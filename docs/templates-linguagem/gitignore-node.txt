@@ -1,0 +1,63 @@
+# Template .gitignore para Node.js / TypeScript / JavaScript
+
+# Dependências
+node_modules/
+jspm_packages/
+.pnp/
+.pnp.js
+.pnp.cjs
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Build e bundlers
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+.svelte-kit/
+.astro/
+.docusaurus/
+.cache/
+.parcel-cache/
+.turbo/
+.vite/
+.rollup.cache/
+.esbuild/
+
+# Testes e cobertura
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+.vitest-result.json
+.jest-cache/
+
+# Logs e debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Outros
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+.npm
+.node_repl_history

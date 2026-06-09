@@ -1,0 +1,44 @@
+# Template .gitignore para Go
+
+# Binários, objetos e arquivos de teste
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Cobertura
+*.cover
+coverage.txt
+coverage.html
+
+# Dependências (use go modules; vendor/ só se realmente versionar)
+# vendor/
+
+# Diretórios de build comuns
+bin/
+pkg/
+dist/
+
+# Air (hot reload)
+tmp/
+
+# Workspace
+go.work
+go.work.sum
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Debugger
+__debug_bin

@@ -1,0 +1,41 @@
+# Infraestrutura local de desenvolvimento (Docker Desktop).
+# Produção usa compose próprio do Portainer — não usar este arquivo lá.
+services:
+    pgsql:
+        build: docker/postgres
+        image: sile/pgsql:16-postgis-pgvector
+        container_name: sile-pgsql
+        restart: unless-stopped
+        ports:
+            # 5433 no host: a 5432 é ocupada pelo PostgreSQL 18 (EDB) instalado na máquina.
+            - '${FORWARD_DB_PORT:-5433}:5432'
+        environment:
+            POSTGRES_DB: '${DB_DATABASE:-sile}'
+            POSTGRES_USER: '${DB_USERNAME:-sile}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+        volumes:
+            - pgsql-data:/var/lib/postgresql/data
+            - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+        healthcheck:
+            test: ['CMD', 'pg_isready', '-q', '-d', '${DB_DATABASE:-sile}', '-U', '${DB_USERNAME:-sile}']
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+    redis:
+        image: redis:8-alpine
+        container_name: sile-redis
+        restart: unless-stopped
+        ports:
+            - '${FORWARD_REDIS_PORT:-6379}:6379'
+        volumes:
+            - redis-data:/data
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+volumes:
+    pgsql-data:
+    redis-data:

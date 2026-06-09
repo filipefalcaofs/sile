@@ -1,0 +1,259 @@
+melhor depois, Felipe.
+
+Você...
+
+É...
+
+Que plataforma é essa? Essa aqui é o...
+
+É, Zou, o que é aqui da empresa.
+
+Eu sou do STVTA.
+
+O Edson não tem que fazer, não.
+
+Vou arranjar a coisa para o Edson fazer.
+
+Essa porra do Vitor vai deixar ele maluco.
+
+É...
+
+é bom você vir e ver ela fazer uma abertura de um processo em homologação no sistema tanto da junta quanto no sistema da gente aí você vai ver todo o processo porque como é que a gente vai separar isso os processos vão ser dados de entrada hoje pela plataforma que a gente chama de integrador federal ok? então lá a pessoa entra E o sistema vai direcionando para cada órgão que...
+
+Então, bombeiro, ele direciona todo bombeiro, a CEDU, a Secretaria daqui, CEPAS, Receita Federal para pegar o CNPJ, fazer o DBE lá no Raio de Parta, na Junta.
+
+Então, ele faz toda a integração.
+
+O cidadão, ele entra numa plataforma e consegue...
+
+começar uma viabilidade e pegar o alvará de funcionamento dele.
+
+Então, dentro dessa plataforma.
+
+E essa plataforma é integrada a um sistema que existe hoje, que não está satisfazendo a gente.
+
+Esse sistema hoje, um sistema que dá muito problema, um sistema que dá extremamente dor de cabeça para a gente aqui, feito em .NET.
+
+E atualmente está parado.
+
+Só para te dizer que está parado aí desde o dia 2.
+
+O sistema do dia 2 ao dia 9, o cara não consegue a solução.
+
+Eu aí fiz, porque eles não conseguiam consumir um acesso lá do sistema, a gente aí pegou, criou um proxy para eles poderem a gente fazer toda a filtragem e já dar mastigada aí.
+
+Aí eles fizeram, levaram uma tarde toda a gente fazer um teste com a gente, uma alocação.
+
+Mas a gente vir para a produção, ele não acerta.
+
+Entendi.
+
+Pronto.
+
+O que eu queria saber é justamente isso hoje.
+
+Por exemplo, eu terminei todas as minhas questões lá no Redicim.
+
+O Redicim me encaminhou para a CEDU.
+
+Quando chega na CEDU, o que acontece aí? O que acontece? O processo, ele tem dois destinos aqui.
+
+Ou ele vem para um enquadramento que a gente chama de expresso, que é quando o sistema consegue aplicar as regras diretamente, sem interferência humana, e aí ele dá a resposta de positivo ou negativo, deferido ou indeferido, e a gente tem a parte quando o sistema não consegue enquadrar ou de fato a regra daquela atividade que que aquela gente tá solicitando é pra vir pra análise.
+
+Aí vem pra análise humana.
+
+Aí, a partir daí, é analisado a possibilidade daquela atividade ser exercida naquele endereço, naquele imóvel, e recebe a conclusão.
+
+Depois dessa conclusão do processo, essa resposta é encaminhada pros dois órgãos, que é a CFAES, a resposta da viabilidade, se positivo ou negativo, Se for um deferido, a gente encaminha os dados dessa viabilidade.
+
+E para a junta comercial, que é o integrador, a gente manda a resposta de volta, dizendo positivo ou negativo, parecer.
+
+E nesse momento, o requerente, ele dá continuidade na Receita Federal ou...
+
+diretamente com a Cefaz, nos casos onde eu já tenho o CNPJ.
+
+Hoje o cidadão consegue fazer isso de casa, nascedor, ou ele tem que ir nascedor pessoalmente? Tudo ou não.
+
+Tudo ou não.
+
+Entendi.
+
+Perfeito.
+
+Tem mais uma dúvida aqui.
+
+É uma visão bem macro agora, essa que a gente está conversando.
+
+Aí depois a gente pode...
+
+A gente pode não, a gente vai aprofundando, né, à medida que você for entendendo como é que o sistema funciona.
+
+Existe uma tabela oficial que relaciona o KINAI para a localidade, para saber se é permitido ou não a viabilidade daquela empresa.
+
+Existe, e a Lousa.
+
+A tabela é que a gente utiliza os quadros da Lousa.
+
+que é o quadro 11 e o quadro 10, onde a gente acaba descobrindo se a atividade pode ou não na via.
+
+Primeiro, a gente utiliza o quadro 7, salvo engano, é o quadro 7 da Loush, que é a lei de uso e ordenamento do solo, para enquadrar o imóvel.
+
+aquela atividade.
+
+A gente vai enquadrar a atividade.
+
+Aí, a partir de algumas características que o requerente informa do imóvel, a gente enquadra essa atividade.
+
+Que tipo de característica a gente utiliza? Área.
+
+A área que o requerente informa que ele vai ocupar, onde ele vai exercer essa atividade.
+
+a gente utiliza para enquadrar a atividade.
+
+A partir do enquadramento, aí a gente parte para a análise dos quadros 11, 11A e 10, que é para saber se a atividade pode na zona, na via, ou em ambas, ou não pode em nenhuma das duas.
+
+Mas o primeiro passo é enquadrar o final.
+
+Que é informado pelo requerente.
+
+Entendi.
+
+Perfeito.
+
+Tem mais algum detalhe que você quer informar? Existem alguns sinais que, independente do que o requerente responde, a gente precisa que ele tenha uma verificação expressa.
+
+que é o que a gente chama aqui de atividade de baixo risco.
+
+Pela legislação, a gente precisa dar uma finalização expressa para eles, quando ele é enquadrado como baixo risco.
+
+Existe uma planilha hoje onde a gente insere as condicionantes para que aquele CNAE seja considerado baixo risco.
+
+Sim.
+
+E quando ele atende tudo aquilo, ele é considerado baixo risco, o próprio sistema consegue fazer isso.
+
+E a resposta é expressa.
+
+A maioria das condicionantes é referente a se a edificação não for residencial, se a área for menor ou igual que 1.250 metros.
+
+quadrados.
+
+Aí, existem alguns outros quinais que têm, né, as suas especificidades.
+
+Aí a gente vai vendo uma 1, a gente vai tratando uma 1.
+
+São 1.332 quinais.
+
+E cada um tem a sua regra.
+
+Mas, a gente tem desses 1.332 quinais, a gente tem 990 que são baixo risco.
+
+que a gente precisa que você tenha uma única regra e um único comportamento, que é o expresso.
+
+E aí é a longe quem vai dizer se vai ser positivo ou negativo a resposta.
+
+O expresso é liberar, né? Ele libera para ele.
+
+Sem precisar de análise de você.
+
+Ou é sem precisar da análise humana.
+
+O expresso pode ser positivo, que é o deferido, ou o indeferido.
+
+Entendi.
+
+Mas não vai precisar da análise humana.
+
+É só baixo ou médio e baixa? Só baixo risco.
+
+Médio, coisa de análise, é? Médio risco depende do KINAI.
+
+Aí a gente teria que olhar as condicionantes.
+
+Só me engano, hoje são 178 KINAIs que são baixo risco.
+
+É porque quando é médio risco, ele pode se tornar alto risco dependendo da condicional, né? Sim, sim.
+
+Mas se o sistema identifica automaticamente que ele...
+
+não é alto risco, que ele é baixo risco, que ele é médio risco, deve ter liberação expressa também ou não? Depende.
+
+O médio risco depende.
+
+O baixo risco, ele precisa ser expresso.
+
+O alto risco, o alto risco precisa vir para análise.
+
+Sim.
+
+Já o médio risco vai depender do que não é.
+
+Entendi.
+
+Aí essa informação do KINAI, que depende do KINAI, vocês têm aí, não é? Sim, sim, sim.
+
+Entendi.
+
+Ela está a mesma que a gente chama de classificação de risco.
+
+Mas existe KINAIs médio risco que é liberado expressamente, de maneira expressa.
+
+Sim, existe.
+
+A gente tem até algumas características de KINAI, que pela lei é alto risco, mas dependendo de onde ele esteja, a gente libera ele expressamente, mas ele não deixa de ser alto risco, entendeu? Entendi.
+
+Depende muito do que nada.
+
+Entendi.
+
+Tem mais alguma coisa? Se não, a gente marca de ir aí pessoalmente na quarta-feira e na quinta para poder ver de perto aí qualquer coisa.
+
+Eu acho que agora, mas te mostrando como é que...
+
+Como é que funciona? Acho que seria mais interessante.
+
+Eu acho que você entenderia melhor o...
+
+Qual o melhor horário amanhã para eu estar indo aí na CEDU? Amanhã a gente tem uma reunião.
+
+Não pode ser quinta? Eu acho que quinta...
+
+Para mim, quinta-feira pela manhã está tudo bem.
+
+Eu só tenho que confirmar com o Anderson.
+
+Pronto.
+
+Eu só tenho...
+
+Quarta e quinta, hein? Eu vou até informar para a Deiró aqui que só tem um quarto e quinta mesmo aí.
+
+Poder conseguir aí, entendeu? Sem nenhuma dessas datas.
+
+Eu acho que quinta-feira pela manhã não está ótimo.
+
+Minhas partidas nove está tudo aqui.
+
+Perfeito, então.
+
+Então, Marcada, eu vou só confirmar com o Deiró também, você confirma daí e a gente deixa para nove horas quinta-feira, tá bom? Tá bom.
+
+Obrigado, viu, Liza.
+
+Foi importante esse bate-papo iniciar aqui, porque já fiz minhas anotações.
+
+Eu já chego aí com conhecimento prévio, entendeu? Sim.
+
+Com certeza.
+
+Tá bom.
+
+Obrigado.
+
+Não tem dúvida.
+
+Nada.
+
+Tchau, tchau.
+
+Valeu, tchau, tchau.

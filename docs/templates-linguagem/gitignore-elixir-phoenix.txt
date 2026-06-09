@@ -1,0 +1,36 @@
+# Template .gitignore para Elixir / Phoenix
+
+# Build e dependências
+_build/
+cover/
+deps/
+doc/
+.fetch
+
+# Bytecode da Erlang VM
+*.beam
+*.ez
+
+# Arquivos gerados pelo Mix
+erl_crash.dump
+
+# Phoenix — assets compilados
+/priv/static/
+/assets/node_modules/
+
+# Phoenix LiveView / esbuild
+/priv/static/assets/
+
+# Credenciais
+.env
+.env.*
+!.env.example
+
+# Liveview LiveDashboard
+/.elixir_ls/
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

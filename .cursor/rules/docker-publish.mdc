@@ -1,0 +1,79 @@
+---
+description: Fluxo de build, publicação e deploy de imagens Docker via Portainer
+alwaysApply: true
+---
+
+# Docker — Build, Publicação e Deploy
+
+Conta Docker Hub: `filipefalcaofs97`
+Máquina de desenvolvimento: Apple Silicon (ARM64)
+Servidores de produção: Linux AMD64
+
+## Fluxo obrigatório de publicação
+
+```
+Build AMD64 com buildx → Push direto para Docker Hub → Commit compose no main → Portainer puxa do main
+```
+
+### 1. Build e push (comando único)
+
+SEMPRE usar `docker buildx` com `--platform linux/amd64` porque a máquina local é ARM (Apple Silicon) e os servidores são AMD64. Build normal com `docker build` ou `docker compose up --build` gera imagem ARM que NÃO funciona no servidor.
+
+```bash
+docker buildx build --platform linux/amd64 -t filipefalcaofs97/<nome-imagem>:latest --push .
+```
+
+Esse comando builda para AMD64 e faz push direto para o Docker Hub em um passo só. Não precisa de `docker tag` nem `docker push` separados.
+
+Aguardar o output confirmar `pushing manifest` e `DONE`.
+
+### 2. Garantir que o compose de produção aponta para a imagem correta
+
+No `docker-compose.portainer-full.yml`, o campo `image:` DEVE ser exatamente:
+
+```yaml
+image: filipefalcaofs97/<nome-imagem>:latest
+```
+
+### 3. Commit e push para main
+
+```bash
+git add -A
+git commit -m "chore: atualiza imagem Docker para deploy"
+git push origin main
+```
+
+O Portainer lê o compose do branch `main` e puxa a imagem do Docker Hub.
+
+## Configuração do Portainer
+
+- **Stacks > Add Stack > Repository**
+- **Repository URL:** URL do repositório GitHub do projeto
+- **Compose path:** `docker-compose.portainer-full.yml`
+- **Branch:** `main`
+- **Automatic updates:** habilitar se disponível (GitOps)
+
+## Estrutura esperada em cada projeto
+
+| Arquivo | Função |
+|---|---|
+| `Dockerfile` | Build da imagem |
+| `docker-compose.yml` | Desenvolvimento local (com `build:`) |
+| `docker-compose.portainer-full.yml` | Produção/Portainer (com `image:` do Docker Hub) |
+| `docker/` | Configs de runtime (nginx, php.ini, supervisord, entrypoint) |
+| `.dockerignore` | Excluir arquivos desnecessários do build |
+
+## Erros comuns
+
+| Erro | Causa | Solução |
+|---|---|---|
+| `no matching manifest for linux/amd64` | Imagem buildada em ARM sem `--platform` | Usar `docker buildx build --platform linux/amd64` |
+| Imagem não encontrada no Portainer | `image:` no compose diferente do que foi pushed | Conferir nome exato no compose |
+
+## Checklist antes de publicar
+
+- Build com `buildx --platform linux/amd64` passou sem erros
+- Push confirmado (digest no output)
+- `docker-compose.portainer-full.yml` aponta para `filipefalcaofs97/<nome>:latest`
+- Commit e push feitos no branch `main`
+- Variáveis sensíveis NÃO estão hardcoded na imagem

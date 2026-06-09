@@ -1,0 +1,23 @@
+---
+description: Todo output da IA em português brasileiro
+alwaysApply: true
+---
+
+# Idioma — Português Brasileiro
+
+Todo output da IA deve ser em **português brasileiro (pt-BR)** com **gramática correta** — acentuação, cedilha, til, crase e pontuação adequadas. Inclui:
+
+- Respostas e explicações
+- Comentários no código
+- Mensagens de commit
+- Documentação gerada
+- Mensagens de erro e logs
+- Labels de UI e textos de interface
+- Nomes de testes (describe/it)
+- Conteúdo de arquivos markdown
+
+Exceções (manter em inglês):
+- Nomes de variáveis, funções, classes e tipos no código
+- Palavras-chave de linguagens de programação
+- Nomes de bibliotecas e frameworks
+- Termos técnicos consagrados sem tradução adequada (middleware, deploy, commit, etc.)

@@ -1,0 +1,187 @@
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Variáveis de ambiente e segredos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+credentials.json
+secrets.json
+
+# GSD — .planning/ é versionado neste projeto (fonte de verdade da gestão)
+# Artefatos temporários de debug/handoff ficam de fora
+.planning/debug/
+
+# Caches de assistentes (não as skills/rules versionadas)
+.claude-cache/
+.cursor/cache/
+.cursor/sessions/
+
+# Logs e temporários genéricos
+*.log
+*.pid
+logs/
+tmp/
+temp/
+.cache/
+
+# Node / JavaScript / TypeScript
+node_modules/
+.pnp/
+.pnp.js
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+.svelte-kit/
+.turbo/
+.vite/
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+*.egg-info/
+.python-version
+
+# Go
+*.exe
+*.test
+*.out
+*.so
+*.dylib
+bin/
+pkg/
+
+# Rust
+target/
+# Cargo.lock — mantenha versionado em binários; ignore em libs (ajuste conforme projeto)
+
+# Java / Kotlin / Gradle
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+.gradle/
+build/
+out/
+hs_err_pid*
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.pdb
+# *.dll — não ignorar por padrão; bibliotecas DLL podem ser intencionais
+
+# PHP / Composer / Laravel
+vendor/
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+bootstrap/cache/*.php
+!bootstrap/cache/.gitkeep
+
+# Ruby / Bundler / Rails
+*.gem
+.bundle/
+log/*.log
+tmp/
+# Gemfile.lock — versione em apps; ignore em gems (ajuste conforme projeto)
+
+# Elixir / Phoenix
+_build/
+deps/
+*.beam
+*.ez
+priv/static/
+.elixir_ls/
+
+# Swift / iOS / Xcode
+*.xcuserstate
+xcuserdata/
+Pods/
+*.xcworkspace/contents.xcworkspacedata
+DerivedData/
+
+# Terraform / Infra
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Laravel (repo-padrao stack)
+# Template .gitignore para PHP / Composer / Laravel
+
+# Composer
+vendor/
+composer.phar
+# composer.lock — versione em apps; ignore em bibliotecas
+
+# Laravel
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/storage/app/public/
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+storage/framework/testing/
+bootstrap/cache/*.php
+!bootstrap/cache/.gitkeep
+.env
+.env.backup
+.env.production
+.env.testing
+.phpunit.result.cache
+auth.json
+npm-debug.log
+yarn-error.log
+Homestead.json
+Homestead.yaml
+/.fleet
+/.idea
+/.vscode
+_ide_helper.php
+_ide_helper_models.php
+.phpstorm.meta.php
+
+# Logs e cache
+*.log
+
+# IDE / SO
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

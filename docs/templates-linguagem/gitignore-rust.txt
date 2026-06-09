@@ -1,0 +1,28 @@
+# Template .gitignore para Rust / Cargo
+
+# Build do Cargo
+target/
+
+# Cargo.lock: versionar em binários (apps), ignorar em libs
+# Descomente a linha abaixo se este crate é uma biblioteca:
+# Cargo.lock
+
+# Backup do rustfmt
+**/*.rs.bk
+
+# Coredumps de teste
+*.pdb
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# rust-analyzer
+.rust-analyzer/

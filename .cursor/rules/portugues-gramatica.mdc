@@ -1,0 +1,83 @@
+# Português Brasileiro — Gramática e Acentuação
+
+## Regra principal
+
+Todo texto visível ao usuário na UI (títulos, labels, botões, placeholders, mensagens, tooltips, alts) DEVE estar com acentuação e gramática corretas do português brasileiro.
+
+## Checklist obrigatório antes de entregar código com textos pt-BR
+
+Verificar TODOS os textos da UI para:
+- Acentos agudos: á, é, í, ó, ú (início, último, exercício, série, histórico, número)
+- Acentos circunflexos: â, ê, ô (frequência, sequência, consistência, resistência)
+- Til: ã, õ (evolução, sessão, descrição, anotação, configuração, não, programação)
+- Cedilha: ç (musculação, começar, força, recomposição, elevação, movimentação)
+- Trema: não existe mais no pt-BR (removido em 2009)
+
+## Palavras frequentes neste projeto (referência rápida)
+
+| Errado | Correto |
+|--------|---------|
+| Evolucao | Evolução |
+| Musculacao | Musculação |
+| Inicio | Início |
+| exercicio | exercício |
+| serie | série |
+| sessao | sessão |
+| historico | histórico |
+| grafico | gráfico |
+| metricas | métricas |
+| anotacao | anotação |
+| descricao | descrição |
+| configuracao | configuração |
+| programacao | programação |
+| distancia | distância |
+| frequencia | frequência |
+| superficie | superfície |
+| elevacao | elevação |
+| Nao | Não |
+| Ja | Já |
+| proximo | próximo |
+| unico | único |
+| ultimo | último |
+| comecar | começar |
+| numero | número |
+| sequencia | sequência |
+| consistencia | consistência |
+| resistencia | resistência |
+| recomposicao | recomposição |
+| obrigatorio | obrigatório |
+| invalido | inválido |
+| trajetoria | trajetória |
+| metabolica | metabólica |
+| fisica | física |
+| medio | médio |
+| usuario | usuário |
+| Terca | Terça |
+| Sabado | Sábado |
+| Gluteos | Glúteos |
+| Bracos | Braços |
+
+## Regras de capitalização para UI
+
+- Títulos de seção: apenas primeira letra maiúscula (exceto siglas ou nomes próprios)
+  - Correto: "Histórico de sessões"
+  - Errado: "Historico de Sessoes"
+- Botões: seguir o padrão do design system (se uppercase via CSS, o texto fonte pode ser lowercase)
+- Labels de formulário: primeira letra maiúscula, restante minúsculo
+  - Correto: "Frequência cardíaca (bpm)"
+  - Errado: "Frequencia Cardiaca (BPM)"
+
+## Separação entre value e label
+
+Quando um `<select>` ou enum precisa de um valor técnico estável (sem acentos) para o banco de dados, separar o `value` do texto exibido:
+
+```tsx
+<option value="forca">Força</option>
+<option value="resistencia">Resistência</option>
+```
+
+Nunca usar o texto acentuado como `value` de banco de dados.
+
+## Verificação
+
+Ao criar ou editar componentes com textos em português, fazer uma revisão rápida de acentuação antes de commitar. Em caso de dúvida sobre a grafia correta, consultar esta tabela.

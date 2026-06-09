@@ -1,0 +1,53 @@
+---
+description: Convenções Laravel 12/13 — estrutura, Artisan, Eloquent e testes
+globs: **/*.php,**/*.blade.php,routes/**,database/**,tests/**,config/**
+alwaysApply: false
+---
+
+# Laravel — Core
+
+Baseado nas [AI Guidelines do Laravel Boost](https://laravel.com/docs/13.x/ai). Aplicar apenas em projetos Laravel.
+
+## Artisan primeiro
+
+- Usar `php artisan make:*` para criar arquivos (migrations, controllers, models, form requests, policies, jobs).
+- Passar `--no-interaction` em todos os comandos Artisan.
+- Conferir opções com `php artisan make:model --help` (ou equivalente) antes de gerar.
+
+## Estrutura (Laravel 11+)
+
+- Middleware, exceções e rotas em `bootstrap/app.php` (`Application::configure()->withMiddleware()`).
+- Providers em `bootstrap/providers.php`.
+- Comandos em `app/Console/Commands/` são auto-descobertos.
+- Se o projeto ainda tem `app/Http/Kernel.php`, seguir a estrutura legada — não migrar sem pedido explícito.
+
+## Eloquent e banco
+
+- Preferir Eloquent e relationships com return type hints; evitar `DB::` quando o ORM resolve.
+- Eager loading (`with()`) para evitar N+1; nunca consultar no Blade.
+- Migrations que alteram coluna devem repetir todos os atributos existentes da coluna.
+- Casts preferencialmente no método `casts()` do model (seguir convenção dos models irmãos).
+
+## Validação e HTTP
+
+- Form Request classes — não validação inline no controller.
+- Usar `$request->validated()`, nunca `$request->all()`.
+- Rotas nomeadas e `route()` para URLs.
+
+## Testes
+
+- Factories nos testes; conferir states customizados antes de montar manualmente.
+- Seguir convenção do projeto: `$this->faker` ou `fake()`.
+- Criar testes com `php artisan make:test --pest NomeTest` (feature) ou `--pest --unit` (unit).
+- Ativar skill `pest-testing` ao escrever ou corrigir testes.
+
+## Frontend (Vite + Inertia)
+
+- Stack padrão: **Inertia.js v2** — ver rule `laravel-inertia` e skill do adapter (Vue/React/Svelte).
+- Pages em `resources/js/Pages/`. Controllers retornam `Inertia::render()`.
+- Erro de manifest Vite: rodar `npm run build` ou `npm run dev` / `composer run dev`.
+
+## Consistência
+
+- Antes de introduzir padrão novo, verificar arquivos irmãos e seguir o que o projeto já faz.
+- Ativar skill `laravel-best-practices` ao escrever, revisar ou refatorar código PHP Laravel.

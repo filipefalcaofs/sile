@@ -1,0 +1,122 @@
+---
+description: Workflows obrigatórios — Superpowers para todos os projetos
+alwaysApply: true
+---
+
+# Superpowers — Workflows Obrigatórios
+
+Todo projeto DEVE seguir os skills do [Superpowers oficial](https://github.com/obra/superpowers) (disciplina de código). Não é opcional.
+
+Antes de qualquer ação, verificar se algum skill do Superpowers se aplica. Se houver 1% de chance de ser relevante, invocar o skill. Sem racionalização.
+
+Skills em `.cursor/plugins/superpowers/` — fonte upstream: https://github.com/obra/superpowers
+
+## Brainstorming (OBRIGATÓRIO antes de qualquer implementação)
+
+Antes de criar features, componentes, funcionalidades ou modificar comportamento:
+
+1. Explorar contexto do projeto
+2. Fazer perguntas clarificadoras (uma por vez)
+3. Propor 2-3 abordagens com trade-offs
+4. Apresentar design e obter aprovação
+5. Escrever spec e commitar
+6. Só então avançar para planejamento
+
+**Não existe tarefa simples demais para pular o brainstorming.** O design pode ser curto, mas deve existir e ser aprovado.
+
+## TDD — Test-Driven Development (OBRIGATÓRIO para todo código)
+
+```
+NENHUM CÓDIGO DE PRODUÇÃO SEM UM TESTE FALHANDO PRIMEIRO
+```
+
+Ciclo Red-Green-Refactor:
+1. **RED** — Escrever teste que falha
+2. **Verificar RED** — Rodar e confirmar que falha pelo motivo certo
+3. **GREEN** — Código mínimo para passar
+4. **Verificar GREEN** — Rodar e confirmar que passa
+5. **REFACTOR** — Limpar, manter testes verdes
+6. **Repetir** — Próximo teste
+
+Escreveu código antes do teste? Delete. Comece de novo. Sem exceções.
+
+## Debugging Sistemático (OBRIGATÓRIO para qualquer bug)
+
+```
+NENHUMA CORREÇÃO SEM INVESTIGAÇÃO DE CAUSA RAIZ PRIMEIRO
+```
+
+4 fases obrigatórias:
+1. **Investigar causa raiz** — ler erros, reproduzir, checar mudanças recentes
+2. **Análise de padrões** — encontrar exemplos funcionais, comparar diferenças
+3. **Hipótese e teste** — uma hipótese por vez, testar minimamente
+4. **Implementação** — teste falhando primeiro, correção mínima, verificar
+
+## Verificação antes de Completar (OBRIGATÓRIO)
+
+```
+NENHUMA AFIRMAÇÃO DE SUCESSO SEM EVIDÊNCIA FRESCA
+```
+
+Antes de dizer que algo funciona, está pronto ou passou:
+1. Identificar qual comando prova a afirmação
+2. Rodar o comando (fresco, completo)
+3. Ler output inteiro e confirmar
+4. Só então afirmar
+
+"Deve funcionar", "provavelmente passou" = proibido.
+
+## Planos de Implementação (para tarefas multi-step)
+
+1. Escrever plano detalhado com tasks bite-sized (2-5 min cada)
+2. Cada task com arquivos exatos, código completo, comandos de verificação
+3. Seguir ciclo TDD dentro de cada task
+4. Review loop após escrever o plano
+
+## Execução com Subagentes
+
+- Um subagente fresco por task
+- Review de duas etapas: conformidade com spec + qualidade de código
+- Nunca pular reviews
+
+## Code Review
+
+Obrigatório:
+- Após cada task em desenvolvimento com subagentes
+- Após completar feature significativa
+- Antes de merge para main
+
+Ao receber review:
+- Verificar antes de implementar sugestões
+- Sem concordância performativa
+- Pushback técnico quando feedback estiver errado
+
+## Git Worktrees e Finalização
+
+- Criar worktree isolada antes de implementar features
+- Ao finalizar: verificar testes, apresentar opções (merge, PR, manter, descartar)
+
+## Agentes Paralelos
+
+Quando há 2+ tarefas independentes:
+- Despachar um agente por domínio de problema
+- Nunca investigar sequencialmente o que pode ser paralelo
+
+## Racionalizações proibidas
+
+| Pensamento | Realidade |
+|------------|-----------|
+| "É só uma pergunta simples" | Perguntas são tarefas. Verificar skills. |
+| "Simples demais para TDD" | Código simples quebra. Teste leva 30 segundos. |
+| "Vou testar depois" | Teste passando de primeira não prova nada. |
+| "Só dessa vez" | Não existe "só dessa vez". |
+| "Já sei o que fazer, não precisa planejar" | Brainstorming e plano existem por um motivo. |
+| "Deve funcionar agora" | Rode o comando. Leia o output. Aí afirme. |
+| "Correção rápida é mais eficiente" | Debugging sistemático é mais rápido que tentativa e erro. |
+
+## Exceções (apenas com permissão explícita do usuário)
+
+- Protótipos descartáveis
+- Código gerado automaticamente
+- Arquivos de configuração pura
+- Alterações puramente visuais/CSS sem lógica

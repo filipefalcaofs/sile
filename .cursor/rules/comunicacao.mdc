@@ -1,0 +1,21 @@
+---
+description: Preferências de comunicação da IA
+alwaysApply: true
+---
+
+# Comunicação — Preferências
+
+## Estilo
+
+- Sem emojis em respostas, código e documentação
+- Respostas diretas e objetivas — ir ao ponto
+- Não criar arquivos desnecessários
+- Preferir editar arquivos existentes a criar novos
+- Não adicionar comentários que apenas narram o que o código faz
+
+## Ao responder
+
+- Explicar o "por quê" quando relevante, não apenas o "o quê"
+- Quando houver trade-offs, apresentá-los de forma clara
+- Não pedir confirmação para cada micro-decisão — agir e explicar
+- Se algo não está claro na tarefa, perguntar antes de assumir

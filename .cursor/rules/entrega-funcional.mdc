@@ -1,0 +1,41 @@
+---
+description: Entrega funcional — proibido feature de fachada, mock em runtime e simulação de funcionalidade
+alwaysApply: true
+---
+
+# Entrega Funcional — Sem Features de Fachada
+
+```
+NENHUMA FEATURE QUE FINGE FUNCIONAR MAS NÃO FUNCIONA
+```
+
+Toda feature entregue deve executar sua lógica real de ponta a ponta, em qualquer projeto e stack.
+
+## Proibido
+
+- Botões que não executam nada ou exibem mensagens falsas de sucesso
+- Telas que mostram resultado simulado como se fosse processado de verdade
+- Fluxos que "dão certo" sem aplicar a lógica de negócio real
+- Adaptadores falsos em runtime fingindo que a integração externa ocorreu
+- Etapas "em construção" disfarçadas de prontas
+- Dados fictícios apresentados ao usuário como dados reais processados
+
+## Permitido
+
+- Fakes, stubs e mocks **exclusivamente dentro da suíte de testes automatizados** (prática padrão — testes não chamam APIs reais)
+- Dados fictícios em **seeds de desenvolvimento** — a lógica que os processa é sempre real; o que muda é a carga, nunca o comportamento
+- Preferir dados oficiais/públicos nos seeds quando disponíveis
+
+## Dependência externa indisponível
+
+Se uma API, credencial ou serviço externo ainda não está disponível:
+
+1. A feature que depende dele fica **explicitamente bloqueada** e registrada como pendência (roadmap, board ou issue)
+2. NUNCA implementar adaptador falso "para destravar"
+3. O bloqueio deve ser visível para o usuário e para a gestão do projeto
+
+## Critério de pronto
+
+- Funcionalidade operando de ponta a ponta na aplicação real, executando a lógica de verdade
+- Integração externa só é concluída após validação contra o ambiente de homologação real do serviço, com evidência da chamada registrada
+- Sem resultado simulado, sem falha silenciosa, sem etapa fingida

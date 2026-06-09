@@ -1,0 +1,53 @@
+---
+description: Convenções de Git e versionamento
+alwaysApply: true
+---
+
+# Git — Convenções de Versionamento
+
+## Conventional Commits em português
+
+Formato: `<tipo>: <descrição em português>`
+
+### Tipos permitidos
+
+- `feat:` — Nova funcionalidade
+- `fix:` — Correção de bug
+- `refactor:` — Refatoração sem mudar comportamento
+- `chore:` — Tarefas de manutenção (deps, configs)
+- `docs:` — Documentação
+- `test:` — Testes
+- `style:` — Formatação, sem mudança de lógica
+- `perf:` — Melhoria de performance
+
+### Exemplos
+
+```
+feat: adiciona modal de cadastro de usuários
+fix: corrige validação de datas no formulário
+refactor: extrai lógica de autenticação para service
+chore: atualiza dependências do projeto
+docs: documenta fluxo de pagamento no brain
+test: adiciona testes para serviço de notificações
+```
+
+### Regras
+
+- Mensagens em português, minúsculas, sem ponto final
+- Descrição concisa (max ~72 caracteres)
+- Corpo opcional para detalhes adicionais
+
+## Nunca versionar
+
+- `.env` e qualquer arquivo com variáveis de ambiente
+- `node_modules/`
+- `test-results/`, `playwright-report/`
+- `.cursor/`
+- Arquivos de build (`dist/`, `.next/`, `.nuxt/`)
+- Credenciais, chaves de API, certificados
+
+## Antes de release
+
+- Garantir que o build passa sem erros
+- Verificar que os testes estão passando
+- Revisar o diff completo antes de merge

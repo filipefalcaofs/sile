@@ -1,0 +1,37 @@
+---
+description: Inertia.js no Laravel — server-side, props, middleware e ativação de skills por framework
+globs: **/*.php,routes/**,app/Http/**,resources/js/**,resources/views/**
+alwaysApply: false
+---
+
+# Inertia.js (Laravel)
+
+Padrão frontend deste template: **Inertia.js v2** com adapter Vue, React ou Svelte.
+
+## Server-side (Laravel)
+
+- Rotas retornam `Inertia::render('Page/Component', $props)` — não Blade views para páginas SPA.
+- Pages em `resources/js/Pages/` (ou path definido em `vite.config.js`).
+- Validar com Form Requests; passar apenas props necessárias.
+- Middleware `HandleInertiaRequests` para shared props (`auth`, `flash`, etc.).
+
+## Client-side — qual skill usar
+
+| Adapter | Skill |
+|---|---|
+| Vue 3 (`@inertiajs/vue3`) | `inertia-vue-development` |
+| React (`@inertiajs/react`) | `inertia-react-development` |
+| Svelte (`@inertiajs/svelte`) | `inertia-svelte-development` |
+
+Ativar a skill indicada em `.laravel-stack.json` (`inertia_adapter`: `vue` | `react` | `svelte`). Se o arquivo não existir, rodar `./stacks/laravel/scripts/choose-inertia-adapter.sh` após clonar.
+
+## Inertia v2 (padrão)
+
+- Deferred props, prefetch, polling, `WhenVisible` (infinite scroll).
+- Com deferred props, incluir skeleton/loading state.
+- Usar `<Link>` do adapter — não `<a>` cru para navegação interna.
+- Formulários: componente `<Form>` (v2.1+) ou `useForm` — seguir skill do framework.
+
+## Documentação
+
+Usar `search-docs` (Laravel Boost MCP) antes de implementar — docs versionadas por pacote.

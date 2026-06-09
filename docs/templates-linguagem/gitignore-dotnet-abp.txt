@@ -1,0 +1,98 @@
+# Template .gitignore para .NET / ABP (backend + frontend Angular/React)
+
+# Resultados de build do MSBuild / Visual Studio
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# Arquivos do usuário do Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# MSTest / xUnit / NUnit
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+coverage*.xml
+coverage*.json
+coverage*.info
+
+# Resultados e debug
+*.pdb
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Visual Studio
+.vs/
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# Publish
+publish/
+PublishProfiles/
+*.[Pp]ublish.xml
+*.azurePubxml
+*.pubxml
+*.publishproj
+
+# ASP.NET — manter appsettings.json; ignorar overrides locais
+appsettings.*.json
+!appsettings.json
+!appsettings.example.json
+
+# Cobertura
+TestCoverage/
+*.coverage
+*.coveragexml
+
+# Node (Angular / React UI ABP)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.angular/
+dist/
+
+# IDE / SO
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Segredos
+.env
+.env.*
+!.env.example
+secrets.json
+*.pfx
+*.snk

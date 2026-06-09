@@ -1,0 +1,34 @@
+---
+description: Parametrização máxima — admin não depende de desenvolvedor para mudar parâmetros ou ativar funcionalidades
+alwaysApply: true
+---
+
+# Parametrização Máxima
+
+```
+O ADMIN NUNCA DEPENDE DE DESENVOLVEDOR PARA MUDAR O QUE PODE SER PARÂMETRO
+```
+
+Ao implementar qualquer funcionalidade, perguntar: **"o que aqui o admin pode querer mudar?"** — e transformar em parâmetro administrável.
+
+## Parâmetros (valores de negócio)
+
+- NENHUM valor de negócio hardcoded: prazos, limiares, taxas, valores, textos de e-mail e notificação, mensagens, termos legais, URLs de integração
+- Todo parâmetro com: tipo, descrição, valor padrão e regras de validação (faixa, formato, obrigatoriedade)
+- Alteração tem efeito **sem novo deploy** (limitado apenas pelo tempo de cache definido)
+- Histórico versionado e auditado: valor anterior, valor novo, responsável, data/hora
+
+## Feature toggles (funcionalidades acopláveis)
+
+- Toda funcionalidade acoplável nasce com chave de ativação/desativação administrável por interface: integrações externas, fluxos automáticos, IA, canais de notificação (e-mail, WhatsApp, SMS), aprovação automática
+- Desativação degrada de forma **controlada e comunicada**: pendência operacional, aviso ou bloqueio explícito — NUNCA falha silenciosa
+
+## Segurança
+
+- Parâmetros sensíveis (credenciais, senhas, tokens, chaves de API) armazenados **criptografados** e nunca reexibidos em texto claro após gravados
+- Telas de parametrização de integração com ação de **teste de conexão** para validar a configuração sem acionar o fluxo real
+
+## Organização
+
+- Configurações segregadas por domínio (ex.: `ConfigEmail`, `ConfigIa`, `ConfigPagamento`), cada uma com tela própria de administração
+- Regras de negócio complexas (tabelas legais, classificações, condicionantes) modeladas como **dados versionados**, não como código

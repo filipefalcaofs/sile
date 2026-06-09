@@ -1,0 +1,80 @@
+# Template .gitignore para Java / JHipster (Gradle ou Maven + Node frontend)
+
+# Compilados
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Logs e dumps
+*.log
+hs_err_pid*
+replay_pid*
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+gradle-app.setting
+.gradletasknamecache
+
+# Kotlin
+*.kotlin_module
+
+# IDE — IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# IDE — Eclipse
+.classpath
+.project
+.settings/
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+
+# IDE — VS Code
+.vscode/
+
+# Spring Boot
+*.original
+
+# Node (frontend JHipster)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Webpack / Vite cache
+.webpack/
+.cache/
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# SO
+.DS_Store
+Thumbs.db

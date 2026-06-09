@@ -1,0 +1,61 @@
+---
+description: Laravel Boost MCP — search-docs, introspecção e ferramentas do app
+globs: **/*.php,**/*.blade.php,routes/**,database/**,tests/**,config/**
+alwaysApply: false
+---
+
+# Laravel Boost
+
+Requer `composer require laravel/boost --dev` e `php artisan boost:install` no projeto Laravel. Docs: [laravel.com/docs/13.x/boost](https://laravel.com/docs/13.x/boost).
+
+## MCP no Cursor
+
+1. Habilitar servidor `laravel-boost` em MCP Settings.
+2. Comando: `php` | Args: `artisan boost:mcp`
+
+## Prioridade de ferramentas
+
+Preferir ferramentas Boost em vez de shell manual quando o MCP estiver ativo:
+
+| Ferramenta | Quando usar |
+|---|---|
+| `search-docs` | **Sempre** antes de mudar código — docs versionadas do ecossistema |
+| `database-schema` | Antes de migrations ou models |
+| `database-query` | Consultas read-only (não SQL cru no tinker) |
+| `get-absolute-url` | Antes de compartilhar URLs com o usuário |
+| `browser-logs` | Erros JS/console no browser (logs recentes) |
+| `last-error` / `read-log-entries` | Debug de exceções e logs |
+| `tinker` | Executar PHP no contexto da app (se habilitado) |
+
+## search-docs (obrigatório)
+
+- Não pular antes de implementar features ou corrigir bugs Laravel.
+- Queries amplas por tópico: `['rate limiting', 'routing']`.
+- Frases exatas entre aspas: `"infinite scroll"`.
+- Não incluir nome de pacote na query — o filtro de versão já é automático.
+
+## Artisan via CLI
+
+- `php artisan route:list` com filtros (`--name=`, `--path=`, `--method=`).
+- `php artisan config:show app.name` para ler config.
+- Tinker: `php artisan tinker --execute '...'` com aspas simples no shell.
+
+## Skills relacionadas
+
+- `laravel-boost` — ferramentas MCP e fluxo de debug
+- `laravel-best-practices` — padrões PHP/Laravel
+- `pest-testing` — testes Pest
+- `inertia-vue-development` / `inertia-react-development` / `inertia-svelte-development` — frontend Inertia (padrão do template)
+
+## Atualização
+
+```bash
+php artisan boost:update
+php artisan boost:update --discover  # pacotes novos
+```
+
+Adicionar ao `composer.json` se desejado:
+
+```json
+"post-update-cmd": ["@php artisan boost:update --ansi"]
+```

@@ -1,0 +1,8 @@
+{
+  "template_id": "repo-padrao-laravel-react-cursor",
+  "stack": "laravel",
+  "variant": "inertia-react",
+  "ide": "cursor",
+  "generated_from": "filipefalcaofs/repo-padrao",
+  "generated_at": "2026-05-25T15:51:07Z"
+}
