@@ -1,0 +1,66 @@
+---
+description: Contexto do projeto SILE e fluxo de trabalho GSD
+alwaysApply: true
+---
+
+<!-- gsd-project-start source:PROJECT.md -->
+## Project
+
+**SILE — Sistema de Licenciamento Eletrônico**
+
+O SILE é o Sistema de Licenciamento Eletrônico da SEDUR (Salvador/BA): gestão da viabilidade locacional de atividades econômicas, com automação do licenciamento via motor de regras da LOUOS (Lei nº 9.148/2016), classificação de risco por CNAE (Decreto nº 32.636/2020), georreferenciamento, fluxo expresso (deferimento/indeferimento automático), análise técnica humana, integrações (REDESIM, Receita Federal, GIS, SEFAZ municipal), auditoria completa e indicadores. Atende cidadãos/requerentes (via integrador federal e portal), analistas e gestores da SEDUR.
+
+**Core Value:** Responder a viabilidade locacional de uma atividade econômica de forma automática, correta e auditável — aplicando de verdade as regras da LOUOS e a classificação de risco, sem análise humana quando a lei permite (fluxo expresso) e com fundamentação legal registrada em toda decisão.
+
+### Constraints
+
+- **Tech stack**: Laravel 13 + Inertia v3 + React 19 + Tailwind 4 + PHPUnit — esqueleto existente; não trocar. Libs de backend do SIGVISA aplicáveis (dompdf, picqer/barcode, simple-qrcode, maatwebsite/excel, spatie/permission, spatie/activitylog).
+- **Qualidade**: TDD estrito (Red-Green-Refactor); cada CA BDD das HUs vira feature test PHPUnit; nenhuma HU concluída sem CAs cobertos por testes passando.
+- **Auditoria transversal**: trilha de auditoria (usuário, data/hora, origem, ação, resultado, versão de regras) é RN-002 de todas as HUs — implementar como infraestrutura desde o EP01.
+- **Sem features de fachada**: toda feature executa lógica real de ponta a ponta; integração indisponível = feature bloqueada no ROADMAP/STATE, não simulada. Fakes/stubs só na suíte de testes.
+- **Integrações reais**: integração externa só é concluída após validação contra homologação real (SEFAZ, REDESIM, GIS) com evidência de chamada real registrada.
+- **Parametrização máxima (HU-014)**: nenhum valor de negócio hardcoded (prazos, limiares, taxas, textos, e-mails, termos); tudo administrável por interface com validação, histórico auditado e efeito sem deploy. Funcionalidades acopláveis nascem com feature toggle; desativação degrada de forma controlada. Credenciais criptografadas com teste de conexão.
+- **Dados de seed**: fictícios aceitáveis em dev; preferir dados oficiais públicos (CNAE IBGE/CONCLA, Decreto 32.636/2020, quadros LOUOS) e substituir pelas planilhas oficiais da SEDUR quando entregues. O motor processa dados reais em qualquer caso — muda a carga, nunca a lógica.
+- **Idioma**: UI, mensagens, commits e documentação em pt-BR; código (variáveis, classes, métodos) em inglês. Conventional commits em português.
+- **Convenções**: AGENTS.md e rules do repositório — Laravel way (`php artisan make:`), Eloquent API Resources, factories em testes, `vendor/bin/pint --dirty --format agent` após alterar PHP, `search-docs` do Boost antes de mudanças.
+<!-- gsd-project-end -->
+
+<!-- gsd-stack-start source:STACK.md -->
+## Technology Stack
+
+Technology stack not yet documented. Will populate after codebase mapping or first phase.
+<!-- gsd-stack-end -->
+
+<!-- gsd-conventions-start source:CONVENTIONS.md -->
+## Conventions
+
+Conventions not yet established. Will populate as patterns emerge during development.
+<!-- gsd-conventions-end -->
+
+<!-- gsd-architecture-start source:ARCHITECTURE.md -->
+## Architecture
+
+Architecture not yet mapped. Follow existing patterns found in the codebase.
+<!-- gsd-architecture-end -->
+
+<!-- gsd-workflow-start source:GSD defaults -->
+## GSD Workflow Enforcement
+
+Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
+
+Use these entry points:
+- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks
+- `/gsd-debug` for investigation and bug fixing
+- `/gsd-execute-phase` for planned phase work
+
+Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
+<!-- gsd-workflow-end -->
+
+
+
+<!-- gsd-profile-start -->
+## Developer Profile
+
+> Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
+> This section is managed by `generate-claude-profile` -- do not edit manually.
+<!-- gsd-profile-end -->

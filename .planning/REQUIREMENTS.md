@@ -211,17 +211,147 @@ Pauta completa: `docs/ANALISE-HUs-REUNIAO-SEDUR.md` seção 5.
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
+Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU pertence a exatamente uma fase. Os mantenedores HU-015 a HU-018 entram na Fase 5 (junto com o motor da LOUOS) e HU-019/HU-020 na Fase 6 (junto com a classificação de risco) — fatia vertical, conforme decisão registrada em PROJECT.md.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (preenchido pelo roadmap) | | |
+| HU-001 | Fase 1 | Pending |
+| HU-002 | Fase 1 | Pending |
+| HU-003 | Fase 1 | Pending |
+| HU-004 | Fase 1 | Pending |
+| HU-005 | Fase 1 | Pending |
+| HU-006 | Fase 1 | Pending |
+| HU-007 | Fase 1 | Pending |
+| HU-008 | Fase 1 | Pending |
+| HU-009 | Fase 1 | Pending |
+| HU-010 | Fase 1 | Pending |
+| HU-011 | Fase 2 | Pending |
+| HU-012 | Fase 2 | Pending |
+| HU-013 | Fase 2 | Pending |
+| HU-014 | Fase 2 | Pending |
+| HU-015 | Fase 5 | Pending |
+| HU-016 | Fase 5 | Pending |
+| HU-017 | Fase 5 | Pending |
+| HU-018 | Fase 5 | Pending |
+| HU-019 | Fase 6 | Pending |
+| HU-020 | Fase 6 | Pending |
+| HU-021 | Fase 3 | Pending |
+| HU-022 | Fase 3 | Pending |
+| HU-023 | Fase 3 | Pending |
+| HU-024 | Fase 3 | Pending |
+| HU-025 | Fase 3 | Pending |
+| HU-026 | Fase 3 | Pending |
+| HU-027 | Fase 3 | Pending |
+| HU-028 | Fase 3 | Pending |
+| HU-029 | Fase 4 | Pending |
+| HU-030 | Fase 4 | Pending |
+| HU-031 | Fase 4 | Pending |
+| HU-032 | Fase 4 | Pending |
+| HU-033 | Fase 4 | Pending |
+| HU-034 | Fase 4 | Pending |
+| HU-035 | Fase 4 | Pending |
+| HU-036 | Fase 4 | Pending |
+| HU-037 | Fase 4 | Pending |
+| HU-038 | Fase 5 | Pending |
+| HU-039 | Fase 5 | Pending |
+| HU-040 | Fase 5 | Pending |
+| HU-041 | Fase 5 | Pending |
+| HU-042 | Fase 5 | Pending |
+| HU-043 | Fase 5 | Pending |
+| HU-044 | Fase 5 | Pending |
+| HU-045 | Fase 5 | Pending |
+| HU-046 | Fase 5 | Pending |
+| HU-047 | Fase 6 | Pending |
+| HU-048 | Fase 6 | Pending |
+| HU-049 | Fase 6 | Pending |
+| HU-050 | Fase 6 | Pending |
+| HU-051 | Fase 6 | Pending |
+| HU-052 | Fase 6 | Pending |
+| HU-053 | Fase 6 | Pending |
+| HU-054 | Fase 7 | Pending |
+| HU-055 | Fase 7 | Pending |
+| HU-056 | Fase 7 | Pending |
+| HU-057 | Fase 7 | Pending |
+| HU-058 | Fase 7 | Pending |
+| HU-059 | Fase 7 | Pending |
+| HU-060 | Fase 7 | Pending |
+| HU-061 | Fase 8 | Pending |
+| HU-062 | Fase 8 | Pending |
+| HU-063 | Fase 8 | Pending |
+| HU-064 | Fase 8 | Pending |
+| HU-065 | Fase 8 | Pending |
+| HU-066 | Fase 8 | Pending |
+| HU-067 | Fase 8 | Pending |
+| HU-068 | Fase 8 | Pending |
+| HU-069 | Fase 8 | Pending |
+| HU-070 | Fase 8 | Pending |
+| HU-071 | Fase 8 | Pending ⚠️ escopo a confirmar (SEDUR) |
+| HU-072 | Fase 8 | Pending ⚠️ escopo a confirmar (SEDUR) |
+| HU-073 | Fase 9 | Pending |
+| HU-074 | Fase 9 | Pending |
+| HU-075 | Fase 9 | Pending |
+| HU-076 | Fase 9 | Pending |
+| HU-077 | Fase 9 | Pending |
+| HU-078 | Fase 9 | Pending |
+| HU-079 | Fase 10 | Pending |
+| HU-080 | Fase 10 | Pending |
+| HU-081 | Fase 10 | Pending |
+| HU-082 | Fase 10 | Pending |
+| HU-083 | Fase 10 | Pending |
+| HU-084 | Fase 10 | Pending |
+| HU-085 | Fase 10 | Pending |
+| HU-086 | Fase 10 | Pending |
+| HU-087 | Fase 10 | Pending |
+| HU-088 | Fase 10 | Pending |
+| HU-089 | Fase 10 | Pending |
+| HU-090 | Fase 11 | Pending |
+| HU-091 | Fase 11 | Pending |
+| HU-092 | Fase 11 | Pending |
+| HU-093 | Fase 11 | Pending |
+| HU-094 | Fase 11 | Pending |
+| HU-095 | Fase 11 | Pending |
+| HU-096 | Fase 11 | Pending |
+| HU-097 | Fase 12 | Pending |
+| HU-098 | Fase 12 | Pending |
+| HU-099 | Fase 12 | Pending |
+| HU-100 | Fase 12 | Pending |
+| HU-101 | Fase 12 | Pending |
+| HU-102 | Fase 12 | Pending |
+| HU-103 | Fase 13 | Pending |
+| HU-104 | Fase 13 | Pending |
+| HU-105 | Fase 13 | Pending |
+| HU-106 | Fase 13 | Pending |
+| HU-107 | Fase 13 | Pending |
+| HU-108 | Fase 13 | Pending |
+| HU-109 | Fase 13 | Pending |
+| HU-110 | Fase 13 | Pending ⚠️ endpoint/credenciais SEFAZ pendentes |
+| HU-111 | Fase 13 | Pending ⚠️ estratégia a confirmar (SEDUR) |
+| HU-112 | Fase 14 | Pending |
+| HU-113 | Fase 14 | Pending |
+| HU-114 | Fase 14 | Pending |
+| HU-115 | Fase 14 | Pending |
+| HU-116 | Fase 14 | Pending |
+| HU-117 | Fase 14 | Pending |
+| HU-118 | Fase 14 | Pending |
+| HU-119 | Fase 14 | Pending |
+| HU-120 | Fase 14 | Pending |
+| HU-121 | Fase 14 | Pending |
+| HU-122 | Fase 15 | Pending |
+| HU-123 | Fase 15 | Pending |
+| HU-124 | Fase 15 | Pending |
+| HU-125 | Fase 15 | Pending |
+| HU-126 | Fase 15 | Pending |
+| HU-127 | Fase 15 | Pending |
+| HU-128 | Fase 15 | Pending |
+| HU-129 | Fase 15 | Pending |
+| HU-130 | Fase 15 | Pending |
+| HU-131 | Fase 15 | Pending |
 
 **Coverage:**
 - v1 requirements: 131 total
-- Mapped to phases: 0
-- Unmapped: 131 ⚠️ (aguardando roadmap)
+- Mapped to phases: 131
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-09*
-*Last updated: 2026-06-09 after initial definition*
+*Last updated: 2026-06-09 after roadmap creation (traceability 131/131)*
