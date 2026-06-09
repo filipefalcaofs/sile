@@ -57,7 +57,18 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
   3. Requerente vincula e revoga procurador, e ações feitas em nome de terceiros ficam identificadas.
   4. Usuário consulta o próprio histórico de acessos.
   5. Toda ação relevante gera registro de auditoria com usuário, data/hora, origem, ação, resultado e versão de regras — mecanismo único (RN-002) reutilizável por todas as fases seguintes.
-**Plans**: TBD
+**Plans**: 9 plans
+
+Plans:
+- [x] 01-01-PLAN.md — Wave 0/fundação: dependências (Fortify/permission/activitylog), pt-BR, config/sile.php + Settings, SecurityHeaders (wave 1) ✓ 2026-06-09
+- [ ] 01-02-PLAN.md — Auditoria transversal RN-002: activitylog estendido, HasAuditoria, AuditService, 403 auditado, access_logs + listeners (wave 2)
+- [ ] 01-03-PLAN.md — Perfis/permissões seedados, rotas portal × gestão, landing pública, shared props, layouts e dashboards (wave 3)
+- [ ] 01-04-PLAN.md — HU-001 + HU-005: cadastro com CPF validado, papel cidadao e confirmação de e-mail (wave 4)
+- [ ] 01-05-PLAN.md — HU-006: termo LGPD versionado com middleware de aceite e re-aceite por versão (wave 5)
+- [ ] 01-06-PLAN.md — HU-002 + HU-003 + HU-004: login por perfil com lockout, recuperação e alteração de senha (wave 6)
+- [ ] 01-07-PLAN.md — HU-008 + HU-009: procuração e representação "em nome de" com revogação imediata (wave 6)
+- [ ] 01-08-PLAN.md — HU-007 + HU-010: perfil do usuário e histórico de acessos portal/gestão (wave 7)
+- [ ] 01-09-PLAN.md — Seeds dev + verificação integral + smoke E2E navegável (checkpoint humano) (wave 8)
 
 ### Phase 2: Administração Base
 **Goal**: Administradores mantêm os cadastros estruturantes (CNAEs, usuários, perfis) e os parâmetros de negócio do sistema sem depender de desenvolvedor.
@@ -267,7 +278,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Identidade, Acesso e Auditoria Transversal | 0/TBD | Not started | - |
+| 1. Identidade, Acesso e Auditoria Transversal | 1/9 | In progress | - |
 | 2. Administração Base | 0/TBD | Not started | - |
 | 3. Cadastro Empresarial | 0/TBD | Not started | - |
 | 4. Georreferenciamento e Território | 0/TBD | Not started | - |
