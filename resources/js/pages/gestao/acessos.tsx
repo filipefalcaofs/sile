@@ -1,5 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import Badge from '@/components/ui/badge';
+import EmptyState from '@/components/ui/empty-state';
+import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import GestaoLayout from '@/layouts/gestao-layout';
 
@@ -11,12 +13,6 @@ interface AccessLogItem {
     created_at: string;
 }
 
-interface PaginationLink {
-    url: string | null;
-    label: string;
-    active: boolean;
-}
-
 interface AcessosProps {
     targetUser: {
         id: number;
@@ -26,6 +22,9 @@ interface AcessosProps {
     logs: {
         data: AccessLogItem[];
         links: PaginationLink[];
+        from: number | null;
+        to: number | null;
+        total: number;
     };
 }
 
@@ -84,41 +83,13 @@ function EventBadge({ event }: { event: string }) {
     );
 }
 
-function Pagination({ links }: { links: PaginationLink[] }) {
-    if (links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="flex flex-wrap items-center gap-1">
-            {links.map((link, index) =>
-                link.url ? (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm font-medium transition ${
-                            link.active
-                                ? 'bg-brand-500 text-white'
-                                : 'text-gray-700 hover:bg-brand-50 hover:text-brand-500 dark:text-gray-400 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400'
-                        }`}
-                        dangerouslySetInnerHTML={{ __html: link.label }}
-                    />
-                ) : (
-                    <span
-                        key={index}
-                        className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm text-gray-400 dark:text-gray-600"
-                        dangerouslySetInnerHTML={{ __html: link.label }}
-                    />
-                ),
-            )}
-        </nav>
-    );
-}
-
 function AccessLogTable({ logs }: { logs: AcessosProps['logs'] }) {
     if (logs.data.length === 0) {
         return (
-            <p className="text-theme-sm text-gray-500 dark:text-gray-400">Nenhum acesso registrado ainda.</p>
+            <EmptyState
+                title="Nenhum acesso registrado"
+                description="Logins, saídas, tentativas falhas e bloqueios desta conta aparecem aqui."
+            />
         );
     }
 
@@ -179,7 +150,7 @@ function AccessLogTable({ logs }: { logs: AcessosProps['logs'] }) {
                     </Table>
                 </div>
             </div>
-            <Pagination links={logs.links} />
+            <Pagination links={logs.links} meta={{ from: logs.from, to: logs.to, total: logs.total }} />
         </>
     );
 }
