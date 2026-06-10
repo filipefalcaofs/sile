@@ -23,19 +23,17 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Password::defaults(function () {
-            $config = config('sile.security.password');
+            $rule = Password::min((int) Settings::get('security.password.min_length', 8));
 
-            $rule = Password::min($config['min_length']);
-
-            if ($config['require_mixed_case']) {
+            if (Settings::get('security.password.require_mixed_case', true)) {
                 $rule->mixedCase();
             }
 
-            if ($config['require_numbers']) {
+            if (Settings::get('security.password.require_numbers', true)) {
                 $rule->numbers();
             }
 
-            if ($config['require_symbols']) {
+            if (Settings::get('security.password.require_symbols', false)) {
                 $rule->symbols();
             }
 

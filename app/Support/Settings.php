@@ -2,17 +2,45 @@
 
 namespace App\Support;
 
+use App\Models\Parameter;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Cache;
+
 /**
  * Ponto único de leitura dos parâmetros de negócio do SILE.
  *
- * Na Fase 1 delega para config/sile.php (defaults versionados). Na Fase 2
- * (HU-014) o backend passa a ser banco administrável por interface sem
- * alterar nenhum call site — apenas esta classe muda.
+ * Backend da HU-014: banco (tabela parameters) com cache por chave e
+ * invalidação na gravação do Parameter — efeito sem deploy (CA-05). Ordem
+ * de resolução: cache → banco (value ?? default do catálogo) → config/sile.php
+ * → default do call site. Sem banco migrado (build Docker, CI, testes Unit)
+ * a QueryException cai no fallback de config — promessa da Fase 1 cumprida
+ * sem alterar nenhum call site.
  */
 class Settings
 {
     public static function get(string $key, mixed $default = null): mixed
     {
-        return config("sile.{$key}", $default);
+        $fallback = config("sile.{$key}", $default);
+
+        try {
+            return Cache::remember(
+                "sile.parameters.{$key}",
+                (int) config('sile.parameters.cache_ttl', 300),
+                function () use ($key, $fallback) {
+                    $parameter = Parameter::query()->where('key', $key)->first();
+
+                    return $parameter === null
+                        ? $fallback
+                        : ($parameter->typedValue() ?? $fallback);
+                },
+            );
+        } catch (QueryException) {
+            return $fallback;
+        }
+    }
+
+    public static function enabled(string $feature): bool
+    {
+        return (bool) static::get("features.{$feature}", false);
     }
 }

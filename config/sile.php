@@ -13,5 +13,13 @@ return [
     ],
     'ui' => [
         'access_history' => ['per_page' => 15],
+        'cnaes' => ['per_page' => 15],
+        'users' => ['per_page' => 15],
+    ],
+    'features' => [
+        'procuracoes' => true,
+    ],
+    'parameters' => [
+        'cache_ttl' => 300,
     ],
 ];
