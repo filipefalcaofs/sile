@@ -50,38 +50,27 @@ function PasswordField({ id, name, label, autoComplete, error, hint }: PasswordF
 
 export default function Register({ passwordRules }: RegisterProps) {
     return (
-        <AuthLayout subtitle="Crie sua conta para acessar os serviços do SILE">
+        <AuthLayout
+            title="Criar sua conta"
+            subtitle="Informe seus dados para acessar os serviços do SILE"
+        >
             <Head title="Criar conta" />
             <Form action="/register" method="post">
                 {({ errors, processing }) => (
                     <div className="space-y-5">
-                        <div>
-                            <Label htmlFor="name">Nome completo</Label>
-                            <Input
-                                id="name"
-                                type="text"
-                                name="name"
-                                autoComplete="name"
-                                required
-                                error={!!errors.name}
-                                hint={errors.name}
-                            />
-                        </div>
-
-                        <div>
-                            <Label htmlFor="email">E-mail</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                name="email"
-                                autoComplete="email"
-                                required
-                                error={!!errors.email}
-                                hint={errors.email}
-                            />
-                        </div>
-
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                            <div>
+                                <Label htmlFor="name">Nome completo</Label>
+                                <Input
+                                    id="name"
+                                    type="text"
+                                    name="name"
+                                    autoComplete="name"
+                                    required
+                                    error={!!errors.name}
+                                    hint={errors.name}
+                                />
+                            </div>
                             <div>
                                 <Label htmlFor="cpf">CPF</Label>
                                 <Input
@@ -93,6 +82,21 @@ export default function Register({ passwordRules }: RegisterProps) {
                                     required
                                     error={!!errors.cpf}
                                     hint={errors.cpf}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                            <div>
+                                <Label htmlFor="email">E-mail</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                    autoComplete="email"
+                                    required
+                                    error={!!errors.email}
+                                    hint={errors.email}
                                 />
                             </div>
                             <div>
@@ -130,11 +134,11 @@ export default function Register({ passwordRules }: RegisterProps) {
                             {processing ? 'Criando conta...' : 'Criar conta'}
                         </Button>
 
-                        <p className="text-center text-sm font-normal text-gray-700 dark:text-gray-400">
-                            Já tenho conta —{' '}
+                        <p className="border-t border-gray-100 pt-5 text-center text-sm font-normal text-gray-700 dark:border-gray-800 dark:text-gray-400">
+                            Já tem conta?{' '}
                             <Link
                                 href="/login"
-                                className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                                className="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
                             >
                                 Entrar
                             </Link>

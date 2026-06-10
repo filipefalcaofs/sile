@@ -2,7 +2,7 @@ import { Form, Head } from '@inertiajs/react';
 import { useState } from 'react';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
-import { EyeCloseIcon, EyeIcon } from '@/components/icons';
+import { EyeCloseIcon, EyeIcon, LockIcon } from '@/components/icons';
 import Button from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
 
@@ -51,7 +51,11 @@ function PasswordField({ id, name, label, autoFocus = false, error }: PasswordFi
 
 export default function ResetPassword({ email, token }: ResetPasswordProps) {
     return (
-        <AuthLayout subtitle="Defina uma nova senha para sua conta">
+        <AuthLayout
+            title="Redefinir senha"
+            subtitle="Defina uma nova senha para voltar a acessar sua conta"
+            icon={<LockIcon className="size-6" />}
+        >
             <Head title="Redefinir senha" />
             <Form action="/reset-password" method="post">
                 {({ errors, processing }) => (

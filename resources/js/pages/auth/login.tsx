@@ -18,7 +18,10 @@ export default function Login({ canResetPassword, status }: LoginProps) {
     const [remember, setRemember] = useState(false);
 
     return (
-        <AuthLayout subtitle="Acesse sua conta para acompanhar seus processos">
+        <AuthLayout
+            title="Acessar o SILE"
+            subtitle="Entre com seu e-mail e senha para acompanhar seus processos"
+        >
             <Head title="Entrar" />
             {status && (
                 <div className="mb-6">
@@ -28,6 +31,14 @@ export default function Login({ canResetPassword, status }: LoginProps) {
             <Form action="/login" method="post">
                 {({ errors, processing }) => (
                     <div className="space-y-6">
+                        {errors.email && (
+                            <Alert
+                                variant="error"
+                                title="Não foi possível entrar"
+                                message={errors.email}
+                            />
+                        )}
+
                         <div>
                             <Label htmlFor="email">E-mail</Label>
                             <Input
@@ -37,8 +48,8 @@ export default function Login({ canResetPassword, status }: LoginProps) {
                                 autoComplete="email"
                                 autoFocus
                                 required
+                                placeholder="nome@exemplo.com"
                                 error={!!errors.email}
-                                hint={errors.email}
                             />
                         </div>
 
@@ -80,7 +91,7 @@ export default function Login({ canResetPassword, status }: LoginProps) {
                             {canResetPassword && (
                                 <Link
                                     href="/forgot-password"
-                                    className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                                    className="text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
                                 >
                                     Esqueceu a senha?
                                 </Link>
@@ -91,11 +102,11 @@ export default function Login({ canResetPassword, status }: LoginProps) {
                             {processing ? 'Entrando...' : 'Entrar'}
                         </Button>
 
-                        <p className="text-center text-sm font-normal text-gray-700 dark:text-gray-400">
-                            Ainda não tenho conta —{' '}
+                        <p className="border-t border-gray-100 pt-5 text-center text-sm font-normal text-gray-700 dark:border-gray-800 dark:text-gray-400">
+                            Ainda não tem conta?{' '}
                             <Link
                                 href="/register"
-                                className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                                className="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
                             >
                                 Criar conta
                             </Link>

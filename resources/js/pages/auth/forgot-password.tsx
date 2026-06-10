@@ -1,6 +1,7 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
+import { LockIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
@@ -11,11 +12,12 @@ interface ForgotPasswordProps {
 
 export default function ForgotPassword({ status }: ForgotPasswordProps) {
     return (
-        <AuthLayout subtitle="Recupere o acesso à sua conta">
+        <AuthLayout
+            title="Recuperar senha"
+            subtitle="Informe seu e-mail e enviaremos um link para redefinir sua senha"
+            icon={<LockIcon className="size-6" />}
+        >
             <Head title="Esqueci minha senha" />
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
-                Informe seu e-mail e enviaremos um link para redefinir sua senha.
-            </p>
             {status && (
                 <div className="mb-6">
                     <Alert variant="success" title="Sucesso" message={status} />
@@ -33,6 +35,7 @@ export default function ForgotPassword({ status }: ForgotPasswordProps) {
                                 autoComplete="email"
                                 autoFocus
                                 required
+                                placeholder="nome@exemplo.com"
                                 error={!!errors.email}
                                 hint={errors.email}
                             />
@@ -42,10 +45,11 @@ export default function ForgotPassword({ status }: ForgotPasswordProps) {
                             {processing ? 'Enviando...' : 'Enviar link de recuperação'}
                         </Button>
 
-                        <p className="text-center text-sm font-normal text-gray-700 dark:text-gray-400">
+                        <p className="border-t border-gray-100 pt-5 text-center text-sm font-normal text-gray-700 dark:border-gray-800 dark:text-gray-400">
+                            Lembrou a senha?{' '}
                             <Link
                                 href="/login"
-                                className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                                className="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
                             >
                                 Voltar ao login
                             </Link>

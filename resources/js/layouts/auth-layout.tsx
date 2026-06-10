@@ -1,17 +1,31 @@
+import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { CheckCircleIcon } from '@/components/icons';
 import { ThemeProvider } from '@/contexts/theme-context';
 
 interface AuthLayoutProps {
+    title: string;
     subtitle: string;
+    icon?: ReactNode;
     children: ReactNode;
 }
 
+const institutionalHighlights = [
+    'Consulta de viabilidade locacional pela LOUOS (Lei nº 9.148/2016)',
+    'Classificação de risco conforme o Decreto nº 32.636/2020',
+    'Acompanhamento do processo com transparência e auditoria',
+];
+
 function BrandGridPattern() {
     return (
-        <svg className="absolute inset-0 -z-1 size-full" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <svg
+            className="absolute inset-0 size-full [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_80%)]"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+        >
             <defs>
                 <pattern id="sile-auth-grid" width="52" height="52" patternUnits="userSpaceOnUse">
-                    <path d="M52 0H0V52" fill="none" stroke="white" strokeOpacity="0.08" />
+                    <path d="M52 0H0V52" fill="none" stroke="white" strokeOpacity="0.07" />
                 </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#sile-auth-grid)" />
@@ -19,40 +33,94 @@ function BrandGridPattern() {
     );
 }
 
+function BrandPanel() {
+    return (
+        <div className="relative hidden w-full overflow-hidden bg-brand-950 bg-linear-to-br from-brand-950 via-brand-900 to-brand-950 lg:flex lg:w-1/2">
+            <BrandGridPattern />
+            <div
+                aria-hidden="true"
+                className="absolute -top-28 -right-24 size-96 rounded-full bg-brand-500/20 blur-3xl"
+            />
+            <div
+                aria-hidden="true"
+                className="absolute -bottom-32 -left-28 size-96 rounded-full bg-brand-400/10 blur-3xl"
+            />
+            <div className="relative z-1 flex w-full flex-col px-12 py-10 xl:px-20">
+                <div className="flex flex-1 items-center">
+                    <div className="mx-auto w-full max-w-md">
+                        <span className="block text-5xl font-semibold tracking-tight text-white">
+                            SILE
+                        </span>
+                        <p className="mt-4 text-lg font-medium text-white/90">
+                            Sistema de Licenciamento Eletrônico
+                        </p>
+                        <p className="mt-2 text-sm/6 text-white/60">
+                            Viabilidade locacional e licenciamento de atividades econômicas no
+                            município de Salvador.
+                        </p>
+                        <ul className="mt-10 space-y-5 border-t border-white/10 pt-10">
+                            {institutionalHighlights.map((highlight) => (
+                                <li key={highlight} className="flex items-start gap-3">
+                                    <CheckCircleIcon className="mt-0.5 size-5 shrink-0 text-brand-300" />
+                                    <span className="text-sm/6 text-white/80">{highlight}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+                <p className="mx-auto w-full max-w-md text-theme-xs font-medium tracking-wide text-white/40">
+                    Prefeitura de Salvador — SEDUR
+                </p>
+            </div>
+        </div>
+    );
+}
+
 /**
- * Layout de autenticação do TailAdmin: formulário à esquerda e painel
- * decorativo brand à direita (apenas em lg). Mantém o contrato
- * original (subtitle + children).
+ * Layout de autenticação: coluna do formulário (card com título e
+ * subtítulo por página, ícone opcional) e painel institucional brand
+ * à direita em telas lg+, com bullets sobre o SILE.
  */
-export default function AuthLayout({ subtitle, children }: AuthLayoutProps) {
+export default function AuthLayout({ title, subtitle, icon, children }: AuthLayoutProps) {
     return (
         <ThemeProvider>
-            <div className="relative z-1 bg-white p-6 dark:bg-gray-900 sm:p-0">
-                <div className="relative flex min-h-screen w-full flex-col justify-center dark:bg-gray-900 sm:p-0 lg:flex-row">
+            <div className="relative z-1 bg-gray-50 p-4 dark:bg-gray-900 sm:p-0">
+                <div className="relative flex min-h-screen w-full flex-col justify-center lg:flex-row">
                     <div className="flex w-full flex-1 flex-col lg:w-1/2">
-                        <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-10">
-                            <div className="mb-5 sm:mb-8">
-                                <h1 className="mb-2 text-2xl font-semibold tracking-tight text-gray-800 dark:text-white/90 sm:text-title-sm">
-                                    SILE
-                                </h1>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
-                            </div>
-                            {children}
-                        </div>
-                    </div>
-                    <div className="relative hidden h-auto w-full items-center bg-brand-950 dark:bg-white/5 lg:grid lg:w-1/2">
-                        <BrandGridPattern />
-                        <div className="relative z-1 flex items-center justify-center">
-                            <div className="flex max-w-xs flex-col items-center">
-                                <span className="mb-4 block text-4xl font-semibold tracking-tight text-white">
+                        <div className="mx-auto w-full max-w-md pt-5 sm:pt-10">
+                            <Link
+                                href="/"
+                                aria-label="Ir para a página inicial do SILE"
+                                className="inline-flex items-baseline gap-2"
+                            >
+                                <span className="text-xl font-bold tracking-tight text-gray-800 dark:text-white/90">
                                     SILE
                                 </span>
-                                <p className="text-center text-gray-400 dark:text-white/60">
-                                    Sistema de Licenciamento Eletrônico — SEDUR
-                                </p>
+                                <span className="text-theme-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500">
+                                    SEDUR
+                                </span>
+                            </Link>
+                        </div>
+                        <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-8 sm:py-12">
+                            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm sm:p-8 dark:border-gray-800 dark:bg-white/[0.03]">
+                                <div className="mb-6 sm:mb-8">
+                                    {icon && (
+                                        <div className="mb-5 flex size-12 items-center justify-center rounded-xl border border-brand-100 bg-brand-50 text-brand-600 dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-400">
+                                            {icon}
+                                        </div>
+                                    )}
+                                    <h1 className="mb-2 text-2xl font-semibold tracking-tight text-gray-800 sm:text-title-sm dark:text-white/90">
+                                        {title}
+                                    </h1>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        {subtitle}
+                                    </p>
+                                </div>
+                                {children}
                             </div>
                         </div>
                     </div>
+                    <BrandPanel />
                 </div>
             </div>
         </ThemeProvider>
