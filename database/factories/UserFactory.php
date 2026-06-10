@@ -72,6 +72,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * Indicate that the account is inactivated (login blocked — HU-012).
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'inactivated_at' => now(),
+        ]);
+    }
+
+    /**
      * Assign the cidadao role (role must be seeded first).
      */
     public function cidadao(): static

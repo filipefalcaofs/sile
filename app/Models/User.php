@@ -30,8 +30,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'inactivated_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function isInactive(): bool
+    {
+        return $this->inactivated_at !== null;
     }
 
     public function termAcceptances(): HasMany

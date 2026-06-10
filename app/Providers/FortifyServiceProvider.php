@@ -6,14 +6,18 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Models\AccessLog;
+use App\Models\User;
 use App\Support\Settings;
 use Illuminate\Cache\RateLimiter as CacheRateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Contracts\LoginResponse;
@@ -93,6 +97,34 @@ class FortifyServiceProvider extends ServiceProvider
             'email' => $request->email,
             'token' => $request->route('token'),
         ]));
+
+        // HU-012: conta inativada não autentica. Retorno null preserva o fluxo
+        // padrão (evento Failed -> access_log 'falha') sem revelar o estado da
+        // conta; a mensagem de inatividade só aparece com credenciais corretas.
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = User::query()->where('email', $request->email)->first();
+
+            if (! $user || ! Hash::check($request->password, $user->password)) {
+                return null;
+            }
+
+            if ($user->isInactive()) {
+                AccessLog::create([
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'event' => 'inativada',
+                    'ip_address' => $request->ip(),
+                    'user_agent' => substr((string) $request->userAgent(), 0, 500),
+                    'channel' => $request->routeIs('gestao.*') ? 'gestao' : 'portal',
+                ]);
+
+                throw ValidationException::withMessages([
+                    'email' => __('Sua conta está inativa. Procure o administrador do sistema.'),
+                ]);
+            }
+
+            return $user;
+        });
 
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower((string) $request->input(Fortify::username())).'|'.$request->ip());
