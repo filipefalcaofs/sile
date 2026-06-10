@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import Logo, { LogoMark } from '@/components/app/logo';
 import { HorizontalDotsIcon } from '@/components/icons';
 import { useSidebar } from '@/contexts/sidebar-context';
 
@@ -60,17 +61,10 @@ export default function AppSidebar({ groups, homeHref, subtitle }: AppSidebarPro
             <div className={`py-8 flex ${!isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'}`}>
                 <Link href={homeHref}>
                     {showText ? (
-                        <span className="flex flex-col">
-                            <span className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
-                                SILE
-                            </span>
-                            {subtitle && (
-                                <span className="text-theme-xs text-gray-500 dark:text-gray-400">{subtitle}</span>
-                            )}
-                        </span>
+                        <Logo subtitle={subtitle} />
                     ) : (
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-base font-semibold text-white">
-                            S
+                        <span className="text-brand-500">
+                            <LogoMark className="size-9" />
                         </span>
                     )}
                 </Link>

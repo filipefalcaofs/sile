@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import type { ComponentType, SVGProps } from 'react';
+import Logo from '@/components/app/logo';
 import {
     ArrowRightIcon,
     CheckCircleIcon,
@@ -128,13 +129,12 @@ function SiteHeader() {
     return (
         <header className="sticky top-0 z-50 border-b border-gray-200/70 bg-white/80 backdrop-blur-md dark:border-gray-800/70 dark:bg-gray-900/80">
             <div className="mx-auto flex w-full max-w-(--breakpoint-xl) items-center justify-between gap-4 px-4 py-4 sm:px-6">
-                <Link href="/" className="flex flex-col leading-tight">
-                    <span className="text-lg font-semibold tracking-tight text-gray-800 dark:text-white/90">
-                        SILE
-                    </span>
-                    <span className="text-theme-xs text-gray-500 dark:text-gray-400">
-                        SEDUR — Salvador
-                    </span>
+                <Link href="/" className="flex items-center">
+                    <Logo
+                        markClassName="size-8"
+                        textClassName="text-lg font-semibold tracking-tight text-gray-800 dark:text-white/90"
+                        subtitle="SEDUR — Salvador"
+                    />
                 </Link>
 
                 <nav aria-label="Navegação principal" className="hidden md:block">
@@ -361,9 +361,10 @@ function SiteFooter() {
         <footer className="border-t border-gray-200 dark:border-gray-800">
             <div className="mx-auto flex w-full max-w-(--breakpoint-xl) flex-col gap-10 px-4 py-12 sm:px-6 lg:flex-row lg:items-start lg:justify-between">
                 <div className="max-w-md">
-                    <p className="text-lg font-semibold tracking-tight text-gray-800 dark:text-white/90">
-                        SILE
-                    </p>
+                    <Logo
+                        markClassName="size-8"
+                        textClassName="text-lg font-semibold tracking-tight text-gray-800 dark:text-white/90"
+                    />
                     <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
                         Sistema de Licenciamento Eletrônico
                         <br />

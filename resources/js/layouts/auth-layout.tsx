@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import Logo, { LogoMark } from '@/components/app/logo';
 import { CheckCircleIcon } from '@/components/icons';
 import { ThemeProvider } from '@/contexts/theme-context';
 
@@ -48,8 +49,11 @@ function BrandPanel() {
             <div className="relative z-1 flex w-full flex-col px-12 py-10 xl:px-20">
                 <div className="flex flex-1 items-center">
                     <div className="mx-auto w-full max-w-md">
-                        <span className="block text-5xl font-semibold tracking-tight text-white">
-                            SILE
+                        <span className="flex items-center gap-4">
+                            <span className="flex size-16 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/15">
+                                <LogoMark className="size-10" />
+                            </span>
+                            <span className="block text-5xl font-semibold tracking-tight text-white">SILE</span>
                         </span>
                         <p className="mt-4 text-lg font-medium text-white/90">
                             Sistema de Licenciamento Eletrônico
@@ -91,14 +95,13 @@ export default function AuthLayout({ title, subtitle, icon, children }: AuthLayo
                             <Link
                                 href="/"
                                 aria-label="Ir para a página inicial do SILE"
-                                className="inline-flex items-baseline gap-2"
+                                className="inline-flex items-center"
                             >
-                                <span className="text-xl font-bold tracking-tight text-gray-800 dark:text-white/90">
-                                    SILE
-                                </span>
-                                <span className="text-theme-xs font-semibold tracking-widest text-gray-400 uppercase dark:text-gray-500">
-                                    SEDUR
-                                </span>
+                                <Logo
+                                    markClassName="size-8"
+                                    textClassName="text-xl font-bold tracking-tight text-gray-800 dark:text-white/90"
+                                    subtitle="SEDUR"
+                                />
                             </Link>
                         </div>
                         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-8 sm:py-12">
