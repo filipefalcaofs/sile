@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureLgpdTermAccepted;
+use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\Audit\AuditService;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
             SecurityHeaders::class,
+            EnsureUserIsActive::class,
         ]);
 
         $middleware->alias([

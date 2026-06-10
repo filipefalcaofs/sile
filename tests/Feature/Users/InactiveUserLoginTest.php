@@ -84,4 +84,30 @@ class InactiveUserLoginTest extends TestCase
 
         $this->assertAuthenticatedAs($user);
     }
+
+    public function test_sessao_ativa_de_usuario_inativado_e_derrubada(): void
+    {
+        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($user);
+
+        $user->forceFill(['inactivated_at' => now()])->save();
+
+        $response = $this->get('/portal');
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors([
+            'email' => 'Sua conta está inativa. Procure o administrador do sistema.',
+        ]);
+        $this->assertGuest();
+
+        $this->get('/portal')->assertRedirect(route('login'));
+    }
+
+    public function test_usuario_ativo_navega_normalmente_com_o_middleware(): void
+    {
+        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($user)->get('/portal')->assertOk();
+    }
 }
