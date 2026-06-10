@@ -81,7 +81,7 @@ Mapa de grupos de teste → HU (do 02-RESEARCH.md):
 ## Wave 0 Requirements
 
 - [ ] CSV oficial convertido e versionado em `database/data/` (com script de proveniência) ANTES do CnaeSeeder
-- [ ] Suíte atual verde no início da fase (regressão: 122/122)
+- [ ] Suíte atual verde no início da fase (regressão: 122/122) — baseline executado pelo ORQUESTRADOR antes de despachar a wave 1 (planos paralelos não rodam full-suite durante a wave)
 
 ---
 
