@@ -10,31 +10,31 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 2 of 15 — Administração Base (HU-011 a HU-014)
-Plan: 3 of 8 completos (02-01, 02-02, 02-03)
-Status: In progress — wave 1 completa (02-01, 02-02 e 02-03 concluídos)
-Last activity: 2026-06-10 — Completed 02-02-PLAN.md (registry de parâmetros + Settings banco+cache+fallback sem tocar call sites)
+Plan: 4 of 8 completos (02-01, 02-02, 02-03, 02-04)
+Status: In progress — wave 2 completa (02-04 concluído; suíte 159/159 verde no fechamento)
+Last activity: 2026-06-10 — Completed 02-04-PLAN.md (HU-011: import oficial de 1.331 CNAEs auditado + CRUD + tela com busca)
 
-Progress: [█░░░░░░░░░] 9% (1/15 fases; fase 2: 3/8 planos)
+Progress: [█░░░░░░░░░] 10% (1/15 fases; fase 2: 4/8 planos)
 
-Next step: orquestrador fecha a wave 1 (suíte completa) e despacha a wave 2
+Next step: orquestrador despacha a wave 3 (02-05 — HU-012 gestão de usuários)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 11 min
-- Total execution time: 2.01 h
+- Total plans completed: 12
+- Average duration: 12 min
+- Total execution time: 2.38 h
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-identidade | 9/9 ✓ | ~96 min | 11 min |
-| 02-administracao-base | 3/8 | ~33 min | 11 min |
+| 02-administracao-base | 4/8 | ~55 min | 14 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-07 (13 min), 01-08 (10 min), 02-01 (9 min), 02-03 (10 min), 02-02 (14 min)
-- Trend: estável
+- Last 5 plans: 01-08 (10 min), 02-01 (9 min), 02-03 (10 min), 02-02 (14 min), 02-04 (22 min)
+- Trend: estável (02-04 maior por cobrir import + CRUD + tela em 3 tasks)
 
 *Atualizado após cada plano concluído*
 
@@ -82,6 +82,9 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [02-02] Settings::get com backend banco+cache+fallback (cache → parameters.value ?? default do catálogo → config/sile.php → default do call site; QueryException → config) mantendo assinatura — call sites e tests/Unit/Support/SettingsTest.php intactos. Settings::enabled(feature) para toggles.
 - [02-02] Parameter: sensitive FORA do fillable e ordenado antes de value na factory (mutator condicional lê a flag — Pitfall 3); SEM HasAuditoria (vazaria sensível) — histórico explícito com mascaramento entra no 02-07; requires_connection_test é contrato do RN-010 (implementação real na Fase 13).
 - [02-02] ParameterSeeder upsert SÓ de metadados (value administrado preservado em re-seed); 10 chaves nos grupos seguranca/ui/features; NÃO registrado no DatabaseSeeder (responsabilidade do 02-08). TTL do cache é constante técnica (sile.parameters.cache_ttl), não parâmetro do registry.
+- [02-04] Import oficial de CNAEs: upsert por code NÃO toca active (desativação administrada sobrevive a re-import); divergência 9900-8/00 (publicação cita 1.332, arquivo traz 1.331) registrada no relatório auditado (rules_version cnae-subclasses-2.3), nunca inserida silenciosamente — caminho é o CRUD manual (testado com esse caso real).
+- [02-04] Cnae: PK surrogate id (code unique em dígitos, não PK), hierarquia desnormalizada, accessor formatted_code — pronto para dimensões de risco da Fase 6 sem retrabalho. UpdateCnaeRequest valida só description/active (código imutável na edição, padrão CPF). CnaeSeeder fora do DatabaseSeeder (02-08).
+- [02-04] Form do Inertia v3 SOBRESCREVE onSubmit custom (handler interno definido após spread das props): confirmações de submit vão no onClick do botão type=submit com preventDefault. Busca por código só aplica branch de dígitos quando o termo contém dígitos (termo textual não vira LIKE '%').
 
 ### Pending Todos
 
@@ -103,8 +106,8 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-10 14:30 UTC
-Stopped at: Completed 02-02-PLAN.md (Fase 2, wave 1 completa — 02-01, 02-02 e 02-03 concluídos; suíte completa no fechamento da wave pelo orquestrador)
+Last session: 2026-06-10 15:00 UTC
+Stopped at: Completed 02-04-PLAN.md (Fase 2, wave 2 completa — suíte 159/159, typecheck/build verdes; seed oficial verificado em banco dev com evidência fresca)
 Resume file: None
 
 Nota operacional: durante o 01-09 houve uma sessão de agente concorrente no mesmo working directory (commits 79b3b81/e4010ce da Task 1 e composer run dev). Conteúdo validado e aproveitado sem duplicação. Evitar duas sessões GSD simultâneas no mesmo repositório.
