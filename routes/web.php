@@ -3,10 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'appName' => config('app.name'),
-        'laravelVersion' => app()->version(),
-        'phpVersion' => PHP_VERSION,
-    ]);
-})->name('home');
+Route::get('/', fn () => Inertia::render('home'))->name('home');
+
+require __DIR__.'/portal.php';
+require __DIR__.'/gestao.php';
