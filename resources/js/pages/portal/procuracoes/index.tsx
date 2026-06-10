@@ -1,9 +1,13 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
+import { FileIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
+import ConfirmDialog from '@/components/ui/confirm-dialog';
+import EmptyState from '@/components/ui/empty-state';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import PortalLayout from '@/layouts/portal-layout';
 
@@ -147,12 +151,38 @@ function GrantProcurationCard() {
     );
 }
 
-function GrantedTable({ granted }: { granted: ProcurationItem[] }) {
+function focusGrantForm() {
+    const input = document.getElementById('attorney_email');
+
+    if (input instanceof HTMLInputElement) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input.focus({ preventScroll: true });
+    }
+}
+
+function GrantedTable({
+    granted,
+    canGrant,
+    onRevoke,
+}: {
+    granted: ProcurationItem[];
+    canGrant: boolean;
+    onRevoke: (item: ProcurationItem) => void;
+}) {
     if (granted.length === 0) {
         return (
-            <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                Você ainda não outorgou procurações.
-            </p>
+            <EmptyState
+                icon={<FileIcon className="size-7" aria-hidden="true" />}
+                title="Nenhuma procuração outorgada"
+                description="Você ainda não vinculou um procurador para atuar em seu nome."
+                action={
+                    canGrant ? (
+                        <Button size="sm" variant="outline" onClick={focusGrantForm}>
+                            Vincular procurador
+                        </Button>
+                    ) : undefined
+                }
+            />
         );
     }
 
@@ -203,14 +233,13 @@ function GrantedTable({ granted }: { granted: ProcurationItem[] }) {
                                 </TableCell>
                                 <TableCell className={bodyCellStyles}>
                                     {item.is_active ? (
-                                        <Link
-                                            href={`/portal/procuracoes/${item.id}`}
-                                            method="delete"
-                                            as="button"
+                                        <button
+                                            type="button"
+                                            onClick={() => onRevoke(item)}
                                             className={errorActionStyles}
                                         >
                                             Revogar
-                                        </Link>
+                                        </button>
                                     ) : (
                                         <span className="text-gray-400 dark:text-gray-500">—</span>
                                     )}
@@ -227,9 +256,11 @@ function GrantedTable({ granted }: { granted: ProcurationItem[] }) {
 function ReceivedTable({ received }: { received: ProcurationItem[] }) {
     if (received.length === 0) {
         return (
-            <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                Você ainda não recebeu procurações.
-            </p>
+            <EmptyState
+                icon={<FileIcon className="size-7" aria-hidden="true" />}
+                title="Nenhuma procuração recebida"
+                description="Quando um interessado vincular você como procurador, o registro aparecerá aqui."
+            />
         );
     }
 
@@ -291,6 +322,29 @@ function ReceivedTable({ received }: { received: ProcurationItem[] }) {
 }
 
 export default function ProcuracoesIndex({ granted, received, procuracoesEnabled }: ProcuracoesIndexProps) {
+    const [revokeTarget, setRevokeTarget] = useState<ProcurationItem | null>(null);
+    const [revoking, setRevoking] = useState(false);
+
+    function closeRevokeDialog() {
+        if (!revoking) {
+            setRevokeTarget(null);
+        }
+    }
+
+    function confirmRevoke() {
+        if (!revokeTarget) {
+            return;
+        }
+
+        router.delete(`/portal/procuracoes/${revokeTarget.id}`, {
+            onStart: () => setRevoking(true),
+            onFinish: () => {
+                setRevoking(false);
+                setRevokeTarget(null);
+            },
+        });
+    }
+
     return (
         <PortalLayout>
             <Head title="Minhas procurações" />
@@ -314,7 +368,11 @@ export default function ProcuracoesIndex({ granted, received, procuracoesEnabled
                         </h3>
                     </div>
                     <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
-                        <GrantedTable granted={granted} />
+                        <GrantedTable
+                            granted={granted}
+                            canGrant={procuracoesEnabled}
+                            onRevoke={setRevokeTarget}
+                        />
                     </div>
                 </div>
 
@@ -329,6 +387,30 @@ export default function ProcuracoesIndex({ granted, received, procuracoesEnabled
                     </div>
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={revokeTarget !== null}
+                onClose={closeRevokeDialog}
+                onConfirm={confirmRevoke}
+                title="Revogar procuração"
+                description={
+                    revokeTarget ? (
+                        <>
+                            A procuração outorgada a{' '}
+                            <span className="font-medium text-gray-800 dark:text-white/90">
+                                {revokeTarget.name}
+                            </span>{' '}
+                            será revogada imediatamente e o procurador deixará de poder atuar em
+                            seu nome.
+                        </>
+                    ) : (
+                        ''
+                    )
+                }
+                confirmLabel="Revogar"
+                variant="danger"
+                processing={revoking}
+            />
         </PortalLayout>
     );
 }
