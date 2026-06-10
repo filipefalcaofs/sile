@@ -25,6 +25,11 @@ class RolesAndPermissionsSeederTest extends TestCase
             'acessar-gestao',
             'consultar-acessos-de-qualquer-conta',
             'gerenciar-procuracoes-proprias',
+            'manter-cnaes',
+            'manter-usuarios',
+            'manter-perfis',
+            'manter-parametros',
+            'consultar-cnaes',
         ];
 
         foreach ($permissions as $permission) {
@@ -40,12 +45,24 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->assertTrue($administrador->hasPermissionTo('acessar-gestao'));
         $this->assertTrue($administrador->hasPermissionTo('consultar-acessos-de-qualquer-conta'));
 
-        $this->assertTrue(Role::findByName('analista', 'web')->hasPermissionTo('acessar-gestao'));
-        $this->assertTrue(Role::findByName('gestor', 'web')->hasPermissionTo('acessar-gestao'));
+        foreach (['manter-cnaes', 'manter-usuarios', 'manter-perfis', 'manter-parametros', 'consultar-cnaes'] as $permission) {
+            $this->assertTrue($administrador->hasPermissionTo($permission));
+        }
+
+        $analista = Role::findByName('analista', 'web');
+        $this->assertTrue($analista->hasPermissionTo('acessar-gestao'));
+        $this->assertTrue($analista->hasPermissionTo('consultar-cnaes'));
+        $this->assertFalse($analista->hasPermissionTo('manter-cnaes'));
+
+        $gestor = Role::findByName('gestor', 'web');
+        $this->assertTrue($gestor->hasPermissionTo('acessar-gestao'));
+        $this->assertTrue($gestor->hasPermissionTo('consultar-cnaes'));
+        $this->assertFalse($gestor->hasPermissionTo('manter-cnaes'));
 
         $cidadao = Role::findByName('cidadao', 'web');
         $this->assertTrue($cidadao->hasPermissionTo('gerenciar-procuracoes-proprias'));
         $this->assertFalse($cidadao->hasPermissionTo('acessar-gestao'));
+        $this->assertFalse($cidadao->hasPermissionTo('consultar-cnaes'));
     }
 
     public function test_estados_da_factory_atribuem_papel(): void
@@ -64,6 +81,19 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(3, Permission::query()->count());
+        $this->assertSame(8, Permission::query()->count());
+    }
+
+    public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        Role::findByName('analista', 'web')->givePermissionTo(
+            Permission::firstOrCreate(['name' => 'permissao-extra-ui', 'guard_name' => 'web']),
+        );
+
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertTrue(Role::findByName('analista', 'web')->hasPermissionTo('permissao-extra-ui'));
     }
 }
