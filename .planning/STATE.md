@@ -121,6 +121,8 @@ Nenhum.
 
 ### Blockers/Concerns
 
+- [Identidade] Marca institucional oficial a confirmar: o usuário indicou a página de marcas da SEDUR **estadual** (https://www.ba.gov.br/sedur/institucional/marcas — manual Secom, marca Sedur, marca do Governo, brasão do Estado; arquivos em SharePoint com login, download direto bloqueado). A documentação do projeto referencia a SEDUR **municipal de Salvador** (LOUOS municipal, Decreto 32.636/2020, Prefeitura de Salvador). Confirmar qual ente é o dono do SILE antes de aplicar marca institucional/co-branding; até lá, o sistema usa a logo própria do SILE (components/app/logo.tsx).
+
 Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Nenhuma bloqueia as Fases 1 a 3.
 
 - [Fase 8] HU-071/HU-072 (DAM e pagamento): escopo a confirmar — não implementar antes da confirmação.
