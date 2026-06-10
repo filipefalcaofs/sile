@@ -10,30 +10,30 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 2 of 15 — Administração Base (HU-011 a HU-014)
-Plan: 2 of 8 completos (02-01, 02-03)
-Status: In progress — wave 1 (02-01 e 02-03 concluídos; 02-02 em paralelo)
-Last activity: 2026-06-10 — Completed 02-03-PLAN.md (inativação de conta: login bloqueado via Fortify + sessão derrubada por middleware)
+Plan: 3 of 8 completos (02-01, 02-02, 02-03)
+Status: In progress — wave 1 completa (02-01, 02-02 e 02-03 concluídos)
+Last activity: 2026-06-10 — Completed 02-02-PLAN.md (registry de parâmetros + Settings banco+cache+fallback sem tocar call sites)
 
-Progress: [█░░░░░░░░░] 8% (1/15 fases; fase 2: 2/8 planos)
+Progress: [█░░░░░░░░░] 9% (1/15 fases; fase 2: 3/8 planos)
 
 Next step: orquestrador fecha a wave 1 (suíte completa) e despacha a wave 2
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
+- Total plans completed: 11
 - Average duration: 11 min
-- Total execution time: 1.78 h
+- Total execution time: 2.01 h
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-identidade | 9/9 ✓ | ~96 min | 11 min |
-| 02-administracao-base | 2/8 | ~19 min | 10 min |
+| 02-administracao-base | 3/8 | ~33 min | 11 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-06 (13 min), 01-07 (13 min), 01-08 (10 min), 02-01 (9 min), 02-03 (10 min)
+- Last 5 plans: 01-07 (13 min), 01-08 (10 min), 02-01 (9 min), 02-03 (10 min), 02-02 (14 min)
 - Trend: estável
 
 *Atualizado após cada plano concluído*
@@ -79,6 +79,9 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [02-01] RolesAndPermissionsSeeder aditivo (givePermissionTo, nunca sync): re-seed não desfaz ajustes de permissão feitos pelo admin via HU-013. 8 permissões; administrador com todas as manter-*; analista/gestor com consultar-cnaes.
 - [02-03] Inativação de conta: users.inactivated_at (fora do fillable — só forceFill em fluxo autorizado); Fortify::authenticateUsing bloqueia com mensagem pt-BR + access_log evento 'inativada' (curto — varchar(20)); anti-oráculo: senha errada retorna null (fluxo padrão 'falha').
 - [02-03] EnsureUserIsActive no append GLOBAL do grupo web (bootstrap/app.php): sessão aberta de inativado derrubada na request seguinte (invalidate+regenerateToken); cobre portal/gestão/settings sem tocar arquivos de rota. 02-05 só grava/limpa inactivated_at.
+- [02-02] Settings::get com backend banco+cache+fallback (cache → parameters.value ?? default do catálogo → config/sile.php → default do call site; QueryException → config) mantendo assinatura — call sites e tests/Unit/Support/SettingsTest.php intactos. Settings::enabled(feature) para toggles.
+- [02-02] Parameter: sensitive FORA do fillable e ordenado antes de value na factory (mutator condicional lê a flag — Pitfall 3); SEM HasAuditoria (vazaria sensível) — histórico explícito com mascaramento entra no 02-07; requires_connection_test é contrato do RN-010 (implementação real na Fase 13).
+- [02-02] ParameterSeeder upsert SÓ de metadados (value administrado preservado em re-seed); 10 chaves nos grupos seguranca/ui/features; NÃO registrado no DatabaseSeeder (responsabilidade do 02-08). TTL do cache é constante técnica (sile.parameters.cache_ttl), não parâmetro do registry.
 
 ### Pending Todos
 
@@ -100,8 +103,8 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-10 14:25 UTC
-Stopped at: Completed 02-03-PLAN.md (Fase 2, wave 1 — 02-01 e 02-03 concluídos; 02-02 em execução paralela; suíte completa no fechamento da wave pelo orquestrador)
+Last session: 2026-06-10 14:30 UTC
+Stopped at: Completed 02-02-PLAN.md (Fase 2, wave 1 completa — 02-01, 02-02 e 02-03 concluídos; suíte completa no fechamento da wave pelo orquestrador)
 Resume file: None
 
 Nota operacional: durante o 01-09 houve uma sessão de agente concorrente no mesmo working directory (commits 79b3b81/e4010ce da Task 1 e composer run dev). Conteúdo validado e aproveitado sem duplicação. Evitar duas sessões GSD simultâneas no mesmo repositório.
