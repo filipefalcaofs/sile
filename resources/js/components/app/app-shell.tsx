@@ -1,24 +1,24 @@
 import type { ReactNode } from 'react';
 import AppHeader from '@/components/app/app-header';
 import AppSidebar from '@/components/app/app-sidebar';
-import type { SidebarItem } from '@/components/app/app-sidebar';
+import type { SidebarGroup } from '@/components/app/app-sidebar';
 import Backdrop from '@/components/app/backdrop';
 import { SidebarProvider, useSidebar } from '@/contexts/sidebar-context';
 
 interface AppShellProps {
-    items: SidebarItem[];
+    groups: SidebarGroup[];
     homeHref: string;
     subtitle?: string;
     children: ReactNode;
 }
 
-function ShellContent({ items, homeHref, subtitle, children }: AppShellProps) {
+function ShellContent({ groups, homeHref, subtitle, children }: AppShellProps) {
     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
     return (
         <div className="min-h-screen xl:flex">
             <div>
-                <AppSidebar items={items} homeHref={homeHref} subtitle={subtitle} />
+                <AppSidebar groups={groups} homeHref={homeHref} subtitle={subtitle} />
                 <Backdrop />
             </div>
             <div

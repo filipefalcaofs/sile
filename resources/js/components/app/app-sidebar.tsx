@@ -10,20 +10,26 @@ export interface SidebarItem {
     visible?: boolean;
 }
 
-interface AppSidebarProps {
+export interface SidebarGroup {
+    label: string;
     items: SidebarItem[];
+}
+
+interface AppSidebarProps {
+    groups: SidebarGroup[];
     homeHref: string;
     subtitle?: string;
 }
 
 /**
- * Sidebar do TailAdmin adaptada: recebe os itens de navegação por
- * props (já filtrados por permissão pelo layout) e marca o item ativo
+ * Sidebar do TailAdmin adaptada: recebe grupos de navegação com
+ * headings (subdivisões, como MENU/OTHERS no template) por props — já
+ * filtrados por permissão pelo layout — e marca o item ativo
  * comparando com a URL atual do Inertia. O item do painel (homeHref)
  * só fica ativo em correspondência exata, para não acender junto com
- * as rotas filhas.
+ * as rotas filhas. Grupos sem itens visíveis não renderizam.
  */
-export default function AppSidebar({ items, homeHref, subtitle }: AppSidebarProps) {
+export default function AppSidebar({ groups, homeHref, subtitle }: AppSidebarProps) {
     const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
     const { url } = usePage();
 
@@ -37,7 +43,9 @@ export default function AppSidebar({ items, homeHref, subtitle }: AppSidebarProp
         return currentPath === href || currentPath.startsWith(`${href}/`);
     };
 
-    const visibleItems = items.filter((item) => item.visible !== false);
+    const visibleGroups = groups
+        .map((group) => ({ ...group, items: group.items.filter((item) => item.visible !== false) }))
+        .filter((group) => group.items.length > 0);
     const showText = isExpanded || isHovered || isMobileOpen;
 
     return (
@@ -69,39 +77,41 @@ export default function AppSidebar({ items, homeHref, subtitle }: AppSidebarProp
             </div>
             <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
                 <nav className="mb-6">
-                    <div className="flex flex-col gap-4">
-                        <div>
-                            <h2
-                                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                                    !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'
-                                }`}
-                            >
-                                {showText ? 'Menu' : <HorizontalDotsIcon className="size-6" />}
-                            </h2>
-                            <ul className="flex flex-col gap-4">
-                                {visibleItems.map((item) => (
-                                    <li key={item.href}>
-                                        <Link
-                                            href={item.href}
-                                            className={`menu-item group ${
-                                                isActive(item.href) ? 'menu-item-active' : 'menu-item-inactive'
-                                            }`}
-                                        >
-                                            <span
-                                                className={`menu-item-icon-size ${
-                                                    isActive(item.href)
-                                                        ? 'menu-item-icon-active'
-                                                        : 'menu-item-icon-inactive'
+                    <div className="flex flex-col gap-6">
+                        {visibleGroups.map((group) => (
+                            <div key={group.label}>
+                                <h2
+                                    className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                                        !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'
+                                    }`}
+                                >
+                                    {showText ? group.label : <HorizontalDotsIcon className="size-6" />}
+                                </h2>
+                                <ul className="flex flex-col gap-4">
+                                    {group.items.map((item) => (
+                                        <li key={item.href}>
+                                            <Link
+                                                href={item.href}
+                                                className={`menu-item group ${
+                                                    isActive(item.href) ? 'menu-item-active' : 'menu-item-inactive'
                                                 }`}
                                             >
-                                                {item.icon}
-                                            </span>
-                                            {showText && <span className="menu-item-text">{item.name}</span>}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                                                <span
+                                                    className={`menu-item-icon-size ${
+                                                        isActive(item.href)
+                                                            ? 'menu-item-icon-active'
+                                                            : 'menu-item-icon-inactive'
+                                                    }`}
+                                                >
+                                                    {item.icon}
+                                                </span>
+                                                {showText && <span className="menu-item-text">{item.name}</span>}
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
                     </div>
                 </nav>
             </div>

@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import AppShell from '@/components/app/app-shell';
-import type { SidebarItem } from '@/components/app/app-sidebar';
+import type { SidebarGroup } from '@/components/app/app-sidebar';
 import { AlertIcon, FileIcon, GridIcon, GroupIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import { ThemeProvider } from '@/contexts/theme-context';
@@ -11,10 +11,19 @@ interface PortalLayoutProps {
     children: ReactNode;
 }
 
-const items: SidebarItem[] = [
-    { name: 'Meu painel', href: '/portal', icon: <GridIcon /> },
-    { name: 'Procurações', href: '/portal/procuracoes', icon: <FileIcon /> },
-    { name: 'Meus acessos', href: '/portal/acessos', icon: <GroupIcon /> },
+const groups: SidebarGroup[] = [
+    {
+        label: 'Início',
+        items: [{ name: 'Meu painel', href: '/portal', icon: <GridIcon /> }],
+    },
+    {
+        label: 'Serviços',
+        items: [{ name: 'Procurações', href: '/portal/procuracoes', icon: <FileIcon /> }],
+    },
+    {
+        label: 'Minha conta',
+        items: [{ name: 'Meus acessos', href: '/portal/acessos', icon: <GroupIcon /> }],
+    },
 ];
 
 export default function PortalLayout({ children }: PortalLayoutProps) {
@@ -22,7 +31,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
 
     return (
         <ThemeProvider>
-            <AppShell items={items} homeHref="/portal" subtitle="Portal do Cidadão">
+            <AppShell groups={groups} homeHref="/portal" subtitle="Portal do Cidadão">
                 {actingFor && (
                     <div className="mb-6 rounded-xl border border-warning-500 bg-warning-50 p-4 dark:border-warning-500/30 dark:bg-warning-500/15">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
