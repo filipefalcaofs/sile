@@ -3,6 +3,7 @@
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\DashboardController;
+use App\Http\Controllers\Gestao\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'permission:acessar-gestao', 'lgpd.accepted'])
@@ -24,5 +25,11 @@ Route::middleware(['auth', 'verified', 'permission:acessar-gestao', 'lgpd.accept
             Route::post('cnaes', [CnaeController::class, 'store'])->name('cnaes.store');
             Route::put('cnaes/{cnae}', [CnaeController::class, 'update'])->name('cnaes.update');
             Route::delete('cnaes/{cnae}', [CnaeController::class, 'destroy'])->name('cnaes.destroy');
+        });
+
+        Route::middleware('permission:manter-usuarios')->group(function () {
+            Route::get('usuarios', [UserManagementController::class, 'index'])->name('usuarios.index');
+            Route::put('usuarios/{user}/papel', [UserManagementController::class, 'updateRole'])->name('usuarios.papel.update');
+            Route::put('usuarios/{user}/inativacao', [UserManagementController::class, 'toggleActivation'])->name('usuarios.inativacao.update');
         });
     });
