@@ -33,7 +33,7 @@ class EnvironmentAccessTest extends TestCase
 
     public function test_cidadao_acessa_dashboard_do_portal(): void
     {
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao)
             ->get('/portal')
@@ -43,7 +43,7 @@ class EnvironmentAccessTest extends TestCase
 
     public function test_props_de_autenticacao_sao_compartilhadas(): void
     {
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao)
             ->get('/portal')
@@ -57,6 +57,8 @@ class EnvironmentAccessTest extends TestCase
 
     public function test_cidadao_nao_acessa_gestao_e_tentativa_e_auditada(): void
     {
+        // Sem aceite do termo de propósito: a permissão é avaliada ANTES do
+        // gate LGPD, então o 403 deve prevalecer (HU-002 CA-04).
         $cidadao = User::factory()->cidadao()->create();
 
         $this->actingAs($cidadao)->get('/gestao')->assertForbidden();
@@ -70,7 +72,7 @@ class EnvironmentAccessTest extends TestCase
 
     public function test_administrador_acessa_dashboard_da_gestao(): void
     {
-        $administrador = User::factory()->administrador()->create();
+        $administrador = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($administrador)
             ->get('/gestao')
@@ -80,7 +82,7 @@ class EnvironmentAccessTest extends TestCase
 
     public function test_analista_acessa_gestao(): void
     {
-        $analista = User::factory()->analista()->create();
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($analista)->get('/gestao')->assertOk();
     }

@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\LegalTerm;
+use App\Models\LegalTermAcceptance;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -99,5 +101,23 @@ class UserFactory extends Factory
     public function administrador(): static
     {
         return $this->afterCreating(fn (User $user) => $user->assignRole('administrador'));
+    }
+
+    /**
+     * Accept the current LGPD term (creates a published v1 if none exists).
+     */
+    public function withAcceptedLgpdTerm(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $term = LegalTerm::current('lgpd')
+                ?? LegalTerm::factory()->published()->create(['type' => 'lgpd', 'version' => 1]);
+
+            LegalTermAcceptance::create([
+                'user_id' => $user->id,
+                'legal_term_id' => $term->id,
+                'ip_address' => '127.0.0.1',
+                'accepted_at' => now(),
+            ]);
+        });
     }
 }

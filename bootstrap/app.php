@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureLgpdTermAccepted;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\Audit\AuditService;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
+            'lgpd.accepted' => EnsureLgpdTermAccepted::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
