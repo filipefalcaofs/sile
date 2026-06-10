@@ -1,84 +1,57 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import AppShell from '@/components/app/app-shell';
+import type { SidebarItem } from '@/components/app/app-sidebar';
+import { AlertIcon, FileIcon, GridIcon, GroupIcon } from '@/components/icons';
+import Alert from '@/components/ui/alert';
+import { ThemeProvider } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
 
 interface PortalLayoutProps {
     children: ReactNode;
 }
 
-const navItems = [
-    { label: 'Meu painel', href: '/portal' },
-    { label: 'Procurações', href: '/portal/procuracoes' },
-    { label: 'Meus acessos', href: '/portal/acessos' },
+const items: SidebarItem[] = [
+    { name: 'Meu painel', href: '/portal', icon: <GridIcon /> },
+    { name: 'Procurações', href: '/portal/procuracoes', icon: <FileIcon /> },
+    { name: 'Meus acessos', href: '/portal/acessos', icon: <GroupIcon /> },
 ];
 
 export default function PortalLayout({ children }: PortalLayoutProps) {
-    const { auth, actingFor, flash } = usePage<SharedProps>().props;
-
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    const { actingFor, flash } = usePage<SharedProps>().props;
 
     return (
-        <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950">
-            {actingFor && (
-                <div className="bg-amber-100 dark:bg-amber-900">
-                    <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-                            Atuando em nome de {actingFor.name}
-                        </p>
-                        <Link
-                            href="/portal/representacao"
-                            method="delete"
-                            as="button"
-                            className="self-start rounded-lg border border-amber-700 px-3 py-1 text-sm font-medium text-amber-900 transition hover:bg-amber-200 sm:self-auto dark:border-amber-300 dark:text-amber-100 dark:hover:bg-amber-800"
-                        >
-                            Encerrar representação
-                        </Link>
+        <ThemeProvider>
+            <AppShell items={items} homeHref="/portal" subtitle="Portal do Cidadão">
+                {actingFor && (
+                    <div className="mb-6 rounded-xl border border-warning-500 bg-warning-50 p-4 dark:border-warning-500/30 dark:bg-warning-500/15">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="text-warning-500">
+                                    <AlertIcon className="size-6 fill-current" />
+                                </span>
+                                <p className="text-sm font-semibold text-gray-800 dark:text-white/90">
+                                    Atuando em nome de {actingFor.name}
+                                </p>
+                            </div>
+                            <Link
+                                href="/portal/representacao"
+                                method="delete"
+                                as="button"
+                                className="self-start rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 sm:self-auto dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300"
+                            >
+                                Encerrar representação
+                            </Link>
+                        </div>
                     </div>
-                </div>
-            )}
-            <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-                <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                        SILE — Portal do Cidadão
-                    </h1>
-                    <div className="flex items-center gap-4">
-                        <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                            {auth.user?.name}
-                        </span>
-                        <Link
-                            href="/logout"
-                            method="post"
-                            as="button"
-                            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800"
-                        >
-                            Sair
-                        </Link>
+                )}
+                {flash.status && (
+                    <div className="mb-6">
+                        <Alert variant="success" title="Sucesso" message={flash.status} />
                     </div>
-                </div>
-                <nav className="mx-auto flex max-w-5xl gap-1 px-4 pb-3">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                                currentPath === item.href
-                                    ? 'bg-blue-700 text-white dark:bg-blue-600'
-                                    : 'text-neutral-700 hover:bg-neutral-200 dark:text-neutral-300 dark:hover:bg-neutral-800'
-                            }`}
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
-                </nav>
-            </header>
-            {flash.status && (
-                <div className="mx-auto mt-4 max-w-5xl px-4">
-                    <p className="rounded-lg bg-green-100 p-4 text-sm text-green-800 dark:bg-green-900 dark:text-green-100">
-                        {flash.status}
-                    </p>
-                </div>
-            )}
-            <main className="mx-auto max-w-5xl p-4 sm:p-6">{children}</main>
-        </div>
+                )}
+                {children}
+            </AppShell>
+        </ThemeProvider>
     );
 }
