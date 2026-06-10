@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 1 of 15 (Identidade, Acesso e Auditoria Transversal)
-Plan: 4 of 9 in current phase
+Plan: 5 of 9 in current phase
 Status: In progress
-Last activity: 2026-06-10 — Completed 01-04-PLAN.md (HU-001 cadastro com CPF + HU-005 confirmação de e-mail)
+Last activity: 2026-06-10 — Completed 01-05-PLAN.md (HU-006 termo LGPD versionado com gate de aceite)
 
-Progress: [████░░░░░░] 44% (fase 1: 4/9 planos)
+Progress: [█████░░░░░] 56% (fase 1: 5/9 planos)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 11 min
-- Total execution time: 0.73 h
+- Total plans completed: 5
+- Average duration: 10 min
+- Total execution time: 0.87 h
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-identidade | 4/9 | 44 min | 11 min |
+| 01-identidade | 5/9 | 52 min | 10 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (8 min), 01-02 (15 min), 01-03 (8 min), 01-04 (13 min)
+- Last 5 plans: 01-01 (8 min), 01-02 (15 min), 01-03 (8 min), 01-04 (13 min), 01-05 (8 min)
 - Trend: estável
 
 *Atualizado após cada plano concluído*
@@ -62,6 +62,8 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [01-04] Cadastro coleta cpf (obrigatório, único, 11 dígitos sem máscara, Rule ValidCpf própria) e phone (opcional); UserFactory gera CPF válido. Senha hasheada SÓ pelo cast hashed do User (Hash::make removido da action publicada).
 - [01-04] User implements MustVerifyEmail — portal bloqueia não verificados; testes que postam /register precisam seedar RolesAndPermissionsSeeder (assignRole no CreateNewUser).
 - [01-04] Mensagem required do laravel-lang pt-BR é "É obrigatória a indicação..." — asserções de validação devem usar 'obrigatória', não 'obrigatório'.
+- [01-05] Termo LGPD é dado versionado: seed publica v1; gate lgpd.accepted desarma sem termo publicado; rotas do termo ficam fora do subgrupo protegido; na gestão a permissão é avaliada ANTES do termo (403 prevalece).
+- [01-05] Testes que acessam rotas protegidas com termo seedado usam User::factory()->...->withAcceptedLgpdTerm(); aceite é firstOrCreate (idempotente sob unique user_id+legal_term_id).
 
 ### Pending Todos
 
@@ -81,6 +83,6 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-10 02:16 UTC
-Stopped at: Completed 01-04-PLAN.md; próximo é 01-05-PLAN.md (HU-006: termo LGPD versionado com middleware de aceite)
+Last session: 2026-06-10 02:30 UTC
+Stopped at: Completed 01-05-PLAN.md; próximos são 01-06 (HU-002/003/004: login, recuperação e alteração de senha) e 01-07 (HU-008/009: procuração) — mesma wave 6
 Resume file: None
