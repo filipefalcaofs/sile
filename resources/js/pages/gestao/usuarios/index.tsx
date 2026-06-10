@@ -1,8 +1,14 @@
 import { Form, Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import Input from '@/components/form/input';
+import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
+import ConfirmDialog from '@/components/ui/confirm-dialog';
+import EmptyState from '@/components/ui/empty-state';
+import { Modal } from '@/components/ui/modal';
+import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import GestaoLayout from '@/layouts/gestao-layout';
 
@@ -15,16 +21,13 @@ interface UserItem {
     cpf_masked: string;
 }
 
-interface PaginationLink {
-    url: string | null;
-    label: string;
-    active: boolean;
-}
-
 interface UsersIndexProps {
     users: {
         data: UserItem[];
         links: PaginationLink[];
+        from: number | null;
+        to: number | null;
+        total: number;
     };
     filters: {
         search: string;
@@ -36,6 +39,8 @@ const actionButtonStyles =
     'inline-flex items-center justify-center rounded-lg px-3 py-2 text-theme-xs font-medium ring-1 ring-inset transition disabled:cursor-not-allowed disabled:opacity-60';
 
 const brandActionStyles = `${actionButtonStyles} text-brand-500 ring-brand-200 hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10`;
+
+const neutralActionStyles = `${actionButtonStyles} text-gray-600 ring-gray-300 hover:bg-gray-50 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03]`;
 
 const warningActionStyles = `${actionButtonStyles} text-warning-600 ring-warning-300 hover:bg-warning-50 dark:text-orange-400 dark:ring-warning-500/30 dark:hover:bg-warning-500/10`;
 
@@ -105,107 +110,52 @@ function RoleBadges({ roles }: { roles: string[] }) {
     );
 }
 
-function FieldError({ message }: { message?: string }) {
-    if (!message) {
-        return null;
-    }
-
-    return <p className="mt-1.5 text-theme-xs text-error-500">{message}</p>;
-}
-
-function Pagination({ links }: { links: PaginationLink[] }) {
-    if (links.length <= 3) {
-        return null;
-    }
-
-    return (
-        <nav className="flex flex-wrap items-center gap-1">
-            {links.map((link, index) =>
-                link.url ? (
-                    <Link
-                        key={index}
-                        href={link.url}
-                        className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm font-medium transition ${
-                            link.active
-                                ? 'bg-brand-500 text-white'
-                                : 'text-gray-700 hover:bg-brand-50 hover:text-brand-500 dark:text-gray-400 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400'
-                        }`}
-                        dangerouslySetInnerHTML={{ __html: link.label }}
-                    />
-                ) : (
-                    <span
-                        key={index}
-                        className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm text-gray-400 dark:text-gray-600"
-                        dangerouslySetInnerHTML={{ __html: link.label }}
-                    />
-                ),
-            )}
-        </nav>
-    );
-}
-
-function RoleForm({ user, roles }: { user: UserItem; roles: string[] }) {
+function RoleModal({ user, roles, onClose }: { user: UserItem; roles: string[]; onClose: () => void }) {
     const [role, setRole] = useState(user.roles[0] ?? '');
 
     return (
-        <Form action={`/gestao/usuarios/${user.id}/papel`} method="put" className="inline">
-            {({ errors, processing }) => (
-                <div className="flex flex-wrap items-center gap-2">
-                    <label htmlFor={`role-${user.id}`} className="sr-only">
-                        Papel de {user.name}
-                    </label>
-                    <div className="w-44">
-                        <Select
-                            id={`role-${user.id}`}
-                            name="role"
-                            value={role}
-                            onChange={setRole}
-                            placeholder="Selecionar..."
-                            options={roles.map((roleOption) => ({ value: roleOption, label: roleOption }))}
-                        />
+        <Modal isOpen onClose={onClose} className="m-4 max-w-[507px] p-6 lg:p-8">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Alterar papel</h4>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Selecione o novo papel da conta de {user.name} ({user.email}).
+            </p>
+
+            <Form action={`/gestao/usuarios/${user.id}/papel`} method="put" onSuccess={onClose} className="mt-6">
+                {({ errors, processing }) => (
+                    <div className="flex flex-col gap-5">
+                        <div>
+                            <Label htmlFor={`role-${user.id}`}>Papel</Label>
+                            <Select
+                                id={`role-${user.id}`}
+                                name="role"
+                                value={role}
+                                onChange={setRole}
+                                placeholder="Selecionar..."
+                                options={roles.map((roleOption) => ({ value: roleOption, label: roleOption }))}
+                            />
+                            {errors.role && <p className="mt-1.5 text-theme-xs text-error-500">{errors.role}</p>}
+                        </div>
+                        <div className="flex items-center justify-end gap-3">
+                            <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>
+                                Cancelar
+                            </Button>
+                            <Button size="sm" type="submit" disabled={processing}>
+                                {processing ? 'Salvando...' : 'Salvar'}
+                            </Button>
+                        </div>
                     </div>
-                    <button type="submit" disabled={processing} className={brandActionStyles}>
-                        Alterar papel
-                    </button>
-                    <FieldError message={errors.role} />
-                </div>
-            )}
-        </Form>
-    );
-}
-
-function ActivationForm({ user }: { user: UserItem }) {
-    const active = user.inactivated_at === null;
-    const confirmMessage = active
-        ? 'Inativar esta conta? O usuário perderá o acesso imediatamente.'
-        : 'Reativar esta conta?';
-
-    return (
-        <Form action={`/gestao/usuarios/${user.id}/inativacao`} method="put" className="inline">
-            {({ errors, processing }) => (
-                <div>
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        onClick={(event) => {
-                            if (!window.confirm(confirmMessage)) {
-                                event.preventDefault();
-                            }
-                        }}
-                        className={active ? warningActionStyles : successActionStyles}
-                    >
-                        {active ? 'Inativar' : 'Reativar'}
-                    </button>
-                    <FieldError message={errors.user} />
-                </div>
-            )}
-        </Form>
+                )}
+            </Form>
+        </Modal>
     );
 }
 
 export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
     const [search, setSearch] = useState(filters.search ?? '');
     const isFirstRender = useRef(true);
+    const [roleUser, setRoleUser] = useState<UserItem | null>(null);
+    const [activationUser, setActivationUser] = useState<UserItem | null>(null);
+    const [activationProcessing, setActivationProcessing] = useState(false);
 
     useEffect(() => {
         if (isFirstRender.current) {
@@ -217,6 +167,37 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
         }, 350);
         return () => clearTimeout(timeout);
     }, [search]);
+
+    const searching = search.trim() !== '';
+
+    function toggleActivation() {
+        if (!activationUser) {
+            return;
+        }
+
+        router.put(`/gestao/usuarios/${activationUser.id}/inativacao`, undefined, {
+            preserveScroll: true,
+            onStart: () => setActivationProcessing(true),
+            onFinish: () => setActivationProcessing(false),
+            onSuccess: () => setActivationUser(null),
+        });
+    }
+
+    const activationContent = activationUser
+        ? activationUser.inactivated_at === null
+            ? {
+                  variant: 'warning' as const,
+                  title: 'Inativar conta',
+                  description: `Inativar a conta de ${activationUser.name}? O usuário perderá o acesso imediatamente.`,
+                  confirmLabel: 'Inativar',
+              }
+            : {
+                  variant: 'info' as const,
+                  title: 'Reativar conta',
+                  description: `Reativar a conta de ${activationUser.name}? O usuário volta a acessar o sistema com o papel atual.`,
+                  confirmLabel: 'Reativar',
+              }
+        : null;
 
     return (
         <GestaoLayout>
@@ -248,9 +229,14 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
                         </div>
 
                         {users.data.length === 0 ? (
-                            <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                                Nenhum usuário encontrado.
-                            </p>
+                            <EmptyState
+                                title={searching ? 'Nenhum resultado para a busca' : 'Nenhum usuário cadastrado'}
+                                description={
+                                    searching
+                                        ? 'Ajuste o termo de busca e tente novamente.'
+                                        : 'As contas criadas no sistema aparecem aqui.'
+                                }
+                            />
                         ) : (
                             <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
                                 <div className="max-w-full overflow-x-auto">
@@ -272,56 +258,94 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
                                                 <TableCell isHeader className={headerCellStyles}>
                                                     Situação
                                                 </TableCell>
-                                                <TableCell isHeader className={headerCellStyles}>
+                                                <TableCell isHeader className={`${headerCellStyles} text-end`}>
                                                     Ações
                                                 </TableCell>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                                            {users.data.map((user) => (
-                                                <TableRow
-                                                    key={user.id}
-                                                    className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
-                                                >
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                                        {user.name}
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                                        {user.email}
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                                        {user.cpf_masked}
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                                        <RoleBadges roles={user.roles} />
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                                        <SituationBadge inactivatedAt={user.inactivated_at} />
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                                        <div className="flex flex-wrap items-center gap-3">
-                                                            <Link
-                                                                href={`/gestao/acessos/${user.id}`}
-                                                                className="text-theme-xs font-medium text-gray-500 underline-offset-2 transition hover:text-brand-500 hover:underline dark:text-gray-400 dark:hover:text-brand-400"
-                                                            >
-                                                                Acessos
-                                                            </Link>
-                                                            <RoleForm user={user} roles={roles} />
-                                                            <ActivationForm user={user} />
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                            {users.data.map((user) => {
+                                                const active = user.inactivated_at === null;
+
+                                                return (
+                                                    <TableRow
+                                                        key={user.id}
+                                                        className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                                                    >
+                                                        <TableCell className="px-5 py-4 text-start text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                                            {user.name}
+                                                        </TableCell>
+                                                        <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                                            {user.email}
+                                                        </TableCell>
+                                                        <TableCell className="px-5 py-4 text-start text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                                            {user.cpf_masked}
+                                                        </TableCell>
+                                                        <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                                            <RoleBadges roles={user.roles} />
+                                                        </TableCell>
+                                                        <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                                            <SituationBadge inactivatedAt={user.inactivated_at} />
+                                                        </TableCell>
+                                                        <TableCell className="px-5 py-4 text-end text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                                            <div className="flex flex-wrap justify-end gap-2">
+                                                                <Link
+                                                                    href={`/gestao/acessos/${user.id}`}
+                                                                    className={neutralActionStyles}
+                                                                >
+                                                                    Acessos
+                                                                </Link>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setRoleUser(user)}
+                                                                    className={brandActionStyles}
+                                                                >
+                                                                    Alterar papel
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setActivationUser(user)}
+                                                                    className={
+                                                                        active
+                                                                            ? warningActionStyles
+                                                                            : successActionStyles
+                                                                    }
+                                                                >
+                                                                    {active ? 'Inativar' : 'Reativar'}
+                                                                </button>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
                                         </TableBody>
                                     </Table>
                                 </div>
                             </div>
                         )}
 
-                        <Pagination links={users.links} />
+                        <Pagination
+                            links={users.links}
+                            meta={{ from: users.from, to: users.to, total: users.total }}
+                        />
                     </div>
                 </div>
             </div>
+
+            {roleUser && <RoleModal user={roleUser} roles={roles} onClose={() => setRoleUser(null)} />}
+
+            {activationContent && (
+                <ConfirmDialog
+                    isOpen
+                    onClose={() => setActivationUser(null)}
+                    onConfirm={toggleActivation}
+                    title={activationContent.title}
+                    description={activationContent.description}
+                    confirmLabel={activationContent.confirmLabel}
+                    variant={activationContent.variant}
+                    processing={activationProcessing}
+                />
+            )}
         </GestaoLayout>
     );
 }
