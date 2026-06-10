@@ -114,8 +114,12 @@ return [
     |
     */
 
+    // 'login' => null mantém EnsureLoginIsNotThrottled no pipeline do Fortify,
+    // que dispara o evento Lockout no bloqueio temporário (auditado em
+    // access_logs — HU-002/HU-010). Com um limiter nomeado aqui, o throttle
+    // viraria middleware de rota (429) e o Lockout nunca dispararia.
     'limiters' => [
-        'login' => 'login',
+        'login' => null,
         'two-factor' => 'two-factor',
         'passkeys' => 'passkeys',
     ],
