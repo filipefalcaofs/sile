@@ -5,34 +5,35 @@
 See: .planning/PROJECT.md (updated 2026-06-09)
 
 **Core value:** Responder a viabilidade locacional de atividade econômica de forma automática, correta e auditável — fluxo expresso quando a lei permite, fundamentação legal em toda decisão.
-**Current focus:** Fase 2 — Administração Base (próxima; Fase 1 concluída)
+**Current focus:** Fase 2 — Administração Base (em execução)
 
 ## Current Position
 
-Phase: 1 of 15 — CONCLUÍDA (Identidade, Acesso e Auditoria Transversal)
-Plan: 9 of 9 completos
-Status: Phase 1 complete — verificação passed (47/47 must-haves); smoke E2E aprovado pelo usuário
-Last activity: 2026-06-10 — Fase 1 fechada: 01-09 concluído (seeds + verificação integral + checkpoint humano aprovado); VERIFICATION.md passed; HU-001 a HU-010 Complete na traceability
+Phase: 2 of 15 — Administração Base (HU-011 a HU-014)
+Plan: 1 of 8 completos (02-01)
+Status: In progress — wave 1 (02-01 concluído; 02-02 e 02-03 em paralelo)
+Last activity: 2026-06-10 — Completed 02-01-PLAN.md (CSV oficial CNAE 1.331 subclasses + seeder aditivo com permissões granulares)
 
-Progress: [█░░░░░░░░░] 7% (1/15 fases; fase 1: 9/9 planos)
+Progress: [█░░░░░░░░░] 7% (1/15 fases; fase 2: 1/8 planos)
 
-Next step: `/gsd-plan-phase 2` (Administração Base — HU-011 a HU-014)
+Next step: orquestrador fecha a wave 1 (suíte completa) e despacha a wave 2
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
+- Total plans completed: 9
 - Average duration: 11 min
-- Total execution time: 1.47 h
+- Total execution time: 1.62 h
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-identidade | 9/9 ✓ | ~96 min | 11 min |
+| 02-administracao-base | 1/8 | ~9 min | 9 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-04 (13 min), 01-05 (8 min), 01-06 (13 min), 01-07 (13 min), 01-08 (10 min)
+- Last 5 plans: 01-05 (8 min), 01-06 (13 min), 01-07 (13 min), 01-08 (10 min), 02-01 (9 min)
 - Trend: estável
 
 *Atualizado após cada plano concluído*
@@ -74,6 +75,8 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [01-08] CPF imutável por omissão nas regras do ProfileUpdateRequest (valor enviado é ignorado); troca de e-mail zera email_verified_at e reenvia VerifyEmail.
 - [01-08] Histórico de acessos filtra user_id OR email — titular vê falhas/bloqueios pré-login gravados sem user_id; page size parametrizado em sile.ui.access_history.per_page via Settings::get.
 - [01-08] Consulta administrativa de acessos auditada explicitamente (log 'acessos', event 'consulta-acessos', target_user_id nas properties) — consulta relevante a dados de terceiro (CA-02).
+- [02-01] CSV oficial CNAE fiel à fonte: 1.331 subclasses versionadas em database/data/; 9900-8/00 ausente do arquivo NÃO inventada (proveniência em scripts/convert-cnae-xlsx.py; relatório formal da divergência no import 02-04). Códigos no formato oficial; normalização para dígitos é do CnaeImportService.
+- [02-01] RolesAndPermissionsSeeder aditivo (givePermissionTo, nunca sync): re-seed não desfaz ajustes de permissão feitos pelo admin via HU-013. 8 permissões; administrador com todas as manter-*; analista/gestor com consultar-cnaes.
 
 ### Pending Todos
 
@@ -95,8 +98,8 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-10 03:50 UTC
-Stopped at: Fase 1 concluída e verificada (passed). Suíte 122/122 (477 asserções), pint/typecheck/build verdes, smoke E2E aprovado. Próximo: `/gsd-plan-phase 2` (Administração Base — HU-011 a HU-014: CNAEs com seed IBGE/CONCLA, manter usuários, perfis e parâmetros do sistema com UI administrável).
+Last session: 2026-06-10 14:23 UTC
+Stopped at: Completed 02-01-PLAN.md (Fase 2, wave 1 — 02-02/02-03 em execução paralela; suíte completa no fechamento da wave pelo orquestrador)
 Resume file: None
 
 Nota operacional: durante o 01-09 houve uma sessão de agente concorrente no mesmo working directory (commits 79b3b81/e4010ce da Task 1 e composer run dev). Conteúdo validado e aproveitado sem duplicação. Evitar duas sessões GSD simultâneas no mesmo repositório.
