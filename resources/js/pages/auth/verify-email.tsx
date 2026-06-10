@@ -41,7 +41,7 @@ export default function VerifyEmail({ status }: VerifyEmailProps) {
                     <Alert variant="success" title="Sucesso" message="Um novo link foi enviado." />
                 )}
 
-                <Form action="/email/verification-notification" method="post">
+                <Form action="/portal/email/verification-notification" method="post">
                     {({ processing }) => (
                         <Button type="submit" size="sm" className="w-full" disabled={processing}>
                             {processing ? 'Enviando...' : 'Reenviar e-mail de confirmação'}
@@ -51,7 +51,7 @@ export default function VerifyEmail({ status }: VerifyEmailProps) {
 
                 <p className="border-t border-gray-100 pt-5 text-center text-sm dark:border-gray-800">
                     <Link
-                        href="/logout"
+                        href="/portal/logout"
                         method="post"
                         as="button"
                         className="text-sm font-medium text-gray-700 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"

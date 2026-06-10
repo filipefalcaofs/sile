@@ -137,6 +137,6 @@ class ProfileTest extends TestCase
 
     public function test_visitante_nao_acessa_perfil(): void
     {
-        $this->get('/settings/profile')->assertRedirect('/login');
+        $this->get('/settings/profile')->assertRedirect('/portal/login');
     }
 }

@@ -8,7 +8,7 @@ class SecurityHeadersTest extends TestCase
 {
     public function test_respostas_web_incluem_cabecalhos_de_seguranca(): void
     {
-        $response = $this->get('/');
+        $response = $this->get('/portal');
 
         $response->assertOk();
         $response->assertHeader('X-Frame-Options', 'DENY');

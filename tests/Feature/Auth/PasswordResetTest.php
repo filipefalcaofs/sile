@@ -26,7 +26,7 @@ class PasswordResetTest extends TestCase
 
     public function test_pagina_esqueci_senha_renderiza(): void
     {
-        $this->get('/forgot-password')
+        $this->get('/portal/forgot-password')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('auth/forgot-password'));
     }
@@ -37,7 +37,7 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->cidadao()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this->post('/portal/forgot-password', ['email' => $user->email]);
 
         Notification::assertSentTo($user, ResetPassword::class);
     }
@@ -48,7 +48,7 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->cidadao()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this->post('/portal/forgot-password', ['email' => $user->email]);
 
         $token = null;
 
@@ -58,7 +58,7 @@ class PasswordResetTest extends TestCase
             return true;
         });
 
-        $this->get("/reset-password/{$token}?email={$user->email}")
+        $this->get("/portal/reset-password/{$token}?email={$user->email}")
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('auth/reset-password')
@@ -72,14 +72,14 @@ class PasswordResetTest extends TestCase
 
         $token = Password::createToken($user);
 
-        $response = $this->post('/reset-password', [
+        $response = $this->post('/portal/reset-password', [
             'token' => $token,
             'email' => $user->email,
             'password' => 'NovaSenhaForte123',
             'password_confirmation' => 'NovaSenhaForte123',
         ]);
 
-        $response->assertRedirect('/login');
+        $response->assertRedirect('/portal/login');
         $response->assertSessionHas('status');
 
         $this->assertTrue(Hash::check('NovaSenhaForte123', $user->fresh()->password));
@@ -91,7 +91,7 @@ class PasswordResetTest extends TestCase
 
         $token = Password::createToken($user);
 
-        $this->post('/reset-password', [
+        $this->post('/portal/reset-password', [
             'token' => $token,
             'email' => $user->email,
             'password' => 'NovaSenhaForte123',
@@ -108,7 +108,7 @@ class PasswordResetTest extends TestCase
     {
         $user = User::factory()->cidadao()->create();
 
-        $response = $this->post('/reset-password', [
+        $response = $this->post('/portal/reset-password', [
             'token' => Str::random(60),
             'email' => $user->email,
             'password' => 'NovaSenhaForte123',
@@ -124,7 +124,7 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $response = $this->post('/forgot-password', ['email' => 'nao-existe@example.com']);
+        $response = $this->post('/portal/forgot-password', ['email' => 'nao-existe@example.com']);
 
         $response->assertSessionHasErrors('email');
 
@@ -137,7 +137,7 @@ class PasswordResetTest extends TestCase
 
         $token = Password::createToken($user);
 
-        $response = $this->post('/reset-password', [
+        $response = $this->post('/portal/reset-password', [
             'token' => $token,
             'email' => $user->email,
             'password' => 'abc',
@@ -153,10 +153,10 @@ class PasswordResetTest extends TestCase
     {
         $user = User::factory()->cidadao()->create();
 
-        // Rotas de recuperação são guest-only: o RedirectIfAuthenticated do
-        // framework manda autenticados para a rota nomeada 'home' (landing /).
+        // Rotas de recuperação são guest-only: redirectUsersTo manda o
+        // autenticado para o próprio painel, conforme o perfil (fase 2.3).
         $this->actingAs($user)
-            ->get('/forgot-password')
-            ->assertRedirect(route('home'));
+            ->get('/portal/forgot-password')
+            ->assertRedirect(route('portal.dashboard'));
     }
 }

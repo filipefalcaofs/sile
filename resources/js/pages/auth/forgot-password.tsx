@@ -23,7 +23,7 @@ export default function ForgotPassword({ status }: ForgotPasswordProps) {
                     <Alert variant="success" title="Sucesso" message={status} />
                 </div>
             )}
-            <Form action="/forgot-password" method="post">
+            <Form action="/portal/forgot-password" method="post">
                 {({ errors, processing }) => (
                     <div className="space-y-6">
                         <div>
@@ -48,7 +48,7 @@ export default function ForgotPassword({ status }: ForgotPasswordProps) {
                         <p className="border-t border-gray-100 pt-5 text-center text-sm font-normal text-gray-700 dark:border-gray-800 dark:text-gray-400">
                             Lembrou a senha?{' '}
                             <Link
-                                href="/login"
+                                href="/portal/login"
                                 className="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
                             >
                                 Voltar ao login

@@ -7,6 +7,15 @@ use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
+
+// Login interno da retaguarda (não divulgado no portal público): tela própria,
+// mesma autenticação do Fortify — o destino pós-login é decidido por perfil.
+Route::middleware('guest')->prefix('gestao')->name('gestao.')->group(function () {
+    Route::get('login', fn () => Inertia::render('auth/gestao-login'))->name('login');
+    Route::post('login', [AuthenticatedSessionController::class, 'store'])->name('login.store');
+});
 
 Route::middleware(['auth', 'verified', 'permission:acessar-gestao', 'lgpd.accepted'])
     ->prefix('gestao')

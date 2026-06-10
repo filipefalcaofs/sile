@@ -176,6 +176,6 @@ class LinkAttorneyTest extends TestCase
 
     public function test_visitante_nao_acessa_procuracoes(): void
     {
-        $this->get('/portal/procuracoes')->assertRedirect('/login');
+        $this->get('/portal/procuracoes')->assertRedirect('/portal/login');
     }
 }

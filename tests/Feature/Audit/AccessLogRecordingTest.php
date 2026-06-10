@@ -17,7 +17,7 @@ class AccessLogRecordingTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->post('/login', [
+        $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
@@ -37,7 +37,7 @@ class AccessLogRecordingTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->post('/login', [
+        $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'senha-errada',
         ]);
@@ -53,7 +53,7 @@ class AccessLogRecordingTest extends TestCase
 
     public function test_falha_de_login_registra_tentativa_com_email_desconhecido(): void
     {
-        $this->post('/login', [
+        $this->post('/portal/login', [
             'email' => 'nao-existe@example.com',
             'password' => 'x',
         ]);
@@ -71,7 +71,7 @@ class AccessLogRecordingTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->post('/logout');
+        $this->actingAs($user)->post('/portal/logout');
 
         $this->assertDatabaseHas('access_logs', [
             'user_id' => $user->id,
@@ -84,13 +84,13 @@ class AccessLogRecordingTest extends TestCase
         $user = User::factory()->create();
 
         foreach (range(1, 5) as $tentativa) {
-            $this->post('/login', [
+            $this->post('/portal/login', [
                 'email' => $user->email,
                 'password' => 'senha-errada',
             ]);
         }
 
-        $this->post('/login', [
+        $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'senha-errada',
         ]);
@@ -105,7 +105,7 @@ class AccessLogRecordingTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        $this->post('/register', [
+        $this->post('/portal/register', [
             'name' => 'Maria da Silva',
             'email' => 'maria@example.com',
             'cpf' => '529.982.247-25',

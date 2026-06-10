@@ -57,7 +57,7 @@ export default function ResetPassword({ email, token }: ResetPasswordProps) {
             icon={<LockIcon className="size-6" />}
         >
             <Head title="Redefinir senha" />
-            <Form action="/reset-password" method="post">
+            <Form action="/portal/reset-password" method="post">
                 {({ errors, processing }) => (
                     <div className="space-y-6">
                         <input type="hidden" name="token" value={token} />

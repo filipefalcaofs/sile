@@ -22,7 +22,7 @@ class InactiveUserLoginTest extends TestCase
     {
         $user = User::factory()->cidadao()->inactive()->create();
 
-        $response = $this->post('/login', [
+        $response = $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
@@ -42,7 +42,7 @@ class InactiveUserLoginTest extends TestCase
     {
         $user = User::factory()->cidadao()->inactive()->create();
 
-        $response = $this->post('/login', [
+        $response = $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'senha-errada',
         ]);
@@ -63,7 +63,7 @@ class InactiveUserLoginTest extends TestCase
     {
         $user = User::factory()->cidadao()->create();
 
-        $this->post('/login', [
+        $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
@@ -77,7 +77,7 @@ class InactiveUserLoginTest extends TestCase
 
         $user->forceFill(['inactivated_at' => null])->save();
 
-        $this->post('/login', [
+        $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
@@ -93,7 +93,7 @@ class InactiveUserLoginTest extends TestCase
 
         $user->forceFill(['inactivated_at' => now()])->save();
 
-        $response = $this->get('/portal');
+        $response = $this->get('/portal/painel');
 
         $response->assertRedirect(route('login'));
         $response->assertSessionHasErrors([
@@ -101,13 +101,13 @@ class InactiveUserLoginTest extends TestCase
         ]);
         $this->assertGuest();
 
-        $this->get('/portal')->assertRedirect(route('login'));
+        $this->get('/portal/painel')->assertRedirect(route('login'));
     }
 
     public function test_usuario_ativo_navega_normalmente_com_o_middleware(): void
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($user)->get('/portal')->assertOk();
+        $this->actingAs($user)->get('/portal/painel')->assertOk();
     }
 }

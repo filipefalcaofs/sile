@@ -34,7 +34,7 @@ class PasswordUpdateTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $response = $this->actingAs($user)->put('/user/password', [
+        $response = $this->actingAs($user)->put('/portal/user/password', [
             'current_password' => 'password',
             'password' => 'NovaSenhaForte123',
             'password_confirmation' => 'NovaSenhaForte123',
@@ -49,7 +49,7 @@ class PasswordUpdateTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($user)->put('/user/password', [
+        $this->actingAs($user)->put('/portal/user/password', [
             'current_password' => 'password',
             'password' => 'NovaSenhaForte123',
             'password_confirmation' => 'NovaSenhaForte123',
@@ -67,7 +67,7 @@ class PasswordUpdateTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $response = $this->actingAs($user)->put('/user/password', [
+        $response = $this->actingAs($user)->put('/portal/user/password', [
             'current_password' => 'senha-errada',
             'password' => 'NovaSenhaForte123',
             'password_confirmation' => 'NovaSenhaForte123',
@@ -82,7 +82,7 @@ class PasswordUpdateTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $response = $this->actingAs($user)->put('/user/password', [
+        $response = $this->actingAs($user)->put('/portal/user/password', [
             'current_password' => 'password',
             'password' => 'abc',
             'password_confirmation' => 'abc',
@@ -95,12 +95,12 @@ class PasswordUpdateTest extends TestCase
 
     public function test_visitante_nao_altera_senha(): void
     {
-        $this->get('/settings/password')->assertRedirect('/login');
+        $this->get('/settings/password')->assertRedirect('/portal/login');
 
-        $this->put('/user/password', [
+        $this->put('/portal/user/password', [
             'current_password' => 'password',
             'password' => 'NovaSenhaForte123',
             'password_confirmation' => 'NovaSenhaForte123',
-        ])->assertRedirect('/login');
+        ])->assertRedirect('/portal/login');
     }
 }

@@ -74,7 +74,7 @@ class TermAcceptanceTest extends TestCase
         $cidadao = User::factory()->cidadao()->create();
 
         $this->actingAs($cidadao)
-            ->get('/portal')
+            ->get('/portal/painel')
             ->assertRedirect(route('portal.termo-lgpd.show'));
     }
 
@@ -101,7 +101,7 @@ class TermAcceptanceTest extends TestCase
 
         $this->actingAs($cidadao)
             ->post('/portal/termo-lgpd', ['accepted' => true])
-            ->assertRedirect('/portal');
+            ->assertRedirect('/portal/painel');
 
         $this->assertDatabaseHas('legal_term_acceptances', [
             'user_id' => $cidadao->id,
@@ -114,7 +114,7 @@ class TermAcceptanceTest extends TestCase
             'event' => 'created',
         ]);
 
-        $this->actingAs($cidadao)->get('/portal')->assertOk();
+        $this->actingAs($cidadao)->get('/portal/painel')->assertOk();
     }
 
     public function test_aceite_sem_concordancia_e_bloqueado(): void
@@ -134,12 +134,12 @@ class TermAcceptanceTest extends TestCase
         $this->seedRolesAndTerm();
         $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($cidadao)->get('/portal')->assertOk();
+        $this->actingAs($cidadao)->get('/portal/painel')->assertOk();
 
         LegalTerm::factory()->published()->create(['type' => 'lgpd', 'version' => 2]);
 
         $this->actingAs($cidadao)
-            ->get('/portal')
+            ->get('/portal/painel')
             ->assertRedirect(route('portal.termo-lgpd.show'));
     }
 
@@ -147,7 +147,7 @@ class TermAcceptanceTest extends TestCase
     {
         $this->seedRolesAndTerm();
 
-        $this->get('/portal/termo-lgpd')->assertRedirect('/login');
+        $this->get('/portal/termo-lgpd')->assertRedirect('/portal/login');
     }
 
     public function test_gestao_tambem_exige_termo(): void

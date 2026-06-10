@@ -161,6 +161,6 @@ class AccessHistoryTest extends TestCase
 
     public function test_visitante_nao_acessa_historico(): void
     {
-        $this->get('/portal/acessos')->assertRedirect('/login');
+        $this->get('/portal/acessos')->assertRedirect('/portal/login');
     }
 }

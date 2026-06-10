@@ -178,7 +178,7 @@ class ManageUsersTest extends TestCase
         $this->post(route('logout'));
         $this->assertGuest();
 
-        $response = $this->post('/login', [
+        $response = $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);

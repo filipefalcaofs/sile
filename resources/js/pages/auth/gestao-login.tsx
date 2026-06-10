@@ -1,34 +1,46 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head } from '@inertiajs/react';
 import { useState } from 'react';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
-import { EyeCloseIcon, EyeIcon } from '@/components/icons';
+import { EyeCloseIcon, EyeIcon, LockIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
 
-interface LoginProps {
-    canResetPassword: boolean;
+interface GestaoLoginProps {
     status?: string;
 }
 
-export default function Login({ canResetPassword, status }: LoginProps) {
+/**
+ * Login interno da retaguarda (Gestão SEDUR). Não é divulgado no portal
+ * público: sem link de cadastro — contas internas são administradas
+ * pela própria SEDUR (HU-012).
+ */
+export default function GestaoLogin({ status }: GestaoLoginProps) {
     const [showPassword, setShowPassword] = useState(false);
     const [remember, setRemember] = useState(false);
 
     return (
         <AuthLayout
-            title="Acessar o SILE"
-            subtitle="Entre com seu e-mail e senha para acompanhar seus processos"
+            title="Gestão SEDUR"
+            subtitle="Ambiente interno de análise e administração do SILE"
         >
-            <Head title="Entrar" />
+            <Head title="Entrar — Gestão" />
+            <div className="mb-6 flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-white/[0.03]">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-500 dark:bg-brand-500/15 dark:text-brand-400">
+                    <LockIcon className="size-5" />
+                </span>
+                <p className="text-theme-sm text-gray-600 dark:text-gray-400">
+                    Acesso restrito a servidores autorizados. Toda tentativa de acesso é registrada.
+                </p>
+            </div>
             {status && (
                 <div className="mb-6">
                     <Alert variant="success" title="Sucesso" message={status} />
                 </div>
             )}
-            <Form action="/portal/login" method="post">
+            <Form action="/gestao/login" method="post">
                 {({ errors, processing }) => (
                     <div className="space-y-6">
                         {errors.email && (
@@ -40,7 +52,7 @@ export default function Login({ canResetPassword, status }: LoginProps) {
                         )}
 
                         <div>
-                            <Label htmlFor="email">E-mail</Label>
+                            <Label htmlFor="email">E-mail institucional</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -48,7 +60,7 @@ export default function Login({ canResetPassword, status }: LoginProps) {
                                 autoComplete="email"
                                 autoFocus
                                 required
-                                placeholder="nome@exemplo.com"
+                                placeholder="nome@salvador.ba.gov.br"
                                 error={!!errors.email}
                             />
                         </div>
@@ -80,37 +92,17 @@ export default function Login({ canResetPassword, status }: LoginProps) {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between gap-4">
-                            <Checkbox
-                                id="remember"
-                                name="remember"
-                                label="Manter conectado"
-                                checked={remember}
-                                onChange={setRemember}
-                            />
-                            {canResetPassword && (
-                                <Link
-                                    href="/portal/forgot-password"
-                                    className="text-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                                >
-                                    Esqueceu a senha?
-                                </Link>
-                            )}
-                        </div>
+                        <Checkbox
+                            id="remember"
+                            name="remember"
+                            label="Manter conectado"
+                            checked={remember}
+                            onChange={setRemember}
+                        />
 
                         <Button type="submit" size="sm" className="w-full" disabled={processing}>
-                            {processing ? 'Entrando...' : 'Entrar'}
+                            {processing ? 'Entrando...' : 'Entrar na gestão'}
                         </Button>
-
-                        <p className="border-t border-gray-100 pt-5 text-center text-sm font-normal text-gray-700 dark:border-gray-800 dark:text-gray-400">
-                            Ainda não tem conta?{' '}
-                            <Link
-                                href="/portal/register"
-                                className="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                            >
-                                Criar conta
-                            </Link>
-                        </p>
                     </div>
                 )}
             </Form>

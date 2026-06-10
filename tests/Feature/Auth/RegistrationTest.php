@@ -21,16 +21,16 @@ class RegistrationTest extends TestCase
 
     public function test_pagina_de_cadastro_renderiza(): void
     {
-        $this->get('/register')
+        $this->get('/portal/register')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('auth/register'));
     }
 
     public function test_usuario_se_cadastra_com_sucesso(): void
     {
-        $response = $this->post('/register', $this->validPayload());
+        $response = $this->post('/portal/register', $this->validPayload());
 
-        $response->assertRedirect('/portal');
+        $response->assertRedirect('/portal/painel');
         $this->assertAuthenticated();
 
         $this->assertDatabaseHas('users', [
@@ -45,7 +45,7 @@ class RegistrationTest extends TestCase
 
     public function test_cadastro_gera_auditoria(): void
     {
-        $this->post('/register', $this->validPayload());
+        $this->post('/portal/register', $this->validPayload());
 
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'cadastro',
@@ -56,7 +56,7 @@ class RegistrationTest extends TestCase
 
     public function test_cadastro_bloqueado_com_dados_incompletos(): void
     {
-        $response = $this->post('/register', [
+        $response = $this->post('/portal/register', [
             'email' => 'maria@example.com',
             'password' => 'SenhaForte123',
             'password_confirmation' => 'SenhaForte123',
@@ -74,7 +74,7 @@ class RegistrationTest extends TestCase
 
     public function test_cadastro_bloqueado_com_cpf_invalido(): void
     {
-        $response = $this->post('/register', [
+        $response = $this->post('/portal/register', [
             ...$this->validPayload(),
             'cpf' => '111.111.111-11',
         ]);
@@ -88,7 +88,7 @@ class RegistrationTest extends TestCase
     {
         User::factory()->create(['email' => 'maria@example.com']);
 
-        $response = $this->post('/register', $this->validPayload());
+        $response = $this->post('/portal/register', $this->validPayload());
 
         $response->assertSessionHasErrors(['email']);
         $this->assertGuest();
@@ -99,7 +99,7 @@ class RegistrationTest extends TestCase
     {
         User::factory()->create(['cpf' => '52998224725']);
 
-        $response = $this->post('/register', [
+        $response = $this->post('/portal/register', [
             ...$this->validPayload(),
             'email' => 'outra@example.com',
         ]);
@@ -113,7 +113,7 @@ class RegistrationTest extends TestCase
     {
         $user = User::factory()->cidadao()->create();
 
-        $this->actingAs($user)->get('/register')->assertRedirect();
+        $this->actingAs($user)->get('/portal/register')->assertRedirect();
     }
 
     /**

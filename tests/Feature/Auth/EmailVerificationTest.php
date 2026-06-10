@@ -26,7 +26,7 @@ class EmailVerificationTest extends TestCase
     {
         Notification::fake();
 
-        $this->post('/register', [
+        $this->post('/portal/register', [
             'name' => 'Maria da Silva',
             'email' => 'maria@example.com',
             'cpf' => '529.982.247-25',
@@ -47,7 +47,7 @@ class EmailVerificationTest extends TestCase
         $user = User::factory()->unverified()->create();
 
         $this->actingAs($user)
-            ->get('/email/verify')
+            ->get('/portal/email/verify')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('auth/verify-email'));
     }
@@ -61,7 +61,7 @@ class EmailVerificationTest extends TestCase
             'hash' => sha1($user->email),
         ]);
 
-        $this->actingAs($user)->get($url)->assertRedirectContains('/portal');
+        $this->actingAs($user)->get($url)->assertRedirectContains('/portal/painel');
 
         $this->assertTrue($user->fresh()->hasVerifiedEmail());
     }
@@ -102,8 +102,8 @@ class EmailVerificationTest extends TestCase
         $user = User::factory()->unverified()->create();
 
         $this->actingAs($user)
-            ->get('/portal')
-            ->assertRedirect('/email/verify');
+            ->get('/portal/painel')
+            ->assertRedirect('/portal/email/verify');
     }
 
     public function test_reenvio_de_link(): void
@@ -112,7 +112,7 @@ class EmailVerificationTest extends TestCase
 
         $user = User::factory()->unverified()->create();
 
-        $this->actingAs($user)->post('/email/verification-notification');
+        $this->actingAs($user)->post('/portal/email/verification-notification');
 
         Notification::assertSentTo($user, VerifyEmail::class);
     }

@@ -155,12 +155,12 @@ function SiteHeader() {
                 <div className="flex items-center gap-3">
                     <ThemeToggleButton />
                     <Link
-                        href="/login"
+                        href="/portal/login"
                         className={`${outlineCtaStyles} hidden px-4 py-2.5 sm:inline-flex`}
                     >
                         Entrar
                     </Link>
-                    <Link href="/register" className={`${primaryCtaStyles} px-4 py-2.5`}>
+                    <Link href="/portal/register" className={`${primaryCtaStyles} px-4 py-2.5`}>
                         Criar conta
                     </Link>
                 </div>
@@ -199,11 +199,11 @@ function HeroSection() {
                 </p>
 
                 <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                    <Link href="/register" className={`${primaryCtaStyles} px-6 py-3.5`}>
+                    <Link href="/portal/register" className={`${primaryCtaStyles} px-6 py-3.5`}>
                         Criar conta
                         <ArrowRightIcon className="size-5" aria-hidden="true" />
                     </Link>
-                    <Link href="/login" className={`${outlineCtaStyles} px-6 py-3.5`}>
+                    <Link href="/portal/login" className={`${outlineCtaStyles} px-6 py-3.5`}>
                         Entrar
                     </Link>
                 </div>
@@ -337,14 +337,14 @@ function FinalCtaSection() {
                     </p>
                     <div className="relative mt-8 flex flex-col justify-center gap-4 sm:flex-row">
                         <Link
-                            href="/register"
+                            href="/portal/register"
                             className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3.5 text-sm font-medium text-gray-800 shadow-theme-xs transition hover:bg-gray-100"
                         >
                             Criar conta
                             <ArrowRightIcon className="size-5" aria-hidden="true" />
                         </Link>
                         <Link
-                            href="/login"
+                            href="/portal/login"
                             className="inline-flex items-center justify-center rounded-lg px-6 py-3.5 text-sm font-medium text-gray-300 ring-1 ring-inset ring-gray-700 transition hover:bg-white/[0.05] hover:text-white"
                         >
                             Entrar
@@ -399,7 +399,7 @@ function SiteFooter() {
                         <ul className="mt-3 space-y-2">
                             <li>
                                 <Link
-                                    href="/login"
+                                    href="/portal/login"
                                     className="text-sm text-gray-500 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-white/90"
                                 >
                                     Entrar
@@ -407,7 +407,7 @@ function SiteFooter() {
                             </li>
                             <li>
                                 <Link
-                                    href="/register"
+                                    href="/portal/register"
                                     className="text-sm text-gray-500 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-white/90"
                                 >
                                     Criar conta

@@ -18,7 +18,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
     const { auth, flash } = usePage<SharedProps>().props;
     const { url } = usePage();
 
-    const dashboardHref = auth.permissions.includes('acessar-gestao') ? '/gestao' : '/portal';
+    const dashboardHref = auth.permissions.includes('acessar-gestao') ? '/gestao' : '/portal/painel';
     const currentPath = url.split('?')[0] ?? '';
 
     return (

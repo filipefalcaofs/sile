@@ -14,7 +14,7 @@ interface PortalLayoutProps {
 const groups: SidebarGroup[] = [
     {
         label: 'Início',
-        items: [{ name: 'Meu painel', href: '/portal', icon: <GridIcon /> }],
+        items: [{ name: 'Meu painel', href: '/portal/painel', icon: <GridIcon /> }],
     },
     {
         label: 'Serviços',

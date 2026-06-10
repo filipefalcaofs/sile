@@ -21,14 +21,51 @@ class EnvironmentAccessTest extends TestCase
 
     public function test_landing_publica_renderiza(): void
     {
-        $this->get('/')
+        // A raiz redireciona para o portal público, onde vive a landing (fase 2.3).
+        $this->get('/')->assertRedirect('/portal');
+
+        $this->get('/portal')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('home'));
     }
 
     public function test_visitante_e_redirecionado_ao_login_no_portal(): void
     {
-        $this->get('/portal')->assertRedirect('/login');
+        $this->get('/portal/painel')->assertRedirect('/portal/login');
+    }
+
+    public function test_visitante_na_gestao_e_redirecionado_ao_login_interno(): void
+    {
+        $this->get('/gestao')->assertRedirect('/gestao/login');
+        $this->get('/gestao/cnaes')->assertRedirect('/gestao/login');
+    }
+
+    public function test_tela_de_login_interno_renderiza(): void
+    {
+        $this->get('/gestao/login')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('auth/gestao-login'));
+    }
+
+    public function test_servidor_autentica_pelo_login_interno(): void
+    {
+        $administrador = User::factory()->administrador()->create();
+
+        $this->post('/gestao/login', [
+            'email' => $administrador->email,
+            'password' => 'password',
+        ])->assertRedirect('/gestao');
+
+        $this->assertAuthenticatedAs($administrador);
+    }
+
+    public function test_autenticado_no_login_interno_vai_para_o_proprio_painel(): void
+    {
+        $administrador = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($administrador)
+            ->get('/gestao/login')
+            ->assertRedirect(route('gestao.dashboard'));
     }
 
     public function test_cidadao_acessa_dashboard_do_portal(): void
@@ -36,7 +73,7 @@ class EnvironmentAccessTest extends TestCase
         $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao)
-            ->get('/portal')
+            ->get('/portal/painel')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('portal/dashboard'));
     }
@@ -46,7 +83,7 @@ class EnvironmentAccessTest extends TestCase
         $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao)
-            ->get('/portal')
+            ->get('/portal/painel')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('auth.user.id')

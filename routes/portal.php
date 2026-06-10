@@ -17,7 +17,7 @@ Route::middleware(['auth', 'verified'])
         Route::post('termo-lgpd', [LgpdTermController::class, 'accept'])->name('termo-lgpd.accept');
 
         Route::middleware(['lgpd.accepted', ResolveRepresentation::class])->group(function () {
-            Route::get('/', DashboardController::class)->name('dashboard');
+            Route::get('painel', DashboardController::class)->name('dashboard');
 
             Route::get('acessos', AccessHistoryController::class)->name('acessos.index');
 

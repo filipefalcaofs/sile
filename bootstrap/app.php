@@ -32,6 +32,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => PermissionMiddleware::class,
             'lgpd.accepted' => EnsureLgpdTermAccepted::class,
         ]);
+
+        // Logins separados por contexto: retaguarda usa /gestao/login,
+        // portal público usa /portal/login (Fortify).
+        $middleware->redirectGuestsTo(
+            fn (Request $request) => $request->is('gestao', 'gestao/*')
+                ? route('gestao.login')
+                : route('login'),
+        );
+
+        // Autenticado em rota guest vai para o próprio painel, por perfil.
+        $middleware->redirectUsersTo(
+            fn (Request $request) => $request->user()?->can('acessar-gestao')
+                ? route('gestao.dashboard')
+                : route('portal.dashboard'),
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

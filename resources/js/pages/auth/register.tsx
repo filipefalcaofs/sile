@@ -55,7 +55,7 @@ export default function Register({ passwordRules }: RegisterProps) {
             subtitle="Informe seus dados para acessar os serviços do SILE"
         >
             <Head title="Criar conta" />
-            <Form action="/register" method="post">
+            <Form action="/portal/register" method="post">
                 {({ errors, processing }) => (
                     <div className="space-y-5">
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -137,7 +137,7 @@ export default function Register({ passwordRules }: RegisterProps) {
                         <p className="border-t border-gray-100 pt-5 text-center text-sm font-normal text-gray-700 dark:border-gray-800 dark:text-gray-400">
                             Já tem conta?{' '}
                             <Link
-                                href="/login"
+                                href="/portal/login"
                                 className="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
                             >
                                 Entrar

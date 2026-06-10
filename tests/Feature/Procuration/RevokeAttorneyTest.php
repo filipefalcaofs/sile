@@ -80,7 +80,7 @@ class RevokeAttorneyTest extends TestCase
 
         $this->actingAs($attorney)
             ->post('/portal/representacao', ['procuration_id' => $procuration->id])
-            ->assertRedirect('/portal');
+            ->assertRedirect('/portal/painel');
 
         $this->assertSame($procuration->id, session('acting_procuration_id'));
 
@@ -98,7 +98,7 @@ class RevokeAttorneyTest extends TestCase
             ->get('/portal-teste/acao-em-representacao', function () {
                 activity('teste')->log('Ação em representação');
 
-                return redirect('/portal');
+                return redirect('/portal/painel');
             });
 
         $this->actingAs($attorney)->post('/portal/representacao', [
@@ -123,7 +123,7 @@ class RevokeAttorneyTest extends TestCase
         ]);
 
         $this->actingAs($attorney)
-            ->get('/portal')
+            ->get('/portal/painel')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('actingFor.id', $grantor->id)
@@ -146,7 +146,7 @@ class RevokeAttorneyTest extends TestCase
         $this->flushSession();
         $this->withSession(['acting_procuration_id' => $procuration->id])
             ->actingAs($attorney)
-            ->get('/portal')
+            ->get('/portal/painel')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->where('actingFor', null));
 

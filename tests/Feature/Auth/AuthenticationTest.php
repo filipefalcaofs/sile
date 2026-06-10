@@ -22,7 +22,7 @@ class AuthenticationTest extends TestCase
 
     public function test_pagina_de_login_renderiza(): void
     {
-        $this->get('/login')
+        $this->get('/portal/login')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('auth/login')
@@ -33,20 +33,20 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->cidadao()->create();
 
-        $response = $this->post('/login', [
+        $response = $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect('/portal');
+        $response->assertRedirect('/portal/painel');
     }
 
     public function test_administrador_autentica_e_vai_para_a_gestao(): void
     {
         $user = User::factory()->administrador()->create();
 
-        $response = $this->post('/login', [
+        $response = $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
@@ -59,7 +59,7 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->cidadao()->create();
 
-        $this->post('/login', [
+        $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
@@ -75,7 +75,7 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->cidadao()->create();
 
-        $response = $this->post('/login', [
+        $response = $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'senha-errada',
         ]);
@@ -98,13 +98,13 @@ class AuthenticationTest extends TestCase
         $max = (int) Settings::get('security.login.max_attempts');
 
         foreach (range(1, $max) as $tentativa) {
-            $this->post('/login', [
+            $this->post('/portal/login', [
                 'email' => $user->email,
                 'password' => 'senha-errada',
             ]);
         }
 
-        $response = $this->post('/login', [
+        $response = $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'senha-errada',
         ]);
@@ -125,7 +125,7 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->cidadao()->create();
 
-        $this->actingAs($user)->post('/logout');
+        $this->actingAs($user)->post('/portal/logout');
 
         $this->assertGuest();
 
@@ -139,7 +139,7 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $this->post('/login', [
+        $this->post('/portal/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);

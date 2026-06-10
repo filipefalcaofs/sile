@@ -69,7 +69,7 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        $this->post('/login', [
+        $this->post('/portal/login', [
             'email' => 'admin@sile.dev',
             'password' => 'password',
         ])->assertRedirect('/gestao');
