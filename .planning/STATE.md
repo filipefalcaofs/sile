@@ -25,6 +25,14 @@ Next step: `/gsd-plan-phase 3` (Cadastro Empresarial — HU-021 a HU-028)
 - Padrões para novas telas: AppShell parametrizado (items/homeHref/subtitle); páginas com PageBreadcrumb + cards rounded-2xl; tabelas com componente Table; forms com Input error/hint. Novas páginas DEVEM usar esses componentes.
 - Regressão: 197/197 testes, typecheck e build verdes; screenshots validados (home, login, painel, CNAEs, parâmetros, dark mode).
 
+### Fase 2.2 (INSERTED) — Refinamento premium de UI/UX (concluída 2026-06-10)
+
+- Landing institucional completa em home.tsx: header sticky, hero, serviços (4 cards), como funciona (4 passos), base legal (LOUOS 9.148/2016, Decreto 32.636/2020, CNAE 2.3), CTA e footer — conteúdo 100% verdadeiro, sem estatísticas/depoimentos inventados.
+- Sidebar subdividida em grupos com headings (API: SidebarGroup[] no AppShell/AppSidebar). Gestão: Visão geral/Cadastros/Sistema. Portal: Início/Serviços/Minha conta.
+- Auth premium: painel institucional com gradiente brand, bullets verdadeiros (LOUOS, decreto, auditoria), hierarquia forte nos forms.
+- PADRÃO DE CRUD (obrigatório para novas telas): datatable em card único com ação primária no header; criar/editar em Modal (700px forms grandes, 600px simples); ações destrutivas/impacto via ui/confirm-dialog.tsx (danger/warning/info, processing); ui/pagination.tsx compartilhado com meta "Mostrando X–Y de Z" (backend envia from/to/total); ui/empty-state.tsx distinguindo busca vazia de lista vazia; edição inline apenas quando for melhor usabilidade (ex.: parâmetros por grupo).
+- Regressão: 197/197 testes, typecheck e build verdes; screenshots validados (landing, login, CNAEs com modal, sidebar agrupada).
+
 ## Performance Metrics
 
 **Velocity:**

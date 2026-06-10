@@ -186,3 +186,4 @@ _ide_helper_models.php
 .vscode/
 .DS_Store
 Thumbs.db
+.playwright-cli/

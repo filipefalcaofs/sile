@@ -31,6 +31,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 1: Identidade, Acesso e Auditoria Transversal** — Autenticação, perfis, procuração e trilha de auditoria reutilizável (EP01) — concluída em 2026-06-10 (verificação: passed 47/47; smoke E2E aprovado)
 - [x] **Phase 2: Administração Base** — CNAEs, usuários, perfis e parâmetros do sistema (EP02 parcial) — concluída em 2026-06-10 (verificação: passed 41/41; smoke E2E aprovado)
 - [x] **Phase 2.1 (INSERTED): Template TailAdmin** — aplica o template visual TailAdmin (React 19 + Tailwind v4) em todos os layouts e páginas existentes, sem mudança de comportamento — concluída em 2026-06-10 (197/197 testes, typecheck/build verdes, validação visual por screenshots)
+- [x] **Phase 2.2 (INSERTED): Refinamento premium de UI/UX** — landing institucional completa, sidebar subdividida em grupos, auth premium com painel institucional, CRUDs padronizados (modais de criar/editar, ConfirmDialog em ações destrutivas, Pagination com contador, EmptyState) — concluída em 2026-06-10 (197/197 testes, typecheck/build verdes, screenshots validados)
 - [ ] **Phase 3: Cadastro Empresarial** — Empresas, CNPJ e vínculos com CNAEs (EP03)
 - [ ] **Phase 4: Georreferenciamento e Território** — Geocodificação, zona, via, lote, bairro e restrições (EP04)
 - [ ] **Phase 5: Motor de Regras da LOUOS** — Quadros 7/10/11/11A como dados versionados + motor de enquadramento (EP05 + HU-015 a HU-018)
