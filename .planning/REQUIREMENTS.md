@@ -22,10 +22,10 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 
 ### EP02 — Administração
 
-- [ ] **HU-011**: Manter CNAEs
-- [ ] **HU-012**: Manter usuários
-- [ ] **HU-013**: Manter perfis
-- [ ] **HU-014**: Manter parâmetros do sistema
+- [x] **HU-011**: Manter CNAEs
+- [x] **HU-012**: Manter usuários
+- [x] **HU-013**: Manter perfis
+- [x] **HU-014**: Manter parâmetros do sistema
 - [ ] **HU-015**: Manter Quadro 7
 - [ ] **HU-016**: Manter Quadro 10
 - [ ] **HU-017**: Manter Quadro 11
@@ -225,10 +225,10 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-008 | Fase 1 | Complete |
 | HU-009 | Fase 1 | Complete |
 | HU-010 | Fase 1 | Complete |
-| HU-011 | Fase 2 | Pending |
-| HU-012 | Fase 2 | Pending |
-| HU-013 | Fase 2 | Pending |
-| HU-014 | Fase 2 | Pending |
+| HU-011 | Fase 2 | Complete |
+| HU-012 | Fase 2 | Complete |
+| HU-013 | Fase 2 | Complete |
+| HU-014 | Fase 2 | Complete |
 | HU-015 | Fase 5 | Pending |
 | HU-016 | Fase 5 | Pending |
 | HU-017 | Fase 5 | Pending |

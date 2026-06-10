@@ -19,7 +19,7 @@ Responder a viabilidade locacional de uma atividade econômica de forma automát
 A fonte de verdade dos requisitos são as 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (índice em `README-CATALOGO-HUs-SILE.md`), organizadas em 15 épicas (EP01 a EP15). Cada HU contém objetivo, fluxos, regras de negócio (RN), critérios de aceite BDD (CA), campos, permissões, exceções, auditoria, dependências e prioridade. Rastreamento detalhado em `.planning/REQUIREMENTS.md` (HU-001 a HU-131).
 
 - [x] EP01 — Identidade, Acesso e Segurança (HU-001 a HU-010) — concluída (Fase 1, 2026-06-10)
-- [ ] EP02 — Administração (HU-011 a HU-020)
+- [ ] EP02 — Administração (HU-011 a HU-020) — parcial: HU-011 a HU-014 concluídas (Fase 2, 2026-06-10); HU-015 a HU-020 nas Fases 5/6
 - [ ] EP03 — Cadastro Empresarial (HU-021 a HU-028)
 - [ ] EP04 — Georreferenciamento e Território (HU-029 a HU-037)
 - [ ] EP05 — Motor de Regras da LOUOS (HU-038 a HU-046)

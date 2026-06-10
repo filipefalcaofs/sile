@@ -5,18 +5,18 @@
 See: .planning/PROJECT.md (updated 2026-06-09)
 
 **Core value:** Responder a viabilidade locacional de atividade econômica de forma automática, correta e auditável — fluxo expresso quando a lei permite, fundamentação legal em toda decisão.
-**Current focus:** Fase 2 — Administração Base (em execução)
+**Current focus:** Fase 3 — Cadastro Empresarial (próxima; Fases 1 e 2 concluídas)
 
 ## Current Position
 
-Phase: 2 of 15 — Administração Base (HU-011 a HU-014)
-Plan: 7 of 8 completos (02-01 a 02-07)
-Status: In progress — wave 5 completa (02-07 concluído; suíte 196/196 verde no fechamento)
-Last activity: 2026-06-10 — Completed 02-07-PLAN.md (HU-014: tela de parâmetros, histórico mascarado e toggle real features.procuracoes)
+Phase: 2 of 15 — CONCLUÍDA (Administração Base)
+Plan: 8 of 8 completos
+Status: Phase 2 complete — verificação passed (41/41 must-haves); smoke E2E aprovado pelo usuário
+Last activity: 2026-06-10 — Fase 2 fechada: 02-08 concluído (DatabaseSeeder completo, nav permissionada, smoke aprovado); VERIFICATION.md passed; HU-011 a HU-014 Complete na traceability
 
-Progress: [█░░░░░░░░░] 13% (1/15 fases; fase 2: 7/8 planos)
+Progress: [█▌░░░░░░░░] 13% (2/15 fases; 17/17 planos executados)
 
-Next step: orquestrador despacha a wave 6 (02-08 — fechamento da fase: DatabaseSeeder + smoke humano)
+Next step: `/gsd-plan-phase 3` (Cadastro Empresarial — HU-021 a HU-028)
 
 ## Performance Metrics
 
@@ -30,7 +30,7 @@ Next step: orquestrador despacha a wave 6 (02-08 — fechamento da fase: Databas
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-identidade | 9/9 ✓ | ~96 min | 11 min |
-| 02-administracao-base | 7/8 | ~88 min | 13 min |
+| 02-administracao-base | 8/8 ✓ | ~100 min | 12 min |
 
 **Recent Trend:**
 - Last 5 plans: 02-02 (14 min), 02-04 (22 min), 02-05 (11 min), 02-06 (9 min), 02-07 (13 min)
