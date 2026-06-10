@@ -3,6 +3,7 @@
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\DashboardController;
+use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use Illuminate\Support\Facades\Route;
@@ -39,5 +40,10 @@ Route::middleware(['auth', 'verified', 'permission:acessar-gestao', 'lgpd.accept
             Route::post('perfis', [RoleController::class, 'store'])->name('perfis.store');
             Route::put('perfis/{role}', [RoleController::class, 'update'])->name('perfis.update');
             Route::delete('perfis/{role}', [RoleController::class, 'destroy'])->name('perfis.destroy');
+        });
+
+        Route::middleware('permission:manter-parametros')->group(function () {
+            Route::get('parametros', [ParameterController::class, 'index'])->name('parametros.index');
+            Route::put('parametros/{parameter:key}', [ParameterController::class, 'update'])->name('parametros.update');
         });
     });

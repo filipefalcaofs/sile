@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Http\Controllers\Gestao;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Gestao\UpdateParameterRequest;
+use App\Models\Parameter;
+use App\Support\Audit\AuditService;
+use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class ParameterController extends Controller
+{
+    /**
+     * Catálogo agrupado por domínio (HU-014 CA-01). Valor de sensível nunca
+     * sai do servidor (RN-009) — a tela recebe null e exibe placeholder.
+     */
+    public function index(): Response
+    {
+        $groups = Parameter::query()
+            ->orderBy('group')
+            ->orderBy('key')
+            ->get()
+            ->groupBy('group')
+            ->map(fn ($parameters) => $parameters->map(fn (Parameter $parameter) => [
+                'key' => $parameter->key,
+                'type' => $parameter->type,
+                'description' => $parameter->description,
+                'sensitive' => $parameter->sensitive,
+                'requires_connection_test' => $parameter->requires_connection_test,
+                'default_value' => $parameter->default_value,
+                'value' => $parameter->sensitive ? null : $parameter->value,
+                'has_admin_value' => $parameter->getRawOriginal('value') !== null,
+                'updated_at' => $parameter->updated_at?->toIso8601String(),
+            ])->values());
+
+        return Inertia::render('gestao/parametros/index', [
+            'groups' => $groups,
+        ]);
+    }
+
+    /**
+     * Gravação validada pelo catálogo (RN-007) com auditoria explícita de
+     * anterior/novo (RN-008) — sensível entra no histórico apenas como o
+     * marcador [criptografado] (RN-009). O saved do model invalida o cache:
+     * efeito imediato sem deploy (CA-05).
+     */
+    public function update(UpdateParameterRequest $request, Parameter $parameter): RedirectResponse
+    {
+        $input = $request->validated('value');
+
+        if ($parameter->sensitive && ($input === null || $input === '')) {
+            return back()->with('status', __('Valor mantido.'));
+        }
+
+        $old = $parameter->value;
+        $parameter->update(['value' => $input]);
+
+        app(AuditService::class)->log(
+            'parametros',
+            'parametro-alterado',
+            "Parâmetro {$parameter->key} alterado",
+            [
+                'key' => $parameter->key,
+                'valor_anterior' => $parameter->sensitive ? '[criptografado]' : $old,
+                'valor_novo' => $parameter->sensitive ? '[criptografado]' : $input,
+            ],
+            $parameter,
+        );
+
+        return back()->with('status', __('Parâmetro atualizado com sucesso.'));
+    }
+}
