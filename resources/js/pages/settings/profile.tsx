@@ -1,4 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
+import Input from '@/components/form/input';
+import Label from '@/components/form/label';
+import Button from '@/components/ui/button';
 import SettingsLayout from '@/layouts/settings-layout';
 
 interface ProfileProps {
@@ -11,13 +14,6 @@ interface ProfileProps {
     };
 }
 
-const inputClasses =
-    'w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500';
-
-const labelClasses = 'mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300';
-
-const errorClasses = 'mt-1 text-sm text-red-600 dark:text-red-400';
-
 function formatCpf(cpf: string): string {
     return cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
 }
@@ -26,94 +22,83 @@ export default function Profile({ user }: ProfileProps) {
     return (
         <SettingsLayout>
             <Head title="Meu perfil" />
-            <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
-                <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                    Meu perfil
-                </h2>
-                <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                    Mantenha seus dados pessoais atualizados.
-                </p>
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+                <div className="mb-6">
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                        Meu perfil
+                    </h4>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Mantenha seus dados pessoais atualizados.
+                    </p>
+                </div>
 
                 <Form action="/settings/profile" method="patch">
                     {({ errors, processing, recentlySuccessful }) => (
-                        <div className="mt-6 flex max-w-md flex-col gap-4">
-                            <div>
-                                <label htmlFor="name" className={labelClasses}>
-                                    Nome completo
-                                </label>
-                                <input
-                                    id="name"
-                                    type="text"
-                                    name="name"
-                                    defaultValue={user.name}
-                                    autoComplete="name"
-                                    required
-                                    className={inputClasses}
-                                />
-                                {errors.name && <p className={errorClasses}>{errors.name}</p>}
-                            </div>
+                        <div className="flex flex-col gap-6">
+                            <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                                <div>
+                                    <Label htmlFor="name">Nome completo</Label>
+                                    <Input
+                                        id="name"
+                                        type="text"
+                                        name="name"
+                                        defaultValue={user.name}
+                                        autoComplete="name"
+                                        required
+                                        error={!!errors.name}
+                                        hint={errors.name}
+                                    />
+                                </div>
 
-                            <div>
-                                <label htmlFor="email" className={labelClasses}>
-                                    E-mail
-                                </label>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    defaultValue={user.email}
-                                    autoComplete="email"
-                                    required
-                                    className={inputClasses}
-                                />
-                                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                                    Ao alterar o e-mail, você precisará confirmá-lo novamente.
-                                </p>
-                                {errors.email && <p className={errorClasses}>{errors.email}</p>}
-                            </div>
+                                <div>
+                                    <Label htmlFor="email">E-mail</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        name="email"
+                                        defaultValue={user.email}
+                                        autoComplete="email"
+                                        required
+                                        error={!!errors.email}
+                                        hint={
+                                            errors.email ??
+                                            'Ao alterar o e-mail, você precisará confirmá-lo novamente.'
+                                        }
+                                    />
+                                </div>
 
-                            <div>
-                                <label htmlFor="phone" className={labelClasses}>
-                                    Telefone
-                                </label>
-                                <input
-                                    id="phone"
-                                    type="text"
-                                    name="phone"
-                                    defaultValue={user.phone ?? ''}
-                                    autoComplete="tel"
-                                    className={inputClasses}
-                                />
-                                {errors.phone && <p className={errorClasses}>{errors.phone}</p>}
-                            </div>
+                                <div>
+                                    <Label htmlFor="phone">Telefone</Label>
+                                    <Input
+                                        id="phone"
+                                        type="text"
+                                        name="phone"
+                                        defaultValue={user.phone ?? ''}
+                                        autoComplete="tel"
+                                        error={!!errors.phone}
+                                        hint={errors.phone}
+                                    />
+                                </div>
 
-                            <div>
-                                <label htmlFor="cpf" className={labelClasses}>
-                                    CPF
-                                </label>
-                                <input
-                                    id="cpf"
-                                    type="text"
-                                    value={formatCpf(user.cpf)}
-                                    readOnly
-                                    disabled
-                                    className={`${inputClasses} cursor-not-allowed bg-neutral-100 text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400`}
-                                />
-                                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                                    O CPF não pode ser alterado.
-                                </p>
+                                <div>
+                                    <Label htmlFor="cpf">CPF</Label>
+                                    <Input
+                                        id="cpf"
+                                        type="text"
+                                        value={formatCpf(user.cpf)}
+                                        readOnly
+                                        disabled
+                                        hint="O CPF não pode ser alterado."
+                                    />
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-4">
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
-                                >
+                                <Button type="submit" size="sm" disabled={processing}>
                                     {processing ? 'Salvando...' : 'Salvar alterações'}
-                                </button>
+                                </Button>
                                 {recentlySuccessful && (
-                                    <p className="text-sm text-green-700 dark:text-green-400">
+                                    <p className="text-sm text-success-600 dark:text-success-500">
                                         Perfil atualizado com sucesso.
                                     </p>
                                 )}
@@ -121,7 +106,7 @@ export default function Profile({ user }: ProfileProps) {
                         </div>
                     )}
                 </Form>
-            </section>
+            </div>
         </SettingsLayout>
     );
 }

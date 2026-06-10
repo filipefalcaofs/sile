@@ -1,99 +1,101 @@
 import { Form, Head } from '@inertiajs/react';
+import { useState } from 'react';
+import Input from '@/components/form/input';
+import Label from '@/components/form/label';
+import { EyeCloseIcon, EyeIcon } from '@/components/icons';
+import Button from '@/components/ui/button';
 import SettingsLayout from '@/layouts/settings-layout';
 
 interface PasswordProps {
     passwordRules: string;
 }
 
-const inputClasses =
-    'w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500';
+interface PasswordFieldProps {
+    id: string;
+    name: string;
+    label: string;
+    autoComplete: string;
+    error?: string;
+    hint?: string;
+}
 
-const labelClasses = 'mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300';
+function PasswordField({ id, name, label, autoComplete, error, hint }: PasswordFieldProps) {
+    const [show, setShow] = useState(false);
 
-const errorClasses = 'mt-1 text-sm text-red-600 dark:text-red-400';
+    return (
+        <div>
+            <Label htmlFor={id}>{label}</Label>
+            <div className="relative">
+                <Input
+                    id={id}
+                    type={show ? 'text' : 'password'}
+                    name={name}
+                    autoComplete={autoComplete}
+                    required
+                    error={!!error}
+                    hint={error ?? hint}
+                />
+                <button
+                    type="button"
+                    onClick={() => setShow((current) => !current)}
+                    aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}
+                    className="absolute top-3 right-4 z-30 cursor-pointer text-gray-500 dark:text-gray-400"
+                >
+                    {show ? <EyeIcon className="size-5" /> : <EyeCloseIcon className="size-5" />}
+                </button>
+            </div>
+        </div>
+    );
+}
 
 export default function Password({ passwordRules }: PasswordProps) {
     return (
         <SettingsLayout>
             <Head title="Alterar senha" />
-            <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
-                <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                    Alterar senha
-                </h2>
-                <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                    Para sua segurança, informe a senha atual antes de definir uma nova.
-                </p>
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+                <div className="mb-6">
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                        Alterar senha
+                    </h4>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Para sua segurança, informe a senha atual antes de definir uma nova.
+                    </p>
+                </div>
 
-                <Form
-                    action="/user/password"
-                    method="put"
-                    errorBag="updatePassword"
-                    resetOnSuccess
-                >
+                <Form action="/user/password" method="put" errorBag="updatePassword" resetOnSuccess>
                     {({ errors, processing, recentlySuccessful }) => (
-                        <div className="mt-6 flex max-w-md flex-col gap-4">
-                            <div>
-                                <label htmlFor="current_password" className={labelClasses}>
-                                    Senha atual
-                                </label>
-                                <input
-                                    id="current_password"
-                                    type="password"
-                                    name="current_password"
-                                    autoComplete="current-password"
-                                    required
-                                    className={inputClasses}
-                                />
-                                {errors.current_password && (
-                                    <p className={errorClasses}>{errors.current_password}</p>
-                                )}
-                            </div>
+                        <div className="flex max-w-md flex-col gap-5">
+                            <PasswordField
+                                id="current_password"
+                                name="current_password"
+                                label="Senha atual"
+                                autoComplete="current-password"
+                                error={errors.current_password}
+                            />
 
-                            <div>
-                                <label htmlFor="password" className={labelClasses}>
-                                    Nova senha
-                                </label>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    name="password"
-                                    autoComplete="new-password"
-                                    required
-                                    className={inputClasses}
-                                />
-                                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                                    Requisitos da senha: {passwordRules}
-                                </p>
-                                {errors.password && <p className={errorClasses}>{errors.password}</p>}
-                            </div>
+                            <PasswordField
+                                id="password"
+                                name="password"
+                                label="Nova senha"
+                                autoComplete="new-password"
+                                error={errors.password}
+                                hint={`Requisitos da senha: ${passwordRules}`}
+                            />
 
-                            <div>
-                                <label htmlFor="password_confirmation" className={labelClasses}>
-                                    Confirmar nova senha
-                                </label>
-                                <input
-                                    id="password_confirmation"
-                                    type="password"
-                                    name="password_confirmation"
-                                    autoComplete="new-password"
-                                    required
-                                    className={inputClasses}
-                                />
-                                {errors.password_confirmation && (
-                                    <p className={errorClasses}>{errors.password_confirmation}</p>
-                                )}
-                            </div>
+                            <PasswordField
+                                id="password_confirmation"
+                                name="password_confirmation"
+                                label="Confirmar nova senha"
+                                autoComplete="new-password"
+                                error={errors.password_confirmation}
+                            />
 
                             <div className="flex items-center gap-4">
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
-                                >
+                                <Button type="submit" size="sm" disabled={processing}>
                                     {processing ? 'Alterando...' : 'Alterar senha'}
-                                </button>
+                                </Button>
                                 {recentlySuccessful && (
-                                    <p className="text-sm text-green-700 dark:text-green-400">
+                                    <p className="text-sm text-success-600 dark:text-success-500">
                                         Senha alterada com sucesso.
                                     </p>
                                 )}
@@ -101,7 +103,7 @@ export default function Password({ passwordRules }: PasswordProps) {
                         </div>
                     )}
                 </Form>
-            </section>
+            </div>
         </SettingsLayout>
     );
 }
