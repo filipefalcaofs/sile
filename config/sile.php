@@ -11,4 +11,7 @@ return [
         'login' => ['max_attempts' => 5],
         'password_reset_expire' => 60,
     ],
+    'ui' => [
+        'access_history' => ['per_page' => 15],
+    ],
 ];

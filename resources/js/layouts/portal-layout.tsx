@@ -6,8 +6,16 @@ interface PortalLayoutProps {
     children: ReactNode;
 }
 
+const navItems = [
+    { label: 'Meu painel', href: '/portal' },
+    { label: 'Procurações', href: '/portal/procuracoes' },
+    { label: 'Meus acessos', href: '/portal/acessos' },
+];
+
 export default function PortalLayout({ children }: PortalLayoutProps) {
     const { auth, actingFor, flash } = usePage<SharedProps>().props;
+
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
 
     return (
         <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950">
@@ -47,6 +55,21 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
                         </Link>
                     </div>
                 </div>
+                <nav className="mx-auto flex max-w-5xl gap-1 px-4 pb-3">
+                    {navItems.map((item) => (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                                currentPath === item.href
+                                    ? 'bg-blue-700 text-white dark:bg-blue-600'
+                                    : 'text-neutral-700 hover:bg-neutral-200 dark:text-neutral-300 dark:hover:bg-neutral-800'
+                            }`}
+                        >
+                            {item.label}
+                        </Link>
+                    ))}
+                </nav>
             </header>
             {flash.status && (
                 <div className="mx-auto mt-4 max-w-5xl px-4">

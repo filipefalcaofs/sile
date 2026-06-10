@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Portal\AccessHistoryController;
 use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\LgpdTermController;
 use App\Http\Controllers\Portal\ProcurationController;
@@ -17,6 +18,8 @@ Route::middleware(['auth', 'verified'])
 
         Route::middleware(['lgpd.accepted', ResolveRepresentation::class])->group(function () {
             Route::get('/', DashboardController::class)->name('dashboard');
+
+            Route::get('acessos', AccessHistoryController::class)->name('acessos.index');
 
             Route::get('procuracoes', [ProcurationController::class, 'index'])->name('procuracoes.index');
             Route::post('procuracoes', [ProcurationController::class, 'store'])->name('procuracoes.store');
