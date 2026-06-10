@@ -18,6 +18,13 @@ Progress: [█▌░░░░░░░░] 13% (2/15 fases; 17/17 planos executa
 
 Next step: `/gsd-plan-phase 3` (Cadastro Empresarial — HU-021 a HU-028)
 
+### Fase 2.1 (INSERTED) — Template TailAdmin (concluída 2026-06-10)
+
+- Visual TailAdmin (React 19 + Tailwind v4) aplicado em todo o app: design system no app.css (@theme com fonte Outfit, cores brand/gray/success/error/warning, shadows), contexts de tema (dark mode com localStorage) e sidebar, 19 ícones SVG inline, componentes base em resources/js/components/{ui,form,app}/ (Button, Badge, Modal, Alert, Dropdown, Table, Input, Select, Switch, AppSidebar, AppHeader, AppShell), 4 layouts e 19 páginas redesenhados.
+- Zero dependências novas (sem react-router/ApexCharts/svgr); sem features de fachada (search/notificações do template não portados).
+- Padrões para novas telas: AppShell parametrizado (items/homeHref/subtitle); páginas com PageBreadcrumb + cards rounded-2xl; tabelas com componente Table; forms com Input error/hint. Novas páginas DEVEM usar esses componentes.
+- Regressão: 197/197 testes, typecheck e build verdes; screenshots validados (home, login, painel, CNAEs, parâmetros, dark mode).
+
 ## Performance Metrics
 
 **Velocity:**
