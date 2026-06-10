@@ -1,5 +1,9 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
+import Input from '@/components/form/input';
+import Label from '@/components/form/label';
+import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 interface RoleItem {
@@ -22,6 +26,13 @@ const GROUP_LABELS: Record<string, string> = {
     gerenciar: 'Gerenciar',
 };
 
+const actionButtonStyles =
+    'inline-flex items-center justify-center rounded-lg px-3 py-2 text-theme-xs font-medium ring-1 ring-inset transition disabled:cursor-not-allowed disabled:opacity-60';
+
+const brandActionStyles = `${actionButtonStyles} text-brand-500 ring-brand-200 hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10`;
+
+const errorActionStyles = `${actionButtonStyles} text-error-600 ring-error-300 hover:bg-error-50 dark:text-error-400 dark:ring-error-500/30 dark:hover:bg-error-500/10`;
+
 function groupPermissions(permissions: string[]): { label: string; items: string[] }[] {
     const groups = new Map<string, string[]>();
 
@@ -38,28 +49,61 @@ function groupPermissions(permissions: string[]): { label: string; items: string
     }));
 }
 
+function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
+    return (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
+            <nav aria-label="Trilha de navegação">
+                <ol className="flex flex-wrap items-center gap-1.5">
+                    <li>
+                        <Link
+                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
+                            href="/gestao"
+                        >
+                            Painel
+                            <svg
+                                className="stroke-current"
+                                width="17"
+                                height="16"
+                                viewBox="0 0 17 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
+                                    strokeWidth="1.2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
+                        </Link>
+                    </li>
+                    <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
+                </ol>
+            </nav>
+        </div>
+    );
+}
+
 function FieldError({ message }: { message?: string }) {
     if (!message) {
         return null;
     }
 
-    return <p className="mt-1 text-xs text-red-600 dark:text-red-400">{message}</p>;
+    return <p className="mt-1.5 text-theme-xs text-error-500">{message}</p>;
 }
 
 function PermissionChips({ permissions }: { permissions: string[] }) {
     if (permissions.length === 0) {
-        return <span className="text-xs text-neutral-400 dark:text-neutral-500">Sem permissões</span>;
+        return <span className="text-theme-xs text-gray-400 dark:text-gray-500">Sem permissões</span>;
     }
 
     return (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5">
             {permissions.map((permission) => (
-                <span
-                    key={permission}
-                    className="inline-block rounded-lg bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-100"
-                >
+                <Badge key={permission} size="sm">
                     {permission}
-                </span>
+                </Badge>
             ))}
         </div>
     );
@@ -79,13 +123,13 @@ function PermissionsGrid({
     const groups = groupPermissions(permissions);
 
     return (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
             {groups.map((group) => (
                 <fieldset key={group.label}>
-                    <legend className="text-xs font-semibold tracking-wide text-neutral-500 uppercase dark:text-neutral-400">
+                    <legend className="text-theme-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
                         {group.label}
                     </legend>
-                    <div className="mt-2 flex flex-col gap-1.5">
+                    <div className="mt-3 flex flex-col gap-2">
                         {group.items.map((permission) => {
                             const locked = permission === lockedPermission;
 
@@ -93,28 +137,46 @@ function PermissionsGrid({
                                 <div key={permission}>
                                     <label
                                         htmlFor={`${idPrefix}-${permission}`}
-                                        className={`flex items-center gap-2 text-sm ${
+                                        className={`flex items-center gap-3 text-theme-sm ${
                                             locked
-                                                ? 'text-neutral-400 dark:text-neutral-500'
-                                                : 'text-neutral-700 dark:text-neutral-300'
+                                                ? 'cursor-not-allowed text-gray-400 dark:text-gray-500'
+                                                : 'cursor-pointer text-gray-700 dark:text-gray-300'
                                         }`}
                                     >
-                                        <input
-                                            id={`${idPrefix}-${permission}`}
-                                            type="checkbox"
-                                            name="permissions[]"
-                                            value={permission}
-                                            defaultChecked={locked || defaultChecked.includes(permission)}
-                                            disabled={locked}
-                                            className="rounded border-neutral-300 text-blue-700 focus:ring-2 focus:ring-blue-600/20 disabled:opacity-60 dark:border-neutral-700"
-                                        />
+                                        <span className="relative flex h-5 w-5 shrink-0 items-center justify-center">
+                                            <input
+                                                id={`${idPrefix}-${permission}`}
+                                                type="checkbox"
+                                                name="permissions[]"
+                                                value={permission}
+                                                defaultChecked={locked || defaultChecked.includes(permission)}
+                                                disabled={locked}
+                                                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 checked:border-transparent checked:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700"
+                                            />
+                                            <svg
+                                                className="pointer-events-none absolute hidden text-white peer-checked:block peer-disabled:text-gray-200"
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 14 14"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <path
+                                                    d="M11.6666 3.5L5.24992 9.91667L2.33325 7"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.94437"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                />
+                                            </svg>
+                                        </span>
                                         <span>{permission}</span>
                                     </label>
                                     {locked && (
                                         <>
                                             {/* Checkbox desabilitada não envia valor — o hidden garante o envio. A regra real está no backend. */}
                                             <input type="hidden" name="permissions[]" value={permission} />
-                                            <p className="ml-6 text-xs text-neutral-400 dark:text-neutral-500">
+                                            <p className="ml-8 mt-1 text-theme-xs text-gray-400 dark:text-gray-500">
                                                 Permissão obrigatória do administrador.
                                             </p>
                                         </>
@@ -131,34 +193,28 @@ function PermissionsGrid({
 
 function EditRoleForm({ role, permissions }: { role: RoleItem; permissions: string[] }) {
     return (
-        <Form action={`/gestao/perfis/${role.id}`} method="put" className="mt-4 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+        <Form action={`/gestao/perfis/${role.id}`} method="put">
             {({ errors, processing }) => (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-5">
                     <div>
-                        <label
-                            htmlFor={`name-${role.id}`}
-                            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                        >
-                            Nome do perfil
-                        </label>
-                        <input
-                            id={`name-${role.id}`}
-                            type="text"
-                            name="name"
-                            defaultValue={role.name}
-                            readOnly={role.structural}
-                            className={`mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none sm:max-w-sm dark:border-neutral-700 dark:text-neutral-100 ${
-                                role.structural
-                                    ? 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400'
-                                    : 'bg-white dark:bg-neutral-950'
-                            }`}
-                        />
+                        <Label htmlFor={`name-${role.id}`}>Nome do perfil</Label>
+                        <div className="w-full sm:max-w-sm">
+                            <Input
+                                id={`name-${role.id}`}
+                                type="text"
+                                name="name"
+                                defaultValue={role.name}
+                                readOnly={role.structural}
+                                className={role.structural ? 'opacity-60' : ''}
+                                error={!!errors.name}
+                                hint={errors.name}
+                            />
+                        </div>
                         {role.structural && (
-                            <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+                            <p className="mt-1.5 text-theme-xs text-gray-400 dark:text-gray-500">
                                 Papéis estruturais não podem ser renomeados.
                             </p>
                         )}
-                        <FieldError message={errors.name} />
                     </div>
 
                     <PermissionsGrid
@@ -170,13 +226,9 @@ function EditRoleForm({ role, permissions }: { role: RoleItem; permissions: stri
                     <FieldError message={errors.permissions} />
 
                     <div>
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
-                        >
+                        <Button size="sm" type="submit" disabled={processing}>
                             {processing ? 'Salvando...' : 'Salvar alterações'}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}
@@ -199,12 +251,12 @@ function DeleteRoleForm({ role }: { role: RoleItem }) {
                                 event.preventDefault();
                             }
                         }}
-                        className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
+                        className={errorActionStyles}
                     >
                         Excluir
                     </button>
                     {blocked && (
-                        <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+                        <p className="mt-1.5 text-theme-xs text-gray-400 dark:text-gray-500">
                             Há usuários vinculados a este perfil.
                         </p>
                     )}
@@ -219,28 +271,26 @@ function RoleCard({ role, permissions }: { role: RoleItem; permissions: string[]
     const [editing, setEditing] = useState(false);
 
     return (
-        <article className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+        <article className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div className="flex flex-wrap items-start justify-between gap-3 px-6 py-5">
                 <div>
                     <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                            {role.name}
-                        </h3>
+                        <h3 className="text-base font-medium text-gray-800 dark:text-white/90">{role.name}</h3>
                         {role.structural && (
-                            <span className="inline-block rounded-lg bg-neutral-200 px-2 py-0.5 text-xs font-medium text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+                            <Badge size="sm" color="light">
                                 Estrutural
-                            </span>
+                            </Badge>
                         )}
                     </div>
-                    <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
                         {role.users_count === 1 ? '1 usuário' : `${role.users_count} usuários`}
                     </p>
                 </div>
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-2">
                     <button
                         type="button"
                         onClick={() => setEditing((current) => !current)}
-                        className="rounded-lg border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700 transition hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950"
+                        className={brandActionStyles}
                     >
                         {editing ? 'Fechar' : 'Editar'}
                     </button>
@@ -248,11 +298,15 @@ function RoleCard({ role, permissions }: { role: RoleItem; permissions: string[]
                 </div>
             </div>
 
-            <div className="mt-3">
+            <div className="border-t border-gray-100 px-6 py-4 dark:border-gray-800">
                 <PermissionChips permissions={role.permissions} />
             </div>
 
-            {editing && <EditRoleForm role={role} permissions={permissions} />}
+            {editing && (
+                <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
+                    <EditRoleForm role={role} permissions={permissions} />
+                </div>
+            )}
         </article>
     );
 }
@@ -261,66 +315,57 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
     return (
         <GestaoLayout>
             <Head title="Perfis e permissões" />
-            <div className="flex flex-col gap-6">
-                <div>
-                    <h2 className="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-                        Perfis e permissões
-                    </h2>
-                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                        Segregação de funções: perfis com permissões granulares por funcionalidade
-                    </p>
-                </div>
+            <PageBreadcrumb pageTitle="Perfis e permissões" />
 
-                <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 md:gap-6">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Segregação de funções: perfis com permissões granulares por funcionalidade
+                </p>
+
+                <div className="flex flex-col gap-4 md:gap-6">
                     {roles.map((role) => (
                         <RoleCard key={role.id} role={role} permissions={permissions} />
                     ))}
                 </div>
 
-                <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
-                    <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                        Criar perfil
-                    </h3>
-                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                        O novo perfil passa a valer imediatamente para os usuários vinculados a ele.
-                    </p>
+                <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                    <div className="px-6 py-5">
+                        <h3 className="text-base font-medium text-gray-800 dark:text-white/90">Criar perfil</h3>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            O novo perfil passa a valer imediatamente para os usuários vinculados a ele.
+                        </p>
+                    </div>
+                    <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
+                        <Form action="/gestao/perfis" method="post" resetOnSuccess>
+                            {({ errors, processing }) => (
+                                <div className="flex flex-col gap-5">
+                                    <div>
+                                        <Label htmlFor="create-name">Nome do perfil</Label>
+                                        <div className="w-full sm:max-w-sm">
+                                            <Input
+                                                id="create-name"
+                                                type="text"
+                                                name="name"
+                                                required
+                                                error={!!errors.name}
+                                                hint={errors.name}
+                                            />
+                                        </div>
+                                    </div>
 
-                    <Form action="/gestao/perfis" method="post" resetOnSuccess className="mt-4">
-                        {({ errors, processing }) => (
-                            <div className="flex flex-col gap-4">
-                                <div>
-                                    <label
-                                        htmlFor="create-name"
-                                        className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                                    >
-                                        Nome do perfil
-                                    </label>
-                                    <input
-                                        id="create-name"
-                                        type="text"
-                                        name="name"
-                                        required
-                                        className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none sm:max-w-sm dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                                    />
-                                    <FieldError message={errors.name} />
+                                    <PermissionsGrid permissions={permissions} idPrefix="create" />
+                                    <FieldError message={errors.permissions} />
+
+                                    <div>
+                                        <Button size="sm" type="submit" disabled={processing}>
+                                            {processing ? 'Criando...' : 'Criar perfil'}
+                                        </Button>
+                                    </div>
                                 </div>
-
-                                <PermissionsGrid permissions={permissions} idPrefix="create" />
-                                <FieldError message={errors.permissions} />
-
-                                <div>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
-                                    >
-                                        {processing ? 'Criando...' : 'Criar perfil'}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </Form>
-                </section>
+                            )}
+                        </Form>
+                    </div>
+                </div>
             </div>
         </GestaoLayout>
     );
