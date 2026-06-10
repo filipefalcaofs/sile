@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 1 of 15 (Identidade, Acesso e Auditoria Transversal)
-Plan: 6 of 9 in current phase
+Plan: 7 of 9 in current phase
 Status: In progress
-Last activity: 2026-06-10 — Completed 01-06-PLAN.md (HU-002/003/004: login por perfil, recuperação e alteração de senha)
+Last activity: 2026-06-10 — Completed 01-07-PLAN.md (HU-008/009: procuração e representação "em nome de"); wave 6 (01-06 ∥ 01-07) concluída
 
-Progress: [██████░░░░] 67% (fase 1: 6/9 planos)
+Progress: [███████░░░] 78% (fase 1: 7/9 planos)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 11 min
-- Total execution time: 1.08 h
+- Total execution time: 1.30 h
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-identidade | 6/9 | 65 min | 11 min |
+| 01-identidade | 7/9 | 78 min | 11 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (15 min), 01-03 (8 min), 01-04 (13 min), 01-05 (8 min), 01-06 (13 min)
+- Last 5 plans: 01-03 (8 min), 01-04 (13 min), 01-05 (8 min), 01-06 (13 min), 01-07 (13 min)
 - Trend: estável
 
 *Atualizado após cada plano concluído*
@@ -67,6 +67,8 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [01-06] Limite de login parametrizado nos DOIS pontos: RateLimiter::for('login') E rebinding do LoginRateLimiter (com limiters.login=null o limiter nomeado não é consultado; sem o rebinding o 5 do vendor governaria).
 - [01-06] Bloqueio temporário em request web responde redirect 302 com erro auth.throttle em 'email' (não 429 — status só é honrado em JSON); testes assertam redirect+erro+access_logs bloqueio.
 - [01-06] Form do Inertia v3 aceita errorBag nativamente (errorBag="updatePassword" em settings/password); rotas de recuperação guest-only redirecionam autenticados para route('home').
+- [01-07] Representação vive na sessão (acting_procuration_id) e é revalidada em TODA request do portal por ResolveRepresentation — revogação tem efeito imediato; Context acting_for_user_id + scoped CurrentRepresentation alimentam auditoria e share actingFor do Inertia.
+- [01-07] ResolveRepresentation RESETA Context e scoped service quando não há representação válida (estado sobrevive entre requests em testes/queue); unicidade "uma procuração ativa por par" na aplicação (FormRequest::after), sem índice único parcial.
 
 ### Pending Todos
 
@@ -86,6 +88,6 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-10 02:45 UTC
-Stopped at: Completed 01-06-PLAN.md; 01-07 (HU-008/009: procuração) em execução paralela na mesma wave 6 — suíte completa e typecheck/build rodam no fechamento da wave
+Last session: 2026-06-10 02:46 UTC
+Stopped at: Completed 01-06-PLAN.md e 01-07-PLAN.md (wave 6 concluída); fechamento da wave (suíte completa + typecheck/build) pendente com o orquestrador; próximo: 01-08 (HU-007/010, wave 7)
 Resume file: None
