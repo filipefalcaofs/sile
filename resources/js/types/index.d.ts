@@ -6,6 +6,7 @@ export interface SharedProps extends PageProps {
         roles: string[];
         permissions: string[];
     };
+    actingFor: { id: number; name: string } | null;
     flash: {
         status?: string;
     };

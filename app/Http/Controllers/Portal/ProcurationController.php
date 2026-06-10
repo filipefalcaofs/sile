@@ -8,6 +8,7 @@ use App\Models\Procuration;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -71,5 +72,20 @@ class ProcurationController extends Controller
         ]);
 
         return back()->with('status', 'Procurador vinculado com sucesso.');
+    }
+
+    /**
+     * Revoga a procuração com efeito imediato (HU-009 CA-01).
+     */
+    public function destroy(Request $request, Procuration $procuration): RedirectResponse
+    {
+        Gate::authorize('delete', $procuration);
+
+        $procuration->update([
+            'revoked_at' => now(),
+            'revoked_by_user_id' => $request->user()->id,
+        ]);
+
+        return back()->with('status', 'Procuração revogada.');
     }
 }

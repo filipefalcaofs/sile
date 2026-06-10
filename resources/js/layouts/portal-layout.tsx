@@ -7,10 +7,27 @@ interface PortalLayoutProps {
 }
 
 export default function PortalLayout({ children }: PortalLayoutProps) {
-    const { auth, flash } = usePage<SharedProps>().props;
+    const { auth, actingFor, flash } = usePage<SharedProps>().props;
 
     return (
         <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950">
+            {actingFor && (
+                <div className="bg-amber-100 dark:bg-amber-900">
+                    <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                            Atuando em nome de {actingFor.name}
+                        </p>
+                        <Link
+                            href="/portal/representacao"
+                            method="delete"
+                            as="button"
+                            className="self-start rounded-lg border border-amber-700 px-3 py-1 text-sm font-medium text-amber-900 transition hover:bg-amber-200 sm:self-auto dark:border-amber-300 dark:text-amber-100 dark:hover:bg-amber-800"
+                        >
+                            Encerrar representação
+                        </Link>
+                    </div>
+                </div>
+            )}
             <header className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
                 <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -13,7 +14,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->scoped(CurrentRepresentation::class);
     }
 
     /**

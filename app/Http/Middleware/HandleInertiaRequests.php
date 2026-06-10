@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Representation\CurrentRepresentation;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,6 +43,9 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $request->user()?->getRoleNames() ?? [],
                 'permissions' => $request->user()?->getAllPermissions()->pluck('name') ?? [],
             ],
+            // Closure: avaliada na serialização da resposta, depois de o
+            // ResolveRepresentation (middleware de rota) resolver o estado.
+            'actingFor' => fn () => app(CurrentRepresentation::class)->grantor()?->only('id', 'name'),
             'flash' => [
                 'status' => $request->session()->get('status'),
             ],

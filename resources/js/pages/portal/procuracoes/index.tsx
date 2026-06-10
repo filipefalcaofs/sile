@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 import PortalLayout from '@/layouts/portal-layout';
 
 interface ProcurationItem {
@@ -154,7 +154,20 @@ export default function ProcuracoesIndex({ granted, received }: ProcuracoesIndex
                                             <td className="py-2.5 pr-4">
                                                 <SituationBadge item={item} />
                                             </td>
-                                            <td className="py-2.5 text-neutral-400 dark:text-neutral-500">—</td>
+                                            <td className="py-2.5">
+                                                {item.is_active ? (
+                                                    <Link
+                                                        href={`/portal/procuracoes/${item.id}`}
+                                                        method="delete"
+                                                        as="button"
+                                                        className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
+                                                    >
+                                                        Revogar
+                                                    </Link>
+                                                ) : (
+                                                    <span className="text-neutral-400 dark:text-neutral-500">—</span>
+                                                )}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -193,7 +206,21 @@ export default function ProcuracoesIndex({ granted, received }: ProcuracoesIndex
                                             <td className="py-2.5 pr-4">
                                                 <SituationBadge item={item} />
                                             </td>
-                                            <td className="py-2.5 text-neutral-400 dark:text-neutral-500">—</td>
+                                            <td className="py-2.5">
+                                                {item.is_active ? (
+                                                    <Link
+                                                        href="/portal/representacao"
+                                                        method="post"
+                                                        data={{ procuration_id: item.id }}
+                                                        as="button"
+                                                        className="rounded-lg border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700 transition hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950"
+                                                    >
+                                                        Atuar em nome de
+                                                    </Link>
+                                                ) : (
+                                                    <span className="text-neutral-400 dark:text-neutral-500">—</span>
+                                                )}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
