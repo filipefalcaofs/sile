@@ -42,4 +42,36 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    /**
+     * Assign the cidadao role (role must be seeded first).
+     */
+    public function cidadao(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('cidadao'));
+    }
+
+    /**
+     * Assign the analista role (role must be seeded first).
+     */
+    public function analista(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('analista'));
+    }
+
+    /**
+     * Assign the gestor role (role must be seeded first).
+     */
+    public function gestor(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('gestor'));
+    }
+
+    /**
+     * Assign the administrador role (role must be seeded first).
+     */
+    public function administrador(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('administrador'));
+    }
 }
