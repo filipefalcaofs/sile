@@ -10,30 +10,30 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 2 of 15 — Administração Base (HU-011 a HU-014)
-Plan: 4 of 8 completos (02-01, 02-02, 02-03, 02-04)
-Status: In progress — wave 2 completa (02-04 concluído; suíte 159/159 verde no fechamento)
-Last activity: 2026-06-10 — Completed 02-04-PLAN.md (HU-011: import oficial de 1.331 CNAEs auditado + CRUD + tela com busca)
+Plan: 5 of 8 completos (02-01, 02-02, 02-03, 02-04, 02-05)
+Status: In progress — wave 3 completa (02-05 concluído; suíte 168/168 verde no fechamento)
+Last activity: 2026-06-10 — Completed 02-05-PLAN.md (HU-012: gestão de usuários com inativação real, papel auditado e link para acessos)
 
-Progress: [█░░░░░░░░░] 10% (1/15 fases; fase 2: 4/8 planos)
+Progress: [█░░░░░░░░░] 11% (1/15 fases; fase 2: 5/8 planos)
 
-Next step: orquestrador despacha a wave 3 (02-05 — HU-012 gestão de usuários)
+Next step: orquestrador despacha a wave 4 (02-06 — HU-013 perfis; 02-07 — HU-014 tela de parâmetros)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Average duration: 12 min
-- Total execution time: 2.38 h
+- Total execution time: 2.57 h
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-identidade | 9/9 ✓ | ~96 min | 11 min |
-| 02-administracao-base | 4/8 | ~55 min | 14 min |
+| 02-administracao-base | 5/8 | ~66 min | 13 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-08 (10 min), 02-01 (9 min), 02-03 (10 min), 02-02 (14 min), 02-04 (22 min)
+- Last 5 plans: 02-01 (9 min), 02-03 (10 min), 02-02 (14 min), 02-04 (22 min), 02-05 (11 min)
 - Trend: estável (02-04 maior por cobrir import + CRUD + tela em 3 tasks)
 
 *Atualizado após cada plano concluído*
@@ -85,14 +85,14 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [02-04] Import oficial de CNAEs: upsert por code NÃO toca active (desativação administrada sobrevive a re-import); divergência 9900-8/00 (publicação cita 1.332, arquivo traz 1.331) registrada no relatório auditado (rules_version cnae-subclasses-2.3), nunca inserida silenciosamente — caminho é o CRUD manual (testado com esse caso real).
 - [02-04] Cnae: PK surrogate id (code unique em dígitos, não PK), hierarquia desnormalizada, accessor formatted_code — pronto para dimensões de risco da Fase 6 sem retrabalho. UpdateCnaeRequest valida só description/active (código imutável na edição, padrão CPF). CnaeSeeder fora do DatabaseSeeder (02-08).
 - [02-04] Form do Inertia v3 SOBRESCREVE onSubmit custom (handler interno definido após spread das props): confirmações de submit vão no onClick do botão type=submit com preventDefault. Busca por código só aplica branch de dígitos quando o termo contém dígitos (termo textual não vira LIKE '%').
+- [02-05] Inativação pela UI é toggle único (PUT usuarios/{user}/inativacao alterna pelo estado) com anti-lockout no FormRequest::after(); auditoria de usuários é EXPLÍCITA (log 'usuarios', target_user_id nas properties) — inactivated_at fora do fillable e papéis (relação) não entram no diff do HasAuditoria.
+- [02-05] Listagem de usuários nunca expõe CPF em claro (LGPD): transform por item com cpf_masked ***.***.***-DD; teste asserta missing('cpf') no payload Inertia.
 
 ### Pending Todos
 
 Nenhum.
 
 ### Blockers/Concerns
-
-- [Fase 2] Tela gestao/acessos alcançável apenas por URL direta (/gestao/acessos/{user}) — a listagem/busca de usuários da gestão é a HU-012 (Fase 2), que fechará essa navegação.
 
 Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Nenhuma bloqueia as Fases 1 a 3.
 
@@ -106,8 +106,8 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-10 15:00 UTC
-Stopped at: Completed 02-04-PLAN.md (Fase 2, wave 2 completa — suíte 159/159, typecheck/build verdes; seed oficial verificado em banco dev com evidência fresca)
+Last session: 2026-06-10 15:17 UTC
+Stopped at: Completed 02-05-PLAN.md (Fase 2, wave 3 completa — suíte 168/168, typecheck/build verdes; concern da tela gestao/acessos resolvido pela navegação da HU-012)
 Resume file: None
 
 Nota operacional: durante o 01-09 houve uma sessão de agente concorrente no mesmo working directory (commits 79b3b81/e4010ce da Task 1 e composer run dev). Conteúdo validado e aproveitado sem duplicação. Evitar duas sessões GSD simultâneas no mesmo repositório.
