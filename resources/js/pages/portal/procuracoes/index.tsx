@@ -14,6 +14,7 @@ interface ProcurationItem {
 interface ProcuracoesIndexProps {
     granted: ProcurationItem[];
     received: ProcurationItem[];
+    procuracoesEnabled: boolean;
 }
 
 function formatDate(value: string | null): string {
@@ -48,7 +49,7 @@ function SituationBadge({ item }: { item: ProcurationItem }) {
     );
 }
 
-export default function ProcuracoesIndex({ granted, received }: ProcuracoesIndexProps) {
+export default function ProcuracoesIndex({ granted, received, procuracoesEnabled }: ProcuracoesIndexProps) {
     return (
         <PortalLayout>
             <Head title="Minhas procurações" />
@@ -57,6 +58,14 @@ export default function ProcuracoesIndex({ granted, received }: ProcuracoesIndex
                     Minhas procurações
                 </h2>
 
+                {!procuracoesEnabled && (
+                    <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                        A funcionalidade de procurações está temporariamente desativada pelo administrador.
+                        Vínculos existentes permanecem visíveis e revogáveis.
+                    </div>
+                )}
+
+                {procuracoesEnabled && (
                 <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
                     <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
                         Vincular procurador
@@ -119,6 +128,7 @@ export default function ProcuracoesIndex({ granted, received }: ProcuracoesIndex
                         )}
                     </Form>
                 </section>
+                )}
 
                 <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
                     <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
