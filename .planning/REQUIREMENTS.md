@@ -9,16 +9,16 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 
 ### EP01 — Identidade, Acesso e Segurança
 
-- [ ] **HU-001**: Cadastrar usuário
-- [ ] **HU-002**: Autenticar usuário
-- [ ] **HU-003**: Recuperar senha
-- [ ] **HU-004**: Alterar senha
-- [ ] **HU-005**: Confirmar e-mail
-- [ ] **HU-006**: Aceitar termo LGPD
-- [ ] **HU-007**: Gerenciar perfil do usuário
-- [ ] **HU-008**: Vincular procurador
-- [ ] **HU-009**: Revogar procuração
-- [ ] **HU-010**: Consultar histórico de acessos
+- [x] **HU-001**: Cadastrar usuário
+- [x] **HU-002**: Autenticar usuário
+- [x] **HU-003**: Recuperar senha
+- [x] **HU-004**: Alterar senha
+- [x] **HU-005**: Confirmar e-mail
+- [x] **HU-006**: Aceitar termo LGPD
+- [x] **HU-007**: Gerenciar perfil do usuário
+- [x] **HU-008**: Vincular procurador
+- [x] **HU-009**: Revogar procuração
+- [x] **HU-010**: Consultar histórico de acessos
 
 ### EP02 — Administração
 
@@ -215,16 +215,16 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HU-001 | Fase 1 | Pending |
-| HU-002 | Fase 1 | Pending |
-| HU-003 | Fase 1 | Pending |
-| HU-004 | Fase 1 | Pending |
-| HU-005 | Fase 1 | Pending |
-| HU-006 | Fase 1 | Pending |
-| HU-007 | Fase 1 | Pending |
-| HU-008 | Fase 1 | Pending |
-| HU-009 | Fase 1 | Pending |
-| HU-010 | Fase 1 | Pending |
+| HU-001 | Fase 1 | Complete |
+| HU-002 | Fase 1 | Complete |
+| HU-003 | Fase 1 | Complete |
+| HU-004 | Fase 1 | Complete |
+| HU-005 | Fase 1 | Complete |
+| HU-006 | Fase 1 | Complete |
+| HU-007 | Fase 1 | Complete |
+| HU-008 | Fase 1 | Complete |
+| HU-009 | Fase 1 | Complete |
+| HU-010 | Fase 1 | Complete |
 | HU-011 | Fase 2 | Pending |
 | HU-012 | Fase 2 | Pending |
 | HU-013 | Fase 2 | Pending |

@@ -28,7 +28,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - Fases inteiras (1, 2, 3): trabalho planejado do milestone
 - Fases decimais (2.1, 2.2): inserções urgentes (marcadas com INSERTED)
 
-- [ ] **Phase 1: Identidade, Acesso e Auditoria Transversal** — Autenticação, perfis, procuração e trilha de auditoria reutilizável (EP01)
+- [x] **Phase 1: Identidade, Acesso e Auditoria Transversal** — Autenticação, perfis, procuração e trilha de auditoria reutilizável (EP01) — concluída em 2026-06-10 (verificação: passed 47/47; smoke E2E aprovado)
 - [ ] **Phase 2: Administração Base** — CNAEs, usuários, perfis e parâmetros do sistema (EP02 parcial)
 - [ ] **Phase 3: Cadastro Empresarial** — Empresas, CNPJ e vínculos com CNAEs (EP03)
 - [ ] **Phase 4: Georreferenciamento e Território** — Geocodificação, zona, via, lote, bairro e restrições (EP04)
