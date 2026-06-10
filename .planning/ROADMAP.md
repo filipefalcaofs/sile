@@ -88,7 +88,7 @@ Plans:
 - [x] 02-03-PLAN.md — Inativação de usuário: bloqueio no login (Fortify) e middleware de sessão ativa (wave 1) ✓ 2026-06-10
 - [x] 02-04-PLAN.md — HU-011: import oficial de 1.331 CNAEs com relatório auditado + CRUD + tela com busca (wave 2) ✓ 2026-06-10
 - [x] 02-05-PLAN.md — HU-012: gestão de usuários (busca, papel, inativação auditada) + link para acessos — fecha concern da Fase 1 (wave 3) ✓ 2026-06-10
-- [ ] 02-06-PLAN.md — HU-013: perfis com permissões granulares, proteções estruturais e anti-lockout (wave 4)
+- [x] 02-06-PLAN.md — HU-013: perfis com permissões granulares, proteções estruturais e anti-lockout (wave 4) ✓ 2026-06-10
 - [ ] 02-07-PLAN.md — HU-014: tela de parâmetros, CA-05 efeito sem deploy, CA-06 toggle real de procurações, CA-07 histórico (wave 5)
 - [ ] 02-08-PLAN.md — Fechamento: seeds dev integrados, navegação da gestão, verificação integral + smoke E2E (checkpoint humano) (wave 6)
 

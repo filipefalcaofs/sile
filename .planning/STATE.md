@@ -10,30 +10,30 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 2 of 15 — Administração Base (HU-011 a HU-014)
-Plan: 5 of 8 completos (02-01, 02-02, 02-03, 02-04, 02-05)
-Status: In progress — wave 3 completa (02-05 concluído; suíte 168/168 verde no fechamento)
-Last activity: 2026-06-10 — Completed 02-05-PLAN.md (HU-012: gestão de usuários com inativação real, papel auditado e link para acessos)
+Plan: 6 of 8 completos (02-01, 02-02, 02-03, 02-04, 02-05, 02-06)
+Status: In progress — wave 4 completa (02-06 concluído; suíte 180/180 verde no fechamento)
+Last activity: 2026-06-10 — Completed 02-06-PLAN.md (HU-013: perfis com permissões granulares, proteções estruturais e anti-lockout)
 
-Progress: [█░░░░░░░░░] 11% (1/15 fases; fase 2: 5/8 planos)
+Progress: [█░░░░░░░░░] 12% (1/15 fases; fase 2: 6/8 planos)
 
-Next step: orquestrador despacha a wave 4 (02-06 — HU-013 perfis; 02-07 — HU-014 tela de parâmetros)
+Next step: orquestrador despacha a wave 5 (02-07 — HU-014 tela de parâmetros)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
+- Total plans completed: 14
 - Average duration: 12 min
-- Total execution time: 2.57 h
+- Total execution time: 2.72 h
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-identidade | 9/9 ✓ | ~96 min | 11 min |
-| 02-administracao-base | 5/8 | ~66 min | 13 min |
+| 02-administracao-base | 6/8 | ~75 min | 13 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (9 min), 02-03 (10 min), 02-02 (14 min), 02-04 (22 min), 02-05 (11 min)
+- Last 5 plans: 02-03 (10 min), 02-02 (14 min), 02-04 (22 min), 02-05 (11 min), 02-06 (9 min)
 - Trend: estável (02-04 maior por cobrir import + CRUD + tela em 3 tasks)
 
 *Atualizado após cada plano concluído*
@@ -87,6 +87,8 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [02-04] Form do Inertia v3 SOBRESCREVE onSubmit custom (handler interno definido após spread das props): confirmações de submit vão no onClick do botão type=submit com preventDefault. Busca por código só aplica branch de dígitos quando o termo contém dígitos (termo textual não vira LIKE '%').
 - [02-05] Inativação pela UI é toggle único (PUT usuarios/{user}/inativacao alterna pelo estado) com anti-lockout no FormRequest::after(); auditoria de usuários é EXPLÍCITA (log 'usuarios', target_user_id nas properties) — inactivated_at fora do fillable e papéis (relação) não entram no diff do HasAuditoria.
 - [02-05] Listagem de usuários nunca expõe CPF em claro (LGPD): transform por item com cpf_masked ***.***.***-DD; teste asserta missing('cpf') no payload Inertia.
+- [02-06] Papéis estruturais protegidos por Roles::STRUCTURAL (constante única) validada em FormRequest::after(): rename/exclusão bloqueados, acessar-gestao não removível do administrador — três proteções anti-lockout com teste nomeado cada. Regra real no backend; UI só comunica (checkbox disabled + hidden, nome readOnly).
+- [02-06] Update de perfil pela UI usa syncPermissions (conjunto exato marcado — intenção do admin) em contraste com o seeder aditivo givePermissionTo do 02-01; sem forgetCachedPermissions manual (spatie v8 reseta nos métodos built-in). Roles do spatie sem HasAuditoria — auditoria explícita no log 'perfis' com permissoes_antes/depois.
 
 ### Pending Todos
 
@@ -106,8 +108,8 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-10 15:17 UTC
-Stopped at: Completed 02-05-PLAN.md (Fase 2, wave 3 completa — suíte 168/168, typecheck/build verdes; concern da tela gestao/acessos resolvido pela navegação da HU-012)
+Last session: 2026-06-10 16:15 UTC
+Stopped at: Completed 02-06-PLAN.md (Fase 2, wave 4 completa — suíte 180/180, typecheck/build verdes; HU-013 com 12 testes e três proteções anti-lockout)
 Resume file: None
 
 Nota operacional: durante o 01-09 houve uma sessão de agente concorrente no mesmo working directory (commits 79b3b81/e4010ce da Task 1 e composer run dev). Conteúdo validado e aproveitado sem duplicação. RECORRÊNCIA no 02-05: TRÊS sessões executoras despachadas para o mesmo plano; a segunda e a terceira detectaram a colisão no início (SUMMARY/commits já no HEAD), não editaram código e validaram o trabalho da primeira com evidência fresca (Users 15/15, suíte 168/168, typecheck/build/pint verdes, 3 rotas usuarios.*). Corrigir o despacho: um único executor por wave/plano — nunca sessões GSD simultâneas ou repetidas no mesmo plano sem checar SUMMARY antes.
