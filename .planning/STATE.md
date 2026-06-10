@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 1 of 15 (Identidade, Acesso e Auditoria Transversal)
-Plan: 1 of 9 in current phase
+Plan: 2 of 9 in current phase
 Status: In progress
-Last activity: 2026-06-09 — Completed 01-01-PLAN.md (fundação: deps, pt-BR, Settings, SecurityHeaders)
+Last activity: 2026-06-10 — Completed 01-02-PLAN.md (auditoria transversal RN-002 + access_logs)
 
-Progress: [█░░░░░░░░░] 11% (fase 1: 1/9 planos)
+Progress: [██░░░░░░░░] 22% (fase 1: 2/9 planos)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 8 min
-- Total execution time: 0.13 h
+- Total plans completed: 2
+- Average duration: 11.5 min
+- Total execution time: 0.38 h
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-identidade | 1/9 | 8 min | 8 min |
+| 01-identidade | 2/9 | 23 min | 11.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (8 min)
+- Last 5 plans: 01-01 (8 min), 01-02 (15 min)
 - Trend: —
 
 *Atualizado após cada plano concluído*
@@ -52,6 +52,10 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [01-01] Parâmetros de segurança em config/sile.php lidos via App\Support\Settings::get(); Password::defaults() parametrizado — HU-014 troca o backend para banco sem tocar call sites.
 - [01-01] Permissions-Policy com geolocation=(self) — mapa da fase 4 pode pedir localização no próprio domínio.
 - [01-01] Rotas Fortify confirmadas (login.store, register.store, password.*, verification.*, user-password.update) — registradas no 01-01-SUMMARY.md.
+- [01-02] 403 auditado via render callback em AccessDeniedHttpException (exceção PREPARADA pelo Handler — callback em AuthorizationException nunca dispararia) + UnauthorizedException do spatie.
+- [01-02] fortify.limiters.login = null: pipeline usa EnsureLoginIsNotThrottled e dispara Lockout (auditado em access_logs); limiter nomeado daria 429 sem evento. 01-06 deve parametrizar respeitando isso (limite atual: 5 fixo do LoginRateLimiter).
+- [01-02] AuditService::log(logName, event, description, properties, subject, result, rulesVersion) e logBlocked() — assinaturas travadas para 01-06/01-07/01-08.
+- [01-02] access_logs é tabela dedicada imutável (sem updated_at); AccessLogFactory pronta para HU-010 (01-08).
 
 ### Pending Todos
 
@@ -71,6 +75,6 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-09 23:53 UTC
-Stopped at: Completed 01-01-PLAN.md; próximo é 01-02-PLAN.md (auditoria transversal RN-002)
+Last session: 2026-06-10 01:48 UTC
+Stopped at: Completed 01-02-PLAN.md; próximo é 01-03-PLAN.md (perfis/permissões, rotas portal × gestão, layouts)
 Resume file: None
