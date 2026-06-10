@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\UpdateParameterRequest;
+use App\Models\Activity;
 use App\Models\Parameter;
 use App\Support\Audit\AuditService;
 use Illuminate\Http\RedirectResponse;
@@ -70,5 +71,35 @@ class ParameterController extends Controller
         );
 
         return back()->with('status', __('Parâmetro atualizado com sucesso.'));
+    }
+
+    /**
+     * Histórico de alterações do parâmetro (CA-07/RN-008): valor anterior,
+     * valor novo, responsável e data/hora — sensíveis já entram mascarados
+     * na gravação. latest('id') garante ordem estável quando duas alterações
+     * caem no mesmo segundo.
+     */
+    public function history(Parameter $parameter): Response
+    {
+        $entries = Activity::query()
+            ->where('log_name', 'parametros')
+            ->where('subject_type', Parameter::class)
+            ->where('subject_id', $parameter->id)
+            ->with('causer:id,name')
+            ->latest('id')
+            ->paginate(15)
+            ->withQueryString()
+            ->through(fn (Activity $activity) => [
+                'id' => $activity->id,
+                'valor_anterior' => $activity->properties['valor_anterior'] ?? null,
+                'valor_novo' => $activity->properties['valor_novo'] ?? null,
+                'responsavel' => $activity->causer?->name,
+                'data' => $activity->created_at->toIso8601String(),
+            ]);
+
+        return Inertia::render('gestao/parametros/historico', [
+            'parameter' => $parameter->only('key', 'description', 'sensitive'),
+            'entries' => $entries,
+        ]);
     }
 }

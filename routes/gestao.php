@@ -44,6 +44,7 @@ Route::middleware(['auth', 'verified', 'permission:acessar-gestao', 'lgpd.accept
 
         Route::middleware('permission:manter-parametros')->group(function () {
             Route::get('parametros', [ParameterController::class, 'index'])->name('parametros.index');
+            Route::get('parametros/{parameter:key}/historico', [ParameterController::class, 'history'])->name('parametros.historico');
             Route::put('parametros/{parameter:key}', [ParameterController::class, 'update'])->name('parametros.update');
         });
     });
