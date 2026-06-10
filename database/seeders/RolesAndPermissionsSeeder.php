@@ -20,20 +20,35 @@ class RolesAndPermissionsSeeder extends Seeder
             'acessar-gestao',
             'consultar-acessos-de-qualquer-conta',
             'gerenciar-procuracoes-proprias',
+            'manter-cnaes',
+            'manter-usuarios',
+            'manter-perfis',
+            'manter-parametros',
+            'consultar-cnaes',
         ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
 
+        // Atribuição aditiva (givePermissionTo, nunca sync): re-seed em produção
+        // não pode remover permissões ajustadas pelo administrador via interface (HU-013).
         Role::firstOrCreate(['name' => 'cidadao', 'guard_name' => 'web'])
-            ->syncPermissions(['gerenciar-procuracoes-proprias']);
+            ->givePermissionTo(['gerenciar-procuracoes-proprias']);
         Role::firstOrCreate(['name' => 'analista', 'guard_name' => 'web'])
-            ->syncPermissions(['acessar-gestao']);
+            ->givePermissionTo(['acessar-gestao', 'consultar-cnaes']);
         Role::firstOrCreate(['name' => 'gestor', 'guard_name' => 'web'])
-            ->syncPermissions(['acessar-gestao']);
+            ->givePermissionTo(['acessar-gestao', 'consultar-cnaes']);
         Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web'])
-            ->syncPermissions(['acessar-gestao', 'consultar-acessos-de-qualquer-conta']);
+            ->givePermissionTo([
+                'acessar-gestao',
+                'consultar-acessos-de-qualquer-conta',
+                'manter-cnaes',
+                'manter-usuarios',
+                'manter-perfis',
+                'manter-parametros',
+                'consultar-cnaes',
+            ]);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
