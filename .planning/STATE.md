@@ -33,6 +33,14 @@ Next step: `/gsd-plan-phase 3` (Cadastro Empresarial — HU-021 a HU-028)
 - PADRÃO DE CRUD (obrigatório para novas telas): datatable em card único com ação primária no header; criar/editar em Modal (700px forms grandes, 600px simples); ações destrutivas/impacto via ui/confirm-dialog.tsx (danger/warning/info, processing); ui/pagination.tsx compartilhado com meta "Mostrando X–Y de Z" (backend envia from/to/total); ui/empty-state.tsx distinguindo busca vazia de lista vazia; edição inline apenas quando for melhor usabilidade (ex.: parâmetros por grupo).
 - Regressão: 197/197 testes, typecheck e build verdes; screenshots validados (landing, login, CNAEs com modal, sidebar agrupada).
 
+### Fase 2.3 (INSERTED) — Segregação de rotas portal × retaguarda (concluída 2026-06-10)
+
+- MAPA DE ROTAS VIGENTE: `/` redireciona para `/portal` (landing pública, name `home`); auth pública do cidadão sob `/portal/*` (Fortify com `prefix: portal` — `/portal/login`, `/portal/register`, `/portal/forgot-password`, `/portal/reset-password`, `/portal/email/verify`, `/portal/logout`, `/portal/user/password`); painel do cidadão em `/portal/painel` (name `portal.dashboard`, `fortify.home`); retaguarda com login interno próprio em `/gestao/login` (GET tela `auth/gestao-login` + POST no `AuthenticatedSessionController` do Fortify, names `gestao.login`/`gestao.login.store`), sem cadastro público.
+- `bootstrap/app.php`: `redirectGuestsTo` por contexto (rotas `gestao*` → `gestao.login`; demais → `login`) e `redirectUsersTo` por perfil (`acessar-gestao` → `gestao.dashboard`; senão → `portal.dashboard`).
+- LoginResponse por perfil (Fase 1) inalterado — usa nomes de rota. Logins separados em TELAS/rotas; autenticação única (mesmo guard `web` + permissões), padrão Laravel.
+- Identidade visual: logo SILE (pin + edifício, `resources/js/components/app/logo.tsx` + `public/favicon.svg`); tela interna com aviso de acesso restrito.
+- Regressão: 201/201 testes (4 novos de roteamento), pint/typecheck/build verdes.
+
 ## Performance Metrics
 
 **Velocity:**
