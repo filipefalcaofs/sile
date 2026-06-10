@@ -68,7 +68,7 @@ Plans:
 - [x] 01-06-PLAN.md — HU-002 + HU-003 + HU-004: login por perfil com lockout, recuperação e alteração de senha (wave 6) ✓ 2026-06-10
 - [x] 01-07-PLAN.md — HU-008 + HU-009: procuração e representação "em nome de" com revogação imediata (wave 6) ✓ 2026-06-10
 - [x] 01-08-PLAN.md — HU-007 + HU-010: perfil do usuário e histórico de acessos portal/gestão (wave 7) ✓ 2026-06-10
-- [ ] 01-09-PLAN.md — Seeds dev + verificação integral + smoke E2E navegável (checkpoint humano) (wave 8)
+- [x] 01-09-PLAN.md — Seeds dev + verificação integral + smoke E2E navegável (checkpoint humano) (wave 8) ✓ 2026-06-10
 
 ### Phase 2: Administração Base
 **Goal**: Administradores mantêm os cadastros estruturantes (CNAEs, usuários, perfis) e os parâmetros de negócio do sistema sem depender de desenvolvedor.
@@ -80,7 +80,17 @@ Plans:
   2. Administrador gerencia usuários (ativação, inativação, vínculo de perfil) pela interface.
   3. Administrador cria e edita perfis com permissões granulares por funcionalidade.
   4. Administrador altera parâmetros de negócio por interface, com tipo, validação, valor padrão, histórico auditado e efeito sem novo deploy.
-**Plans**: TBD
+**Plans**: 8 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Fundação: conversão xlsx→CSV oficial (Wave 0) + permissões granulares com seeder aditivo (wave 1)
+- [ ] 02-02-PLAN.md — Registry de parâmetros: tabela parameters, Settings banco+cache+fallback e catálogo seedado (wave 1)
+- [ ] 02-03-PLAN.md — Inativação de usuário: bloqueio no login (Fortify) e middleware de sessão ativa (wave 1)
+- [ ] 02-04-PLAN.md — HU-011: import oficial de 1.331 CNAEs com relatório auditado + CRUD + tela com busca (wave 2)
+- [ ] 02-05-PLAN.md — HU-012: gestão de usuários (busca, papel, inativação auditada) + link para acessos — fecha concern da Fase 1 (wave 3)
+- [ ] 02-06-PLAN.md — HU-013: perfis com permissões granulares, proteções estruturais e anti-lockout (wave 4)
+- [ ] 02-07-PLAN.md — HU-014: tela de parâmetros, CA-05 efeito sem deploy, CA-06 toggle real de procurações, CA-07 histórico (wave 5)
+- [ ] 02-08-PLAN.md — Fechamento: seeds dev integrados, navegação da gestão, verificação integral + smoke E2E (checkpoint humano) (wave 6)
 
 ### Phase 3: Cadastro Empresarial
 **Goal**: Empresas são cadastradas e mantidas com seus CNAEs e vínculos com usuários, prontas para sustentar solicitações de viabilidade.
@@ -278,8 +288,8 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Identidade, Acesso e Auditoria Transversal | 1/9 | In progress | - |
-| 2. Administração Base | 0/TBD | Not started | - |
+| 1. Identidade, Acesso e Auditoria Transversal | 9/9 | Complete | 2026-06-10 |
+| 2. Administração Base | 0/8 | Planned | - |
 | 3. Cadastro Empresarial | 0/TBD | Not started | - |
 | 4. Georreferenciamento e Território | 0/TBD | Not started | - |
 | 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |
