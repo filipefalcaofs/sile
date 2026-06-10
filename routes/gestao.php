@@ -3,6 +3,7 @@
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\DashboardController;
+use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,5 +32,12 @@ Route::middleware(['auth', 'verified', 'permission:acessar-gestao', 'lgpd.accept
             Route::get('usuarios', [UserManagementController::class, 'index'])->name('usuarios.index');
             Route::put('usuarios/{user}/papel', [UserManagementController::class, 'updateRole'])->name('usuarios.papel.update');
             Route::put('usuarios/{user}/inativacao', [UserManagementController::class, 'toggleActivation'])->name('usuarios.inativacao.update');
+        });
+
+        Route::middleware('permission:manter-perfis')->group(function () {
+            Route::get('perfis', [RoleController::class, 'index'])->name('perfis.index');
+            Route::post('perfis', [RoleController::class, 'store'])->name('perfis.store');
+            Route::put('perfis/{role}', [RoleController::class, 'update'])->name('perfis.update');
+            Route::delete('perfis/{role}', [RoleController::class, 'destroy'])->name('perfis.destroy');
         });
     });
