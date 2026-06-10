@@ -1,5 +1,11 @@
 import { Form, Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import Input from '@/components/form/input';
+import Label from '@/components/form/label';
+import Select from '@/components/form/select';
+import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
 
@@ -28,177 +34,238 @@ interface CnaesIndexProps {
     };
 }
 
-const inputStyles =
-    'mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100';
+const actionButtonStyles =
+    'inline-flex items-center justify-center rounded-lg px-3 py-2 text-theme-xs font-medium ring-1 ring-inset transition disabled:cursor-not-allowed disabled:opacity-60';
 
-const labelStyles = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300';
+const brandActionStyles = `${actionButtonStyles} text-brand-500 ring-brand-200 hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10`;
 
-function SituationBadge({ active }: { active: boolean }) {
-    const styles = active
-        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-        : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100';
+const warningActionStyles = `${actionButtonStyles} text-warning-600 ring-warning-300 hover:bg-warning-50 dark:text-orange-400 dark:ring-warning-500/30 dark:hover:bg-warning-500/10`;
 
+const errorActionStyles = `${actionButtonStyles} text-error-600 ring-error-300 hover:bg-error-50 dark:text-error-400 dark:ring-error-500/30 dark:hover:bg-error-500/10`;
+
+const headerCellStyles = 'px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400';
+
+function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
     return (
-        <span className={`inline-block rounded-lg px-2 py-0.5 text-xs font-medium ${styles}`}>
-            {active ? 'Ativo' : 'Inativo'}
-        </span>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
+            <nav aria-label="Trilha de navegação">
+                <ol className="flex flex-wrap items-center gap-1.5">
+                    <li>
+                        <Link
+                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
+                            href="/gestao"
+                        >
+                            Painel
+                            <svg
+                                className="stroke-current"
+                                width="17"
+                                height="16"
+                                viewBox="0 0 17 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
+                                    strokeWidth="1.2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
+                        </Link>
+                    </li>
+                    <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
+                </ol>
+            </nav>
+        </div>
     );
 }
 
-function FieldError({ message }: { message?: string }) {
-    if (!message) {
+function SituationBadge({ active }: { active: boolean }) {
+    return (
+        <Badge size="sm" color={active ? 'success' : 'warning'}>
+            {active ? 'Ativo' : 'Inativo'}
+        </Badge>
+    );
+}
+
+function Pagination({ links }: { links: PaginationLink[] }) {
+    if (links.length <= 3) {
         return null;
     }
 
-    return <p className="mt-1 text-sm text-red-600 dark:text-red-400">{message}</p>;
+    return (
+        <nav className="flex flex-wrap items-center gap-1">
+            {links.map((link, index) =>
+                link.url ? (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm font-medium transition ${
+                            link.active
+                                ? 'bg-brand-500 text-white'
+                                : 'text-gray-700 hover:bg-brand-50 hover:text-brand-500 dark:text-gray-400 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400'
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                    />
+                ) : (
+                    <span
+                        key={index}
+                        className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm text-gray-400 dark:text-gray-600"
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                    />
+                ),
+            )}
+        </nav>
+    );
 }
 
 function CreateCnaeForm() {
     return (
-        <Form action="/gestao/cnaes" method="post" resetOnSuccess className="mt-4">
+        <Form action="/gestao/cnaes" method="post" resetOnSuccess>
             {({ errors, processing }) => (
-                <div className="flex flex-col gap-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-5">
+                    <div className="grid gap-5 sm:grid-cols-2">
                         <div>
-                            <label htmlFor="create-code" className={labelStyles}>
-                                Código (DDDD-D/SS)
-                            </label>
-                            <input
+                            <Label htmlFor="create-code">Código (DDDD-D/SS)</Label>
+                            <Input
                                 id="create-code"
                                 type="text"
                                 name="code"
                                 required
                                 placeholder="0000-0/00"
-                                className={inputStyles}
+                                error={!!errors.code}
+                                hint={errors.code}
                             />
-                            <FieldError message={errors.code} />
                         </div>
                         <div>
-                            <label htmlFor="create-description" className={labelStyles}>
-                                Denominação
-                            </label>
-                            <input
+                            <Label htmlFor="create-description">Denominação</Label>
+                            <Input
                                 id="create-description"
                                 type="text"
                                 name="description"
                                 required
-                                className={inputStyles}
+                                error={!!errors.description}
+                                hint={errors.description}
                             />
-                            <FieldError message={errors.description} />
                         </div>
                     </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-5 sm:grid-cols-2">
                         <div>
-                            <label htmlFor="create-section-code" className={labelStyles}>
-                                Seção (código e descrição)
-                            </label>
+                            <Label htmlFor="create-section-code">Seção (código e descrição)</Label>
                             <div className="flex gap-2">
-                                <input
-                                    id="create-section-code"
-                                    type="text"
-                                    name="section_code"
-                                    required
-                                    maxLength={1}
-                                    placeholder="A"
-                                    className={`${inputStyles} w-16`}
-                                />
-                                <input
-                                    type="text"
-                                    name="section_description"
-                                    required
-                                    aria-label="Descrição da seção"
-                                    className={inputStyles}
-                                />
+                                <div className="w-16 shrink-0">
+                                    <Input
+                                        id="create-section-code"
+                                        type="text"
+                                        name="section_code"
+                                        required
+                                        maxLength={1}
+                                        placeholder="A"
+                                        error={!!errors.section_code}
+                                        hint={errors.section_code}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <Input
+                                        type="text"
+                                        name="section_description"
+                                        required
+                                        aria-label="Descrição da seção"
+                                        error={!!errors.section_description}
+                                        hint={errors.section_description}
+                                    />
+                                </div>
                             </div>
-                            <FieldError message={errors.section_code} />
-                            <FieldError message={errors.section_description} />
                         </div>
                         <div>
-                            <label htmlFor="create-division-code" className={labelStyles}>
-                                Divisão (código e descrição)
-                            </label>
+                            <Label htmlFor="create-division-code">Divisão (código e descrição)</Label>
                             <div className="flex gap-2">
-                                <input
-                                    id="create-division-code"
-                                    type="text"
-                                    name="division_code"
-                                    required
-                                    maxLength={2}
-                                    placeholder="01"
-                                    className={`${inputStyles} w-16`}
-                                />
-                                <input
-                                    type="text"
-                                    name="division_description"
-                                    required
-                                    aria-label="Descrição da divisão"
-                                    className={inputStyles}
-                                />
+                                <div className="w-16 shrink-0">
+                                    <Input
+                                        id="create-division-code"
+                                        type="text"
+                                        name="division_code"
+                                        required
+                                        maxLength={2}
+                                        placeholder="01"
+                                        error={!!errors.division_code}
+                                        hint={errors.division_code}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <Input
+                                        type="text"
+                                        name="division_description"
+                                        required
+                                        aria-label="Descrição da divisão"
+                                        error={!!errors.division_description}
+                                        hint={errors.division_description}
+                                    />
+                                </div>
                             </div>
-                            <FieldError message={errors.division_code} />
-                            <FieldError message={errors.division_description} />
                         </div>
                         <div>
-                            <label htmlFor="create-group-code" className={labelStyles}>
-                                Grupo (código e descrição)
-                            </label>
+                            <Label htmlFor="create-group-code">Grupo (código e descrição)</Label>
                             <div className="flex gap-2">
-                                <input
-                                    id="create-group-code"
-                                    type="text"
-                                    name="group_code"
-                                    required
-                                    maxLength={5}
-                                    placeholder="01.1"
-                                    className={`${inputStyles} w-20`}
-                                />
-                                <input
-                                    type="text"
-                                    name="group_description"
-                                    required
-                                    aria-label="Descrição do grupo"
-                                    className={inputStyles}
-                                />
+                                <div className="w-20 shrink-0">
+                                    <Input
+                                        id="create-group-code"
+                                        type="text"
+                                        name="group_code"
+                                        required
+                                        maxLength={5}
+                                        placeholder="01.1"
+                                        error={!!errors.group_code}
+                                        hint={errors.group_code}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <Input
+                                        type="text"
+                                        name="group_description"
+                                        required
+                                        aria-label="Descrição do grupo"
+                                        error={!!errors.group_description}
+                                        hint={errors.group_description}
+                                    />
+                                </div>
                             </div>
-                            <FieldError message={errors.group_code} />
-                            <FieldError message={errors.group_description} />
                         </div>
                         <div>
-                            <label htmlFor="create-class-code" className={labelStyles}>
-                                Classe (código e descrição)
-                            </label>
+                            <Label htmlFor="create-class-code">Classe (código e descrição)</Label>
                             <div className="flex gap-2">
-                                <input
-                                    id="create-class-code"
-                                    type="text"
-                                    name="class_code"
-                                    required
-                                    maxLength={7}
-                                    placeholder="01.11-3"
-                                    className={`${inputStyles} w-24`}
-                                />
-                                <input
-                                    type="text"
-                                    name="class_description"
-                                    required
-                                    aria-label="Descrição da classe"
-                                    className={inputStyles}
-                                />
+                                <div className="w-24 shrink-0">
+                                    <Input
+                                        id="create-class-code"
+                                        type="text"
+                                        name="class_code"
+                                        required
+                                        maxLength={7}
+                                        placeholder="01.11-3"
+                                        error={!!errors.class_code}
+                                        hint={errors.class_code}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <Input
+                                        type="text"
+                                        name="class_description"
+                                        required
+                                        aria-label="Descrição da classe"
+                                        error={!!errors.class_description}
+                                        hint={errors.class_description}
+                                    />
+                                </div>
                             </div>
-                            <FieldError message={errors.class_code} />
-                            <FieldError message={errors.class_description} />
                         </div>
                     </div>
 
                     <div>
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
-                        >
+                        <Button size="sm" type="submit" disabled={processing}>
                             {processing ? 'Salvando...' : 'Salvar'}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}
@@ -207,71 +274,62 @@ function CreateCnaeForm() {
 }
 
 function EditCnaeRow({ cnae, onClose }: { cnae: CnaeItem; onClose: () => void }) {
+    const [active, setActive] = useState(cnae.active ? '1' : '0');
+
     return (
-        <tr className="border-b border-neutral-100 bg-neutral-50 last:border-0 dark:border-neutral-800 dark:bg-neutral-950/50">
-            <td colSpan={5} className="px-2 py-4">
-                <Form
-                    action={`/gestao/cnaes/${cnae.id}`}
-                    method="put"
-                    onSuccess={onClose}
-                >
+        <tr className="bg-gray-50 dark:bg-white/[0.02]">
+            <td colSpan={5} className="px-5 py-5">
+                <Form action={`/gestao/cnaes/${cnae.id}`} method="put" onSuccess={onClose}>
                     {({ errors, processing }) => (
-                        <div className="flex flex-col gap-4">
-                            <div className="grid gap-4 sm:grid-cols-3">
+                        <div className="flex flex-col gap-5">
+                            <div className="grid gap-5 sm:grid-cols-3">
                                 <div>
-                                    <span className={labelStyles}>Código</span>
-                                    <p className="mt-1 px-1 py-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                                    <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                        Código
+                                    </span>
+                                    <p className="py-2.5 text-theme-sm font-medium text-gray-800 dark:text-white/90">
                                         {cnae.formatted_code}
                                     </p>
-                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                                    <p className="text-theme-xs text-gray-500 dark:text-gray-400">
                                         O código não pode ser alterado.
                                     </p>
                                 </div>
                                 <div>
-                                    <label htmlFor={`edit-description-${cnae.id}`} className={labelStyles}>
-                                        Denominação
-                                    </label>
-                                    <input
+                                    <Label htmlFor={`edit-description-${cnae.id}`}>Denominação</Label>
+                                    <Input
                                         id={`edit-description-${cnae.id}`}
                                         type="text"
                                         name="description"
                                         defaultValue={cnae.description}
                                         required
-                                        className={inputStyles}
+                                        error={!!errors.description}
+                                        hint={errors.description}
                                     />
-                                    <FieldError message={errors.description} />
                                 </div>
                                 <div>
-                                    <label htmlFor={`edit-active-${cnae.id}`} className={labelStyles}>
-                                        Situação
-                                    </label>
-                                    <select
+                                    <Label htmlFor={`edit-active-${cnae.id}`}>Situação</Label>
+                                    <Select
                                         id={`edit-active-${cnae.id}`}
                                         name="active"
-                                        defaultValue={cnae.active ? '1' : '0'}
-                                        className={inputStyles}
-                                    >
-                                        <option value="1">Ativo</option>
-                                        <option value="0">Inativo</option>
-                                    </select>
-                                    <FieldError message={errors.active} />
+                                        value={active}
+                                        onChange={setActive}
+                                        options={[
+                                            { value: '1', label: 'Ativo' },
+                                            { value: '0', label: 'Inativo' },
+                                        ]}
+                                    />
+                                    {errors.active && (
+                                        <p className="mt-1.5 text-theme-xs text-error-500">{errors.active}</p>
+                                    )}
                                 </div>
                             </div>
-                            <div className="flex gap-2">
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
-                                >
+                            <div className="flex flex-wrap gap-3">
+                                <Button size="sm" type="submit" disabled={processing}>
                                     {processing ? 'Salvando...' : 'Salvar alterações'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800"
-                                >
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={onClose}>
                                     Cancelar
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -284,20 +342,13 @@ function EditCnaeRow({ cnae, onClose }: { cnae: CnaeItem; onClose: () => void })
 function CnaeActions({ cnae, onEdit }: { cnae: CnaeItem; onEdit: () => void }) {
     return (
         <div className="flex flex-wrap gap-2">
-            <button
-                type="button"
-                onClick={onEdit}
-                className="rounded-lg border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700 transition hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950"
-            >
+            <button type="button" onClick={onEdit} className={brandActionStyles}>
                 Editar
             </button>
             <Form action={`/gestao/cnaes/${cnae.id}`} method="put" className="inline">
                 <input type="hidden" name="description" value={cnae.description} />
                 <input type="hidden" name="active" value={cnae.active ? '0' : '1'} />
-                <button
-                    type="submit"
-                    className="rounded-lg border border-amber-300 px-3 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-950"
-                >
+                <button type="submit" className={warningActionStyles}>
                     {cnae.active ? 'Desativar' : 'Reativar'}
                 </button>
             </Form>
@@ -309,7 +360,7 @@ function CnaeActions({ cnae, onEdit }: { cnae: CnaeItem; onEdit: () => void }) {
                             event.preventDefault();
                         }
                     }}
-                    className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
+                    className={errorActionStyles}
                 >
                     Excluir
                 </button>
@@ -341,127 +392,130 @@ export default function CnaesIndex({ cnaes, filters }: CnaesIndexProps) {
     return (
         <GestaoLayout>
             <Head title="CNAEs" />
-            <div className="flex flex-col gap-6">
-                <div>
-                    <h2 className="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-                        CNAEs
-                    </h2>
-                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                        Estrutura oficial CNAE-Subclasses 2.3 (IBGE/CONCLA)
-                    </p>
-                </div>
+            <PageBreadcrumb pageTitle="CNAEs" />
 
+            <div className="flex flex-col gap-4 md:gap-6">
                 {canMaintain && (
-                    <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
+                    <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
                         <button
                             type="button"
                             onClick={() => setShowCreate((current) => !current)}
-                            className="flex w-full items-center justify-between text-left"
+                            className="flex w-full items-center justify-between gap-3 px-6 py-5 text-left"
                         >
-                            <span className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+                            <span className="text-base font-medium text-gray-800 dark:text-white/90">
                                 Cadastrar CNAE
                             </span>
-                            <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                            <span className="text-theme-sm text-gray-500 dark:text-gray-400">
                                 {showCreate ? 'Recolher' : 'Expandir'}
                             </span>
                         </button>
-                        {showCreate && <CreateCnaeForm />}
-                    </section>
+                        {showCreate && (
+                            <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
+                                <CreateCnaeForm />
+                            </div>
+                        )}
+                    </div>
                 )}
 
-                <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
-                    <label htmlFor="search" className="sr-only">
-                        Buscar CNAEs
-                    </label>
-                    <input
-                        id="search"
-                        type="search"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Buscar por código ou denominação..."
-                        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none sm:max-w-sm dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                    />
-
-                    {cnaes.data.length === 0 ? (
-                        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-                            Nenhum CNAE encontrado.
+                <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                    <div className="px-6 py-5">
+                        <h3 className="text-base font-medium text-gray-800 dark:text-white/90">CNAEs cadastrados</h3>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Estrutura oficial CNAE-Subclasses 2.3 (IBGE/CONCLA)
                         </p>
-                    ) : (
-                        <div className="mt-3 overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead>
-                                    <tr className="border-b border-neutral-200 text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-                                        <th className="py-2 pr-4 font-medium">Código</th>
-                                        <th className="py-2 pr-4 font-medium">Denominação</th>
-                                        <th className="py-2 pr-4 font-medium">Classe</th>
-                                        <th className="py-2 pr-4 font-medium">Situação</th>
-                                        {canMaintain && <th className="py-2 font-medium">Ações</th>}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {cnaes.data.map((cnae) =>
-                                        editingId === cnae.id ? (
-                                            <EditCnaeRow
-                                                key={cnae.id}
-                                                cnae={cnae}
-                                                onClose={() => setEditingId(null)}
-                                            />
-                                        ) : (
-                                            <tr
-                                                key={cnae.id}
-                                                className="border-b border-neutral-100 text-neutral-900 last:border-0 dark:border-neutral-800 dark:text-neutral-100"
-                                            >
-                                                <td className="py-2.5 pr-4 font-medium whitespace-nowrap">
-                                                    {cnae.formatted_code}
-                                                </td>
-                                                <td className="py-2.5 pr-4">{cnae.description}</td>
-                                                <td className="py-2.5 pr-4 whitespace-nowrap">
-                                                    {cnae.class_code}
-                                                </td>
-                                                <td className="py-2.5 pr-4">
-                                                    <SituationBadge active={cnae.active} />
-                                                </td>
-                                                {canMaintain && (
-                                                    <td className="py-2.5">
-                                                        <CnaeActions
-                                                            cnae={cnae}
-                                                            onEdit={() => setEditingId(cnae.id)}
-                                                        />
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        ),
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                    </div>
+                    <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
+                        <div className="space-y-6">
+                            <div>
+                                <label htmlFor="search" className="sr-only">
+                                    Buscar CNAEs
+                                </label>
+                                <div className="w-full sm:max-w-sm">
+                                    <Input
+                                        id="search"
+                                        type="search"
+                                        value={search}
+                                        onChange={(event) => setSearch(event.target.value)}
+                                        placeholder="Buscar por código ou denominação..."
+                                    />
+                                </div>
+                            </div>
 
-                    {cnaes.links.length > 3 && (
-                        <nav className="mt-4 flex flex-wrap gap-1">
-                            {cnaes.links.map((link, index) =>
-                                link.url ? (
-                                    <Link
-                                        key={index}
-                                        href={link.url}
-                                        className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                                            link.active
-                                                ? 'bg-blue-700 font-medium text-white dark:bg-blue-600'
-                                                : 'text-neutral-700 hover:bg-neutral-200 dark:text-neutral-300 dark:hover:bg-neutral-800'
-                                        }`}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ) : (
-                                    <span
-                                        key={index}
-                                        className="rounded-lg px-3 py-1.5 text-sm text-neutral-400 dark:text-neutral-600"
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ),
+                            {cnaes.data.length === 0 ? (
+                                <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                    Nenhum CNAE encontrado.
+                                </p>
+                            ) : (
+                                <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+                                    <div className="max-w-full overflow-x-auto">
+                                        <Table>
+                                            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                                                <TableRow>
+                                                    <TableCell isHeader className={headerCellStyles}>
+                                                        Código
+                                                    </TableCell>
+                                                    <TableCell isHeader className={headerCellStyles}>
+                                                        Denominação
+                                                    </TableCell>
+                                                    <TableCell isHeader className={headerCellStyles}>
+                                                        Classe
+                                                    </TableCell>
+                                                    <TableCell isHeader className={headerCellStyles}>
+                                                        Situação
+                                                    </TableCell>
+                                                    {canMaintain && (
+                                                        <TableCell isHeader className={headerCellStyles}>
+                                                            Ações
+                                                        </TableCell>
+                                                    )}
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                                                {cnaes.data.map((cnae) =>
+                                                    editingId === cnae.id ? (
+                                                        <EditCnaeRow
+                                                            key={cnae.id}
+                                                            cnae={cnae}
+                                                            onClose={() => setEditingId(null)}
+                                                        />
+                                                    ) : (
+                                                        <TableRow
+                                                            key={cnae.id}
+                                                            className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                                                        >
+                                                            <TableCell className="px-5 py-4 text-start text-theme-sm font-medium whitespace-nowrap text-gray-800 dark:text-white/90">
+                                                                {cnae.formatted_code}
+                                                            </TableCell>
+                                                            <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                                                {cnae.description}
+                                                            </TableCell>
+                                                            <TableCell className="px-5 py-4 text-start text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                                                {cnae.class_code}
+                                                            </TableCell>
+                                                            <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                                                <SituationBadge active={cnae.active} />
+                                                            </TableCell>
+                                                            {canMaintain && (
+                                                                <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                                                    <CnaeActions
+                                                                        cnae={cnae}
+                                                                        onEdit={() => setEditingId(cnae.id)}
+                                                                    />
+                                                                </TableCell>
+                                                            )}
+                                                        </TableRow>
+                                                    ),
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </div>
                             )}
-                        </nav>
-                    )}
-                </section>
+
+                            <Pagination links={cnaes.links} />
+                        </div>
+                    </div>
+                </div>
             </div>
         </GestaoLayout>
     );

@@ -1,5 +1,9 @@
 import { Form, Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import Input from '@/components/form/input';
+import Select from '@/components/form/select';
+import Badge from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 interface UserItem {
@@ -28,33 +32,74 @@ interface UsersIndexProps {
     roles: string[];
 }
 
+const actionButtonStyles =
+    'inline-flex items-center justify-center rounded-lg px-3 py-2 text-theme-xs font-medium ring-1 ring-inset transition disabled:cursor-not-allowed disabled:opacity-60';
+
+const brandActionStyles = `${actionButtonStyles} text-brand-500 ring-brand-200 hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10`;
+
+const warningActionStyles = `${actionButtonStyles} text-warning-600 ring-warning-300 hover:bg-warning-50 dark:text-orange-400 dark:ring-warning-500/30 dark:hover:bg-warning-500/10`;
+
+const successActionStyles = `${actionButtonStyles} text-success-600 ring-success-300 hover:bg-success-50 dark:text-success-400 dark:ring-success-500/30 dark:hover:bg-success-500/10`;
+
+const headerCellStyles = 'px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400';
+
+function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
+    return (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
+            <nav aria-label="Trilha de navegação">
+                <ol className="flex flex-wrap items-center gap-1.5">
+                    <li>
+                        <Link
+                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
+                            href="/gestao"
+                        >
+                            Painel
+                            <svg
+                                className="stroke-current"
+                                width="17"
+                                height="16"
+                                viewBox="0 0 17 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
+                                    strokeWidth="1.2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
+                        </Link>
+                    </li>
+                    <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
+                </ol>
+            </nav>
+        </div>
+    );
+}
+
 function SituationBadge({ inactivatedAt }: { inactivatedAt: string | null }) {
     const active = inactivatedAt === null;
-    const styles = active
-        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-        : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100';
 
     return (
-        <span className={`inline-block rounded-lg px-2 py-0.5 text-xs font-medium ${styles}`}>
+        <Badge size="sm" color={active ? 'success' : 'warning'}>
             {active ? 'Ativa' : 'Inativa'}
-        </span>
+        </Badge>
     );
 }
 
 function RoleBadges({ roles }: { roles: string[] }) {
     if (roles.length === 0) {
-        return <span className="text-xs text-neutral-400 dark:text-neutral-500">Sem papel</span>;
+        return <span className="text-theme-xs text-gray-400 dark:text-gray-500">Sem papel</span>;
     }
 
     return (
         <div className="flex flex-wrap gap-1">
             {roles.map((role) => (
-                <span
-                    key={role}
-                    className="inline-block rounded-lg bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-100"
-                >
+                <Badge key={role} size="sm">
                     {role}
-                </span>
+                </Badge>
             ))}
         </div>
     );
@@ -65,10 +110,43 @@ function FieldError({ message }: { message?: string }) {
         return null;
     }
 
-    return <p className="mt-1 text-xs text-red-600 dark:text-red-400">{message}</p>;
+    return <p className="mt-1.5 text-theme-xs text-error-500">{message}</p>;
+}
+
+function Pagination({ links }: { links: PaginationLink[] }) {
+    if (links.length <= 3) {
+        return null;
+    }
+
+    return (
+        <nav className="flex flex-wrap items-center gap-1">
+            {links.map((link, index) =>
+                link.url ? (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm font-medium transition ${
+                            link.active
+                                ? 'bg-brand-500 text-white'
+                                : 'text-gray-700 hover:bg-brand-50 hover:text-brand-500 dark:text-gray-400 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400'
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                    />
+                ) : (
+                    <span
+                        key={index}
+                        className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm text-gray-400 dark:text-gray-600"
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                    />
+                ),
+            )}
+        </nav>
+    );
 }
 
 function RoleForm({ user, roles }: { user: UserItem; roles: string[] }) {
+    const [role, setRole] = useState(user.roles[0] ?? '');
+
     return (
         <Form action={`/gestao/usuarios/${user.id}/papel`} method="put" className="inline">
             {({ errors, processing }) => (
@@ -76,28 +154,17 @@ function RoleForm({ user, roles }: { user: UserItem; roles: string[] }) {
                     <label htmlFor={`role-${user.id}`} className="sr-only">
                         Papel de {user.name}
                     </label>
-                    <select
-                        id={`role-${user.id}`}
-                        name="role"
-                        defaultValue={user.roles[0] ?? ''}
-                        className="rounded-lg border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                    >
-                        {user.roles.length === 0 && (
-                            <option value="" disabled>
-                                Selecionar...
-                            </option>
-                        )}
-                        {roles.map((role) => (
-                            <option key={role} value={role}>
-                                {role}
-                            </option>
-                        ))}
-                    </select>
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="rounded-lg border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950"
-                    >
+                    <div className="w-44">
+                        <Select
+                            id={`role-${user.id}`}
+                            name="role"
+                            value={role}
+                            onChange={setRole}
+                            placeholder="Selecionar..."
+                            options={roles.map((roleOption) => ({ value: roleOption, label: roleOption }))}
+                        />
+                    </div>
+                    <button type="submit" disabled={processing} className={brandActionStyles}>
                         Alterar papel
                     </button>
                     <FieldError message={errors.role} />
@@ -125,11 +192,7 @@ function ActivationForm({ user }: { user: UserItem }) {
                                 event.preventDefault();
                             }
                         }}
-                        className={`rounded-lg border px-3 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                            active
-                                ? 'border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-950'
-                                : 'border-green-300 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950'
-                        }`}
+                        className={active ? warningActionStyles : successActionStyles}
                     >
                         {active ? 'Inativar' : 'Reativar'}
                     </button>
@@ -158,107 +221,106 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
     return (
         <GestaoLayout>
             <Head title="Usuários" />
-            <div className="flex flex-col gap-6">
-                <div>
-                    <h2 className="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-                        Usuários
-                    </h2>
-                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            <PageBreadcrumb pageTitle="Usuários" />
+
+            <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                <div className="px-6 py-5">
+                    <h3 className="text-base font-medium text-gray-800 dark:text-white/90">Contas cadastradas</h3>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Contas do sistema: situação, papel e histórico de acessos
                     </p>
                 </div>
-
-                <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
-                    <label htmlFor="search" className="sr-only">
-                        Buscar usuários
-                    </label>
-                    <input
-                        id="search"
-                        type="search"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Buscar por nome ou e-mail..."
-                        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none sm:max-w-sm dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                    />
-
-                    {users.data.length === 0 ? (
-                        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-                            Nenhum usuário encontrado.
-                        </p>
-                    ) : (
-                        <div className="mt-3 overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead>
-                                    <tr className="border-b border-neutral-200 text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-                                        <th className="py-2 pr-4 font-medium">Nome</th>
-                                        <th className="py-2 pr-4 font-medium">E-mail</th>
-                                        <th className="py-2 pr-4 font-medium">CPF</th>
-                                        <th className="py-2 pr-4 font-medium">Papel</th>
-                                        <th className="py-2 pr-4 font-medium">Situação</th>
-                                        <th className="py-2 font-medium">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {users.data.map((user) => (
-                                        <tr
-                                            key={user.id}
-                                            className="border-b border-neutral-100 text-neutral-900 last:border-0 dark:border-neutral-800 dark:text-neutral-100"
-                                        >
-                                            <td className="py-2.5 pr-4 font-medium">{user.name}</td>
-                                            <td className="py-2.5 pr-4">{user.email}</td>
-                                            <td className="py-2.5 pr-4 whitespace-nowrap">
-                                                {user.cpf_masked}
-                                            </td>
-                                            <td className="py-2.5 pr-4">
-                                                <RoleBadges roles={user.roles} />
-                                            </td>
-                                            <td className="py-2.5 pr-4">
-                                                <SituationBadge inactivatedAt={user.inactivated_at} />
-                                            </td>
-                                            <td className="py-2.5">
-                                                <div className="flex flex-wrap items-center gap-3">
-                                                    <Link
-                                                        href={`/gestao/acessos/${user.id}`}
-                                                        className="text-xs font-medium text-neutral-500 underline-offset-2 transition hover:text-blue-700 hover:underline dark:text-neutral-400 dark:hover:text-blue-400"
-                                                    >
-                                                        Acessos
-                                                    </Link>
-                                                    <RoleForm user={user} roles={roles} />
-                                                    <ActivationForm user={user} />
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
+                    <div className="space-y-6">
+                        <div>
+                            <label htmlFor="search" className="sr-only">
+                                Buscar usuários
+                            </label>
+                            <div className="w-full sm:max-w-sm">
+                                <Input
+                                    id="search"
+                                    type="search"
+                                    value={search}
+                                    onChange={(event) => setSearch(event.target.value)}
+                                    placeholder="Buscar por nome ou e-mail..."
+                                />
+                            </div>
                         </div>
-                    )}
 
-                    {users.links.length > 3 && (
-                        <nav className="mt-4 flex flex-wrap gap-1">
-                            {users.links.map((link, index) =>
-                                link.url ? (
-                                    <Link
-                                        key={index}
-                                        href={link.url}
-                                        className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                                            link.active
-                                                ? 'bg-blue-700 font-medium text-white dark:bg-blue-600'
-                                                : 'text-neutral-700 hover:bg-neutral-200 dark:text-neutral-300 dark:hover:bg-neutral-800'
-                                        }`}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ) : (
-                                    <span
-                                        key={index}
-                                        className="rounded-lg px-3 py-1.5 text-sm text-neutral-400 dark:text-neutral-600"
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ),
-                            )}
-                        </nav>
-                    )}
-                </section>
+                        {users.data.length === 0 ? (
+                            <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                Nenhum usuário encontrado.
+                            </p>
+                        ) : (
+                            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+                                <div className="max-w-full overflow-x-auto">
+                                    <Table>
+                                        <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                                            <TableRow>
+                                                <TableCell isHeader className={headerCellStyles}>
+                                                    Nome
+                                                </TableCell>
+                                                <TableCell isHeader className={headerCellStyles}>
+                                                    E-mail
+                                                </TableCell>
+                                                <TableCell isHeader className={headerCellStyles}>
+                                                    CPF
+                                                </TableCell>
+                                                <TableCell isHeader className={headerCellStyles}>
+                                                    Papel
+                                                </TableCell>
+                                                <TableCell isHeader className={headerCellStyles}>
+                                                    Situação
+                                                </TableCell>
+                                                <TableCell isHeader className={headerCellStyles}>
+                                                    Ações
+                                                </TableCell>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                                            {users.data.map((user) => (
+                                                <TableRow
+                                                    key={user.id}
+                                                    className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                                                >
+                                                    <TableCell className="px-5 py-4 text-start text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                                        {user.name}
+                                                    </TableCell>
+                                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                                        {user.email}
+                                                    </TableCell>
+                                                    <TableCell className="px-5 py-4 text-start text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                                        {user.cpf_masked}
+                                                    </TableCell>
+                                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                                        <RoleBadges roles={user.roles} />
+                                                    </TableCell>
+                                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                                        <SituationBadge inactivatedAt={user.inactivated_at} />
+                                                    </TableCell>
+                                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                                        <div className="flex flex-wrap items-center gap-3">
+                                                            <Link
+                                                                href={`/gestao/acessos/${user.id}`}
+                                                                className="text-theme-xs font-medium text-gray-500 underline-offset-2 transition hover:text-brand-500 hover:underline dark:text-gray-400 dark:hover:text-brand-400"
+                                                            >
+                                                                Acessos
+                                                            </Link>
+                                                            <RoleForm user={user} roles={roles} />
+                                                            <ActivationForm user={user} />
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
+                        )}
+
+                        <Pagination links={users.links} />
+                    </div>
+                </div>
             </div>
         </GestaoLayout>
     );
