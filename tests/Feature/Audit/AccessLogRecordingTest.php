@@ -3,6 +3,7 @@
 namespace Tests\Feature\Audit;
 
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -102,9 +103,13 @@ class AccessLogRecordingTest extends TestCase
 
     public function test_cadastro_gera_activity_de_cadastro(): void
     {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
         $this->post('/register', [
             'name' => 'Maria da Silva',
             'email' => 'maria@example.com',
+            'cpf' => '529.982.247-25',
+            'phone' => '(71) 99999-0000',
             'password' => 'SenhaForte1',
             'password_confirmation' => 'SenhaForte1',
         ]);

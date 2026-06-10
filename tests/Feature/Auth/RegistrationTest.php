@@ -68,7 +68,8 @@ class RegistrationTest extends TestCase
 
         $errors = session('errors')->get('name');
 
-        $this->assertStringContainsString('obrigatório', $errors[0]);
+        $this->assertStringContainsString('obrigatória', $errors[0]);
+        $this->assertStringContainsString('nome', $errors[0]);
     }
 
     public function test_cadastro_bloqueado_com_cpf_invalido(): void

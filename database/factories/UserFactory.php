@@ -27,10 +27,36 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'cpf' => $this->generateCpf(),
+            'phone' => fake()->numerify('(71) 9####-####'),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /**
+     * Generate a valid CPF (digits only) with correct check digits.
+     */
+    private function generateCpf(): string
+    {
+        $n = [];
+
+        for ($i = 0; $i < 9; $i++) {
+            $n[] = random_int(0, 9);
+        }
+
+        for ($t = 9; $t < 11; $t++) {
+            $d = 0;
+
+            for ($c = 0; $c < $t; $c++) {
+                $d += $n[$c] * (($t + 1) - $c);
+            }
+
+            $n[$t] = ((10 * $d) % 11) % 10;
+        }
+
+        return implode('', $n);
     }
 
     /**
