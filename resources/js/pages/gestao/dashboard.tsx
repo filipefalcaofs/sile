@@ -96,7 +96,7 @@ export default function Dashboard() {
                                 <Link
                                     key={module.href}
                                     href={module.href}
-                                    className="rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-brand-300 dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-500/40 md:p-6"
+                                    className="group rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-brand-300 hover:shadow-theme-md dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-500/40 md:p-6"
                                 >
                                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
                                         {module.icon}
@@ -110,7 +110,7 @@ export default function Dashboard() {
                                                 {module.name}
                                             </h4>
                                         </div>
-                                        <ArrowRightIcon className="mb-1.5 size-5 text-gray-400 dark:text-gray-500" />
+                                        <ArrowRightIcon className="mb-1.5 size-5 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-brand-500 dark:text-gray-500 dark:group-hover:text-brand-400" />
                                     </div>
                                 </Link>
                             ))}
