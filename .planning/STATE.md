@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 1 of 15 (Identidade, Acesso e Auditoria Transversal)
-Plan: 2 of 9 in current phase
+Plan: 3 of 9 in current phase
 Status: In progress
-Last activity: 2026-06-10 — Completed 01-02-PLAN.md (auditoria transversal RN-002 + access_logs)
+Last activity: 2026-06-10 — Completed 01-03-PLAN.md (RBAC seedado + ambientes portal × gestão)
 
-Progress: [██░░░░░░░░] 22% (fase 1: 2/9 planos)
+Progress: [███░░░░░░░] 33% (fase 1: 3/9 planos)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 11.5 min
-- Total execution time: 0.38 h
+- Total plans completed: 3
+- Average duration: 10.3 min
+- Total execution time: 0.52 h
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-identidade | 2/9 | 23 min | 11.5 min |
+| 01-identidade | 3/9 | 31 min | 10.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (8 min), 01-02 (15 min)
-- Trend: —
+- Last 5 plans: 01-01 (8 min), 01-02 (15 min), 01-03 (8 min)
+- Trend: estável
 
 *Atualizado após cada plano concluído*
 
@@ -56,6 +56,9 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [01-02] fortify.limiters.login = null: pipeline usa EnsureLoginIsNotThrottled e dispara Lockout (auditado em access_logs); limiter nomeado daria 429 sem evento. 01-06 deve parametrizar respeitando isso (limite atual: 5 fixo do LoginRateLimiter).
 - [01-02] AuditService::log(logName, event, description, properties, subject, result, rulesVersion) e logBlocked() — assinaturas travadas para 01-06/01-07/01-08.
 - [01-02] access_logs é tabela dedicada imutável (sem updated_at); AccessLogFactory pronta para HU-010 (01-08).
+- [01-03] Papéis travados: cidadao/analista/gestor/administrador num único guard web; contador/procurador NÃO são papéis (poder vem de dados). Factory states por papel exigem seed prévio de RolesAndPermissionsSeeder.
+- [01-03] Ambientes segregados por middleware permission:acessar-gestao (não por guard); nomes portal.*/gestao.* alimentam o channel da auditoria. Portal usa auth+verified; lgpd.accepted entra no 01-05; MustVerifyEmail no 01-04.
+- [01-03] Props Inertia compartilhadas (auth.user/roles/permissions, flash.status) tipadas em SharedProps (resources/js/types/index.d.ts); auth-layout.tsx pronto para as telas de auth dos planos 01-04/01-05/01-06.
 
 ### Pending Todos
 
@@ -75,6 +78,6 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-10 01:48 UTC
-Stopped at: Completed 01-02-PLAN.md; próximo é 01-03-PLAN.md (perfis/permissões, rotas portal × gestão, layouts)
+Last session: 2026-06-10 02:01 UTC
+Stopped at: Completed 01-03-PLAN.md; próximo é 01-04-PLAN.md (HU-001 + HU-005: cadastro com CPF, papel cidadao e confirmação de e-mail)
 Resume file: None
