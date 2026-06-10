@@ -1,16 +1,52 @@
 import { Form, Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
+import Input from '@/components/form/input';
+import Label from '@/components/form/label';
+import { EyeCloseIcon, EyeIcon } from '@/components/icons';
+import Button from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
 
 interface RegisterProps {
     passwordRules: string;
 }
 
-const inputClasses =
-    'w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500';
+interface PasswordFieldProps {
+    id: string;
+    name: string;
+    label: string;
+    autoComplete: string;
+    error?: string;
+    hint?: string;
+}
 
-const labelClasses = 'mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300';
+function PasswordField({ id, name, label, autoComplete, error, hint }: PasswordFieldProps) {
+    const [show, setShow] = useState(false);
 
-const errorClasses = 'mt-1 text-sm text-red-600 dark:text-red-400';
+    return (
+        <div>
+            <Label htmlFor={id}>{label}</Label>
+            <div className="relative">
+                <Input
+                    id={id}
+                    type={show ? 'text' : 'password'}
+                    name={name}
+                    autoComplete={autoComplete}
+                    required
+                    error={!!error}
+                    hint={error ?? hint}
+                />
+                <button
+                    type="button"
+                    onClick={() => setShow((current) => !current)}
+                    aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}
+                    className="absolute top-3 right-4 z-30 cursor-pointer text-gray-500 dark:text-gray-400"
+                >
+                    {show ? <EyeIcon className="size-5" /> : <EyeCloseIcon className="size-5" />}
+                </button>
+            </div>
+        </div>
+    );
+}
 
 export default function Register({ passwordRules }: RegisterProps) {
     return (
@@ -18,116 +54,87 @@ export default function Register({ passwordRules }: RegisterProps) {
             <Head title="Criar conta" />
             <Form action="/register" method="post">
                 {({ errors, processing }) => (
-                    <div className="flex flex-col gap-4">
+                    <div className="space-y-5">
                         <div>
-                            <label htmlFor="name" className={labelClasses}>
-                                Nome completo
-                            </label>
-                            <input
+                            <Label htmlFor="name">Nome completo</Label>
+                            <Input
                                 id="name"
                                 type="text"
                                 name="name"
                                 autoComplete="name"
                                 required
-                                className={inputClasses}
+                                error={!!errors.name}
+                                hint={errors.name}
                             />
-                            {errors.name && <p className={errorClasses}>{errors.name}</p>}
                         </div>
 
                         <div>
-                            <label htmlFor="email" className={labelClasses}>
-                                E-mail
-                            </label>
-                            <input
+                            <Label htmlFor="email">E-mail</Label>
+                            <Input
                                 id="email"
                                 type="email"
                                 name="email"
                                 autoComplete="email"
                                 required
-                                className={inputClasses}
+                                error={!!errors.email}
+                                hint={errors.email}
                             />
-                            {errors.email && <p className={errorClasses}>{errors.email}</p>}
                         </div>
 
-                        <div>
-                            <label htmlFor="cpf" className={labelClasses}>
-                                CPF
-                            </label>
-                            <input
-                                id="cpf"
-                                type="text"
-                                name="cpf"
-                                inputMode="numeric"
-                                placeholder="000.000.000-00"
-                                required
-                                className={inputClasses}
-                            />
-                            {errors.cpf && <p className={errorClasses}>{errors.cpf}</p>}
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                            <div>
+                                <Label htmlFor="cpf">CPF</Label>
+                                <Input
+                                    id="cpf"
+                                    type="text"
+                                    name="cpf"
+                                    inputMode="numeric"
+                                    placeholder="000.000.000-00"
+                                    required
+                                    error={!!errors.cpf}
+                                    hint={errors.cpf}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="phone">Telefone (opcional)</Label>
+                                <Input
+                                    id="phone"
+                                    type="tel"
+                                    name="phone"
+                                    autoComplete="tel"
+                                    placeholder="(71) 90000-0000"
+                                    error={!!errors.phone}
+                                    hint={errors.phone}
+                                />
+                            </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="phone" className={labelClasses}>
-                                Telefone (opcional)
-                            </label>
-                            <input
-                                id="phone"
-                                type="tel"
-                                name="phone"
-                                autoComplete="tel"
-                                placeholder="(71) 90000-0000"
-                                className={inputClasses}
-                            />
-                            {errors.phone && <p className={errorClasses}>{errors.phone}</p>}
-                        </div>
+                        <PasswordField
+                            id="password"
+                            name="password"
+                            label="Senha"
+                            autoComplete="new-password"
+                            error={errors.password}
+                            hint={`Requisitos da senha: ${passwordRules}`}
+                        />
 
-                        <div>
-                            <label htmlFor="password" className={labelClasses}>
-                                Senha
-                            </label>
-                            <input
-                                id="password"
-                                type="password"
-                                name="password"
-                                autoComplete="new-password"
-                                required
-                                className={inputClasses}
-                            />
-                            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                                Requisitos da senha: {passwordRules}
-                            </p>
-                            {errors.password && <p className={errorClasses}>{errors.password}</p>}
-                        </div>
+                        <PasswordField
+                            id="password_confirmation"
+                            name="password_confirmation"
+                            label="Confirmar senha"
+                            autoComplete="new-password"
+                            error={errors.password_confirmation}
+                        />
 
-                        <div>
-                            <label htmlFor="password_confirmation" className={labelClasses}>
-                                Confirmar senha
-                            </label>
-                            <input
-                                id="password_confirmation"
-                                type="password"
-                                name="password_confirmation"
-                                autoComplete="new-password"
-                                required
-                                className={inputClasses}
-                            />
-                            {errors.password_confirmation && (
-                                <p className={errorClasses}>{errors.password_confirmation}</p>
-                            )}
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
-                        >
+                        <Button type="submit" size="sm" className="w-full" disabled={processing}>
                             {processing ? 'Criando conta...' : 'Criar conta'}
-                        </button>
+                        </Button>
 
-                        <p className="text-center text-sm text-neutral-600 dark:text-neutral-400">
+                        <p className="text-center text-sm font-normal text-gray-700 dark:text-gray-400">
                             Já tenho conta —{' '}
                             <Link
                                 href="/login"
-                                className="font-medium text-blue-700 hover:underline dark:text-blue-400"
+                                className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                             >
                                 Entrar
                             </Link>

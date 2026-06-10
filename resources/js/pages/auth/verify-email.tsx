@@ -1,4 +1,6 @@
 import { Form, Head, Link } from '@inertiajs/react';
+import Alert from '@/components/ui/alert';
+import Button from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
 
 interface VerifyEmailProps {
@@ -9,27 +11,21 @@ export default function VerifyEmail({ status }: VerifyEmailProps) {
     return (
         <AuthLayout subtitle="Confirme seu e-mail">
             <Head title="Confirme seu e-mail" />
-            <div className="flex flex-col gap-4">
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            <div className="space-y-6">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                     Enviamos um link de confirmação para o seu e-mail. Verifique sua caixa de
                     entrada.
                 </p>
 
                 {status === 'verification-link-sent' && (
-                    <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-950 dark:text-green-400">
-                        Um novo link foi enviado.
-                    </p>
+                    <Alert variant="success" title="Sucesso" message="Um novo link foi enviado." />
                 )}
 
                 <Form action="/email/verification-notification" method="post">
                     {({ processing }) => (
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="w-full rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
-                        >
+                        <Button type="submit" size="sm" className="w-full" disabled={processing}>
                             {processing ? 'Enviando...' : 'Reenviar e-mail de confirmação'}
-                        </button>
+                        </Button>
                     )}
                 </Form>
 
@@ -38,7 +34,7 @@ export default function VerifyEmail({ status }: VerifyEmailProps) {
                         href="/logout"
                         method="post"
                         as="button"
-                        className="font-medium text-neutral-600 hover:underline dark:text-neutral-400"
+                        className="text-sm font-medium text-gray-700 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                     >
                         Sair
                     </Link>
