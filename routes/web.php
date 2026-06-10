@@ -7,3 +7,4 @@ Route::get('/', fn () => Inertia::render('home'))->name('home');
 
 require __DIR__.'/portal.php';
 require __DIR__.'/gestao.php';
+require __DIR__.'/settings.php';
