@@ -1,4 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
+import Badge from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import PortalLayout from '@/layouts/portal-layout';
 
 interface AccessLogItem {
@@ -22,42 +24,98 @@ interface AcessosProps {
     };
 }
 
-const eventConfig: Record<string, { label: string; styles: string }> = {
-    login: {
-        label: 'Login',
-        styles: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
-    },
-    logout: {
-        label: 'Saída',
-        styles: 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300',
-    },
-    falha: {
-        label: 'Tentativa falha',
-        styles: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
-    },
-    bloqueio: {
-        label: 'Bloqueio temporário',
-        styles: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100',
-    },
+const headerCellStyles = 'px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400';
+
+type BadgeColor = 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark';
+
+const eventConfig: Record<string, { label: string; color: BadgeColor }> = {
+    login: { label: 'Login', color: 'success' },
+    logout: { label: 'Saída', color: 'light' },
+    falha: { label: 'Tentativa falha', color: 'error' },
+    bloqueio: { label: 'Bloqueio temporário', color: 'warning' },
 };
 
 function EventBadge({ event }: { event: string }) {
-    const config = eventConfig[event] ?? {
-        label: event,
-        styles: 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300',
-    };
+    const config = eventConfig[event] ?? { label: event, color: 'light' as BadgeColor };
 
     return (
-        <span className={`inline-block rounded-lg px-2 py-0.5 text-xs font-medium ${config.styles}`}>
+        <Badge size="sm" color={config.color}>
             {config.label}
-        </span>
+        </Badge>
+    );
+}
+
+function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
+    return (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
+            <nav aria-label="Trilha de navegação">
+                <ol className="flex flex-wrap items-center gap-1.5">
+                    <li>
+                        <Link
+                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
+                            href="/portal"
+                        >
+                            Portal
+                            <svg
+                                className="stroke-current"
+                                width="17"
+                                height="16"
+                                viewBox="0 0 17 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
+                                    strokeWidth="1.2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
+                        </Link>
+                    </li>
+                    <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
+                </ol>
+            </nav>
+        </div>
+    );
+}
+
+function Pagination({ links }: { links: PaginationLink[] }) {
+    if (links.length <= 3) {
+        return null;
+    }
+
+    return (
+        <nav className="flex flex-wrap items-center gap-1">
+            {links.map((link, index) =>
+                link.url ? (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm font-medium transition ${
+                            link.active
+                                ? 'bg-brand-500 text-white'
+                                : 'text-gray-700 hover:bg-brand-50 hover:text-brand-500 dark:text-gray-400 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400'
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                    />
+                ) : (
+                    <span
+                        key={index}
+                        className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm text-gray-400 dark:text-gray-600"
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                    />
+                ),
+            )}
+        </nav>
     );
 }
 
 function AccessLogTable({ logs }: { logs: AcessosProps['logs'] }) {
     if (logs.data.length === 0) {
         return (
-            <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-theme-sm text-gray-500 dark:text-gray-400">
                 Nenhum acesso registrado ainda.
             </p>
         );
@@ -65,59 +123,50 @@ function AccessLogTable({ logs }: { logs: AcessosProps['logs'] }) {
 
     return (
         <>
-            <div className="mt-3 overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                    <thead>
-                        <tr className="border-b border-neutral-200 text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-                            <th className="py-2 pr-4 font-medium">Data/hora</th>
-                            <th className="py-2 pr-4 font-medium">Evento</th>
-                            <th className="py-2 pr-4 font-medium">IP</th>
-                            <th className="py-2 font-medium">Canal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {logs.data.map((log) => (
-                            <tr
-                                key={log.id}
-                                className="border-b border-neutral-100 text-neutral-900 last:border-0 dark:border-neutral-800 dark:text-neutral-100"
-                            >
-                                <td className="py-2.5 pr-4">
-                                    {new Date(log.created_at).toLocaleString('pt-BR')}
-                                </td>
-                                <td className="py-2.5 pr-4">
-                                    <EventBadge event={log.event} />
-                                </td>
-                                <td className="py-2.5 pr-4">{log.ip_address ?? '—'}</td>
-                                <td className="py-2.5">{log.channel ?? '—'}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+                <div className="max-w-full overflow-x-auto">
+                    <Table>
+                        <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                            <TableRow>
+                                <TableCell isHeader className={headerCellStyles}>
+                                    Data/hora
+                                </TableCell>
+                                <TableCell isHeader className={headerCellStyles}>
+                                    Evento
+                                </TableCell>
+                                <TableCell isHeader className={headerCellStyles}>
+                                    IP
+                                </TableCell>
+                                <TableCell isHeader className={headerCellStyles}>
+                                    Canal
+                                </TableCell>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                            {logs.data.map((log) => (
+                                <TableRow
+                                    key={log.id}
+                                    className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                                >
+                                    <TableCell className="px-5 py-4 text-start text-theme-sm font-medium whitespace-nowrap text-gray-800 dark:text-white/90">
+                                        {new Date(log.created_at).toLocaleString('pt-BR')}
+                                    </TableCell>
+                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                        <EventBadge event={log.event} />
+                                    </TableCell>
+                                    <TableCell className="px-5 py-4 text-start text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                        {log.ip_address ?? '—'}
+                                    </TableCell>
+                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
+                                        {log.channel ?? '—'}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             </div>
-            {logs.links.length > 3 && (
-                <nav className="mt-4 flex flex-wrap gap-1">
-                    {logs.links.map((link, index) =>
-                        link.url ? (
-                            <Link
-                                key={index}
-                                href={link.url}
-                                className={`rounded-lg px-3 py-1.5 text-sm transition ${
-                                    link.active
-                                        ? 'bg-blue-700 font-medium text-white dark:bg-blue-600'
-                                        : 'text-neutral-700 hover:bg-neutral-200 dark:text-neutral-300 dark:hover:bg-neutral-800'
-                                }`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ) : (
-                            <span
-                                key={index}
-                                className="rounded-lg px-3 py-1.5 text-sm text-neutral-400 dark:text-neutral-600"
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ),
-                    )}
-                </nav>
-            )}
+            <Pagination links={logs.links} />
         </>
     );
 }
@@ -126,20 +175,22 @@ export default function Acessos({ logs }: AcessosProps) {
     return (
         <PortalLayout>
             <Head title="Meus acessos" />
-            <div className="flex flex-col gap-6">
-                <h2 className="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-                    Meus acessos
-                </h2>
+            <PageBreadcrumb pageTitle="Meus acessos" />
 
-                <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
-                    <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+            <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                <div className="px-6 py-5">
+                    <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
                         Histórico de acessos
                     </h3>
-                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Logins, saídas, tentativas falhas e bloqueios registrados na sua conta.
                     </p>
-                    <AccessLogTable logs={logs} />
-                </section>
+                </div>
+                <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
+                    <div className="space-y-6">
+                        <AccessLogTable logs={logs} />
+                    </div>
+                </div>
             </div>
         </PortalLayout>
     );

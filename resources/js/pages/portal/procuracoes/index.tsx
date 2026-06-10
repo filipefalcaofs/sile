@@ -1,4 +1,10 @@
 import { Form, Head, Link } from '@inertiajs/react';
+import Input from '@/components/form/input';
+import Label from '@/components/form/label';
+import Alert from '@/components/ui/alert';
+import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import PortalLayout from '@/layouts/portal-layout';
 
 interface ProcurationItem {
@@ -16,6 +22,17 @@ interface ProcuracoesIndexProps {
     received: ProcurationItem[];
     procuracoesEnabled: boolean;
 }
+
+const headerCellStyles = 'px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400';
+
+const bodyCellStyles = 'px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400';
+
+const actionButtonStyles =
+    'inline-flex items-center justify-center rounded-lg px-3 py-2 text-theme-xs font-medium ring-1 ring-inset transition';
+
+const brandActionStyles = `${actionButtonStyles} text-brand-500 ring-brand-200 hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10`;
+
+const errorActionStyles = `${actionButtonStyles} text-error-600 ring-error-300 hover:bg-error-50 dark:text-error-400 dark:ring-error-500/30 dark:hover:bg-error-500/10`;
 
 function formatDate(value: string | null): string {
     if (!value) {
@@ -35,17 +52,241 @@ function situationLabel(item: ProcurationItem): string {
 
 function SituationBadge({ item }: { item: ProcurationItem }) {
     const label = situationLabel(item);
-    const styles =
-        label === 'Ativa'
-            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-            : label === 'Revogada'
-              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
-              : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300';
+    const color = label === 'Ativa' ? 'success' : label === 'Revogada' ? 'error' : 'light';
 
     return (
-        <span className={`inline-block rounded-lg px-2 py-0.5 text-xs font-medium ${styles}`}>
+        <Badge size="sm" color={color}>
             {label}
-        </span>
+        </Badge>
+    );
+}
+
+function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
+    return (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
+            <nav aria-label="Trilha de navegação">
+                <ol className="flex flex-wrap items-center gap-1.5">
+                    <li>
+                        <Link
+                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
+                            href="/portal"
+                        >
+                            Portal
+                            <svg
+                                className="stroke-current"
+                                width="17"
+                                height="16"
+                                viewBox="0 0 17 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
+                                    strokeWidth="1.2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
+                        </Link>
+                    </li>
+                    <li className="text-sm text-gray-800 dark:text-white/90">Procurações</li>
+                </ol>
+            </nav>
+        </div>
+    );
+}
+
+function GrantProcurationCard() {
+    return (
+        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div className="px-6 py-5">
+                <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
+                    Vincular procurador
+                </h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    O procurador precisa ter conta no SILE. Informe o e-mail cadastrado e, se
+                    desejar, uma data de validade para a procuração.
+                </p>
+            </div>
+            <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
+                <Form action="/portal/procuracoes" method="post">
+                    {({ errors, processing }) => (
+                        <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
+                            <div className="flex-1">
+                                <Label htmlFor="attorney_email">E-mail do procurador</Label>
+                                <Input
+                                    id="attorney_email"
+                                    type="email"
+                                    name="attorney_email"
+                                    required
+                                    error={!!errors.attorney_email}
+                                    hint={errors.attorney_email}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="expires_at">Validade (opcional)</Label>
+                                <Input
+                                    id="expires_at"
+                                    type="date"
+                                    name="expires_at"
+                                    error={!!errors.expires_at}
+                                    hint={errors.expires_at}
+                                />
+                            </div>
+                            <div>
+                                <Button size="sm" type="submit" disabled={processing}>
+                                    {processing ? 'Vinculando...' : 'Vincular'}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </Form>
+            </div>
+        </div>
+    );
+}
+
+function GrantedTable({ granted }: { granted: ProcurationItem[] }) {
+    if (granted.length === 0) {
+        return (
+            <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                Você ainda não outorgou procurações.
+            </p>
+        );
+    }
+
+    return (
+        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+            <div className="max-w-full overflow-x-auto">
+                <Table>
+                    <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                        <TableRow>
+                            <TableCell isHeader className={headerCellStyles}>
+                                Procurador
+                            </TableCell>
+                            <TableCell isHeader className={headerCellStyles}>
+                                E-mail
+                            </TableCell>
+                            <TableCell isHeader className={headerCellStyles}>
+                                Início
+                            </TableCell>
+                            <TableCell isHeader className={headerCellStyles}>
+                                Validade
+                            </TableCell>
+                            <TableCell isHeader className={headerCellStyles}>
+                                Situação
+                            </TableCell>
+                            <TableCell isHeader className={headerCellStyles}>
+                                Ações
+                            </TableCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                        {granted.map((item) => (
+                            <TableRow
+                                key={item.id}
+                                className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                            >
+                                <TableCell className="px-5 py-4 text-start text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                    {item.name}
+                                </TableCell>
+                                <TableCell className={bodyCellStyles}>{item.email}</TableCell>
+                                <TableCell className={`${bodyCellStyles} whitespace-nowrap`}>
+                                    {formatDate(item.starts_at)}
+                                </TableCell>
+                                <TableCell className={`${bodyCellStyles} whitespace-nowrap`}>
+                                    {formatDate(item.expires_at)}
+                                </TableCell>
+                                <TableCell className={bodyCellStyles}>
+                                    <SituationBadge item={item} />
+                                </TableCell>
+                                <TableCell className={bodyCellStyles}>
+                                    {item.is_active ? (
+                                        <Link
+                                            href={`/portal/procuracoes/${item.id}`}
+                                            method="delete"
+                                            as="button"
+                                            className={errorActionStyles}
+                                        >
+                                            Revogar
+                                        </Link>
+                                    ) : (
+                                        <span className="text-gray-400 dark:text-gray-500">—</span>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
+    );
+}
+
+function ReceivedTable({ received }: { received: ProcurationItem[] }) {
+    if (received.length === 0) {
+        return (
+            <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                Você ainda não recebeu procurações.
+            </p>
+        );
+    }
+
+    return (
+        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
+            <div className="max-w-full overflow-x-auto">
+                <Table>
+                    <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                        <TableRow>
+                            <TableCell isHeader className={headerCellStyles}>
+                                Outorgante
+                            </TableCell>
+                            <TableCell isHeader className={headerCellStyles}>
+                                E-mail
+                            </TableCell>
+                            <TableCell isHeader className={headerCellStyles}>
+                                Situação
+                            </TableCell>
+                            <TableCell isHeader className={headerCellStyles}>
+                                Ações
+                            </TableCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                        {received.map((item) => (
+                            <TableRow
+                                key={item.id}
+                                className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                            >
+                                <TableCell className="px-5 py-4 text-start text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                    {item.name}
+                                </TableCell>
+                                <TableCell className={bodyCellStyles}>{item.email}</TableCell>
+                                <TableCell className={bodyCellStyles}>
+                                    <SituationBadge item={item} />
+                                </TableCell>
+                                <TableCell className={bodyCellStyles}>
+                                    {item.is_active ? (
+                                        <Link
+                                            href="/portal/representacao"
+                                            method="post"
+                                            data={{ procuration_id: item.id }}
+                                            as="button"
+                                            className={brandActionStyles}
+                                        >
+                                            Atuar em nome de
+                                        </Link>
+                                    ) : (
+                                        <span className="text-gray-400 dark:text-gray-500">—</span>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
     );
 }
 
@@ -53,191 +294,40 @@ export default function ProcuracoesIndex({ granted, received, procuracoesEnabled
     return (
         <PortalLayout>
             <Head title="Minhas procurações" />
-            <div className="flex flex-col gap-6">
-                <h2 className="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-                    Minhas procurações
-                </h2>
+            <PageBreadcrumb pageTitle="Minhas procurações" />
 
+            <div className="flex flex-col gap-4 md:gap-6">
                 {!procuracoesEnabled && (
-                    <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-                        A funcionalidade de procurações está temporariamente desativada pelo administrador.
-                        Vínculos existentes permanecem visíveis e revogáveis.
+                    <Alert
+                        variant="warning"
+                        title="Funcionalidade desativada"
+                        message="A funcionalidade de procurações está temporariamente desativada pelo administrador. Vínculos existentes permanecem visíveis e revogáveis."
+                    />
+                )}
+
+                {procuracoesEnabled && <GrantProcurationCard />}
+
+                <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                    <div className="px-6 py-5">
+                        <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
+                            Procurações outorgadas
+                        </h3>
                     </div>
-                )}
+                    <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
+                        <GrantedTable granted={granted} />
+                    </div>
+                </div>
 
-                {procuracoesEnabled && (
-                <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
-                    <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                        Vincular procurador
-                    </h3>
-                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                        O procurador precisa ter conta no SILE. Informe o e-mail cadastrado e,
-                        se desejar, uma data de validade para a procuração.
-                    </p>
-
-                    <Form action="/portal/procuracoes" method="post" className="mt-4">
-                        {({ errors, processing }) => (
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                                <div className="flex-1">
-                                    <label
-                                        htmlFor="attorney_email"
-                                        className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                                    >
-                                        E-mail do procurador
-                                    </label>
-                                    <input
-                                        id="attorney_email"
-                                        type="email"
-                                        name="attorney_email"
-                                        required
-                                        className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                                    />
-                                    {errors.attorney_email && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                                            {errors.attorney_email}
-                                        </p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label
-                                        htmlFor="expires_at"
-                                        className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
-                                    >
-                                        Validade (opcional)
-                                    </label>
-                                    <input
-                                        id="expires_at"
-                                        type="date"
-                                        name="expires_at"
-                                        className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                                    />
-                                    {errors.expires_at && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                                            {errors.expires_at}
-                                        </p>
-                                    )}
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
-                                >
-                                    {processing ? 'Vinculando...' : 'Vincular'}
-                                </button>
-                            </div>
-                        )}
-                    </Form>
-                </section>
-                )}
-
-                <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
-                    <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                        Procurações outorgadas
-                    </h3>
-                    {granted.length === 0 ? (
-                        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-                            Você ainda não outorgou procurações.
-                        </p>
-                    ) : (
-                        <div className="mt-3 overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead>
-                                    <tr className="border-b border-neutral-200 text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-                                        <th className="py-2 pr-4 font-medium">Procurador</th>
-                                        <th className="py-2 pr-4 font-medium">E-mail</th>
-                                        <th className="py-2 pr-4 font-medium">Início</th>
-                                        <th className="py-2 pr-4 font-medium">Validade</th>
-                                        <th className="py-2 pr-4 font-medium">Situação</th>
-                                        <th className="py-2 font-medium">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {granted.map((item) => (
-                                        <tr
-                                            key={item.id}
-                                            className="border-b border-neutral-100 text-neutral-900 last:border-0 dark:border-neutral-800 dark:text-neutral-100"
-                                        >
-                                            <td className="py-2.5 pr-4">{item.name}</td>
-                                            <td className="py-2.5 pr-4">{item.email}</td>
-                                            <td className="py-2.5 pr-4">{formatDate(item.starts_at)}</td>
-                                            <td className="py-2.5 pr-4">{formatDate(item.expires_at)}</td>
-                                            <td className="py-2.5 pr-4">
-                                                <SituationBadge item={item} />
-                                            </td>
-                                            <td className="py-2.5">
-                                                {item.is_active ? (
-                                                    <Link
-                                                        href={`/portal/procuracoes/${item.id}`}
-                                                        method="delete"
-                                                        as="button"
-                                                        className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
-                                                    >
-                                                        Revogar
-                                                    </Link>
-                                                ) : (
-                                                    <span className="text-neutral-400 dark:text-neutral-500">—</span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </section>
-
-                <section className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
-                    <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                        Procurações recebidas
-                    </h3>
-                    {received.length === 0 ? (
-                        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
-                            Você ainda não recebeu procurações.
-                        </p>
-                    ) : (
-                        <div className="mt-3 overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead>
-                                    <tr className="border-b border-neutral-200 text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-                                        <th className="py-2 pr-4 font-medium">Outorgante</th>
-                                        <th className="py-2 pr-4 font-medium">E-mail</th>
-                                        <th className="py-2 pr-4 font-medium">Situação</th>
-                                        <th className="py-2 font-medium">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {received.map((item) => (
-                                        <tr
-                                            key={item.id}
-                                            className="border-b border-neutral-100 text-neutral-900 last:border-0 dark:border-neutral-800 dark:text-neutral-100"
-                                        >
-                                            <td className="py-2.5 pr-4">{item.name}</td>
-                                            <td className="py-2.5 pr-4">{item.email}</td>
-                                            <td className="py-2.5 pr-4">
-                                                <SituationBadge item={item} />
-                                            </td>
-                                            <td className="py-2.5">
-                                                {item.is_active ? (
-                                                    <Link
-                                                        href="/portal/representacao"
-                                                        method="post"
-                                                        data={{ procuration_id: item.id }}
-                                                        as="button"
-                                                        className="rounded-lg border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700 transition hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950"
-                                                    >
-                                                        Atuar em nome de
-                                                    </Link>
-                                                ) : (
-                                                    <span className="text-neutral-400 dark:text-neutral-500">—</span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </section>
+                <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                    <div className="px-6 py-5">
+                        <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
+                            Procurações recebidas
+                        </h3>
+                    </div>
+                    <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
+                        <ReceivedTable received={received} />
+                    </div>
+                </div>
             </div>
         </PortalLayout>
     );
