@@ -1,8 +1,8 @@
 <?php
 
+use App\Models\Activity;
+use App\Support\Audit\RecordActivityAction;
 use Spatie\Activitylog\Actions\CleanActivityLogAction;
-use Spatie\Activitylog\Actions\LogActivityAction;
-use Spatie\Activitylog\Models\Activity;
 
 return [
 
@@ -67,7 +67,7 @@ return [
      * are logged and cleaned. Your custom classes must extend the originals.
      */
     'actions' => [
-        'log_activity' => LogActivityAction::class,
+        'log_activity' => RecordActivityAction::class,
         'clean_log' => CleanActivityLogAction::class,
     ],
 ];
