@@ -1,4 +1,10 @@
 import { Form, Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
+import Input from '@/components/form/input';
+import Label from '@/components/form/label';
+import Switch from '@/components/form/switch';
+import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 interface ParameterItem {
@@ -27,37 +33,98 @@ function groupLabel(group: string): string {
     return GROUP_LABELS[group] ?? group.charAt(0).toUpperCase() + group.slice(1);
 }
 
+const actionButtonStyles =
+    'inline-flex items-center justify-center rounded-lg px-3 py-2 text-theme-xs font-medium ring-1 ring-inset transition disabled:cursor-not-allowed disabled:opacity-60';
+
+const brandActionStyles = `${actionButtonStyles} text-brand-500 ring-brand-200 hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10`;
+
+const textareaStyles =
+    'w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800';
+
+function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
+    return (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
+            <nav aria-label="Trilha de navegação">
+                <ol className="flex flex-wrap items-center gap-1.5">
+                    <li>
+                        <Link
+                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
+                            href="/gestao"
+                        >
+                            Painel
+                            <svg
+                                className="stroke-current"
+                                width="17"
+                                height="16"
+                                viewBox="0 0 17 16"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
+                                    strokeWidth="1.2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
+                        </Link>
+                    </li>
+                    <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
+                </ol>
+            </nav>
+        </div>
+    );
+}
+
 function FieldError({ message }: { message?: string }) {
     if (!message) {
         return null;
     }
 
-    return <p className="mt-1 text-xs text-red-600 dark:text-red-400">{message}</p>;
+    return <p className="mt-1.5 text-theme-xs text-error-500">{message}</p>;
 }
 
-const inputStyles =
-    'mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none sm:max-w-sm dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100';
+function BooleanField({ item, error }: { item: ParameterItem; error?: string }) {
+    const initial = item.value ?? item.default_value ?? '';
+    const initialChecked = initial !== '0';
+    const [checked, setChecked] = useState(initialChecked);
 
-function ValueField({ item }: { item: ParameterItem }) {
+    return (
+        <div>
+            <Label>Valor</Label>
+            <input type="hidden" name="value" value={checked ? '1' : '0'} />
+            <Switch
+                label={checked ? 'Ativado' : 'Desativado'}
+                defaultChecked={initialChecked}
+                onChange={setChecked}
+            />
+            <FieldError message={error} />
+        </div>
+    );
+}
+
+function ValueField({ item, error }: { item: ParameterItem; error?: string }) {
     const fieldId = `value-${item.key}`;
     const initial = item.value ?? item.default_value ?? '';
 
     if (item.sensitive) {
         return (
             <div>
-                <label htmlFor={fieldId} className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Novo valor
-                </label>
-                <input
-                    id={fieldId}
-                    type="password"
-                    name="value"
-                    defaultValue=""
-                    placeholder="••••••"
-                    autoComplete="new-password"
-                    className={inputStyles}
-                />
-                <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+                <Label htmlFor={fieldId}>Novo valor</Label>
+                <div className="w-full sm:max-w-sm">
+                    <Input
+                        id={fieldId}
+                        type="password"
+                        name="value"
+                        defaultValue=""
+                        placeholder="••••••"
+                        autoComplete="new-password"
+                        error={!!error}
+                        hint={error}
+                    />
+                </div>
+                <p className="mt-1.5 text-theme-xs text-gray-400 dark:text-gray-500">
                     Deixe em branco para manter o valor atual. O valor gravado nunca é exibido.
                 </p>
             </div>
@@ -65,33 +132,24 @@ function ValueField({ item }: { item: ParameterItem }) {
     }
 
     if (item.type === 'boolean') {
-        return (
-            <div>
-                <label htmlFor={fieldId} className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Valor
-                </label>
-                <select id={fieldId} name="value" defaultValue={initial} className={inputStyles}>
-                    <option value="1">Ativado</option>
-                    <option value="0">Desativado</option>
-                </select>
-            </div>
-        );
+        return <BooleanField item={item} error={error} />;
     }
 
     if (item.type === 'integer' || item.type === 'decimal') {
         return (
             <div>
-                <label htmlFor={fieldId} className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Valor
-                </label>
-                <input
-                    id={fieldId}
-                    type="number"
-                    name="value"
-                    defaultValue={initial}
-                    step={item.type === 'decimal' ? 'any' : 1}
-                    className={inputStyles}
-                />
+                <Label htmlFor={fieldId}>Valor</Label>
+                <div className="w-full sm:max-w-sm">
+                    <Input
+                        id={fieldId}
+                        type="number"
+                        name="value"
+                        defaultValue={initial}
+                        step={item.type === 'decimal' ? 'any' : 1}
+                        error={!!error}
+                        hint={error}
+                    />
+                </div>
             </div>
         );
     }
@@ -99,80 +157,76 @@ function ValueField({ item }: { item: ParameterItem }) {
     if (item.type === 'text' || item.type === 'json') {
         return (
             <div>
-                <label htmlFor={fieldId} className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Valor
-                </label>
-                <textarea id={fieldId} name="value" defaultValue={initial} rows={4} className={`${inputStyles} sm:max-w-xl`} />
+                <Label htmlFor={fieldId}>Valor</Label>
+                <textarea
+                    id={fieldId}
+                    name="value"
+                    defaultValue={initial}
+                    rows={4}
+                    className={`${textareaStyles} sm:max-w-xl`}
+                />
+                <FieldError message={error} />
             </div>
         );
     }
 
     return (
         <div>
-            <label htmlFor={fieldId} className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Valor
-            </label>
-            <input id={fieldId} type="text" name="value" defaultValue={initial} className={inputStyles} />
+            <Label htmlFor={fieldId}>Valor</Label>
+            <div className="w-full sm:max-w-sm">
+                <Input
+                    id={fieldId}
+                    type="text"
+                    name="value"
+                    defaultValue={initial}
+                    error={!!error}
+                    hint={error}
+                />
+            </div>
         </div>
     );
 }
 
-function ParameterCard({ item }: { item: ParameterItem }) {
+function ParameterSection({ item }: { item: ParameterItem }) {
     return (
-        <article className="rounded-xl bg-white p-6 shadow-sm dark:bg-neutral-900">
+        <div>
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                        <h4 className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
                             {item.description}
                         </h4>
-                        {item.has_admin_value && (
-                            <span className="inline-block rounded-lg bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-100">
-                                Administrado
-                            </span>
-                        )}
+                        {item.has_admin_value && <Badge size="sm">Administrado</Badge>}
                     </div>
-                    <p className="mt-1 font-mono text-xs text-neutral-400 dark:text-neutral-500">{item.key}</p>
-                    <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    <p className="mt-1 font-mono text-theme-xs text-gray-400 dark:text-gray-500">{item.key}</p>
+                    <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
                         Padrão: {item.default_value ?? '—'}
                     </p>
                 </div>
-                <Link
-                    href={`/gestao/parametros/${item.key}/historico`}
-                    className="rounded-lg border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700 transition hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950"
-                >
+                <Link href={`/gestao/parametros/${item.key}/historico`} className={brandActionStyles}>
                     Histórico
                 </Link>
             </div>
 
-            <Form
-                action={`/gestao/parametros/${item.key}`}
-                method="put"
-                className="mt-4 border-t border-neutral-100 pt-4 dark:border-neutral-800"
-            >
+            <Form action={`/gestao/parametros/${item.key}`} method="put" className="mt-5">
                 {({ errors, processing }) => (
-                    <div className="flex flex-col gap-3">
-                        <ValueField item={item} />
-                        <FieldError message={errors.value} />
+                    <div className="flex flex-col gap-4">
+                        <ValueField item={item} error={errors.value} />
                         <div>
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
-                            >
+                            <Button size="sm" type="submit" disabled={processing}>
                                 {processing ? 'Salvando...' : 'Salvar'}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 )}
             </Form>
 
             {item.requires_connection_test && (
-                <p className="mt-3 text-xs text-neutral-400 dark:text-neutral-500">
+                <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
                     Teste de conexão disponível quando a integração for configurada (Fase 13).
                 </p>
             )}
-        </article>
+        </div>
     );
 }
 
@@ -180,23 +234,30 @@ export default function ParametersIndex({ groups }: ParametersIndexProps) {
     return (
         <GestaoLayout>
             <Head title="Parâmetros do sistema" />
-            <div className="flex flex-col gap-6">
-                <div>
-                    <h2 className="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-                        Parâmetros do sistema
-                    </h2>
-                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                        Alterações valem imediatamente, sem novo deploy, e ficam registradas no histórico auditado
-                    </p>
-                </div>
+            <PageBreadcrumb pageTitle="Parâmetros do sistema" />
+
+            <div className="flex flex-col gap-4 md:gap-6">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Alterações valem imediatamente, sem novo deploy, e ficam registradas no histórico auditado
+                </p>
 
                 {Object.entries(groups).map(([group, items]) => (
-                    <section key={group} className="flex flex-col gap-4">
-                        <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                            {groupLabel(group)}
-                        </h3>
+                    <section
+                        key={group}
+                        className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+                    >
+                        <div className="px-6 py-5">
+                            <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
+                                {groupLabel(group)}
+                            </h3>
+                        </div>
                         {items.map((item) => (
-                            <ParameterCard key={item.key} item={item} />
+                            <div
+                                key={item.key}
+                                className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6"
+                            >
+                                <ParameterSection item={item} />
+                            </div>
                         ))}
                     </section>
                 ))}
