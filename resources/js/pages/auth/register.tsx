@@ -51,8 +51,8 @@ function PasswordField({ id, name, label, autoComplete, error, hint }: PasswordF
 export default function Register({ passwordRules }: RegisterProps) {
     return (
         <AuthLayout
-            title="Criar sua conta"
-            subtitle="Informe seus dados para acessar os serviços do SILE"
+            title="Crie sua conta gratuita"
+            subtitle="Em poucos minutos você consulta a viabilidade do seu negócio e acompanha tudo pelo portal"
         >
             <Head title="Criar conta" />
             <Form action="/portal/register" method="post">

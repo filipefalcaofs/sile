@@ -19,8 +19,8 @@ export default function Login({ canResetPassword, status }: LoginProps) {
 
     return (
         <AuthLayout
-            title="Acessar o SILE"
-            subtitle="Entre com seu e-mail e senha para acompanhar seus processos"
+            title="Bem-vindo de volta"
+            subtitle="Acesse sua conta para consultar a viabilidade do seu negócio e acompanhar seus processos"
         >
             <Head title="Entrar" />
             {status && (
