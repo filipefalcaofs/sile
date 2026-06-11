@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 
 ## Current Position
 
-Phase: 2 of 15 — CONCLUÍDA (Administração Base)
+Phase: 2 of 15 — CONCLUÍDA (Administração Base; inserções 2.1 a 2.4 concluídas)
 Plan: 8 of 8 completos
 Status: Phase 2 complete — verificação passed (41/41 must-haves); smoke E2E aprovado pelo usuário
-Last activity: 2026-06-10 — Fase 2 fechada: 02-08 concluído (DatabaseSeeder completo, nav permissionada, smoke aprovado); VERIFICATION.md passed; HU-011 a HU-014 Complete na traceability
+Last activity: 2026-06-11 — Fase 2.4 (template SaaS de listagens) concluída: DataTable tipada server-driven, KPI cards reais no painel, componentes Card/PageHeader/TableAction/Avatar/Skeleton/ProgressBar, páginas da gestão migradas, fix de busca case-sensitive no PostgreSQL
 
 Progress: [█▌░░░░░░░░] 13% (2/15 fases; 17/17 planos executados)
 
@@ -42,6 +42,17 @@ Next step: `/gsd-plan-phase 3` (Cadastro Empresarial — HU-021 a HU-028)
 - Regressão: 201/201 testes (4 novos de roteamento), pint/typecheck/build verdes.
 - IDENTIDADES DISTINTAS por contexto (decisão do usuário, 2026-06-10): portal público = claro/acolhedor (AuthLayout split com painel institucional, "Bem-vindo de volta"); retaguarda = console interno escuro standalone (`auth/gestao-login.tsx` — gray-950 com grade técnica, badge "Ambiente interno", "Entrar no console", aviso de auditoria; SEM AuthLayout). Novas telas internas de auth seguem o padrão console; novas telas públicas seguem o padrão portal.
 - MCP de UI/UX instalado no projeto (`.cursor/mcp.json`): `shadcn-ui` (@jpisnice/shadcn-ui-mcp-server — contexto de componentes/blocks shadcn v4 para referência de padrões). Requer reload do Cursor para carregar; usar como referência de UI/UX nas próximas telas, mantendo o design system TailAdmin próprio.
+
+### Fase 2.4 (INSERTED) — Template SaaS de listagens e dashboard (concluída 2026-06-11)
+
+- Biblioteca de componentes de listagem em `resources/js/components/` (spec: `.planning/phases/02.4-template-listagens/02.4-01-PLAN.md`; referências: SILE Design System kit, Horizon UI, Spruko Dashtic/Rixzo — identidade SILE mantida, zero dependências novas):
+  - `ui/data-table/` — DataTable genérica tipada (`ColumnDef<T>`, ordenação controlada com aria-sort, skeleton rows, empty state integrado, densidade default/compact), `use-server-table.ts` (hook Inertia: busca com debounce 350ms, sort/filtros/per_page imediatos, preserveState+replace, volta à página 1), `table-toolbar.tsx` (busca com lupa + filtros + ações), `per-page-select.tsx` (whitelist + valor vigente).
+  - `ui/` — Card/CardHeader/CardContent, KpiCard (delta opcional só com dado real), Skeleton/SkeletonText, Avatar (iniciais, cor determinística), ProgressBar (role progressbar), TableAction (tones brand/warning/success/error/neutral, href ou onClick, title); Button ganhou variantes ghost/danger e size xs.
+  - `app/page-header.tsx` — título + trilha (ancestrais via prop; item final é o título) + ações; substituiu TODOS os PageBreadcrumb duplicados.
+- PADRÃO DE LISTAGEM (obrigatório para novas telas): PageHeader → Card(CardHeader com ação primária) → CardContent(TableToolbar → chips de filtros ativos → DataTable → Pagination). CNAEs é a listagem-modelo (ordenação por código/denominação, filtro de situação com chip "Limpar filtro", page size 10/15/25/50 com whitelist no backend e default parametrizado).
+- Backend: CnaeController@index aceita sort/direction/per_page/active com whitelists (constantes técnicas) e ecoa `filters` + `perPageOptions`; DashboardController (gestão) envia `kpis` reais condicionados à permissão (cnaes ativos/total, usuários ativos/total, perfis/permissões, logins na janela `ui.dashboard.acessos_janela_dias` — parâmetro novo no catálogo, 11 parâmetros). Sem delta inventado nos KPIs (sem série histórica ainda).
+- FIX importante: busca com `LIKE` era case-sensitive no PostgreSQL (banco real) — testes SQLite não pegavam. CnaeController e UserManagementController agora usam `whereLike(..., caseSensitive: false)`. Padrão para TODAS as buscas futuras.
+- Regressão: 209/209 testes (8 novos: CnaeIndexTableTest com 6, GestaoDashboardKpisTest com 2), pint/typecheck/build verdes; screenshots validados (dashboard e CNAEs claro/escuro, usuários com Avatar, perfis, parâmetros, mobile 375px com toolbar empilhada e scroll-x).
 
 ## Performance Metrics
 
