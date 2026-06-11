@@ -40,6 +40,8 @@ Next step: `/gsd-plan-phase 3` (Cadastro Empresarial — HU-021 a HU-028)
 - LoginResponse por perfil (Fase 1) inalterado — usa nomes de rota. Logins separados em TELAS/rotas; autenticação única (mesmo guard `web` + permissões), padrão Laravel.
 - Identidade visual: logo SILE (pin + edifício, `resources/js/components/app/logo.tsx` + `public/favicon.svg`); tela interna com aviso de acesso restrito.
 - Regressão: 201/201 testes (4 novos de roteamento), pint/typecheck/build verdes.
+- IDENTIDADES DISTINTAS por contexto (decisão do usuário, 2026-06-10): portal público = claro/acolhedor (AuthLayout split com painel institucional, "Bem-vindo de volta"); retaguarda = console interno escuro standalone (`auth/gestao-login.tsx` — gray-950 com grade técnica, badge "Ambiente interno", "Entrar no console", aviso de auditoria; SEM AuthLayout). Novas telas internas de auth seguem o padrão console; novas telas públicas seguem o padrão portal.
+- MCP de UI/UX instalado no projeto (`.cursor/mcp.json`): `shadcn-ui` (@jpisnice/shadcn-ui-mcp-server — contexto de componentes/blocks shadcn v4 para referência de padrões). Requer reload do Cursor para carregar; usar como referência de UI/UX nas próximas telas, mantendo o design system TailAdmin próprio.
 
 ## Performance Metrics
 
