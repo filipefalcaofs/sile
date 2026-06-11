@@ -95,7 +95,7 @@ const legalBasis = [
 function HeroGridPattern() {
     return (
         <svg
-            className="absolute inset-0 -z-1 size-full text-gray-100 dark:text-white/[0.04]"
+            className="absolute inset-0 size-full text-white/[0.05]"
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
         >
@@ -171,41 +171,52 @@ function SiteHeader() {
 
 function HeroSection() {
     return (
-        <section className="relative overflow-hidden">
+        <section className="relative isolate overflow-hidden bg-brand-950">
+            <img
+                src="/images/salvador-hero.jpg"
+                alt="Vista aérea do Elevador Lacerda e da Baía de Todos-os-Santos ao entardecer, em Salvador"
+                className="absolute inset-0 -z-2 size-full object-cover object-[70%_center]"
+                fetchPriority="high"
+            />
+            <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-1 bg-linear-to-r from-brand-950/95 via-brand-950/85 to-brand-950/55 sm:via-brand-950/70 sm:to-brand-950/20"
+            />
+            <div
+                aria-hidden="true"
+                className="absolute inset-x-0 top-0 -z-1 h-24 bg-linear-to-b from-brand-950/80 to-transparent"
+            />
             <HeroGridPattern />
-            <div
-                aria-hidden="true"
-                className="absolute top-0 left-1/2 -z-1 h-105 w-180 max-w-full -translate-x-1/2 -translate-y-1/3 rounded-full bg-brand-500/10 blur-3xl"
-            />
-            <div
-                aria-hidden="true"
-                className="absolute inset-0 -z-1 bg-linear-to-b from-transparent via-transparent to-white dark:to-gray-900"
-            />
 
-            <div className="mx-auto flex w-full max-w-(--breakpoint-xl) flex-col items-center px-4 pt-16 pb-20 text-center sm:px-6 sm:pt-24 sm:pb-28">
-                <span className="inline-flex items-center rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-theme-xs font-medium text-brand-500 dark:border-brand-500/30 dark:bg-brand-500/15 dark:text-brand-400">
-                    Secretaria Municipal de Desenvolvimento Urbano — SEDUR
-                </span>
+            <div className="mx-auto w-full max-w-(--breakpoint-xl) px-4 py-24 sm:px-6 sm:py-32 lg:py-36">
+                <div className="max-w-2xl">
+                    <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-theme-xs font-medium text-white backdrop-blur-sm">
+                        Secretaria Municipal de Desenvolvimento Urbano — SEDUR
+                    </span>
 
-                <h1 className="mt-6 max-w-3xl text-title-sm font-semibold tracking-tight text-gray-800 dark:text-white/90 sm:text-title-md lg:text-title-lg">
-                    Licenciamento de atividades econômicas em Salvador
-                </h1>
+                    <h1 className="mt-6 text-title-sm font-semibold tracking-tight text-white sm:text-title-md lg:text-title-lg">
+                        Licenciamento de atividades econômicas em Salvador
+                    </h1>
 
-                <p className="mt-5 max-w-2xl text-base leading-7 text-gray-500 dark:text-gray-400 sm:text-lg sm:leading-8">
-                    O SILE é o Sistema de Licenciamento Eletrônico da SEDUR. Ele responde à
-                    viabilidade locacional de forma automatizada, aplicando as regras da LOUOS e a
-                    classificação de risco municipal, com fundamentação legal registrada em cada
-                    decisão.
-                </p>
+                    <p className="mt-5 max-w-xl text-base leading-7 text-white/70 sm:text-lg sm:leading-8">
+                        O SILE é o Sistema de Licenciamento Eletrônico da SEDUR. Ele responde à
+                        viabilidade locacional de forma automatizada, aplicando as regras da LOUOS
+                        e a classificação de risco municipal, com fundamentação legal registrada em
+                        cada decisão.
+                    </p>
 
-                <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                    <Link href="/portal/register" className={`${primaryCtaStyles} px-6 py-3.5`}>
-                        Criar conta
-                        <ArrowRightIcon className="size-5" aria-hidden="true" />
-                    </Link>
-                    <Link href="/portal/login" className={`${outlineCtaStyles} px-6 py-3.5`}>
-                        Entrar
-                    </Link>
+                    <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+                        <Link href="/portal/register" className={`${primaryCtaStyles} px-6 py-3.5`}>
+                            Criar conta
+                            <ArrowRightIcon className="size-5" aria-hidden="true" />
+                        </Link>
+                        <Link
+                            href="/portal/login"
+                            className="inline-flex items-center justify-center rounded-lg px-6 py-3.5 text-sm font-medium text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition hover:bg-white/10"
+                        >
+                            Entrar
+                        </Link>
+                    </div>
                 </div>
             </div>
         </section>
