@@ -89,6 +89,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
                 'description' => 'Itens por página na listagem de usuários',
             ],
+            'ui.dashboard.acessos_janela_dias' => [
+                'group' => 'ui',
+                'type' => 'integer',
+                'default_value' => '7',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:90'],
+                'description' => 'Janela em dias do indicador de acessos no painel de gestão',
+            ],
             'features.procuracoes' => [
                 'group' => 'features',
                 'type' => 'boolean',

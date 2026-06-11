@@ -15,11 +15,34 @@ use Inertia\Response;
 class CnaeController extends Controller
 {
     /**
+     * Colunas ordenáveis e tamanhos de página aceitos via request —
+     * whitelists técnicas de proteção; o padrão de página é parâmetro.
+     */
+    private const SORTABLE_COLUMNS = ['code', 'description'];
+
+    private const PER_PAGE_OPTIONS = [10, 15, 25, 50];
+
+    /**
      * Listagem com busca por código (prefixo, dígitos) ou denominação
-     * (HU-011 CA-01). Paginação parametrizada — nenhum valor hardcoded.
+     * (HU-011 CA-01), filtro de situação, ordenação e itens por página
+     * server-driven (Fase 2.4). Paginação parametrizada — nenhum valor
+     * de negócio hardcoded.
      */
     public function index(Request $request): Response
     {
+        $sort = $request->string('sort')->toString();
+        $sort = in_array($sort, self::SORTABLE_COLUMNS, true) ? $sort : 'code';
+
+        $direction = $request->string('direction')->toString();
+        $direction = in_array($direction, ['asc', 'desc'], true) ? $direction : 'asc';
+
+        $perPage = (int) $request->input('per_page');
+        $perPage = in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : (int) Settings::get('ui.cnaes.per_page', 15);
+
+        $active = $request->string('active')->toString();
+
         $cnaes = Cnae::query()
             ->when($request->string('search')->isNotEmpty(), function ($query) use ($request) {
                 $term = (string) $request->string('search')->trim();
@@ -33,8 +56,10 @@ class CnaeController extends Controller
                     $inner->orWhere('description', 'like', "%{$term}%");
                 });
             })
+            ->when(in_array($active, ['0', '1'], true), fn ($query) => $query->where('active', $active === '1'))
+            ->orderBy($sort, $direction)
             ->orderBy('code')
-            ->paginate((int) Settings::get('ui.cnaes.per_page', 15))
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Cnae $cnae) => [
                 'id' => $cnae->id,
@@ -47,7 +72,14 @@ class CnaeController extends Controller
 
         return Inertia::render('gestao/cnaes/index', [
             'cnaes' => $cnaes,
-            'filters' => ['search' => $request->string('search')->toString()],
+            'filters' => [
+                'search' => $request->string('search')->toString(),
+                'sort' => $sort,
+                'direction' => $direction,
+                'per_page' => $perPage,
+                'active' => in_array($active, ['0', '1'], true) ? $active : '',
+            ],
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);
     }
 
