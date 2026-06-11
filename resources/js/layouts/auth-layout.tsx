@@ -36,16 +36,18 @@ function BrandGridPattern() {
 
 function BrandPanel() {
     return (
-        <div className="relative hidden w-full overflow-hidden bg-brand-950 bg-linear-to-br from-brand-950 via-brand-900 to-brand-950 lg:flex lg:w-1/2">
+        <div className="relative hidden w-full overflow-hidden bg-brand-950 lg:flex lg:w-1/2">
+            <img
+                src="/images/salvador-hero.jpg"
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 size-full object-cover object-[68%_35%]"
+            />
+            <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-linear-to-t from-brand-950/95 via-brand-950/80 to-brand-950/55"
+            />
             <BrandGridPattern />
-            <div
-                aria-hidden="true"
-                className="absolute -top-28 -right-24 size-96 rounded-full bg-brand-500/20 blur-3xl"
-            />
-            <div
-                aria-hidden="true"
-                className="absolute -bottom-32 -left-28 size-96 rounded-full bg-brand-400/10 blur-3xl"
-            />
             <div className="relative z-1 flex w-full flex-col px-12 py-10 xl:px-20">
                 <div className="flex flex-1 items-center">
                     <div className="mx-auto w-full max-w-md">
