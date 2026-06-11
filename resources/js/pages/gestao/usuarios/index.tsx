@@ -2,6 +2,7 @@ import { Form, Head, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Label from '@/components/form/label';
+import { PowerIcon } from '@/components/icons';
 import Select from '@/components/form/select';
 import Avatar from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge';
@@ -177,10 +178,10 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
                         </TableAction>
                         <TableAction
                             tone={active ? 'warning' : 'success'}
+                            icon={<PowerIcon className="size-4.5" />}
+                            label={active ? 'Inativar' : 'Reativar'}
                             onClick={() => setActivationUser(user)}
-                        >
-                            {active ? 'Inativar' : 'Reativar'}
-                        </TableAction>
+                        />
                     </div>
                 );
             },

@@ -2,6 +2,7 @@ import { Form, Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import { PencilIcon, PowerIcon, TrashIcon } from '@/components/icons';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import Badge from '@/components/ui/badge';
@@ -327,18 +328,24 @@ export default function CnaesIndex({ cnaes, filters, perPageOptions }: CnaesInde
                       cellClassName: 'whitespace-nowrap',
                       cell: (cnae) => (
                           <div className="flex justify-end gap-2">
-                              <TableAction tone="brand" onClick={() => setEditingCnae(cnae)}>
-                                  Editar
-                              </TableAction>
+                              <TableAction
+                                  tone="brand"
+                                  icon={<PencilIcon className="size-4.5" />}
+                                  label="Editar"
+                                  onClick={() => setEditingCnae(cnae)}
+                              />
                               <TableAction
                                   tone={cnae.active ? 'warning' : 'success'}
+                                  icon={<PowerIcon className="size-4.5" />}
+                                  label={cnae.active ? 'Desativar' : 'Reativar'}
                                   onClick={() => setPendingAction({ type: 'toggle', cnae })}
-                              >
-                                  {cnae.active ? 'Desativar' : 'Reativar'}
-                              </TableAction>
-                              <TableAction tone="error" onClick={() => setPendingAction({ type: 'delete', cnae })}>
-                                  Excluir
-                              </TableAction>
+                              />
+                              <TableAction
+                                  tone="error"
+                                  icon={<TrashIcon className="size-4.5" />}
+                                  label="Excluir"
+                                  onClick={() => setPendingAction({ type: 'delete', cnae })}
+                              />
                           </div>
                       ),
                   } satisfies ColumnDef<CnaeItem>,

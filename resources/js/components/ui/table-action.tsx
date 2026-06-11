@@ -4,7 +4,11 @@ import type { ReactNode } from 'react';
 type TableActionTone = 'brand' | 'warning' | 'success' | 'error' | 'neutral';
 
 interface TableActionProps {
-    children: ReactNode;
+    children?: ReactNode;
+    /** Modo ícone: ação compacta quadrada com tooltip — exige `label`. */
+    icon?: ReactNode;
+    /** Rótulo acessível (aria-label e tooltip) quando a ação é só ícone. */
+    label?: string;
     tone?: TableActionTone;
     onClick?: () => void;
     /** Quando informado, renderiza um Link de navegação no lugar do botão. */
@@ -14,7 +18,7 @@ interface TableActionProps {
 }
 
 const baseStyles =
-    'inline-flex items-center justify-center rounded-lg px-3 py-2 text-theme-xs font-medium ring-1 ring-inset transition disabled:cursor-not-allowed disabled:opacity-60';
+    'inline-flex items-center justify-center gap-1.5 rounded-lg text-theme-xs font-medium ring-1 ring-inset transition disabled:cursor-not-allowed disabled:opacity-60';
 
 const toneStyles: Record<TableActionTone, string> = {
     brand: 'text-brand-500 ring-brand-200 hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10',
@@ -28,30 +32,50 @@ const toneStyles: Record<TableActionTone, string> = {
 };
 
 /**
- * Ação contextual de linha de tabela (Editar, Desativar, Excluir…) no
- * padrão de CRUD do design system — texto explícito, nunca só ícone.
+ * Ação contextual de linha de tabela no padrão de CRUD do design
+ * system. Com texto (children) ou só ícone (`icon` + `label` — o
+ * rótulo vira aria-label e tooltip).
  */
 export default function TableAction({
     children,
+    icon,
+    label,
     tone = 'brand',
     onClick,
     href,
     disabled = false,
     title,
 }: TableActionProps) {
-    const className = `${baseStyles} ${toneStyles[tone]}`;
+    const iconOnly = Boolean(icon) && !children;
+    const className = `${baseStyles} ${iconOnly ? 'h-9 w-9' : 'px-3 py-2'} ${toneStyles[tone]}`;
+    const accessibleLabel = iconOnly ? label : undefined;
+    const tooltip = title ?? (iconOnly ? label : undefined);
+
+    const content = (
+        <>
+            {icon}
+            {children}
+        </>
+    );
 
     if (href && !disabled) {
         return (
-            <Link href={href} className={className} title={title}>
-                {children}
+            <Link href={href} className={className} aria-label={accessibleLabel} title={tooltip}>
+                {content}
             </Link>
         );
     }
 
     return (
-        <button type="button" onClick={onClick} disabled={disabled} title={title} className={className}>
-            {children}
+        <button
+            type="button"
+            onClick={onClick}
+            disabled={disabled}
+            aria-label={accessibleLabel}
+            title={tooltip}
+            className={className}
+        >
+            {content}
         </button>
     );
 }

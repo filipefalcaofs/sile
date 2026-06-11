@@ -3,6 +3,7 @@ import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
+import { PencilIcon, TrashIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -330,18 +331,21 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
             cellClassName: 'whitespace-nowrap',
             cell: (role) => (
                 <div className="flex justify-end gap-2">
-                    <TableAction tone="brand" onClick={() => setEditingRole(role)}>
-                        Editar
-                    </TableAction>
+                    <TableAction
+                        tone="brand"
+                        icon={<PencilIcon className="size-4.5" />}
+                        label="Editar"
+                        onClick={() => setEditingRole(role)}
+                    />
                     {!role.structural && (
                         <TableAction
                             tone="error"
+                            icon={<TrashIcon className="size-4.5" />}
+                            label="Excluir"
                             onClick={() => setDeletingRole(role)}
                             disabled={role.users_count > 0}
                             title={role.users_count > 0 ? 'Há usuários vinculados a este perfil.' : undefined}
-                        >
-                            Excluir
-                        </TableAction>
+                        />
                     )}
                 </div>
             ),
