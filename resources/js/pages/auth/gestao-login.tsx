@@ -15,11 +15,23 @@ export default function GestaoLogin({ status }: { status?: string }) {
     const [remember, setRemember] = useState(false);
 
     const inputClasses =
-        'h-11 w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:border-brand-500 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden';
+        'h-11 w-full rounded-lg border border-white/15 bg-gray-950/50 px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:border-brand-500 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden';
 
     return (
-        <div className="relative flex min-h-screen flex-col items-center justify-center bg-gray-950 px-4 py-10">
+        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gray-950 px-4 py-10">
             <Head title="Gestão SEDUR — Acesso interno" />
+
+            {/* Cidade como atmosfera: foto muito escurecida, console em primeiro plano */}
+            <img
+                src="/images/salvador-hero.jpg"
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 size-full object-cover object-[60%_40%] opacity-40"
+            />
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-linear-to-b from-gray-950/80 via-gray-950/70 to-gray-950"
+            />
 
             {/* Grade técnica de fundo, sutil */}
             <div
@@ -48,7 +60,7 @@ export default function GestaoLogin({ status }: { status?: string }) {
                     </span>
                 </div>
 
-                <div className="rounded-2xl border border-gray-800 bg-gray-900/80 p-6 shadow-theme-lg backdrop-blur-sm sm:p-8">
+                <div className="rounded-2xl bg-gray-900/70 p-6 shadow-theme-lg ring-1 ring-white/10 backdrop-blur-md sm:p-8">
                     <h1 className="text-xl font-semibold tracking-tight text-white">Acesso restrito</h1>
                     <p className="mt-1 text-theme-sm text-gray-400">
                         Console de análise e administração do licenciamento.
@@ -136,7 +148,7 @@ export default function GestaoLogin({ status }: { status?: string }) {
                     </Form>
                 </div>
 
-                <p className="mt-5 text-center text-theme-xs leading-5 text-gray-600">
+                <p className="mt-5 text-center text-theme-xs leading-5 text-gray-500">
                     Acesso exclusivo de servidores autorizados pela SEDUR.
                     <br />
                     Todas as tentativas de acesso são registradas para auditoria.
