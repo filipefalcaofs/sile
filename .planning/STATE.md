@@ -123,6 +123,7 @@ Nenhum.
 
 ### Blockers/Concerns
 
+- [Produto] Painel consolidado do cidadão (padrão SIGVISA: situação atual ao logar — empresas, solicitações, DAMs, TVLs): NÃO há HU no catálogo (HU-122 é dashboard do GESTOR). Lacuna identificada em 2026-06-10; decisão pendente (criar HU-132 proposta ou evoluir o painel dentro das fases). Pauta para a SEDUR. As peças surgem nas Fases 3 (empresas), 7 (consultas), 8 (solicitações) e 9 (TVL) — o painel atual de atalhos evolui junto.
 - [Identidade] Marca institucional oficial a confirmar: o usuário indicou a página de marcas da SEDUR **estadual** (https://www.ba.gov.br/sedur/institucional/marcas — manual Secom, marca Sedur, marca do Governo, brasão do Estado; arquivos em SharePoint com login, download direto bloqueado). A documentação do projeto referencia a SEDUR **municipal de Salvador** (LOUOS municipal, Decreto 32.636/2020, Prefeitura de Salvador). Confirmar qual ente é o dono do SILE antes de aplicar marca institucional/co-branding; até lá, o sistema usa a logo própria do SILE (components/app/logo.tsx).
 
 Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Nenhuma bloqueia as Fases 1 a 3.
