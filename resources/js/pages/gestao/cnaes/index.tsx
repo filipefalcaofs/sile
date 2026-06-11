@@ -1,15 +1,22 @@
-import { Form, Head, Link, router, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { Form, Head, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import ConfirmDialog from '@/components/ui/confirm-dialog';
+import DataTable from '@/components/ui/data-table/data-table';
+import PerPageSelect from '@/components/ui/data-table/per-page-select';
+import TableToolbar from '@/components/ui/data-table/table-toolbar';
+import type { ColumnDef, SortDirection } from '@/components/ui/data-table/types';
+import { useServerTable } from '@/components/ui/data-table/use-server-table';
 import EmptyState from '@/components/ui/empty-state';
 import { Modal } from '@/components/ui/modal';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
-import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
+import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
 
@@ -32,59 +39,15 @@ interface CnaesIndexProps {
     };
     filters: {
         search: string;
+        sort: string;
+        direction: SortDirection;
+        per_page: number;
+        active: string;
     };
+    perPageOptions: number[];
 }
 
 type PendingAction = { type: 'delete' | 'toggle'; cnae: CnaeItem };
-
-const actionButtonStyles =
-    'inline-flex items-center justify-center rounded-lg px-3 py-2 text-theme-xs font-medium ring-1 ring-inset transition disabled:cursor-not-allowed disabled:opacity-60';
-
-const brandActionStyles = `${actionButtonStyles} text-brand-500 ring-brand-200 hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10`;
-
-const warningActionStyles = `${actionButtonStyles} text-warning-600 ring-warning-300 hover:bg-warning-50 dark:text-orange-400 dark:ring-warning-500/30 dark:hover:bg-warning-500/10`;
-
-const successActionStyles = `${actionButtonStyles} text-success-600 ring-success-300 hover:bg-success-50 dark:text-success-400 dark:ring-success-500/30 dark:hover:bg-success-500/10`;
-
-const errorActionStyles = `${actionButtonStyles} text-error-600 ring-error-300 hover:bg-error-50 dark:text-error-400 dark:ring-error-500/30 dark:hover:bg-error-500/10`;
-
-const headerCellStyles = 'px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400';
-
-function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
-    return (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
-            <nav aria-label="Trilha de navegação">
-                <ol className="flex flex-wrap items-center gap-1.5">
-                    <li>
-                        <Link
-                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
-                            href="/gestao"
-                        >
-                            Painel
-                            <svg
-                                className="stroke-current"
-                                width="17"
-                                height="16"
-                                viewBox="0 0 17 16"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
-                                    strokeWidth="1.2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
-                        </Link>
-                    </li>
-                    <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
-                </ol>
-            </nav>
-        </div>
-    );
-}
 
 function SituationBadge({ active }: { active: boolean }) {
     return (
@@ -311,59 +274,77 @@ function EditCnaeModal({ cnae, onClose }: { cnae: CnaeItem; onClose: () => void 
     );
 }
 
-function CnaeActions({
-    cnae,
-    onEdit,
-    onToggle,
-    onDelete,
-}: {
-    cnae: CnaeItem;
-    onEdit: () => void;
-    onToggle: () => void;
-    onDelete: () => void;
-}) {
-    return (
-        <div className="flex flex-wrap justify-end gap-2">
-            <button type="button" onClick={onEdit} className={brandActionStyles}>
-                Editar
-            </button>
-            <button
-                type="button"
-                onClick={onToggle}
-                className={cnae.active ? warningActionStyles : successActionStyles}
-            >
-                {cnae.active ? 'Desativar' : 'Reativar'}
-            </button>
-            <button type="button" onClick={onDelete} className={errorActionStyles}>
-                Excluir
-            </button>
-        </div>
-    );
-}
-
-export default function CnaesIndex({ cnaes, filters }: CnaesIndexProps) {
+export default function CnaesIndex({ cnaes, filters, perPageOptions }: CnaesIndexProps) {
     const { auth } = usePage<SharedProps>().props;
     const canMaintain = auth.permissions.includes('manter-cnaes');
 
-    const [search, setSearch] = useState(filters.search ?? '');
-    const isFirstRender = useRef(true);
+    const table = useServerTable({
+        url: '/gestao/cnaes',
+        initialSearch: filters.search,
+        initialSort: { column: filters.sort, direction: filters.direction },
+        initialPerPage: filters.per_page,
+        initialFilters: { active: filters.active },
+    });
+
     const [showCreate, setShowCreate] = useState(false);
     const [editingCnae, setEditingCnae] = useState<CnaeItem | null>(null);
     const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
     const [actionProcessing, setActionProcessing] = useState(false);
 
-    useEffect(() => {
-        if (isFirstRender.current) {
-            isFirstRender.current = false;
-            return;
-        }
-        const timeout = setTimeout(() => {
-            router.get('/gestao/cnaes', { search }, { preserveState: true, replace: true });
-        }, 350);
-        return () => clearTimeout(timeout);
-    }, [search]);
+    const filtering = table.search.trim() !== '' || table.filters.active !== '';
 
-    const searching = search.trim() !== '';
+    const columns: ColumnDef<CnaeItem>[] = [
+        {
+            id: 'code',
+            header: 'Código',
+            sortable: true,
+            cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
+            cell: (cnae) => cnae.formatted_code,
+        },
+        {
+            id: 'description',
+            header: 'Denominação',
+            sortable: true,
+            cell: (cnae) => cnae.description,
+        },
+        {
+            id: 'class_code',
+            header: 'Classe',
+            cellClassName: 'whitespace-nowrap',
+            cell: (cnae) => cnae.class_code,
+        },
+        {
+            id: 'active',
+            header: 'Situação',
+            cell: (cnae) => <SituationBadge active={cnae.active} />,
+        },
+        ...(canMaintain
+            ? [
+                  {
+                      id: 'actions',
+                      header: 'Ações',
+                      align: 'end',
+                      cellClassName: 'whitespace-nowrap',
+                      cell: (cnae) => (
+                          <div className="flex justify-end gap-2">
+                              <TableAction tone="brand" onClick={() => setEditingCnae(cnae)}>
+                                  Editar
+                              </TableAction>
+                              <TableAction
+                                  tone={cnae.active ? 'warning' : 'success'}
+                                  onClick={() => setPendingAction({ type: 'toggle', cnae })}
+                              >
+                                  {cnae.active ? 'Desativar' : 'Reativar'}
+                              </TableAction>
+                              <TableAction tone="error" onClick={() => setPendingAction({ type: 'delete', cnae })}>
+                                  Excluir
+                              </TableAction>
+                          </div>
+                      ),
+                  } satisfies ColumnDef<CnaeItem>,
+              ]
+            : []),
+    ];
 
     function executePendingAction() {
         if (!pendingAction) {
@@ -415,130 +396,104 @@ export default function CnaesIndex({ cnaes, filters }: CnaesIndexProps) {
     return (
         <GestaoLayout>
             <Head title="CNAEs" />
-            <PageBreadcrumb pageTitle="CNAEs" />
+            <PageHeader title="CNAEs" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
-            <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-                <div className="flex flex-wrap items-start justify-between gap-3 px-6 py-5">
-                    <div>
-                        <h3 className="text-base font-medium text-gray-800 dark:text-white/90">CNAEs cadastrados</h3>
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Estrutura oficial CNAE-Subclasses 2.3 (IBGE/CONCLA)
-                        </p>
-                    </div>
-                    {canMaintain && (
-                        <Button size="sm" onClick={() => setShowCreate(true)}>
-                            Cadastrar CNAE
-                        </Button>
-                    )}
-                </div>
-                <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
-                    <div className="space-y-6">
-                        <div>
-                            <label htmlFor="search" className="sr-only">
-                                Buscar CNAEs
-                            </label>
-                            <div className="w-full sm:max-w-sm">
-                                <Input
-                                    id="search"
-                                    type="search"
-                                    value={search}
-                                    onChange={(event) => setSearch(event.target.value)}
-                                    placeholder="Buscar por código ou denominação..."
-                                />
-                            </div>
-                        </div>
-
-                        {cnaes.data.length === 0 ? (
-                            <EmptyState
-                                title={searching ? 'Nenhum resultado para a busca' : 'Nenhum CNAE cadastrado'}
-                                description={
-                                    searching
-                                        ? 'Ajuste o termo de busca e tente novamente.'
-                                        : 'Cadastre o primeiro CNAE para montar a base de atividades.'
-                                }
-                                action={
-                                    !searching && canMaintain ? (
-                                        <Button size="sm" onClick={() => setShowCreate(true)}>
-                                            Cadastrar CNAE
-                                        </Button>
-                                    ) : undefined
-                                }
-                            />
-                        ) : (
-                            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
-                                <div className="max-w-full overflow-x-auto">
-                                    <Table>
-                                        <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                                            <TableRow>
-                                                <TableCell isHeader className={headerCellStyles}>
-                                                    Código
-                                                </TableCell>
-                                                <TableCell isHeader className={headerCellStyles}>
-                                                    Denominação
-                                                </TableCell>
-                                                <TableCell isHeader className={headerCellStyles}>
-                                                    Classe
-                                                </TableCell>
-                                                <TableCell isHeader className={headerCellStyles}>
-                                                    Situação
-                                                </TableCell>
-                                                {canMaintain && (
-                                                    <TableCell
-                                                        isHeader
-                                                        className={`${headerCellStyles} text-end`}
-                                                    >
-                                                        Ações
-                                                    </TableCell>
-                                                )}
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                                            {cnaes.data.map((cnae) => (
-                                                <TableRow
-                                                    key={cnae.id}
-                                                    className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
-                                                >
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm font-medium whitespace-nowrap text-gray-800 dark:text-white/90">
-                                                        {cnae.formatted_code}
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                                        {cnae.description}
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                                        {cnae.class_code}
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                                        <SituationBadge active={cnae.active} />
-                                                    </TableCell>
-                                                    {canMaintain && (
-                                                        <TableCell className="px-5 py-4 text-end text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                                            <CnaeActions
-                                                                cnae={cnae}
-                                                                onEdit={() => setEditingCnae(cnae)}
-                                                                onToggle={() =>
-                                                                    setPendingAction({ type: 'toggle', cnae })
-                                                                }
-                                                                onDelete={() =>
-                                                                    setPendingAction({ type: 'delete', cnae })
-                                                                }
-                                                            />
-                                                        </TableCell>
-                                                    )}
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+            <Card>
+                <CardHeader
+                    title="CNAEs cadastrados"
+                    description="Estrutura oficial CNAE-Subclasses 2.3 (IBGE/CONCLA)"
+                    actions={
+                        canMaintain ? (
+                            <Button size="sm" onClick={() => setShowCreate(true)}>
+                                Cadastrar CNAE
+                            </Button>
+                        ) : undefined
+                    }
+                />
+                <CardContent>
+                    <div className="space-y-5">
+                        <TableToolbar
+                            search={{
+                                value: table.search,
+                                onChange: table.setSearch,
+                                placeholder: 'Buscar por código ou denominação...',
+                                label: 'Buscar CNAEs',
+                            }}
+                            filters={
+                                <div className="w-40">
+                                    <label htmlFor="filter-active" className="sr-only">
+                                        Filtrar por situação
+                                    </label>
+                                    <Select
+                                        id="filter-active"
+                                        value={table.filters.active}
+                                        onChange={(value) => table.setFilter('active', value)}
+                                        placeholder="Situação"
+                                        options={[
+                                            { value: '1', label: 'Ativos' },
+                                            { value: '0', label: 'Inativos' },
+                                        ]}
+                                    />
                                 </div>
+                            }
+                            actions={
+                                <PerPageSelect
+                                    value={table.perPage}
+                                    options={perPageOptions}
+                                    onChange={table.setPerPage}
+                                />
+                            }
+                        />
+
+                        {table.filters.active !== '' && (
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Badge size="sm" color="light">
+                                    Situação: {table.filters.active === '1' ? 'Ativos' : 'Inativos'}
+                                </Badge>
+                                <button
+                                    type="button"
+                                    onClick={() => table.setFilter('active', '')}
+                                    className="text-theme-xs font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
+                                >
+                                    Limpar filtro
+                                </button>
                             </div>
                         )}
+
+                        <DataTable
+                            columns={columns}
+                            rows={cnaes.data}
+                            rowKey={(cnae) => cnae.id}
+                            sort={table.sort}
+                            onSortChange={table.setSort}
+                            loading={table.processing}
+                            skeletonRows={8}
+                            emptyState={
+                                <EmptyState
+                                    title={filtering ? 'Nenhum resultado para a busca' : 'Nenhum CNAE cadastrado'}
+                                    description={
+                                        filtering
+                                            ? 'Ajuste o termo de busca ou os filtros e tente novamente.'
+                                            : 'Cadastre o primeiro CNAE para montar a base de atividades.'
+                                    }
+                                    action={
+                                        !filtering && canMaintain ? (
+                                            <Button size="sm" onClick={() => setShowCreate(true)}>
+                                                Cadastrar CNAE
+                                            </Button>
+                                        ) : undefined
+                                    }
+                                />
+                            }
+                        />
 
                         <Pagination
                             links={cnaes.links}
                             meta={{ from: cnaes.from, to: cnaes.to, total: cnaes.total }}
                         />
                     </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
 
             {canMaintain && <CreateCnaeModal isOpen={showCreate} onClose={() => setShowCreate(false)} />}
 

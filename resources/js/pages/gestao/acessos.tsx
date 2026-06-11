@@ -1,8 +1,11 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
+import PageHeader from '@/components/app/page-header';
 import Badge from '@/components/ui/badge';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import DataTable from '@/components/ui/data-table/data-table';
+import type { ColumnDef } from '@/components/ui/data-table/types';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
-import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 interface AccessLogItem {
@@ -37,42 +40,6 @@ const eventConfig: Record<string, { label: string; color: BadgeColor }> = {
     bloqueio: { label: 'Bloqueio temporário', color: 'warning' },
 };
 
-function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
-    return (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
-            <nav aria-label="Trilha de navegação">
-                <ol className="flex flex-wrap items-center gap-1.5">
-                    <li>
-                        <Link
-                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
-                            href="/gestao"
-                        >
-                            Painel
-                            <svg
-                                className="stroke-current"
-                                width="17"
-                                height="16"
-                                viewBox="0 0 17 16"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
-                                    strokeWidth="1.2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
-                        </Link>
-                    </li>
-                    <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
-                </ol>
-            </nav>
-        </div>
-    );
-}
-
 function EventBadge({ event }: { event: string }) {
     const config = eventConfig[event] ?? { label: event, color: 'light' as BadgeColor };
 
@@ -83,97 +50,65 @@ function EventBadge({ event }: { event: string }) {
     );
 }
 
-function AccessLogTable({ logs }: { logs: AcessosProps['logs'] }) {
-    if (logs.data.length === 0) {
-        return (
-            <EmptyState
-                title="Nenhum acesso registrado"
-                description="Logins, saídas, tentativas falhas e bloqueios desta conta aparecem aqui."
-            />
-        );
-    }
-
-    return (
-        <>
-            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
-                <div className="max-w-full overflow-x-auto">
-                    <Table>
-                        <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                            <TableRow>
-                                <TableCell
-                                    isHeader
-                                    className="px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400"
-                                >
-                                    Data/hora
-                                </TableCell>
-                                <TableCell
-                                    isHeader
-                                    className="px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400"
-                                >
-                                    Evento
-                                </TableCell>
-                                <TableCell
-                                    isHeader
-                                    className="px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400"
-                                >
-                                    IP
-                                </TableCell>
-                                <TableCell
-                                    isHeader
-                                    className="px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400"
-                                >
-                                    Canal
-                                </TableCell>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                            {logs.data.map((log) => (
-                                <TableRow
-                                    key={log.id}
-                                    className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
-                                >
-                                    <TableCell className="px-5 py-4 text-start text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                        {new Date(log.created_at).toLocaleString('pt-BR')}
-                                    </TableCell>
-                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                        <EventBadge event={log.event} />
-                                    </TableCell>
-                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                        {log.ip_address ?? '—'}
-                                    </TableCell>
-                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                        {log.channel ?? '—'}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            </div>
-            <Pagination links={logs.links} meta={{ from: logs.from, to: logs.to, total: logs.total }} />
-        </>
-    );
-}
+const columns: ColumnDef<AccessLogItem>[] = [
+    {
+        id: 'created_at',
+        header: 'Data/hora',
+        cellClassName: 'font-medium text-gray-800 dark:text-white/90 whitespace-nowrap',
+        cell: (log) => new Date(log.created_at).toLocaleString('pt-BR'),
+    },
+    {
+        id: 'event',
+        header: 'Evento',
+        cell: (log) => <EventBadge event={log.event} />,
+    },
+    {
+        id: 'ip',
+        header: 'IP',
+        cellClassName: 'whitespace-nowrap',
+        cell: (log) => log.ip_address ?? '—',
+    },
+    {
+        id: 'channel',
+        header: 'Canal',
+        cell: (log) => log.channel ?? '—',
+    },
+];
 
 export default function Acessos({ targetUser, logs }: AcessosProps) {
     return (
         <GestaoLayout>
             <Head title={`Acessos de ${targetUser.name}`} />
-            <PageBreadcrumb pageTitle={`Acessos de ${targetUser.name}`} />
+            <PageHeader
+                title={`Acessos de ${targetUser.name}`}
+                breadcrumbs={[
+                    { label: 'Painel', href: '/gestao' },
+                    { label: 'Usuários', href: '/gestao/usuarios' },
+                ]}
+            />
 
-            <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-                <div className="px-6 py-5">
-                    <h3 className="text-base font-medium text-gray-800 dark:text-white/90">Histórico de acessos</h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Logins, saídas, tentativas falhas e bloqueios registrados na conta de {targetUser.email}.
-                    </p>
-                </div>
-                <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
-                    <div className="space-y-6">
-                        <AccessLogTable logs={logs} />
+            <Card>
+                <CardHeader
+                    title="Histórico de acessos"
+                    description={`Logins, saídas, tentativas falhas e bloqueios registrados na conta de ${targetUser.email}.`}
+                />
+                <CardContent>
+                    <div className="space-y-5">
+                        <DataTable
+                            columns={columns}
+                            rows={logs.data}
+                            rowKey={(log) => log.id}
+                            emptyState={
+                                <EmptyState
+                                    title="Nenhum acesso registrado"
+                                    description="Logins, saídas, tentativas falhas e bloqueios desta conta aparecem aqui."
+                                />
+                            }
+                        />
+                        <Pagination links={logs.links} meta={{ from: logs.from, to: logs.to, total: logs.total }} />
                     </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         </GestaoLayout>
     );
 }

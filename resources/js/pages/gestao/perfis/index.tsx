@@ -1,13 +1,17 @@
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Form, Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import ConfirmDialog from '@/components/ui/confirm-dialog';
+import DataTable from '@/components/ui/data-table/data-table';
+import type { ColumnDef } from '@/components/ui/data-table/types';
 import EmptyState from '@/components/ui/empty-state';
 import { Modal } from '@/components/ui/modal';
-import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
+import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 interface RoleItem {
@@ -30,15 +34,6 @@ const GROUP_LABELS: Record<string, string> = {
     gerenciar: 'Gerenciar',
 };
 
-const actionButtonStyles =
-    'inline-flex items-center justify-center rounded-lg px-3 py-2 text-theme-xs font-medium ring-1 ring-inset transition disabled:cursor-not-allowed disabled:opacity-60';
-
-const brandActionStyles = `${actionButtonStyles} text-brand-500 ring-brand-200 hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10`;
-
-const errorActionStyles = `${actionButtonStyles} text-error-600 ring-error-300 hover:bg-error-50 dark:text-error-400 dark:ring-error-500/30 dark:hover:bg-error-500/10`;
-
-const headerCellStyles = 'px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400';
-
 function groupPermissions(permissions: string[]): { label: string; items: string[] }[] {
     const groups = new Map<string, string[]>();
 
@@ -53,42 +48,6 @@ function groupPermissions(permissions: string[]): { label: string; items: string
         label: GROUP_LABELS[prefix] ?? prefix.charAt(0).toUpperCase() + prefix.slice(1),
         items,
     }));
-}
-
-function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
-    return (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
-            <nav aria-label="Trilha de navegação">
-                <ol className="flex flex-wrap items-center gap-1.5">
-                    <li>
-                        <Link
-                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
-                            href="/gestao"
-                        >
-                            Painel
-                            <svg
-                                className="stroke-current"
-                                width="17"
-                                height="16"
-                                viewBox="0 0 17 16"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
-                                    strokeWidth="1.2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
-                        </Link>
-                    </li>
-                    <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
-                </ol>
-            </nav>
-        </div>
-    );
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -337,121 +296,92 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
         setDeleteError(null);
     }
 
+    const columns: ColumnDef<RoleItem>[] = [
+        {
+            id: 'name',
+            header: 'Perfil',
+            cellClassName: 'whitespace-nowrap',
+            cell: (role) => (
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium text-gray-800 dark:text-white/90">{role.name}</span>
+                    {role.structural && (
+                        <Badge size="sm" color="light">
+                            Estrutural
+                        </Badge>
+                    )}
+                </div>
+            ),
+        },
+        {
+            id: 'permissions',
+            header: 'Permissões',
+            cell: (role) => <PermissionChips permissions={role.permissions} />,
+        },
+        {
+            id: 'users_count',
+            header: 'Usuários',
+            cellClassName: 'whitespace-nowrap',
+            cell: (role) => (role.users_count === 1 ? '1 usuário' : `${role.users_count} usuários`),
+        },
+        {
+            id: 'actions',
+            header: 'Ações',
+            align: 'end',
+            cellClassName: 'whitespace-nowrap',
+            cell: (role) => (
+                <div className="flex justify-end gap-2">
+                    <TableAction tone="brand" onClick={() => setEditingRole(role)}>
+                        Editar
+                    </TableAction>
+                    {!role.structural && (
+                        <TableAction
+                            tone="error"
+                            onClick={() => setDeletingRole(role)}
+                            disabled={role.users_count > 0}
+                            title={role.users_count > 0 ? 'Há usuários vinculados a este perfil.' : undefined}
+                        >
+                            Excluir
+                        </TableAction>
+                    )}
+                </div>
+            ),
+        },
+    ];
+
     return (
         <GestaoLayout>
             <Head title="Perfis e permissões" />
-            <PageBreadcrumb pageTitle="Perfis e permissões" />
+            <PageHeader title="Perfis e permissões" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
-            <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-                <div className="flex flex-wrap items-start justify-between gap-3 px-6 py-5">
-                    <div>
-                        <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
-                            Perfis cadastrados
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Segregação de funções: perfis com permissões granulares por funcionalidade
-                        </p>
-                    </div>
-                    <Button size="sm" onClick={() => setShowCreate(true)}>
-                        Novo perfil
-                    </Button>
-                </div>
-                <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
-                    {roles.length === 0 ? (
-                        <EmptyState
-                            title="Nenhum perfil cadastrado"
-                            description="Crie o primeiro perfil para organizar as permissões por função."
-                            action={
-                                <Button size="sm" onClick={() => setShowCreate(true)}>
-                                    Novo perfil
-                                </Button>
-                            }
-                        />
-                    ) : (
-                        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
-                            <div className="max-w-full overflow-x-auto">
-                                <Table>
-                                    <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                                        <TableRow>
-                                            <TableCell isHeader className={headerCellStyles}>
-                                                Perfil
-                                            </TableCell>
-                                            <TableCell isHeader className={headerCellStyles}>
-                                                Permissões
-                                            </TableCell>
-                                            <TableCell isHeader className={headerCellStyles}>
-                                                Usuários
-                                            </TableCell>
-                                            <TableCell isHeader className={`${headerCellStyles} text-end`}>
-                                                Ações
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                                        {roles.map((role) => {
-                                            const blocked = role.users_count > 0;
-
-                                            return (
-                                                <TableRow
-                                                    key={role.id}
-                                                    className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
-                                                >
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                                        <div className="flex flex-wrap items-center gap-2">
-                                                            <span className="font-medium text-gray-800 dark:text-white/90">
-                                                                {role.name}
-                                                            </span>
-                                                            {role.structural && (
-                                                                <Badge size="sm" color="light">
-                                                                    Estrutural
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                                        <PermissionChips permissions={role.permissions} />
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 text-start text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                                        {role.users_count === 1
-                                                            ? '1 usuário'
-                                                            : `${role.users_count} usuários`}
-                                                    </TableCell>
-                                                    <TableCell className="px-5 py-4 text-end text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                                        <div className="flex flex-wrap justify-end gap-2">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setEditingRole(role)}
-                                                                className={brandActionStyles}
-                                                            >
-                                                                Editar
-                                                            </button>
-                                                            {!role.structural && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setDeletingRole(role)}
-                                                                    disabled={blocked}
-                                                                    title={
-                                                                        blocked
-                                                                            ? 'Há usuários vinculados a este perfil.'
-                                                                            : undefined
-                                                                    }
-                                                                    className={errorActionStyles}
-                                                                >
-                                                                    Excluir
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
+            <Card>
+                <CardHeader
+                    title="Perfis cadastrados"
+                    description="Segregação de funções: perfis com permissões granulares por funcionalidade"
+                    actions={
+                        <Button size="sm" onClick={() => setShowCreate(true)}>
+                            Novo perfil
+                        </Button>
+                    }
+                />
+                <CardContent>
+                    <DataTable
+                        columns={columns}
+                        rows={roles}
+                        rowKey={(role) => role.id}
+                        emptyState={
+                            <EmptyState
+                                title="Nenhum perfil cadastrado"
+                                description="Crie o primeiro perfil para organizar as permissões por função."
+                                action={
+                                    <Button size="sm" onClick={() => setShowCreate(true)}>
+                                        Novo perfil
+                                    </Button>
+                                }
+                            />
+                        }
+                    />
+                </CardContent>
+            </Card>
 
             <CreateRoleModal isOpen={showCreate} onClose={() => setShowCreate(false)} permissions={permissions} />
 

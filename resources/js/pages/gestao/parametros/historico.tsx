@@ -1,8 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
+import PageHeader from '@/components/app/page-header';
 import Badge from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import DataTable from '@/components/ui/data-table/data-table';
+import type { ColumnDef } from '@/components/ui/data-table/types';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
-import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 interface HistoryEntry {
@@ -28,57 +31,6 @@ interface ParameterHistoryProps {
     };
 }
 
-const headerCellStyles = 'px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400';
-
-function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
-    const separator = (
-        <svg
-            className="stroke-current"
-            width="17"
-            height="16"
-            viewBox="0 0 17 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <path
-                d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-    );
-
-    return (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
-            <nav aria-label="Trilha de navegação">
-                <ol className="flex flex-wrap items-center gap-1.5">
-                    <li>
-                        <Link
-                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
-                            href="/gestao"
-                        >
-                            Painel
-                            {separator}
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
-                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
-                            href="/gestao/parametros"
-                        >
-                            Parâmetros do sistema
-                            {separator}
-                        </Link>
-                    </li>
-                    <li className="text-sm text-gray-800 dark:text-white/90">Histórico</li>
-                </ol>
-            </nav>
-        </div>
-    );
-}
-
 function HistoryValue({ value }: { value: string | null }) {
     if (value === '[criptografado]') {
         return (
@@ -91,78 +43,44 @@ function HistoryValue({ value }: { value: string | null }) {
     return <>{value ?? '—'}</>;
 }
 
-function HistoryTable({ entries }: { entries: ParameterHistoryProps['entries'] }) {
-    if (entries.data.length === 0) {
-        return (
-            <EmptyState
-                title="Nenhuma alteração registrada"
-                description="As alterações deste parâmetro aparecem aqui com valor anterior, valor novo e responsável."
-            />
-        );
-    }
-
-    return (
-        <div className="space-y-6">
-            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
-                <div className="max-w-full overflow-x-auto">
-                    <Table>
-                        <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                            <TableRow>
-                                <TableCell isHeader className={headerCellStyles}>
-                                    Data/hora
-                                </TableCell>
-                                <TableCell isHeader className={headerCellStyles}>
-                                    Responsável
-                                </TableCell>
-                                <TableCell isHeader className={headerCellStyles}>
-                                    Valor anterior
-                                </TableCell>
-                                <TableCell isHeader className={headerCellStyles}>
-                                    Valor novo
-                                </TableCell>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                            {entries.data.map((entry) => (
-                                <TableRow
-                                    key={entry.id}
-                                    className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
-                                >
-                                    <TableCell className="px-5 py-4 text-start text-theme-sm font-medium whitespace-nowrap text-gray-800 dark:text-white/90">
-                                        {new Date(entry.data).toLocaleString('pt-BR')}
-                                    </TableCell>
-                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                        {entry.responsavel ?? '—'}
-                                    </TableCell>
-                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                        <HistoryValue value={entry.valor_anterior} />
-                                    </TableCell>
-                                    <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                        <HistoryValue value={entry.valor_novo} />
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            </div>
-
-            <Pagination
-                links={entries.links}
-                meta={{ from: entries.from, to: entries.to, total: entries.total }}
-            />
-        </div>
-    );
-}
+const columns: ColumnDef<HistoryEntry>[] = [
+    {
+        id: 'data',
+        header: 'Data/hora',
+        cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
+        cell: (entry) => new Date(entry.data).toLocaleString('pt-BR'),
+    },
+    {
+        id: 'responsavel',
+        header: 'Responsável',
+        cell: (entry) => entry.responsavel ?? '—',
+    },
+    {
+        id: 'valor_anterior',
+        header: 'Valor anterior',
+        cell: (entry) => <HistoryValue value={entry.valor_anterior} />,
+    },
+    {
+        id: 'valor_novo',
+        header: 'Valor novo',
+        cell: (entry) => <HistoryValue value={entry.valor_novo} />,
+    },
+];
 
 export default function ParameterHistory({ parameter, entries }: ParameterHistoryProps) {
     return (
         <GestaoLayout>
             <Head title={`Histórico — ${parameter.description}`} />
-            <PageBreadcrumb pageTitle={`Histórico — ${parameter.description}`} />
+            <PageHeader
+                title={`Histórico — ${parameter.description}`}
+                breadcrumbs={[
+                    { label: 'Painel', href: '/gestao' },
+                    { label: 'Parâmetros do sistema', href: '/gestao/parametros' },
+                ]}
+            />
 
             <div className="flex flex-col gap-4 md:gap-6">
-                <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                <Card>
                     <div className="px-6 py-5">
                         <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
                             Alterações registradas
@@ -174,10 +92,26 @@ export default function ParameterHistory({ parameter, entries }: ParameterHistor
                             {parameter.key}
                         </p>
                     </div>
-                    <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
-                        <HistoryTable entries={entries} />
-                    </div>
-                </div>
+                    <CardContent>
+                        <div className="space-y-5">
+                            <DataTable
+                                columns={columns}
+                                rows={entries.data}
+                                rowKey={(entry) => entry.id}
+                                emptyState={
+                                    <EmptyState
+                                        title="Nenhuma alteração registrada"
+                                        description="As alterações deste parâmetro aparecem aqui com valor anterior, valor novo e responsável."
+                                    />
+                                }
+                            />
+                            <Pagination
+                                links={entries.links}
+                                meta={{ from: entries.from, to: entries.to, total: entries.total }}
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
 
                 <div>
                     <Link

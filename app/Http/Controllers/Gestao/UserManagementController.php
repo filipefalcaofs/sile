@@ -27,9 +27,10 @@ class UserManagementController extends Controller
             ->when($request->string('search')->isNotEmpty(), function ($query) use ($request) {
                 $term = (string) $request->string('search')->trim();
 
+                // whereLike sem case: LIKE do PostgreSQL é case-sensitive.
                 $query->where(fn ($inner) => $inner
-                    ->where('name', 'like', "%{$term}%")
-                    ->orWhere('email', 'like', "%{$term}%"));
+                    ->whereLike('name', "%{$term}%", caseSensitive: false)
+                    ->orWhereLike('email', "%{$term}%", caseSensitive: false));
             })
             ->orderBy('name')
             ->paginate((int) Settings::get('ui.users.per_page', 15))

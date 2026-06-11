@@ -53,7 +53,8 @@ class CnaeController extends Controller
                         $inner->where('code', 'like', "{$digits}%");
                     }
 
-                    $inner->orWhere('description', 'like', "%{$term}%");
+                    // whereLike sem case: LIKE do PostgreSQL é case-sensitive.
+                    $inner->orWhereLike('description', "%{$term}%", caseSensitive: false);
                 });
             })
             ->when(in_array($active, ['0', '1'], true), fn ($query) => $query->where('active', $active === '1'))
