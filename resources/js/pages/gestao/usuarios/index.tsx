@@ -241,6 +241,7 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
                             columns={columns}
                             rows={users.data}
                             rowKey={(user) => user.id}
+                            density="compact"
                             emptyState={
                                 <EmptyState
                                     title={searching ? 'Nenhum resultado para a busca' : 'Nenhum usuário cadastrado'}

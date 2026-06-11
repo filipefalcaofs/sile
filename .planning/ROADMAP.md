@@ -33,7 +33,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 2.1 (INSERTED): Template TailAdmin** — aplica o template visual TailAdmin (React 19 + Tailwind v4) em todos os layouts e páginas existentes, sem mudança de comportamento — concluída em 2026-06-10 (197/197 testes, typecheck/build verdes, validação visual por screenshots)
 - [x] **Phase 2.2 (INSERTED): Refinamento premium de UI/UX** — landing institucional completa, sidebar subdividida em grupos, auth premium com painel institucional, CRUDs padronizados (modais de criar/editar, ConfirmDialog em ações destrutivas, Pagination com contador, EmptyState) — concluída em 2026-06-10 (197/197 testes, typecheck/build verdes, screenshots validados)
 - [x] **Phase 2.3 (INSERTED): Segregação de rotas portal × retaguarda** — portal público do cidadão sob /portal/* (landing, login, cadastro, painel) e login interno próprio da retaguarda em /gestao/login; redirecionamento de guests por contexto (padrão Laravel) — concluída em 2026-06-10 (201/201 testes, pint/typecheck/build verdes, screenshots validados)
-- [x] **Phase 2.4 (INSERTED): Template SaaS de listagens e dashboard** — biblioteca de componentes reutilizáveis (DataTable tipada com ordenação/filtros/busca/page size, KPI cards, PageHeader, Card, Skeleton, Avatar, ProgressBar, TableAction) aplicada às listagens reais da gestão e KPIs reais no dashboard — concluída em 2026-06-11 (209/209 testes com 8 novos, pint/typecheck/build verdes, screenshots validados claro/escuro/mobile; corrige busca case-sensitive no PostgreSQL)
+- [x] **Phase 2.4 (INSERTED): Template SaaS de listagens e dashboard** — biblioteca de componentes reutilizáveis (DataTable tipada com ordenação/filtros/busca/page size, KPI cards, PageHeader, Card, Skeleton, Avatar, ProgressBar, TableAction) aplicada às listagens reais da gestão e KPIs reais no dashboard; re-tematização "Console SEDUR" (sidebar escura permanente na gestão, KPIs com wells coloridos, thead com fundo, densidade compacta) — concluída em 2026-06-11 (209/209 testes com 8 novos, pint/typecheck/build verdes, screenshots validados claro/escuro/mobile; corrige busca case-sensitive no PostgreSQL)
 - [ ] **Phase 3: Cadastro Empresarial** — Empresas, CNPJ e vínculos com CNAEs (EP03)
 - [ ] **Phase 4: Georreferenciamento e Território** — Geocodificação, zona, via, lote, bairro e restrições (EP04)
 - [ ] **Phase 5: Motor de Regras da LOUOS** — Quadros 7/10/11/11A como dados versionados + motor de enquadramento (EP05 + HU-015 a HU-018)
@@ -106,7 +106,18 @@ Plans:
   2. Dados no formato REDESIM são importados e criam/atualizam o cadastro empresarial — lógica real de importação atrás de contrato; a conexão com o integrador é a HU-103 (Fase 13).
   3. Empresa possui CNAE principal e CNAEs secundários vinculados a partir da tabela oficial.
   4. Usuário consulta as empresas às quais está vinculado, atualiza dados e encerra vínculo, com auditoria.
-**Plans**: TBD
+**Plans**: 9 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Fundação: ValidCnpj alfanumérico, schema companies/vínculos/CNAEs, parâmetros novos e pendência herdada do CnaeController (wave 1)
+- [ ] 03-02-PLAN.md — HU-021: contrato CnpjLookup + provider BrasilAPI real com cache/toggle + endpoint auditado (wave 2)
+- [ ] 03-03-PLAN.md — HU-022: payload REDESIM de referência + RedesimImportService + comando redesim:importar (wave 2)
+- [ ] 03-04-PLAN.md — HU-023 + HU-027: policy com representação, cadastro transacional com vínculo e listagem Minhas empresas (wave 3)
+- [ ] 03-05-PLAN.md — HU-024 + HU-028: detalhe/atualização com CNPJ imutável e encerramento de vínculo com proteção do último responsável (wave 4)
+- [ ] 03-06-PLAN.md — HU-025 + HU-026: CompanyCnaeService transacional, endpoints de CNAE e busca server-side da tabela oficial (wave 5)
+- [ ] 03-07-PLAN.md — UI: sidebar + tela Minhas empresas + página de cadastro com lookup vivo (wave 6, ‖ 03-08)
+- [ ] 03-08-PLAN.md — UI: página de detalhe (dados, CNAEs com ConfirmDialog, vínculos) (wave 6, ‖ 03-07)
+- [ ] 03-09-PLAN.md — Fechamento: verificação integral + smoke E2E com chamada real ao provider (checkpoint humano) (wave 7)
 
 ### Phase 4: Georreferenciamento e Território
 **Goal**: O sistema localiza imóveis no território de Salvador e identifica zona urbanística, via, lote, bairro e restrições — insumos do motor de regras.

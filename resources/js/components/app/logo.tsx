@@ -25,6 +25,8 @@ interface LogoProps {
     subtitle?: string;
     markClassName?: string;
     textClassName?: string;
+    subtitleClassName?: string;
+    markColorClassName?: string;
 }
 
 /**
@@ -34,15 +36,17 @@ export default function Logo({
     subtitle,
     markClassName = 'size-9',
     textClassName = 'text-2xl font-semibold tracking-tight text-gray-900 dark:text-white',
+    subtitleClassName = 'text-theme-xs text-gray-500 dark:text-gray-400',
+    markColorClassName = 'text-brand-500',
 }: LogoProps) {
     return (
         <span className="flex items-center gap-2.5">
-            <span className="text-brand-500">
+            <span className={markColorClassName}>
                 <LogoMark className={markClassName} />
             </span>
             <span className="flex flex-col leading-tight">
                 <span className={textClassName}>SILE</span>
-                {subtitle && <span className="text-theme-xs text-gray-500 dark:text-gray-400">{subtitle}</span>}
+                {subtitle && <span className={subtitleClassName}>{subtitle}</span>}
             </span>
         </span>
     );

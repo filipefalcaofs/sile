@@ -98,6 +98,7 @@ export default function ParameterHistory({ parameter, entries }: ParameterHistor
                                 columns={columns}
                                 rows={entries.data}
                                 rowKey={(entry) => entry.id}
+                                density="compact"
                                 emptyState={
                                     <EmptyState
                                         title="Nenhuma alteração registrada"

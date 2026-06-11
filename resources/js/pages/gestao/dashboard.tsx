@@ -39,6 +39,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
             value: numberFormat.format(kpis.cnaes.ativos),
             note: `de ${numberFormat.format(kpis.cnaes.total)} cadastrados`,
             icon: <TableIcon className="size-6" />,
+            tone: 'brand' as const,
         },
         kpis.usuarios && {
             key: 'usuarios',
@@ -46,6 +47,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
             value: numberFormat.format(kpis.usuarios.ativos),
             note: `de ${numberFormat.format(kpis.usuarios.total)} contas`,
             icon: <GroupIcon className="size-6" />,
+            tone: 'success' as const,
         },
         kpis.perfis && {
             key: 'perfis',
@@ -53,6 +55,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
             value: numberFormat.format(kpis.perfis.total),
             note: `${numberFormat.format(kpis.perfis.permissoes)} permissões granulares`,
             icon: <LockIcon className="size-6" />,
+            tone: 'info' as const,
         },
         kpis.acessos && {
             key: 'acessos',
@@ -60,6 +63,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
             value: numberFormat.format(kpis.acessos.logins),
             note: `logins em ${kpis.acessos.janela_dias} dias`,
             icon: <UserCircleIcon className="size-6" />,
+            tone: 'warning' as const,
         },
     ].filter((indicator) => indicator !== null);
 
@@ -110,6 +114,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
                                     value={indicator.value}
                                     note={indicator.note}
                                     icon={indicator.icon}
+                                    tone={indicator.tone}
                                 />
                             ))}
                         </div>

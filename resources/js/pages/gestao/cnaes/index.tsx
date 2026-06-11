@@ -468,6 +468,7 @@ export default function CnaesIndex({ cnaes, filters, perPageOptions }: CnaesInde
                             onSortChange={table.setSort}
                             loading={table.processing}
                             skeletonRows={8}
+                            density="compact"
                             emptyState={
                                 <EmptyState
                                     title={filtering ? 'Nenhum resultado para a busca' : 'Nenhum CNAE cadastrado'}

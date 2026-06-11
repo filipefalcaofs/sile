@@ -57,7 +57,7 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
 
     return (
         <ThemeProvider>
-            <AppShell groups={groups} homeHref="/gestao" subtitle="Gestão SEDUR">
+            <AppShell groups={groups} homeHref="/gestao" subtitle="Gestão SEDUR" variant="console">
                 {flash.status && (
                     <div className="mb-6">
                         <Alert variant="success" title="Sucesso" message={flash.status} />

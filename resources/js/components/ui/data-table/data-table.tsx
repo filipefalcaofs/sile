@@ -68,7 +68,7 @@ export default function DataTable<T>({
         <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
             <div className="max-w-full overflow-x-auto">
                 <table className="min-w-full">
-                    <thead className="border-b border-gray-100 dark:border-white/[0.05]">
+                    <thead className="border-b border-gray-100 bg-gray-50 dark:border-white/[0.05] dark:bg-white/[0.02]">
                         <tr>
                             {columns.map((column) => {
                                 const isSorted = sort?.column === column.id;

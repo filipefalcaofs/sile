@@ -98,6 +98,7 @@ export default function Acessos({ targetUser, logs }: AcessosProps) {
                             columns={columns}
                             rows={logs.data}
                             rowKey={(log) => log.id}
+                            density="compact"
                             emptyState={
                                 <EmptyState
                                     title="Nenhum acesso registrado"

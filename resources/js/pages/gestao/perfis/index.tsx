@@ -368,6 +368,7 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                         columns={columns}
                         rows={roles}
                         rowKey={(role) => role.id}
+                        density="compact"
                         emptyState={
                             <EmptyState
                                 title="Nenhum perfil cadastrado"
