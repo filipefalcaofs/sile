@@ -3,6 +3,7 @@
 use App\Http\Controllers\Portal\AccessHistoryController;
 use App\Http\Controllers\Portal\CnpjLookupController;
 use App\Http\Controllers\Portal\CompanyController;
+use App\Http\Controllers\Portal\CompanyLinkController;
 use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\LgpdTermController;
 use App\Http\Controllers\Portal\ProcurationController;
@@ -39,5 +40,6 @@ Route::middleware(['auth', 'verified'])
             // Rotas com binding {company} DEPOIS das literais (03-05).
             Route::get('empresas/{company}', [CompanyController::class, 'show'])->name('empresas.show');
             Route::put('empresas/{company}', [CompanyController::class, 'update'])->name('empresas.update');
+            Route::delete('empresas/{company}/vinculo', [CompanyLinkController::class, 'destroy'])->name('empresas.vinculo.destroy');
         });
     });

@@ -259,6 +259,13 @@ class RedesimImportTest extends TestCase
     {
         $this->assertFalse(Route::has('portal.empresas.importar-redesim'));
 
-        $this->post('/portal/empresas/importar-redesim')->assertNotFound();
+        // Nenhuma rota POST de import existe. O path colide com o binding
+        // {company} (GET/PUT/DELETE — show/update/encerrar vínculo, 03-05),
+        // então o POST não é roteável: 404 (sem colisão) ou 405 (verbo não
+        // permitido) — nunca uma resposta de sucesso. O import real é só o
+        // comando artisan redesim:importar.
+        $status = $this->post('/portal/empresas/importar-redesim')->getStatusCode();
+
+        $this->assertContains($status, [404, 405], "POST de import roteável: status {$status}");
     }
 }
