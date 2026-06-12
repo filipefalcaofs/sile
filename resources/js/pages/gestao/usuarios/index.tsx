@@ -27,6 +27,8 @@ interface UserItem {
     cpf_masked: string;
 }
 
+type UsersTab = 'gestao' | 'portal';
+
 interface UsersIndexProps {
     users: {
         data: UserItem[];
@@ -37,8 +39,64 @@ interface UsersIndexProps {
     };
     filters: {
         search: string;
+        tab: UsersTab;
+    };
+    counts: {
+        gestao: number;
+        portal: number;
     };
     roles: string[];
+}
+
+function UsersTabs({
+    active,
+    counts,
+    onChange,
+}: {
+    active: UsersTab;
+    counts: { gestao: number; portal: number };
+    onChange: (tab: UsersTab) => void;
+}) {
+    const tabs: { id: UsersTab; label: string; count: number }[] = [
+        { id: 'gestao', label: 'Equipe SEDUR', count: counts.gestao },
+        { id: 'portal', label: 'Usuários do portal', count: counts.portal },
+    ];
+
+    return (
+        <div className="border-b border-gray-200 dark:border-gray-800" role="tablist" aria-label="Tipo de usuário">
+            <nav className="-mb-px flex gap-6">
+                {tabs.map((tab) => {
+                    const isActive = tab.id === active;
+
+                    return (
+                        <button
+                            key={tab.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActive}
+                            onClick={() => onChange(tab.id)}
+                            className={`inline-flex items-center gap-2 border-b-2 pt-1 pb-3 text-sm font-medium transition-colors ${
+                                isActive
+                                    ? 'border-brand-500 text-brand-600 dark:border-brand-400 dark:text-brand-400'
+                                    : 'cursor-pointer border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                            }`}
+                        >
+                            {tab.label}
+                            <span
+                                className={`rounded-full px-2 py-0.5 text-theme-xs font-semibold ${
+                                    isActive
+                                        ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400'
+                                        : 'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400'
+                                }`}
+                            >
+                                {tab.count}
+                            </span>
+                        </button>
+                    );
+                })}
+            </nav>
+        </div>
+    );
 }
 
 function SituationBadge({ inactivatedAt }: { inactivatedAt: string | null }) {
@@ -107,12 +165,14 @@ function RoleModal({ user, roles, onClose }: { user: UserItem; roles: string[]; 
     );
 }
 
-export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
+export default function UsersIndex({ users, filters, counts, roles }: UsersIndexProps) {
     const [search, setSearch] = useState(filters.search ?? '');
     const isFirstRender = useRef(true);
     const [roleUser, setRoleUser] = useState<UserItem | null>(null);
     const [activationUser, setActivationUser] = useState<UserItem | null>(null);
     const [activationProcessing, setActivationProcessing] = useState(false);
+
+    const tab = filters.tab ?? 'gestao';
 
     useEffect(() => {
         if (isFirstRender.current) {
@@ -120,10 +180,21 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
             return;
         }
         const timeout = setTimeout(() => {
-            router.get('/gestao/usuarios', { search }, { preserveState: true, replace: true });
+            router.get('/gestao/usuarios', { tab, search }, { preserveState: true, replace: true });
         }, 350);
         return () => clearTimeout(timeout);
+        // tab fora das deps de propósito: a troca de aba navega na hora pelo
+        // onChange — o efeito cobre apenas o debounce da busca.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search]);
+
+    function changeTab(nextTab: UsersTab) {
+        if (nextTab === tab) {
+            return;
+        }
+
+        router.get('/gestao/usuarios', { tab: nextTab, search }, { preserveState: true, replace: true });
+    }
 
     const searching = search.trim() !== '';
 
@@ -225,10 +296,16 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
             <Card>
                 <CardHeader
                     title="Contas cadastradas"
-                    description="Contas do sistema: situação, papel e histórico de acessos"
+                    description={
+                        tab === 'gestao'
+                            ? 'Servidores e perfis internos com acesso ao console SEDUR'
+                            : 'Cidadãos, contadores e procuradores que usam o portal'
+                    }
                 />
                 <CardContent>
                     <div className="space-y-5">
+                        <UsersTabs active={tab} counts={counts} onChange={changeTab} />
+
                         <TableToolbar
                             search={{
                                 value: search,
@@ -245,11 +322,19 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
                             density="compact"
                             emptyState={
                                 <EmptyState
-                                    title={searching ? 'Nenhum resultado para a busca' : 'Nenhum usuário cadastrado'}
+                                    title={
+                                        searching
+                                            ? 'Nenhum resultado para a busca'
+                                            : tab === 'gestao'
+                                              ? 'Nenhum usuário na equipe SEDUR'
+                                              : 'Nenhum usuário do portal'
+                                    }
                                     description={
                                         searching
                                             ? 'Ajuste o termo de busca e tente novamente.'
-                                            : 'As contas criadas no sistema aparecem aqui.'
+                                            : tab === 'gestao'
+                                              ? 'Contas com acesso ao console aparecem aqui.'
+                                              : 'Contas criadas pelo portal do cidadão aparecem aqui.'
                                     }
                                 />
                             }

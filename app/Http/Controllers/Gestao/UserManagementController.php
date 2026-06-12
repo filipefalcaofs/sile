@@ -16,13 +16,33 @@ use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
+    private const TABS = ['gestao', 'portal'];
+
     /**
-     * Listagem com busca por nome ou e-mail (HU-012 CA-01). CPF nunca
-     * exposto em claro (LGPD) — apenas os dígitos verificadores mascarados.
+     * Listagem com busca por nome ou e-mail (HU-012 CA-01), separada em
+     * abas: equipe SEDUR (papéis com a permissão acessar-gestao, inclusive
+     * perfis customizados da HU-013) e usuários do portal (os demais).
+     * CPF nunca exposto em claro (LGPD) — apenas os dígitos verificadores.
      */
     public function index(Request $request): Response
     {
-        $users = User::query()
+        $tab = $request->string('tab')->toString();
+
+        if (! in_array($tab, self::TABS, true)) {
+            $tab = 'gestao';
+        }
+
+        $gestaoRoleIds = Role::query()
+            ->whereHas('permissions', fn ($query) => $query->where('name', 'acessar-gestao'))
+            ->pluck('id');
+
+        $scopeTab = function ($query, string $which) use ($gestaoRoleIds) {
+            return $which === 'gestao'
+                ? $query->whereHas('roles', fn ($inner) => $inner->whereIn('roles.id', $gestaoRoleIds))
+                : $query->whereDoesntHave('roles', fn ($inner) => $inner->whereIn('roles.id', $gestaoRoleIds));
+        };
+
+        $users = $scopeTab(User::query(), $tab)
             ->with('roles:id,name')
             ->when($request->string('search')->isNotEmpty(), function ($query) use ($request) {
                 $term = (string) $request->string('search')->trim();
@@ -46,7 +66,14 @@ class UserManagementController extends Controller
 
         return Inertia::render('gestao/usuarios/index', [
             'users' => $users,
-            'filters' => ['search' => $request->string('search')->toString()],
+            'filters' => [
+                'search' => $request->string('search')->toString(),
+                'tab' => $tab,
+            ],
+            'counts' => [
+                'gestao' => $scopeTab(User::query(), 'gestao')->count(),
+                'portal' => $scopeTab(User::query(), 'portal')->count(),
+            ],
             'roles' => Role::orderBy('name')->pluck('name'),
         ]);
     }
