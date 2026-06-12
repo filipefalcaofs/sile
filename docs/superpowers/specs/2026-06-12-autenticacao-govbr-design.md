@@ -21,8 +21,10 @@ Roteiro de Integração do Login Único (acesso.gov.br/roteiro-tecnico, atualiza
 - Autorização: `{base}/authorize` · Token: `{base}/token` (Basic auth) · Chaves: `{base}/jwk` · Logout: `{base}/logout`.
 - Staging: `https://sso.staging.acesso.gov.br` · Produção: `https://sso.acesso.gov.br`.
 - Scopes: `openid email profile govbr_confiabilidades govbr_confiabilidades_idtoken`.
-- `id_token` (RS256, validar contra JWK): claims `sub` (CPF), `name`, `email`, `email_verified`, `amr`, `nonce`; níveis de confiabilidade no próprio token com o scope `govbr_confiabilidades_idtoken`.
-- API de níveis (fallback): `{api_base}/confiabilidades/v3/contas/{cpf}/niveis?response-type=ids` (1=bronze, 2=prata, 3=ouro).
+- `id_token` (RS256, validar contra JWK): claims `sub` (CPF), `name`, `email`, `email_verified`, `amr`, `nonce`; com o scope `govbr_confiabilidades_idtoken`, `reliability_info.level` (`bronze|silver|gold`) e `reliability_info.reliabilities[]` (selos) vêm no próprio token.
+- **Ajuste pós-pesquisa (2026-06-12)**: a API separada de níveis (`/confiabilidades/v3/...`) é método **obsoleto** no roteiro ("novas integrações não devem utilizar"); os níveis são lidos exclusivamente do `id_token` e o parâmetro `integrations.govbr.api_base_url` foi removido do catálogo (não parametrizar o que não tem uso). `id_token` sem `reliability_info` é tratado como bronze (piso de qualquer conta gov.br) — fail-closed quando o mínimo parametrizado for prata/ouro.
+- **Ajuste**: e-mail não verificado no gov.br faz o claim `email` nem ser emitido; primeiro acesso sem e-mail é bloqueado com orientação (conta local exige e-mail) — usuário existente (CPF encontrado) autentica normalmente.
+- Token request usa `Authorization: Basic base64(client_id:client_secret)` + form body (grant_type, code, redirect_uri, code_verifier), conforme roteiro.
 
 ## Arquitetura
 

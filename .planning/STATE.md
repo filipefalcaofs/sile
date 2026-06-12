@@ -166,12 +166,17 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [03-05] HU-028 encerrar vínculo: CompanyLinkController::destroy encerra o PRÓPRIO vínculo ativo do usuário efetivo via ended_at/ended_reason — NUNCA delete físico (histórico preservado). Proteção do último responsável ativo em EndCompanyLinkRequest::after() (precedente anti-lockout [02-05]): bloqueia com "A empresa não pode ficar sem responsável ativo." contando APENAS o papel responsavel (procurador único encerra normalmente). Auditoria de negócio explícita event 'encerramento-vinculo' (AuditService, log_name 'empresas', props empresa_id/vinculo_id/motivo) coexiste com o 'updated' técnico do HasAuditoria. Rota DELETE empresas/{company}/vinculo.
 - [03-04] Testes Inertia da Fase 3 usam assertInertia has()/where() SEM ->component() — as páginas React (portal/empresas/index, cadastrar) só nascem no 03-07 (wave 6) e a checagem de componente exige o arquivo em disco. PENDÊNCIA p/ 03-07: adicionar a verificação visual/componente quando as telas existirem. Shape das props do index documentado no 03-04-SUMMARY (contrato da DataTable).
 
+### Roadmap Evolution
+
+- Phase 3.1 inserida após a Phase 3: Fundação assíncrona — scheduler, jobs e retenção (URGENT). Origem: levantamento "Laravel 13 — recursos prontos não usados" (2026-06-12). Escopo: scheduler ativo com primeira rotina real (padrão para HU-134/HU-147), importações REDESIM/CNAE como jobs em fila com retry e relatório, `throttle` parametrizado nas rotas públicas, pruning de access_logs com retenção parametrizada (LGPD; trilha de auditoria RN-002 fica fora) e retry/backoff no HTTP client. Demais recursos do levantamento anotados nas fases consumidoras como "Nota (recursos do framework)": Storage/URLs assinadas (Fases 8 e 10), atomic locks e eventos de domínio (Fases 8 e 9), canal database de Notifications (Fase 11), `Concurrency`/`Http::pool`/`Queue::route()`/Horizon (Fase 13).
+
 ### Pending Todos
 
 Nenhum.
 
 ### Blockers/Concerns
 
+- [Fase 3.2 / HU-151] Credenciamento no Login Único GOV.BR: a SEDUR ainda não possui client_id/client_secret (Termo de Adesão junto à Secretaria de Governo Digital). A autenticação GOV.BR do portal entra completa e DESLIGADA (`features.govbr_login` default false); a validação contra `sso.staging.acesso.gov.br` real é critério de conclusão da integração — bloqueada até a credencial. Spec: `docs/superpowers/specs/2026-06-12-autenticacao-govbr-design.md`.
 - [Produto] Painel consolidado do cidadão (padrão SIGVISA: situação atual ao logar — empresas, solicitações, DAMs, TVLs): NÃO há HU no catálogo (HU-122 é dashboard do GESTOR). Lacuna identificada em 2026-06-10; decisão pendente (criar HU-132 proposta ou evoluir o painel dentro das fases). Pauta para a SEDUR. As peças surgem nas Fases 3 (empresas), 7 (consultas), 8 (solicitações) e 9 (TVL) — o painel atual de atalhos evolui junto.
 - [Identidade] Marca institucional oficial a confirmar: o usuário indicou a página de marcas da SEDUR **estadual** (https://www.ba.gov.br/sedur/institucional/marcas — manual Secom, marca Sedur, marca do Governo, brasão do Estado; arquivos em SharePoint com login, download direto bloqueado). A documentação do projeto referencia a SEDUR **municipal de Salvador** (LOUOS municipal, Decreto 32.636/2020, Prefeitura de Salvador). Confirmar qual ente é o dono do SILE antes de aplicar marca institucional/co-branding; até lá, o sistema usa a logo própria do SILE (components/app/logo.tsx).
 
