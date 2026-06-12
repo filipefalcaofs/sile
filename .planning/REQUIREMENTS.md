@@ -36,7 +36,7 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 ### EP03 — Cadastro Empresarial
 
 - [x] **HU-021**: Consultar dados do CNPJ
-- [ ] **HU-022**: Importar dados da REDESIM
+- [x] **HU-022**: Importar dados da REDESIM
 - [ ] **HU-023**: Cadastrar empresa
 - [ ] **HU-024**: Atualizar dados empresariais
 - [ ] **HU-025**: Vincular CNAE principal
@@ -236,7 +236,7 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-019 | Fase 6 | Pending |
 | HU-020 | Fase 6 | Pending |
 | HU-021 | Fase 3 | Done |
-| HU-022 | Fase 3 | Pending |
+| HU-022 | Fase 3 | Complete (03-03) |
 | HU-023 | Fase 3 | Pending |
 | HU-024 | Fase 3 | Pending |
 | HU-025 | Fase 3 | Pending |

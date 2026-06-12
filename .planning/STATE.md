@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md (Fase 3, wave 2 — consulta de CNPJ HU-021: contrato CnpjLookup + provider BrasilAPI real, URL administrável, cache 24h só de sucesso, toggle e endpoint auditado; 12 testes verdes)
-last_updated: "2026-06-12T04:25:00.000Z"
-last_activity: 2026-06-12 -- Completed 03-02 (consulta de CNPJ — HU-021)
+stopped_at: Completed 03-03-PLAN.md (Fase 3, wave 2 — importação REDESIM HU-022: RedesimImportService com validação por item, upsert por CNPJ, sync de CNAEs e relatório auditado rules_version redesim-import-v1; comando redesim:importar com exit codes; payload de referência versionado; 15 testes verdes, smoke real idempotente)
+last_updated: "2026-06-12T04:40:00.000Z"
+last_activity: 2026-06-12 -- Completed 03-03 (importação REDESIM — HU-022)
 progress:
   total_phases: 15
   completed_phases: 2
   total_plans: 26
-  completed_plans: 19
+  completed_plans: 20
   percent: 14
 ---
 
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 3 (Cadastro Empresarial) — EXECUTING
-Plan: 3 of 9
+Plan: 4 of 9
 Status: Executing Phase 3
-Last activity: 2026-06-12 -- Completed 03-02 (consulta de CNPJ — HU-021)
+Last activity: 2026-06-12 -- Completed 03-03 (importação REDESIM — HU-022)
 
-Progress: [█▌░░░░░░░░] 14% (2/15 fases; 19 planos executados)
+Progress: [█▌░░░░░░░░] 14% (2/15 fases; 20 planos executados)
 
-Next step: `/gsd-execute-phase 3` (próximo plano: 03-03 — importação REDESIM)
+Next step: `/gsd-execute-phase 3` (próximo plano: 03-04 — cadastro/atualização manual de empresa)
 
 ### Fase 2.1 (INSERTED) — Template TailAdmin (concluída 2026-06-10)
 
@@ -75,9 +75,9 @@ Next step: `/gsd-execute-phase 3` (próximo plano: 03-03 — importação REDESI
 
 **Velocity:**
 
-- Total plans completed: 19
+- Total plans completed: 20
 - Average duration: 12 min
-- Total execution time: ~3.61 h
+- Total execution time: ~3.81 h
 
 **By Phase:**
 
@@ -85,12 +85,12 @@ Next step: `/gsd-execute-phase 3` (próximo plano: 03-03 — importação REDESI
 |-------|-------|-------|----------|
 | 01-identidade | 9/9 ✓ | ~96 min | 11 min |
 | 02-administracao-base | 8/8 ✓ | ~100 min | 12 min |
-| 03-cadastro-empresarial | 2/9 | ~40 min | 20 min |
+| 03-cadastro-empresarial | 3/9 | ~52 min | 17 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 02-05 (11 min), 02-06 (9 min), 02-07 (13 min), 03-01 (22 min), 03-02 (18 min)
-- Trend: 03-02 com 2 deviations Rule 3/1 (shouldRenderJsonWhen do portal + sobrescrita de Http::fake por merge) — consulta de CNPJ real atrás de contrato em 2 tasks TDD
+- Last 5 plans: 02-06 (9 min), 02-07 (13 min), 03-01 (22 min), 03-02 (18 min), 03-03 (12 min)
+- Trend: 03-03 sem deviations — HU-022 com lógica real atrás de contrato (service + comando) em 3 tasks TDD; smoke real idempotente em DB isolado
 
 *Atualizado após cada plano concluído*
 
@@ -156,6 +156,9 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [03-02] Cache de consulta CNPJ (Cache::remember key sile.cnpj_lookup.{cnpj}, ttl config 86400) grava SÓ sucesso: exceção dentro do closure impede a gravação (falha nunca cacheada). Constantes técnicas (timeout 8s, connectTimeout 3s, retries 2) em config/sile.php. ConnectionException convertida em CnpjLookupException no provider; 404 → CnpjNotFoundException.
 - [03-02] Endpoint POST /portal/empresas/consultar-cnpj (name portal.empresas.consultar-cnpj) auditado em TODAS as saídas via AuditService (event consulta-cnpj, result sucesso/falha/bloqueado, properties com cnpj e provider). Toggle features.cnpj_lookup desligado bloqueia ANTES de qualquer request HTTP (degradação comunicada 422). Shape JSON = CnpjData::toArray (snake_case) — contrato do formulário React no 03-06.
 - [03-02] bootstrap/app.php: shouldRenderJsonWhen estendido para portal/empresas/consultar-cnpj quando expectsJson() — o projeto restringia render JSON de exceções a api/*, fazendo o portal redirecionar (302) em vez de 401/422/404 JSON. Padrão para futuros endpoints JSON do portal (useHttp): adicionar a rota na condição.
+- [03-03] Importação REDESIM (HU-022) com lógica REAL atrás de contrato: RedesimImportService->import(jsonPath) retorna {lidos, importados, atualizados, rejeitados[], avisos[]} e audita via AuditService (log 'empresas', event 'importacao-redesim', rules_version 'redesim-import-v1', result falha SÓ quando todos rejeitados; causer null = sistema). Validação por item (protocolo/razão social/CNPJ via ValidCnpj/CNAE principal existente); item inválido rejeitado com motivo pt-BR carregando o protocolo, sem inserção parcial (DB::transaction por item). Estrutura do payload é REFERÊNCIA A VALIDAR COM A SEDUR (REGIN/JUCEB) — o transporte real é a Fase 13 (HU-103) e ajusta só o parsing.
+- [03-03] Upsert por CNPJ NÃO reescreve source (origem de criação imutável — Pitfall 8): empresa criada manual continua manual após reimport, marcando redesim_synced_at + redesim_protocol. CNAEs sincronizados com sync() exato (principal is_primary=true + secundários resolvidos). CNAE inativo (principal/secundário) IMPORTA com aviso (dado da Junta é fato consumado; "somente ativos" vale só para seleção manual HU-025/026); secundário inexistente vira aviso e é ignorado. Import NUNCA cria company_user (payload não traz usuário do portal — associação é da Fase 13).
+- [03-03] Comando redesim:importar {arquivo} (App\Console\Commands\ImportRedesimCommand, auto-descoberto): relatório pt-BR (Lidos/Importados/Atualizados + seções Rejeitados/Avisos), exit 1 para arquivo inexistente / JSON inválido (JsonException) / todos os itens rejeitados; exit 0 caso contrário. NÃO existe rota pública de import (testado — entrada é exclusivamente comando/serviço, CA-04). Payload de referência REAL versionado em database/data/redesim-exemplo.json (dados públicos RFB) para homologação; fixture em tests/Fixtures/redesim/.
 
 ### Pending Todos
 
@@ -178,8 +181,8 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-12 04:25 UTC
-Stopped at: Completed 03-02-PLAN.md (Fase 3, wave 2 — consulta de CNPJ HU-021: contrato CnpjLookup + provider BrasilAPI real, URL administrável por parâmetro, cache 24h só de sucesso, toggle e endpoint JSON auditado em sucesso/falha/bloqueio; 12 testes verdes, pint limpo)
+Last session: 2026-06-12 04:40 UTC
+Stopped at: Completed 03-03-PLAN.md (Fase 3, wave 2 — importação REDESIM HU-022: RedesimImportService com validação por item, upsert por CNPJ sem tocar source, sync de CNAEs e relatório auditado rules_version redesim-import-v1; comando redesim:importar com exit codes pt-BR; payload de referência versionado a validar com a SEDUR; 15 testes verdes, smoke real idempotente em DB isolado, pint limpo)
 Resume file: None
 
 Nota operacional: durante o 01-09 houve uma sessão de agente concorrente no mesmo working directory (commits 79b3b81/e4010ce da Task 1 e composer run dev). Conteúdo validado e aproveitado sem duplicação. RECORRÊNCIA no 02-05: TRÊS sessões executoras despachadas para o mesmo plano; a segunda e a terceira detectaram a colisão no início (SUMMARY/commits já no HEAD), não editaram código e validaram o trabalho da primeira com evidência fresca (Users 15/15, suíte 168/168, typecheck/build/pint verdes, 3 rotas usuarios.*). Corrigir o despacho: um único executor por wave/plano — nunca sessões GSD simultâneas ou repetidas no mesmo plano sem checar SUMMARY antes.
