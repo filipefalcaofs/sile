@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Portal\AccessHistoryController;
+use App\Http\Controllers\Portal\CnaeSearchController;
 use App\Http\Controllers\Portal\CnpjLookupController;
+use App\Http\Controllers\Portal\CompanyCnaeController;
 use App\Http\Controllers\Portal\CompanyController;
 use App\Http\Controllers\Portal\CompanyLinkController;
 use App\Http\Controllers\Portal\DashboardController;
@@ -59,5 +61,12 @@ Route::middleware(['auth:web', 'verified'])
             Route::get('empresas/{company}', [CompanyController::class, 'show'])->name('empresas.show');
             Route::put('empresas/{company}', [CompanyController::class, 'update'])->name('empresas.update');
             Route::delete('empresas/{company}/vinculo', [CompanyLinkController::class, 'destroy'])->name('empresas.vinculo.destroy');
+
+            // CNAEs da empresa (HU-025/HU-026) — escrita só via service (03-06).
+            Route::put('empresas/{company}/cnae-principal', [CompanyCnaeController::class, 'updatePrimary'])->name('empresas.cnae-principal');
+            Route::put('empresas/{company}/cnaes-secundarios', [CompanyCnaeController::class, 'updateSecondaries'])->name('empresas.cnaes-secundarios');
+
+            // Busca da tabela oficial para os selects de CNAE (só ativos).
+            Route::get('cnaes', CnaeSearchController::class)->name('cnaes.search');
         });
     });
