@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-04-PLAN.md (Fase 3, wave 3 — cadastro/consulta de empresas HU-023/HU-027: CompanyPolicy integrada à representação [01-07], store transacional empresa+vínculo responsável, listagem Minhas empresas server-driven com busca/ordenação/paginação parametrizada; 17 testes verdes (8 cadastro + 9 listagem), grupo Companies 50 verdes, pint limpo)
-last_updated: "2026-06-12T04:55:00.000Z"
-last_activity: 2026-06-12 -- Completed 03-04 (cadastro e consulta de empresas — HU-023/HU-027)
+stopped_at: Completed 03-05-PLAN.md (Fase 3, wave 4 — atualizar empresa/encerrar vínculo HU-024/HU-028: show com props completas (contrato 03-08) + update com CNPJ imutável por omissão nas regras; CompanyLinkController::destroy encerra o próprio vínculo (ended_at/ended_reason, nunca delete físico) com proteção do último responsável ativo no FormRequest::after [02-05]; evento de auditoria 'encerramento-vinculo'; 15 testes verdes (7 update + 8 encerramento), grupo Companies 65 verdes, pint limpo)
+last_updated: "2026-06-12T05:10:00.000Z"
+last_activity: 2026-06-12 -- Completed 03-05 (atualizar empresa e encerrar vínculo — HU-024/HU-028)
 progress:
   total_phases: 15
   completed_phases: 2
   total_plans: 26
-  completed_plans: 21
-  percent: 14
+  completed_plans: 22
+  percent: 15
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 3 (Cadastro Empresarial) — EXECUTING
-Plan: 5 of 9
+Plan: 6 of 9
 Status: Executing Phase 3
-Last activity: 2026-06-12 -- Completed 03-04 (cadastro e consulta de empresas — HU-023/HU-027)
+Last activity: 2026-06-12 -- Completed 03-05 (atualizar empresa e encerrar vínculo — HU-024/HU-028)
 
-Progress: [█▌░░░░░░░░] 14% (2/15 fases; 21 planos executados)
+Progress: [█▌░░░░░░░░] 15% (2/15 fases; 22 planos executados)
 
-Next step: `/gsd-execute-phase 3` (próximo plano: 03-05 — vínculo de CNAEs principal/secundários da empresa)
+Next step: `/gsd-execute-phase 3` (próximo plano: 03-06 — vínculo de CNAEs principal/secundários da empresa, HU-025/HU-026)
 
 ### Fase 2.1 (INSERTED) — Template TailAdmin (concluída 2026-06-10)
 
@@ -85,12 +85,12 @@ Next step: `/gsd-execute-phase 3` (próximo plano: 03-05 — vínculo de CNAEs p
 |-------|-------|-------|----------|
 | 01-identidade | 9/9 ✓ | ~96 min | 11 min |
 | 02-administracao-base | 8/8 ✓ | ~100 min | 12 min |
-| 03-cadastro-empresarial | 4/9 | ~66 min | 17 min |
+| 03-cadastro-empresarial | 5/9 | ~75 min | 15 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 02-07 (13 min), 03-01 (22 min), 03-02 (18 min), 03-03 (12 min), 03-04 (14 min)
-- Trend: 03-04 com 1 deviation de teste (flushSession entre os dois lados da representação) — HU-023/HU-027 backend em 2 tasks TDD; 50 testes do grupo Companies verdes
+- Last 5 plans: 03-01 (22 min), 03-02 (18 min), 03-03 (12 min), 03-04 (14 min), 03-05 (9 min)
+- Trend: 03-05 com 1 deviation de teste (assert do RedesimImportTest aceita 404/405 — colisão do path importar-redesim com a rota {company}); HU-024/HU-028 backend em 2 tasks TDD; 65 testes do grupo Companies verdes
 
 *Atualizado após cada plano concluído*
 
@@ -162,6 +162,8 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [03-04] CompanyPolicy integrada à representação [01-07]: effectiveUser() = CurrentRepresentation::grantor() ?? $user, replicado na policy E no CompanyController. view() aceita vínculo ativo OU encerrado (histórico visível); update/manageCnaes/endLink exigem vínculo ATIVO (whereNull ended_at). Gate manageCnaes pronto para o 03-05; endLink para o 03-06 (HU-028).
 - [03-04] store de empresa (HU-023) cria Company (source=manual) + CompanyUser (responsavel, started_at=now) na MESMA DB::transaction, em nome do usuário efetivo — em representação o vínculo nasce para o REPRESENTADO (user_id=grantor), nunca para o procurador; auditoria created enriquecida com acting_for_user_id=grantor. CNPJ duplicado bloqueado no StoreCompanyRequest com unique + mensagem "Já existe empresa cadastrada com este CNPJ." (CA-03); prepareForValidation normaliza CNPJ (uppercase/sem máscara), telefone e CEP (só dígitos).
 - [03-04] Listagem Minhas empresas (HU-027) server-driven (padrão CnaeController@index): escopo whereHas('links', user efetivo), busca por razão social/fantasia (whereLike caseSensitive:false) ou prefixo de CNPJ, ordenação whitelistada (SORTABLE_COLUMNS=['legal_name']), paginação parametrizada ui.companies.per_page; eager loading anti-N+1 (wherePivot is_primary + vínculo do usuário). Company::countForUser exposto em totalCompanies (contagem reutilizável p/ painel do cidadão). Rotas portal.empresas.index/create/store ANTES de empresas/{company} (03-05).
+- [03-05] HU-024 atualizar empresa: CompanyController::show (Gate view, aceita vínculo ativo OU encerrado) com props completas (company, cnaes primary/secondaries, links com is_current_user, abilities update/manageCnaes/endLink) — contrato direto da tela de detalhe 03-08. update (Gate update, vínculo ATIVO) com CNPJ IMUTÁVEL POR OMISSÃO: o UpdateCompanyRequest não inclui cnpj nas rules, logo validated() nunca o contém e o valor enviado é ignorado (padrão CPF [01-08]); auditoria 'updated' com attribute_changes automática (HasAuditoria). Rotas empresas/{company} (show/update) DEPOIS das literais.
+- [03-05] HU-028 encerrar vínculo: CompanyLinkController::destroy encerra o PRÓPRIO vínculo ativo do usuário efetivo via ended_at/ended_reason — NUNCA delete físico (histórico preservado). Proteção do último responsável ativo em EndCompanyLinkRequest::after() (precedente anti-lockout [02-05]): bloqueia com "A empresa não pode ficar sem responsável ativo." contando APENAS o papel responsavel (procurador único encerra normalmente). Auditoria de negócio explícita event 'encerramento-vinculo' (AuditService, log_name 'empresas', props empresa_id/vinculo_id/motivo) coexiste com o 'updated' técnico do HasAuditoria. Rota DELETE empresas/{company}/vinculo.
 - [03-04] Testes Inertia da Fase 3 usam assertInertia has()/where() SEM ->component() — as páginas React (portal/empresas/index, cadastrar) só nascem no 03-07 (wave 6) e a checagem de componente exige o arquivo em disco. PENDÊNCIA p/ 03-07: adicionar a verificação visual/componente quando as telas existirem. Shape das props do index documentado no 03-04-SUMMARY (contrato da DataTable).
 
 ### Pending Todos
@@ -185,8 +187,8 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-12 04:55 UTC
-Stopped at: Completed 03-04-PLAN.md (Fase 3, wave 3 — cadastro/consulta de empresas HU-023/HU-027: CompanyPolicy integrada à representação [01-07] com effectiveUser grantor??user; store transacional empresa+vínculo responsável em nome do efetivo; listagem Minhas empresas server-driven com busca case-insensitive, ordenação whitelistada e paginação parametrizada; 17 testes do plano verdes, grupo Companies 50 verdes, pint limpo)
+Last session: 2026-06-12 05:10 UTC
+Stopped at: Completed 03-05-PLAN.md (Fase 3, wave 4 — atualizar empresa/encerrar vínculo HU-024/HU-028: show com props completas (contrato 03-08) + update com CNPJ imutável por omissão nas regras; CompanyLinkController::destroy encerra o próprio vínculo (ended_at/ended_reason, nunca delete físico) com proteção do último responsável ativo no FormRequest::after [02-05] e auditoria de negócio 'encerramento-vinculo'; 15 testes do plano verdes (7 update + 8 encerramento), grupo Companies 65 verdes, pint limpo)
 Resume file: None
 
 Nota operacional: durante o 01-09 houve uma sessão de agente concorrente no mesmo working directory (commits 79b3b81/e4010ce da Task 1 e composer run dev). Conteúdo validado e aproveitado sem duplicação. RECORRÊNCIA no 02-05: TRÊS sessões executoras despachadas para o mesmo plano; a segunda e a terceira detectaram a colisão no início (SUMMARY/commits já no HEAD), não editaram código e validaram o trabalho da primeira com evidência fresca (Users 15/15, suíte 168/168, typecheck/build/pint verdes, 3 rotas usuarios.*). Corrigir o despacho: um único executor por wave/plano — nunca sessões GSD simultâneas ou repetidas no mesmo plano sem checar SUMMARY antes.

@@ -38,11 +38,11 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 - [x] **HU-021**: Consultar dados do CNPJ
 - [x] **HU-022**: Importar dados da REDESIM
 - [x] **HU-023**: Cadastrar empresa
-- [ ] **HU-024**: Atualizar dados empresariais
+- [x] **HU-024**: Atualizar dados empresariais
 - [ ] **HU-025**: Vincular CNAE principal
 - [ ] **HU-026**: Vincular CNAEs secundários
 - [x] **HU-027**: Consultar empresas vinculadas
-- [ ] **HU-028**: Encerrar vínculo empresarial
+- [x] **HU-028**: Encerrar vínculo empresarial
 
 ### EP04 — Georreferenciamento e Território
 
@@ -238,11 +238,11 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-021 | Fase 3 | Done |
 | HU-022 | Fase 3 | Complete (03-03) |
 | HU-023 | Fase 3 | Complete (03-04) |
-| HU-024 | Fase 3 | Pending |
+| HU-024 | Fase 3 | Complete (03-05) |
 | HU-025 | Fase 3 | Pending |
 | HU-026 | Fase 3 | Pending |
 | HU-027 | Fase 3 | Complete (03-04) |
-| HU-028 | Fase 3 | Pending |
+| HU-028 | Fase 3 | Complete (03-05) |
 | HU-029 | Fase 4 | Pending |
 | HU-030 | Fase 4 | Pending |
 | HU-031 | Fase 4 | Pending |
