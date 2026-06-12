@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-05-PLAN.md (Fase 3, wave 4 — atualizar empresa/encerrar vínculo HU-024/HU-028: show com props completas (contrato 03-08) + update com CNPJ imutável por omissão nas regras; CompanyLinkController::destroy encerra o próprio vínculo (ended_at/ended_reason, nunca delete físico) com proteção do último responsável ativo no FormRequest::after [02-05]; evento de auditoria 'encerramento-vinculo'; 15 testes verdes (7 update + 8 encerramento), grupo Companies 65 verdes, pint limpo)
-last_updated: "2026-06-12T05:10:00.000Z"
-last_activity: 2026-06-12 -- Completed 03-05 (atualizar empresa e encerrar vínculo — HU-024/HU-028)
+stopped_at: Completed 03-06-PLAN.md (Fase 3, wave 5 — vínculo de CNAEs da empresa HU-025/HU-026: CompanyCnaeService transacional como ÚNICO ponto de escrita do pivot (setPrimary demote→promote, syncSecondaries com sync calculado preservando o principal), endpoints PUT cnae-principal/cnaes-secundarios autorizados por manageCnaes com seleção restrita a CNAEs ativos, busca GET /portal/cnaes só ativos máx 20, auditoria 'cnae-principal'/'cnaes-secundarios' com antes/depois; 17 testes novos, grupo Companies 82 verdes, pint limpo)
+last_updated: "2026-06-12T19:50:50.000Z"
+last_activity: 2026-06-12 -- Completed 03-06 (vínculo de CNAEs da empresa — HU-025/HU-026)
 progress:
   total_phases: 15
   completed_phases: 2
   total_plans: 26
-  completed_plans: 22
+  completed_plans: 23
   percent: 15
 ---
 
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 3 (Cadastro Empresarial) — EXECUTING
-Plan: 6 of 9
+Plan: 7 of 9
 Status: Executing Phase 3
-Last activity: 2026-06-12 -- Completed 03-05 (atualizar empresa e encerrar vínculo — HU-024/HU-028)
+Last activity: 2026-06-12 -- Completed 03-06 (vínculo de CNAEs da empresa — HU-025/HU-026)
 
-Progress: [█▌░░░░░░░░] 15% (2/15 fases; 22 planos executados)
+Progress: [█▌░░░░░░░░] 15% (2/15 fases; 23 planos executados)
 
-Next step: `/gsd-execute-phase 3` (próximo plano: 03-06 — vínculo de CNAEs principal/secundários da empresa, HU-025/HU-026)
+Next step: `/gsd-execute-phase 3` (próximo plano: 03-07 — telas do portal de empresas, wave 6; nota: a página de cadastro já foi adiantada no commit 41d76d8)
 
 ### Fase 2.1 (INSERTED) — Template TailAdmin (concluída 2026-06-10)
 
@@ -75,9 +75,9 @@ Next step: `/gsd-execute-phase 3` (próximo plano: 03-06 — vínculo de CNAEs p
 
 **Velocity:**
 
-- Total plans completed: 21
-- Average duration: 12 min
-- Total execution time: ~4.04 h
+- Total plans completed: 22
+- Average duration: 11 min
+- Total execution time: ~4.21 h
 
 **By Phase:**
 
@@ -85,12 +85,12 @@ Next step: `/gsd-execute-phase 3` (próximo plano: 03-06 — vínculo de CNAEs p
 |-------|-------|-------|----------|
 | 01-identidade | 9/9 ✓ | ~96 min | 11 min |
 | 02-administracao-base | 8/8 ✓ | ~100 min | 12 min |
-| 03-cadastro-empresarial | 5/9 | ~75 min | 15 min |
+| 03-cadastro-empresarial | 6/9 | ~85 min | 14 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 03-01 (22 min), 03-02 (18 min), 03-03 (12 min), 03-04 (14 min), 03-05 (9 min)
-- Trend: 03-05 com 1 deviation de teste (assert do RedesimImportTest aceita 404/405 — colisão do path importar-redesim com a rota {company}); HU-024/HU-028 backend em 2 tasks TDD; 65 testes do grupo Companies verdes
+- Last 5 plans: 03-02 (18 min), 03-03 (12 min), 03-04 (14 min), 03-05 (9 min), 03-06 (10 min)
+- Trend: 03-06 sem deviations (plano executado como escrito); HU-025/HU-026 backend em 2 tasks TDD; 82 testes do grupo Companies verdes (17 novos)
 
 *Atualizado após cada plano concluído*
 
@@ -167,6 +167,7 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [03-05] HU-024 atualizar empresa: CompanyController::show (Gate view, aceita vínculo ativo OU encerrado) com props completas (company, cnaes primary/secondaries, links com is_current_user, abilities update/manageCnaes/endLink) — contrato direto da tela de detalhe 03-08. update (Gate update, vínculo ATIVO) com CNPJ IMUTÁVEL POR OMISSÃO: o UpdateCompanyRequest não inclui cnpj nas rules, logo validated() nunca o contém e o valor enviado é ignorado (padrão CPF [01-08]); auditoria 'updated' com attribute_changes automática (HasAuditoria). Rotas empresas/{company} (show/update) DEPOIS das literais.
 - [03-05] HU-028 encerrar vínculo: CompanyLinkController::destroy encerra o PRÓPRIO vínculo ativo do usuário efetivo via ended_at/ended_reason — NUNCA delete físico (histórico preservado). Proteção do último responsável ativo em EndCompanyLinkRequest::after() (precedente anti-lockout [02-05]): bloqueia com "A empresa não pode ficar sem responsável ativo." contando APENAS o papel responsavel (procurador único encerra normalmente). Auditoria de negócio explícita event 'encerramento-vinculo' (AuditService, log_name 'empresas', props empresa_id/vinculo_id/motivo) coexiste com o 'updated' técnico do HasAuditoria. Rota DELETE empresas/{company}/vinculo.
 - [03-04] Testes Inertia da Fase 3 usam assertInertia has()/where() SEM ->component() — as páginas React (portal/empresas/index, cadastrar) só nascem no 03-07 (wave 6) e a checagem de componente exige o arquivo em disco. PENDÊNCIA p/ 03-07: adicionar a verificação visual/componente quando as telas existirem. Shape das props do index documentado no 03-04-SUMMARY (contrato da DataTable).
+- [03-06] Escrita do pivot company_cnae EXCLUSIVAMENTE via CompanyCnaeService em DB::transaction: setPrimary demove→promove (o antigo principal VIRA secundário — linha do pivot preservada, nunca removida); syncSecondaries com sync() calculado incluindo o principal no payload (conjunto exato dos secundários, padrão syncPermissions [02-06]). Auditoria explícita dentro da transação: 'cnae-principal' (cnae_anterior/cnae_novo) e 'cnaes-secundarios' (antes/depois) — insumo das Fases 5/6. Seleção manual aceita SÓ CNAEs ativos (Rule::exists where active nos FormRequests; principal bloqueado entre os secundários via after()); GET /portal/cnaes (portal.cnaes.search) retorna só ativos, máx 20 (constante técnica MAX_RESULTS), shape id/formatted_code/description — contrato do picker da tela 03-08.
 
 ### Roadmap Evolution
 
@@ -197,8 +198,8 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-12 05:10 UTC
-Stopped at: Completed 03-05-PLAN.md (Fase 3, wave 4 — atualizar empresa/encerrar vínculo HU-024/HU-028: show com props completas (contrato 03-08) + update com CNPJ imutável por omissão nas regras; CompanyLinkController::destroy encerra o próprio vínculo (ended_at/ended_reason, nunca delete físico) com proteção do último responsável ativo no FormRequest::after [02-05] e auditoria de negócio 'encerramento-vinculo'; 15 testes do plano verdes (7 update + 8 encerramento), grupo Companies 65 verdes, pint limpo)
+Last session: 2026-06-12 19:50 UTC
+Stopped at: Completed 03-06-PLAN.md (Fase 3, wave 5 — vínculo de CNAEs da empresa HU-025/HU-026: CompanyCnaeService transacional único ponto de escrita do pivot, endpoints PUT cnae-principal/cnaes-secundarios via manageCnaes, busca GET /portal/cnaes só ativos; 17 testes do plano verdes, grupo Companies 82 verdes, pint limpo; MCP Laravel Boost indisponível na sessão — padrões do RESEARCH validados por teste)
 Resume file: None
 
 Nota operacional: durante o 01-09 houve uma sessão de agente concorrente no mesmo working directory (commits 79b3b81/e4010ce da Task 1 e composer run dev). Conteúdo validado e aproveitado sem duplicação. RECORRÊNCIA no 02-05: TRÊS sessões executoras despachadas para o mesmo plano; a segunda e a terceira detectaram a colisão no início (SUMMARY/commits já no HEAD), não editaram código e validaram o trabalho da primeira com evidência fresca (Users 15/15, suíte 168/168, typecheck/build/pint verdes, 3 rotas usuarios.*). Corrigir o despacho: um único executor por wave/plano — nunca sessões GSD simultâneas ou repetidas no mesmo plano sem checar SUMMARY antes.
