@@ -1,19 +1,19 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
+import { CloseIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import ConfirmDialog from '@/components/ui/confirm-dialog';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import PortalLayout from '@/layouts/portal-layout';
-
-interface CnaeOption {
-    id: number;
-    formatted_code: string;
-    description: string;
-}
+import type { SharedProps } from '@/types';
+import CnaePicker, { type CnaeOption } from './cnae-picker';
 
 interface CompanyDetail {
     id: number;
@@ -54,9 +54,14 @@ interface Abilities {
     endLink: boolean;
 }
 
+interface CompanyCnaes {
+    primary: CnaeOption | null;
+    secondaries: CnaeOption[];
+}
+
 interface DetalheEmpresaProps {
     company: CompanyDetail;
-    cnaes: { primary: CnaeOption | null; secondaries: CnaeOption[] };
+    cnaes: CompanyCnaes;
     links: LinkRow[];
     abilities: Abilities;
 }
@@ -77,6 +82,21 @@ interface CompanyForm {
     zip_code: string;
     email: string;
     phone: string;
+}
+
+const headerCellStyles = 'px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400';
+
+const bodyCellStyles = 'px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400';
+
+/** Formata 'YYYY-MM-DD' como 'DD/MM/YYYY' sem passar por Date (evita deslocamento de fuso). */
+function formatDate(value: string | null): string {
+    if (!value) {
+        return '—';
+    }
+
+    const [year, month, day] = value.split('-');
+
+    return `${day}/${month}/${year}`;
 }
 
 /** Formata 'YYYY-MM-DD HH:MM:SS' como 'DD/MM/YYYY HH:MM' sem depender de Date (evita deslocamento de fuso). */
@@ -243,7 +263,366 @@ function CompanyDataCard({ company, abilities }: { company: CompanyDetail; abili
     );
 }
 
-export default function DetalheEmpresa({ company, links, abilities }: DetalheEmpresaProps) {
+function CnaeLine({ cnae, action }: { cnae: CnaeOption; action?: ReactNode }) {
+    return (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-4 py-3 dark:border-gray-800">
+            <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-800 dark:text-white/90">{cnae.formatted_code}</span>
+                <span className="text-theme-xs text-gray-500 dark:text-gray-400">{cnae.description}</span>
+            </div>
+            {action}
+        </div>
+    );
+}
+
+function CnaesCard({
+    company,
+    cnaes,
+    canManage,
+}: {
+    company: CompanyDetail;
+    cnaes: CompanyCnaes;
+    canManage: boolean;
+}) {
+    const { errors } = usePage<SharedProps>().props;
+
+    const [showPrimaryPicker, setShowPrimaryPicker] = useState(false);
+    const [primaryCandidate, setPrimaryCandidate] = useState<CnaeOption | null>(null);
+    const [primaryProcessing, setPrimaryProcessing] = useState(false);
+
+    const [secondaries, setSecondaries] = useState<CnaeOption[]>(cnaes.secondaries);
+    const [secondariesProcessing, setSecondariesProcessing] = useState(false);
+
+    const serverIdsKey = cnaes.secondaries
+        .map((cnae) => cnae.id)
+        .sort((a, b) => a - b)
+        .join(',');
+    const localIdsKey = secondaries
+        .map((cnae) => cnae.id)
+        .sort((a, b) => a - b)
+        .join(',');
+    const dirty = localIdsKey !== serverIdsKey;
+
+    /*
+     * Re-sincroniza o estado local quando o conjunto do servidor muda
+     * (ex.: troca de principal demove o antigo para os secundários).
+     */
+    useEffect(() => {
+        setSecondaries(cnaes.secondaries);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [serverIdsKey]);
+
+    const cnaeErrors = Object.entries(errors as Record<string, string>)
+        .filter(([key]) => key === 'cnae_id' || key === 'cnaes' || key.startsWith('cnaes.'))
+        .map(([, message]) => message);
+
+    function confirmPrimaryChange() {
+        if (!primaryCandidate) {
+            return;
+        }
+
+        router.put(
+            `/portal/empresas/${company.id}/cnae-principal`,
+            { cnae_id: primaryCandidate.id },
+            {
+                preserveScroll: true,
+                onStart: () => setPrimaryProcessing(true),
+                onSuccess: () => setShowPrimaryPicker(false),
+                onFinish: () => {
+                    setPrimaryProcessing(false);
+                    setPrimaryCandidate(null);
+                },
+            },
+        );
+    }
+
+    function saveSecondaries() {
+        router.put(
+            `/portal/empresas/${company.id}/cnaes-secundarios`,
+            { cnaes: secondaries.map((cnae) => cnae.id) },
+            {
+                preserveScroll: true,
+                onStart: () => setSecondariesProcessing(true),
+                onFinish: () => setSecondariesProcessing(false),
+            },
+        );
+    }
+
+    const primaryExcludeIds = cnaes.primary ? [cnaes.primary.id] : [];
+    const secondariesExcludeIds = [
+        ...(cnaes.primary ? [cnaes.primary.id] : []),
+        ...secondaries.map((cnae) => cnae.id),
+    ];
+
+    return (
+        <Card>
+            <CardHeader
+                title="Atividades econômicas (CNAEs)"
+                description="CNAE principal e secundários vinculados à empresa — base do enquadramento das solicitações."
+            />
+            <CardContent>
+                <div className="flex flex-col gap-6">
+                    {cnaeErrors.length > 0 && (
+                        <Alert variant="error" title="Não foi possível salvar" message={cnaeErrors.join(' ')} />
+                    )}
+
+                    <div className="flex flex-col gap-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <h4 className="text-sm font-semibold text-gray-800 dark:text-white/90">CNAE principal</h4>
+                            {canManage && (
+                                <Button
+                                    size="xs"
+                                    variant="outline"
+                                    onClick={() => setShowPrimaryPicker((current) => !current)}
+                                >
+                                    {showPrimaryPicker
+                                        ? 'Cancelar'
+                                        : cnaes.primary
+                                          ? 'Alterar principal'
+                                          : 'Definir principal'}
+                                </Button>
+                            )}
+                        </div>
+
+                        {cnaes.primary ? (
+                            <CnaeLine cnae={cnaes.primary} action={<Badge size="sm">Principal</Badge>} />
+                        ) : (
+                            <p className="rounded-xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                                Nenhum CNAE principal definido.
+                            </p>
+                        )}
+
+                        {canManage && showPrimaryPicker && (
+                            <CnaePicker
+                                onSelect={(cnae) => setPrimaryCandidate(cnae)}
+                                excludeIds={primaryExcludeIds}
+                                placeholder="Buscar novo CNAE principal..."
+                            />
+                        )}
+                    </div>
+
+                    <div className="flex flex-col gap-3 border-t border-gray-100 pt-5 dark:border-gray-800">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h4 className="text-sm font-semibold text-gray-800 dark:text-white/90">
+                                    CNAEs secundários
+                                </h4>
+                                {canManage && dirty && (
+                                    <Badge size="sm" color="warning">
+                                        Alterações não salvas
+                                    </Badge>
+                                )}
+                            </div>
+                            {canManage && (
+                                <Button
+                                    size="xs"
+                                    onClick={saveSecondaries}
+                                    disabled={!dirty || secondariesProcessing}
+                                >
+                                    {secondariesProcessing ? 'Salvando...' : 'Salvar secundários'}
+                                </Button>
+                            )}
+                        </div>
+
+                        {secondaries.length > 0 ? (
+                            <div className="flex flex-col gap-2">
+                                {secondaries.map((cnae) => (
+                                    <CnaeLine
+                                        key={cnae.id}
+                                        cnae={cnae}
+                                        action={
+                                            canManage ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setSecondaries((current) =>
+                                                            current.filter((item) => item.id !== cnae.id),
+                                                        )
+                                                    }
+                                                    aria-label={`Remover ${cnae.formatted_code}`}
+                                                    title="Remover da seleção"
+                                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10 dark:hover:text-error-400"
+                                                >
+                                                    <CloseIcon className="size-4" />
+                                                </button>
+                                            ) : undefined
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="rounded-xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                                Nenhum CNAE secundário selecionado.
+                            </p>
+                        )}
+
+                        {canManage && (
+                            <CnaePicker
+                                onSelect={(cnae) => setSecondaries((current) => [...current, cnae])}
+                                excludeIds={secondariesExcludeIds}
+                                placeholder="Adicionar CNAE secundário..."
+                            />
+                        )}
+                    </div>
+                </div>
+            </CardContent>
+
+            <ConfirmDialog
+                isOpen={primaryCandidate !== null}
+                onClose={() => setPrimaryCandidate(null)}
+                onConfirm={confirmPrimaryChange}
+                title="Alterar CNAE principal"
+                description={
+                    primaryCandidate
+                        ? `A troca do CNAE principal impacta o enquadramento da atividade nas próximas solicitações. Confirmar a alteração para ${primaryCandidate.formatted_code} — ${primaryCandidate.description}?`
+                        : ''
+                }
+                confirmLabel="Alterar principal"
+                variant="warning"
+                processing={primaryProcessing}
+            />
+        </Card>
+    );
+}
+
+function LinksCard({ company, links, canEndLink }: { company: CompanyDetail; links: LinkRow[]; canEndLink: boolean }) {
+    const { errors } = usePage<SharedProps>().props;
+
+    const [confirmingEnd, setConfirmingEnd] = useState(false);
+    const [endReason, setEndReason] = useState('');
+    const [endProcessing, setEndProcessing] = useState(false);
+
+    function endLink() {
+        router.delete(`/portal/empresas/${company.id}/vinculo`, {
+            data: { ended_reason: endReason.trim() === '' ? null : endReason.trim() },
+            preserveScroll: true,
+            onStart: () => setEndProcessing(true),
+            onSuccess: () => setEndReason(''),
+            onFinish: () => {
+                setEndProcessing(false);
+                setConfirmingEnd(false);
+            },
+        });
+    }
+
+    return (
+        <Card>
+            <CardHeader
+                title="Vínculos"
+                description="Pessoas vinculadas à empresa — o histórico de vínculos encerrados é preservado."
+                actions={
+                    canEndLink ? (
+                        <Button size="sm" variant="danger" onClick={() => setConfirmingEnd(true)}>
+                            Encerrar meu vínculo
+                        </Button>
+                    ) : undefined
+                }
+            />
+            <CardContent flush>
+                <div className="flex flex-col">
+                    {errors.vinculo && (
+                        <div className="px-5 pt-5">
+                            <Alert variant="error" title="Não foi possível encerrar o vínculo" message={errors.vinculo} />
+                        </div>
+                    )}
+
+                    <div className="max-w-full overflow-x-auto">
+                        <Table>
+                            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                                <TableRow>
+                                    <TableCell isHeader className={headerCellStyles}>
+                                        Usuário
+                                    </TableCell>
+                                    <TableCell isHeader className={headerCellStyles}>
+                                        Papel
+                                    </TableCell>
+                                    <TableCell isHeader className={headerCellStyles}>
+                                        Início
+                                    </TableCell>
+                                    <TableCell isHeader className={headerCellStyles}>
+                                        Fim
+                                    </TableCell>
+                                    <TableCell isHeader className={headerCellStyles}>
+                                        Motivo
+                                    </TableCell>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                                {links.map((link) => (
+                                    <TableRow
+                                        key={link.id}
+                                        className={
+                                            link.is_current_user
+                                                ? 'bg-brand-50/60 dark:bg-brand-500/[0.08]'
+                                                : 'transition hover:bg-gray-50 dark:hover:bg-white/[0.03]'
+                                        }
+                                    >
+                                        <TableCell className="px-5 py-4 text-start text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                {link.user_name ?? '—'}
+                                                {link.is_current_user && (
+                                                    <Badge size="sm" color="primary">
+                                                        Você
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className={bodyCellStyles}>{link.role_label}</TableCell>
+                                        <TableCell className={`${bodyCellStyles} whitespace-nowrap`}>
+                                            {formatDate(link.started_at)}
+                                        </TableCell>
+                                        <TableCell className={`${bodyCellStyles} whitespace-nowrap`}>
+                                            {link.ended_at ? (
+                                                formatDate(link.ended_at)
+                                            ) : (
+                                                <Badge size="sm" color="success">
+                                                    Ativo
+                                                </Badge>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className={bodyCellStyles}>{link.ended_reason ?? '—'}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </div>
+            </CardContent>
+
+            <ConfirmDialog
+                isOpen={confirmingEnd}
+                onClose={() => setConfirmingEnd(false)}
+                onConfirm={endLink}
+                title="Encerrar vínculo com a empresa"
+                description={
+                    <div className="flex flex-col gap-4 text-start">
+                        <p>
+                            Esta ação não exclui o histórico — o vínculo ficará registrado como encerrado e a empresa
+                            passará a ser somente leitura para você.
+                        </p>
+                        <div>
+                            <Label htmlFor="ended_reason">Motivo (opcional)</Label>
+                            <Input
+                                id="ended_reason"
+                                type="text"
+                                name="ended_reason"
+                                value={endReason}
+                                maxLength={255}
+                                onChange={(event) => setEndReason(event.target.value)}
+                                placeholder="Ex.: encerramento das atividades"
+                            />
+                        </div>
+                    </div>
+                }
+                confirmLabel="Encerrar vínculo"
+                variant="danger"
+                processing={endProcessing}
+            />
+        </Card>
+    );
+}
+
+export default function DetalheEmpresa({ company, cnaes, links, abilities }: DetalheEmpresaProps) {
     return (
         <>
             <Head title={company.legal_name} />
@@ -258,6 +637,8 @@ export default function DetalheEmpresa({ company, links, abilities }: DetalheEmp
 
             <div className="flex flex-col gap-4 md:gap-6">
                 <CompanyDataCard company={company} abilities={abilities} />
+                <CnaesCard company={company} cnaes={cnaes} canManage={abilities.manageCnaes} />
+                <LinksCard company={company} links={links} canEndLink={abilities.endLink} />
             </div>
         </>
     );
