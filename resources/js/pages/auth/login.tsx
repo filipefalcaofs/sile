@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
+import GovBrButton from '@/components/app/govbr-button';
 import { EyeCloseIcon, EyeIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
@@ -10,10 +11,11 @@ import AuthLayout from '@/layouts/auth-layout';
 
 interface LoginProps {
     canResetPassword: boolean;
+    canLoginWithGovBr: boolean;
     status?: string;
 }
 
-export default function Login({ canResetPassword, status }: LoginProps) {
+export default function Login({ canResetPassword, canLoginWithGovBr, status }: LoginProps) {
     const [showPassword, setShowPassword] = useState(false);
     const [remember, setRemember] = useState(false);
 
@@ -40,7 +42,9 @@ export default function Login({ canResetPassword, status }: LoginProps) {
                         )}
 
                         <div>
-                            <Label htmlFor="email">E-mail</Label>
+                            <Label htmlFor="email" required>
+                                E-mail
+                            </Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -54,7 +58,9 @@ export default function Login({ canResetPassword, status }: LoginProps) {
                         </div>
 
                         <div>
-                            <Label htmlFor="password">Senha</Label>
+                            <Label htmlFor="password" required>
+                                Senha
+                            </Label>
                             <div className="relative">
                                 <Input
                                     id="password"
@@ -101,6 +107,8 @@ export default function Login({ canResetPassword, status }: LoginProps) {
                         <Button type="submit" size="sm" className="w-full" disabled={processing}>
                             {processing ? 'Entrando...' : 'Entrar'}
                         </Button>
+
+                        {canLoginWithGovBr && <GovBrButton />}
 
                         <p className="border-t border-gray-100 pt-5 text-center text-sm font-normal text-gray-700 dark:border-gray-800 dark:text-gray-400">
                             Ainda não tem conta?{' '}

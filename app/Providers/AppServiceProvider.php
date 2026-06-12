@@ -2,12 +2,18 @@
 
 namespace App\Providers;
 
+use App\Listeners\LogNotificationSent;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjLookup;
+use App\Services\GovBr\GovBrIdTokenValidator;
+use App\Services\GovBr\GovBrProvider;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
+use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Socialite\Facades\Socialite;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(NotificationSent::class, LogNotificationSent::class);
+
         Password::defaults(function () {
             $rule = Password::min((int) Settings::get('security.password.min_length', 8));
 
@@ -48,5 +56,21 @@ class AppServiceProvider extends ServiceProvider
         });
 
         config(['auth.passwords.users.expire' => (int) Settings::get('security.password_reset_expire', 60)]);
+
+        // Driver Socialite do Login Único (HU-151). Credenciais e URL são
+        // lidas dos parâmetros administráveis A CADA resolução do driver —
+        // trocar staging/produção ou rotacionar credencial não exige deploy.
+        Socialite::extend('govbr', function ($app): GovBrProvider {
+            $provider = new GovBrProvider(
+                $app['request'],
+                (string) Settings::get('integrations.govbr.client_id', ''),
+                (string) Settings::get('integrations.govbr.client_secret', ''),
+                route('portal.govbr.callback'),
+            );
+
+            return $provider
+                ->withBaseUrl((string) Settings::get('integrations.govbr.base_url'))
+                ->withIdTokenValidator($app->make(GovBrIdTokenValidator::class));
+        });
     }
 }

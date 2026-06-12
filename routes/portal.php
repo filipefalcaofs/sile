@@ -5,11 +5,21 @@ use App\Http\Controllers\Portal\CnpjLookupController;
 use App\Http\Controllers\Portal\CompanyController;
 use App\Http\Controllers\Portal\CompanyLinkController;
 use App\Http\Controllers\Portal\DashboardController;
+use App\Http\Controllers\Portal\GovBrLoginController;
 use App\Http\Controllers\Portal\LgpdTermController;
 use App\Http\Controllers\Portal\ProcurationController;
 use App\Http\Controllers\Portal\RepresentationController;
 use App\Http\Middleware\ResolveRepresentation;
 use Illuminate\Support\Facades\Route;
+
+// Login Único GOV.BR (HU-151) — rotas públicas de guest, fora do Fortify.
+Route::middleware('guest')
+    ->prefix('portal')
+    ->name('portal.')
+    ->group(function () {
+        Route::get('login/govbr', [GovBrLoginController::class, 'redirect'])->name('govbr.redirect');
+        Route::get('login/govbr/callback', [GovBrLoginController::class, 'callback'])->name('govbr.callback');
+    });
 
 Route::middleware(['auth', 'verified'])
     ->prefix('portal')

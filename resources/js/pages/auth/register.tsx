@@ -1,6 +1,8 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
+import GovBrButton from '@/components/app/govbr-button';
 import Input from '@/components/form/input';
+import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import { EyeCloseIcon, EyeIcon } from '@/components/icons';
 import Button from '@/components/ui/button';
@@ -8,6 +10,7 @@ import AuthLayout from '@/layouts/auth-layout';
 
 interface RegisterProps {
     passwordRules: string;
+    canLoginWithGovBr: boolean;
 }
 
 interface PasswordFieldProps {
@@ -24,7 +27,9 @@ function PasswordField({ id, name, label, autoComplete, error, hint }: PasswordF
 
     return (
         <div>
-            <Label htmlFor={id}>{label}</Label>
+            <Label htmlFor={id} required>
+                {label}
+            </Label>
             <div className="relative">
                 <Input
                     id={id}
@@ -48,7 +53,7 @@ function PasswordField({ id, name, label, autoComplete, error, hint }: PasswordF
     );
 }
 
-export default function Register({ passwordRules }: RegisterProps) {
+export default function Register({ passwordRules, canLoginWithGovBr }: RegisterProps) {
     return (
         <AuthLayout
             title="Crie sua conta gratuita"
@@ -58,81 +63,95 @@ export default function Register({ passwordRules }: RegisterProps) {
             <Form action="/portal/register" method="post">
                 {({ errors, processing }) => (
                     <div className="space-y-5">
+                        <div>
+                            <Label htmlFor="name" required>
+                                Nome completo
+                            </Label>
+                            <Input
+                                id="name"
+                                type="text"
+                                name="name"
+                                autoComplete="name"
+                                required
+                                error={!!errors.name}
+                                hint={errors.name}
+                            />
+                        </div>
+
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Nome completo</Label>
-                                <Input
-                                    id="name"
-                                    type="text"
-                                    name="name"
-                                    autoComplete="name"
-                                    required
-                                    error={!!errors.name}
-                                    hint={errors.name}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="cpf">CPF</Label>
-                                <Input
+                                <Label htmlFor="cpf" required>
+                                    CPF
+                                </Label>
+                                <MaskedInput
                                     id="cpf"
-                                    type="text"
+                                    mask="cpf"
                                     name="cpf"
-                                    inputMode="numeric"
                                     placeholder="000.000.000-00"
                                     required
                                     error={!!errors.cpf}
                                     hint={errors.cpf}
                                 />
                             </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                             <div>
-                                <Label htmlFor="email">E-mail</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    autoComplete="email"
-                                    required
-                                    error={!!errors.email}
-                                    hint={errors.email}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="phone">Telefone (opcional)</Label>
-                                <Input
+                                <Label htmlFor="phone" required>
+                                    Telefone
+                                </Label>
+                                <MaskedInput
                                     id="phone"
-                                    type="tel"
+                                    mask="phone"
                                     name="phone"
                                     autoComplete="tel"
                                     placeholder="(71) 90000-0000"
+                                    required
                                     error={!!errors.phone}
                                     hint={errors.phone}
                                 />
                             </div>
                         </div>
 
-                        <PasswordField
-                            id="password"
-                            name="password"
-                            label="Senha"
-                            autoComplete="new-password"
-                            error={errors.password}
-                            hint={`Requisitos da senha: ${passwordRules}`}
-                        />
+                        <div>
+                            <Label htmlFor="email" required>
+                                E-mail
+                            </Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                name="email"
+                                autoComplete="email"
+                                required
+                                error={!!errors.email}
+                                hint={errors.email}
+                            />
+                        </div>
 
-                        <PasswordField
-                            id="password_confirmation"
-                            name="password_confirmation"
-                            label="Confirmar senha"
-                            autoComplete="new-password"
-                            error={errors.password_confirmation}
-                        />
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                            <PasswordField
+                                id="password"
+                                name="password"
+                                label="Senha"
+                                autoComplete="new-password"
+                                error={errors.password}
+                            />
+
+                            <PasswordField
+                                id="password_confirmation"
+                                name="password_confirmation"
+                                label="Confirmar senha"
+                                autoComplete="new-password"
+                                error={errors.password_confirmation}
+                            />
+                        </div>
+
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Requisitos da senha: {passwordRules}
+                        </p>
 
                         <Button type="submit" size="sm" className="w-full" disabled={processing}>
                             {processing ? 'Criando conta...' : 'Criar conta'}
                         </Button>
+
+                        {canLoginWithGovBr && <GovBrButton />}
 
                         <p className="border-t border-gray-100 pt-5 text-center text-sm font-normal text-gray-700 dark:border-gray-800 dark:text-gray-400">
                             Já tem conta?{' '}

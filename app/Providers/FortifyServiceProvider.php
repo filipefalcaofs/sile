@@ -8,6 +8,8 @@ use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Models\AccessLog;
 use App\Models\User;
+use App\Services\GovBr\GovBr;
+use App\Support\PasswordPolicy;
 use App\Support\Settings;
 use Illuminate\Cache\RateLimiter as CacheRateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -16,7 +18,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
@@ -78,11 +79,13 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
+            'canLoginWithGovBr' => GovBr::loginAvailable(),
             'status' => $request->session()->get('status'),
         ]));
 
         Fortify::registerView(fn () => Inertia::render('auth/register', [
-            'passwordRules' => Password::defaults()->toPasswordRulesString(),
+            'passwordRules' => PasswordPolicy::description(),
+            'canLoginWithGovBr' => GovBr::loginAvailable(),
         ]));
 
         Fortify::verifyEmailView(fn (Request $request) => Inertia::render('auth/verify-email', [
