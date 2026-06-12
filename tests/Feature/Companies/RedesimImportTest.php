@@ -6,6 +6,7 @@ use App\Models\Cnae;
 use App\Models\Company;
 use App\Services\RedesimImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class RedesimImportTest extends TestCase
@@ -213,5 +214,51 @@ class RedesimImportTest extends TestCase
         $this->service()->import(base_path('tests/Fixtures/redesim/payload-valido.json'));
 
         $this->assertDatabaseCount('company_user', 0);
+    }
+
+    public function test_comando_importa_arquivo_e_imprime_relatorio(): void
+    {
+        $this->seedBancoDoBrasilCnaes();
+
+        $this->artisan('redesim:importar', ['arquivo' => base_path('tests/Fixtures/redesim/payload-valido.json')])
+            ->expectsOutputToContain('Importados: 1')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseHas('companies', ['cnpj' => '00000000000191']);
+    }
+
+    public function test_comando_com_arquivo_inexistente_falha(): void
+    {
+        $this->artisan('redesim:importar', ['arquivo' => 'storage/nao-existe.json'])
+            ->expectsOutputToContain('Arquivo não encontrado')
+            ->assertExitCode(1);
+    }
+
+    public function test_comando_com_json_invalido_falha(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'redesim');
+        file_put_contents($path, 'não-json');
+
+        $this->artisan('redesim:importar', ['arquivo' => $path])
+            ->expectsOutputToContain('JSON inválido')
+            ->assertExitCode(1);
+    }
+
+    public function test_comando_com_todos_os_itens_rejeitados_retorna_falha(): void
+    {
+        $this->seedBancoDoBrasilCnaes();
+
+        $path = $this->tempPayload([$this->validItem(['empresa' => ['cnpj' => '11111111111111']])]);
+
+        $this->artisan('redesim:importar', ['arquivo' => $path])
+            ->expectsOutputToContain('Rejeitados')
+            ->assertExitCode(1);
+    }
+
+    public function test_nao_existe_rota_publica_de_import(): void
+    {
+        $this->assertFalse(Route::has('portal.empresas.importar-redesim'));
+
+        $this->post('/portal/empresas/importar-redesim')->assertNotFound();
     }
 }
