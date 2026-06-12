@@ -35,5 +35,9 @@ Route::middleware(['auth', 'verified'])
             Route::get('empresas/cadastrar', [CompanyController::class, 'create'])->name('empresas.create');
             Route::post('empresas', [CompanyController::class, 'store'])->name('empresas.store');
             Route::post('empresas/consultar-cnpj', CnpjLookupController::class)->name('empresas.consultar-cnpj');
+
+            // Rotas com binding {company} DEPOIS das literais (03-05).
+            Route::get('empresas/{company}', [CompanyController::class, 'show'])->name('empresas.show');
+            Route::put('empresas/{company}', [CompanyController::class, 'update'])->name('empresas.update');
         });
     });
