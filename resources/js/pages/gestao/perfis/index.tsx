@@ -1,4 +1,5 @@
 import { Form, Head, router } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
@@ -353,7 +354,7 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
     ];
 
     return (
-        <GestaoLayout>
+        <>
             <Head title="Perfis e permissões" />
             <PageHeader title="Perfis e permissões" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
@@ -413,6 +414,8 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                     processing={deleteProcessing}
                 />
             )}
-        </GestaoLayout>
+        </>
     );
 }
+
+RolesIndex.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;

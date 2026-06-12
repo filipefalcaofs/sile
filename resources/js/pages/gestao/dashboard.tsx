@@ -99,7 +99,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
     ].filter((module) => module.visible);
 
     return (
-        <GestaoLayout>
+        <>
             <Head title="Painel de gestão" />
             <PageHeader title="Painel de gestão" breadcrumbs={[{ label: 'Gestão' }]} />
 
@@ -191,6 +191,8 @@ export default function Dashboard({ kpis }: DashboardProps) {
                     </Card>
                 </div>
             </div>
-        </GestaoLayout>
+        </>
     );
 }
+
+Dashboard.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;

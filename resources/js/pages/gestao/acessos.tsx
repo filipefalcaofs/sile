@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -77,7 +78,7 @@ const columns: ColumnDef<AccessLogItem>[] = [
 
 export default function Acessos({ targetUser, logs }: AcessosProps) {
     return (
-        <GestaoLayout>
+        <>
             <Head title={`Acessos de ${targetUser.name}`} />
             <PageHeader
                 title={`Acessos de ${targetUser.name}`}
@@ -110,6 +111,8 @@ export default function Acessos({ targetUser, logs }: AcessosProps) {
                     </div>
                 </CardContent>
             </Card>
-        </GestaoLayout>
+        </>
     );
 }
+
+Acessos.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;

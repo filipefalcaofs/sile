@@ -1,4 +1,5 @@
 import { Form, Head, router } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Label from '@/components/form/label';
@@ -289,7 +290,7 @@ export default function UsersIndex({ users, filters, counts, roles }: UsersIndex
         : null;
 
     return (
-        <GestaoLayout>
+        <>
             <Head title="Usuários" />
             <PageHeader title="Usuários" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
@@ -362,6 +363,8 @@ export default function UsersIndex({ users, filters, counts, roles }: UsersIndex
                     processing={activationProcessing}
                 />
             )}
-        </GestaoLayout>
+        </>
     );
 }
+
+UsersIndex.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;

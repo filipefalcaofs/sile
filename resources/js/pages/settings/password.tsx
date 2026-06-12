@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
@@ -50,7 +51,7 @@ function PasswordField({ id, name, label, autoComplete, error, hint }: PasswordF
 
 export default function Password({ passwordRules }: PasswordProps) {
     return (
-        <SettingsLayout>
+        <>
             <Head title="Alterar senha" />
             <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
                 <div className="mb-6">
@@ -104,6 +105,8 @@ export default function Password({ passwordRules }: PasswordProps) {
                     )}
                 </Form>
             </div>
-        </SettingsLayout>
+        </>
     );
 }
+
+Password.layout = (page: ReactNode) => <SettingsLayout>{page}</SettingsLayout>;

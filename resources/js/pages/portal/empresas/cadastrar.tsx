@@ -1,4 +1,5 @@
 import { Head, Link, useForm, useHttp } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
@@ -143,7 +144,7 @@ export default function CadastrarEmpresa({ cnpjLookupEnabled }: CadastrarEmpresa
     }
 
     return (
-        <PortalLayout>
+        <>
             <Head title="Cadastrar empresa" />
             <PageHeader
                 title="Cadastrar empresa"
@@ -419,6 +420,8 @@ export default function CadastrarEmpresa({ cnpjLookupEnabled }: CadastrarEmpresa
                     </Button>
                 </div>
             </form>
-        </PortalLayout>
+        </>
     );
 }
+
+CadastrarEmpresa.layout = (page: ReactNode) => <PortalLayout>{page}</PortalLayout>;

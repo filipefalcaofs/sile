@@ -66,7 +66,7 @@ export default function Dashboard() {
     const { auth } = usePage<SharedProps>().props;
 
     return (
-        <PortalLayout>
+        <>
             <Head title="Meu painel" />
             <PageBreadcrumb pageTitle="Meu painel" />
 
@@ -127,6 +127,8 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
-        </PortalLayout>
+        </>
     );
 }
+
+Dashboard.layout = (page: ReactNode) => <PortalLayout>{page}</PortalLayout>;

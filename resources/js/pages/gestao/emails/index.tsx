@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -119,7 +120,7 @@ export default function EmailsIndex({ logs, filters, counts }: EmailsProps) {
     const activeFilter = filters.status ?? null;
 
     return (
-        <GestaoLayout>
+        <>
             <Head title="Log de e-mails" />
             <PageHeader
                 title="Log de e-mails"
@@ -172,9 +173,11 @@ export default function EmailsIndex({ logs, filters, counts }: EmailsProps) {
                     </div>
                 </CardContent>
             </Card>
-        </GestaoLayout>
+        </>
     );
 }
+
+EmailsIndex.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;
 
 function SummaryCard({
     label,

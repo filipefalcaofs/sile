@@ -1,4 +1,5 @@
 import { Form, Head, Link, router } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
@@ -346,7 +347,7 @@ export default function ProcuracoesIndex({ granted, received, procuracoesEnabled
     }
 
     return (
-        <PortalLayout>
+        <>
             <Head title="Minhas procurações" />
             <PageBreadcrumb pageTitle="Minhas procurações" />
 
@@ -411,6 +412,8 @@ export default function ProcuracoesIndex({ granted, received, procuracoesEnabled
                 variant="danger"
                 processing={revoking}
             />
-        </PortalLayout>
+        </>
     );
 }
+
+ProcuracoesIndex.layout = (page: ReactNode) => <PortalLayout>{page}</PortalLayout>;

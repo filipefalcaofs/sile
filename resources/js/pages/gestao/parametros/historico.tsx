@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -69,7 +70,7 @@ const columns: ColumnDef<HistoryEntry>[] = [
 
 export default function ParameterHistory({ parameter, entries }: ParameterHistoryProps) {
     return (
-        <GestaoLayout>
+        <>
             <Head title={`Histórico — ${parameter.description}`} />
             <PageHeader
                 title={`Histórico — ${parameter.description}`}
@@ -123,6 +124,8 @@ export default function ParameterHistory({ parameter, entries }: ParameterHistor
                     </Link>
                 </div>
             </div>
-        </GestaoLayout>
+        </>
     );
 }
+
+ParameterHistory.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;

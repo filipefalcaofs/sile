@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
@@ -197,7 +198,7 @@ export default function ParametersIndex({ groups }: ParametersIndexProps) {
     const activeItems = groups[activeGroup] ?? [];
 
     return (
-        <GestaoLayout>
+        <>
             <Head title="Parâmetros do sistema" />
             <PageHeader title="Parâmetros do sistema" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
@@ -261,6 +262,8 @@ export default function ParametersIndex({ groups }: ParametersIndexProps) {
                     ))}
                 </section>
             </div>
-        </GestaoLayout>
+        </>
     );
 }
+
+ParametersIndex.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;

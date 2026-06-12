@@ -1,4 +1,5 @@
 import { Form, Head, router, usePage } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
@@ -401,7 +402,7 @@ export default function CnaesIndex({ cnaes, filters, perPageOptions }: CnaesInde
         : null;
 
     return (
-        <GestaoLayout>
+        <>
             <Head title="CNAEs" />
             <PageHeader title="CNAEs" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
@@ -519,6 +520,8 @@ export default function CnaesIndex({ cnaes, filters, perPageOptions }: CnaesInde
                     processing={actionProcessing}
                 />
             )}
-        </GestaoLayout>
+        </>
     );
 }
+
+CnaesIndex.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;

@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import { EyeIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
@@ -147,7 +148,7 @@ export default function EmpresasIndex({ companies, filters, perPageOptions }: Em
     ];
 
     return (
-        <PortalLayout>
+        <>
             <Head title="Minhas empresas" />
             <PageHeader title="Minhas empresas" breadcrumbs={[{ label: 'Meu painel', href: '/portal/painel' }]} />
 
@@ -213,6 +214,8 @@ export default function EmpresasIndex({ companies, filters, perPageOptions }: Em
                     </div>
                 </CardContent>
             </Card>
-        </PortalLayout>
+        </>
     );
 }
+
+EmpresasIndex.layout = (page: ReactNode) => <PortalLayout>{page}</PortalLayout>;

@@ -40,7 +40,7 @@ export function useServerTable({
     const [filters, setFiltersState] = useState<Record<string, string>>(initialFilters);
     const [processing, setProcessing] = useState(false);
 
-    const isFirstRender = useRef(true);
+    const hasMounted = useRef(false);
     const stateRef = useRef<ServerTableState>({ search, sort, perPage, filters });
     stateRef.current = { search, sort, perPage, filters };
 
@@ -74,8 +74,7 @@ export function useServerTable({
     );
 
     useEffect(() => {
-        if (isFirstRender.current) {
-            isFirstRender.current = false;
+        if (!hasMounted.current) {
             return;
         }
 
@@ -83,6 +82,14 @@ export function useServerTable({
 
         return () => clearTimeout(timeout);
     }, [search, debounceMs, visit]);
+
+    useEffect(() => {
+        hasMounted.current = true;
+
+        return () => {
+            hasMounted.current = false;
+        };
+    }, []);
 
     const setSort = useCallback(
         (next: SortState) => {
