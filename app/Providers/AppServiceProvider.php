@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Cnpj\BrasilApiCnpjLookup;
+use App\Services\Cnpj\CnpjLookup;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
 use Illuminate\Support\ServiceProvider;
@@ -15,6 +17,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(CurrentRepresentation::class);
+
+        // Provider público inicial (BrasilAPI / dados abertos RFB). A Fase 13
+        // (HU-105) troca este binding pelo provider conveniado da Receita
+        // Federal sem tocar controllers ou telas.
+        $this->app->bind(CnpjLookup::class, BrasilApiCnpjLookup::class);
     }
 
     /**
