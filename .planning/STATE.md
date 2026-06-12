@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-06-PLAN.md (Fase 3, wave 5 — vínculo de CNAEs da empresa HU-025/HU-026: CompanyCnaeService transacional como ÚNICO ponto de escrita do pivot (setPrimary demote→promote, syncSecondaries com sync calculado preservando o principal), endpoints PUT cnae-principal/cnaes-secundarios autorizados por manageCnaes com seleção restrita a CNAEs ativos, busca GET /portal/cnaes só ativos máx 20, auditoria 'cnae-principal'/'cnaes-secundarios' com antes/depois; 17 testes novos, grupo Companies 82 verdes, pint limpo)
-last_updated: "2026-06-12T19:50:50.000Z"
-last_activity: 2026-06-12 -- Completed 03-06 (vínculo de CNAEs da empresa — HU-025/HU-026)
+stopped_at: Completed wave 6 da Fase 3 — 03-07 (telas Minhas empresas + cadastro com lookup, fechado por validação com evidência fresca; pendência do 03-04 resolvida com assert de componente no GET create) e 03-08 (detalhe da empresa com CNPJ imutável, picker de CNAEs com busca server-side real, ConfirmDialog warning/danger e encerramento de vínculo com motivo) executados em paralelo sem colisão; typecheck/build verdes, grupo Companies 83 verdes
+last_updated: "2026-06-12T20:15:00.000Z"
+last_activity: 2026-06-12 -- Completed 03-07 e 03-08 (wave 6 — UI do cadastro empresarial)
 progress:
   total_phases: 15
   completed_phases: 2
   total_plans: 26
-  completed_plans: 23
-  percent: 15
+  completed_plans: 25
+  percent: 17
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 3 (Cadastro Empresarial) — EXECUTING
-Plan: 7 of 9
-Status: Executing Phase 3
-Last activity: 2026-06-12 -- Completed 03-06 (vínculo de CNAEs da empresa — HU-025/HU-026)
+Plan: 9 of 9
+Status: Executing Phase 3 (wave 7 — fechamento)
+Last activity: 2026-06-12 -- Completed 03-07 e 03-08 (wave 6 — UI do cadastro empresarial)
 
-Progress: [█▌░░░░░░░░] 15% (2/15 fases; 23 planos executados)
+Progress: [█▋░░░░░░░░] 17% (2/15 fases; 25 planos executados)
 
-Next step: `/gsd-execute-phase 3` (próximo plano: 03-07 — telas do portal de empresas, wave 6; nota: a página de cadastro já foi adiantada no commit 41d76d8)
+Next step: 03-09 (fechamento: seeds dev + verificação integral + smoke E2E com checkpoint humano)
 
 ### Fase 2.1 (INSERTED) — Template TailAdmin (concluída 2026-06-10)
 
