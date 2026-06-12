@@ -18,13 +18,11 @@ function ShellContent({ groups, homeHref, logoutHref, subtitle, variant, childre
     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
     return (
-        <div className="min-h-screen xl:flex">
-            <div>
-                <AppSidebar groups={groups} homeHref={homeHref} subtitle={subtitle} variant={variant} />
-                <Backdrop />
-            </div>
+        <div className="min-h-screen">
+            <AppSidebar groups={groups} homeHref={homeHref} subtitle={subtitle} variant={variant} />
+            <Backdrop />
             <div
-                className={`flex-1 transition-all duration-300 ease-in-out ${
+                className={`transition-all duration-300 ease-in-out ${
                     isExpanded || isHovered ? 'lg:ml-[290px]' : 'lg:ml-[90px]'
                 } ${isMobileOpen ? 'ml-0' : ''}`}
             >
