@@ -112,7 +112,7 @@ Plans:
 - [x] 03-01-PLAN.md — Fundação: ValidCnpj alfanumérico, schema companies/vínculos/CNAEs, parâmetros novos e pendência herdada do CnaeController (wave 1) ✓ 2026-06-12
 - [x] 03-02-PLAN.md — HU-021: contrato CnpjLookup + provider BrasilAPI real com cache/toggle + endpoint auditado (wave 2) ✓ 2026-06-12
 - [x] 03-03-PLAN.md — HU-022: payload REDESIM de referência + RedesimImportService + comando redesim:importar (wave 2) ✓ 2026-06-12
-- [ ] 03-04-PLAN.md — HU-023 + HU-027: policy com representação, cadastro transacional com vínculo e listagem Minhas empresas (wave 3)
+- [x] 03-04-PLAN.md — HU-023 + HU-027: policy com representação, cadastro transacional com vínculo e listagem Minhas empresas (wave 3) ✓ 2026-06-12
 - [ ] 03-05-PLAN.md — HU-024 + HU-028: detalhe/atualização com CNPJ imutável e encerramento de vínculo com proteção do último responsável (wave 4)
 - [ ] 03-06-PLAN.md — HU-025 + HU-026: CompanyCnaeService transacional, endpoints de CNAE e busca server-side da tabela oficial (wave 5)
 - [ ] 03-07-PLAN.md — UI: sidebar + tela Minhas empresas + página de cadastro com lookup vivo (wave 6, ‖ 03-08)
