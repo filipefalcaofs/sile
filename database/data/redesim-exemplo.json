@@ -1,0 +1,48 @@
+[
+  {
+    "protocolo": "BAP2612345678",
+    "data_solicitacao": "2026-06-10T14:30:00-03:00",
+    "evento": { "codigo": "101", "descricao": "Inscrição de primeiro estabelecimento" },
+    "empresa": {
+      "cnpj": "00000000000191",
+      "razao_social": "BANCO DO BRASIL SA",
+      "nome_fantasia": "DIRECAO GERAL",
+      "natureza_juridica": { "codigo": "2038", "descricao": "Sociedade de Economia Mista" },
+      "porte": { "codigo": "05", "descricao": "DEMAIS" }
+    },
+    "endereco": {
+      "cep": "40020000",
+      "logradouro": "Rua Chile",
+      "numero": "10",
+      "complemento": "",
+      "bairro": "Centro",
+      "municipio": "Salvador",
+      "uf": "BA"
+    },
+    "atividades": { "principal": "6422100", "secundarias": ["6499999"] },
+    "contato": { "email": "banco@example.com", "telefone": "7133330000" }
+  },
+  {
+    "protocolo": "BAP2687654321",
+    "data_solicitacao": "2026-06-10T15:00:00-03:00",
+    "evento": { "codigo": "101", "descricao": "Inscrição de primeiro estabelecimento" },
+    "empresa": {
+      "cnpj": "33000167000101",
+      "razao_social": "PETROLEO BRASILEIRO S A PETROBRAS",
+      "nome_fantasia": "PETROBRAS",
+      "natureza_juridica": { "codigo": "2038", "descricao": "Sociedade de Economia Mista" },
+      "porte": { "codigo": "05", "descricao": "DEMAIS" }
+    },
+    "endereco": {
+      "cep": "40010000",
+      "logradouro": "Avenida da Franca",
+      "numero": "100",
+      "complemento": "Edificio Sede",
+      "bairro": "Comercio",
+      "municipio": "Salvador",
+      "uf": "BA"
+    },
+    "atividades": { "principal": "0600001", "secundarias": [] },
+    "contato": { "email": "petrobras@example.com", "telefone": "7133340000" }
+  }
+]
