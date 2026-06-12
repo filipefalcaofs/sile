@@ -49,8 +49,13 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Endpoints JSON do portal (ex.: consulta de CNPJ — HU-021) precisam de
+        // respostas JSON para erros (401/422/404), não redirect. api/* mantém o
+        // comportamento existente; o portal só renderiza JSON quando o cliente
+        // explicitamente o pede (Accept: application/json / XHR).
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*')
+                || ($request->is('portal/empresas/consultar-cnpj') && $request->expectsJson()),
         );
 
         // CA-04 transversal: todo 403 de autorização é auditado num ponto único.
