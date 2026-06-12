@@ -16,7 +16,16 @@ class ParameterSeeder extends Seeder
     public function run(): void
     {
         foreach (self::catalog() as $key => $meta) {
-            Parameter::query()->updateOrCreate(['key' => $key], $meta);
+            $sensitive = (bool) ($meta['sensitive'] ?? false);
+            unset($meta['sensitive']);
+
+            $parameter = Parameter::query()->updateOrCreate(['key' => $key], $meta);
+
+            // `sensitive` fica fora do fillable (decisão 02-02): só o seed a
+            // define, via forceFill, sempre ANTES de qualquer gravação de value.
+            if ($parameter->sensitive !== $sensitive) {
+                $parameter->forceFill(['sensitive' => $sensitive])->save();
+            }
         }
     }
 
@@ -124,6 +133,52 @@ class ParameterSeeder extends Seeder
                 'default_value' => '15',
                 'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
                 'description' => 'Itens por página na listagem de empresas',
+            ],
+            'features.govbr_login' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita o login com a conta GOV.BR no portal do cidadão (exige credenciais configuradas)',
+            ],
+            'integrations.govbr.base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://sso.staging.acesso.gov.br',
+                'validation_rules' => ['required', 'url'],
+                'requires_connection_test' => true,
+                'description' => 'URL base do Login Único GOV.BR (staging: sso.staging.acesso.gov.br; produção: sso.acesso.gov.br)',
+            ],
+            'integrations.govbr.api_base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://api.staging.acesso.gov.br',
+                'validation_rules' => ['required', 'url'],
+                'requires_connection_test' => true,
+                'description' => 'URL base da API de confiabilidades do GOV.BR (níveis bronze/prata/ouro)',
+            ],
+            'integrations.govbr.client_id' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'sensitive' => true,
+                'default_value' => null,
+                'validation_rules' => ['required', 'string', 'max:255'],
+                'description' => 'Client ID da credencial do Login Único GOV.BR (Termo de Adesão SGD)',
+            ],
+            'integrations.govbr.client_secret' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'sensitive' => true,
+                'default_value' => null,
+                'validation_rules' => ['required', 'string', 'max:255'],
+                'description' => 'Client Secret da credencial do Login Único GOV.BR (armazenado criptografado)',
+            ],
+            'security.govbr.minimum_level' => [
+                'group' => 'seguranca',
+                'type' => 'string',
+                'default_value' => 'bronze',
+                'validation_rules' => ['required', 'in:bronze,prata,ouro'],
+                'description' => 'Nível mínimo de confiabilidade da conta GOV.BR aceito no login (bronze, prata ou ouro)',
             ],
         ];
     }

@@ -60,11 +60,11 @@ class ManageParametersTest extends TestCase
                     'has_admin_value',
                     'updated_at',
                 ]))
-                ->where('groups.seguranca.0.key', 'security.login.max_attempts')
-                ->where('groups.seguranca.0.type', 'integer')
-                ->where('groups.seguranca.0.description', 'Tentativas de login antes do bloqueio temporário')
+                ->where('groups.seguranca.0.key', 'security.govbr.minimum_level')
+                ->where('groups.seguranca.0.type', 'string')
+                ->where('groups.seguranca.0.description', 'Nível mínimo de confiabilidade da conta GOV.BR aceito no login (bronze, prata ou ouro)')
                 ->where('groups.seguranca.0.value', null)
-                ->where('groups.seguranca.0.default_value', '5')
+                ->where('groups.seguranca.0.default_value', 'bronze')
                 ->where('groups.seguranca.0.sensitive', false));
     }
 

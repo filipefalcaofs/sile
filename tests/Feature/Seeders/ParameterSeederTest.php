@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(14, Parameter::query()->count());
+        $this->assertSame(20, Parameter::query()->count());
         $this->assertSame(
             ['features', 'integracoes', 'seguranca', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -60,6 +60,61 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['required', 'integer', 'min:5', 'max:100'], $perPage->validation_rules);
     }
 
+    public function test_seeder_registra_parametros_do_login_govbr(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $toggle = Parameter::query()->where('key', 'features.govbr_login')->first();
+
+        $this->assertNotNull($toggle);
+        $this->assertSame('features', $toggle->group);
+        $this->assertSame('boolean', $toggle->type);
+        $this->assertSame('0', $toggle->default_value);
+        $this->assertFalse($toggle->sensitive);
+
+        $baseUrl = Parameter::query()->where('key', 'integrations.govbr.base_url')->first();
+
+        $this->assertNotNull($baseUrl);
+        $this->assertSame('integracoes', $baseUrl->group);
+        $this->assertSame('https://sso.staging.acesso.gov.br', $baseUrl->default_value);
+        $this->assertTrue($baseUrl->requires_connection_test);
+
+        $apiBaseUrl = Parameter::query()->where('key', 'integrations.govbr.api_base_url')->first();
+
+        $this->assertNotNull($apiBaseUrl);
+        $this->assertSame('https://api.staging.acesso.gov.br', $apiBaseUrl->default_value);
+        $this->assertTrue($apiBaseUrl->requires_connection_test);
+
+        $clientId = Parameter::query()->where('key', 'integrations.govbr.client_id')->first();
+
+        $this->assertNotNull($clientId);
+        $this->assertTrue($clientId->sensitive);
+        $this->assertNull($clientId->default_value);
+
+        $clientSecret = Parameter::query()->where('key', 'integrations.govbr.client_secret')->first();
+
+        $this->assertNotNull($clientSecret);
+        $this->assertTrue($clientSecret->sensitive);
+        $this->assertNull($clientSecret->default_value);
+
+        $minimumLevel = Parameter::query()->where('key', 'security.govbr.minimum_level')->first();
+
+        $this->assertNotNull($minimumLevel);
+        $this->assertSame('seguranca', $minimumLevel->group);
+        $this->assertSame('bronze', $minimumLevel->default_value);
+        $this->assertSame(['required', 'in:bronze,prata,ouro'], $minimumLevel->validation_rules);
+    }
+
+    public function test_seeder_mantem_flag_sensivel_em_reseed(): void
+    {
+        $this->seed(ParameterSeeder::class);
+        $this->seed(ParameterSeeder::class);
+
+        $clientSecret = Parameter::query()->where('key', 'integrations.govbr.client_secret')->first();
+
+        $this->assertTrue($clientSecret->sensitive);
+    }
+
     public function test_seeder_preserva_valor_administrado(): void
     {
         $this->seed(ParameterSeeder::class);
@@ -82,6 +137,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(14, Parameter::query()->count());
+        $this->assertSame(20, Parameter::query()->count());
     }
 }
