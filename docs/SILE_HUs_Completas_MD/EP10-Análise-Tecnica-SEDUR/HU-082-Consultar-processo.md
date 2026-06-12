@@ -67,6 +67,7 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-008: A consulta deve responder com desempenho adequado (reclamação central do legado: "sistema muito lento") — paginação server-side e índices nos campos filtrados.
 - RN-009: A retaguarda deve oferecer **busca global** (atalho de teclado, ex.: Cmd/Ctrl+K): digitar número de processo, BAP, produto, CNPJ ou nome leva diretamente ao processo — sem passar pela tela de filtros.
 - RN-010: O histórico do processo deve ser apresentado como **timeline visual** (etapas com duração, responsável e tipo de evento), além da tabela de tramitação; o detalhe deve exibir **mini-mapa permanente** com o polígono e a zona/via sobrepostas (sem precisar abrir a aba de polígono).
+- RN-011: A listagem de processos oferece **exportação em CSV, XLSX e PDF** do conjunto filtrado, conforme o padrão transversal de exportação da gestão (HU-131 RN-004 a RN-009).
 
 ## Critérios de Aceite — BDD
 

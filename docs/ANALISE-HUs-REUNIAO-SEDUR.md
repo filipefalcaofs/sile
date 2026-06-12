@@ -339,3 +339,4 @@ Propostas do time de desenvolvimento aceitas pelo Filipe para o SILE superar o S
 | Atendimento presencial assistido ("em nome de" no balcão) | **HU-150** (nova, EP08) |
 | Observabilidade com SLO (p95 por rota, telemetria de uso) | ROADMAP critério de pronto (nota de engenharia) |
 | Recurso administrativo, transparência pública, padrões de fraude reais, ciência presencial | Perguntas 12–15 (seção 7.6) |
+| Exportação CSV/XLSX/PDF em toda datatable da gestão (conjunto filtrado, assíncrona acima de limiar, auditada) — pedido do Filipe em 2026-06-12 | HU-131 RN-004 a RN-009 (padrão transversal), HU-082 RN-011, ROADMAP critério de pronto nº 8 |

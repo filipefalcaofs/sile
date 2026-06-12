@@ -23,6 +23,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 5. `vendor/bin/pint --dirty --format agent` sem pendências.
 6. Telas novas responsivas (mobile-first no portal do cidadão) e acessíveis (WCAG/eMAG — obrigação legal de órgão público); validação visual inclui viewport mobile.
 7. Observabilidade mínima nas rotas novas: logs estruturados e medição de duração (base para SLO de p95 — resposta de engenharia à reclamação "sistema muito lento" do legado).
+8. Toda tela de gestão com datatable nasce com **exportação CSV/XLSX/PDF** do conjunto filtrado, via componente compartilhado (padrão HU-131 RN-004 a RN-009: assíncrono acima de limiar, permissões/LGPD, auditada). Listagens já entregues nas Fases 1–2 recebem retrofit quando o componente for construído.
 
 ## Phases
 

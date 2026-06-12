@@ -199,7 +199,7 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-128 — Taxa de indeferimento](EP15-Relatórios-e-Indicadores/HU-128-Taxa-de-indeferimento.md)
 - [HU-129 — Tempo médio de análise](EP15-Relatórios-e-Indicadores/HU-129-Tempo-medio-de-analise.md)
 - [HU-130 — Produtividade por analista](EP15-Relatórios-e-Indicadores/HU-130-Produtividade-por-analista.md)
-- [HU-131 — Exportar relatórios](EP15-Relatórios-e-Indicadores/HU-131-Exportar-relatorios.md)
+- [HU-131 — Exportar relatórios e listagens](EP15-Relatórios-e-Indicadores/HU-131-Exportar-relatorios.md) *(escopo ampliado — padrão transversal de exportação CSV/XLSX/PDF em toda datatable da gestão)*
 - [HU-145 — Relatório de quedas por gatilho (expansão do expresso)](EP15-Relatórios-e-Indicadores/HU-145-Relatorio-de-quedas-por-gatilho.md) *(nova — melhoria além do legado)*
 
 ## Mapa de renumeração (2026-06-09)
