@@ -187,3 +187,4 @@ _ide_helper_models.php
 .DS_Store
 Thumbs.db
 .playwright-cli/
+output/

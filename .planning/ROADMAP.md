@@ -375,7 +375,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 1. Identidade, Acesso e Auditoria Transversal | 9/9 | Complete | 2026-06-10 |
 | 2. Administração Base | 0/8 | Planned | - |
 | 3. Cadastro Empresarial | 3/9 | In progress | - |
-| 3.2. Autenticação GOV.BR no portal (INSERTED) | 0/1 | Planned | - |
+| 3.2. Autenticação GOV.BR no portal (INSERTED) | 1/1 | Implemented — aguardando credenciamento p/ validar staging | - |
 | 4. Georreferenciamento e Território | 0/TBD | Not started | - |
 | 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |
 | 6. Classificação de Risco | 0/TBD | Not started | - |
