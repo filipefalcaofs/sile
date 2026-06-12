@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Portal\AccessHistoryController;
 use App\Http\Controllers\Portal\CnpjLookupController;
+use App\Http\Controllers\Portal\CompanyController;
 use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\LgpdTermController;
 use App\Http\Controllers\Portal\ProcurationController;
@@ -29,7 +30,10 @@ Route::middleware(['auth', 'verified'])
             Route::post('representacao', [RepresentationController::class, 'store'])->name('representacao.store');
             Route::delete('representacao', [RepresentationController::class, 'destroy'])->name('representacao.destroy');
 
-            // Empresas: rotas literais ANTES de empresas/{company} (chega no 03-05).
+            // Empresas: rotas literais ANTES de empresas/{company} (03-05).
+            Route::get('empresas', [CompanyController::class, 'index'])->name('empresas.index');
+            Route::get('empresas/cadastrar', [CompanyController::class, 'create'])->name('empresas.create');
+            Route::post('empresas', [CompanyController::class, 'store'])->name('empresas.store');
             Route::post('empresas/consultar-cnpj', CnpjLookupController::class)->name('empresas.consultar-cnpj');
         });
     });

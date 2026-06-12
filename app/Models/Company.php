@@ -38,6 +38,18 @@ class Company extends Model
     }
 
     /**
+     * Contagem reutilizável das empresas com vínculo ATIVO do usuário —
+     * consumida pela listagem (totalCompanies) e pelo painel do cidadão na
+     * evolução (lacuna registrada no STATE).
+     */
+    public static function countForUser(User $user): int
+    {
+        return static::query()
+            ->whereHas('links', fn ($q) => $q->where('user_id', $user->id)->whereNull('ended_at'))
+            ->count();
+    }
+
+    /**
      * Todos os CNAEs vinculados (principal e secundários).
      *
      * @return BelongsToMany<Cnae, $this>
