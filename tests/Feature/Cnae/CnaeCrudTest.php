@@ -4,6 +4,7 @@ namespace Tests\Feature\Cnae;
 
 use App\Models\Activity;
 use App\Models\Cnae;
+use App\Models\Company;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -219,5 +220,27 @@ class CnaeCrudTest extends TestCase
             ->first();
 
         $this->assertNotNull($activity, 'Esperava activity de exclusão do CNAE');
+    }
+
+    public function test_exclusao_de_cnae_vinculado_a_empresa_e_bloqueada(): void
+    {
+        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+        $company = Company::factory()->create();
+        $cnae = Cnae::factory()->create();
+        $company->cnaes()->attach($cnae->id, ['is_primary' => true]);
+
+        $this->actingAs($admin)
+            ->delete("/gestao/cnaes/{$cnae->id}")
+            ->assertRedirect()
+            ->assertSessionHas('error', 'CNAE vinculado a empresas não pode ser excluído.');
+
+        $this->assertDatabaseHas('cnaes', ['id' => $cnae->id]);
+
+        $activity = Activity::where('event', 'deleted')
+            ->where('subject_type', Cnae::class)
+            ->where('subject_id', $cnae->id)
+            ->first();
+
+        $this->assertNull($activity, 'Não deveria haver activity de exclusão para CNAE vinculado');
     }
 }

@@ -63,6 +63,11 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                         <Alert variant="success" title="Sucesso" message={flash.status} />
                     </div>
                 )}
+                {flash.error && (
+                    <div className="mb-6">
+                        <Alert variant="error" title="Ação bloqueada" message={flash.error} />
+                    </div>
+                )}
                 {children}
             </AppShell>
         </ThemeProvider>

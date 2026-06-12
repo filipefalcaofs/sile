@@ -9,5 +9,6 @@ export interface SharedProps extends PageProps {
     actingFor: { id: number; name: string } | null;
     flash: {
         status?: string;
+        error?: string | null;
     };
 }

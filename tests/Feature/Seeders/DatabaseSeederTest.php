@@ -22,7 +22,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(4, Role::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(11, Parameter::query()->count());
+        $this->assertSame(14, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -45,7 +45,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'admin@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(11, Parameter::query()->count());
+        $this->assertSame(14, Parameter::query()->count());
     }
 
     public function test_seed_preserva_valor_de_parametro_administrado(): void

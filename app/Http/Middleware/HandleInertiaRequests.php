@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
             'actingFor' => fn () => app(CurrentRepresentation::class)->grantor()?->only('id', 'name'),
             'flash' => [
                 'status' => $request->session()->get('status'),
+                'error' => $request->session()->get('error'),
             ],
         ];
     }

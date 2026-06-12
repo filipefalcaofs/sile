@@ -99,11 +99,16 @@ class CnaeController extends Controller
     }
 
     /**
-     * Exclusão física permitida nesta fase — o bloqueio por vínculo
-     * empresarial entra com o cadastro de empresas (Fase 3).
+     * Exclusão física bloqueada quando o CNAE está vinculado a empresas
+     * (Fase 3): verificação amigável na aplicação + restrictOnDelete como
+     * defesa no banco (company_cnae.cnae_id).
      */
     public function destroy(Cnae $cnae): RedirectResponse
     {
+        if ($cnae->companies()->exists()) {
+            return back()->with('error', 'CNAE vinculado a empresas não pode ser excluído.');
+        }
+
         $cnae->delete();
 
         return back()->with('status', 'CNAE excluído.');

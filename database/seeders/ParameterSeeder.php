@@ -103,6 +103,28 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita o módulo de procurações no portal',
             ],
+            'features.cnpj_lookup' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a consulta automática de dados por CNPJ no cadastro de empresas',
+            ],
+            'integrations.cnpj_lookup.base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://brasilapi.com.br/api/cnpj/v1',
+                'validation_rules' => ['required', 'url'],
+                'requires_connection_test' => true,
+                'description' => 'URL base do provedor de consulta de CNPJ (dados abertos da RFB)',
+            ],
+            'ui.companies.per_page' => [
+                'group' => 'ui',
+                'type' => 'integer',
+                'default_value' => '15',
+                'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
+                'description' => 'Itens por página na listagem de empresas',
+            ],
         ];
     }
 }
