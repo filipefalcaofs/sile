@@ -192,6 +192,10 @@ function ParameterSection({ item }: { item: ParameterItem }) {
 }
 
 export default function ParametersIndex({ groups }: ParametersIndexProps) {
+    const groupKeys = Object.keys(groups);
+    const [activeGroup, setActiveGroup] = useState(groupKeys[0] ?? '');
+    const activeItems = groups[activeGroup] ?? [];
+
     return (
         <GestaoLayout>
             <Head title="Parâmetros do sistema" />
@@ -202,26 +206,60 @@ export default function ParametersIndex({ groups }: ParametersIndexProps) {
                     Alterações valem imediatamente, sem novo deploy, e ficam registradas no histórico auditado
                 </p>
 
-                {Object.entries(groups).map(([group, items]) => (
-                    <section
-                        key={group}
-                        className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
-                    >
-                        <div className="px-6 py-5">
-                            <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
-                                {groupLabel(group)}
-                            </h3>
+                <div className="border-b border-gray-200 dark:border-gray-800">
+                    <nav role="tablist" aria-label="Grupos de parâmetros" className="-mb-px flex flex-wrap gap-1">
+                        {groupKeys.map((group) => {
+                            const selected = group === activeGroup;
+
+                            return (
+                                <button
+                                    key={group}
+                                    type="button"
+                                    role="tab"
+                                    id={`tab-${group}`}
+                                    aria-selected={selected}
+                                    aria-controls={`panel-${group}`}
+                                    onClick={() => setActiveGroup(group)}
+                                    className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                                        selected
+                                            ? 'border-brand-500 text-brand-600 dark:border-brand-400 dark:text-brand-400'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    {groupLabel(group)}
+                                    <span
+                                        className={`rounded-full px-2 py-0.5 text-theme-xs font-medium ${
+                                            selected
+                                                ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400'
+                                                : 'bg-gray-100 text-gray-500 dark:bg-white/[0.06] dark:text-gray-400'
+                                        }`}
+                                    >
+                                        {groups[group].length}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </nav>
+                </div>
+
+                <section
+                    key={activeGroup}
+                    role="tabpanel"
+                    id={`panel-${activeGroup}`}
+                    aria-labelledby={`tab-${activeGroup}`}
+                    className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+                >
+                    {activeItems.map((item, index) => (
+                        <div
+                            key={item.key}
+                            className={`p-4 sm:p-6 ${
+                                index > 0 ? 'border-t border-gray-100 dark:border-gray-800' : ''
+                            }`}
+                        >
+                            <ParameterSection item={item} />
                         </div>
-                        {items.map((item) => (
-                            <div
-                                key={item.key}
-                                className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6"
-                            >
-                                <ParameterSection item={item} />
-                            </div>
-                        ))}
-                    </section>
-                ))}
+                    ))}
+                </section>
             </div>
         </GestaoLayout>
     );
