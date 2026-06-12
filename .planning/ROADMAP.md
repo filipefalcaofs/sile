@@ -110,7 +110,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — Fundação: ValidCnpj alfanumérico, schema companies/vínculos/CNAEs, parâmetros novos e pendência herdada do CnaeController (wave 1) ✓ 2026-06-12
-- [ ] 03-02-PLAN.md — HU-021: contrato CnpjLookup + provider BrasilAPI real com cache/toggle + endpoint auditado (wave 2)
+- [x] 03-02-PLAN.md — HU-021: contrato CnpjLookup + provider BrasilAPI real com cache/toggle + endpoint auditado (wave 2) ✓ 2026-06-12
 - [ ] 03-03-PLAN.md — HU-022: payload REDESIM de referência + RedesimImportService + comando redesim:importar (wave 2)
 - [ ] 03-04-PLAN.md — HU-023 + HU-027: policy com representação, cadastro transacional com vínculo e listagem Minhas empresas (wave 3)
 - [ ] 03-05-PLAN.md — HU-024 + HU-028: detalhe/atualização com CNPJ imutável e encerramento de vínculo com proteção do último responsável (wave 4)
@@ -310,7 +310,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 |-------|----------------|--------|-----------|
 | 1. Identidade, Acesso e Auditoria Transversal | 9/9 | Complete | 2026-06-10 |
 | 2. Administração Base | 0/8 | Planned | - |
-| 3. Cadastro Empresarial | 1/9 | In progress | - |
+| 3. Cadastro Empresarial | 2/9 | In progress | - |
 | 4. Georreferenciamento e Território | 0/TBD | Not started | - |
 | 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |
 | 6. Classificação de Risco | 0/TBD | Not started | - |

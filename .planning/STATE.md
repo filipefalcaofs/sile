@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-01-PLAN.md (Fase 3, wave 1 — fundação: ValidCnpj, schema empresarial, 14 parâmetros, bloqueio de CNAE vinculado; 48 testes escopados verdes)
-last_updated: "2026-06-12T04:05:00.000Z"
-last_activity: 2026-06-12 -- Completed 03-01 (fundação do cadastro empresarial)
+stopped_at: Completed 03-02-PLAN.md (Fase 3, wave 2 — consulta de CNPJ HU-021: contrato CnpjLookup + provider BrasilAPI real, URL administrável, cache 24h só de sucesso, toggle e endpoint auditado; 12 testes verdes)
+last_updated: "2026-06-12T04:25:00.000Z"
+last_activity: 2026-06-12 -- Completed 03-02 (consulta de CNPJ — HU-021)
 progress:
   total_phases: 15
   completed_phases: 2
   total_plans: 26
-  completed_plans: 18
-  percent: 13
+  completed_plans: 19
+  percent: 14
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 3 (Cadastro Empresarial) — EXECUTING
-Plan: 2 of 9
+Plan: 3 of 9
 Status: Executing Phase 3
-Last activity: 2026-06-12 -- Completed 03-01 (fundação do cadastro empresarial)
+Last activity: 2026-06-12 -- Completed 03-02 (consulta de CNPJ — HU-021)
 
-Progress: [█▌░░░░░░░░] 13% (2/15 fases; 18 planos executados)
+Progress: [█▌░░░░░░░░] 14% (2/15 fases; 19 planos executados)
 
-Next step: `/gsd-execute-phase 3` (próximo plano: 03-02 — consulta de CNPJ)
+Next step: `/gsd-execute-phase 3` (próximo plano: 03-03 — importação REDESIM)
 
 ### Fase 2.1 (INSERTED) — Template TailAdmin (concluída 2026-06-10)
 
@@ -75,9 +75,9 @@ Next step: `/gsd-execute-phase 3` (próximo plano: 03-02 — consulta de CNPJ)
 
 **Velocity:**
 
-- Total plans completed: 18
+- Total plans completed: 19
 - Average duration: 12 min
-- Total execution time: ~3.31 h
+- Total execution time: ~3.61 h
 
 **By Phase:**
 
@@ -85,12 +85,12 @@ Next step: `/gsd-execute-phase 3` (próximo plano: 03-02 — consulta de CNPJ)
 |-------|-------|-------|----------|
 | 01-identidade | 9/9 ✓ | ~96 min | 11 min |
 | 02-administracao-base | 8/8 ✓ | ~100 min | 12 min |
-| 03-cadastro-empresarial | 1/9 | ~22 min | 22 min |
+| 03-cadastro-empresarial | 2/9 | ~40 min | 20 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 02-04 (22 min), 02-05 (11 min), 02-06 (9 min), 02-07 (13 min), 03-01 (22 min)
-- Trend: 03-01 maior por cobrir rule + schema completo + parâmetros em 3 tasks TDD
+- Last 5 plans: 02-05 (11 min), 02-06 (9 min), 02-07 (13 min), 03-01 (22 min), 03-02 (18 min)
+- Trend: 03-02 com 2 deviations Rule 3/1 (shouldRenderJsonWhen do portal + sobrescrita de Http::fake por merge) — consulta de CNPJ real atrás de contrato em 2 tasks TDD
 
 *Atualizado após cada plano concluído*
 
@@ -152,6 +152,10 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [03-01] Pivot company_cnae exige nome EXPLÍCITO no belongsToMany em Company::cnaes() e Cnae::companies() — Eloquent inferiria cnae_company (ordem alfabética). Accessor formatted_cnpj é posicional (regex por posição), funciona com alfanumérico.
 - [03-01] Parâmetros do lookup de CNPJ: features.cnpj_lookup (default true), integrations.cnpj_lookup.base_url (requires_connection_test, contrato RN-010 — teste real na Fase 13), ui.companies.per_page — catálogo passa a 14 chaves. Constantes técnicas (timeout 8s, retries 2, cache_ttl 86400) ficam SÓ em config/sile.php, nunca no registry (precedente [02-02]).
 - [03-01] Pendência da Fase 2 resolvida: CnaeController::destroy bloqueia exclusão de CNAE vinculado (companies()->exists()) com mensagem pt-BR via flash.error. Canal flash.error agora compartilhado no HandleInertiaRequests e exibido via Alert variant=error na gestao-layout — padrão para bloqueios comunicados (nunca silenciosos).
+- [03-02] Consulta de CNPJ (HU-021) atrás de contrato: interface App\Services\Cnpj\CnpjLookup (lookup(string): CnpjData) + DTO readonly CnpjData (fromBrasilApi/toArray snake_case) + provider real BrasilApiCnpjLookup. Binding no AppServiceProvider — a Fase 13 (HU-105) troca SÓ o binding pelo provider conveniado RFB, sem tocar call sites. base_url lido via Settings::get (banco→cache→config); trocar BrasilAPI↔minhareceita é mudança de parâmetro, sem deploy (provado em teste).
+- [03-02] Cache de consulta CNPJ (Cache::remember key sile.cnpj_lookup.{cnpj}, ttl config 86400) grava SÓ sucesso: exceção dentro do closure impede a gravação (falha nunca cacheada). Constantes técnicas (timeout 8s, connectTimeout 3s, retries 2) em config/sile.php. ConnectionException convertida em CnpjLookupException no provider; 404 → CnpjNotFoundException.
+- [03-02] Endpoint POST /portal/empresas/consultar-cnpj (name portal.empresas.consultar-cnpj) auditado em TODAS as saídas via AuditService (event consulta-cnpj, result sucesso/falha/bloqueado, properties com cnpj e provider). Toggle features.cnpj_lookup desligado bloqueia ANTES de qualquer request HTTP (degradação comunicada 422). Shape JSON = CnpjData::toArray (snake_case) — contrato do formulário React no 03-06.
+- [03-02] bootstrap/app.php: shouldRenderJsonWhen estendido para portal/empresas/consultar-cnpj quando expectsJson() — o projeto restringia render JSON de exceções a api/*, fazendo o portal redirecionar (302) em vez de 401/422/404 JSON. Padrão para futuros endpoints JSON do portal (useHttp): adicionar a rota na condição.
 
 ### Pending Todos
 
@@ -174,8 +178,8 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-12 04:05 UTC
-Stopped at: Completed 03-01-PLAN.md (Fase 3, wave 1 — fundação: ValidCnpj alfanumérico, schema empresarial, 14 parâmetros, bloqueio de CNAE vinculado; 48 testes escopados verdes, pint/typecheck limpos)
+Last session: 2026-06-12 04:25 UTC
+Stopped at: Completed 03-02-PLAN.md (Fase 3, wave 2 — consulta de CNPJ HU-021: contrato CnpjLookup + provider BrasilAPI real, URL administrável por parâmetro, cache 24h só de sucesso, toggle e endpoint JSON auditado em sucesso/falha/bloqueio; 12 testes verdes, pint limpo)
 Resume file: None
 
 Nota operacional: durante o 01-09 houve uma sessão de agente concorrente no mesmo working directory (commits 79b3b81/e4010ce da Task 1 e composer run dev). Conteúdo validado e aproveitado sem duplicação. RECORRÊNCIA no 02-05: TRÊS sessões executoras despachadas para o mesmo plano; a segunda e a terceira detectaram a colisão no início (SUMMARY/commits já no HEAD), não editaram código e validaram o trabalho da primeira com evidência fresca (Users 15/15, suíte 168/168, typecheck/build/pint verdes, 3 rotas usuarios.*). Corrigir o despacho: um único executor por wave/plano — nunca sessões GSD simultâneas ou repetidas no mesmo plano sem checar SUMMARY antes.
