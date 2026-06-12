@@ -15,10 +15,10 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
- * HU-027 — consultar empresas vinculadas. As asserções Inertia NÃO usam
- * ->component(): as páginas React desta fase só nascem no 03-07 (wave 6) e a
- * checagem de componente exige o arquivo de página em disco. A verificação
- * visual do componente fica registrada para o 03-07.
+ * HU-027 — consultar empresas vinculadas. A partir do 03-07 a página React
+ * portal/empresas/index existe em disco, então o teste principal verifica o
+ * ->component(); as demais asserções continuam sobre as props (contrato da
+ * DataTable).
  */
 class MyCompaniesTest extends TestCase
 {
@@ -67,6 +67,7 @@ class MyCompaniesTest extends TestCase
             ->get('/portal/empresas')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
+                ->component('portal/empresas/index')
                 ->has('companies.data', 2)
                 ->has('companies.data.0', fn (Assert $item) => $item
                     ->has('id')
