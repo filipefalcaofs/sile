@@ -8,6 +8,7 @@ use App\Models\Procuration;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CompanyRegistrationTest extends TestCase
@@ -53,6 +54,18 @@ class CompanyRegistrationTest extends TestCase
             'email' => 'contato@exemplo.com',
             'phone' => '(71) 3333-0000',
         ], $overrides);
+    }
+
+    public function test_pagina_de_cadastro_renderiza_componente_com_toggle_do_lookup(): void
+    {
+        // Pendência herdada do 03-04: a asserção de componente só era possível
+        // depois que a página React nasceu no 03-07.
+        $this->actingAs($this->portalUser())
+            ->get('/portal/empresas/cadastrar')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('portal/empresas/cadastrar')
+                ->has('cnpjLookupEnabled'));
     }
 
     public function test_cadastro_cria_empresa_e_vinculo_responsavel_ativo(): void
