@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: executing
+stopped_at: Completed 03-01-PLAN.md (Fase 3, wave 1 — fundação: ValidCnpj, schema empresarial, 14 parâmetros, bloqueio de CNAE vinculado; 48 testes escopados verdes)
+last_updated: "2026-06-12T04:05:00.000Z"
+last_activity: 2026-06-12 -- Completed 03-01 (fundação do cadastro empresarial)
+progress:
+  total_phases: 15
+  completed_phases: 2
+  total_plans: 26
+  completed_plans: 18
+  percent: 13
+---
+
 # Project State
 
 ## Project Reference
@@ -5,18 +21,18 @@
 See: .planning/PROJECT.md (updated 2026-06-09)
 
 **Core value:** Responder a viabilidade locacional de atividade econômica de forma automática, correta e auditável — fluxo expresso quando a lei permite, fundamentação legal em toda decisão.
-**Current focus:** Fase 3 — Cadastro Empresarial (próxima; Fases 1 e 2 concluídas)
+**Current focus:** Phase 3 — Cadastro Empresarial
 
 ## Current Position
 
-Phase: 2 of 15 — CONCLUÍDA (Administração Base; inserções 2.1 a 2.4 concluídas)
-Plan: 8 of 8 completos
-Status: Phase 2 complete — verificação passed (41/41 must-haves); smoke E2E aprovado pelo usuário
-Last activity: 2026-06-11 — Fase 2.4 (template SaaS de listagens) concluída: DataTable tipada server-driven, KPI cards reais no painel, componentes Card/PageHeader/TableAction/Avatar/Skeleton/ProgressBar, páginas da gestão migradas, fix de busca case-sensitive no PostgreSQL
+Phase: 3 (Cadastro Empresarial) — EXECUTING
+Plan: 2 of 9
+Status: Executing Phase 3
+Last activity: 2026-06-12 -- Completed 03-01 (fundação do cadastro empresarial)
 
-Progress: [█▌░░░░░░░░] 13% (2/15 fases; 17/17 planos executados)
+Progress: [█▌░░░░░░░░] 13% (2/15 fases; 18 planos executados)
 
-Next step: `/gsd-plan-phase 3` (Cadastro Empresarial — HU-021 a HU-028)
+Next step: `/gsd-execute-phase 3` (próximo plano: 03-02 — consulta de CNPJ)
 
 ### Fase 2.1 (INSERTED) — Template TailAdmin (concluída 2026-06-10)
 
@@ -58,9 +74,10 @@ Next step: `/gsd-plan-phase 3` (Cadastro Empresarial — HU-021 a HU-028)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
+
+- Total plans completed: 18
 - Average duration: 12 min
-- Total execution time: 2.94 h
+- Total execution time: ~3.31 h
 
 **By Phase:**
 
@@ -68,10 +85,12 @@ Next step: `/gsd-plan-phase 3` (Cadastro Empresarial — HU-021 a HU-028)
 |-------|-------|-------|----------|
 | 01-identidade | 9/9 ✓ | ~96 min | 11 min |
 | 02-administracao-base | 8/8 ✓ | ~100 min | 12 min |
+| 03-cadastro-empresarial | 1/9 | ~22 min | 22 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (14 min), 02-04 (22 min), 02-05 (11 min), 02-06 (9 min), 02-07 (13 min)
-- Trend: estável (02-04 maior por cobrir import + CRUD + tela em 3 tasks)
+
+- Last 5 plans: 02-04 (22 min), 02-05 (11 min), 02-06 (9 min), 02-07 (13 min), 03-01 (22 min)
+- Trend: 03-01 maior por cobrir rule + schema completo + parâmetros em 3 tasks TDD
 
 *Atualizado após cada plano concluído*
 
@@ -128,6 +147,11 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - [02-06] Update de perfil pela UI usa syncPermissions (conjunto exato marcado — intenção do admin) em contraste com o seeder aditivo givePermissionTo do 02-01; sem forgetCachedPermissions manual (spatie v8 reseta nos métodos built-in). Roles do spatie sem HasAuditoria — auditoria explícita no log 'perfis' com permissoes_antes/depois.
 - [02-07] Toggle real features.procuracoes (CA-06): store bloqueado com aviso pt-BR, index acessível, destroy NUNCA bloqueado — segurança do outorgante prevalece sobre o toggle. Toggles futuros (Fases 9/11/13/14) só registram chaves features.* no catálogo e usam Settings::enabled — mecanismo fechado.
 - [02-07] Validação de parâmetro é dinâmica via validation_rules do próprio registro (FormRequest::after); sensível com campo vazio = manter valor (sem gravação, sem activity); UI nunca recebe valor sensível (prop null + password vazio). Histórico via AuditService explícito com [criptografado] e latest('id') para ordem estável no mesmo segundo.
+- [03-01] ValidCnpj nasce compatível com CNPJ alfanumérico (IN RFB 2.229/2024, produção julho/2026): normaliza `[^A-Z0-9]` + uppercase, valida `/^[A-Z\d]{12}\d{2}$/`, DV por módulo 11 sobre `ord(char)-48`. Pesos `[6,5,4,3,2,9,8,7,6,5,4,3,2]` com `array_slice($weights, 13 - $position)` para posições 12 e 13 (NÃO usar o snippet de 12 pesos do RESEARCH). Coluna cnpj é string(14) SEMPRE, nunca numérico.
+- [03-01] Schema empresarial: companies (cnpj unique), company_user (modelo próprio CompanyUser com started_at/ended_at — encerramento nunca apaga, histórico preservado), company_cnae (pivot SEM modelo). Unicidade "um vínculo ativo por par" e "exatamente um principal" ficam NA APLICAÇÃO (precedente procurations/[01-07]); company_cnae.cnae_id com restrictOnDelete como defesa no banco + unique(company_id, cnae_id).
+- [03-01] Pivot company_cnae exige nome EXPLÍCITO no belongsToMany em Company::cnaes() e Cnae::companies() — Eloquent inferiria cnae_company (ordem alfabética). Accessor formatted_cnpj é posicional (regex por posição), funciona com alfanumérico.
+- [03-01] Parâmetros do lookup de CNPJ: features.cnpj_lookup (default true), integrations.cnpj_lookup.base_url (requires_connection_test, contrato RN-010 — teste real na Fase 13), ui.companies.per_page — catálogo passa a 14 chaves. Constantes técnicas (timeout 8s, retries 2, cache_ttl 86400) ficam SÓ em config/sile.php, nunca no registry (precedente [02-02]).
+- [03-01] Pendência da Fase 2 resolvida: CnaeController::destroy bloqueia exclusão de CNAE vinculado (companies()->exists()) com mensagem pt-BR via flash.error. Canal flash.error agora compartilhado no HandleInertiaRequests e exibido via Alert variant=error na gestao-layout — padrão para bloqueios comunicados (nunca silenciosos).
 
 ### Pending Todos
 
@@ -150,8 +174,8 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 
 ## Session Continuity
 
-Last session: 2026-06-10 16:32 UTC
-Stopped at: Completed 02-07-PLAN.md (Fase 2, wave 5 completa — suíte 196/196, typecheck/build verdes; HU-014 com 16 testes, toggle real e histórico mascarado)
+Last session: 2026-06-12 04:05 UTC
+Stopped at: Completed 03-01-PLAN.md (Fase 3, wave 1 — fundação: ValidCnpj alfanumérico, schema empresarial, 14 parâmetros, bloqueio de CNAE vinculado; 48 testes escopados verdes, pint/typecheck limpos)
 Resume file: None
 
 Nota operacional: durante o 01-09 houve uma sessão de agente concorrente no mesmo working directory (commits 79b3b81/e4010ce da Task 1 e composer run dev). Conteúdo validado e aproveitado sem duplicação. RECORRÊNCIA no 02-05: TRÊS sessões executoras despachadas para o mesmo plano; a segunda e a terceira detectaram a colisão no início (SUMMARY/commits já no HEAD), não editaram código e validaram o trabalho da primeira com evidência fresca (Users 15/15, suíte 168/168, typecheck/build/pint verdes, 3 rotas usuarios.*). Corrigir o despacho: um único executor por wave/plano — nunca sessões GSD simultâneas ou repetidas no mesmo plano sem checar SUMMARY antes.

@@ -8,7 +8,7 @@ O SILE será construído em 15 fases que partem da fundação (identidade, acess
 
 A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que reflete as dependências reais entre épicas. Decisões estruturais:
 
-- **Auditoria transversal na Fase 1**: a RN-002 (usuário, data/hora, origem, ação, resultado, versão de regras) é exigida por todas as 131 HUs. O mecanismo nasce como infraestrutura reutilizável na Fase 1; a Fase 12 (EP12) cobre apenas consulta, exportação e LGPD sobre dados já registrados.
+- **Auditoria transversal na Fase 1**: a RN-002 (usuário, data/hora, origem, ação, resultado, versão de regras) é exigida por todas as HUs. O mecanismo nasce como infraestrutura reutilizável na Fase 1; a Fase 12 (EP12) cobre apenas consulta, exportação e LGPD sobre dados já registrados.
 - **Mantenedores junto com os motores**: HU-015 a HU-018 (Quadros 7/10/11/11A) entram na Fase 5 e HU-019/HU-020 (condicionantes, risco) na Fase 6 — mantenedor sem motor que consuma os dados é feature morta; juntos formam fatia vertical verificável.
 - **Consulta prévia (Fase 7) depois dos motores**: EP07 consome território (Fase 4), motor LOUOS (Fase 5) e risco (Fase 6) — é a primeira entrega que executa o fluxo de decisão de ponta a ponta.
 - **Integrações na Fase 13, contratos desde cedo**: os serviços externos ficam atrás de interfaces (contratos) definidas quando o domínio consumidor é construído (ex.: HU-022 na Fase 3 importa dados no formato REDESIM); os adaptadores reais são implementados contra homologação na Fase 13, quando documentação, credenciais e acesso forem disponibilizados pela SEDUR. Sem acesso disponível = feature explicitamente bloqueada, nunca adaptador falso.
@@ -40,8 +40,8 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [ ] **Phase 6: Classificação de Risco** — Risco por CNAE com condicionante-pergunta reclassificadora (EP06 + HU-019, HU-020)
 - [ ] **Phase 7: Consulta Prévia de Viabilidade** — Simulação consumindo território + motores (EP07)
 - [ ] **Phase 8: Solicitação de Viabilidade** — Processo formal: criação, documentos, protocolo (EP08)
-- [ ] **Phase 9: Fluxo Expresso** — Deferimento/indeferimento automático com documento e auditoria (EP09)
-- [ ] **Phase 10: Análise Técnica SEDUR** — Distribuição, análise humana, parecer e decisão (EP10)
+- [ ] **Phase 9: Fluxo Expresso** — Deferimento/indeferimento automático, Regin + SEFAZ, prazo BAP (EP09 + HU-134)
+- [ ] **Phase 10: Análise Técnica SEDUR** — Ficha de análise, malha fina, TVL PDF backoffice (EP10 + HU-132/135/136)
 - [ ] **Phase 11: Pendências e Comunicação** — Notificações, respostas e canais administráveis (EP11)
 - [ ] **Phase 12: Auditoria e Compliance** — Consulta, exportação e LGPD sobre a trilha registrada (EP12)
 - [ ] **Phase 13: Integrações** — REDESIM, Junta, Receita, GIS, SEFAZ e legado contra homologação real (EP13)
@@ -77,7 +77,7 @@ Plans:
 ### Phase 2: Administração Base
 **Goal**: Administradores mantêm os cadastros estruturantes (CNAEs, usuários, perfis) e os parâmetros de negócio do sistema sem depender de desenvolvedor.
 **Depends on**: Phase 1
-**Requirements**: HU-011, HU-012, HU-013, HU-014
+**Requirements**: HU-011, HU-012, HU-013, HU-014 *(HU-137 feriados — Fase 2 extensão ou antes da Fase 9)*
 **UI hint**: yes (telas administrativas de CNAEs, usuários, perfis e parâmetros)
 **Success Criteria** (o que deve ser VERDADE):
   1. Administrador consulta e mantém a tabela de CNAEs, carregada com a estrutura oficial CNAE-Subclasses 2.3 (IBGE/CONCLA, 1.331 códigos).
@@ -109,7 +109,7 @@ Plans:
 **Plans**: 9 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Fundação: ValidCnpj alfanumérico, schema companies/vínculos/CNAEs, parâmetros novos e pendência herdada do CnaeController (wave 1)
+- [x] 03-01-PLAN.md — Fundação: ValidCnpj alfanumérico, schema companies/vínculos/CNAEs, parâmetros novos e pendência herdada do CnaeController (wave 1) ✓ 2026-06-12
 - [ ] 03-02-PLAN.md — HU-021: contrato CnpjLookup + provider BrasilAPI real com cache/toggle + endpoint auditado (wave 2)
 - [ ] 03-03-PLAN.md — HU-022: payload REDESIM de referência + RedesimImportService + comando redesim:importar (wave 2)
 - [ ] 03-04-PLAN.md — HU-023 + HU-027: policy com representação, cadastro transacional com vínculo e listagem Minhas empresas (wave 3)
@@ -131,7 +131,7 @@ Plans:
   4. Localização do imóvel é validada (confirmada ou ajustada pelo usuário) antes de prosseguir nos fluxos de viabilidade.
 **Plans**: TBD
 
-Nota: a geocodificação (Nominatim/OSM) e a lógica de identificação operam sobre camadas carregadas de dados oficiais da LOUOS; a base GIS municipal oficial (camadas, formato, acesso) está pendente com a SEDUR — a integração viva é a HU-107 (Fase 13).
+Nota: a geocodificação (Nominatim/OSM) e a lógica de identificação operam sobre camadas carregadas de dados oficiais da LOUOS; a base GIS municipal oficial é o **SIGIS** com migração **S69 → CA 2000** (reunião SEDUR 2026-06-11) — a integração viva é a HU-107 (Fase 13). Polígono de 4 pontos validado no formulário Regin (HU-062).
 
 ### Phase 5: Motor de Regras da LOUOS
 **Goal**: O motor aplica os quadros da LOUOS (7, 10, 11, 11A) de forma parametrizável — regras como dados versionados, nunca código — consolidando resultado com fundamentação legal.
@@ -149,7 +149,7 @@ Nota: a geocodificação (Nominatim/OSM) e a lógica de identificação operam s
 Nota: a correspondência "Quadro 11" ↔ Quadro 11B oficial e as planilhas parametrizadas vigentes estão pendentes de confirmação com a SEDUR; o motor nasce parametrizável e recebe a carga oficial quando entregue (seeds derivados da Lei nº 9.148/2016 até lá).
 
 ### Phase 6: Classificação de Risco
-**Goal**: CNAEs classificados por risco municipal (Decreto nº 32.636/2020) com condicionantes operacionalizadas como perguntas que reclassificam o risco, determinando o encaminhamento (expresso ou análise humana).
+**Goal**: CNAEs classificados por risco municipal (Decreto nº 32.636/2020) com condicionantes operacionalizadas como perguntas que reclassificam o risco, determinando o encaminhamento — **baixo e médio risco → fluxo expresso**; **alto risco → análise humana**; gatilhos CNAE parametrizados derrubam casos pontuais para análise (semi-expresso).
 **Depends on**: Phase 2 (CNAEs). Pode executar em paralelo com a Phase 5.
 **Requirements**: HU-019, HU-020, HU-047, HU-048, HU-049, HU-050, HU-051, HU-052, HU-053
 **UI hint**: yes (mantenedores de condicionantes e risco, consulta da tabela de risco)
@@ -157,7 +157,7 @@ Nota: a correspondência "Quadro 11" ↔ Quadro 11B oficial e as planilhas param
   1. Administrador mantém condicionantes e classificação de risco como dados versionados, com seed oficial do Decreto nº 32.636/2020 (767 Baixo A / 328 Baixo B / 236 Alto).
   2. Sistema classifica qualquer CNAE por risco, mantendo risco municipal e risco sanitário como dimensões separadas.
   3. Condicionante operacionalizada como pergunta ao requerente reclassifica o risco conforme a resposta (mecanismo "DI" do decreto).
-  4. Regras de baixo, médio e alto risco produzem o encaminhamento correto, incluindo exceções por localização (CNAE de alto risco liberado expressamente conforme local).
+  4. Regras de baixo e **médio** risco produzem encaminhamento ao fluxo expresso quando elegíveis; alto risco e gatilhos CNAE encaminham à análise técnica, incluindo exceções por localização (HU-051).
   5. Tabela de risco vigente é consultável e atualizável com trilha de auditoria.
 **Plans**: TBD
 
@@ -175,41 +175,44 @@ Nota: a correspondência "Quadro 11" ↔ Quadro 11B oficial e as planilhas param
 ### Phase 8: Solicitação de Viabilidade
 **Goal**: Requerente cria, instrui e protocola a solicitação formal de viabilidade que alimentará o fluxo expresso e a análise técnica.
 **Depends on**: Phases 3 e 4
-**Requirements**: HU-061, HU-062, HU-063, HU-064, HU-065, HU-066, HU-067, HU-068, HU-069, HU-070, HU-071 ⚠, HU-072 ⚠
-**UI hint**: yes (formulário multi-etapas, anexos, protocolo)
+**Requirements**: HU-061, HU-062, HU-063, HU-064, HU-065, HU-066, HU-067, HU-068, HU-069, HU-070, HU-071, HU-072
+**UI hint**: yes (formulário multi-etapas — incl. embed Regin — anexos, protocolo)
 **Success Criteria** (o que deve ser VERDADE):
-  1. Requerente cria solicitação informando imóvel, área utilizada, atividade principal e CNAEs complementares.
+  1. Requerente cria solicitação informando imóvel (polígono, fachada, escritório virtual, área pública quando aplicável), área utilizada, atividade principal e CNAEs complementares (até 99).
   2. Documentos são anexados e a obrigatoriedade documental por CNAE é validada antes do protocolo.
   3. Solicitação é protocolada com número único rastreável; o protocolo é consultável e a solicitação pode ser cancelada conforme regras.
-  4. (Condicional — bloqueada) DAM gerado e pagamento conciliado, caso a SEDUR confirme o escopo de HU-071/HU-072.
+  4. Analista **visualiza** DAM de viabilidade quando emitido pela SEFAZ (HU-071); status de pagamento sincronizado quando aplicável (HU-072) — **sem geração de DAM** no SILE para fluxo Regin.
 **Plans**: TBD
 
-⚠ HU-071 (Gerar DAM) e HU-072 (Confirmar pagamento do DAM): **pendentes de confirmação de escopo com a SEDUR** — não implementar antes da confirmação; se confirmadas, a mecânica de DAM do SIGVISA é a referência (fórmula TLL própria do SILE).
+Nota (reunião SEDUR 2026-06-11): HU-071/072 tiveram escopo **revisado** — DAM de viabilidade via Regin é da SEFAZ; SILE consulta/exibe. Renovação direta pelo portal Simplifica pode ter regras distintas (confirmar).
 
 ### Phase 9: Fluxo Expresso
-**Goal**: Solicitações elegíveis são deferidas ou indeferidas automaticamente — obrigação legal para baixo risco — com documento emitido, notificação e auditoria integral da decisão.
+**Goal**: Solicitações elegíveis (baixo e médio risco) são deferidas ou indeferidas automaticamente — com parecer ao Regin, envio à SEFAZ quando deferido, indeferimento por prazo BAP e auditoria integral. PDF/TVL **não** vai ao cidadão (HU-132 na Fase 10).
 **Depends on**: Phases 5, 6 e 8
-**Requirements**: HU-073, HU-074, HU-075, HU-076, HU-077, HU-078
-**UI hint**: yes (resultado expresso, documento TVL com verificação pública)
+**Requirements**: HU-073, HU-074, HU-075, HU-076, HU-077, HU-078, HU-134
+**UI hint**: yes (resultado expresso na retaguarda; cidadão acompanha via Regin)
 **Success Criteria** (o que deve ser VERDADE):
   1. Sistema identifica automaticamente a elegibilidade da solicitação para o fluxo expresso conforme risco e regras vigentes.
   2. Deferimento e indeferimento automáticos executam os motores reais (LOUOS + risco) e produzem decisão fundamentada.
-  3. Resultado expresso é emitido como documento com verificação pública de autenticidade.
-  4. Cidadão é notificado do resultado pelos canais habilitados.
-  5. Decisão automática fica integralmente auditada: dados de entrada, regras aplicadas, versão das regras e resultado.
+  3. Resultado expresso comunica parecer ao **Regin/Junta** (HU-104) e envia dados à **SEFAZ** quando deferido (HU-110); número de produto TVL registrado para emissão PDF no backoffice (HU-132).
+  4. Processos sem BAP vinculado no prazo parametrizado são indeferidos automaticamente (HU-134).
+  5. Cidadão é notificado pelos canais habilitados **sem** anexo de TVL (HU-077).
+  6. Decisão automática fica integralmente auditada: dados de entrada, regras aplicadas, versão das regras e resultado.
 **Plans**: TBD
 
 ### Phase 10: Análise Técnica SEDUR
-**Goal**: Analistas da SEDUR recebem, distribuem, analisam e decidem os processos não elegíveis ao fluxo expresso, com parecer fundamentado.
+**Goal**: Analistas da SEDUR recebem, distribuem, analisam e decidem processos não elegíveis ao expresso (alto risco, gatilhos, semi-expresso), com ficha de análise versionada, malha fina e emissão opcional de TVL em PDF no backoffice.
 **Depends on**: Phases 8 e 9
-**Requirements**: HU-079, HU-080, HU-081, HU-082, HU-083, HU-084, HU-085, HU-086, HU-087, HU-088, HU-089
-**UI hint**: yes (fila de análise, painel do analista, emissão de parecer)
+**Requirements**: HU-079, HU-080, HU-081, HU-082, HU-083, HU-084, HU-085, HU-086, HU-087, HU-088, HU-089, HU-132, HU-135, HU-136
+**UI hint**: yes (fila de análise, ficha de análise SAPS, malha fina, emissão TVL PDF)
 **Success Criteria** (o que deve ser VERDADE):
-  1. Solicitações não elegíveis ao expresso são encaminhadas e distribuídas para a fila de análise técnica.
-  2. Analista assume o processo, consulta todo o conteúdo da solicitação e solicita pendências ao requerente.
-  3. Complementação recebida retorna o processo ao fluxo de análise.
-  4. Analista emite parecer fundamentado e defere/indefere, aplicando condicionantes quando cabíveis.
-  5. Processo é encerrado com status final e trilha completa.
+  1. Solicitações não elegíveis ao expresso são encaminhadas e distribuídas para a fila de análise técnica (caixa do setor).
+  2. Analista assume o processo, preenche **ficha de análise** por CNAE (gatilhos, condicionantes, vagas LOUOS/CNLU, revisões versionadas — HU-135).
+  3. Analista solicita **convites**/pendências ao requerente via portal Simplifica (HU-083); complementação retorna ao fluxo (HU-084).
+  4. Analista emite parecer e defere/indefere (todas CNAEs deferidas para deferir processo); integrações Regin + SEFAZ disparam na conclusão.
+  5. Analista pode **emitir TVL em PDF** no backoffice sob demanda (HU-132) — relatório interno, não entrega ao cidadão.
+  6. Qualquer processo pode ser encaminhado à **malha fina** para revisão humana provocada (HU-136).
+  7. Processo encerrado com status final e trilha completa.
 **Plans**: TBD
 
 ### Phase 11: Pendências e Comunicação
@@ -239,21 +242,21 @@ Nota: a correspondência "Quadro 11" ↔ Quadro 11B oficial e as planilhas param
 ### Phase 13: Integrações
 **Goal**: Serviços externos integrados de verdade — cada adaptador implementado atrás de contrato e validado contra o ambiente de homologação real, com evidência de chamada registrada.
 **Depends on**: Phases 3, 8, 9 e 10
-**Requirements**: HU-103, HU-104, HU-105, HU-106, HU-107, HU-108, HU-109, HU-110 ⚠, HU-111 ⚠
-**UI hint**: no (adaptadores backend; telas de credenciais/teste de conexão seguem o padrão de parametrização da HU-014)
+**Requirements**: HU-103, HU-104, HU-105, HU-106, HU-107, HU-108, HU-109, HU-110, HU-111, HU-133
+**UI hint**: no (adaptadores backend; formulário Regin embed; telas de credenciais/teste de conexão seguem HU-014)
 **Success Criteria** (o que deve ser VERDADE):
-  1. Solicitações entram via integrador federal (REDESIM/Junta Comercial) e o parecer é devolvido ao integrador — validado em homologação real.
+  1. Solicitações entram via **Regin** (formulário embed + webservice), protocolo **BAP** vinculado ao processo (HU-133) e parecer devolvido ao integrador — validado em homologação real.
   2. Deferimento de viabilidade é enviado à SEFAZ municipal via API com evidência de chamada real em homologação.
-  3. Receita Federal, Cadastro Imobiliário, GIS municipal, Protocolo e Portal do Contribuinte integrados atrás de contratos, cada um validado contra ambiente real.
-  4. Dados do sistema legado .NET migrados/em convivência conforme estratégia confirmada com a SEDUR.
+  3. Receita Federal, Cadastro Imobiliário, **SIGIS/CA 2000**, Protocolo e Portal do Contribuinte integrados atrás de contratos, cada um validado contra ambiente real.
+  4. Dados do legado **SAPS/Simplifica** migrados/em convivência conforme estratégia confirmada (HU-111).
 **Plans**: TBD
 
-**Bloqueios conhecidos da fase** (detalhes em `docs/ANALISE-HUs-REUNIAO-SEDUR.md` seção 5):
-- Contrato REDESIM/integrador (entrada da solicitação e devolução do parecer) — aguardando documentação (HU-103, HU-104).
-- Base GIS municipal (camadas, formato, acesso) — aguardando acesso (HU-107).
-- HU-110 (SEFAZ): **confirmada** — API existente, base conhecida via SIGVISA; **endpoint específico de envio do deferimento e credenciais SenhaWeb pendentes**.
-- HU-111 (migração do legado): **pendente de confirmação de estratégia com a SEDUR**.
-- Acesso a ambiente de homologação (integrador/SEFAZ/GIS) — solicitado.
+**Bloqueios conhecidos da fase** (detalhes em `docs/ANALISE-HUs-REUNIAO-SEDUR.md` seções 5 e 7.8):
+- Contrato **Regin**↔SAPS (webservice em produção; spec não pública) — aguardando documentação (HU-103, HU-104, HU-133).
+- Base **SIGIS / CA 2000** (substituir S69) — aguardando acesso (HU-107).
+- HU-110 (SEFAZ): **confirmada** — API existente via SIGVISA; **endpoint de envio de viabilidade e credenciais SenhaWeb pendentes**.
+- HU-111 (migração legado SAPS): **pendente** export parametrizações e estratégia com SEDUR.
+- Acesso a ambiente de homologação (Regin/SEFAZ/GIS) — solicitado.
 
 Regra da fase: integração sem documentação/credencial/acesso permanece **explicitamente bloqueada** neste roadmap e no STATE.md — nunca adaptador falso para "destravar".
 
@@ -286,15 +289,17 @@ Regra da fase: integração sem documentação/credencial/acesso permanece **exp
 
 | Item | HUs afetadas | Fase | Status |
 |------|--------------|------|--------|
-| Escopo de DAM/pagamento dentro do SILE | HU-071, HU-072 | 8 | Aguardando confirmação — não implementar antes |
+| DAM viabilidade Regin (escopo revisado: consulta SEFAZ) | HU-071, HU-072 | 8 | **Escopo definido** — geração fica na SEFAZ; confirmar renovação portal |
 | Endpoint e credenciais SEFAZ (envio de deferimento) | HU-110 | 13 | API confirmada; contrato e credenciais pendentes |
-| Estratégia de migração/convivência com legado .NET | HU-111 | 13 | Aguardando definição |
-| Contrato REDESIM/integrador | HU-022, HU-103, HU-104 | 3, 13 | Aguardando documentação |
-| Base GIS municipal (camadas, formato, acesso) | HU-107 e EP04 | 4, 13 | Aguardando acesso |
-| Quadros parametrizados vigentes da LOUOS; "Quadro 11" ↔ 11B | HU-015 a HU-018, HU-040, HU-041 | 5 | Aguardando planilhas e confirmação |
+| Estratégia de migração/convivência legado SAPS/Simplifica | HU-111 | 13 | Aguardando export parametrizações + definição |
+| Contrato Regin/webservice (spec não pública) | HU-103, HU-104, HU-133 | 13 | Aguardando documentação JUCEB/SEDUR |
+| Base SIGIS / CA 2000 (substituir S69) | HU-107, EP04 | 4, 13 | Aguardando acesso |
+| Regra semi-expresso vs gatilho CNAE | HU-049, HU-135 | 6, 10 | Aguardando lista completa gatilhos |
+| Formato PDF/assinatura TVL backoffice | HU-132 | 10 | Aguardando Anderson |
+| Quadros parametrizados vigentes da LOUOS; "Quadro 11" ↔ 11B | HU-015 a HU-018 | 5 | Aguardando planilhas |
 | Acesso a ambiente de homologação | EP13 | 13 | Solicitado |
 
-Pauta completa: `docs/ANALISE-HUs-REUNIAO-SEDUR.md` seção 5. Nenhum desses itens bloqueia as Fases 1 a 3; os motores (Fases 5 e 6) nascem parametrizáveis e recebem a carga oficial quando entregue.
+Pauta completa: `docs/ANALISE-HUs-REUNIAO-SEDUR.md` seções 5 e 7. Refinamento HUs aplicado em 2026-06-12. Nenhum bloqueio externo impede Fases 1–3; motores (5–6) nascem parametrizáveis.
 
 ## Progress
 
@@ -305,7 +310,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 |-------|----------------|--------|-----------|
 | 1. Identidade, Acesso e Auditoria Transversal | 9/9 | Complete | 2026-06-10 |
 | 2. Administração Base | 0/8 | Planned | - |
-| 3. Cadastro Empresarial | 0/TBD | Not started | - |
+| 3. Cadastro Empresarial | 1/9 | In progress | - |
 | 4. Georreferenciamento e Território | 0/TBD | Not started | - |
 | 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |
 | 6. Classificação de Risco | 0/TBD | Not started | - |
@@ -319,7 +324,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 14. Inteligência Artificial | 0/TBD | Not started | - |
 | 15. Relatórios e Indicadores | 0/TBD | Not started | - |
 
-**Cobertura de requisitos:** 131/131 HUs mapeadas (HU-001 a HU-131) — nenhum órfão, nenhuma duplicada. Rastreabilidade detalhada em `.planning/REQUIREMENTS.md`.
+**Cobertura de requisitos:** 137 HUs catalogadas (HU-001 a HU-131 + HU-132 a HU-137 da reunião SEDUR 2026-06) — rastreabilidade em `.planning/REQUIREMENTS.md` *(atualizar REQUIREMENTS na próxima revisão de milestone)*.
 
 ---
-*Roadmap criado: 2026-06-09*
+*Roadmap criado: 2026-06-09 | Atualizado: 2026-06-12 (refinamento HUs reunião SEDUR)*
