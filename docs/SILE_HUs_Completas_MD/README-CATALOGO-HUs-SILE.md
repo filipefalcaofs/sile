@@ -31,6 +31,10 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-018 — Manter Quadro 11A](EP02-Administracao/HU-018-Manter-Quadro-11A.md)
 - [HU-019 — Manter condicionantes](EP02-Administracao/HU-019-Manter-condicionantes.md)
 - [HU-020 — Manter classificação de risco](EP02-Administracao/HU-020-Manter-classificacao-de-risco.md)
+- [HU-137 — Manter feriados](EP02-Administracao/HU-137-Manter-feriados.md) *(nova — reunião SEDUR 2026-06)*
+- [HU-138 — Manter setores](EP02-Administracao/HU-138-Manter-setores.md) *(nova — SAPS legado)*
+- [HU-139 — Manter edifícios comerciais e complementos](EP02-Administracao/HU-139-Manter-edificios-comerciais-e-complementos.md) *(proposta — SAPS legado; semântica a confirmar)*
+- [HU-143 — Simular impacto de alteração de parametrização](EP02-Administracao/HU-143-Simular-impacto-de-parametrizacao.md) *(nova — melhoria além do legado)*
 
 ## EP03 — Cadastro Empresarial
 
@@ -99,8 +103,11 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-068 — Protocolar solicitação](EP08-Solicitacao-de-Viabilidade/HU-068-Protocolar-solicitacao.md)
 - [HU-069 — Consultar protocolo](EP08-Solicitacao-de-Viabilidade/HU-069-Consultar-protocolo.md)
 - [HU-070 — Cancelar solicitação](EP08-Solicitacao-de-Viabilidade/HU-070-Cancelar-solicitacao.md)
-- [HU-071 — Gerar DAM da solicitação](EP08-Solicitacao-de-Viabilidade/HU-071-Gerar-DAM-da-solicitacao.md) *(proposta — escopo a confirmar)*
-- [HU-072 — Confirmar pagamento do DAM](EP08-Solicitacao-de-Viabilidade/HU-072-Confirmar-pagamento-do-DAM.md) *(proposta — escopo a confirmar)*
+- [HU-071 — Visualizar DAM da solicitação](EP08-Solicitacao-de-Viabilidade/HU-071-Gerar-DAM-da-solicitacao.md) *(escopo revisado — consulta SEFAZ)*
+- [HU-072 — Confirmar pagamento do DAM](EP08-Solicitacao-de-Viabilidade/HU-072-Confirmar-pagamento-do-DAM.md) *(escopo revisado — sync status SEFAZ)*
+- [HU-141 — Simular viabilidade antes de protocolar](EP08-Solicitacao-de-Viabilidade/HU-141-Simular-viabilidade-antes-de-protocolar.md) *(nova — melhoria além do legado)*
+- [HU-148 — Registrar solicitação em contingência](EP08-Solicitacao-de-Viabilidade/HU-148-Registrar-solicitacao-em-contingencia.md) *(nova — melhoria além do legado)*
+- [HU-150 — Atendimento presencial assistido](EP08-Solicitacao-de-Viabilidade/HU-150-Atendimento-presencial-assistido.md) *(nova — melhoria além do legado)*
 
 ## EP09 — Fluxo Expresso
 
@@ -110,6 +117,7 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-076 — Emitir resultado expresso](EP09-Fluxo-Expresso/HU-076-Emitir-resultado-expresso.md)
 - [HU-077 — Notificar resultado ao cidadão](EP09-Fluxo-Expresso/HU-077-Notificar-resultado-ao-cidadao.md)
 - [HU-078 — Registrar auditoria da decisão automática](EP09-Fluxo-Expresso/HU-078-Registrar-auditoria-da-decisao-automatica.md)
+- [HU-134 — Indeferir sem atuação por prazo BAP](EP09-Fluxo-Expresso/HU-134-Indeferir-sem-atuação-por-prazo-BAP.md) *(nova — reunião SEDUR 2026-06)*
 
 ## EP10 — Análise Técnica SEDUR
 
@@ -124,6 +132,12 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-087 — Indeferir solicitação](EP10-Análise-Tecnica-SEDUR/HU-087-Indeferir-solicitacao.md)
 - [HU-088 — Aplicar condicionantes](EP10-Análise-Tecnica-SEDUR/HU-088-Aplicar-condicionantes.md)
 - [HU-089 — Encerrar processo](EP10-Análise-Tecnica-SEDUR/HU-089-Encerrar-processo.md)
+- [HU-132 — Emitir TVL em PDF no backoffice](EP10-Análise-Tecnica-SEDUR/HU-132-Emitir-TVL-em-PDF-no-backoffice.md) *(nova — reunião SEDUR 2026-06)*
+- [HU-135 — Preencher ficha de análise](EP10-Análise-Tecnica-SEDUR/HU-135-Preencher-ficha-de-análise.md) *(nova — SAPS legado)*
+- [HU-136 — Encaminhar para malha fina](EP10-Análise-Tecnica-SEDUR/HU-136-Encaminhar-para-malha-fina.md) *(nova — SAPS legado)*
+- [HU-140 — Pré-analisar processo pelo motor](EP10-Análise-Tecnica-SEDUR/HU-140-Pre-analisar-processo-pelo-motor.md) *(nova — melhoria além do legado)*
+- [HU-142 — Exibir histórico decisório do imóvel e do CNAE na zona](EP10-Análise-Tecnica-SEDUR/HU-142-Exibir-historico-decisorio-do-imovel-e-CNAE.md) *(nova — melhoria além do legado)*
+- [HU-144 — Fila de trabalho do analista com SLA visual](EP10-Análise-Tecnica-SEDUR/HU-144-Fila-de-trabalho-do-analista-com-SLA.md) *(nova — melhoria além do legado)*
 
 ## EP11 — Pendências e Comunicação
 
@@ -135,6 +149,8 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-095 — Enviar WhatsApp](EP11-Pendências-e-Comunicacao/HU-095-Enviar-WhatsApp.md)
 - [HU-096 — Consultar histórico de comunicações](EP11-Pendências-e-Comunicacao/HU-096-Consultar-historico-de-comunicacões.md)
 
+- [HU-147 — Escalonar processos parados por SLA](EP11-Pendências-e-Comunicacao/HU-147-Escalonar-processos-parados-por-SLA.md) *(nova — melhoria além do legado)*
+
 ## EP12 — Auditoria e Compliance
 
 - [HU-097 — Registrar log das decisões](EP12-Auditoria-e-Compliance/HU-097-Registrar-log-das-decisões.md)
@@ -143,6 +159,7 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-100 — Consultar trilha de auditoria](EP12-Auditoria-e-Compliance/HU-100-Consultar-trilha-de-auditoria.md)
 - [HU-101 — Exportar auditoria](EP12-Auditoria-e-Compliance/HU-101-Exportar-auditoria.md)
 - [HU-102 — Monitorar conformidade LGPD](EP12-Auditoria-e-Compliance/HU-102-Monitorar-conformidade-LGPD.md)
+- [HU-149 — Detectar padrões de abuso e fraude](EP12-Auditoria-e-Compliance/HU-149-Detectar-padroes-de-abuso-e-fraude.md) *(nova — melhoria além do legado)*
 
 ## EP13 — Integrações
 
@@ -154,7 +171,9 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-108 — Integrar com Protocolo Municipal](EP13-Integracões/HU-108-Integrar-com-Protocolo-Municipal.md)
 - [HU-109 — Integrar com Portal do Contribuinte](EP13-Integracões/HU-109-Integrar-com-Portal-do-Contribuinte.md)
 - [HU-110 — Integrar com SEFAZ municipal](EP13-Integracões/HU-110-Integrar-com-SEFAZ-municipal.md) *(confirmada — API existente; contrato pendente)*
-- [HU-111 — Migrar dados do sistema legado](EP13-Integracões/HU-111-Migrar-dados-do-sistema-legado.md) *(proposta — estratégia a definir)*
+- [HU-111 — Migrar dados do sistema legado](EP13-Integracões/HU-111-Migrar-dados-do-sistema-legado.md) *(proposta — SAPS/Simplifica legado)*
+- [HU-133 — Vincular protocolo BAP](EP13-Integracões/HU-133-Vincular-protocolo-BAP.md) *(nova — Regin 2026-06)*
+- [HU-146 — Painel de saúde das integrações](EP13-Integracões/HU-146-Painel-de-saude-das-integracoes.md) *(nova — melhoria além do legado)*
 
 ## EP14 — Inteligência Artificial
 
@@ -181,6 +200,7 @@ Total: 131 HUs (127 originais + 4 propostas)
 - [HU-129 — Tempo médio de análise](EP15-Relatórios-e-Indicadores/HU-129-Tempo-medio-de-analise.md)
 - [HU-130 — Produtividade por analista](EP15-Relatórios-e-Indicadores/HU-130-Produtividade-por-analista.md)
 - [HU-131 — Exportar relatórios](EP15-Relatórios-e-Indicadores/HU-131-Exportar-relatorios.md)
+- [HU-145 — Relatório de quedas por gatilho (expansão do expresso)](EP15-Relatórios-e-Indicadores/HU-145-Relatorio-de-quedas-por-gatilho.md) *(nova — melhoria além do legado)*
 
 ## Mapa de renumeração (2026-06-09)
 

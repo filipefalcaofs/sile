@@ -63,6 +63,8 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-004: Decisão automática somente deve ocorrer quando todas as regras necessárias forem encontradas e não houver conflito.
 - RN-005: O sistema deve registrar a fundamentação legal, dados de entrada, regras aplicadas e resultado final.
 - RN-006: Casos ambíguos, sem dado confiável ou com conflito normativo devem ir para análise técnica.
+- RN-007: São elegíveis ao expresso solicitações de **baixo e médio risco** (diretriz 2026-06-11) com condicionantes atendidas e enquadramento LOUOS automático resolvido — a meta é superar os ~405 CNAEs com resposta expressa do legado, levando a automação ao máximo permitido pela parametrização.
+- RN-008: **Gatilhos CNAE** parametrizados (enquadramento pelo analista, zona ZEIS especial, informações do processo etc.) tornam o caso inelegível e o encaminham à análise com motivo registrado (categoria semi-expresso); cada queda deve ser mensurável (EP15) para reduzir exceções ao longo do tempo.
 
 ## Critérios de Aceite — BDD
 

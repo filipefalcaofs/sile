@@ -60,8 +60,9 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
+- RN-004: O status deve ser exibido ao cidadão em **linguagem simples**, com explicação do momento atual e dos próximos passos (ex.: "Aguardando confirmação da Junta Comercial — protocolo BAP. Nada a fazer por enquanto."), mantendo o status técnico disponível em detalhe.
+- RN-005: Exibir **prazo estimado com base em dados reais** (tempo médio recente de processos equivalentes, alimentado pela medição por etapa da HU-129), com a ressalva de estimativa.
+- RN-006: A consulta deve apresentar a timeline do processo em versão simplificada para o cidadão (etapas concluídas, etapa atual, pendências dele).
 
 ### CA-01 — Execução com sucesso
 **Dado** que o usuário possui permissão e informou os dados obrigatórios,  

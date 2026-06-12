@@ -4,12 +4,12 @@
 **EP10 — Análise Técnica SEDUR**
 
 ## Objetivo
-Solicitar complementação ao cidadão.
+Solicitar complementação ao cidadão via **convite** no portal Simplifica (interação analista ↔ requerente), conforme fluxo operacional atual.
 
 ## História de Usuário
 **Como** analista,  
-**quero** solicitar pendência,  
-**para** corrigir informações insuficientes.
+**quero** solicitar pendência/convite,  
+**para** obter correções ou documentos do requerente pelo portal.
 
 ## Contexto de Negócio
 O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
@@ -59,7 +59,8 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 ## Regras de Negócio
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: Convite deve ser entregue ao requerente via portal Simplifica (e canais parametrizados EP11); o acompanhamento primário no fluxo Regin permanece na Junta.
+- RN-005: Prazo de resposta ao convite deve respeitar regras de contagem parametrizadas (HU-014/HU-137).
 
 ## Critérios de Aceite — BDD
 

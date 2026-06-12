@@ -1,10 +1,12 @@
-# HU-107 — Integrar com GIS Municipal
+# HU-107 — Integrar com GIS Municipal (SIGIS)
+
+> **Status: Refinada (2026-06-11)** — base cartográfica em uso no SAPS é a antiga ("S69"); exigência da SEDUR é migrar para base **CA 2000** via **SIGIS**. Campo operacional: "Zona e Via SIGIS" na ficha de análise.
 
 ## Épica
 **EP13 — Integrações**
 
 ## Objetivo
-Consultar bases geográficas oficiais.
+Consultar o SIGIS/GIS municipal para identificar zona, via, polígono validado e restrições territoriais com base cartográfica oficial atualizada.
 
 ## História de Usuário
 **Como** sistema,  
@@ -27,12 +29,11 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - Regras, integrações ou bases oficiais configuradas quando aplicável.
 
 ## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Integrar com GIS Municipal**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+1. O requerente ou sistema informa polígono de 4 pontos no mapa (formulário Regin ou portal).
+2. O sistema valida coerência do polígono com o logradouro/inscrição imobiliária informados.
+3. O sistema consulta camadas SIGIS (base CA 2000) e retorna zona urbanística, classificação da via e metadados geográficos.
+4. O sistema persiste resultado geográfico no processo e disponibiliza na ficha de análise ("Zona e Via SIGIS").
+5. Falhas de integração registram pendência — decisão automática bloqueada quando dado geográfico for pré-requisito.
 
 ## Fluxos Alternativos
 ### FA-01 — Dados incompletos
@@ -62,7 +63,9 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
 - RN-004: Integrações devem registrar payload, status, protocolo externo quando houver e erros de comunicação.
 - RN-005: Falha de integração não deve gerar decisão inconsistente; deve permitir retentativa ou análise técnica.
-- RN-006: O sistema deve tratar indisponibilidade do serviço externo.
+- RN-007: A base cartográfica de referência deve ser a **CA 2000** (não S69); versão da base consultada deve ser registrada na auditoria do processo.
+- RN-008: Polígono inválido ou inconsistente com endereço deve impedir avanço do formulário Regin.
+- RN-009: **Camadas geográficas são dados versionados** (mesmo princípio do versionamento de regras): atualização de base/camada cria nova versão com vigência; cada decisão registra a versão da camada consultada, e a reprodução da decisão (HU-099) usa a versão da época — atualização da base **não** reescreve o contexto de processos já decididos.
 
 ## Critérios de Aceite — BDD
 
@@ -134,4 +137,4 @@ O sistema deve manter registro completo da execução desta HU, incluindo:
 Alta
 
 ## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+Pendente com a SEDUR: acesso às camadas SIGIS, formato de serviço (WMS/WFS/API) e cronograma de migração S69 → CA 2000. Integração bloqueada até credenciais/endpoints reais — nunca simular em produção.

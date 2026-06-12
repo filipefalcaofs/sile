@@ -1,10 +1,12 @@
 # HU-062 — Informar imóvel
 
+> **Refinada (2026-06-11)** — no fluxo Regin, esta etapa ocorre no formulário hospedado pelo Simplifica (`ps001_Regin.aspx`), após dados da Junta.
+
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
 ## Objetivo
-Registrar imóvel da atividade.
+Registrar imóvel, polígono territorial e dados complementares necessários à análise locacional e ao enquadramento LOUOS.
 
 ## História de Usuário
 **Como** cidadão,  
@@ -27,12 +29,12 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - Regras, integrações ou bases oficiais configuradas quando aplicável.
 
 ## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Informar imóvel**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+1. Requerente informa inscrição imobiliária (pré-preenche logradouro quando disponível no cadastro).
+2. Requerente informa complemento (pré-preenchido quando edifício comercial; descrição obrigatória), ponto de referência (obrigatório) e número métrico.
+3. Requerente demarca **polígono de 4 pontos** no mapa; sistema valida contra logradouro e consulta SIGIS (HU-107) para zona/via.
+4. Requerente responde indicadores: escritório virtual (valida sede na inscrição + CNPJ com viabilidade de sede), área pública (exige concessão de uso ou bloqueia), acessos independentes residencial/comercial.
+5. Requerente anexa **foto da fachada** (obrigatória), contrato de locação (opcional se proprietário) e termo de concessão (obrigatório se área pública).
+6. Sistema registra dados e avança para CNAEs e condicionantes (HU-064, HU-065).
 
 ## Fluxos Alternativos
 ### FA-01 — Dados incompletos
@@ -59,7 +61,9 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 ## Regras de Negócio
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: Polígono de 4 pontos é obrigatório no fluxo Regin; deve ser validado geograficamente antes de protocolar.
+- RN-005: Foto da fachada é documento obrigatório; área pública sem concessão de uso impede continuidade.
+- RN-006: Escritório virtual exige comprovação de sede na mesma inscrição imobiliária e CNPJ da sede com viabilidade deferida.
 
 ## Critérios de Aceite — BDD
 

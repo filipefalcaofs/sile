@@ -1,17 +1,17 @@
 # HU-072 — Confirmar pagamento do DAM
 
-> **Status: Proposta** — escopo pendente de confirmação com a SEDUR. Especificação técnica baseada na implementação de referência do projeto SIGVISA (sls-sms), que opera baixa automática de DAMs via API da SEFAZ Salvador em produção (`sls-sms/docs/DAM-SEFAZ-IMPLEMENTACAO.md`).
+> **Status: Escopo revisado (2026-06-11)** — no fluxo Regin, pagamento do DAM e liberação tributária são responsabilidade da **SEFAZ**. O SILE pode **sincronizar status** de pagamento via API (consulta) para exibição no processo, mas **não bloqueia** emissão de resultado de viabilidade aguardando DAM — o TVL não é mais entregue ao requerente (HU-076). Indeferimento por não pagamento aplica-se apenas se a SEDUR confirmar essa regra para fluxos diretos pelo portal.
 
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
 ## Objetivo
-Confirmar o pagamento do DAM — por baixa automática via API da SEFAZ ou baixa manual por operador — e liberar a continuidade do processo, incluindo a disponibilização do TVL; tratar o não pagamento.
+Sincronizar status de pagamento do DAM junto à SEFAZ e refletir no processo; tratar indeferimento por não pagamento apenas nos fluxos em que a SEDUR exigir conciliação prévia.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** confirmar o pagamento do DAM,  
-**para** liberar o TVL ao requerente ou indeferir o processo por não pagamento.
+**quero** confirmar o pagamento do DAM via API SEFAZ,  
+**para** exibir situação atualizada ao analista e aplicar regras de indeferimento quando parametrizadas.
 
 ## Contexto de Negócio
 No fluxo atual, o TVL é disponibilizado após o pagamento do DAM mediante compensação bancária (prazo de até 48 horas). Conforme o Decreto Municipal nº 32.155/2020 (art. 6º), o primeiro DAM do processo, se não quitado até a data de validade, é automaticamente cancelado, com o consequente indeferimento do processo, sem gerar dívida ativa. A SEFAZ Salvador disponibiliza API de consulta de pagamentos por código de barras (`POST /DAM/ConsultarDamsSEMOP`), já utilizada em produção pelo SIGVISA para baixa automática horária.

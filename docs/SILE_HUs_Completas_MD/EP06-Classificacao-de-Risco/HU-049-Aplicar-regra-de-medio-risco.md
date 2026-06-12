@@ -4,12 +4,12 @@
 **EP06 — Classificação de Risco**
 
 ## Objetivo
-Avaliar condicionantes de médio risco.
+Avaliar condicionantes de médio risco e encaminhar processos elegíveis ao fluxo expresso automático, conforme diretriz operacional da SEDUR (baixo e médio risco → expresso; alto risco → análise humana).
 
 ## História de Usuário
 **Como** sistema,  
 **quero** aplicar médio risco,  
-**para** definir se será expresso ou análise.
+**para** finalizar automaticamente quando elegível ou encaminhar à análise técnica quando houver gatilho ou alto risco.
 
 ## Contexto de Negócio
 O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
@@ -27,12 +27,12 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - Regras, integrações ou bases oficiais configuradas quando aplicável.
 
 ## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Aplicar regra de médio risco**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+1. O sistema identifica solicitação classificada como médio risco (conforme Decreto Municipal nº 32.636/2020 e parametrização por CNAE).
+2. O sistema avalia condicionantes gerais e específicas do CNAE (HU-019, HU-048).
+3. O sistema verifica enquadramento LOUOS automático (Quadro 7) e ausência de gatilhos CNAE parametrizados (ex.: enquadramento ausente, zona ZEIS especial).
+4. Quando todas as condicionantes forem atendidas, não houver gatilho e o enquadramento estiver resolvido, o sistema encaminha ao fluxo expresso (HU-073 a HU-076).
+5. Quando houver gatilho, enquadramento pendente ou classificação de alto risco, o sistema encaminha à análise técnica (HU-079), registrando o motivo (semi-expresso quando aplicável).
+6. O sistema registra classificação, condicionantes avaliadas, gatilhos e decisão de roteamento em trilha de auditoria.
 
 ## Fluxos Alternativos
 ### FA-01 — Dados incompletos
@@ -61,8 +61,10 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
 - RN-004: A classificação de risco deve ser parametrizável por CNAE e condicionantes.
-- RN-005: Baixo risco elegível deve seguir fluxo expresso quando todas as condicionantes forem atendidas.
+- RN-005: Médio risco elegível deve seguir fluxo expresso quando todas as condicionantes forem atendidas, o enquadramento LOUOS estiver resolvido automaticamente e não houver gatilho CNAE parametrizado — mesma lógica de finalização expressa aplicável ao baixo risco (HU-048).
 - RN-006: Alto risco deve ser encaminhado para análise técnica quando a legislação assim exigir.
+- RN-007: Gatilhos CNAE (enquadramento pelo analista, zona ZEIS especial, informações do processo etc.) devem ser parametrizáveis e, quando acionados, impedem decisão automática — o processo segue para análise técnica com motivo registrado (categoria semi-expresso, quando aplicável).
+- RN-008: A taxonomia operacional "médio risco" deve ser mapeável à classificação legal do Decreto 32.636/2020 (confirmar com a SEDUR se corresponde a Baixo Risco B ou outra faixa).
 
 ## Critérios de Aceite — BDD
 
@@ -134,4 +136,4 @@ O sistema deve manter registro completo da execução desta HU, incluindo:
 Alta
 
 ## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+Refinada com base na reunião SEDUR (2026-06-11) e mapeamento do SAPS legado. Diretriz-alvo: expresso para baixo e médio risco; análise humana para alto risco. Pendente confirmar mapeamento exato "médio risco" ↔ Decreto 32.636/2020 e lista completa de gatilhos CNAE.

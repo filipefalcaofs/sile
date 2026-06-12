@@ -60,6 +60,8 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: O parecer conta com **biblioteca de textos-padrão** administrada pela coordenação (fundamentações e trechos aprovados, organizados por situação/CNAE/zona), inseríveis e editáveis no texto — consistência de redação entre analistas; o legado só oferece texto livre.
+- RN-005: Textos-padrão são versionados; o parecer registra quais blocos-padrão foram usados (rastreabilidade de fundamentação).
 
 ## Critérios de Aceite — BDD
 
