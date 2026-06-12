@@ -10,5 +10,26 @@
     </head>
     <body class="font-sans antialiased">
         <x-inertia::app />
+
+        {{-- VLibras — tradutor de Libras exigido para serviços públicos
+             digitais (Lei 13.146/2015 / eMAG). Carregado fora do console
+             interno (gestao*). Injetado no blade por ser script externo
+             do governo e para persistir entre navegações do SPA. --}}
+        @unless (request()->is('gestao*'))
+            <div vw class="enabled" data-keep-contrast>
+                <div vw-access-button class="active"></div>
+                <div vw-plugin-wrapper>
+                    <div class="vw-plugin-top-wrapper"></div>
+                </div>
+            </div>
+            <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+            <script>
+                window.addEventListener('load', function () {
+                    if (window.VLibras) {
+                        new window.VLibras.Widget('https://vlibras.gov.br/app');
+                    }
+                });
+            </script>
+        @endunless
     </body>
 </html>
