@@ -25,6 +25,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'manter-perfis',
             'manter-parametros',
             'consultar-cnaes',
+            'monitorar-emails',
         ];
 
         foreach ($permissions as $permission) {
@@ -48,6 +49,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'manter-perfis',
                 'manter-parametros',
                 'consultar-cnaes',
+                'monitorar-emails',
             ]);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();

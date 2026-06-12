@@ -79,12 +79,6 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('https://sso.staging.acesso.gov.br', $baseUrl->default_value);
         $this->assertTrue($baseUrl->requires_connection_test);
 
-        $apiBaseUrl = Parameter::query()->where('key', 'integrations.govbr.api_base_url')->first();
-
-        $this->assertNotNull($apiBaseUrl);
-        $this->assertSame('https://api.staging.acesso.gov.br', $apiBaseUrl->default_value);
-        $this->assertTrue($apiBaseUrl->requires_connection_test);
-
         $clientId = Parameter::query()->where('key', 'integrations.govbr.client_id')->first();
 
         $this->assertNotNull($clientId);
@@ -103,6 +97,19 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('seguranca', $minimumLevel->group);
         $this->assertSame('bronze', $minimumLevel->default_value);
         $this->assertSame(['required', 'in:bronze,prata,ouro'], $minimumLevel->validation_rules);
+    }
+
+    public function test_seeder_registra_parametro_da_listagem_de_emails(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $perPage = Parameter::query()->where('key', 'ui.email_logs.per_page')->first();
+
+        $this->assertNotNull($perPage);
+        $this->assertSame('ui', $perPage->group);
+        $this->assertSame('integer', $perPage->type);
+        $this->assertSame('20', $perPage->default_value);
+        $this->assertSame(['required', 'integer', 'min:5', 'max:100'], $perPage->validation_rules);
     }
 
     public function test_seeder_mantem_flag_sensivel_em_reseed(): void

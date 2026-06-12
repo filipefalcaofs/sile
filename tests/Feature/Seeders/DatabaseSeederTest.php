@@ -69,12 +69,13 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        $this->post('/portal/login', [
+        // Ambientes independentes: a gestão tem login próprio (guard gestao).
+        $this->post('/gestao/login', [
             'email' => 'admin@sile.dev',
             'password' => 'password',
         ])->assertRedirect('/gestao');
 
-        $this->assertAuthenticated();
+        $this->assertAuthenticated('gestao');
 
         $this->get('/gestao')->assertRedirect(route('portal.termo-lgpd.show'));
 

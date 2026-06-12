@@ -98,6 +98,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
                 'description' => 'Itens por página na listagem de usuários',
             ],
+            'ui.email_logs.per_page' => [
+                'group' => 'ui',
+                'type' => 'integer',
+                'default_value' => '20',
+                'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
+                'description' => 'Itens por página no log de e-mails',
+            ],
             'ui.dashboard.acessos_janela_dias' => [
                 'group' => 'ui',
                 'type' => 'integer',
@@ -148,14 +155,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'url'],
                 'requires_connection_test' => true,
                 'description' => 'URL base do Login Único GOV.BR (staging: sso.staging.acesso.gov.br; produção: sso.acesso.gov.br)',
-            ],
-            'integrations.govbr.api_base_url' => [
-                'group' => 'integracoes',
-                'type' => 'string',
-                'default_value' => 'https://api.staging.acesso.gov.br',
-                'validation_rules' => ['required', 'url'],
-                'requires_connection_test' => true,
-                'description' => 'URL base da API de confiabilidades do GOV.BR (níveis bronze/prata/ouro)',
             ],
             'integrations.govbr.client_id' => [
                 'group' => 'integracoes',
