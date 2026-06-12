@@ -2,6 +2,9 @@
  * Acesso via Login Único GOV.BR (HU-151), com a identidade do guia oficial
  * (azul institucional, marca "gov.br" em peso forte). Navegação de página
  * inteira (não XHR): o destino é o redirect OAuth para o provedor.
+ *
+ * As cores vêm dos tokens brand-* (escala alinhada ao azul gov.br em
+ * resources/css/app.css) — sem hex hardcoded no componente.
  */
 export default function GovBrButton() {
     return (
@@ -16,7 +19,7 @@ export default function GovBrButton() {
 
             <a
                 href="/portal/login/govbr"
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#1351B4] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#0C326F] focus:ring-2 focus:ring-[#1351B4]/40 focus:ring-offset-2 focus:outline-none dark:focus:ring-offset-gray-900"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-600 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
             >
                 Entrar com{' '}
                 <span className="text-base font-extrabold tracking-tight">gov.br</span>

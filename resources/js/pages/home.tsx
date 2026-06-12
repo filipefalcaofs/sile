@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import type { ComponentType, SVGProps } from 'react';
+import AccessibilityBar from '@/components/app/accessibility-bar';
 import Logo from '@/components/app/logo';
 import {
     ArrowRightIcon,
@@ -137,7 +138,7 @@ function SiteHeader() {
                     />
                 </Link>
 
-                <nav aria-label="Navegação principal" className="hidden md:block">
+                <nav id="menu" aria-label="Navegação principal" className="hidden md:block">
                     <ul className="flex items-center gap-8">
                         {navLinks.map((link) => (
                             <li key={link.href}>
@@ -199,10 +200,10 @@ function HeroSection() {
                     </h1>
 
                     <p className="mt-5 max-w-xl text-base leading-7 text-white/70 sm:text-lg sm:leading-8">
-                        O SILE é o Sistema de Licenciamento Eletrônico da SEDUR. Ele responde à
-                        viabilidade locacional de forma automatizada, aplicando as regras da LOUOS
-                        e a classificação de risco municipal, com fundamentação legal registrada em
-                        cada decisão.
+                        O Simplifica Salvador é o sistema de licenciamento eletrônico da SEDUR.
+                        Ele responde à viabilidade locacional de forma automatizada, aplicando as
+                        regras da LOUOS e a classificação de risco municipal, com fundamentação
+                        legal registrada em cada decisão.
                     </p>
 
                     <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -232,7 +233,7 @@ function ServicesSection() {
                         Serviços do portal
                     </h2>
                     <p className="mt-3 text-base text-gray-500 dark:text-gray-400">
-                        Recursos do SILE para requerentes, procuradores e responsáveis por
+                        Recursos do Simplifica para requerentes, procuradores e responsáveis por
                         atividades econômicas no Município de Salvador.
                     </p>
                 </div>
@@ -308,7 +309,7 @@ function LegalBasisSection() {
                         Base legal
                     </h2>
                     <p className="mt-3 text-base text-gray-500 dark:text-gray-400">
-                        As verificações do SILE são fundamentadas na legislação municipal e nas
+                        As verificações do Simplifica são fundamentadas na legislação municipal e nas
                         classificações oficiais.
                     </p>
                 </div>
@@ -343,7 +344,7 @@ function FinalCtaSection() {
                         Comece pelo portal
                     </h2>
                     <p className="relative mx-auto mt-3 max-w-xl text-base text-gray-400">
-                        Crie sua conta para acessar os serviços do SILE ou entre com seu cadastro
+                        Crie sua conta para acessar os serviços do Simplifica ou entre com seu cadastro
                         existente.
                     </p>
                     <div className="relative mt-8 flex flex-col justify-center gap-4 sm:flex-row">
@@ -369,7 +370,7 @@ function FinalCtaSection() {
 
 function SiteFooter() {
     return (
-        <footer className="border-t border-gray-200 dark:border-gray-800">
+        <footer id="rodape" className="border-t border-gray-200 dark:border-gray-800">
             <div className="mx-auto flex w-full max-w-(--breakpoint-xl) flex-col gap-10 px-4 py-12 sm:px-6 lg:flex-row lg:items-start lg:justify-between">
                 <div className="max-w-md">
                     <Logo
@@ -431,8 +432,8 @@ function SiteFooter() {
 
             <div className="border-t border-gray-200 dark:border-gray-800">
                 <p className="mx-auto w-full max-w-(--breakpoint-xl) px-4 py-6 text-sm text-gray-500 dark:text-gray-400 sm:px-6">
-                    © {new Date().getFullYear()} SILE — Sistema de Licenciamento Eletrônico ·
-                    SEDUR · Prefeitura de Salvador
+                    © {new Date().getFullYear()} Simplifica Salvador — Sistema de Licenciamento
+                    Eletrônico · SEDUR · Prefeitura de Salvador
                 </p>
             </div>
         </footer>
@@ -442,10 +443,11 @@ function SiteFooter() {
 export default function Home() {
     return (
         <ThemeProvider>
-            <Head title="SILE — Sistema de Licenciamento Eletrônico" />
+            <Head title="Simplifica Salvador — Licenciamento Eletrônico" />
             <div className="flex min-h-screen flex-col bg-white dark:bg-gray-900">
+                <AccessibilityBar />
                 <SiteHeader />
-                <main className="flex-1">
+                <main id="conteudo" className="flex-1">
                     <HeroSection />
                     <ServicesSection />
                     <HowItWorksSection />

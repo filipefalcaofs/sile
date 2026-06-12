@@ -105,7 +105,7 @@ export default function Dashboard() {
                                 Minha conta
                             </h3>
                             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                Bem-vindo(a) ao SILE.
+                                Bem-vindo(a) ao Simplifica.
                             </p>
                         </div>
                         <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">

@@ -3,9 +3,10 @@ interface LogoMarkProps {
 }
 
 /**
- * Símbolo da marca SILE: pin de localização com edifício — viabilidade
- * locacional de atividades econômicas. Versão vetorial do conceito em
- * docs/marca/, herda a cor via currentColor (usar text-brand-500).
+ * Símbolo da marca Simplifica (nome técnico do sistema: SILE): pin de
+ * localização com edifício — viabilidade locacional de atividades
+ * econômicas. Versão vetorial do conceito em docs/marca/, herda a cor
+ * via currentColor (usar text-brand-500).
  */
 export function LogoMark({ className = 'size-8' }: LogoMarkProps) {
     return (
@@ -30,7 +31,7 @@ interface LogoProps {
 }
 
 /**
- * Logo horizontal: símbolo + wordmark "SILE" com subtítulo opcional.
+ * Logo horizontal: símbolo + wordmark "SIMPLIFICA" com subtítulo opcional.
  */
 export default function Logo({
     subtitle,
@@ -45,7 +46,7 @@ export default function Logo({
                 <LogoMark className={markClassName} />
             </span>
             <span className="flex flex-col leading-tight">
-                <span className={textClassName}>SILE</span>
+                <span className={textClassName}>SIMPLIFICA</span>
                 {subtitle && <span className={subtitleClassName}>{subtitle}</span>}
             </span>
         </span>

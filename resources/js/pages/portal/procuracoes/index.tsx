@@ -109,7 +109,7 @@ function GrantProcurationCard() {
                     Vincular procurador
                 </h3>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    O procurador precisa ter conta no SILE. Informe o e-mail cadastrado e, se
+                    O procurador precisa ter conta no Simplifica. Informe o e-mail cadastrado e, se
                     desejar, uma data de validade para a procuração.
                 </p>
             </div>
