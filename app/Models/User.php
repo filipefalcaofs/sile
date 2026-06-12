@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Concerns\HasAuditoria;
+use App\Notifications\ResetPasswordQueued;
+use App\Notifications\VerifyEmailQueued;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Activitylog\Models\Concerns\CausesActivity;
@@ -35,6 +38,36 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    public function sendEmailVerificationNotification(): void
+    {
+        $log = EmailLog::create([
+            'recipient_email' => $this->email,
+            'recipient_name' => $this->name,
+            'notification_class' => VerifyEmailQueued::class,
+            'status' => 'na_fila',
+            'queued_at' => now(),
+        ]);
+
+        $notification = new VerifyEmailQueued;
+        $notification->emailLogId = $log->id;
+        $this->notify($notification);
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $log = EmailLog::create([
+            'recipient_email' => $this->email,
+            'recipient_name' => $this->name,
+            'notification_class' => ResetPasswordQueued::class,
+            'status' => 'na_fila',
+            'queued_at' => now(),
+        ]);
+
+        $notification = new ResetPasswordQueued($token);
+        $notification->emailLogId = $log->id;
+        $this->notify($notification);
+    }
+
     public function isInactive(): bool
     {
         return $this->inactivated_at !== null;
@@ -43,6 +76,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function termAcceptances(): HasMany
     {
         return $this->hasMany(LegalTermAcceptance::class);
+    }
+
+    public function govBrAccount(): HasOne
+    {
+        return $this->hasOne(GovBrAccount::class);
     }
 
     public function hasAcceptedTerm(LegalTerm $term): bool
