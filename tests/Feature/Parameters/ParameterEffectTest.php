@@ -37,13 +37,14 @@ class ParameterEffectTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put(route('gestao.parametros.update', 'ui.access_history.per_page'), ['value' => '5'])
             ->assertRedirect();
 
         AccessLog::factory()->count(6)->for($admin)->create();
 
-        $this->actingAs($admin)
+        // Ambientes independentes: o mesmo titular usa o portal pelo guard web.
+        $this->actingAs($admin, 'web')
             ->get(route('portal.acessos.index'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -55,11 +56,11 @@ class ParameterEffectTest extends TestCase
         $cidadao = $this->cidadao();
         $attorney = $this->cidadao();
 
-        $this->actingAs($this->admin())
+        $this->actingAs($this->admin(), 'gestao')
             ->put(route('gestao.parametros.update', 'features.procuracoes'), ['value' => '0'])
             ->assertRedirect();
 
-        $this->actingAs($cidadao)
+        $this->actingAs($cidadao, 'web')
             ->post('/portal/procuracoes', [
                 'attorney_email' => $attorney->email,
                 'expires_at' => null,
@@ -76,11 +77,11 @@ class ParameterEffectTest extends TestCase
         $grantor = $this->cidadao();
         $procuration = Procuration::factory()->create(['grantor_user_id' => $grantor->id]);
 
-        $this->actingAs($this->admin())
+        $this->actingAs($this->admin(), 'gestao')
             ->put(route('gestao.parametros.update', 'features.procuracoes'), ['value' => '0'])
             ->assertRedirect();
 
-        $this->actingAs($grantor)
+        $this->actingAs($grantor, 'web')
             ->delete("/portal/procuracoes/{$procuration->id}")
             ->assertRedirect();
 
@@ -89,11 +90,11 @@ class ParameterEffectTest extends TestCase
 
     public function test_toggle_desligado_comunica_na_tela(): void
     {
-        $this->actingAs($this->admin())
+        $this->actingAs($this->admin(), 'gestao')
             ->put(route('gestao.parametros.update', 'features.procuracoes'), ['value' => '0'])
             ->assertRedirect();
 
-        $this->actingAs($this->cidadao())
+        $this->actingAs($this->cidadao(), 'web')
             ->get('/portal/procuracoes')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page

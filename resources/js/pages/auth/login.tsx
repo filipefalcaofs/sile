@@ -1,13 +1,16 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
+import MaskedInput from '@/components/form/masked-input';
 import GovBrButton from '@/components/app/govbr-button';
 import { EyeCloseIcon, EyeIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
+import type { SharedProps } from '@/types';
 
 interface LoginProps {
     canResetPassword: boolean;
@@ -16,8 +19,16 @@ interface LoginProps {
 }
 
 export default function Login({ canResetPassword, canLoginWithGovBr, status }: LoginProps) {
+    const { flash } = usePage<SharedProps>().props;
     const [showPassword, setShowPassword] = useState(false);
     const [remember, setRemember] = useState(false);
+    const [capsLockOn, setCapsLockOn] = useState(false);
+
+    const handlePasswordKeyUp = (event: KeyboardEvent<HTMLInputElement>) => {
+        if (typeof event.getModifierState === 'function') {
+            setCapsLockOn(event.getModifierState('CapsLock'));
+        }
+    };
 
     return (
         <AuthLayout
@@ -30,30 +41,35 @@ export default function Login({ canResetPassword, canLoginWithGovBr, status }: L
                     <Alert variant="success" title="Sucesso" message={status} />
                 </div>
             )}
+            {flash.error && (
+                <div className="mb-6">
+                    <Alert variant="error" title="Atenção" message={flash.error} />
+                </div>
+            )}
             <Form action="/portal/login" method="post">
                 {({ errors, processing }) => (
                     <div className="space-y-6">
-                        {errors.email && (
+                        {(errors.cpf || errors.email) && (
                             <Alert
                                 variant="error"
                                 title="Não foi possível entrar"
-                                message={errors.email}
+                                message={errors.cpf ?? errors.email}
                             />
                         )}
 
                         <div>
-                            <Label htmlFor="email" required>
-                                E-mail
+                            <Label htmlFor="cpf" required>
+                                CPF
                             </Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                name="email"
-                                autoComplete="email"
+                            <MaskedInput
+                                id="cpf"
+                                mask="cpf"
+                                name="cpf"
+                                autoComplete="username"
                                 autoFocus
                                 required
-                                placeholder="nome@exemplo.com"
-                                error={!!errors.email}
+                                placeholder="000.000.000-00"
+                                error={!!errors.cpf}
                             />
                         </div>
 
@@ -68,6 +84,9 @@ export default function Login({ canResetPassword, canLoginWithGovBr, status }: L
                                     name="password"
                                     autoComplete="current-password"
                                     required
+                                    className="pr-12"
+                                    onKeyUp={handlePasswordKeyUp}
+                                    onBlur={() => setCapsLockOn(false)}
                                     error={!!errors.password}
                                     hint={errors.password}
                                 />
@@ -75,7 +94,8 @@ export default function Login({ canResetPassword, canLoginWithGovBr, status }: L
                                     type="button"
                                     onClick={() => setShowPassword((current) => !current)}
                                     aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                                    className="absolute top-3 right-4 z-30 cursor-pointer text-gray-500 dark:text-gray-400"
+                                    aria-pressed={showPassword}
+                                    className="absolute top-[7px] right-2 z-30 grid size-[30px] cursor-pointer place-items-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:outline-none dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
                                 >
                                     {showPassword ? (
                                         <EyeIcon className="size-5" />
@@ -84,6 +104,11 @@ export default function Login({ canResetPassword, canLoginWithGovBr, status }: L
                                     )}
                                 </button>
                             </div>
+                            {capsLockOn && (
+                                <p className="mt-1.5 text-xs text-warning-600 dark:text-warning-400">
+                                    Caps Lock está ativado.
+                                </p>
+                            )}
                         </div>
 
                         <div className="flex items-center justify-between gap-4">

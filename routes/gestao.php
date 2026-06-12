@@ -3,21 +3,29 @@
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\DashboardController;
+use App\Http\Controllers\Gestao\EmailLogController;
+use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
-// Login interno da retaguarda (não divulgado no portal público): tela própria,
-// mesma autenticação do Fortify — o destino pós-login é decidido por perfil.
-Route::middleware('guest')->prefix('gestao')->name('gestao.')->group(function () {
+// Login interno da retaguarda (não divulgado no portal público), em guard
+// próprio (gestao): a sessão é independente da sessão do portal do cidadão.
+Route::middleware('gestao.guest')->prefix('gestao')->name('gestao.')->group(function () {
     Route::get('login', fn () => Inertia::render('auth/gestao-login'))->name('login');
-    Route::post('login', [AuthenticatedSessionController::class, 'store'])->name('login.store');
+    Route::post('login', [LoginController::class, 'store'])->name('login.store');
 });
 
-Route::middleware(['auth', 'verified', 'permission:acessar-gestao', 'lgpd.accepted'])
+Route::middleware('auth:gestao')
+    ->post('gestao/logout', [LoginController::class, 'destroy'])
+    ->name('gestao.logout');
+
+// Sem middleware verified: e-mail verificado é pré-condição do PRÓPRIO login
+// interno (LoginController) — o aviso/reenvio de verificação pertence ao
+// fluxo do portal e exige o guard web.
+Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
     ->prefix('gestao')
     ->name('gestao.')
     ->group(function () {
@@ -49,6 +57,10 @@ Route::middleware(['auth', 'verified', 'permission:acessar-gestao', 'lgpd.accept
             Route::post('perfis', [RoleController::class, 'store'])->name('perfis.store');
             Route::put('perfis/{role}', [RoleController::class, 'update'])->name('perfis.update');
             Route::delete('perfis/{role}', [RoleController::class, 'destroy'])->name('perfis.destroy');
+        });
+
+        Route::middleware('permission:monitorar-emails')->group(function () {
+            Route::get('emails', [EmailLogController::class, 'index'])->name('emails.index');
         });
 
         Route::middleware('permission:manter-parametros')->group(function () {

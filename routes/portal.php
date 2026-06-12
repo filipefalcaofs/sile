@@ -21,14 +21,22 @@ Route::middleware('guest')
         Route::get('login/govbr/callback', [GovBrLoginController::class, 'callback'])->name('govbr.callback');
     });
 
-Route::middleware(['auth', 'verified'])
+// Termo LGPD é compartilhado pelos dois ambientes (a gestão também exige o
+// aceite): auth multi-guard, fora do gate lgpd.accepted (evita loop).
+Route::middleware(['auth:web,gestao', 'verified'])
     ->prefix('portal')
     ->name('portal.')
     ->group(function () {
-        // Rotas do próprio termo fora do gate lgpd.accepted (evita loop de redirect).
         Route::get('termo-lgpd', [LgpdTermController::class, 'show'])->name('termo-lgpd.show');
         Route::post('termo-lgpd', [LgpdTermController::class, 'accept'])->name('termo-lgpd.accept');
+    });
 
+// Guard web explícito: a sessão do console (guard gestao) não dá acesso
+// ao portal — autenticações independentes por ambiente.
+Route::middleware(['auth:web', 'verified'])
+    ->prefix('portal')
+    ->name('portal.')
+    ->group(function () {
         Route::middleware(['lgpd.accepted', ResolveRepresentation::class])->group(function () {
             Route::get('painel', DashboardController::class)->name('dashboard');
 

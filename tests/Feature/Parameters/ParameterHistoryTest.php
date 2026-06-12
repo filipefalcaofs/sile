@@ -32,10 +32,10 @@ class ParameterHistoryTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)->put(route('gestao.parametros.update', 'ui.access_history.per_page'), ['value' => '5']);
-        $this->actingAs($admin)->put(route('gestao.parametros.update', 'ui.access_history.per_page'), ['value' => '10']);
+        $this->actingAs($admin, 'gestao')->put(route('gestao.parametros.update', 'ui.access_history.per_page'), ['value' => '5']);
+        $this->actingAs($admin, 'gestao')->put(route('gestao.parametros.update', 'ui.access_history.per_page'), ['value' => '10']);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get(route('gestao.parametros.historico', 'ui.access_history.per_page'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -58,11 +58,11 @@ class ParameterHistoryTest extends TestCase
             'validation_rules' => ['required', 'string'],
         ]);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put(route('gestao.parametros.update', 'integracao.sefaz.token'), ['value' => 'token-secreto-003'])
             ->assertRedirect();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get(route('gestao.parametros.historico', 'integracao.sefaz.token'))
             ->assertOk()
             ->assertDontSee('token-secreto-003')
@@ -80,7 +80,7 @@ class ParameterHistoryTest extends TestCase
     {
         $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($gestor)
+        $this->actingAs($gestor, 'gestao')
             ->get('/gestao/parametros/ui.access_history.per_page/historico')
             ->assertForbidden();
 

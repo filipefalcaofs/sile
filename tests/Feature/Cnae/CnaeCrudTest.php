@@ -47,7 +47,7 @@ class CnaeCrudTest extends TestCase
 
         Cnae::factory()->count(3)->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -65,14 +65,14 @@ class CnaeCrudTest extends TestCase
         Cnae::factory()->create(['code' => '5611201', 'description' => 'Restaurantes e similares']);
         Cnae::factory()->create(['code' => '0111301', 'description' => 'Cultivo de arroz']);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes?search=restaurante')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('cnaes.data', 1)
                 ->where('cnaes.data.0.code', '5611201'));
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes?search=0111-3')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -84,11 +84,11 @@ class CnaeCrudTest extends TestCase
     {
         $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($analista)
+        $this->actingAs($analista, 'gestao')
             ->get('/gestao/cnaes')
             ->assertOk();
 
-        $this->actingAs($analista)
+        $this->actingAs($analista, 'gestao')
             ->post('/gestao/cnaes', $this->validPayload())
             ->assertForbidden();
 
@@ -103,7 +103,7 @@ class CnaeCrudTest extends TestCase
     {
         $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($cidadao)
+        $this->actingAs($cidadao, 'gestao')
             ->get('/gestao/cnaes')
             ->assertForbidden();
 
@@ -118,7 +118,7 @@ class CnaeCrudTest extends TestCase
     {
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->post('/gestao/cnaes', $this->validPayload())
             ->assertRedirect();
 
@@ -134,11 +134,11 @@ class CnaeCrudTest extends TestCase
 
         Cnae::factory()->create(['code' => '9900800']);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->post('/gestao/cnaes', $this->validPayload())
             ->assertSessionHasErrors('code');
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->post('/gestao/cnaes', [...$this->validPayload(), 'code' => '123'])
             ->assertSessionHasErrors('code');
 
@@ -150,7 +150,7 @@ class CnaeCrudTest extends TestCase
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
         $cnae = Cnae::factory()->create(['code' => '0111301']);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/cnaes/{$cnae->id}", [
                 'code' => '9999999',
                 'description' => 'Denominação ajustada',
@@ -170,7 +170,7 @@ class CnaeCrudTest extends TestCase
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
         $cnae = Cnae::factory()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/cnaes/{$cnae->id}", [
                 'description' => $cnae->description,
                 'active' => false,
@@ -187,7 +187,7 @@ class CnaeCrudTest extends TestCase
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
         $cnae = Cnae::factory()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/cnaes/{$cnae->id}", [
                 'description' => 'Denominação auditável',
                 'active' => true,
@@ -208,7 +208,7 @@ class CnaeCrudTest extends TestCase
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
         $cnae = Cnae::factory()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->delete("/gestao/cnaes/{$cnae->id}")
             ->assertRedirect();
 
@@ -229,7 +229,7 @@ class CnaeCrudTest extends TestCase
         $cnae = Cnae::factory()->create();
         $company->cnaes()->attach($cnae->id, ['is_primary' => true]);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->delete("/gestao/cnaes/{$cnae->id}")
             ->assertRedirect()
             ->assertSessionHas('error', 'CNAE vinculado a empresas não pode ser excluído.');

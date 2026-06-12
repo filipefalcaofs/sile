@@ -37,14 +37,14 @@ class CnaeIndexTableTest extends TestCase
         Cnae::factory()->create(['code' => '2222222', 'description' => 'Açougues e peixarias']);
         Cnae::factory()->create(['code' => '3333333', 'description' => 'Costura sob medida']);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes?sort=description&direction=asc')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('cnaes.data.0.description', 'Açougues e peixarias')
                 ->where('cnaes.data.2.description', 'Costura sob medida'));
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes?sort=description&direction=desc')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -59,7 +59,7 @@ class CnaeIndexTableTest extends TestCase
         Cnae::factory()->create(['code' => '9999999']);
         Cnae::factory()->create(['code' => '1111111']);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes?sort=id;drop&direction=sideways')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -74,7 +74,7 @@ class CnaeIndexTableTest extends TestCase
 
         Cnae::factory()->count(12)->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes?per_page=10')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -89,7 +89,7 @@ class CnaeIndexTableTest extends TestCase
 
         Cnae::factory()->count(20)->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes?per_page=999')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -104,7 +104,7 @@ class CnaeIndexTableTest extends TestCase
         Cnae::factory()->count(2)->create();
         Cnae::factory()->inactive()->create(['description' => 'Atividade desativada']);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes?active=0')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -112,12 +112,12 @@ class CnaeIndexTableTest extends TestCase
                 ->where('cnaes.data.0.description', 'Atividade desativada')
                 ->where('filters.active', '0'));
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes?active=1')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->has('cnaes.data', 2));
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -134,7 +134,7 @@ class CnaeIndexTableTest extends TestCase
         Cnae::factory()->inactive()->create(['description' => 'Restaurante desativado']);
         Cnae::factory()->create(['description' => 'Cultivo de arroz']);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/cnaes?search=restaurante&active=1&sort=description&direction=desc')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page

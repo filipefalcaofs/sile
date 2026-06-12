@@ -55,7 +55,7 @@ function BrandPanel() {
                             <span className="flex size-16 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/15">
                                 <LogoMark className="size-10" />
                             </span>
-                            <span className="block text-5xl font-semibold tracking-tight text-white">SILE</span>
+                            <span className="block text-4xl font-semibold tracking-tight text-white">SIMPLIFICA</span>
                         </span>
                         <p className="mt-4 text-lg font-medium text-white/90">
                             Sistema de Licenciamento Eletrônico
@@ -74,9 +74,19 @@ function BrandPanel() {
                         </ul>
                     </div>
                 </div>
-                <p className="mx-auto w-full max-w-md text-theme-xs font-medium tracking-wide text-white/40">
-                    Prefeitura de Salvador — SEDUR
-                </p>
+                <div className="mx-auto flex w-full max-w-md items-center gap-5">
+                    <img
+                        src="/images/logo_prefeitura.png"
+                        alt="Prefeitura de Salvador"
+                        className="h-10 w-auto opacity-90"
+                    />
+                    <span className="h-8 w-px bg-white/20" aria-hidden="true" />
+                    <img
+                        src="/images/01JW9M9BYJ76Y0M06Z1XHJDKH8.png"
+                        alt="SEDUR — Secretaria de Desenvolvimento Urbano"
+                        className="h-7 w-auto opacity-90"
+                    />
+                </div>
             </div>
         </div>
     );
@@ -85,7 +95,7 @@ function BrandPanel() {
 /**
  * Layout de autenticação: coluna do formulário (card com título e
  * subtítulo por página, ícone opcional) e painel institucional brand
- * à direita em telas lg+, com bullets sobre o SILE.
+ * à direita em telas lg+, com bullets sobre o Simplifica.
  */
 export default function AuthLayout({ title, subtitle, icon, children }: AuthLayoutProps) {
     return (
@@ -93,10 +103,10 @@ export default function AuthLayout({ title, subtitle, icon, children }: AuthLayo
             <div className="relative z-1 bg-gray-50 p-4 dark:bg-gray-900 sm:p-0">
                 <div className="relative flex min-h-screen w-full flex-col justify-center lg:flex-row">
                     <div className="flex w-full flex-1 flex-col lg:w-1/2">
-                        <div className="mx-auto w-full max-w-md pt-5 sm:pt-10">
+                        <div className="mx-auto w-full max-w-lg pt-6 sm:pt-8">
                             <Link
                                 href="/"
-                                aria-label="Ir para a página inicial do SILE"
+                                aria-label="Ir para a página inicial do Simplifica"
                                 className="inline-flex items-center"
                             >
                                 <Logo
@@ -106,9 +116,9 @@ export default function AuthLayout({ title, subtitle, icon, children }: AuthLayo
                                 />
                             </Link>
                         </div>
-                        <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-8 sm:py-12">
+                        <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center py-6 sm:py-8">
                             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm sm:p-8 dark:border-gray-800 dark:bg-white/[0.03]">
-                                <div className="mb-6 sm:mb-8">
+                                <div className="mb-5 sm:mb-6">
                                     {icon && (
                                         <div className="mb-5 flex size-12 items-center justify-center rounded-xl border border-brand-100 bg-brand-50 text-brand-600 dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-400">
                                             {icon}

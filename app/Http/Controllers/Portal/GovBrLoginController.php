@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
 
@@ -66,7 +67,10 @@ class GovBrLoginController extends Controller
             $user,
         );
 
-        return redirect()->intended(route('portal.dashboard'));
+        // Mesma resposta do login local: destino por perfil e descarte de
+        // URL pretendida incompatível (um servidor com conta GOV.BR vai
+        // para a gestão, não para o painel do cidadão).
+        return app(LoginResponse::class)->toResponse($request);
     }
 
     private function unavailable(): RedirectResponse

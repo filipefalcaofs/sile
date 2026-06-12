@@ -4,8 +4,8 @@ namespace Tests\Feature\Settings;
 
 use App\Models\Activity;
 use App\Models\User;
+use App\Notifications\VerifyEmailQueued;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -102,7 +102,7 @@ class ProfileTest extends TestCase
         $this->assertSame('novo-email@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
 
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertSentTo($user, VerifyEmailQueued::class);
     }
 
     public function test_cpf_nao_e_alteravel(): void

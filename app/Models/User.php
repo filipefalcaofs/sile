@@ -25,6 +25,13 @@ class User extends Authenticatable implements MustVerifyEmail
     use CausesActivity, HasAuditoria, HasFactory, HasRoles, Notifiable;
 
     /**
+     * Papéis e permissões (spatie) são um conceito único da aplicação,
+     * sempre no guard web — independente do guard de sessão usado para
+     * autenticar (web no portal, gestao no console).
+     */
+    protected string $guard_name = 'web';
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -50,6 +57,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $notification = new VerifyEmailQueued;
         $notification->emailLogId = $log->id;
+        $notification->freezeUrlFor($this);
         $this->notify($notification);
     }
 
@@ -65,6 +73,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $notification = new ResetPasswordQueued($token);
         $notification->emailLogId = $log->id;
+        $notification->freezeUrlFor($this);
         $this->notify($notification);
     }
 

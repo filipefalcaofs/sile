@@ -8,12 +8,13 @@ import { SidebarProvider, useSidebar } from '@/contexts/sidebar-context';
 interface AppShellProps {
     groups: SidebarGroup[];
     homeHref: string;
+    logoutHref?: string;
     subtitle?: string;
     variant?: SidebarVariant;
     children: ReactNode;
 }
 
-function ShellContent({ groups, homeHref, subtitle, variant, children }: AppShellProps) {
+function ShellContent({ groups, homeHref, logoutHref, subtitle, variant, children }: AppShellProps) {
     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
     return (
@@ -27,8 +28,8 @@ function ShellContent({ groups, homeHref, subtitle, variant, children }: AppShel
                     isExpanded || isHovered ? 'lg:ml-[290px]' : 'lg:ml-[90px]'
                 } ${isMobileOpen ? 'ml-0' : ''}`}
             >
-                <AppHeader homeHref={homeHref} />
-                <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">{children}</div>
+                <AppHeader homeHref={homeHref} logoutHref={logoutHref ?? '/portal/logout'} />
+                <div id="conteudo" className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">{children}</div>
             </div>
         </div>
     );
@@ -46,3 +47,4 @@ export default function AppShell(props: AppShellProps) {
         </SidebarProvider>
     );
 }
+

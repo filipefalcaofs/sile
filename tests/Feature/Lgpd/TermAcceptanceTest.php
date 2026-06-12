@@ -155,11 +155,13 @@ class TermAcceptanceTest extends TestCase
         $this->seedRolesAndTerm();
 
         $administrador = User::factory()->administrador()->create();
-        $this->actingAs($administrador)
+        $this->actingAs($administrador, 'gestao')
             ->get('/gestao')
             ->assertRedirect(route('portal.termo-lgpd.show'));
 
+        // Defesa em profundidade: sessão da gestão sem a permissão (ex.:
+        // papel rebaixado após o login) é barrada antes do gate do termo.
         $cidadao = User::factory()->cidadao()->create();
-        $this->actingAs($cidadao)->get('/gestao')->assertForbidden();
+        $this->actingAs($cidadao, 'gestao')->get('/gestao')->assertForbidden();
     }
 }

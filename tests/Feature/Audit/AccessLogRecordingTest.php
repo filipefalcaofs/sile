@@ -18,7 +18,7 @@ class AccessLogRecordingTest extends TestCase
         $user = User::factory()->create();
 
         $this->post('/portal/login', [
-            'email' => $user->email,
+            'cpf' => $user->cpf,
             'password' => 'password',
         ]);
 
@@ -38,7 +38,7 @@ class AccessLogRecordingTest extends TestCase
         $user = User::factory()->create();
 
         $this->post('/portal/login', [
-            'email' => $user->email,
+            'cpf' => $user->cpf,
             'password' => 'senha-errada',
         ]);
 
@@ -51,18 +51,19 @@ class AccessLogRecordingTest extends TestCase
         ]);
     }
 
-    public function test_falha_de_login_registra_tentativa_com_email_desconhecido(): void
+    public function test_falha_de_login_registra_tentativa_com_cpf_desconhecido(): void
     {
         $this->post('/portal/login', [
-            'email' => 'nao-existe@example.com',
+            'cpf' => '529.982.247-25',
             'password' => 'x',
         ]);
 
         $this->assertGuest();
 
+        // Sem conta correspondente, a trilha guarda o CPF digitado (dígitos).
         $this->assertDatabaseHas('access_logs', [
             'user_id' => null,
-            'email' => 'nao-existe@example.com',
+            'email' => '52998224725',
             'event' => 'falha',
         ]);
     }
@@ -85,13 +86,13 @@ class AccessLogRecordingTest extends TestCase
 
         foreach (range(1, 5) as $tentativa) {
             $this->post('/portal/login', [
-                'email' => $user->email,
+                'cpf' => $user->cpf,
                 'password' => 'senha-errada',
             ]);
         }
 
         $this->post('/portal/login', [
-            'email' => $user->email,
+            'cpf' => $user->cpf,
             'password' => 'senha-errada',
         ]);
 

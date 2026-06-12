@@ -43,7 +43,7 @@ class GestaoDashboardKpisTest extends TestCase
         AccessLog::factory()->for($ativo)->create(['created_at' => now()->subDays(30)]);
         AccessLog::factory()->for($ativo)->create(['event' => 'falha', 'created_at' => now()]);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -64,7 +64,7 @@ class GestaoDashboardKpisTest extends TestCase
 
         Cnae::factory()->create();
 
-        $this->actingAs($analista)
+        $this->actingAs($analista, 'gestao')
             ->get('/gestao')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page

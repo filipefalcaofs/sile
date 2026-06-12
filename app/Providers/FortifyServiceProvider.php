@@ -33,19 +33,24 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Login único, dois ambientes (HU-002 CA-01): o destino pós-login é
-        // decidido por perfil — quem pode acessar a gestão vai para ela.
+        // Ambientes com sessões independentes (decisão 2026-06-12): o login
+        // do portal leva sempre ao portal — a gestão exige o login interno
+        // (/gestao/login, guard gestao). URL pretendida da gestão é
+        // descartada para ninguém aterrissar no login interno sem querer.
         $this->app->instance(LoginResponse::class, new class implements LoginResponse
         {
             public function toResponse($request)
             {
-                $user = $request->user();
+                $intendedPath = (string) parse_url(
+                    (string) $request->session()->get('url.intended', ''),
+                    PHP_URL_PATH,
+                );
 
-                $target = $user->can('acessar-gestao')
-                    ? route('gestao.dashboard')
-                    : route('portal.dashboard');
+                if ($intendedPath === '/gestao' || str_starts_with($intendedPath, '/gestao/')) {
+                    $request->session()->forget('url.intended');
+                }
 
-                return redirect()->intended($target);
+                return redirect()->intended(route('portal.dashboard'));
             }
         });
 
@@ -61,6 +66,17 @@ class FortifyServiceProvider extends ServiceProvider
                         $this->throttleKey($request),
                         (int) Settings::get('security.login.max_attempts'),
                     );
+                }
+
+                /**
+                 * CPF normalizado para dígitos: alternar máscara não pode
+                 * criar chaves de throttle diferentes para a mesma conta.
+                 */
+                protected function throttleKey(Request $request): string
+                {
+                    $username = preg_replace('/\D/', '', (string) $request->input(Fortify::username()));
+
+                    return Str::transliterate($username.'|'.$request->ip());
                 }
             };
         });
@@ -101,11 +117,20 @@ class FortifyServiceProvider extends ServiceProvider
             'token' => $request->route('token'),
         ]));
 
-        // HU-012: conta inativada não autentica. Retorno null preserva o fluxo
-        // padrão (evento Failed -> access_log 'falha') sem revelar o estado da
-        // conta; a mensagem de inatividade só aparece com credenciais corretas.
+        // Rota GET registrada pelo Fortify independentemente de feature:
+        // sem a view, ações futuras protegidas por password.confirm dariam
+        // erro 500 em vez de pedir a senha.
+        Fortify::confirmPasswordView(fn () => Inertia::render('auth/confirm-password'));
+
+        // Login do cidadão por CPF (normalizado para dígitos — o form envia
+        // com máscara). HU-012: conta inativada não autentica; retorno null
+        // preserva o fluxo padrão (evento Failed -> access_log 'falha') sem
+        // revelar o estado da conta — a mensagem de inatividade só aparece
+        // com credenciais corretas.
         Fortify::authenticateUsing(function (Request $request) {
-            $user = User::query()->where('email', $request->email)->first();
+            $cpf = preg_replace('/\D/', '', (string) $request->input('cpf'));
+
+            $user = User::query()->where('cpf', $cpf)->first();
 
             if (! $user || ! Hash::check($request->password, $user->password)) {
                 return null;
@@ -122,7 +147,7 @@ class FortifyServiceProvider extends ServiceProvider
                 ]);
 
                 throw ValidationException::withMessages([
-                    'email' => __('Sua conta está inativa. Procure o administrador do sistema.'),
+                    'cpf' => __('Sua conta está inativa. Procure o administrador do sistema.'),
                 ]);
             }
 
@@ -130,7 +155,8 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower((string) $request->input(Fortify::username())).'|'.$request->ip());
+            $username = preg_replace('/\D/', '', (string) $request->input(Fortify::username()));
+            $throttleKey = Str::transliterate($username.'|'.$request->ip());
 
             return Limit::perMinute((int) Settings::get('security.login.max_attempts'))->by($throttleKey);
         });

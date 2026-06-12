@@ -62,7 +62,7 @@ export default function Password({ passwordRules }: PasswordProps) {
                     </p>
                 </div>
 
-                <Form action="/portal/user/password" method="put" errorBag="updatePassword" resetOnSuccess>
+                <Form action="/settings/password" method="put" errorBag="updatePassword" resetOnSuccess>
                     {({ errors, processing, recentlySuccessful }) => (
                         <div className="flex max-w-md flex-col gap-5">
                             <PasswordField

@@ -45,7 +45,9 @@ return [
     |
     */
 
-    'username' => 'email',
+    // Cidadão autentica com CPF (decisão 2026-06-12); a recuperação de
+    // senha permanece por e-mail ('email' abaixo é o campo do reset).
+    'username' => 'cpf',
 
     'email' => 'email',
 
