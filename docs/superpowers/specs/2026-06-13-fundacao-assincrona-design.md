@@ -14,7 +14,7 @@ Ativar a infraestrutura assíncrona que o Laravel 13 entrega pronta e que ainda 
 - `QUEUE_CONNECTION=redis`, `CACHE_STORE=redis`, `SESSION_DRIVER=redis` (predis); `docker-compose.yml` de dev tem serviço `redis`.
 - `composer dev` roda `serve` + `queue:listen` + `pail` + `vite` — **sem scheduler**.
 - Sem `withSchedule()` em `bootstrap/app.php`; `routes/console.php` só tem `inspire`.
-- Faltam migrations `failed_jobs` e `job_batches` (só existe `jobs`).
+- As migrations `jobs`, `failed_jobs` e `job_batches` JÁ existem (`database/migrations/0001_01_01_000002_create_jobs_table.php`, padrão do Laravel 11+) — não há migration a criar; os jobs apenas as USAM.
 - `AccessLog` (`app/Models/AccessLog.php`): sem pruning; `const UPDATED_AT = null`, tem `created_at`. NÃO usa `HasAuditoria` (já É auditoria de acesso).
 - `BrasilApiCnpjLookup` já faz `->retry(retries, 200, throw: false)` + `timeout`/`connectTimeout`, mas os valores vêm de **constantes** em `config/sile.php` (`sile.integrations.cnpj_lookup.*`), não de parâmetros.
 - `RedesimImportService->import(path)` e `CnaeImportService` existem e são síncronos; comando `redesim:importar` despacha o serviço direto. Não há comando de CNAE (carga via `CnaeSeeder`).
@@ -22,7 +22,7 @@ Ativar a infraestrutura assíncrona que o Laravel 13 entrega pronta e que ainda 
 
 ## Decisões travadas
 
-1. **Driver de fila:** manter **Redis** (já configurado; zero dependência nova). `failed_jobs` sempre grava no banco — adicionar as migrations.
+1. **Driver de fila:** manter **Redis** (já configurado; zero dependência nova). `failed_jobs` sempre grava no banco (driver `database-uuids`) — as migrations já existem (não criar).
 2. **Primeira rotina real do scheduler = pruning de retenção de `access_logs`** — mata dois critérios (scheduler real + retenção LGPD) sem rotina artificial.
 3. **Trilha de auditoria de decisões (`activity_log`/RN-002) NÃO é podada** nesta fase — retenção longa por compliance; política completa fica na Fase 12.
 4. **Produção documentada**, não construída: `docs/deploy/producao-assincrona.md` com cron `schedule:run` + `queue:work`/Horizon. O stack Portainer entra quando o deploy for montado.
@@ -38,7 +38,7 @@ Ativar a infraestrutura assíncrona que o Laravel 13 entrega pronta e que ainda 
 - **Teste:** rotina registrada no schedule; pruning remove logs além da retenção e preserva activity_log; alterar o parâmetro muda a janela.
 
 ### U2 — Jobs em fila com retry/timeout/relatório
-- Migrations `failed_jobs` e `job_batches`.
+- Tabelas de fila `failed_jobs` e `job_batches`: JÁ existem (migration padrão `0001_01_01_000002_create_jobs_table.php`) — os jobs apenas as usam; nenhuma migration nova.
 - `ImportRedesimJob` envelopa `RedesimImportService` com `$tries`, `$timeout`, `backoff()`; o comando `redesim:importar` ganha flag `--queue` para despachar o job (modo síncrono preservado para homologação local).
 - `ImportCnaeJob` envelopa `CnaeImportService`; novo comando `cnae:importar {arquivo} {--queue}` dá ao admin um caminho assíncrono de reimportação oficial (hoje só via re-seed).
 - Jobs falhos visíveis em `failed_jobs` e reprocessáveis (`queue:retry`); auditoria do resultado preservada (o serviço já audita).

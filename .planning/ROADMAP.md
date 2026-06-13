@@ -135,7 +135,14 @@ Plans:
   3. Rotas públicas têm rate limiting (`throttle`) com limites parametrizados via HU-014 — consulta de CNPJ hoje; padrão estabelecido para protocolo (HU-069) e consulta prévia (EP07).
   4. Access_logs têm retenção parametrizada aplicada por pruning agendado (`MassPrunable`) — sem crescimento ilimitado; a trilha de auditoria de decisões (RN-002) fica FORA do pruning (retenção longa por compliance; política completa na Fase 12).
   5. HTTP client de integrações com retry/backoff parametrizado (lookup CNPJ hoje; padrão herdado pelos adaptadores do EP13).
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 03.1-01-PLAN.md — Fundação: 5 parâmetros novos (retenção, throttle, retries/timeout/backoff) + fallbacks em config/sile.php + testes de seeder (wave 1)
+- [ ] 03.1-02-PLAN.md — Jobs REDESIM/CNAE com retry/timeout/backoff, flag --queue, comando cnae:importar e visibilidade de failed_jobs (wave 1)
+- [ ] 03.1-03-PLAN.md — Scheduler ativo (composer dev) + pruning diário de access_logs com retenção parametrizada; activity_log fora (wave 2)
+- [ ] 03.1-04-PLAN.md — Throttle parametrizado na consulta de CNPJ + HTTP client com retries/timeout/backoff parametrizados (wave 2)
+- [ ] 03.1-05-PLAN.md — Documentação de produção assíncrona + verificação integral fresca da fase (wave 3)
 
 Nota: fase originada do levantamento "Laravel 13 — recursos prontos não usados" (2026-06-12). Demais recursos identificados ficaram anotados nas fases consumidoras: Storage/URLs assinadas (Fases 8 e 10), atomic locks e eventos de domínio (Fase 9), canal database de notificações (Fase 11), `Concurrency`/`Http::pool`/`Queue::route()` (Fase 13).
 
@@ -376,6 +383,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 1. Identidade, Acesso e Auditoria Transversal | 9/9 | Complete | 2026-06-10 |
 | 2. Administração Base | 0/8 | Planned | - |
 | 3. Cadastro Empresarial | 9/9 | Complete | 2026-06-13 |
+| 3.1. Fundação assíncrona — scheduler, jobs e retenção (INSERTED) | 0/5 | Planned | - |
 | 3.2. Autenticação GOV.BR no portal (INSERTED) | 1/1 | Implemented — aguardando credenciamento p/ validar staging | - |
 | 4. Georreferenciamento e Território | 0/TBD | Not started | - |
 | 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |
