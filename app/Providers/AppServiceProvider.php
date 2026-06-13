@@ -8,6 +8,8 @@ use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjLookup;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\NominatimGeocoder;
+use App\Services\Geo\PostgisSpatialRepository;
+use App\Services\Geo\SpatialRepository;
 use App\Services\GovBr\GovBrIdTokenValidator;
 use App\Services\GovBr\GovBrProvider;
 use App\Support\Representation\CurrentRepresentation;
@@ -37,6 +39,11 @@ class AppServiceProvider extends ServiceProvider
         // binding por self-host ou pela base geográfica da SEDUR sem tocar
         // controllers ou telas (HU-029).
         $this->app->bind(Geocoder::class, NominatimGeocoder::class);
+
+        // SQL espacial real (PostGIS) atrás de contrato (HU-031 a HU-035): o
+        // TerritoryService e o motor da Fase 5 dependem da interface, não do
+        // SQL — os testes dos consumidores usam um fake em memória.
+        $this->app->bind(SpatialRepository::class, PostgisSpatialRepository::class);
     }
 
     /**
