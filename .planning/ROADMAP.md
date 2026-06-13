@@ -38,7 +38,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 2.3 (INSERTED): Segregação de rotas portal × retaguarda** — portal público do cidadão sob /portal/* (landing, login, cadastro, painel) e login interno próprio da retaguarda em /gestao/login; redirecionamento de guests por contexto (padrão Laravel) — concluída em 2026-06-10 (201/201 testes, pint/typecheck/build verdes, screenshots validados)
 - [x] **Phase 2.4 (INSERTED): Template SaaS de listagens e dashboard** — biblioteca de componentes reutilizáveis (DataTable tipada com ordenação/filtros/busca/page size, KPI cards, PageHeader, Card, Skeleton, Avatar, ProgressBar, TableAction) aplicada às listagens reais da gestão e KPIs reais no dashboard; re-tematização "Console SEDUR" (sidebar escura permanente na gestão, KPIs com wells coloridos, thead com fundo, densidade compacta) — concluída em 2026-06-11 (209/209 testes com 8 novos, pint/typecheck/build verdes, screenshots validados claro/escuro/mobile; corrige busca case-sensitive no PostgreSQL)
 - [x] **Phase 3: Cadastro Empresarial** — Empresas, CNPJ e vínculos com CNAEs (EP03) — concluída em 2026-06-13 (verificação: passed; suíte 367/367, grupo Companies 83/83; smoke E2E navegável com chamada REAL à BrasilAPI e import REDESIM idempotente)
-- [ ] **Phase 3.1 (INSERTED): Fundação assíncrona — scheduler, jobs e retenção** — ativa capacidades prontas do Laravel 13 ainda não usadas (levantamento 2026-06-12): scheduler com primeira rotina real, importações REDESIM/CNAE como jobs em fila com retry e relatório, throttle parametrizado nas rotas públicas, retenção de access_logs via pruning agendado e retry/backoff no HTTP client — infraestrutura habilitadora para prazo BAP (HU-134), SLA (HU-144/147) e integrações (HU-146)
+- [x] **Phase 3.1 (INSERTED): Fundação assíncrona — scheduler, jobs e retenção** — ativa capacidades prontas do Laravel 13 ainda não usadas (levantamento 2026-06-12): scheduler com primeira rotina real, importações REDESIM/CNAE como jobs em fila com retry e relatório, throttle parametrizado nas rotas públicas, retenção de access_logs via pruning agendado e retry/backoff no HTTP client — infraestrutura habilitadora para prazo BAP (HU-134), SLA (HU-144/147) e integrações (HU-146) — concluída em 2026-06-13 (verificação: passed 5/5; suíte 385/385; produção documentada em docs/deploy/producao-assincrona.md)
 - [ ] **Phase 3.2 (INSERTED): Autenticação GOV.BR no portal** — Login Único (OAuth/OIDC, Authorization Code + PKCE S256) convivendo com o login local: vínculo determinístico por CPF, criação de conta real no primeiro acesso, nível de confiabilidade parametrizável, credenciais sensíveis administráveis (HU-014) e toggle `features.govbr_login` (HU-151); sem credenciamento da SEDUR a validação contra staging real permanece bloqueada — spec `docs/superpowers/specs/2026-06-12-autenticacao-govbr-design.md`
 - [ ] **Phase 4: Georreferenciamento e Território** — Geocodificação, zona, via, lote, bairro e restrições (EP04)
 - [ ] **Phase 5: Motor de Regras da LOUOS** — Quadros 7/10/11/11A como dados versionados + motor de enquadramento (EP05 + HU-015 a HU-018)
@@ -138,11 +138,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 03.1-01-PLAN.md — Fundação: 5 parâmetros novos (retenção, throttle, retries/timeout/backoff) + fallbacks em config/sile.php + testes de seeder (wave 1)
-- [ ] 03.1-02-PLAN.md — Jobs REDESIM/CNAE com retry/timeout/backoff, flag --queue, comando cnae:importar e visibilidade de failed_jobs (wave 1)
-- [ ] 03.1-03-PLAN.md — Scheduler ativo (composer dev) + pruning diário de access_logs com retenção parametrizada; activity_log fora (wave 2)
-- [ ] 03.1-04-PLAN.md — Throttle parametrizado na consulta de CNPJ + HTTP client com retries/timeout/backoff parametrizados (wave 2)
-- [ ] 03.1-05-PLAN.md — Documentação de produção assíncrona + verificação integral fresca da fase (wave 3)
+- [x] 03.1-01-PLAN.md — Fundação: 5 parâmetros novos (retenção, throttle, retries/timeout/backoff) + fallbacks em config/sile.php + testes de seeder (wave 1) ✓ 2026-06-13
+- [x] 03.1-02-PLAN.md — Jobs REDESIM/CNAE com retry/timeout/backoff, flag --queue, comando cnae:importar e visibilidade de failed_jobs (wave 1) ✓ 2026-06-13
+- [x] 03.1-03-PLAN.md — Scheduler ativo (composer dev) + pruning diário de access_logs com retenção parametrizada; activity_log fora (wave 2) ✓ 2026-06-13
+- [x] 03.1-04-PLAN.md — Throttle parametrizado na consulta de CNPJ + HTTP client com retries/timeout/backoff parametrizados (wave 2) ✓ 2026-06-13
+- [x] 03.1-05-PLAN.md — Documentação de produção assíncrona + verificação integral fresca da fase (wave 3) ✓ 2026-06-13
 
 Nota: fase originada do levantamento "Laravel 13 — recursos prontos não usados" (2026-06-12). Demais recursos identificados ficaram anotados nas fases consumidoras: Storage/URLs assinadas (Fases 8 e 10), atomic locks e eventos de domínio (Fase 9), canal database de notificações (Fase 11), `Concurrency`/`Http::pool`/`Queue::route()` (Fase 13).
 
@@ -383,7 +383,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 1. Identidade, Acesso e Auditoria Transversal | 9/9 | Complete | 2026-06-10 |
 | 2. Administração Base | 0/8 | Planned | - |
 | 3. Cadastro Empresarial | 9/9 | Complete | 2026-06-13 |
-| 3.1. Fundação assíncrona — scheduler, jobs e retenção (INSERTED) | 0/5 | Planned | - |
+| 3.1. Fundação assíncrona — scheduler, jobs e retenção (INSERTED) | 5/5 | Complete | 2026-06-13 |
 | 3.2. Autenticação GOV.BR no portal (INSERTED) | 1/1 | Implemented — aguardando credenciamento p/ validar staging | - |
 | 4. Georreferenciamento e Território | 0/TBD | Not started | - |
 | 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |

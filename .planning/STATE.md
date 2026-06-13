@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed Phase 3 (Cadastro Empresarial) — 03-09 fechou a fase: CompanySeeder (cidadão dev + empresa manual Magazine Luiza + empresas REDESIM por import real), verificação integral fresca (suíte 367/367, pint/typecheck/build verdes, migrate:fresh --seed no pgsql dev, redesim:importar idempotente 2x) e smoke E2E navegável no browser (login cidadão → Minhas empresas com badges manual/REDESIM → detalhe com CNPJ imutável → cadastro com lookup VIVO preenchendo dados reais do Itaú via BrasilAPI). gsd-verifier: status passed (4/4 success criteria, 8/8 HUs com evidência arquivo+teste)
-last_updated: "2026-06-13T14:45:00.000Z"
-last_activity: 2026-06-13 -- Phase 3 COMPLETE (verificação passed; smoke E2E com BrasilAPI real)
+stopped_at: Completed Phase 3.1 (Fundação assíncrona) — scheduler ativo (composer dev com schedule:work) + primeira rotina real (pruning diário de access_logs via MassPrunable, janela parametrizada retencao.access_logs.dias, idempotente withoutOverlapping/onOneServer e AUDITADA via listener ModelsPruned); jobs ImportRedesimJob/ImportCnaeJob (tries/timeout/backoff + failed() auditado) com flag --queue e comando cnae:importar, falha visível em failed_jobs; throttle parametrizado (cnpj-lookup) na rota consultar-cnpj; HTTP client com retries/timeout/backoff parametrizados; 5 parâmetros novos (catálogo 25); produção documentada em docs/deploy/producao-assincrona.md. gsd-verifier: passed 5/5. Suíte 385/385, pint/typecheck/build verdes, migrate:fresh --seed ok.
+last_updated: "2026-06-13T19:30:00.000Z"
+last_activity: 2026-06-13 -- Phase 3.1 COMPLETE (verificação passed; infra assíncrona ativa)
 progress:
   total_phases: 15
-  completed_phases: 3
-  total_plans: 26
-  completed_plans: 26
-  percent: 20
+  completed_phases: 4
+  total_plans: 31
+  completed_plans: 31
+  percent: 23
 ---
 
 # Project State
@@ -21,18 +21,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-09)
 
 **Core value:** Responder a viabilidade locacional de atividade econômica de forma automática, correta e auditável — fluxo expresso quando a lei permite, fundamentação legal em toda decisão.
-**Current focus:** Phase 3 concluída — próxima: Phase 3.1 (fundação assíncrona) ou Phase 4 (georreferenciamento)
+**Current focus:** Phases 3 e 3.1 concluídas — próxima acionável: Phase 4 (Georreferenciamento e Território). Phase 3.2 (GOV.BR) implementada e desligada, aguardando credenciamento da SEDUR.
 
 ## Current Position
 
-Phase: 3 (Cadastro Empresarial) — COMPLETE (verificação passed em 2026-06-13)
-Plan: 9 of 9 (todos concluídos)
-Status: Fase 3 fechada; pronta para a próxima fase
-Last activity: 2026-06-13 -- Phase 3 COMPLETE (verificação passed; smoke E2E com BrasilAPI real)
+Phase: 3.1 (Fundação assíncrona) — COMPLETE (verificação passed em 2026-06-13)
+Plan: 5 of 5 (todos concluídos)
+Status: Fase 3.1 fechada; próxima é a Fase 4 (precisa de brainstorming — provedor de geocodificação, base GIS, biblioteca de mapa)
+Last activity: 2026-06-13 -- Phase 3.1 COMPLETE (verificação passed; infra assíncrona ativa)
 
-Progress: [██░░░░░░░░] 20% (3/15 fases; 26 planos executados)
+Progress: [██▍░░░░░░░] 23% (4/15 fases; 31 planos executados)
 
-Next step: `/gsd-plan-phase 3.1` (fundação assíncrona — scheduler/jobs/retenção, INSERTED) ou `/gsd-plan-phase 4` (georreferenciamento). A Fase 3.2 (GOV.BR) já está implementada e desligada, aguardando credenciamento da SEDUR.
+Next step: `/gsd-plan-phase 4` (Georreferenciamento) — exige brainstorming antes (decisões: geocodificação Nominatim/OSM, base GIS SIGIS/CA2000 pendente de acesso SEDUR, biblioteca de mapa vs. zero-dep). A Fase 3.2 (GOV.BR) segue bloqueada externamente.
 
 ### Fase 2.1 (INSERTED) — Template TailAdmin (concluída 2026-06-10)
 
