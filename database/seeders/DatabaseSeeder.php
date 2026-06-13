@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ParameterSeeder::class,
             CnaeSeeder::class,
             DevAdminSeeder::class,
+            CompanySeeder::class,
         ]);
     }
 }
