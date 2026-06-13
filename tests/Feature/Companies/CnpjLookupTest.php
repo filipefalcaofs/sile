@@ -106,8 +106,9 @@ class CnpjLookupTest extends TestCase
     {
         // Primeira resposta falha (indisponibilidade), a segunda sucede:
         // se a falha tivesse sido cacheada, a 2ª chamada nunca chegaria à rede.
-        // O provider faz até 3 tentativas (retries=2) antes de desistir, então
-        // a 1ª chamada esgota 3 conexões falhas; a 2ª encontra o sucesso.
+        // Http::retry(N) faz N tentativas TOTAIS (retries=2 → 2 por chamada):
+        // a 1ª chamada esgota 2 conexões falhas e lança; a 2ª consome a 3ª
+        // falha e encontra o sucesso na 4ª resposta da sequência.
         Http::fake([
             '*/00000000000191' => Http::sequence()
                 ->pushFailedConnection()
