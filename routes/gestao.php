@@ -4,6 +4,7 @@ use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\DashboardController;
 use App\Http\Controllers\Gestao\EmailLogController;
+use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\RoleController;
@@ -67,5 +68,12 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('parametros', [ParameterController::class, 'index'])->name('parametros.index');
             Route::get('parametros/{parameter:key}/historico', [ParameterController::class, 'history'])->name('parametros.historico');
             Route::put('parametros/{parameter:key}', [ParameterController::class, 'update'])->name('parametros.update');
+        });
+
+        // Território (HU-029+): geocodificação atrás de permissão própria e
+        // throttle parametrizado. O gate é este middleware permission: (a
+        // permissão vive no guard web e resolve para o usuário do guard gestao).
+        Route::middleware('permission:consultar-territorio')->prefix('territorio')->name('territorio.')->group(function () {
+            Route::post('geocodificar', GeocodeController::class)->middleware('throttle:geocoding')->name('geocodificar');
         });
     });

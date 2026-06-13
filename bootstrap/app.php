@@ -56,7 +56,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // explicitamente o pede (Accept: application/json / XHR).
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*')
-                || ($request->is('portal/empresas/consultar-cnpj') && $request->expectsJson()),
+                || ($request->is('portal/empresas/consultar-cnpj') && $request->expectsJson())
+                || ($request->is('gestao/territorio/*') && $request->expectsJson()),
         );
 
         // CA-04 transversal: todo 403 de autorização é auditado num ponto único.
