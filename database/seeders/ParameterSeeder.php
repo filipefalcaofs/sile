@@ -179,6 +179,41 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'in:bronze,prata,ouro'],
                 'description' => 'Nível mínimo de confiabilidade da conta GOV.BR aceito no login (bronze, prata ou ouro)',
             ],
+            'retencao.access_logs.dias' => [
+                'group' => 'retencao',
+                'type' => 'integer',
+                'default_value' => '365',
+                'validation_rules' => ['required', 'integer', 'min:30', 'max:3650'],
+                'description' => 'Dias de retenção do histórico de acessos antes da limpeza automática (LGPD)',
+            ],
+            'seguranca.throttle.cnpj_lookup.por_minuto' => [
+                'group' => 'seguranca',
+                'type' => 'integer',
+                'default_value' => '30',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
+                'description' => 'Limite de consultas de CNPJ por minuto por usuário no portal',
+            ],
+            'integrations.cnpj_lookup.retries' => [
+                'group' => 'integracoes',
+                'type' => 'integer',
+                'default_value' => '2',
+                'validation_rules' => ['required', 'integer', 'min:0', 'max:5'],
+                'description' => 'Número de novas tentativas na consulta de CNPJ quando a integração falha',
+            ],
+            'integrations.cnpj_lookup.timeout' => [
+                'group' => 'integracoes',
+                'type' => 'integer',
+                'default_value' => '8',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:30'],
+                'description' => 'Tempo limite em segundos para a consulta de CNPJ',
+            ],
+            'integrations.cnpj_lookup.backoff_ms' => [
+                'group' => 'integracoes',
+                'type' => 'integer',
+                'default_value' => '200',
+                'validation_rules' => ['required', 'integer', 'min:0', 'max:5000'],
+                'description' => 'Intervalo em milissegundos entre as tentativas de consulta de CNPJ',
+            ],
         ];
     }
 }

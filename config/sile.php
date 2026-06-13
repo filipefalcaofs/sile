@@ -23,6 +23,15 @@ return [
         'cnpj_lookup' => true,
         'govbr_login' => false,
     ],
+    // Chaves pt-BR (retencao.*, seguranca.*) espelham os parâmetros HU-014 de
+    // mesmo nome — Settings::get lê config("sile.{chave}") no fallback. São
+    // distintas do bloco `security` (inglês): decisão travada da Fase 3.1.
+    'retencao' => [
+        'access_logs' => ['dias' => 365],
+    ],
+    'seguranca' => [
+        'throttle' => ['cnpj_lookup' => ['por_minuto' => 30]],
+    ],
     'integrations' => [
         // Constantes técnicas (timeout/retries/cache_ttl) ficam SÓ aqui,
         // nunca no registry — precedente [02-02]. base_url é parametrizável.
@@ -30,6 +39,7 @@ return [
             'base_url' => 'https://brasilapi.com.br/api/cnpj/v1',
             'timeout' => 8,
             'retries' => 2,
+            'backoff_ms' => 200,
             'cache_ttl' => 86400,
         ],
         'govbr' => [
