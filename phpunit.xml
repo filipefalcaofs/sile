@@ -23,10 +23,10 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <!-- A suíte roda em SQLite :memory: (rápido). O grupo @group postgis
-             NÃO usa este default: o PostgisTestCase aponta a conexão para
-             pgsql_testing (lê DB_TEST_*), exigindo o container PostGIS de pé.
-             Rodar com: php artisan test --group postgis -->
+        <!-- A suíte roda em SQLite :memory: (rápido). O grupo postgis NÃO usa
+             este default: o PostgisTestCase aponta a conexão para pgsql_testing
+             (lê DB_TEST_*), exigindo o container PostGIS de pé. Execute o grupo
+             com "php artisan test" filtrando pelo group postgis. -->
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
