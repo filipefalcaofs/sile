@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(20, Parameter::query()->count());
+        $this->assertSame(25, Parameter::query()->count());
         $this->assertSame(
-            ['features', 'integracoes', 'seguranca', 'ui'],
+            ['features', 'integracoes', 'retencao', 'seguranca', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -58,6 +58,52 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('integer', $perPage->type);
         $this->assertSame('15', $perPage->default_value);
         $this->assertSame(['required', 'integer', 'min:5', 'max:100'], $perPage->validation_rules);
+    }
+
+    public function test_seeder_registra_parametros_da_fundacao_assincrona(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $retencao = Parameter::query()->where('key', 'retencao.access_logs.dias')->first();
+
+        $this->assertNotNull($retencao);
+        $this->assertSame('retencao', $retencao->group);
+        $this->assertSame('integer', $retencao->type);
+        $this->assertSame('365', $retencao->default_value);
+        $this->assertSame(['required', 'integer', 'min:30', 'max:3650'], $retencao->validation_rules);
+        $this->assertNull($retencao->value);
+
+        $throttle = Parameter::query()->where('key', 'seguranca.throttle.cnpj_lookup.por_minuto')->first();
+
+        $this->assertNotNull($throttle);
+        $this->assertSame('seguranca', $throttle->group);
+        $this->assertSame('integer', $throttle->type);
+        $this->assertSame('30', $throttle->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $throttle->validation_rules);
+
+        $retries = Parameter::query()->where('key', 'integrations.cnpj_lookup.retries')->first();
+
+        $this->assertNotNull($retries);
+        $this->assertSame('integracoes', $retries->group);
+        $this->assertSame('integer', $retries->type);
+        $this->assertSame('2', $retries->default_value);
+        $this->assertSame(['required', 'integer', 'min:0', 'max:5'], $retries->validation_rules);
+
+        $timeout = Parameter::query()->where('key', 'integrations.cnpj_lookup.timeout')->first();
+
+        $this->assertNotNull($timeout);
+        $this->assertSame('integracoes', $timeout->group);
+        $this->assertSame('integer', $timeout->type);
+        $this->assertSame('8', $timeout->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:30'], $timeout->validation_rules);
+
+        $backoff = Parameter::query()->where('key', 'integrations.cnpj_lookup.backoff_ms')->first();
+
+        $this->assertNotNull($backoff);
+        $this->assertSame('integracoes', $backoff->group);
+        $this->assertSame('integer', $backoff->type);
+        $this->assertSame('200', $backoff->default_value);
+        $this->assertSame(['required', 'integer', 'min:0', 'max:5000'], $backoff->validation_rules);
     }
 
     public function test_seeder_registra_parametros_do_login_govbr(): void
@@ -144,6 +190,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(20, Parameter::query()->count());
+        $this->assertSame(25, Parameter::query()->count());
     }
 }
