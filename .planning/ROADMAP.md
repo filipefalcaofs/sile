@@ -172,9 +172,21 @@ Nota: feature entra completa e DESLIGADA por default — o credenciamento da SED
   3. Restrições territoriais incidentes são identificadas e as camadas geográficas são consultáveis no mapa.
   4. Localização do imóvel é validada (confirmada ou ajustada pelo usuário) antes de prosseguir nos fluxos de viabilidade; polígono comparado ao lote oficial com alerta por baixa sobreposição (HU-037 RN-004).
   5. Camadas geográficas são **dados versionados com vigência** (HU-036 RN-004): decisões registram a versão da camada consultada e a reprodução usa a versão da época — mesma disciplina do versionamento de regras.
-**Plans**: TBD
+**Plans**: 8 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Fundação PostGIS: migrations geo_layers/geo_features driver-aware, models/enums, infra de teste PostGIS (wave 1)
+- [ ] 04-02-PLAN.md — Catálogo de parâmetros (25→29) + permissão consultar-territorio (wave 1)
+- [ ] 04-03-PLAN.md — HU-029: contrato Geocoder + NominatimGeocoder + throttle/retry + endpoint auditado (wave 2)
+- [ ] 04-04-PLAN.md — HU-036: camadas versionadas, comando geo:importar auditado + carga real GeoSalvador (bairro/via/restrição); zona/lote pendente_fonte (wave 2)
+- [ ] 04-05-PLAN.md — HU-031–035: TerritoryService + SpatialRepository PostGIS (bairro/via/restrição reais; zona/lote indisponível) (wave 3)
+- [ ] 04-06-PLAN.md — HU-030/036/037: backend do mapa (página + identificar + validar-localizacao com sobreposição parametrizada) (wave 4)
+- [ ] 04-07-PLAN.md — HU-030/036/037 UI: mapa Leaflet reutilizável + página de consulta territorial (wave 5)
+- [ ] 04-08-PLAN.md — Fechamento: verificação integral + evidência real (Nominatim + consulta espacial sobre dado oficial) (wave 6)
 
 Nota: a geocodificação (Nominatim/OSM) e a lógica de identificação operam sobre camadas carregadas de dados oficiais da LOUOS; a base GIS municipal oficial é o **SIGIS** com migração **S69 → CA 2000** (reunião SEDUR 2026-06-11) — a integração viva é a HU-107 (Fase 13). Polígono de 4 pontos validado no formulário Regin (HU-062).
+
+**Escopo honesto da fase (sem fachada — confirmado pela pesquisa 2026-06-13):** entregáveis com dado público REAL do GeoSalvador — **bairro** (HU-034), **eixo viário** (HU-032) e **restrições ambientais** (HU-035). **BLOQUEADAS pendente SEDUR** (sem fonte vetorial pública): **zona urbanística LOUOS** (HU-031, só PDF) e **lote cadastral** (HU-033, SEFAZ restrito) — e por consequência **HU-037 RN-005** (divergência por inscrição imobiliária). A arquitetura (camadas versionadas, TerritoryService, sobreposição, mapa) entra completa e genérica; as camadas bloqueadas são modeladas como `pendente_fonte` (feature_count 0) e comunicadas na UI — nunca polígono inventado. Quando a SEDUR entregar a base, a carga muda, a lógica não.
 
 ### Phase 5: Motor de Regras da LOUOS
 **Goal**: O motor aplica os quadros da LOUOS (7, 10, 11, 11A) de forma parametrizável — regras como dados versionados, nunca código — consolidando resultado com fundamentação legal.
@@ -385,7 +397,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 3. Cadastro Empresarial | 9/9 | Complete | 2026-06-13 |
 | 3.1. Fundação assíncrona — scheduler, jobs e retenção (INSERTED) | 5/5 | Complete | 2026-06-13 |
 | 3.2. Autenticação GOV.BR no portal (INSERTED) | 1/1 | Implemented — aguardando credenciamento p/ validar staging | - |
-| 4. Georreferenciamento e Território | 0/TBD | Not started | - |
+| 4. Georreferenciamento e Território | 0/8 | Planned | - |
 | 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |
 | 6. Classificação de Risco | 0/TBD | Not started | - |
 | 7. Consulta Prévia de Viabilidade | 0/TBD | Not started | - |
