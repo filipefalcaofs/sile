@@ -20,8 +20,8 @@ use Tests\TestCase;
  * de sobreposição; os endpoints identificar e validar-localizacao operam a
  * lógica real e são auditados; tudo protegido pela permissão consultar-territorio
  * (PADRÃO CROSS-GUARD do 04-03 — gate no middleware permission:, FormRequest
- * authorize()=true). A página React nasce no 04-07, por isso assertInertia sem
- * ->component() (precedente 03-04).
+ * authorize()=true). A página React (gestao/territorio/index) foi entregue no
+ * 04-07, então o carregamento verifica também o ->component().
  */
 class TerritoryPageTest extends TestCase
 {
@@ -100,6 +100,7 @@ class TerritoryPageTest extends TestCase
             ->get('/gestao/territorio')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/territorio/index')
                 ->has('camadas')
                 ->where('sobreposicaoMinima', 50)
                 ->has('geocodingEnabled')
