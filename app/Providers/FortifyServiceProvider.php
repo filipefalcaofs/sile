@@ -172,5 +172,13 @@ class FortifyServiceProvider extends ServiceProvider
                 ($credentialId ?: $request->session()->getId()).'|'.$request->ip()
             );
         });
+
+        // Throttle da consulta pública de CNPJ (HU-021) — limite administrável
+        // sem deploy; estabelece o padrão de throttle parametrizado para HU-069/EP07.
+        RateLimiter::for('cnpj-lookup', function (Request $request) {
+            return Limit::perMinute(
+                (int) Settings::get('seguranca.throttle.cnpj_lookup.por_minuto', 30),
+            )->by($request->user()?->id ?: $request->ip());
+        });
     }
 }
