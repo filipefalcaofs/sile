@@ -28,9 +28,22 @@ class BrasilApiCnpjLookup implements CnpjLookup
             (int) config('sile.integrations.cnpj_lookup.cache_ttl', 86400),
             function () use ($baseUrl, $cnpj): CnpjData {
                 try {
-                    $response = Http::timeout((int) config('sile.integrations.cnpj_lookup.timeout', 8))
+                    $response = Http::timeout((int) Settings::get(
+                        'integrations.cnpj_lookup.timeout',
+                        config('sile.integrations.cnpj_lookup.timeout', 8),
+                    ))
                         ->connectTimeout(3)
-                        ->retry((int) config('sile.integrations.cnpj_lookup.retries', 2), 200, throw: false)
+                        ->retry(
+                            (int) Settings::get(
+                                'integrations.cnpj_lookup.retries',
+                                config('sile.integrations.cnpj_lookup.retries', 2),
+                            ),
+                            (int) Settings::get(
+                                'integrations.cnpj_lookup.backoff_ms',
+                                config('sile.integrations.cnpj_lookup.backoff_ms', 200),
+                            ),
+                            throw: false,
+                        )
                         ->acceptJson()
                         ->get("{$baseUrl}/{$cnpj}");
                 } catch (ConnectionException $exception) {
