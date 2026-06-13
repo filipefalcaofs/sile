@@ -26,7 +26,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(4, Role::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(25, Parameter::query()->count());
+        $this->assertSame(29, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -83,7 +83,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(25, Parameter::query()->count());
+        $this->assertSame(29, Parameter::query()->count());
         $this->assertSame(3, Company::query()->count());
         $this->assertSame(
             2,

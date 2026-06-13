@@ -214,6 +214,35 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:0', 'max:5000'],
                 'description' => 'Intervalo em milissegundos entre as tentativas de consulta de CNPJ',
             ],
+            'features.geocoding' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a geocodificação de endereços (Nominatim/OSM)',
+            ],
+            'integrations.geocoding.base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://nominatim.openstreetmap.org',
+                'validation_rules' => ['required', 'url'],
+                'requires_connection_test' => true,
+                'description' => 'URL base do serviço de geocodificação (Nominatim; trocável por self-host sem deploy)',
+            ],
+            'seguranca.throttle.geocoding.por_minuto' => [
+                'group' => 'seguranca',
+                'type' => 'integer',
+                'default_value' => '60',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
+                'description' => 'Limite de geocodificações por minuto por usuário (Nominatim recomenda ~1 req/s)',
+            ],
+            'geo.validacao.sobreposicao_minima' => [
+                'group' => 'geo',
+                'type' => 'integer',
+                'default_value' => '50',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:100'],
+                'description' => 'Percentual mínimo de sobreposição entre o polígono informado e o lote oficial antes de alertar (HU-037)',
+            ],
         ];
     }
 }

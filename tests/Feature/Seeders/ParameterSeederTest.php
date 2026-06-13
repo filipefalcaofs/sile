@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(25, Parameter::query()->count());
+        $this->assertSame(29, Parameter::query()->count());
         $this->assertSame(
-            ['features', 'integracoes', 'retencao', 'seguranca', 'ui'],
+            ['features', 'geo', 'integracoes', 'retencao', 'seguranca', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -145,6 +145,46 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['required', 'in:bronze,prata,ouro'], $minimumLevel->validation_rules);
     }
 
+    public function test_seeder_registra_parametros_do_georreferenciamento(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $toggle = Parameter::query()->where('key', 'features.geocoding')->first();
+
+        $this->assertNotNull($toggle);
+        $this->assertSame('features', $toggle->group);
+        $this->assertSame('boolean', $toggle->type);
+        $this->assertSame('1', $toggle->default_value);
+        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
+        $this->assertNull($toggle->value);
+
+        $baseUrl = Parameter::query()->where('key', 'integrations.geocoding.base_url')->first();
+
+        $this->assertNotNull($baseUrl);
+        $this->assertSame('integracoes', $baseUrl->group);
+        $this->assertSame('string', $baseUrl->type);
+        $this->assertSame('https://nominatim.openstreetmap.org', $baseUrl->default_value);
+        $this->assertSame(['required', 'url'], $baseUrl->validation_rules);
+        $this->assertTrue($baseUrl->requires_connection_test);
+
+        $throttle = Parameter::query()->where('key', 'seguranca.throttle.geocoding.por_minuto')->first();
+
+        $this->assertNotNull($throttle);
+        $this->assertSame('seguranca', $throttle->group);
+        $this->assertSame('integer', $throttle->type);
+        $this->assertSame('60', $throttle->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $throttle->validation_rules);
+
+        $sobreposicao = Parameter::query()->where('key', 'geo.validacao.sobreposicao_minima')->first();
+
+        $this->assertNotNull($sobreposicao);
+        $this->assertSame('geo', $sobreposicao->group);
+        $this->assertSame('integer', $sobreposicao->type);
+        $this->assertSame('50', $sobreposicao->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:100'], $sobreposicao->validation_rules);
+        $this->assertNull($sobreposicao->value);
+    }
+
     public function test_seeder_registra_parametro_da_listagem_de_emails(): void
     {
         $this->seed(ParameterSeeder::class);
@@ -190,6 +230,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(25, Parameter::query()->count());
+        $this->assertSame(29, Parameter::query()->count());
     }
 }
