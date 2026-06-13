@@ -41,7 +41,7 @@ class ManageRolesTest extends TestCase
                 ->where('roles.0.name', 'administrador')
                 ->where('roles.0.structural', true)
                 ->where('roles.0.users_count', 1)
-                ->has('permissions', 9));
+                ->has('permissions', 10));
     }
 
     public function test_cria_perfil_com_permissoes_granulares(): void

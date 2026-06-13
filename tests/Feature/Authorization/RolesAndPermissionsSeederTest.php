@@ -65,6 +65,26 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->assertFalse($cidadao->hasPermissionTo('consultar-cnaes'));
     }
 
+    public function test_papeis_recebem_permissao_consultar_territorio(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertSame(
+            'consultar-territorio',
+            Permission::findByName('consultar-territorio', 'web')->name,
+        );
+
+        foreach (['administrador', 'analista', 'gestor'] as $role) {
+            $this->assertTrue(
+                Role::findByName($role, 'web')->hasPermissionTo('consultar-territorio'),
+            );
+        }
+
+        $this->assertFalse(
+            Role::findByName('cidadao', 'web')->hasPermissionTo('consultar-territorio'),
+        );
+    }
+
     public function test_estados_da_factory_atribuem_papel(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
@@ -81,7 +101,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(9, Permission::query()->count());
+        $this->assertSame(10, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void
