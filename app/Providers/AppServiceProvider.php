@@ -6,6 +6,8 @@ use App\Listeners\AuditModelsPruned;
 use App\Listeners\LogNotificationSent;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjLookup;
+use App\Services\Geo\Geocoder;
+use App\Services\Geo\NominatimGeocoder;
 use App\Services\GovBr\GovBrIdTokenValidator;
 use App\Services\GovBr\GovBrProvider;
 use App\Support\Representation\CurrentRepresentation;
@@ -30,6 +32,11 @@ class AppServiceProvider extends ServiceProvider
         // (HU-105) troca este binding pelo provider conveniado da Receita
         // Federal sem tocar controllers ou telas.
         $this->app->bind(CnpjLookup::class, BrasilApiCnpjLookup::class);
+
+        // Geocodificação pública inicial (Nominatim/OSM). A Fase 13 troca este
+        // binding por self-host ou pela base geográfica da SEDUR sem tocar
+        // controllers ou telas (HU-029).
+        $this->app->bind(Geocoder::class, NominatimGeocoder::class);
     }
 
     /**
