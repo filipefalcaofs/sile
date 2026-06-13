@@ -8,6 +8,7 @@ use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\RoleController;
+use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -70,10 +71,14 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('parametros/{parameter:key}', [ParameterController::class, 'update'])->name('parametros.update');
         });
 
-        // Território (HU-029+): geocodificação atrás de permissão própria e
-        // throttle parametrizado. O gate é este middleware permission: (a
-        // permissão vive no guard web e resolve para o usuário do guard gestao).
+        // Território (HU-029+): consulta territorial, geocodificação e validação
+        // de localização atrás de permissão própria. O gate é este middleware
+        // permission: (a permissão vive no guard web e resolve para o usuário do
+        // guard gestao). A geocodificação tem throttle parametrizado próprio.
         Route::middleware('permission:consultar-territorio')->prefix('territorio')->name('territorio.')->group(function () {
+            Route::get('/', [TerritoryController::class, 'index'])->name('index');
             Route::post('geocodificar', GeocodeController::class)->middleware('throttle:geocoding')->name('geocodificar');
+            Route::post('identificar', [TerritoryController::class, 'identify'])->name('identificar');
+            Route::post('validar-localizacao', [TerritoryController::class, 'validateLocation'])->name('validar-localizacao');
         });
     });
