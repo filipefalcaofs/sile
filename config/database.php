@@ -99,6 +99,25 @@ return [
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
+        // Conexão dedicada para os testes espaciais (@group postgis). Espelha
+        // pgsql e, por padrão, reutiliza o container de dev (porta 5433) num
+        // banco separado (sile_testing) criado pelo preflight
+        // `php artisan geo:preparar-banco-de-testes`. Não é o default da suíte
+        // (que segue SQLite :memory:); o PostgisTestCase aponta para cá.
+        'pgsql_testing' => [
+            'driver' => 'pgsql',
+            'host' => env('DB_TEST_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('DB_TEST_PORT', env('DB_PORT', '5433')),
+            'database' => env('DB_TEST_DATABASE', 'sile_testing'),
+            'username' => env('DB_TEST_USERNAME', env('DB_USERNAME', 'sile')),
+            'password' => env('DB_TEST_PASSWORD', env('DB_PASSWORD', 'secret')),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),
