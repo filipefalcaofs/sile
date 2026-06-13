@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\ImportRedesimJob;
 use App\Services\RedesimImportService;
 use Illuminate\Console\Command;
 use JsonException;
@@ -15,7 +16,7 @@ use JsonException;
  */
 class ImportRedesimCommand extends Command
 {
-    protected $signature = 'redesim:importar {arquivo : Caminho do arquivo JSON no formato REDESIM}';
+    protected $signature = 'redesim:importar {arquivo : Caminho do arquivo JSON no formato REDESIM} {--queue : Processa em fila (job com retry/timeout) em vez de síncrono}';
 
     protected $description = 'Importa dados empresariais no formato REDESIM (HU-022) — transporte real do integrador é a Fase 13';
 
@@ -27,6 +28,13 @@ class ImportRedesimCommand extends Command
             $this->error("Arquivo não encontrado: {$path}");
 
             return self::FAILURE;
+        }
+
+        if ($this->option('queue')) {
+            ImportRedesimJob::dispatch($path);
+            $this->info('Importação REDESIM enfileirada (job ImportRedesimJob).');
+
+            return self::SUCCESS;
         }
 
         try {
