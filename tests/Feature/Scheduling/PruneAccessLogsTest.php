@@ -61,4 +61,22 @@ class PruneAccessLogsTest extends TestCase
         $this->artisan('model:prune', ['--model' => [AccessLog::class]]);
         $this->assertSame(0, AccessLog::query()->count()); // 60 > 30 → podado (efeito sem deploy)
     }
+
+    public function test_pruning_grava_auditoria_da_remocao(): void
+    {
+        $this->seed(ParameterSeeder::class);
+        AccessLog::factory()->count(3)->create(['created_at' => now()->subDays(400)]);
+
+        $this->artisan('model:prune', ['--model' => [AccessLog::class]])->assertExitCode(0);
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'retencao',
+            'event' => 'pruning-access-logs',
+        ]);
+
+        $activity = Activity::query()->where('event', 'pruning-access-logs')->latest('id')->first();
+        $this->assertNotNull($activity);
+        $this->assertSame(AccessLog::class, $activity->properties['modelo']);
+        $this->assertSame(3, $activity->properties['removidos']);
+    }
 }

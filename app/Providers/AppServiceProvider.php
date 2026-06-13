@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\AuditModelsPruned;
 use App\Listeners\LogNotificationSent;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjLookup;
@@ -9,6 +10,7 @@ use App\Services\GovBr\GovBrIdTokenValidator;
 use App\Services\GovBr\GovBrProvider;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
+use Illuminate\Database\Events\ModelsPruned;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -36,6 +38,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(NotificationSent::class, LogNotificationSent::class);
+
+        // Auditoria da retenção (RN-002 / SC#1): a poda em massa de access_logs
+        // não dispara model events, mas emite ModelsPruned — registrado aqui.
+        Event::listen(ModelsPruned::class, AuditModelsPruned::class);
 
         Password::defaults(function () {
             $rule = Password::min((int) Settings::get('security.password.min_length', 8));
