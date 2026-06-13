@@ -7,6 +7,7 @@ use App\Models\Activity;
 use App\Models\Parameter;
 use App\Support\Audit\AuditService;
 use Database\Seeders\ParameterSeeder;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -78,5 +79,18 @@ class PruneAccessLogsTest extends TestCase
         $this->assertNotNull($activity);
         $this->assertSame(AccessLog::class, $activity->properties['modelo']);
         $this->assertSame(3, $activity->properties['removidos']);
+    }
+
+    public function test_pruning_esta_agendado_diariamente_de_forma_idempotente(): void
+    {
+        $schedule = app(Schedule::class);
+        $event = collect($schedule->events())
+            ->first(fn ($e) => str_contains((string) $e->command, 'model:prune'));
+
+        $this->assertNotNull($event, 'A rotina de pruning deve estar registrada no scheduler');
+        $this->assertSame('0 0 * * *', $event->expression); // diário
+        $this->assertStringContainsString('AccessLog', (string) $event->command);
+        $this->assertTrue($event->withoutOverlapping);
+        $this->assertTrue($event->onOneServer);
     }
 }
