@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed wave 6 da Fase 3 — 03-07 (telas Minhas empresas + cadastro com lookup, fechado por validação com evidência fresca; pendência do 03-04 resolvida com assert de componente no GET create) e 03-08 (detalhe da empresa com CNPJ imutável, picker de CNAEs com busca server-side real, ConfirmDialog warning/danger e encerramento de vínculo com motivo) executados em paralelo sem colisão; typecheck/build verdes, grupo Companies 83 verdes
-last_updated: "2026-06-12T20:15:00.000Z"
-last_activity: 2026-06-12 -- Completed 03-07 e 03-08 (wave 6 — UI do cadastro empresarial)
+stopped_at: Completed Phase 3 (Cadastro Empresarial) — 03-09 fechou a fase: CompanySeeder (cidadão dev + empresa manual Magazine Luiza + empresas REDESIM por import real), verificação integral fresca (suíte 367/367, pint/typecheck/build verdes, migrate:fresh --seed no pgsql dev, redesim:importar idempotente 2x) e smoke E2E navegável no browser (login cidadão → Minhas empresas com badges manual/REDESIM → detalhe com CNPJ imutável → cadastro com lookup VIVO preenchendo dados reais do Itaú via BrasilAPI). gsd-verifier: status passed (4/4 success criteria, 8/8 HUs com evidência arquivo+teste)
+last_updated: "2026-06-13T14:45:00.000Z"
+last_activity: 2026-06-13 -- Phase 3 COMPLETE (verificação passed; smoke E2E com BrasilAPI real)
 progress:
   total_phases: 15
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 26
-  completed_plans: 25
-  percent: 17
+  completed_plans: 26
+  percent: 20
 ---
 
 # Project State
@@ -21,18 +21,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-09)
 
 **Core value:** Responder a viabilidade locacional de atividade econômica de forma automática, correta e auditável — fluxo expresso quando a lei permite, fundamentação legal em toda decisão.
-**Current focus:** Phase 3 — Cadastro Empresarial
+**Current focus:** Phase 3 concluída — próxima: Phase 3.1 (fundação assíncrona) ou Phase 4 (georreferenciamento)
 
 ## Current Position
 
-Phase: 3 (Cadastro Empresarial) — EXECUTING
-Plan: 9 of 9
-Status: Executing Phase 3 (wave 7 — fechamento)
-Last activity: 2026-06-12 -- Completed 03-07 e 03-08 (wave 6 — UI do cadastro empresarial)
+Phase: 3 (Cadastro Empresarial) — COMPLETE (verificação passed em 2026-06-13)
+Plan: 9 of 9 (todos concluídos)
+Status: Fase 3 fechada; pronta para a próxima fase
+Last activity: 2026-06-13 -- Phase 3 COMPLETE (verificação passed; smoke E2E com BrasilAPI real)
 
-Progress: [█▋░░░░░░░░] 17% (2/15 fases; 25 planos executados)
+Progress: [██░░░░░░░░] 20% (3/15 fases; 26 planos executados)
 
-Next step: 03-09 (fechamento: seeds dev + verificação integral + smoke E2E com checkpoint humano)
+Next step: `/gsd-plan-phase 3.1` (fundação assíncrona — scheduler/jobs/retenção, INSERTED) ou `/gsd-plan-phase 4` (georreferenciamento). A Fase 3.2 (GOV.BR) já está implementada e desligada, aguardando credenciamento da SEDUR.
 
 ### Fase 2.1 (INSERTED) — Template TailAdmin (concluída 2026-06-10)
 

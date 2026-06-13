@@ -239,8 +239,8 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-022 | Fase 3 | Complete (03-03) |
 | HU-023 | Fase 3 | Complete (03-04) |
 | HU-024 | Fase 3 | Complete (03-05) |
-| HU-025 | Fase 3 | Pending |
-| HU-026 | Fase 3 | Pending |
+| HU-025 | Fase 3 | Complete (03-06) |
+| HU-026 | Fase 3 | Complete (03-06) |
 | HU-027 | Fase 3 | Complete (03-04) |
 | HU-028 | Fase 3 | Complete (03-05) |
 | HU-029 | Fase 4 | Pending |

@@ -37,7 +37,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 2.2 (INSERTED): Refinamento premium de UI/UX** — landing institucional completa, sidebar subdividida em grupos, auth premium com painel institucional, CRUDs padronizados (modais de criar/editar, ConfirmDialog em ações destrutivas, Pagination com contador, EmptyState) — concluída em 2026-06-10 (197/197 testes, typecheck/build verdes, screenshots validados)
 - [x] **Phase 2.3 (INSERTED): Segregação de rotas portal × retaguarda** — portal público do cidadão sob /portal/* (landing, login, cadastro, painel) e login interno próprio da retaguarda em /gestao/login; redirecionamento de guests por contexto (padrão Laravel) — concluída em 2026-06-10 (201/201 testes, pint/typecheck/build verdes, screenshots validados)
 - [x] **Phase 2.4 (INSERTED): Template SaaS de listagens e dashboard** — biblioteca de componentes reutilizáveis (DataTable tipada com ordenação/filtros/busca/page size, KPI cards, PageHeader, Card, Skeleton, Avatar, ProgressBar, TableAction) aplicada às listagens reais da gestão e KPIs reais no dashboard; re-tematização "Console SEDUR" (sidebar escura permanente na gestão, KPIs com wells coloridos, thead com fundo, densidade compacta) — concluída em 2026-06-11 (209/209 testes com 8 novos, pint/typecheck/build verdes, screenshots validados claro/escuro/mobile; corrige busca case-sensitive no PostgreSQL)
-- [ ] **Phase 3: Cadastro Empresarial** — Empresas, CNPJ e vínculos com CNAEs (EP03)
+- [x] **Phase 3: Cadastro Empresarial** — Empresas, CNPJ e vínculos com CNAEs (EP03) — concluída em 2026-06-13 (verificação: passed; suíte 367/367, grupo Companies 83/83; smoke E2E navegável com chamada REAL à BrasilAPI e import REDESIM idempotente)
 - [ ] **Phase 3.1 (INSERTED): Fundação assíncrona — scheduler, jobs e retenção** — ativa capacidades prontas do Laravel 13 ainda não usadas (levantamento 2026-06-12): scheduler com primeira rotina real, importações REDESIM/CNAE como jobs em fila com retry e relatório, throttle parametrizado nas rotas públicas, retenção de access_logs via pruning agendado e retry/backoff no HTTP client — infraestrutura habilitadora para prazo BAP (HU-134), SLA (HU-144/147) e integrações (HU-146)
 - [ ] **Phase 3.2 (INSERTED): Autenticação GOV.BR no portal** — Login Único (OAuth/OIDC, Authorization Code + PKCE S256) convivendo com o login local: vínculo determinístico por CPF, criação de conta real no primeiro acesso, nível de confiabilidade parametrizável, credenciais sensíveis administráveis (HU-014) e toggle `features.govbr_login` (HU-151); sem credenciamento da SEDUR a validação contra staging real permanece bloqueada — spec `docs/superpowers/specs/2026-06-12-autenticacao-govbr-design.md`
 - [ ] **Phase 4: Georreferenciamento e Território** — Geocodificação, zona, via, lote, bairro e restrições (EP04)
@@ -119,10 +119,10 @@ Plans:
 - [x] 03-03-PLAN.md — HU-022: payload REDESIM de referência + RedesimImportService + comando redesim:importar (wave 2) ✓ 2026-06-12
 - [x] 03-04-PLAN.md — HU-023 + HU-027: policy com representação, cadastro transacional com vínculo e listagem Minhas empresas (wave 3) ✓ 2026-06-12
 - [x] 03-05-PLAN.md — HU-024 + HU-028: detalhe/atualização com CNPJ imutável e encerramento de vínculo com proteção do último responsável (wave 4) ✓ 2026-06-12
-- [ ] 03-06-PLAN.md — HU-025 + HU-026: CompanyCnaeService transacional, endpoints de CNAE e busca server-side da tabela oficial (wave 5)
-- [ ] 03-07-PLAN.md — UI: sidebar + tela Minhas empresas + página de cadastro com lookup vivo (wave 6, ‖ 03-08)
-- [ ] 03-08-PLAN.md — UI: página de detalhe (dados, CNAEs com ConfirmDialog, vínculos) (wave 6, ‖ 03-07)
-- [ ] 03-09-PLAN.md — Fechamento: verificação integral + smoke E2E com chamada real ao provider (checkpoint humano) (wave 7)
+- [x] 03-06-PLAN.md — HU-025 + HU-026: CompanyCnaeService transacional, endpoints de CNAE e busca server-side da tabela oficial (wave 5) ✓ 2026-06-12
+- [x] 03-07-PLAN.md — UI: sidebar + tela Minhas empresas + página de cadastro com lookup vivo (wave 6, ‖ 03-08) ✓ 2026-06-12
+- [x] 03-08-PLAN.md — UI: página de detalhe (dados, CNAEs com ConfirmDialog, vínculos) (wave 6, ‖ 03-07) ✓ 2026-06-12
+- [x] 03-09-PLAN.md — Fechamento: seeds dev + verificação integral + smoke E2E com chamada real ao provider (wave 7) ✓ 2026-06-13
 
 ### Phase 3.1: Fundação assíncrona — scheduler, jobs e retenção (INSERTED)
 **Goal**: O sistema opera com a infraestrutura assíncrona que o Laravel 13 entrega pronta e que ainda não usamos — scheduler, jobs em fila com retry e retenção de dados — fechando lacunas que travariam prazos automáticos, SLA e integrações nas fases seguintes.
@@ -375,7 +375,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 |-------|----------------|--------|-----------|
 | 1. Identidade, Acesso e Auditoria Transversal | 9/9 | Complete | 2026-06-10 |
 | 2. Administração Base | 0/8 | Planned | - |
-| 3. Cadastro Empresarial | 3/9 | In progress | - |
+| 3. Cadastro Empresarial | 9/9 | Complete | 2026-06-13 |
 | 3.2. Autenticação GOV.BR no portal (INSERTED) | 1/1 | Implemented — aguardando credenciamento p/ validar staging | - |
 | 4. Georreferenciamento e Território | 0/TBD | Not started | - |
 | 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |
