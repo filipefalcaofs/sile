@@ -5,6 +5,7 @@ namespace Tests\Feature\Analise;
 use App\Enums\AnalysisStage;
 use App\Models\Parameter;
 use App\Services\Analise\AnalysisSlaService;
+use App\Services\Analise\SlaStatus;
 use App\Services\Expresso\BusinessDeadlineCalculator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -79,5 +80,82 @@ class AnalysisSlaServiceTest extends TestCase
         );
 
         Carbon::setTestNow();
+    }
+
+    public function test_semaforo_verde_quando_recem_iniciado(): void
+    {
+        $startedAt = Carbon::parse('2026-01-10 09:00:00');
+        $dueAt = $startedAt->copy()->addDays(10);
+
+        // 0% decorrido: dentro do prazo e bem abaixo do limiar amarelo.
+        $status = $this->service()->statusFor($dueAt, $startedAt, $startedAt);
+
+        $this->assertSame(SlaStatus::Verde, $status['status']);
+    }
+
+    public function test_semaforo_amarelo_ao_atingir_o_limiar(): void
+    {
+        $startedAt = Carbon::parse('2026-01-10 09:00:00');
+        $dueAt = $startedAt->copy()->addHours(240); // 10 dias
+
+        // 85% da janela decorrido (204h de 240h) >= 80% (default) → amarelo.
+        $now = $startedAt->copy()->addHours(204);
+
+        $status = $this->service()->statusFor($dueAt, $startedAt, $now);
+
+        $this->assertSame(SlaStatus::Amarelo, $status['status']);
+    }
+
+    public function test_semaforo_vermelho_quando_estourado(): void
+    {
+        $startedAt = Carbon::parse('2026-01-10 09:00:00');
+        $dueAt = $startedAt->copy()->addDays(10);
+
+        // now após o dueAt: prazo estourado (isOverdue do calculator) → vermelho.
+        $now = $dueAt->copy()->addHour();
+
+        $status = $this->service()->statusFor($dueAt, $startedAt, $now);
+
+        $this->assertSame(SlaStatus::Vermelho, $status['status']);
+    }
+
+    public function test_limiar_do_semaforo_e_parametrizavel_sem_deploy(): void
+    {
+        $startedAt = Carbon::parse('2026-01-10 09:00:00');
+        $dueAt = $startedAt->copy()->addHours(240); // 10 dias
+        $now = $startedAt->copy()->addHours(120); // 50% decorrido
+
+        // Com o limiar default (80%), 50% decorrido ainda é verde.
+        $antes = $this->service()->statusFor($dueAt, $startedAt, $now);
+        $this->assertSame(SlaStatus::Verde, $antes['status']);
+
+        // O admin baixa o limiar para 50% (HU-014): a gravação do Parameter
+        // invalida o cache da chave (Parameter::saved) — efeito sem deploy.
+        Parameter::query()->create([
+            'key' => 'analise.sla.semaforo.amarelo_percentual',
+            'group' => 'analise',
+            'type' => 'integer',
+            'value' => '50',
+            'default_value' => '80',
+            'validation_rules' => ['required', 'integer', 'min:1', 'max:99'],
+            'description' => 'Percentual do prazo a partir do qual o semáforo fica amarelo.',
+        ]);
+
+        // Mesma fração (50%), novo limiar → amarelo.
+        $depois = $this->service()->statusFor($dueAt, $startedAt, $now);
+        $this->assertSame(SlaStatus::Amarelo, $depois['status']);
+    }
+
+    public function test_status_for_devolve_o_tempo_restante_legivel(): void
+    {
+        $startedAt = Carbon::parse('2026-01-10 09:00:00');
+        $dueAt = $startedAt->copy()->addDays(10);
+        $now = $startedAt->copy()->addDays(3);
+
+        $status = $this->service()->statusFor($dueAt, $startedAt, $now);
+
+        $this->assertArrayHasKey('restante', $status);
+        $this->assertIsString($status['restante']);
+        $this->assertNotSame('', $status['restante']);
     }
 }

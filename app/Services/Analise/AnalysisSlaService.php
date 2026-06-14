@@ -5,6 +5,7 @@ namespace App\Services\Analise;
 use App\Enums\AnalysisStage;
 use App\Services\Expresso\BusinessDeadlineCalculator;
 use App\Support\Settings;
+use Carbon\CarbonInterface;
 use DateTimeInterface;
 use Illuminate\Support\Carbon;
 
@@ -72,5 +73,76 @@ class AnalysisSlaService
         $from ??= Carbon::now();
 
         return $this->calculator->dueAt($from, $this->diasDaEtapa($stage) * self::HORAS_POR_DIA);
+    }
+
+    /**
+     * Semáforo do SLA calculado ON-THE-FLY (nunca persistido) + tempo restante
+     * legível. Vermelho quando o prazo estourou (isOverdue do calculator);
+     * amarelo ao atingir o limiar parametrizável da fração decorrida; verde caso
+     * contrário. $now é injetável para teste determinístico.
+     *
+     * @return array{status: SlaStatus, restante: string}
+     */
+    public function statusFor(
+        DateTimeInterface $dueAt,
+        DateTimeInterface $startedAt,
+        ?DateTimeInterface $now = null,
+    ): array {
+        $dueAt = Carbon::instance($dueAt);
+        $startedAt = Carbon::instance($startedAt);
+        $now = $now !== null ? Carbon::instance($now) : Carbon::now();
+
+        return [
+            'status' => $this->semaforo($dueAt, $startedAt, $now),
+            // Tempo restante relativo a $now ("em 5 dias" / "há 2 dias" quando
+            // estourado), em pt-BR independentemente do locale da app.
+            'restante' => $dueAt->locale('pt_BR')->diffForHumans([
+                'other' => $now,
+                'syntax' => CarbonInterface::DIFF_RELATIVE_TO_NOW,
+                'parts' => 2,
+            ]),
+        ];
+    }
+
+    private function semaforo(Carbon $dueAt, Carbon $startedAt, Carbon $now): SlaStatus
+    {
+        if ($this->calculator->isOverdue($dueAt, $now)) {
+            return SlaStatus::Vermelho;
+        }
+
+        return $this->fracaoDecorrida($startedAt, $dueAt, $now) >= $this->limiarAmarelo()
+            ? SlaStatus::Amarelo
+            : SlaStatus::Verde;
+    }
+
+    /**
+     * Limiar (0..1) a partir do qual o semáforo fica amarelo, do parâmetro
+     * administrável analise.sla.semaforo.amarelo_percentual (default inline 80%).
+     */
+    private function limiarAmarelo(): float
+    {
+        $percentual = (int) Settings::get(
+            'analise.sla.semaforo.amarelo_percentual',
+            config('sile.analise.sla.semaforo.amarelo_percentual', 80),
+        );
+
+        return $percentual / 100;
+    }
+
+    /**
+     * Fração da janela do prazo já decorrida (0..1). Janela degenerada
+     * (startedAt >= dueAt) trata como no limite; antes do início, como zero.
+     */
+    private function fracaoDecorrida(Carbon $startedAt, Carbon $dueAt, Carbon $now): float
+    {
+        $total = $startedAt->diffInSeconds($dueAt, absolute: true);
+
+        if ($total <= 0.0) {
+            return 1.0;
+        }
+
+        $decorrido = max(0.0, (float) $startedAt->diffInSeconds($now, absolute: false));
+
+        return $decorrido / $total;
     }
 }
