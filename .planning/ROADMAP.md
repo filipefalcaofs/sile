@@ -217,7 +217,18 @@ Nota: a correspondência "Quadro 11" ↔ Quadro 11B oficial e as planilhas param
   4. Regras de baixo e **médio** risco produzem encaminhamento ao fluxo expresso quando elegíveis; alto risco e gatilhos CNAE encaminham à análise técnica, incluindo exceções por localização (HU-051).
   5. Tabela de risco vigente é consultável e atualizável com trilha de auditoria.
   6. Golden cases de classificação de risco (incluindo reclassificação por condicionante-pergunta) integram a suíte de regressão de domínio iniciada na Fase 5.
-**Plans**: TBD
+**Plans**: 9 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Fundação: regras como dados versionados (rule_versions + RuleVersion + RuleVersionService openDraft/publish/4-olhos + enums) — infra que a Fase 5 herda (wave 1)
+- [ ] 06-02-PLAN.md — HU-020/047: classificação municipal — risk_classifications + seed oficial do Decreto 32.636/2020 (767/328/236) versionado e auditado (wave 2)
+- [ ] 06-03-PLAN.md — HU-019/047/048: dimensão sanitária (VISA) separada + condicionante-pergunta com regra de reclassificação (golden 1031-7/00) (wave 3)
+- [ ] 06-04-PLAN.md — HU-049/050/051: encaminhamento parametrizável (mapa risk_level→fluxo + dimensao_tvl) + gatilhos (tabela) + DTOs RiscoInput/RiscoResult (wave 4)
+- [ ] 06-05-PLAN.md — HU-047/048/049/050/051: motor RiscoClassificationService (2 dimensões separadas + reclassificação + encaminhamento + gatilhos/ZEIS + auditoria) (wave 5)
+- [ ] 06-06-PLAN.md — HU-019/020/052/053: mantenedores backend + consulta da tabela vigente + publicação versionada 4-olhos + permissões (wave 6, ‖ 06-07)
+- [ ] 06-07-PLAN.md — Golden cases entrada→esperado (#[DataProvider]) sobre o seed real + regressão da distribuição 767/328/236 (wave 6, ‖ 06-06)
+- [ ] 06-08-PLAN.md — HU-019/020/052/053 UI: telas do console (consulta/publicação de risco + condicionantes) + navegação por permissão (wave 7)
+- [ ] 06-09-PLAN.md — Fechamento: comando risco:classificar (evidência real) + verificação integral + checkpoint humano (wave 8)
 
 ### Phase 7: Consulta Prévia de Viabilidade
 **Goal**: Cidadão consulta a viabilidade de uma atividade em um endereço sem criar processo formal — primeira entrega que executa o fluxo de decisão de ponta a ponta.
@@ -399,7 +410,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 3.2. Autenticação GOV.BR no portal (INSERTED) | 1/1 | Implemented — aguardando credenciamento p/ validar staging | - |
 | 4. Georreferenciamento e Território | 8/8 | Complete (zona/lote bloqueados — pendente SEDUR) | 2026-06-13 |
 | 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |
-| 6. Classificação de Risco | 0/TBD | Not started | - |
+| 6. Classificação de Risco | 0/9 | Planned | - |
 | 7. Consulta Prévia de Viabilidade | 0/TBD | Not started | - |
 | 8. Solicitação de Viabilidade | 0/TBD | Not started | - |
 | 9. Fluxo Expresso | 0/TBD | Not started | - |
