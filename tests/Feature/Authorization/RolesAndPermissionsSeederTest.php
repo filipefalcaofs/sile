@@ -34,6 +34,11 @@ class RolesAndPermissionsSeederTest extends TestCase
             'manter-risco',
             'consultar-louos',
             'manter-louos',
+            'registrar-contingencia',
+            'atendimento-presencial',
+            'consultar-solicitacoes',
+            'manter-tipos-servico',
+            'manter-requisitos-documentais',
         ];
 
         foreach ($permissions as $permission) {
@@ -139,6 +144,45 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->assertFalse(Role::findByName('cidadao', 'web')->hasPermissionTo('consultar-louos'));
     }
 
+    public function test_papeis_recebem_permissoes_de_solicitacao(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $solicitacao = [
+            'registrar-contingencia',
+            'atendimento-presencial',
+            'consultar-solicitacoes',
+            'manter-tipos-servico',
+            'manter-requisitos-documentais',
+        ];
+
+        foreach ($solicitacao as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Administrador parametriza tudo; gestor opera e parametriza os cadastros da fase.
+        foreach (['administrador', 'gestor'] as $role) {
+            foreach ($solicitacao as $permission) {
+                $this->assertTrue(
+                    Role::findByName($role, 'web')->hasPermissionTo($permission),
+                );
+            }
+        }
+
+        // Analista só consulta os processos no backoffice (não registra contingência).
+        $analista = Role::findByName('analista', 'web');
+        $this->assertTrue($analista->hasPermissionTo('consultar-solicitacoes'));
+        $this->assertFalse($analista->hasPermissionTo('registrar-contingencia'));
+
+        // Cidadão opera as próprias solicitações por policy, sem permissão nomeada.
+        $this->assertFalse(
+            Role::findByName('cidadao', 'web')->hasPermissionTo('consultar-solicitacoes'),
+        );
+    }
+
     public function test_estados_da_factory_atribuem_papel(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
@@ -155,7 +199,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(14, Permission::query()->count());
+        $this->assertSame(19, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void
