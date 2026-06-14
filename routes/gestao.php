@@ -15,6 +15,7 @@ use App\Http\Controllers\Gestao\LouosController;
 use App\Http\Controllers\Gestao\LouosSandboxController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\PrecedenteController;
+use App\Http\Controllers\Gestao\ProcessoController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RiscoCondicionanteController;
 use App\Http\Controllers\Gestao\RiscoController;
@@ -208,6 +209,21 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:consultar-solicitacoes')->prefix('resultados-expresso')->name('resultados-expresso.')->group(function () {
             Route::get('/', [ResultadoExpressoController::class, 'index'])->name('index');
             Route::get('{viabilityRequest}', [ResultadoExpressoController::class, 'show'])->name('show');
+        });
+
+        // Consulta de processos (HU-082) e fila do analista (HU-144) na
+        // retaguarda: busca com os filtros completos do SAPS + analista +
+        // categoria, paginação server-side (índices de 10-02/10-14), CSV simples
+        // do conjunto filtrado (export pleno → HU-131/Fase 15), busca global
+        // (Cmd+K) e fila priorizada por SLA (meus/setor). REUSO da permissão
+        // consultar-solicitacoes (decisão de 10-01 — a consulta é parte da
+        // solicitação; sem permissão nova). Somente leitura; auditada (RN-002); o
+        // 403 é auditado no ponto único (bootstrap/app.php). As rotas estáticas
+        // (fila, busca) vêm ANTES do show {viabilityRequest} para não serem
+        // capturadas pelo wildcard. ÚNICO editor de routes/gestao.php na Wave 6.
+        Route::middleware('permission:consultar-solicitacoes')->prefix('processos')->name('processos.')->group(function () {
+            Route::get('/', [ProcessoController::class, 'index'])->name('index');
+            Route::get('{viabilityRequest}', [ProcessoController::class, 'show'])->name('show');
         });
 
         // Caixa do setor (HU-080/081): a fila da distribuição da análise técnica.
