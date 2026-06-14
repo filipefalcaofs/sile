@@ -2,7 +2,7 @@ import { usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import AppShell from '@/components/app/app-shell';
 import type { SidebarGroup } from '@/components/app/app-sidebar';
-import { GridIcon, GroupIcon, ListIcon, LockIcon, MailIcon, MapPinIcon, PlugInIcon, ShieldIcon, TableIcon } from '@/components/icons';
+import { FileIcon, GridIcon, GroupIcon, ListIcon, LockIcon, MailIcon, MapPinIcon, PlugInIcon, ShieldIcon, TableIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import { ThemeProvider } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
@@ -47,6 +47,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     href: '/gestao/risco/condicionantes',
                     icon: <ListIcon />,
                     visible: auth.permissions.includes('manter-risco'),
+                },
+                {
+                    name: 'Quadros LOUOS',
+                    href: '/gestao/louos',
+                    icon: <FileIcon />,
+                    visible: auth.permissions.includes('consultar-louos'),
                 },
                 {
                     name: 'Usuários',
