@@ -20,14 +20,8 @@ class AvaliarFluxoExpresso
 {
     public function handle(SolicitacaoProtocolada $event): void
     {
-        $pending = DecidirFluxoExpressoJob::dispatch($event->request->id);
-
-        // Fila dedicada parametrizável (config/sile.php); 'default' usa a fila
-        // padrão sem sobrescrever a conexão.
-        $fila = (string) config('sile.expresso.fila', 'default');
-
-        if ($fila !== '' && $fila !== 'default') {
-            $pending->onQueue($fila);
-        }
+        // Despacha pelo ID (serialização segura; o job recarrega o estado fresco).
+        // A fila é responsabilidade do próprio job (config/sile.php).
+        DecidirFluxoExpressoJob::dispatch($event->request->id);
     }
 }

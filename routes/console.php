@@ -17,3 +17,13 @@ Schedule::command('model:prune', ['--model' => [AccessLog::class]])
     ->daily()
     ->withoutOverlapping()
     ->onOneServer();
+
+// Rede de SEGURANÇA do fluxo expresso (EP09): redecide as solicitações
+// protocoladas que ficaram SEM decisão (órfãs — gatilho perdido/worker caído).
+// NÃO é o gatilho principal (esse é o listener AvaliarFluxoExpresso no
+// protocolo); é reprocesso idempotente. Cadência TÉCNICA (precedente [02-02]),
+// segura em multi-instância (withoutOverlapping/onOneServer).
+Schedule::command('expresso:reavaliar')
+    ->everyTenMinutes()
+    ->withoutOverlapping()
+    ->onOneServer();
