@@ -105,12 +105,12 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 
 ### EP09 — Fluxo Expresso
 
-- [ ] **HU-073**: Identificar elegibilidade para fluxo expresso
-- [ ] **HU-074**: Deferir automaticamente
-- [ ] **HU-075**: Indeferir automaticamente
-- [ ] **HU-076**: Emitir resultado expresso
-- [ ] **HU-077**: Notificar resultado ao cidadão
-- [ ] **HU-078**: Registrar auditoria da decisão automática
+- [x] **HU-073**: Identificar elegibilidade para fluxo expresso
+- [x] **HU-074**: Deferir automaticamente
+- [x] **HU-075**: Indeferir automaticamente
+- [x] **HU-076**: Emitir resultado expresso (decisão + número TVL interno; transmissão Regin/SEFAZ → Fase 13; PDF → Fase 10)
+- [x] **HU-077**: Notificar resultado ao cidadão (e-mail sem anexo; canais plenos → EP11)
+- [x] **HU-078**: Registrar auditoria da decisão automática
 
 ### EP10 — Análise Técnica SEDUR
 
@@ -287,12 +287,12 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-070 | Fase 8 | Complete (EP08 2026-06-14) |
 | HU-071 | Fase 8 | Blocked → Fase 13 (DAM/SEFAZ; sem contrato especulativo) |
 | HU-072 | Fase 8 | Blocked → Fase 13 (sincronização pagamento SEFAZ) |
-| HU-073 | Fase 9 | Pending |
-| HU-074 | Fase 9 | Pending |
-| HU-075 | Fase 9 | Pending |
-| HU-076 | Fase 9 | Pending |
-| HU-077 | Fase 9 | Pending |
-| HU-078 | Fase 9 | Pending |
+| HU-073 | Fase 9 | Complete (EP09 2026-06-14) |
+| HU-074 | Fase 9 | Complete (EP09 2026-06-14) |
+| HU-075 | Fase 9 | Complete (EP09 2026-06-14) |
+| HU-076 | Fase 9 | Complete (decisão+TVL; transmissão Regin/SEFAZ → Fase 13) |
+| HU-077 | Fase 9 | Complete (e-mail; canais plenos → EP11) |
+| HU-078 | Fase 9 | Complete (EP09 2026-06-14) |
 | HU-079 | Fase 10 | Pending |
 | HU-080 | Fase 10 | Pending |
 | HU-081 | Fase 10 | Pending |
