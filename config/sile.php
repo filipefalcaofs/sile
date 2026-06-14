@@ -37,6 +37,16 @@ return [
     'retencao' => [
         'access_logs' => ['dias' => 365],
     ],
+    // Espelha os parâmetros HU-014 risco.* (encaminhamento). Settings::get lê
+    // config("sile.risco.*") no fallback (banco indisponível). O mapa é o ARRAY
+    // já decodificado — typedValue() do parâmetro json também devolve array, de
+    // modo que o consumidor (motor 06-05) sempre recebe array, nunca string.
+    // Nível ausente no mapa degrada para 'analise' (decisão do consumidor) —
+    // o decreto não tem nível "médio".
+    'risco' => [
+        'mapa_encaminhamento' => ['baixo_a' => 'expresso', 'baixo_b' => 'expresso', 'alto' => 'analise'],
+        'dimensao_tvl' => 'municipal',
+    ],
     'seguranca' => [
         'throttle' => [
             'cnpj_lookup' => ['por_minuto' => 30],

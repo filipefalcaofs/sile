@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(29, Parameter::query()->count());
+        $this->assertSame(31, Parameter::query()->count());
         $this->assertSame(
-            ['features', 'geo', 'integracoes', 'retencao', 'seguranca', 'ui'],
+            ['features', 'geo', 'integracoes', 'retencao', 'risco', 'seguranca', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -225,11 +225,44 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('Itens por página no histórico de acessos', $parameter->description);
     }
 
+    public function test_seeder_registra_parametros_de_encaminhamento_de_risco(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $mapa = Parameter::query()->where('key', 'risco.mapa_encaminhamento')->first();
+
+        $this->assertNotNull($mapa);
+        $this->assertSame('risco', $mapa->group);
+        $this->assertSame('json', $mapa->type);
+        $this->assertStringContainsString('baixo_a', $mapa->default_value);
+        $this->assertStringContainsString('expresso', $mapa->default_value);
+        $this->assertStringContainsString('alto', $mapa->default_value);
+        $this->assertStringContainsString('analise', $mapa->default_value);
+        $this->assertSame(['required', 'json'], $mapa->validation_rules);
+        $this->assertNull($mapa->value);
+
+        // O parâmetro json é decodificado para array em typedValue() — o
+        // consumidor (motor 06-05) sempre recebe o mapa como array.
+        $this->assertSame(
+            ['baixo_a' => 'expresso', 'baixo_b' => 'expresso', 'alto' => 'analise'],
+            $mapa->typedValue(),
+        );
+
+        $dimensao = Parameter::query()->where('key', 'risco.dimensao_tvl')->first();
+
+        $this->assertNotNull($dimensao);
+        $this->assertSame('risco', $dimensao->group);
+        $this->assertSame('string', $dimensao->type);
+        $this->assertSame('municipal', $dimensao->default_value);
+        $this->assertSame(['required', 'in:municipal,sanitario'], $dimensao->validation_rules);
+        $this->assertNull($dimensao->value);
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(29, Parameter::query()->count());
+        $this->assertSame(31, Parameter::query()->count());
     }
 }

@@ -243,6 +243,20 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:100'],
                 'description' => 'Percentual mínimo de sobreposição entre o polígono informado e o lote oficial antes de alertar (HU-037)',
             ],
+            'risco.mapa_encaminhamento' => [
+                'group' => 'risco',
+                'type' => 'json',
+                'default_value' => '{"baixo_a":"expresso","baixo_b":"expresso","alto":"analise"}',
+                'validation_rules' => ['required', 'json'],
+                'description' => 'Mapa de encaminhamento por nível de risco da dimensão decisiva (expresso/analise) — Decreto 32.636/2020 não tem nível médio',
+            ],
+            'risco.dimensao_tvl' => [
+                'group' => 'risco',
+                'type' => 'string',
+                'default_value' => 'municipal',
+                'validation_rules' => ['required', 'in:municipal,sanitario'],
+                'description' => 'Dimensão de risco que prevalece no encaminhamento/TVL (default municipal; confirmar com a SEDUR)',
+            ],
         ];
     }
 }
