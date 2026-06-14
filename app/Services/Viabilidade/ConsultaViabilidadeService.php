@@ -10,6 +10,7 @@ use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Louos\LouosEnquadramentoService;
 use App\Services\Realty\PropertyRegistryLookup;
+use App\Services\Realty\PropertyRegistryUnavailableException;
 use App\Services\Risco\RiscoClassificationService;
 use App\Services\Risco\RiscoInput;
 use App\Services\Risco\RiscoResult;
@@ -38,6 +39,8 @@ class ConsultaViabilidadeService
     private const AVISO_ZONA_PENDENTE = 'Veredito locacional pendente: zona urbanística pendente da base oficial (SEDUR).';
 
     private const AVISO_CNAE_SEM_LOCAL = 'Consulta por CNAE não avalia o local: o veredito locacional depende do endereço/zona. Para a viabilidade locacional, consulte por endereço.';
+
+    private const AVISO_INSCRICAO_INDISPONIVEL = 'Resolução por inscrição imobiliária indisponível (base de lotes pendente SEDUR). Resultado sem análise territorial; consulte por endereço para o veredito locacional.';
 
     public function __construct(
         private Geocoder $geocoder,
@@ -75,6 +78,27 @@ class ConsultaViabilidadeService
         $input = ConsultaViabilidadeInput::paraCnae($cnae, $area);
 
         return $this->consultarPorCnaeComEntrada($input, [self::AVISO_CNAE_SEM_LOCAL]);
+    }
+
+    /**
+     * Consulta por INSCRIÇÃO imobiliária (HU-055) via contrato PropertyRegistryLookup:
+     * com a base de lotes disponível, resolve o ponto e roda a pipeline completa
+     * (igual ao endereço, mas sem geocode); indisponível (pendente SEDUR), degrada
+     * para a análise por CNAE + área com aviso — JAMAIS inventa um ponto.
+     */
+    public function consultarPorInscricao(string $inscricao, string $cnae, ?float $area = null): ConsultaViabilidadeResult
+    {
+        $input = ConsultaViabilidadeInput::paraInscricao($inscricao, $cnae, $area);
+
+        try {
+            $ponto = $this->propertyRegistry->resolve($inscricao);
+        } catch (PropertyRegistryUnavailableException) {
+            // Degradação honesta: base de lotes pendente SEDUR. NUNCA inventa ponto.
+            // Cai para a análise por CNAE + área (risco + Quadro 7), com aviso claro.
+            return $this->consultarPorCnaeComEntrada($input, [self::AVISO_INSCRICAO_INDISPONIVEL]);
+        }
+
+        return $this->consultarPorPonto($ponto->latitude, $ponto->longitude, $input, null);
     }
 
     /**

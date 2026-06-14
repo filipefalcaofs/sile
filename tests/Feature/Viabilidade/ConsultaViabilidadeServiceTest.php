@@ -9,6 +9,8 @@ use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Realty\PropertyRegistryLookup;
+use App\Services\Realty\PropertyRegistryResult;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
 use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RiscoMunicipalSeeder;
@@ -42,6 +44,8 @@ class ConsultaViabilidadeServiceTest extends TestCase
     private const AVISO_ZONA_PENDENTE = 'Veredito locacional pendente: zona urbanística pendente da base oficial (SEDUR).';
 
     private const AVISO_CNAE_SEM_LOCAL = 'Consulta por CNAE não avalia o local: o veredito locacional depende do endereço/zona. Para a viabilidade locacional, consulte por endereço.';
+
+    private const AVISO_INSCRICAO_INDISPONIVEL = 'Resolução por inscrição imobiliária indisponível (base de lotes pendente SEDUR). Resultado sem análise territorial; consulte por endereço para o veredito locacional.';
 
     protected function setUp(): void
     {
@@ -245,5 +249,58 @@ class ConsultaViabilidadeServiceTest extends TestCase
         $this->assertNotSame('permitido', $veredito['resultado']);
         $this->assertNotSame('nao_permitido', $veredito['resultado']);
         $this->assertSame('classificado', $result->risco->municipal['status']);
+    }
+
+    public function test_inscricao_com_provider_disponivel_resolve_ponto_e_roda_pipeline_completa(): void
+    {
+        // Anti-fachada (prova a lógica): com um provider que resolve a inscrição
+        // (como será quando a base de lotes chegar — Fase 13), a consulta roda de
+        // ponta a ponta a partir do ponto resolvido.
+        $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
+        {
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                return new PropertyRegistryResult(
+                    latitude: -12.9714,
+                    longitude: -38.5014,
+                    inscricao: $inscricao,
+                    source: 'fake-cadastro',
+                );
+            }
+        });
+        $this->fakeTerritorioBairroSemZona();
+
+        $result = $this->service()->consultarPorInscricao('123456789', self::CNAE_MINIMERCADO, 120.0);
+
+        // Rodou a identificação a partir do ponto resolvido (território real).
+        $this->assertSame('inscricao', $result->entrada['tipo']);
+        $this->assertNotNull($result->territory);
+        $this->assertSame('identificado', $result->territory->bairro['status']);
+
+        // Risco e Quadro 7 reais (pipeline completa).
+        $this->assertSame('classificado', $result->risco->municipal['status']);
+        $this->assertSame('identificado', $result->enquadramento->quadro7['status']);
+    }
+
+    public function test_inscricao_indisponivel_degrada_para_cnae_com_aviso_e_nunca_inventa_ponto(): void
+    {
+        // HU-055/CA-03: com o binding REAL (base de lotes pendente SEDUR), a
+        // resolução do ponto degrada para a via CNAE — NUNCA inventa coordenada.
+        $result = $this->service()->consultarPorInscricao('123456789', self::CNAE_MINIMERCADO, 120.0);
+
+        // Sem ponto inventado: nenhum geocode e nenhum território.
+        $this->assertNull($result->geocode);
+        $this->assertNull($result->territory);
+
+        // O risco continua REAL e o veredito é pendente (sem análise territorial).
+        $this->assertSame('classificado', $result->risco->municipal['status']);
+        $this->assertSame('pendente', $result->vereditoLocacional()['resultado']);
+
+        // Degradação comunicada com o aviso honesto que sugere o endereço.
+        $this->assertContains(self::AVISO_INSCRICAO_INDISPONIVEL, $result->avisos);
+
+        // O snapshot serializado não carrega coordenada inventada.
+        $this->assertNull($result->toArray()['geocode']);
+        $this->assertNull($result->toArray()['territorio']);
     }
 }
