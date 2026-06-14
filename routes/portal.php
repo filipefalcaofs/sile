@@ -9,6 +9,7 @@ use App\Http\Controllers\Portal\CompanyLinkController;
 use App\Http\Controllers\Portal\ConsultaViabilidadeController;
 use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\GovBrLoginController;
+use App\Http\Controllers\Portal\HistoricoConsultaController;
 use App\Http\Controllers\Portal\LgpdTermController;
 use App\Http\Controllers\Portal\ProcurationController;
 use App\Http\Controllers\Portal\RepresentationController;
@@ -58,6 +59,11 @@ Route::middleware(['auth:web', 'verified'])
             Route::get('painel', DashboardController::class)->name('dashboard');
 
             Route::get('acessos', AccessHistoryController::class)->name('acessos.index');
+
+            // Histórico autenticado das consultas de viabilidade do próprio
+            // usuário (HU-060) — rota literal, sem conflito com a pública
+            // viabilidade.index (07-06). Escopo do dono no controller (forUser).
+            Route::get('viabilidade/historico', HistoricoConsultaController::class)->name('viabilidade.historico');
 
             Route::get('procuracoes', [ProcurationController::class, 'index'])->name('procuracoes.index');
             Route::post('procuracoes', [ProcurationController::class, 'store'])->name('procuracoes.store');

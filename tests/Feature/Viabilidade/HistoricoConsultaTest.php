@@ -10,7 +10,9 @@ use App\Services\Geo\GeocodeResult;
 use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -35,10 +37,19 @@ class HistoricoConsultaTest extends TestCase
         parent::setUp();
 
         $this->seed([
+            RolesAndPermissionsSeeder::class,
             LouosQuadro7Seeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
         ]);
+    }
+
+    /**
+     * Cidadão do portal com termo LGPD aceito — precedente "Minhas empresas".
+     */
+    private function portalUser(): User
+    {
+        return User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
     }
 
     public function test_consulta_autenticada_grava_snapshot_no_historico(): void
@@ -110,5 +121,73 @@ class HistoricoConsultaTest extends TestCase
             ->assertStatus(404);
 
         $this->assertSame(0, ViabilityQuery::count());
+    }
+
+    public function test_historico_lista_so_as_consultas_do_dono(): void
+    {
+        // HU-060/CA-04 (escopo): o usuário vê SOMENTE as próprias consultas
+        // (forUser — precedente "Minhas empresas"); as de terceiro nunca aparecem.
+        $userA = $this->portalUser();
+        $userB = $this->portalUser();
+
+        ViabilityQuery::factory()->for($userA)->create();
+        ViabilityQuery::factory()->for($userA)->create();
+        ViabilityQuery::factory()->for($userB)->create();
+
+        $this->actingAs($userA)
+            ->get('/portal/viabilidade/historico')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('consultas.data', 2)
+                ->where('consultas.total', 2)
+                ->has('consultas.data.0', fn (Assert $item) => $item
+                    ->has('id')
+                    ->has('entry_type')
+                    ->has('resultado')
+                    ->has('resultado_label')
+                    ->has('input')
+                    ->has('created_at')
+                    ->has('result')));
+    }
+
+    public function test_historico_exige_autenticacao(): void
+    {
+        // A rota de histórico é AUTENTICADA (auth:web + verified + lgpd): o
+        // visitante é redirecionado ao login do portal.
+        $this->get('/portal/viabilidade/historico')->assertRedirect('/portal/login');
+    }
+
+    public function test_consulta_do_historico_e_auditada(): void
+    {
+        // RN-002: a consulta do histórico (dado do próprio usuário) é auditada,
+        // com causer = usuário — precedente do histórico de acessos.
+        $user = $this->portalUser();
+        ViabilityQuery::factory()->for($user)->create();
+
+        $this->actingAs($user)
+            ->get('/portal/viabilidade/historico')
+            ->assertOk();
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'viabilidade',
+            'event' => 'consulta-historico',
+            'causer_id' => $user->id,
+            'result' => 'sucesso',
+        ]);
+    }
+
+    public function test_historico_ordena_da_mais_recente(): void
+    {
+        // Ordenação da mais recente para a mais antiga (latest created_at, id).
+        $user = $this->portalUser();
+
+        $antiga = ViabilityQuery::factory()->for($user)->create(['created_at' => now()->subDay()]);
+        $recente = ViabilityQuery::factory()->for($user)->create(['created_at' => now()]);
+
+        $this->actingAs($user)
+            ->get('/portal/viabilidade/historico')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('consultas.data.0.id', $recente->id)
+                ->where('consultas.data.1.id', $antiga->id));
     }
 }
