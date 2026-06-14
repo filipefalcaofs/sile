@@ -2,7 +2,7 @@ import { usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import AppShell from '@/components/app/app-shell';
 import type { SidebarGroup } from '@/components/app/app-sidebar';
-import { GridIcon, GroupIcon, LockIcon, MailIcon, MapPinIcon, PlugInIcon, TableIcon } from '@/components/icons';
+import { GridIcon, GroupIcon, ListIcon, LockIcon, MailIcon, MapPinIcon, PlugInIcon, ShieldIcon, TableIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import { ThemeProvider } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
@@ -35,6 +35,18 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     href: '/gestao/cnaes',
                     icon: <TableIcon />,
                     visible: auth.permissions.includes('consultar-cnaes'),
+                },
+                {
+                    name: 'Classificação de risco',
+                    href: '/gestao/risco',
+                    icon: <ShieldIcon />,
+                    visible: auth.permissions.includes('consultar-risco'),
+                },
+                {
+                    name: 'Condicionantes',
+                    href: '/gestao/risco/condicionantes',
+                    icon: <ListIcon />,
+                    visible: auth.permissions.includes('manter-risco'),
                 },
                 {
                     name: 'Usuários',
