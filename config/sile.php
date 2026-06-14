@@ -23,6 +23,7 @@ return [
         'cnpj_lookup' => true,
         'govbr_login' => false,
         'geocoding' => true,
+        'consulta_viabilidade' => true,
     ],
     // Chaves pt-BR (geo.*, retencao.*, seguranca.*) espelham os parâmetros
     // HU-014 de mesmo nome — Settings::get lê config("sile.{chave}") no
@@ -61,6 +62,7 @@ return [
         'throttle' => [
             'cnpj_lookup' => ['por_minuto' => 30],
             'geocoding' => ['por_minuto' => 60],
+            'consulta_viabilidade' => ['por_minuto' => 20],
         ],
     ],
     'integrations' => [

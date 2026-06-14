@@ -271,6 +271,20 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:1000'],
                 'description' => 'Tamanho padrão da amostra de cenários reprocessados na simulação de impacto de regra (HU-143)',
             ],
+            'features.consulta_viabilidade' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a consulta prévia de viabilidade no portal do cidadão (endereço, CNAE e inscrição imobiliária)',
+            ],
+            'seguranca.throttle.consulta_viabilidade.por_minuto' => [
+                'group' => 'seguranca',
+                'type' => 'integer',
+                'default_value' => '20',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
+                'description' => 'Limite de consultas de viabilidade por minuto por usuário/IP no portal',
+            ],
         ];
     }
 }

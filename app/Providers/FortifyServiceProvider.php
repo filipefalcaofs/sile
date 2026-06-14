@@ -188,5 +188,14 @@ class FortifyServiceProvider extends ServiceProvider
                 (int) Settings::get('seguranca.throttle.geocoding.por_minuto', 60),
             )->by($request->user()?->id ?: $request->ip());
         });
+
+        // Throttle da consulta pública de viabilidade (EP07) — limite
+        // administrável sem deploy; reusa o padrão de throttle parametrizado
+        // estabelecido na Fase 3.1 (cnpj-lookup/geocoding).
+        RateLimiter::for('consulta-viabilidade', function (Request $request) {
+            return Limit::perMinute(
+                (int) Settings::get('seguranca.throttle.consulta_viabilidade.por_minuto', 20),
+            )->by($request->user()?->id ?: $request->ip());
+        });
     }
 }
