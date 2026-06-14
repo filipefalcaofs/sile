@@ -14,6 +14,10 @@ class ImportRedesimJobTest extends TestCase
 {
     use RefreshDatabase;
 
+    // Exercita o worker REAL da fila (queue:work + failed_jobs); o fake padrão
+    // do DecidirFluxoExpressoJob impediria o pop do worker.
+    protected bool $fakeExpressoDecisionJob = false;
+
     public function test_job_executa_a_importacao_real(): void
     {
         Cnae::factory()->create(['code' => '6422100']);
