@@ -10,6 +10,9 @@ use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
+use App\Models\LouosQuadro10Permissao;
+use App\Models\LouosQuadro11CondicaoVia;
+use App\Models\LouosQuadro7Faixa;
 use App\Models\Parameter;
 use App\Models\RiskClassification;
 use App\Models\RiskCondicionante;
@@ -59,6 +62,24 @@ class DatabaseSeederTest extends TestCase
             Activity::query()
                 ->where('log_name', 'risco')
                 ->where('event', 'importacao-classificacao-sanitaria')
+                ->exists()
+        );
+
+        // Quadros da LOUOS (Lei 9.148/2016): cada Quadro publica uma versão
+        // vigente própria; o Quadro 7 carrega as 40 faixas reais e a importação
+        // é auditada (RN-002). Quadros 10/11/11A modelados (carga oficial
+        // pendente SEDUR), mas já versionados.
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro7)->count());
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11)->count());
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
+        $this->assertSame(40, LouosQuadro7Faixa::query()->count());
+        $this->assertGreaterThan(0, LouosQuadro10Permissao::query()->count());
+        $this->assertGreaterThan(0, LouosQuadro11CondicaoVia::query()->count());
+        $this->assertTrue(
+            Activity::query()
+                ->where('log_name', 'louos')
+                ->where('event', 'importacao-quadro7')
                 ->exists()
         );
 
@@ -117,6 +138,11 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
         $this->assertSame(261, SanitaryRiskClassification::query()->count());
         $this->assertSame(67, RiskCondicionante::query()->count());
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro7)->count());
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11)->count());
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
+        $this->assertSame(40, LouosQuadro7Faixa::query()->count());
         $this->assertSame(3, Company::query()->count());
         $this->assertSame(
             2,
