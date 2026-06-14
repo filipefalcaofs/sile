@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Carbon;
 
 /**
  * @extends Factory<ViabilityRequest>
@@ -75,6 +76,24 @@ class ViabilityRequestFactory extends Factory
             'status' => ViabilityRequestStatus::Protocolada,
             'protocol_number' => 'VIA-'.now()->year.'-000001',
             'protocoled_at' => now(),
+        ]);
+    }
+
+    /**
+     * Solicitação parada em aguardando_bap (HU-134) — a antessala do
+     * indeferimento por prazo. bap_due_at já VENCIDO por padrão (now-72h) para os
+     * testes da rotina; passe $dueAt para um vencimento específico (ex.: futuro,
+     * dentro do prazo). bap_linked_at fica null — nada vincula o BAP hoje
+     * (BapRegistry indisponível até o Regin, Fase 13).
+     */
+    public function awaitingBap(?Carbon $dueAt = null): static
+    {
+        return $this->state(fn () => [
+            'status' => ViabilityRequestStatus::AguardandoBap,
+            'protocol_number' => fake()->unique()->numerify('VIA-'.now()->year.'-######'),
+            'protocoled_at' => now(),
+            'bap_due_at' => $dueAt ?? now()->subHours(72),
+            'bap_linked_at' => null,
         ]);
     }
 
