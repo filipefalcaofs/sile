@@ -12,6 +12,12 @@ use App\Services\GovBr\GovBrIdTokenValidator;
 use App\Services\GovBr\GovBrProvider;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\UnavailablePropertyRegistryLookup;
+use App\Services\Regin\BapRegistry;
+use App\Services\Regin\ReginParecerNotifier;
+use App\Services\Regin\UnavailableBapRegistry;
+use App\Services\Regin\UnavailableReginParecerNotifier;
+use App\Services\Sefaz\SefazViabilidadeGateway;
+use App\Services\Sefaz\UnavailableSefazViabilidadeGateway;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
 use Illuminate\Support\ServiceProvider;
@@ -46,6 +52,17 @@ class AppServiceProvider extends ServiceProvider
         // de lotes/Cadastro está PENDENTE SEDUR — o provider degrada honestamente
         // (nunca inventa ponto). A Fase 13 (HU-106) troca SÓ este binding.
         $this->app->bind(PropertyRegistryLookup::class, UnavailablePropertyRegistryLookup::class);
+
+        // Integrações de saída do fluxo expresso BLOQUEADAS (sem contrato/
+        // homologação): comunicar o parecer ao Regin/Junta (HU-104) e enviar a
+        // viabilidade à SEFAZ municipal (HU-110) degradam HONESTO — o provider
+        // Unavailable LANÇA exceção (a transmissão não ocorreu), nunca simula
+        // sucesso; o vínculo BAP (HU-134) retorna null (sem vínculo, nada entra
+        // em aguardando_bap). A Fase 13 troca SÓ estes bindings, sem tocar os
+        // listeners que os consomem (09-08/09/10).
+        $this->app->bind(ReginParecerNotifier::class, UnavailableReginParecerNotifier::class);
+        $this->app->bind(SefazViabilidadeGateway::class, UnavailableSefazViabilidadeGateway::class);
+        $this->app->bind(BapRegistry::class, UnavailableBapRegistry::class);
     }
 
     /**
