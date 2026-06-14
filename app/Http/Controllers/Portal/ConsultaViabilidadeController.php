@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Portal\ConsultaViabilidadeCnaeRequest;
 use App\Http\Requests\Portal\ConsultaViabilidadeEnderecoRequest;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\GeocoderException;
@@ -65,6 +66,26 @@ class ConsultaViabilidadeController extends Controller
                 'message' => 'Serviço de geocodificação indisponível no momento. Tente novamente em instantes.',
             ], 503);
         }
+
+        return response()->json($result->toArray());
+    }
+
+    /**
+     * Consulta por CNAE (HU-056): risco real + Quadro 7 por área, SEM território.
+     * Não há geocodificação — sem AddressNotFoundException/GeocoderException a
+     * tratar; o veredito locacional fica pendente e o serviço já avisa que a
+     * consulta não avalia o local.
+     */
+    public function cnae(ConsultaViabilidadeCnaeRequest $request): JsonResponse
+    {
+        if ($bloqueio = $this->guardToggle()) {
+            return $bloqueio;
+        }
+
+        $result = $this->service->consultarPorCnae(
+            $request->validated('cnae'),
+            $request->validated('area') !== null ? (float) $request->validated('area') : null,
+        );
 
         return response()->json($result->toArray());
     }

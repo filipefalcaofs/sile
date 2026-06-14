@@ -33,6 +33,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
 
     Route::middleware('throttle:consulta-viabilidade')->group(function () {
         Route::post('viabilidade/endereco', [ConsultaViabilidadeController::class, 'endereco'])->name('viabilidade.endereco');
+        Route::post('viabilidade/cnae', [ConsultaViabilidadeController::class, 'cnae'])->name('viabilidade.cnae');
     });
 });
 

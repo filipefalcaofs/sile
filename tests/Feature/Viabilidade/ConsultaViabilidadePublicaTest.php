@@ -201,6 +201,56 @@ class ConsultaViabilidadePublicaTest extends TestCase
             ->assertJsonValidationErrors('endereco');
     }
 
+    public function test_consulta_por_cnae_anonima_roda_risco_e_quadro7(): void
+    {
+        // HU-056: consulta por CNAE (sem endereço/inscrição) roda o risco real e o
+        // Quadro 7 por área, SEM território — o veredito fica pendente (sem local)
+        // e a consulta avisa que não avalia o local. Não precisa de geocoder.
+        $this->postJson('/portal/viabilidade/cnae', [
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+        ])
+            ->assertOk()
+            ->assertJsonPath('risco.municipal.status', 'classificado')
+            ->assertJsonPath('enquadramento.quadro7.status', 'identificado')
+            ->assertJsonPath('veredito_locacional.resultado', 'pendente')
+            ->assertJsonPath('avisos.0', self::AVISO_CNAE_SEM_LOCAL)
+            // Sem ponto: nenhum território/geocode inventado.
+            ->assertJsonPath('geocode', null)
+            ->assertJsonPath('territorio', null);
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'viabilidade',
+            'event' => 'consulta',
+            'result' => 'sucesso',
+        ]);
+    }
+
+    public function test_consulta_por_cnae_respeita_toggle(): void
+    {
+        // HU-014: o toggle desligado bloqueia também a via CNAE, com aviso comunicado.
+        $this->seed(ParameterSeeder::class);
+        Parameter::query()
+            ->where('key', 'features.consulta_viabilidade')
+            ->first()
+            ->update(['value' => '0']);
+
+        $this->postJson('/portal/viabilidade/cnae', [
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+        ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'A consulta de viabilidade está temporariamente desativada. Tente novamente mais tarde.');
+    }
+
+    public function test_cnae_invalido_e_rejeitado_sem_executar(): void
+    {
+        // FormRequest valida antes de orquestrar: CNAE ausente → 422.
+        $this->postJson('/portal/viabilidade/cnae', ['area' => 120])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('cnae');
+    }
+
     public function test_toggle_desligado_bloqueia_antes_de_executar(): void
     {
         // HU-014: features.consulta_viabilidade desligado bloqueia ANTES de
