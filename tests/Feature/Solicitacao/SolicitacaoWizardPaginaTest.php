@@ -4,9 +4,11 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Enums\CompanyLinkRole;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityServiceType;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -127,5 +129,91 @@ class SolicitacaoWizardPaginaTest extends TestCase
                 ->where('duplicateAlert.request_id', 123)
                 ->where('duplicateAlert.protocol_number', 'VIA-2026-000001')
             );
+    }
+
+    public function test_nova_renderiza_o_wizard_com_dados_de_apoio(): void
+    {
+        // GET solicitacoes/nova (portal.solicitacoes.create) renderiza o wizard
+        // para um NOVO rascunho (sem solicitação ainda) com os dados de apoio.
+        $user = $this->portalUser();
+
+        $this->actingAs($user)
+            ->get('/portal/solicitacoes/nova')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('portal/solicitacoes/wizard')
+                ->where('solicitacao', null)
+                ->has('serviceTypes')
+                ->has('companies')
+                ->where('solicitacaoEnabled', true)
+            );
+    }
+
+    public function test_nova_so_lista_tipos_ativos_e_empresas_do_dono(): void
+    {
+        $user = $this->portalUser();
+        $this->companyLinkedTo($user);
+        Company::factory()->create(); // empresa de terceiro, sem vínculo
+
+        ViabilityServiceType::factory()->create();
+        ViabilityServiceType::factory()->inactive()->create();
+
+        $this->actingAs($user)
+            ->get('/portal/solicitacoes/nova')
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('portal/solicitacoes/wizard')
+                ->has('serviceTypes', 1)
+                ->has('companies', 1)
+            );
+    }
+
+    public function test_editar_renderiza_o_wizard_do_rascunho_do_dono(): void
+    {
+        // GET solicitacoes/{solicitacao}/editar (portal.solicitacoes.edit)
+        // renderiza o wizard com o rascunho do dono — DISTINTA da rota de
+        // protocolo/consulta solicitacoes/{solicitacao} (08-11).
+        $user = $this->portalUser();
+        $solicitacao = $this->draftFor($user);
+        $solicitacao->cnaes()->attach(Cnae::factory()->create()->id, ['is_primary' => true]);
+
+        $this->actingAs($user)
+            ->get("/portal/solicitacoes/{$solicitacao->id}/editar")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('portal/solicitacoes/wizard')
+                ->where('solicitacao.id', $solicitacao->id)
+                ->where('solicitacao.status.value', 'rascunho')
+                ->has('solicitacao.cnaes', 1)
+                ->has('anexosConfig')
+                ->where('simulacaoEnabled', true)
+            );
+    }
+
+    public function test_editar_bloqueia_terceiro(): void
+    {
+        // CA-04: terceiro não edita o rascunho alheio (policy update → 403).
+        $owner = $this->portalUser();
+        $stranger = $this->portalUser();
+        $solicitacao = $this->draftFor($owner);
+
+        $this->actingAs($stranger)
+            ->get("/portal/solicitacoes/{$solicitacao->id}/editar")
+            ->assertForbidden();
+    }
+
+    public function test_editar_bloqueia_quando_protocolada(): void
+    {
+        // Protocolada não é editável (policy update = dono + rascunho): o wizard
+        // só serve para rascunho; a consulta da protocolada é a página show.
+        $user = $this->portalUser();
+        $solicitacao = $this->draftFor($user, [
+            'status' => ViabilityRequestStatus::Protocolada,
+            'protocol_number' => 'VIA-2026-000050',
+            'protocoled_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get("/portal/solicitacoes/{$solicitacao->id}/editar")
+            ->assertForbidden();
     }
 }

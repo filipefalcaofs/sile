@@ -2,19 +2,26 @@
 
 namespace App\Http\Controllers\Portal;
 
+use App\Enums\ResultadoViabilidade;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreSolicitacaoRequest;
+use App\Models\Cnae;
 use App\Models\Company;
+use App\Models\DocumentRequirement;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestDocument;
+use App\Models\ViabilityServiceType;
+use App\Services\Solicitacao\DocumentRequirementResolver;
 use App\Services\Solicitacao\DuplicateRequestDetector;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -38,7 +45,10 @@ class SolicitacaoController extends Controller
 
     private const DEFAULT_PER_PAGE = 15;
 
-    public function __construct(private DuplicateRequestDetector $duplicateDetector) {}
+    public function __construct(
+        private DuplicateRequestDetector $duplicateDetector,
+        private DocumentRequirementResolver $requirementResolver,
+    ) {}
 
     /**
      * "Minhas solicitações": lista server-driven SOMENTE das solicitações do
@@ -170,6 +180,219 @@ class SolicitacaoController extends Controller
         }
 
         return $redirect;
+    }
+
+    /**
+     * Wizard de um NOVO rascunho (HU-061): só a etapa de início (tipo de serviço
+     * + empresa do dono). Renderiza a página do wizard sem solicitação — o POST
+     * em store cria o rascunho e o fluxo segue na edição (continuar preenchendo).
+     */
+    public function create(Request $request): Response
+    {
+        $effectiveUser = $this->effectiveUser($request);
+
+        return Inertia::render('portal/solicitacoes/wizard', [
+            'solicitacao' => null,
+            'serviceTypes' => $this->serviceTypeOptions(),
+            'companies' => $this->companyOptions($effectiveUser),
+            'requisitosObrigatorios' => [],
+            'requisitosFaltantes' => [],
+            'anexosConfig' => $this->anexosConfig(),
+            'cnaesComplementaresMax' => $this->cnaesComplementaresMax(),
+            'simulacaoEnabled' => Settings::enabled('simulacao_solicitacao'),
+            'solicitacaoEnabled' => Settings::enabled('solicitacao_viabilidade'),
+            'territorio' => null,
+            'areaAlert' => null,
+        ]);
+    }
+
+    /**
+     * Wizard de um rascunho EXISTENTE (HU-062..067, 141): continua o
+     * preenchimento (imóvel, atividades, documentos, simulação, revisão). Só o
+     * dono em rascunho (ViabilityRequestPolicy::update, CA-04). O território e o
+     * alerta de área voltam por flash da etapa de imóvel (transientes); a
+     * simulação vem do snapshot persistido (RN-003). Distinta da página de
+     * protocolo/consulta (08-11).
+     */
+    public function edit(Request $request, ViabilityRequest $solicitacao): Response
+    {
+        Gate::authorize('update', $solicitacao);
+
+        $solicitacao->load(['company', 'serviceType', 'cnaes', 'documents.requirement']);
+
+        return Inertia::render('portal/solicitacoes/wizard', [
+            'solicitacao' => $this->wizardDraftPayload($solicitacao),
+            'serviceTypes' => [],
+            'companies' => [],
+            'requisitosObrigatorios' => $this->requirementResolver->required($solicitacao)
+                ->map(fn (DocumentRequirement $requirement) => [
+                    'id' => $requirement->id,
+                    'code' => $requirement->code,
+                    'name' => $requirement->name,
+                    'description' => $requirement->description,
+                ])->values(),
+            'requisitosFaltantes' => $this->requirementResolver->missing($solicitacao)
+                ->map(fn (DocumentRequirement $requirement) => [
+                    'id' => $requirement->id,
+                    'code' => $requirement->code,
+                    'name' => $requirement->name,
+                ])->values(),
+            'anexosConfig' => $this->anexosConfig(),
+            'cnaesComplementaresMax' => $this->cnaesComplementaresMax(),
+            'simulacaoEnabled' => Settings::enabled('simulacao_solicitacao'),
+            'solicitacaoEnabled' => Settings::enabled('solicitacao_viabilidade'),
+            // Transientes vindos do PUT de imóvel (08-06): resumo do território
+            // identificado (degrada honesto sem zona) e alerta de área×polígono.
+            'territorio' => $request->session()->get('territorio'),
+            'areaAlert' => $request->session()->get('areaAlert'),
+        ]);
+    }
+
+    /**
+     * Tipos de serviço ATIVOS (HU-061 RN-005) para o select de início.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function serviceTypeOptions(): array
+    {
+        return ViabilityServiceType::query()
+            ->active()
+            ->orderBy('name')
+            ->get()
+            ->map(fn (ViabilityServiceType $type) => [
+                'value' => $type->id,
+                'label' => $type->name,
+            ])
+            ->all();
+    }
+
+    /**
+     * Empresas com vínculo ATIVO do usuário efetivo (Fase 3) — base da solicitação.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function companyOptions(User $user): array
+    {
+        return Company::query()
+            ->whereHas('links', fn ($query) => $query->where('user_id', $user->id)->whereNull('ended_at'))
+            ->orderBy('legal_name')
+            ->get()
+            ->map(fn (Company $company) => [
+                'value' => $company->id,
+                'label' => $company->legal_name,
+                'formatted_cnpj' => $company->formatted_cnpj,
+            ])
+            ->all();
+    }
+
+    /**
+     * Estado completo do rascunho para reidratar o wizard (consome o que os
+     * backends 08-06/07/08/09 persistiram — nada simulado no front).
+     *
+     * @return array<string, mixed>
+     */
+    private function wizardDraftPayload(ViabilityRequest $solicitacao): array
+    {
+        return [
+            'id' => $solicitacao->id,
+            'protocol_number' => $solicitacao->protocol_number,
+            'status' => [
+                'value' => $solicitacao->status->value,
+                'label' => $solicitacao->status->label(),
+                'public_label' => $solicitacao->status->publicLabel(),
+            ],
+            'service_type' => $solicitacao->serviceType?->name,
+            'service_type_id' => $solicitacao->service_type_id,
+            'company' => $solicitacao->company ? [
+                'id' => $solicitacao->company->id,
+                'legal_name' => $solicitacao->company->legal_name,
+                'formatted_cnpj' => $solicitacao->company->formatted_cnpj,
+            ] : null,
+            'used_area_m2' => $solicitacao->used_area_m2,
+            'address' => [
+                'street' => $solicitacao->address_street,
+                'number' => $solicitacao->address_number,
+                'complement' => $solicitacao->address_complement,
+                'neighborhood' => $solicitacao->address_neighborhood,
+                'zip' => $solicitacao->address_zip,
+                'reference' => $solicitacao->address_reference,
+            ],
+            'property_polygon_geojson' => $solicitacao->property_polygon_geojson,
+            'indicators' => [
+                'is_virtual_office' => (bool) $solicitacao->is_virtual_office,
+                'is_public_area' => (bool) $solicitacao->is_public_area,
+                'has_independent_access' => (bool) $solicitacao->has_independent_access,
+            ],
+            'cnaes' => $solicitacao->cnaes
+                ->sortByDesc(fn (Cnae $cnae) => (bool) $cnae->pivot->is_primary)
+                ->values()
+                ->map(fn (Cnae $cnae) => [
+                    'id' => $cnae->id,
+                    'formatted_code' => $cnae->formatted_code,
+                    'description' => $cnae->description,
+                    'is_primary' => (bool) $cnae->pivot->is_primary,
+                ])
+                ->all(),
+            'documentos' => $solicitacao->documents
+                ->map(fn (ViabilityRequestDocument $document) => [
+                    'id' => $document->id,
+                    'original_name' => $document->original_name,
+                    'mime_type' => $document->mime_type,
+                    'size' => $document->size,
+                    'requirement_id' => $document->requirement_id,
+                    'requirement_name' => $document->requirement?->name,
+                    'download_url' => route('portal.solicitacoes.documentos.download', [$solicitacao, $document]),
+                ])
+                ->all(),
+            'simulation' => $this->simulationPayload($solicitacao),
+        ];
+    }
+
+    /**
+     * Snapshot da simulação persistido (RN-003) — não reprocessa: o front reusa
+     * o ResultadoViabilidade por CNAE. Null quando ainda não simulada/invalidada.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function simulationPayload(ViabilityRequest $solicitacao): ?array
+    {
+        if ($solicitacao->simulated_at === null || $solicitacao->simulation_resultado === null) {
+            return null;
+        }
+
+        return [
+            'resultado' => $solicitacao->simulation_resultado,
+            'resultado_label' => ResultadoViabilidade::from($solicitacao->simulation_resultado)->label(),
+            'por_cnae' => $solicitacao->simulation_snapshot['por_cnae'] ?? [],
+            'simulated_at' => $solicitacao->simulated_at->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Tipos e tamanho máximo aceitos no upload (HU-014) — comunicados na UI.
+     *
+     * @return array<string, mixed>
+     */
+    private function anexosConfig(): array
+    {
+        return [
+            'max_mb' => (int) Settings::get('solicitacao.anexos.max_mb', config('sile.solicitacao.anexos.max_mb', 10)),
+            'mime_permitidos' => (array) Settings::get(
+                'solicitacao.anexos.mime_permitidos',
+                config('sile.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']),
+            ),
+        ];
+    }
+
+    /**
+     * Limite parametrizável de CNAEs complementares (HU-065) — comunicado na UI.
+     */
+    private function cnaesComplementaresMax(): int
+    {
+        return (int) Settings::get(
+            'solicitacao.cnaes_complementares.max',
+            config('sile.solicitacao.cnaes_complementares.max', 99),
+        );
     }
 
     /**

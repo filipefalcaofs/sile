@@ -119,6 +119,14 @@ Route::middleware(['auth:web', 'verified'])
             Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->name('solicitacoes.index');
             Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->name('solicitacoes.store');
 
+            // Wizard multi-etapas (HU-061..067, 141) — rotas GET que RENDERIZAM o
+            // wizard. 'nova' é LITERAL e precisa vir ANTES de solicitacoes/{solicitacao}
+            // (08-11 show) para não ser capturada como id. 'editar' continua um
+            // rascunho existente (policy update, dono + rascunho). São DISTINTAS da
+            // GET solicitacoes/{solicitacao} (página de protocolo/consulta do 08-11).
+            Route::get('solicitacoes/nova', [SolicitacaoController::class, 'create'])->name('solicitacoes.create');
+            Route::get('solicitacoes/{solicitacao}/editar', [SolicitacaoController::class, 'edit'])->name('solicitacoes.edit');
+
             // Consulta AUTENTICADA do protocolo (HU-069) — rota com {solicitacao}
             // DEPOIS das literais. Dono/representado (policy view) acompanha a
             // timeline em linguagem simples + prazo estimado com ressalva e gera o
