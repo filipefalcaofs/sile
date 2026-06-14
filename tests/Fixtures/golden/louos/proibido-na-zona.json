@@ -1,0 +1,16 @@
+{
+    "nome": "Atividade nR3 e nao permitida na zona ZPAM (Quadro 10 proibe)",
+    "descricao": "Caminho decidivel quando ha zona: CNAE 1091-1/02 enquadra no grupo nR3 pelo Quadro 7 (faixa unica, sem teto). Com a zona ZPAM informada como ENTRADA EXPLICITA do operador (hipotese — a base oficial de zona segue pendente SEDUR), a combinacao (ZPAM x nR3) tem permissao 'proibido' no Quadro 10 real → consolidado nao_permitido (RN-005). Prova que, quando ha zona, o motor decide de verdade pela regra versionada.",
+    "input": {
+        "area": 200,
+        "cnae": "1091-1/02",
+        "zona": "ZPAM"
+    },
+    "esperado": {
+        "quadro7_status": "identificado",
+        "quadro7_grupo": "nR3",
+        "quadro10_status": "identificado",
+        "quadro10_permissao": "proibido",
+        "resultado": "nao_permitido"
+    }
+}

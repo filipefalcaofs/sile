@@ -1,0 +1,15 @@
+{
+    "nome": "Atividade que requer zona fica pendente enquanto a base SEDUR nao chega",
+    "descricao": "CASO CHAVE anti-fachada (criterio 7): CNAE 7020-4/00 (consultoria) com area de 500 m2 enquadra no Quadro 7 (grupo nR1), mas o caso e marcado requer_zona e NAO traz zona no input — a base de zoneamento da LOUOS esta bloqueada pendente SEDUR (Fase 4). O Quadro 10 degrada para indisponivel e o consolidado fica pendente. Trava a degradacao honesta como regressao: se algum dia o motor passar a declarar permitido/nao_permitido sem a zona real, este caso falha.",
+    "input": {
+        "area": 500,
+        "cnae": "7020-4/00",
+        "requer_zona": true
+    },
+    "esperado": {
+        "quadro7_status": "identificado",
+        "quadro7_grupo": "nR1",
+        "quadro10_status": "indisponivel",
+        "resultado": "pendente"
+    }
+}
