@@ -2,15 +2,19 @@
 
 namespace App\Services\Expresso;
 
+use App\Enums\DecisionOutcome;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\ViabilityRequestStatus;
+use App\Events\ResultadoEmitido;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -142,9 +146,9 @@ class FluxoExpressoService
             );
 
             $this->audit->log(
-                'expresso',
-                'decisao',
-                "Encaminhamento à análise técnica da solicitação #{$request->id}: {$reason}",
+                logName: 'expresso',
+                event: 'decisao',
+                description: "Encaminhamento à análise técnica da solicitação #{$request->id}: {$reason}",
                 properties: [
                     'viability_request_id' => $request->id,
                     'protocol_number' => $request->protocol_number,
@@ -163,12 +167,118 @@ class FluxoExpressoService
     }
 
     /**
-     * Emite a decisão vinculante (defere/indefere). Implementado na Task 2 do
-     * plano 09-05.
+     * Emite a decisão vinculante (HU-074/075/076, RN-009): nao_permitido →
+     * INDEFERE; permitido(_com_condicoes) → DEFERE. Numa transação cria a
+     * ViabilityDecision imutável (per_cnae/rules_versions/fundamentação), gera o
+     * número TVL só no deferimento, transiciona pela StateMachine (timeline +
+     * auditoria) e AUDITA SÍNCRONO a decisão (HU-078) — tudo antes do commit. O
+     * ResultadoEmitido é disparado APÓS o commit.
+     *
+     * Robustez idempotente: se uma corrida rara escapar do Cache::lock (ex.:
+     * cache não compartilhado), a unique(viability_request_id) barra a 2ª
+     * decisão; a QueryException vira NO-OP — recarrega a decisão real já gravada
+     * e devolve sem redisparar o evento (não é fachada: a decisão existe).
      */
     private function emitir(ViabilityRequest $request, ResolvedViability $resolved, ?User $actor): DecisionResult
     {
-        throw new \RuntimeException('Emissão da decisão (defere/indefere) é implementada na Task 2 do 09-05.');
+        $outcome = $resolved->consolidado === ResultadoViabilidade::NaoPermitido->value
+            ? DecisionOutcome::Indeferida
+            : DecisionOutcome::Deferida;
+
+        try {
+            $decision = DB::transaction(function () use ($request, $resolved, $actor, $outcome): ViabilityDecision {
+                $decision = ViabilityDecision::create([
+                    'viability_request_id' => $request->id,
+                    'flow' => 'expresso',
+                    'outcome' => $outcome,
+                    'consolidated_result' => $resolved->consolidado,
+                    'tvl_product_number' => $outcome === DecisionOutcome::Deferida ? $this->tvl->generate() : null,
+                    'per_cnae' => $this->perCnae($resolved),
+                    'rules_versions' => $resolved->rules_versions,
+                    'fundamentacao' => $this->fundamentacaoConsolidada($resolved),
+                    'reason' => null,
+                    'decided_by_user_id' => $actor?->id,
+                    'decided_at' => now(),
+                ]);
+
+                $destino = $outcome === DecisionOutcome::Deferida
+                    ? ViabilityRequestStatus::Deferida
+                    : ViabilityRequestStatus::Indeferida;
+
+                $this->stateMachine->transition($request, $destino, $actor, publicLabel: $destino->publicLabel());
+
+                $this->audit->log(
+                    logName: 'expresso',
+                    event: 'decisao',
+                    description: "Decisão expressa ({$outcome->value}) da solicitação #{$request->id}",
+                    properties: [
+                        'viability_request_id' => $request->id,
+                        'protocol_number' => $request->protocol_number,
+                        'outcome' => $outcome->value,
+                        'consolidado' => $resolved->consolidado,
+                        'tvl_product_number' => $decision->tvl_product_number,
+                        'por_cnae' => $this->perCnaeResumo($resolved),
+                    ],
+                    subject: $request,
+                    result: $outcome->value,
+                    rulesVersion: $this->rulesVersionRepresentativa($resolved->rules_versions),
+                );
+
+                return $decision;
+            });
+        } catch (QueryException $e) {
+            $existente = $request->decision()->first();
+
+            if ($existente !== null) {
+                return DecisionResult::decidida($existente, emitted: false);
+            }
+
+            throw $e;
+        }
+
+        // APÓS o commit: só decisões efetivadas geram efeitos (notificação, Regin,
+        // SEFAZ). A auditoria autoritativa já foi gravada na transação.
+        ResultadoEmitido::dispatch($request, $decision);
+
+        return DecisionResult::decidida($decision, emitted: true);
+    }
+
+    /**
+     * Por-CNAE completo persistido na decisão (RN-005/RN-009): veredito
+     * locacional, encaminhamento de risco e fundamentação legal de cada CNAE —
+     * sem o objeto ConsultaViabilidadeResult (só o que é auditável e serializável).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function perCnae(ResolvedViability $resolved): array
+    {
+        return array_map(static fn (array $item): array => [
+            'cnae' => $item['cnae'],
+            'cnae_formatado' => $item['cnae_formatado'],
+            'is_primary' => $item['is_primary'],
+            'tendencia' => $item['tendencia'],
+            'tendencia_label' => $item['tendencia_label'],
+            'fluxo' => $item['fluxo'],
+            'fundamentacao' => $item['consulta']->fundamentacao(),
+        ], $resolved->por_cnae);
+    }
+
+    /**
+     * Fundamentação legal consolidada (RN-005): união sem duplicar das
+     * referências de todos os CNAEs (já produzidas pelos motores LOUOS/risco) —
+     * nunca inventada.
+     *
+     * @return list<string>
+     */
+    private function fundamentacaoConsolidada(ResolvedViability $resolved): array
+    {
+        $referencias = [];
+
+        foreach ($resolved->por_cnae as $item) {
+            $referencias = [...$referencias, ...$item['consulta']->fundamentacao()];
+        }
+
+        return array_values(array_unique($referencias));
     }
 
     /**
