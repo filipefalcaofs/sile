@@ -37,6 +37,13 @@ class SanitaryRiskClassification extends Model
     use HasFactory;
 
     /**
+     * Nome explícito: a convenção pluralizaria a classe para
+     * "sanitary_risk_classifications", mas a tabela é "risk_sanitary_classifications"
+     * (alinhada à risk_classifications municipal e ao prefixo de domínio).
+     */
+    protected $table = 'risk_sanitary_classifications';
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
