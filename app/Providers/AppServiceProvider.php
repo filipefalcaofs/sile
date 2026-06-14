@@ -2,10 +2,6 @@
 
 namespace App\Providers;
 
-use App\Events\SolicitacaoProtocolada;
-use App\Listeners\AuditModelsPruned;
-use App\Listeners\LogNotificationSent;
-use App\Listeners\RegistrarTrilhaProtocolo;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjLookup;
 use App\Services\Geo\Geocoder;
@@ -18,9 +14,6 @@ use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\UnavailablePropertyRegistryLookup;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
-use Illuminate\Database\Events\ModelsPruned;
-use Illuminate\Notifications\Events\NotificationSent;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Socialite\Facades\Socialite;
@@ -60,18 +53,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Event::listen(NotificationSent::class, LogNotificationSent::class);
-
-        // Auditoria da retenção (RN-002 / SC#1): a poda em massa de access_logs
-        // não dispara model events, mas emite ModelsPruned — registrado aqui.
-        Event::listen(ModelsPruned::class, AuditModelsPruned::class);
-
-        // Primeiro evento de domínio (HU-068): o protocolo dispara
-        // SolicitacaoProtocolada após o commit; o listener síncrono grava o marco
-        // amigável da timeline e a auditoria de alto nível. Fases futuras só
-        // ADICIONAM listeners ao mesmo evento (notificação EP11, elegibilidade
-        // EP09, resposta Regin EP13), sem tocar o protocolo.
-        Event::listen(SolicitacaoProtocolada::class, RegistrarTrilhaProtocolo::class);
+        // Os listeners em app/Listeners são registrados pela auto-descoberta de
+        // eventos do Laravel (cada um faz type-hint do evento no handle): a poda
+        // de retenção (ModelsPruned → AuditModelsPruned, RN-002/SC#1), o envio de
+        // notificação (NotificationSent → LogNotificationSent) e o PRIMEIRO evento
+        // de domínio (SolicitacaoProtocolada → RegistrarTrilhaProtocolo, HU-068,
+        // que grava o marco da timeline e a auditoria de alto nível). NÃO registrar
+        // manualmente aqui: o Event::listen duplicaria o registro (auditoria 2×).
+        // Fases futuras só ADICIONAM classes de listener ao mesmo evento
+        // (notificação EP11, elegibilidade EP09, resposta Regin EP13).
 
         Password::defaults(function () {
             $rule = Password::min((int) Settings::get('security.password.min_length', 8));

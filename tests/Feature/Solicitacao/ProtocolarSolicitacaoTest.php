@@ -17,6 +17,7 @@ use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use RuntimeException;
 use Tests\TestCase;
@@ -336,6 +337,17 @@ class ProtocolarSolicitacaoTest extends TestCase
             'subject_type' => $solicitacao->getMorphClass(),
             'subject_id' => $solicitacao->id,
         ]);
+
+        // RN-002: a auditoria de negócio 'protocolada' é gravada EXATAMENTE uma
+        // vez. O listener é registrado uma única vez (auto-descoberta), sem
+        // duplicação — auditoria duplicada corromperia compliance (EP12) e
+        // indicadores (EP15).
+        $this->assertSame(1, DB::table('activity_log')->where([
+            'log_name' => 'solicitacoes',
+            'event' => 'protocolada',
+            'subject_type' => $solicitacao->getMorphClass(),
+            'subject_id' => $solicitacao->id,
+        ])->count());
     }
 
     public function test_controller_traduz_bloqueio_documental(): void
