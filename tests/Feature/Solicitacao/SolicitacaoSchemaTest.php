@@ -2,6 +2,11 @@
 
 namespace Tests\Feature\Solicitacao;
 
+use App\Enums\ViabilityRequestOrigin;
+use App\Enums\ViabilityRequestStatus;
+use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestDocument;
+use App\Models\ViabilityRequestTransition;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -82,5 +87,136 @@ class SolicitacaoSchemaTest extends TestCase
         // SQLite sem tentar a geometry/GiST (guardadas por driver) — suíte intacta.
         $this->assertSame('sqlite', DB::getDriverName());
         $this->assertTrue(Schema::hasTable('viability_requests'));
+    }
+
+    public function test_status_tem_estados_ativos_e_ganchos_futuros(): void
+    {
+        // Ativos nesta fase.
+        $this->assertSame('rascunho', ViabilityRequestStatus::Rascunho->value);
+        $this->assertSame('protocolada', ViabilityRequestStatus::Protocolada->value);
+        $this->assertSame('cancelada', ViabilityRequestStatus::Cancelada->value);
+
+        // Ganchos das Fases 9/10/11/13 — existem como casos, mas a máquina NÃO
+        // os transiciona nesta fase (teste no ViabilityRequestStateMachineTest).
+        $this->assertSame('aguardando_bap', ViabilityRequestStatus::AguardandoBap->value);
+        $this->assertSame('em_analise', ViabilityRequestStatus::EmAnalise->value);
+        $this->assertSame('deferida', ViabilityRequestStatus::Deferida->value);
+        $this->assertSame('indeferida', ViabilityRequestStatus::Indeferida->value);
+        $this->assertSame('em_pendencia', ViabilityRequestStatus::EmPendencia->value);
+
+        $this->assertCount(8, ViabilityRequestStatus::cases());
+    }
+
+    public function test_status_tem_label_tecnico_e_publico(): void
+    {
+        $this->assertSame('Rascunho', ViabilityRequestStatus::Rascunho->label());
+        $this->assertSame('Protocolada', ViabilityRequestStatus::Protocolada->label());
+
+        // publicLabel() fala ao cidadão em linguagem simples (HU-069 RN-004) —
+        // diferente do label técnico.
+        $this->assertNotSame(
+            ViabilityRequestStatus::Protocolada->label(),
+            ViabilityRequestStatus::Protocolada->publicLabel(),
+        );
+        $this->assertNotEmpty(ViabilityRequestStatus::AguardandoBap->publicLabel());
+
+        // Todos os casos têm os dois rótulos preenchidos.
+        foreach (ViabilityRequestStatus::cases() as $status) {
+            $this->assertNotEmpty($status->label());
+            $this->assertNotEmpty($status->publicLabel());
+        }
+    }
+
+    public function test_origin_tem_casos_com_regin_de_gancho(): void
+    {
+        $this->assertSame('portal', ViabilityRequestOrigin::Portal->value);
+        $this->assertSame('contingencia', ViabilityRequestOrigin::Contingencia->value);
+        // Regin é gancho (Fase 13) — presente no enum, mas não usado nesta fase.
+        $this->assertSame('regin', ViabilityRequestOrigin::Regin->value);
+
+        foreach (ViabilityRequestOrigin::cases() as $origin) {
+            $this->assertNotEmpty($origin->label());
+        }
+    }
+
+    public function test_factory_cria_rascunho_por_padrao(): void
+    {
+        $request = ViabilityRequest::factory()->create();
+
+        $this->assertSame(ViabilityRequestStatus::Rascunho, $request->status);
+        $this->assertSame(ViabilityRequestOrigin::Portal, $request->origin);
+        $this->assertNull($request->protocol_number);
+        $this->assertIsArray($request->property_polygon_geojson);
+        $this->assertNotNull($request->requester_user_id);
+        $this->assertNotNull($request->created_by_user_id);
+    }
+
+    public function test_factory_protocolada_tem_numero_e_data(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create();
+
+        $this->assertSame(ViabilityRequestStatus::Protocolada, $request->status);
+        $this->assertNotNull($request->protocol_number);
+        $this->assertNotNull($request->protocoled_at);
+    }
+
+    public function test_factory_cancelada_tem_data_e_motivo(): void
+    {
+        $request = ViabilityRequest::factory()->cancelled()->create();
+
+        $this->assertSame(ViabilityRequestStatus::Cancelada, $request->status);
+        $this->assertNotNull($request->cancelled_at);
+        $this->assertNotNull($request->cancelled_reason);
+    }
+
+    public function test_factory_contingencia_tem_origem_e_motivo(): void
+    {
+        $request = ViabilityRequest::factory()->contingency()->create();
+
+        $this->assertSame(ViabilityRequestOrigin::Contingencia, $request->origin);
+        $this->assertNotNull($request->contingency_reason);
+    }
+
+    public function test_factory_com_cnae_principal(): void
+    {
+        $request = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create();
+
+        $this->assertSame(1, $request->primaryCnae()->count());
+        $this->assertTrue((bool) $request->primaryCnae()->first()->pivot->is_primary);
+    }
+
+    public function test_factory_com_cnaes_complementares(): void
+    {
+        $request = ViabilityRequest::factory()->withCnaes(3)->create();
+
+        $this->assertSame(3, $request->cnaes()->count());
+    }
+
+    public function test_mark_simulation_stale_zera_a_simulacao(): void
+    {
+        $request = ViabilityRequest::factory()->create([
+            'simulation_snapshot' => ['resultado' => 'pendente'],
+            'simulation_rules_versions' => ['louos' => 'x'],
+            'simulation_resultado' => 'pendente',
+            'simulated_at' => now(),
+        ]);
+
+        $request->markSimulationStale();
+        $request->refresh();
+
+        $this->assertNull($request->simulation_snapshot);
+        $this->assertNull($request->simulation_rules_versions);
+        $this->assertNull($request->simulation_resultado);
+        $this->assertNull($request->simulated_at);
+    }
+
+    public function test_relacoes_documentos_e_transicoes(): void
+    {
+        $request = ViabilityRequest::factory()->create();
+        ViabilityRequestDocument::factory()->create(['viability_request_id' => $request->id]);
+        ViabilityRequestTransition::factory()->create(['viability_request_id' => $request->id]);
+
+        $this->assertSame(1, $request->documents()->count());
+        $this->assertSame(1, $request->transitions()->count());
     }
 }
