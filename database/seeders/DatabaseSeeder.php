@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             CnaeSeeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
+            RiskTriggerSeeder::class,
             DevAdminSeeder::class,
             CompanySeeder::class,
             GeoLayerSeeder::class,
