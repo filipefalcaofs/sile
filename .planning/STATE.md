@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed Phase 3.1 (Fundação assíncrona) — scheduler ativo (composer dev com schedule:work) + primeira rotina real (pruning diário de access_logs via MassPrunable, janela parametrizada retencao.access_logs.dias, idempotente withoutOverlapping/onOneServer e AUDITADA via listener ModelsPruned); jobs ImportRedesimJob/ImportCnaeJob (tries/timeout/backoff + failed() auditado) com flag --queue e comando cnae:importar, falha visível em failed_jobs; throttle parametrizado (cnpj-lookup) na rota consultar-cnpj; HTTP client com retries/timeout/backoff parametrizados; 5 parâmetros novos (catálogo 25); produção documentada em docs/deploy/producao-assincrona.md. gsd-verifier: passed 5/5. Suíte 385/385, pint/typecheck/build verdes, migrate:fresh --seed ok.
-last_updated: "2026-06-13T19:30:00.000Z"
-last_activity: 2026-06-13 -- Phase 3.1 COMPLETE (verificação passed; infra assíncrona ativa)
+stopped_at: Completed Phase 4 (Georreferenciamento e Território) — PostGIS (geo_layers/geo_features versionados com vigência, migrations driver-aware), geocodificação Nominatim atrás de contrato (throttle/retry parametrizados), TerritoryService/SpatialRepository (ST_Contains/ST_DWithin/ST_Intersects reais), LocationValidationService (sobreposição ST_Area/ST_Intersection com limiar parametrizado), mapa Leaflet (react-leaflet v5, client-side/SSR-safe) e página de consulta territorial no console SEDUR, comando geo:importar auditado + carga REAL do GeoSalvador (bairro 171, via 800, restrição ZEIS 234), CI real com PostGIS (.github/workflows/tests.yml + POSTGIS_TESTS_REQUIRED). gsd-verifier: passed 5/5. Suíte 448/448 SQLite + 15/15 @group postgis; evidência real: Nominatim (Elevador Lacerda) + consulta espacial (Farol da Barra → bairro "Barra").
+last_updated: "2026-06-13T23:55:00.000Z"
+last_activity: 2026-06-13 -- Phase 4 COMPLETE (verificação passed; bairro/via/restrição reais; zona/lote bloqueados pendente SEDUR)
 progress:
   total_phases: 15
-  completed_phases: 4
-  total_plans: 31
-  completed_plans: 31
-  percent: 23
+  completed_phases: 5
+  total_plans: 39
+  completed_plans: 39
+  percent: 30
 ---
 
 # Project State
@@ -21,18 +21,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-09)
 
 **Core value:** Responder a viabilidade locacional de atividade econômica de forma automática, correta e auditável — fluxo expresso quando a lei permite, fundamentação legal em toda decisão.
-**Current focus:** Phases 3 e 3.1 concluídas — próxima acionável: Phase 4 (Georreferenciamento e Território). Phase 3.2 (GOV.BR) implementada e desligada, aguardando credenciamento da SEDUR.
+**Current focus:** Phases 3, 3.1 e 4 concluídas — próxima acionável: Phase 5 (Motor de Regras da LOUOS) ‖ Phase 6 (Classificação de Risco). ATENÇÃO: a Fase 5 consome a ZONA urbanística, hoje BLOQUEADA (sem fonte vetorial pública — pendente SEDUR). O motor nasce parametrizável e roda com seeds derivados da Lei 9.148/2016 até a base oficial chegar. Phase 3.2 (GOV.BR) implementada e desligada, aguardando credenciamento.
 
 ## Current Position
 
-Phase: 3.1 (Fundação assíncrona) — COMPLETE (verificação passed em 2026-06-13)
-Plan: 5 of 5 (todos concluídos)
-Status: Fase 3.1 fechada; próxima é a Fase 4 (precisa de brainstorming — provedor de geocodificação, base GIS, biblioteca de mapa)
-Last activity: 2026-06-13 -- Phase 3.1 COMPLETE (verificação passed; infra assíncrona ativa)
+Phase: 4 (Georreferenciamento e Território) — COMPLETE (verificação passed em 2026-06-13)
+Plan: 8 of 8 (todos concluídos)
+Status: Fase 4 fechada; próxima é a Fase 5 (Motor LOUOS) ou 6 (Risco) — exigem brainstorming
+Last activity: 2026-06-13 -- Phase 4 COMPLETE (bairro/via/restrição reais; zona/lote bloqueados pendente SEDUR)
 
-Progress: [██▍░░░░░░░] 23% (4/15 fases; 31 planos executados)
+Progress: [███░░░░░░░] 30% (5/15 fases; 39 planos executados)
 
-Next step: `/gsd-plan-phase 4` (Georreferenciamento) — exige brainstorming antes (decisões: geocodificação Nominatim/OSM, base GIS SIGIS/CA2000 pendente de acesso SEDUR, biblioteca de mapa vs. zero-dep). A Fase 3.2 (GOV.BR) segue bloqueada externamente.
+Next step: `/gsd-plan-phase 5` (Motor LOUOS) ou `/gsd-plan-phase 6` (Risco) — ambos exigem brainstorming (quadros parametrizados, golden cases, condicionante-pergunta). A zona urbanística (insumo do motor) segue bloqueada até a SEDUR liberar SIGIS/CA 2000.
 
 ### Fase 2.1 (INSERTED) — Template TailAdmin (concluída 2026-06-10)
 
@@ -193,6 +193,7 @@ Pendências com a SEDUR (pauta: docs/ANALISE-HUs-REUNIAO-SEDUR.md seção 5). Ne
 - [Fase 13] HU-111 (migração do legado .NET): estratégia a definir.
 - [Fases 3/13] Contrato REDESIM/integrador (entrada e devolução de parecer): aguardando documentação.
 - [Fases 4/13] Base GIS municipal (camadas, formato, acesso): aguardando — Fase 4 opera com camadas carregadas de dados oficiais da LOUOS até a entrega.
+- [Fase 4 — RESOLVIDO PARCIAL/BLOQUEADO, 2026-06-13] EP04 concluído com escopo honesto. ENTREGUE com dado público real do GeoSalvador (ArcGIS REST, f=geojson&outSR=4326): bairro (171, Dec. 38.776/2024), eixo viário (800, extrato central) e restrições ambientais ZEIS (234, PDDU 2016); geocodificação Nominatim real atrás de contrato. BLOQUEADO pendente SEDUR (sem fonte vetorial pública — comunicado na UI como "pendente SEDUR", nunca inventado): **zona urbanística LOUOS** (HU-031 — Quadro 10 só em PDF) e **lote cadastral** (HU-033 — Cadastro Multifinalitário/SEFAZ restrito); por consequência HU-037 RN-005 (divergência por inscrição imobiliária). A classificação viária LOUOS (Quadros 11/11A) entra como geometria, mas o ATRIBUTO operacional pende de confirmação SEDUR (PDDU 2016 ≟ Mapa 04 da LOUOS). IMPACTO NA FASE 5: o motor de enquadramento depende da zona urbanística — manter o bloqueio explícito; o motor nasce parametrizável e roda com seeds derivados da Lei 9.148/2016 até a base oficial chegar. A infraestrutura (camadas versionadas, TerritoryService, sobreposição polígono×lote) já está pronta e testada — quando a SEDUR entregar SIGIS/CA 2000, muda a carga, não a lógica.
 - [Fase 5] Quadros parametrizados vigentes e correspondência "Quadro 11" ↔ 11B: a confirmar — motor nasce parametrizável.
 - [Fase 13] Acesso a ambiente de homologação (integrador/SEFAZ/GIS): solicitado.
 

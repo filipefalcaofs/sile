@@ -40,7 +40,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 3: Cadastro Empresarial** — Empresas, CNPJ e vínculos com CNAEs (EP03) — concluída em 2026-06-13 (verificação: passed; suíte 367/367, grupo Companies 83/83; smoke E2E navegável com chamada REAL à BrasilAPI e import REDESIM idempotente)
 - [x] **Phase 3.1 (INSERTED): Fundação assíncrona — scheduler, jobs e retenção** — ativa capacidades prontas do Laravel 13 ainda não usadas (levantamento 2026-06-12): scheduler com primeira rotina real, importações REDESIM/CNAE como jobs em fila com retry e relatório, throttle parametrizado nas rotas públicas, retenção de access_logs via pruning agendado e retry/backoff no HTTP client — infraestrutura habilitadora para prazo BAP (HU-134), SLA (HU-144/147) e integrações (HU-146) — concluída em 2026-06-13 (verificação: passed 5/5; suíte 385/385; produção documentada em docs/deploy/producao-assincrona.md)
 - [ ] **Phase 3.2 (INSERTED): Autenticação GOV.BR no portal** — Login Único (OAuth/OIDC, Authorization Code + PKCE S256) convivendo com o login local: vínculo determinístico por CPF, criação de conta real no primeiro acesso, nível de confiabilidade parametrizável, credenciais sensíveis administráveis (HU-014) e toggle `features.govbr_login` (HU-151); sem credenciamento da SEDUR a validação contra staging real permanece bloqueada — spec `docs/superpowers/specs/2026-06-12-autenticacao-govbr-design.md`
-- [ ] **Phase 4: Georreferenciamento e Território** — Geocodificação, zona, via, lote, bairro e restrições (EP04)
+- [x] **Phase 4: Georreferenciamento e Território** — Geocodificação, zona, via, lote, bairro e restrições (EP04) — concluída em 2026-06-13 (verificação: passed 5/5; suíte 448/448 SQLite + 15/15 @group postgis; geocodificação Nominatim e consulta espacial reais). ESCOPO HONESTO: bairro/via/restrições entregues com dado público real do GeoSalvador; **zona urbanística (HU-031) e lote cadastral (HU-033) BLOQUEADOS pendente SEDUR** (sem fonte vetorial pública — comunicados na UI, nunca inventados). A zona é insumo crítico da Fase 5.
 - [ ] **Phase 5: Motor de Regras da LOUOS** — Quadros 7/10/11/11A como dados versionados + motor de enquadramento (EP05 + HU-015 a HU-018)
 - [ ] **Phase 6: Classificação de Risco** — Risco por CNAE com condicionante-pergunta reclassificadora (EP06 + HU-019, HU-020)
 - [ ] **Phase 7: Consulta Prévia de Viabilidade** — Simulação consumindo território + motores (EP07)
@@ -175,14 +175,14 @@ Nota: feature entra completa e DESLIGADA por default — o credenciamento da SED
 **Plans**: 8 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Fundação PostGIS: migrations geo_layers/geo_features driver-aware, models/enums, infra de teste PostGIS (wave 1)
-- [ ] 04-02-PLAN.md — Catálogo de parâmetros (25→29) + permissão consultar-territorio (wave 1)
-- [ ] 04-03-PLAN.md — HU-029: contrato Geocoder + NominatimGeocoder + throttle/retry + endpoint auditado (wave 2)
-- [ ] 04-04-PLAN.md — HU-036: camadas versionadas, comando geo:importar auditado + carga real GeoSalvador (bairro/via/restrição); zona/lote pendente_fonte (wave 2)
-- [ ] 04-05-PLAN.md — HU-031–035: TerritoryService + SpatialRepository PostGIS (bairro/via/restrição reais; zona/lote indisponível) (wave 3)
-- [ ] 04-06-PLAN.md — HU-030/036/037: backend do mapa (página + identificar + validar-localizacao com sobreposição parametrizada) (wave 4)
-- [ ] 04-07-PLAN.md — HU-030/036/037 UI: mapa Leaflet reutilizável + página de consulta territorial (wave 5)
-- [ ] 04-08-PLAN.md — Fechamento: verificação integral + evidência real (Nominatim + consulta espacial sobre dado oficial) (wave 6)
+- [x] 04-01-PLAN.md — Fundação PostGIS: migrations geo_layers/geo_features driver-aware, models/enums, infra de teste PostGIS (wave 1) ✓ 2026-06-13
+- [x] 04-02-PLAN.md — Catálogo de parâmetros (25→29) + permissão consultar-territorio (wave 1) ✓ 2026-06-13
+- [x] 04-03-PLAN.md — HU-029: contrato Geocoder + NominatimGeocoder + throttle/retry + endpoint auditado (wave 2) ✓ 2026-06-13
+- [x] 04-04-PLAN.md — HU-036: camadas versionadas, comando geo:importar auditado + carga real GeoSalvador (bairro/via/restrição); zona/lote pendente_fonte (wave 2) ✓ 2026-06-13
+- [x] 04-05-PLAN.md — HU-031–035: TerritoryService + SpatialRepository PostGIS (bairro/via/restrição reais; zona/lote indisponível) (wave 3) ✓ 2026-06-13
+- [x] 04-06-PLAN.md — HU-030/036/037: backend do mapa (página + identificar + validar-localizacao com sobreposição parametrizada) (wave 4) ✓ 2026-06-13
+- [x] 04-07-PLAN.md — HU-030/036/037 UI: mapa Leaflet reutilizável + página de consulta territorial (wave 5) ✓ 2026-06-13
+- [x] 04-08-PLAN.md — Fechamento: verificação integral + evidência real (Nominatim + consulta espacial sobre dado oficial) (wave 6) ✓ 2026-06-13
 
 Nota: a geocodificação (Nominatim/OSM) e a lógica de identificação operam sobre camadas carregadas de dados oficiais da LOUOS; a base GIS municipal oficial é o **SIGIS** com migração **S69 → CA 2000** (reunião SEDUR 2026-06-11) — a integração viva é a HU-107 (Fase 13). Polígono de 4 pontos validado no formulário Regin (HU-062).
 
@@ -397,7 +397,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 3. Cadastro Empresarial | 9/9 | Complete | 2026-06-13 |
 | 3.1. Fundação assíncrona — scheduler, jobs e retenção (INSERTED) | 5/5 | Complete | 2026-06-13 |
 | 3.2. Autenticação GOV.BR no portal (INSERTED) | 1/1 | Implemented — aguardando credenciamento p/ validar staging | - |
-| 4. Georreferenciamento e Território | 0/8 | Planned | - |
+| 4. Georreferenciamento e Território | 8/8 | Complete (zona/lote bloqueados — pendente SEDUR) | 2026-06-13 |
 | 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |
 | 6. Classificação de Risco | 0/TBD | Not started | - |
 | 7. Consulta Prévia de Viabilidade | 0/TBD | Not started | - |

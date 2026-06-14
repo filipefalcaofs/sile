@@ -46,15 +46,15 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 
 ### EP04 — Georreferenciamento e Território
 
-- [ ] **HU-029**: Geocodificar endereço
-- [ ] **HU-030**: Localizar imóvel no mapa
-- [ ] **HU-031**: Identificar zona urbanística
-- [ ] **HU-032**: Identificar classificação da via
-- [ ] **HU-033**: Identificar lote
-- [ ] **HU-034**: Identificar bairro
-- [ ] **HU-035**: Identificar restrições territoriais
-- [ ] **HU-036**: Consultar camadas geográficas
-- [ ] **HU-037**: Validar localização do imóvel
+- [x] **HU-029**: Geocodificar endereço
+- [x] **HU-030**: Localizar imóvel no mapa
+- [~] **HU-031**: Identificar zona urbanística — BLOQUEADA (pendente SEDUR: zona LOUOS sem fonte vetorial pública)
+- [x] **HU-032**: Identificar classificação da via (geometria; atributo LOUOS pendente confirmação SEDUR)
+- [~] **HU-033**: Identificar lote — BLOQUEADA (pendente SEDUR: Cadastro Multifinalitário/SEFAZ)
+- [x] **HU-034**: Identificar bairro
+- [x] **HU-035**: Identificar restrições territoriais
+- [x] **HU-036**: Consultar camadas geográficas
+- [x] **HU-037**: Validar localização do imóvel (infra de sobreposição pronta; RN-005/lote pendente SEDUR)
 
 ### EP05 — Motor de Regras da LOUOS
 
@@ -243,15 +243,15 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-026 | Fase 3 | Complete (03-06) |
 | HU-027 | Fase 3 | Complete (03-04) |
 | HU-028 | Fase 3 | Complete (03-05) |
-| HU-029 | Fase 4 | Pending |
-| HU-030 | Fase 4 | Pending |
-| HU-031 | Fase 4 | Pending |
-| HU-032 | Fase 4 | Pending |
-| HU-033 | Fase 4 | Pending |
-| HU-034 | Fase 4 | Pending |
-| HU-035 | Fase 4 | Pending |
-| HU-036 | Fase 4 | Pending |
-| HU-037 | Fase 4 | Pending |
+| HU-029 | Fase 4 | Complete (04-03) |
+| HU-030 | Fase 4 | Complete (04-06/04-07) |
+| HU-031 | Fase 4 | Blocked — pendente SEDUR (zona LOUOS sem fonte pública) |
+| HU-032 | Fase 4 | Complete (04-04/04-05) — atributo LOUOS pendente SEDUR |
+| HU-033 | Fase 4 | Blocked — pendente SEDUR (lote/SEFAZ) |
+| HU-034 | Fase 4 | Complete (04-04/04-05) |
+| HU-035 | Fase 4 | Complete (04-04/04-05) |
+| HU-036 | Fase 4 | Complete (04-04/04-06/04-07) |
+| HU-037 | Fase 4 | Complete (04-06/04-07) — RN-005/lote pendente SEDUR |
 | HU-038 | Fase 5 | Pending |
 | HU-039 | Fase 5 | Pending |
 | HU-040 | Fase 5 | Pending |
