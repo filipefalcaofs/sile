@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\ConsultaViabilidadeCnaeRequest;
 use App\Http\Requests\Portal\ConsultaViabilidadeEnderecoRequest;
 use App\Http\Requests\Portal\ConsultaViabilidadeInscricaoRequest;
+use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\GeocoderException;
+use App\Services\Viabilidade\ConsultaViabilidadeResult;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -68,6 +71,8 @@ class ConsultaViabilidadeController extends Controller
             ], 503);
         }
 
+        $this->registrarHistorico($request, $result);
+
         return response()->json($result->toArray());
     }
 
@@ -87,6 +92,8 @@ class ConsultaViabilidadeController extends Controller
             $request->validated('cnae'),
             $request->validated('area') !== null ? (float) $request->validated('area') : null,
         );
+
+        $this->registrarHistorico($request, $result);
 
         return response()->json($result->toArray());
     }
@@ -111,7 +118,39 @@ class ConsultaViabilidadeController extends Controller
             $request->validated('area') !== null ? (float) $request->validated('area') : null,
         );
 
+        $this->registrarHistorico($request, $result);
+
         return response()->json($result->toArray());
+    }
+
+    /**
+     * Histórico pessoal (HU-060): grava o SNAPSHOT imutável da consulta SOMENTE
+     * quando o usuário está autenticado (guard web). A consulta anônima segue
+     * auditada (RN-002, no serviço), mas NÃO cria histórico pessoal. Chamado
+     * apenas no caminho de SUCESSO — erros honestos (endereço não localizado,
+     * serviço indisponível, toggle off) nunca viram histórico (sem fachada). O
+     * snapshot guarda entrada + resultado + versões da época (reprodução).
+     */
+    private function registrarHistorico(Request $request, ConsultaViabilidadeResult $result): void
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return;
+        }
+
+        $payload = $result->toArray();
+
+        ViabilityQuery::create([
+            'user_id' => $user->id,
+            'entry_type' => $payload['entrada']['tipo'],
+            'input' => $payload['entrada'],
+            'result' => $payload,
+            'rules_versions' => $payload['versoes'],
+            'resultado' => $payload['veredito_locacional']['resultado'],
+            'ip_address' => $request->ip(),
+            'created_at' => now(),
+        ]);
     }
 
     /**
