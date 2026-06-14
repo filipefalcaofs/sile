@@ -36,6 +36,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'consultar-solicitacoes',
             'manter-tipos-servico',
             'manter-requisitos-documentais',
+            'analisar-processos',
+            'distribuir-processos',
+            'emitir-tvl',
+            'encaminhar-malha-fina',
+            'manter-setores',
         ];
 
         foreach ($permissions as $permission) {
@@ -47,7 +52,17 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::firstOrCreate(['name' => 'cidadao', 'guard_name' => 'web'])
             ->givePermissionTo(['gerenciar-procuracoes-proprias']);
         Role::firstOrCreate(['name' => 'analista', 'guard_name' => 'web'])
-            ->givePermissionTo(['acessar-gestao', 'consultar-cnaes', 'consultar-territorio', 'consultar-risco', 'consultar-louos', 'consultar-solicitacoes']);
+            ->givePermissionTo([
+                'acessar-gestao',
+                'consultar-cnaes',
+                'consultar-territorio',
+                'consultar-risco',
+                'consultar-louos',
+                'consultar-solicitacoes',
+                'analisar-processos',
+                'encaminhar-malha-fina',
+                'emitir-tvl',
+            ]);
         Role::firstOrCreate(['name' => 'gestor', 'guard_name' => 'web'])
             ->givePermissionTo([
                 'acessar-gestao',
@@ -60,6 +75,11 @@ class RolesAndPermissionsSeeder extends Seeder
                 'consultar-solicitacoes',
                 'manter-tipos-servico',
                 'manter-requisitos-documentais',
+                'analisar-processos',
+                'distribuir-processos',
+                'encaminhar-malha-fina',
+                'emitir-tvl',
+                'manter-setores',
             ]);
         Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web'])
             ->givePermissionTo([
@@ -81,6 +101,11 @@ class RolesAndPermissionsSeeder extends Seeder
                 'consultar-solicitacoes',
                 'manter-tipos-servico',
                 'manter-requisitos-documentais',
+                'analisar-processos',
+                'distribuir-processos',
+                'emitir-tvl',
+                'encaminhar-malha-fina',
+                'manter-setores',
             ]);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();

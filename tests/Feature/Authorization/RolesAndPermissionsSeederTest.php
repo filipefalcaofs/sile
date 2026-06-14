@@ -193,13 +193,60 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->assertTrue(User::factory()->administrador()->create()->hasRole('administrador'));
     }
 
+    public function test_papeis_recebem_permissoes_da_analise_tecnica(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $novas = [
+            'analisar-processos',
+            'distribuir-processos',
+            'emitir-tvl',
+            'encaminhar-malha-fina',
+            'manter-setores',
+        ];
+
+        foreach ($novas as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Analista analisa, provoca malha fina e emite o TVL interno; não
+        // distribui processos nem administra setores (atribuições do gestor).
+        $analista = Role::findByName('analista', 'web');
+        foreach (['analisar-processos', 'encaminhar-malha-fina', 'emitir-tvl'] as $permission) {
+            $this->assertTrue($analista->hasPermissionTo($permission));
+        }
+        $this->assertFalse($analista->hasPermissionTo('distribuir-processos'));
+        $this->assertFalse($analista->hasPermissionTo('manter-setores'));
+
+        // Gestor distribui, administra setores e também analisa/emite TVL.
+        $gestor = Role::findByName('gestor', 'web');
+        foreach ($novas as $permission) {
+            $this->assertTrue($gestor->hasPermissionTo($permission));
+        }
+
+        // Administrador recebe as cinco (administra tudo).
+        $administrador = Role::findByName('administrador', 'web');
+        foreach ($novas as $permission) {
+            $this->assertTrue($administrador->hasPermissionTo($permission));
+        }
+
+        // Cidadão não recebe nenhuma permissão de backoffice da análise.
+        $cidadao = Role::findByName('cidadao', 'web');
+        foreach ($novas as $permission) {
+            $this->assertFalse($cidadao->hasPermissionTo($permission));
+        }
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(19, Permission::query()->count());
+        $this->assertSame(24, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void
