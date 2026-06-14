@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Events\SolicitacaoProtocolada;
 use App\Listeners\AuditModelsPruned;
 use App\Listeners\LogNotificationSent;
+use App\Listeners\RegistrarTrilhaProtocolo;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjLookup;
 use App\Services\Geo\Geocoder;
@@ -63,6 +65,13 @@ class AppServiceProvider extends ServiceProvider
         // Auditoria da retenção (RN-002 / SC#1): a poda em massa de access_logs
         // não dispara model events, mas emite ModelsPruned — registrado aqui.
         Event::listen(ModelsPruned::class, AuditModelsPruned::class);
+
+        // Primeiro evento de domínio (HU-068): o protocolo dispara
+        // SolicitacaoProtocolada após o commit; o listener síncrono grava o marco
+        // amigável da timeline e a auditoria de alto nível. Fases futuras só
+        // ADICIONAM listeners ao mesmo evento (notificação EP11, elegibilidade
+        // EP09, resposta Regin EP13), sem tocar o protocolo.
+        Event::listen(SolicitacaoProtocolada::class, RegistrarTrilhaProtocolo::class);
 
         Password::defaults(function () {
             $rule = Password::min((int) Settings::get('security.password.min_length', 8));

@@ -12,6 +12,7 @@ use App\Http\Controllers\Portal\GovBrLoginController;
 use App\Http\Controllers\Portal\HistoricoConsultaController;
 use App\Http\Controllers\Portal\LgpdTermController;
 use App\Http\Controllers\Portal\ProcurationController;
+use App\Http\Controllers\Portal\ProtocoloController;
 use App\Http\Controllers\Portal\RepresentationController;
 use App\Http\Controllers\Portal\SolicitacaoAtividadeController;
 use App\Http\Controllers\Portal\SolicitacaoController;
@@ -129,5 +130,13 @@ Route::middleware(['auth:web', 'verified'])
             // ORIENTATIVA, NÃO bloqueia o protocolo. Só do dono em rascunho
             // (policy update); toggle features.simulacao_solicitacao degrada.
             Route::post('solicitacoes/{solicitacao}/simular', [SolicitacaoSimulacaoController::class, 'store'])->name('solicitacoes.simular');
+
+            // Protocolar a solicitação (HU-068) — rota com {solicitacao} DEPOIS
+            // das literais. Valida documentos obrigatórios (bloqueia com aviso se
+            // faltar), gera o número único (lock + unique), transiciona
+            // rascunho→protocolada (timeline + auditoria) e dispara o primeiro
+            // evento de domínio após o commit. Só do dono em rascunho (policy
+            // protocol); toggle features.solicitacao_viabilidade degrada.
+            Route::post('solicitacoes/{solicitacao}/protocolar', [ProtocoloController::class, 'store'])->name('solicitacoes.protocolar');
         });
     });

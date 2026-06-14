@@ -6,6 +6,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Events\SolicitacaoProtocolada;
 use App\Models\Cnae;
 use App\Models\DocumentRequirement;
+use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\DocumentacaoIncompletaException;
@@ -13,6 +14,7 @@ use App\Services\Solicitacao\InvalidStatusTransitionException;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\SolicitacaoIncompletaException;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
+use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -295,5 +297,125 @@ class ProtocolarSolicitacaoTest extends TestCase
         $this->assertNotNull(
             $solicitacao->transitions()->whereNotNull('public_label')->first()
         );
+    }
+
+    public function test_listener_grava_marco_da_timeline(): void
+    {
+        // Com o listener ATIVO (sem Event::fake), após protocolar pelo controller
+        // a timeline tem o marco amigável (public_label) e existe a auditoria de
+        // alto nível 'protocolada' gravada pelo RegistrarTrilhaProtocolo.
+        $user = $this->portalUser();
+        $solicitacao = $this->completeDraft($user);
+
+        $this->actingAs($user)
+            ->from(route('portal.solicitacoes.index'))
+            ->post(route('portal.solicitacoes.protocolar', $solicitacao))
+            ->assertRedirect(route('portal.solicitacoes.index'))
+            ->assertSessionHas('status')
+            ->assertSessionHasNoErrors();
+
+        $solicitacao->refresh();
+        $this->assertSame(ViabilityRequestStatus::Protocolada, $solicitacao->status);
+
+        $marco = $solicitacao->transitions()
+            ->where('to_status', ViabilityRequestStatus::Protocolada)
+            ->whereNotNull('public_label')
+            ->first();
+        $this->assertNotNull($marco);
+        $this->assertSame(ViabilityRequestStatus::Protocolada->publicLabel(), $marco->public_label);
+
+        // O marco não é duplicado (idempotente): a transição síncrona já o criou.
+        $this->assertSame(1, $solicitacao->transitions()
+            ->where('to_status', ViabilityRequestStatus::Protocolada)
+            ->whereNotNull('public_label')
+            ->count());
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'solicitacoes',
+            'event' => 'protocolada',
+            'subject_type' => $solicitacao->getMorphClass(),
+            'subject_id' => $solicitacao->id,
+        ]);
+    }
+
+    public function test_controller_traduz_bloqueio_documental(): void
+    {
+        // HU-067: protocolar sem o documento obrigatório → redirect com flash.error
+        // citando o requisito faltante (aviso, nunca silencioso); nada é protocolado.
+        $user = $this->portalUser();
+        $solicitacao = $this->completeDraft($user);
+
+        $cnae = $solicitacao->cnaes()->first();
+        $requisito = DocumentRequirement::factory()->required()->create();
+        $requisito->cnaes()->attach($cnae->id);
+
+        $this->actingAs($user)
+            ->from(route('portal.solicitacoes.index'))
+            ->post(route('portal.solicitacoes.protocolar', $solicitacao))
+            ->assertRedirect(route('portal.solicitacoes.index'))
+            ->assertSessionHas('error');
+
+        $this->assertStringContainsString($requisito->name, (string) session('error'));
+
+        $solicitacao->refresh();
+        $this->assertSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
+        $this->assertNull($solicitacao->protocol_number);
+    }
+
+    public function test_so_dono_em_rascunho_protocola(): void
+    {
+        // CA-04: terceiro não protocola (403, auditado globalmente) e a
+        // solicitação fica intacta.
+        $owner = $this->portalUser();
+        $stranger = $this->portalUser();
+        $solicitacao = $this->completeDraft($owner);
+
+        $this->actingAs($stranger)
+            ->post(route('portal.solicitacoes.protocolar', $solicitacao))
+            ->assertForbidden();
+
+        $solicitacao->refresh();
+        $this->assertSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
+        $this->assertNull($solicitacao->protocol_number);
+
+        // Já protocolada → bloqueado pela policy (status != rascunho) → 403; o
+        // número anterior permanece (nenhum novo é gerado).
+        $protocolada = ViabilityRequest::factory()->protocoled()->withPrimaryCnae()->create([
+            'requester_user_id' => $owner->id,
+            'created_by_user_id' => $owner->id,
+        ]);
+        $numeroAntes = $protocolada->protocol_number;
+
+        $this->actingAs($owner)
+            ->post(route('portal.solicitacoes.protocolar', $protocolada))
+            ->assertForbidden();
+
+        $protocolada->refresh();
+        $this->assertSame($numeroAntes, $protocolada->protocol_number);
+    }
+
+    public function test_toggle_desligado_degrada_comunicado(): void
+    {
+        // RN-005: com features.solicitacao_viabilidade desligado, o protocolo
+        // degrada de forma comunicada — sem protocolar, sem erro.
+        $this->seed(ParameterSeeder::class);
+        Parameter::query()
+            ->where('key', 'features.solicitacao_viabilidade')
+            ->first()
+            ->update(['value' => '0']);
+
+        $user = $this->portalUser();
+        $solicitacao = $this->completeDraft($user);
+
+        $this->actingAs($user)
+            ->from(route('portal.solicitacoes.index'))
+            ->post(route('portal.solicitacoes.protocolar', $solicitacao))
+            ->assertRedirect(route('portal.solicitacoes.index'))
+            ->assertSessionHas('status')
+            ->assertSessionHasNoErrors();
+
+        $solicitacao->refresh();
+        $this->assertSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
+        $this->assertNull($solicitacao->protocol_number);
     }
 }
