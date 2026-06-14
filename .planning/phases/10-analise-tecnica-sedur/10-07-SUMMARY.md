@@ -134,10 +134,11 @@ _Cada task seguiu RED→GREEN com evidência fresca._
 - `php artisan test --compact --filter=CaixaSetorTest` → **7/7**.
 - `php artisan test --compact --filter="EncaminhamentoAnaliseTest|DistribuicaoServiceTest|CaixaSetorTest"` → **16/16** (60 asserções).
 - `php artisan test --compact --exclude-group postgis` → **1020/1020** (5151 asserções) — suíte completa verde, Fase 9 intacta.
+- `php artisan test --compact --filter="...|PreAnaliseServiceTest|PreAnalisarProcessoListenerTest"` → **26/26** — integração produtor (10-07) + consumidor (10-08) com o listener já presente na árvore.
 - Greps de aceite OK: `EncaminhadoParaAnalise::dispatch` + `analysis_due_at` em `FluxoExpressoService`; `assigned_user_id` + `AnalysisSlaService` + `->log('analise'` em `DistribuicaoService`; `caixa-setor` em `routes/gestao.php`.
 
 ## Coordenação (Wave 3) e Deviations
-- **EncaminhadoParaAnalise — produtor x consumidor (resolvido sem conflito):** o plano 10-08 foi LIDO antes de codar. Ele só cria `PreAnaliseService` + listener AUTO-DESCOBERTO `PreAnalisarProcesso` e dispara o evento REAL nos próprios testes — NÃO toca `FluxoExpressoService`. Logo, o dispatch no `encaminharAnalise` é responsabilidade do 10-07 (Task 1, como manda o plano e o frontmatter `files_modified`), e o 10-08 é o consumidor. File-disjunto: nenhum arquivo compartilhado. No ambiente atual o dispatch é inerte (listener do 10-08 ainda não existe na árvore); ao integrar, a pré-análise reage por auto-descoberta.
+- **EncaminhadoParaAnalise — produtor x consumidor (resolvido sem conflito):** o plano 10-08 foi LIDO antes de codar. Ele só cria `PreAnaliseService` + listener AUTO-DESCOBERTO `PreAnalisarProcesso` e dispara o evento REAL nos próprios testes — NÃO toca `FluxoExpressoService`. Logo, o dispatch no `encaminharAnalise` é responsabilidade do 10-07 (Task 1, como manda o plano e o frontmatter `files_modified`), e o 10-08 é o consumidor. File-disjunto: nenhum arquivo compartilhado. Durante a execução o 10-08 commitou seus arquivos na MESMA árvore (`372e294`, `97c15ac`): o listener `PreAnalisarProcesso` (auto-descoberto) já reage ao dispatch deste plano — integração produtor+consumidor VERIFICADA (fatia `10-07`+`10-08` 26/26; suíte completa 1020/1020).
 - **ÚNICO editor de `routes/gestao.php` na Wave 3:** confirmado — só este plano alterou o arquivo (import + grupo `caixa-setor`).
 - **STATE.md NÃO editado** (wave paralela — consolidação a cargo do orquestrador), conforme instrução.
 - Sem outros desvios no código de produção — plano executado como escrito.
