@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(35, Parameter::query()->count());
+        $this->assertSame(48, Parameter::query()->count());
         $this->assertSame(
-            ['features', 'geo', 'integracoes', 'louos', 'retencao', 'risco', 'seguranca', 'ui'],
+            ['features', 'geo', 'integracoes', 'louos', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -304,11 +304,54 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($throttle->value);
     }
 
+    public function test_seeder_registra_parametros_da_solicitacao_de_viabilidade(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $toggle = Parameter::query()->where('key', 'features.solicitacao_viabilidade')->first();
+        $this->assertNotNull($toggle);
+        $this->assertSame('features', $toggle->group);
+        $this->assertSame('boolean', $toggle->type);
+        $this->assertSame('1', $toggle->default_value);
+        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
+        $this->assertNull($toggle->value);
+
+        $prefixo = Parameter::query()->where('key', 'solicitacao.protocolo.prefixo')->first();
+        $this->assertNotNull($prefixo);
+        $this->assertSame('solicitacao', $prefixo->group);
+        $this->assertSame('string', $prefixo->type);
+        $this->assertSame('VIA', $prefixo->default_value);
+        $this->assertSame(['required', 'string', 'max:10'], $prefixo->validation_rules);
+        $this->assertNull($prefixo->value);
+
+        $mimes = Parameter::query()->where('key', 'solicitacao.anexos.mime_permitidos')->first();
+        $this->assertNotNull($mimes);
+        $this->assertSame('solicitacao', $mimes->group);
+        $this->assertSame('json', $mimes->type);
+        $this->assertSame(['required', 'json'], $mimes->validation_rules);
+        $this->assertSame(['application/pdf', 'image/jpeg', 'image/png'], $mimes->typedValue());
+
+        $disk = Parameter::query()->where('key', 'storage.documentos.disk')->first();
+        $this->assertNotNull($disk);
+        $this->assertSame('solicitacao', $disk->group);
+        $this->assertSame('string', $disk->type);
+        $this->assertSame('local', $disk->default_value);
+        $this->assertSame(['required', 'string', 'max:50'], $disk->validation_rules);
+
+        $throttle = Parameter::query()->where('key', 'seguranca.throttle.consulta_protocolo.por_minuto')->first();
+        $this->assertNotNull($throttle);
+        $this->assertSame('seguranca', $throttle->group);
+        $this->assertSame('integer', $throttle->type);
+        $this->assertSame('30', $throttle->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $throttle->validation_rules);
+        $this->assertNull($throttle->value);
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(35, Parameter::query()->count());
+        $this->assertSame(48, Parameter::query()->count());
     }
 }
