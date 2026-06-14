@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Analise\PostgisPrecedentRepository;
+use App\Services\Analise\PrecedentRepository;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjLookup;
 use App\Services\Geo\Geocoder;
@@ -47,6 +49,14 @@ class AppServiceProvider extends ServiceProvider
         // TerritoryService e o motor da Fase 5 dependem da interface, não do
         // SQL — os testes dos consumidores usam um fake em memória.
         $this->app->bind(SpatialRepository::class, PostgisSpatialRepository::class);
+
+        // Precedentes da análise técnica (HU-142) atrás de contrato, espelhando
+        // o SpatialRepository: o PrecedentService depende da interface, não do
+        // SQL espacial (ST_Intersects sobre property_polygon). Binding
+        // INCONDICIONAL → PostgisPrecedentRepository; os testes SQLite injetam um
+        // fake em memória via $this->app->instance, nunca o fake no container de
+        // produção.
+        $this->app->bind(PrecedentRepository::class, PostgisPrecedentRepository::class);
 
         // Resolução por inscrição imobiliária (HU-055) atrás de contrato. A base
         // de lotes/Cadastro está PENDENTE SEDUR — o provider degrada honestamente
