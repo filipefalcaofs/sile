@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(33, Parameter::query()->count());
+        $this->assertSame(35, Parameter::query()->count());
         $this->assertSame(
             ['features', 'geo', 'integracoes', 'louos', 'retencao', 'risco', 'seguranca', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -283,11 +283,32 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(50, $sandbox->typedValue());
     }
 
+    public function test_seeder_registra_parametros_da_consulta_de_viabilidade(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $toggle = Parameter::query()->where('key', 'features.consulta_viabilidade')->first();
+        $this->assertNotNull($toggle);
+        $this->assertSame('features', $toggle->group);
+        $this->assertSame('boolean', $toggle->type);
+        $this->assertSame('1', $toggle->default_value);
+        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
+        $this->assertNull($toggle->value);
+
+        $throttle = Parameter::query()->where('key', 'seguranca.throttle.consulta_viabilidade.por_minuto')->first();
+        $this->assertNotNull($throttle);
+        $this->assertSame('seguranca', $throttle->group);
+        $this->assertSame('integer', $throttle->type);
+        $this->assertSame('20', $throttle->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $throttle->validation_rules);
+        $this->assertNull($throttle->value);
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(33, Parameter::query()->count());
+        $this->assertSame(35, Parameter::query()->count());
     }
 }
