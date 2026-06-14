@@ -349,9 +349,31 @@ Nota (recursos do framework — levantamento 2026-06-12): emissão de resultado 
   5. Analista pode **emitir TVL em PDF** no backoffice sob demanda (HU-132) — relatório interno, não entrega ao cidadão.
   6. Qualquer processo pode ser encaminhado à **malha fina** para revisão humana provocada (HU-136).
   7. Processo encerrado com status final e trilha completa.
-**Plans**: TBD
+**Plans**: 18 plans (8 waves do CONTEXT) — planejados em 2026-06-14
+
+Plans:
+- [ ] 10-01-PLAN.md — Fundação: 11 parâmetros grupo `analise` (56→67) + 5 permissões (19→24) + fallback config (dono do catálogo) (wave 1)
+- [ ] 10-02-PLAN.md — Schema: 8 tabelas (setores+pivot, ficha versionada, divergências, pendências, malha fina, textos-padrão, tvl_documents) + colunas de análise em viability_requests + 4 enums + models/factories (wave 1)
+- [ ] 10-03-PLAN.md — StateMachine: transições da análise humana (em_analise/em_pendencia, decisão final) + evento EncaminhadoParaAnalise (wave 1)
+- [ ] 10-04-PLAN.md — HU-138 setores (CRUD + analistas N:N) + HU-085 textos-padrão (CRUD versionado) — backend, route-owner W2 (wave 2)
+- [ ] 10-05-PLAN.md — AnalysisSlaService (reusa BusinessDeadlineCalculator) + semáforo on-the-fly (HU-144) (wave 2)
+- [ ] 10-06-PLAN.md — PrecedentRepository (contrato+postgis+fake) + PrecedentService (HU-142, @group postgis, LGPD) (wave 2)
+- [ ] 10-07-PLAN.md — HU-079/080/081: encaminhar (dispara EncaminhadoParaAnalise + SLA) + caixa do setor/distribuir(lote)/assumir, route-owner W3 (wave 3)
+- [ ] 10-08-PLAN.md — HU-140 PreAnalisarProcesso (listener auto-descoberto, reusa resolver, ficha rev 1; FA-01) (wave 3)
+- [ ] 10-09-PLAN.md — HU-135 ficha backend (autosave/finalizar imutável/revisões/diff) + HU-140 divergências + HU-142 endpoint, route-owner W4 (wave 4)
+- [ ] 10-10-PLAN.md — HU-085/086/087/088/089 AnaliseTecnicaDecisionService → ViabilityDecision (flow analise_tecnica) + ResultadoEmitido (serviço) (wave 5)
+- [ ] 10-11-PLAN.md — HU-083/084 pendências (ciclo interno: serviço + evento gancho EP11 + e-mail + resposta no portal), route-owner portal W5 (wave 5)
+- [ ] 10-12-PLAN.md — HU-136 malha fina (flag+tabela ortogonal ao status, qualquer status, lote) — serviço (wave 5)
+- [ ] 10-13-PLAN.md — HU-132 TVL PDF (barryvdh/laravel-dompdf — única dep nova) + TvlPdfService (só deferida, disco não público, auditado) (wave 6)
+- [ ] 10-14-PLAN.md — HU-082 consulta (filtros SAPS+analista+categoria, índices, busca global, CSV) + HU-144 fila por SLA, route-owner W6 (wave 6)
+- [ ] 10-15-PLAN.md — Ações backend (decidir/encerrar, abrir pendência, malha fina lote, emitir/baixar TVL por URL assinada), route-owner W7 (wave 7)
+- [ ] 10-16-PLAN.md — UI: fila com SLA + consulta + detalhe (timeline/mini-mapa) + lote de malha fina/CSV (wave 7)
+- [ ] 10-17-PLAN.md — UI: ficha SAPS (HU-135/140/142 + ações) + telas admin (setores/textos-padrão) + navegação do console + busca global Cmd+K (wave 7)
+- [ ] 10-18-PLAN.md — Fechamento: seeds dev + analise:decidir + golden/smoke + precedentes @group postgis + verificação integral + smoke navegável (checkpoint humano) (wave 8)
 
 Nota (recursos do framework — levantamento 2026-06-12): TVL em PDF (HU-132) gerado e armazenado via Storage/Filesystem, com download no backoffice por URL temporária assinada — nunca arquivo público.
+
+Nota de planejamento (2026-06-14): 18 planos em 8 waves (CONTEXT). Estratégia de paralelismo sem sobreposição de arquivos — lógica de negócio em serviços route-free nas waves 2–6, com UM único dono de `routes/gestao.php` por wave (10-04 W2, 10-07 W3, 10-09 W4, 10-14 W6, 10-15 W7) e UM dono do catálogo de parâmetros/permissões (10-01); UI (páginas React) concentrada na wave 7. Dependência nova pré-aprovada: `barryvdh/laravel-dompdf` (HU-132, isolada em 10-13). Bloqueios herdados (degradam honesto): transmissão Regin/SEFAZ na conclusão (HU-104/110) → Fase 13; HU-083/084 convite Simplifica/Regin + multicanal → EP11; exportação plena (HU-131) → Fase 15; zona oficial Quadro 10/SEDUR; HU-137 feriados (seam pronto).
 
 ### Phase 11: Pendências e Comunicação
 **Goal**: Requerentes são notificados de pendências e vencimentos pelos canais configurados e respondem pelo próprio sistema, reabrindo a análise.
@@ -473,7 +495,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 7. Consulta Prévia de Viabilidade | 10/10 | Complete (veredito locacional/inscrição pendentes SEDUR) | 2026-06-14 |
 | 8. Solicitação de Viabilidade | 16/16 | Complete (guardião APROVADO; resta só o smoke navegável humano); DAM HU-071/072 + Regin bloqueados → Fase 13; HU-139 texto livre | 2026-06-14 |
 | 9. Fluxo Expresso | 12/12 | Complete (resta só o smoke navegável humano); Regin/SEFAZ HU-104/110 e HU-134 ativa → Fase 13; TVL PDF HU-132 → Fase 10; zona oficial Quadro 10 pendente SEDUR | 2026-06-14 |
-| 10. Análise Técnica SEDUR | 0/TBD | Not started | - |
+| 10. Análise Técnica SEDUR | 0/18 | Planned | - |
 | 11. Pendências e Comunicação | 0/TBD | Not started | - |
 | 12. Auditoria e Compliance | 0/TBD | Not started | - |
 | 13. Integrações | 0/TBD | Not started | - |
