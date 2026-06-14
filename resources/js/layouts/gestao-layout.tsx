@@ -2,7 +2,7 @@ import { usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import AppShell from '@/components/app/app-shell';
 import type { SidebarGroup } from '@/components/app/app-sidebar';
-import { FileIcon, GearIcon, GridIcon, GroupIcon, ListIcon, LockIcon, MailIcon, MapPinIcon, PlugInIcon, ShieldIcon, TableIcon } from '@/components/icons';
+import { FileIcon, GearIcon, GridIcon, GroupIcon, ListIcon, LockIcon, MailIcon, MapPinIcon, PlugInIcon, ShieldIcon, TableIcon, TagIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import { ThemeProvider } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
@@ -35,6 +35,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     href: '/gestao/cnaes',
                     icon: <TableIcon />,
                     visible: auth.permissions.includes('consultar-cnaes'),
+                },
+                {
+                    name: 'Tipos de serviço',
+                    href: '/gestao/tipos-servico',
+                    icon: <TagIcon />,
+                    visible: auth.permissions.includes('manter-tipos-servico'),
                 },
                 {
                     name: 'Classificação de risco',

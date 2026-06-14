@@ -430,3 +430,16 @@ export function LogoutIcon(props: IconProps) {
         </svg>
     );
 }
+
+export function TagIcon(props: IconProps) {
+    return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+            <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M5.5 4.25A2.25 2.25 0 0 0 3.25 6.5v4.69c0 .597.237 1.169.659 1.591l7.5 7.5a2.25 2.25 0 0 0 3.182 0l4.69-4.69a2.25 2.25 0 0 0 0-3.182l-7.5-7.5a2.25 2.25 0 0 0-1.591-.659H5.5Zm1.75 4.5a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Z"
+                fill="currentColor"
+            />
+        </svg>
+    );
+}
