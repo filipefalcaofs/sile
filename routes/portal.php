@@ -13,6 +13,7 @@ use App\Http\Controllers\Portal\HistoricoConsultaController;
 use App\Http\Controllers\Portal\LgpdTermController;
 use App\Http\Controllers\Portal\ProcurationController;
 use App\Http\Controllers\Portal\RepresentationController;
+use App\Http\Controllers\Portal\SolicitacaoAtividadeController;
 use App\Http\Controllers\Portal\SolicitacaoController;
 use App\Http\Middleware\ResolveRepresentation;
 use Illuminate\Support\Facades\Route;
@@ -98,5 +99,10 @@ Route::middleware(['auth:web', 'verified'])
             // comunicada com o toggle features.solicitacao_viabilidade off.
             Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->name('solicitacoes.index');
             Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->name('solicitacoes.store');
+
+            // Atividades da solicitação (HU-064/HU-065) — rota com {solicitacao}
+            // DEPOIS das literais. Define o CNAE principal + complementares
+            // (até o limite parametrizável) só do dono em rascunho (policy).
+            Route::put('solicitacoes/{solicitacao}/atividades', [SolicitacaoAtividadeController::class, 'update'])->name('solicitacoes.atividades');
         });
     });
