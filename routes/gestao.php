@@ -7,6 +7,8 @@ use App\Http\Controllers\Gestao\EmailLogController;
 use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\ParameterController;
+use App\Http\Controllers\Gestao\RiscoCondicionanteController;
+use App\Http\Controllers\Gestao\RiscoController;
 use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\UserManagementController;
@@ -80,5 +82,22 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('geocodificar', GeocodeController::class)->middleware('throttle:geocoding')->name('geocodificar');
             Route::post('identificar', [TerritoryController::class, 'identify'])->name('identificar');
             Route::post('validar-localizacao', [TerritoryController::class, 'validateLocation'])->name('validar-localizacao');
+        });
+
+        // Classificação de risco (HU-019/HU-020/HU-052/HU-053): a consulta da
+        // tabela vigente (analista/gestor/admin) é separada da manutenção
+        // versionada e do CRUD de condicionantes (admin). Gate cross-guard via
+        // permission: (PADRÃO 04-03). Atualizar publica NOVA versão (4-olhos),
+        // nunca edição destrutiva da vigente.
+        Route::middleware('permission:consultar-risco')->prefix('risco')->name('risco.')->group(function () {
+            Route::get('/', [RiscoController::class, 'index'])->name('index');
+            Route::get('condicionantes', [RiscoCondicionanteController::class, 'index'])->name('condicionantes.index');
+        });
+
+        Route::middleware('permission:manter-risco')->prefix('risco')->name('risco.')->group(function () {
+            Route::put('publicar', [RiscoController::class, 'publish'])->name('publicar');
+            Route::post('condicionantes', [RiscoCondicionanteController::class, 'store'])->name('condicionantes.store');
+            Route::put('condicionantes/{condicionante}', [RiscoCondicionanteController::class, 'update'])->name('condicionantes.update');
+            Route::delete('condicionantes/{condicionante}', [RiscoCondicionanteController::class, 'destroy'])->name('condicionantes.destroy');
         });
     });

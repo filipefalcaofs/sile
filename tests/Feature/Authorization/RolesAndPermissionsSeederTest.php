@@ -30,6 +30,8 @@ class RolesAndPermissionsSeederTest extends TestCase
             'manter-perfis',
             'manter-parametros',
             'consultar-cnaes',
+            'consultar-risco',
+            'manter-risco',
         ];
 
         foreach ($permissions as $permission) {
@@ -85,6 +87,31 @@ class RolesAndPermissionsSeederTest extends TestCase
         );
     }
 
+    public function test_papeis_recebem_permissoes_de_risco(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        foreach (['consultar-risco', 'manter-risco'] as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Consulta da tabela de risco: analista, gestor e administrador (espelha CNAEs).
+        foreach (['administrador', 'analista', 'gestor'] as $role) {
+            $this->assertTrue(
+                Role::findByName($role, 'web')->hasPermissionTo('consultar-risco'),
+            );
+        }
+
+        // Manutenção (publicação versionada e condicionantes): só o administrador.
+        $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('manter-risco'));
+        $this->assertFalse(Role::findByName('analista', 'web')->hasPermissionTo('manter-risco'));
+        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('manter-risco'));
+        $this->assertFalse(Role::findByName('cidadao', 'web')->hasPermissionTo('consultar-risco'));
+    }
+
     public function test_estados_da_factory_atribuem_papel(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
@@ -101,7 +128,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(10, Permission::query()->count());
+        $this->assertSame(12, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void

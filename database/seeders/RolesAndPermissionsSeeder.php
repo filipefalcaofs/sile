@@ -27,6 +27,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'consultar-cnaes',
             'monitorar-emails',
             'consultar-territorio',
+            'consultar-risco',
+            'manter-risco',
         ];
 
         foreach ($permissions as $permission) {
@@ -38,9 +40,9 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::firstOrCreate(['name' => 'cidadao', 'guard_name' => 'web'])
             ->givePermissionTo(['gerenciar-procuracoes-proprias']);
         Role::firstOrCreate(['name' => 'analista', 'guard_name' => 'web'])
-            ->givePermissionTo(['acessar-gestao', 'consultar-cnaes', 'consultar-territorio']);
+            ->givePermissionTo(['acessar-gestao', 'consultar-cnaes', 'consultar-territorio', 'consultar-risco']);
         Role::firstOrCreate(['name' => 'gestor', 'guard_name' => 'web'])
-            ->givePermissionTo(['acessar-gestao', 'consultar-cnaes', 'consultar-territorio']);
+            ->givePermissionTo(['acessar-gestao', 'consultar-cnaes', 'consultar-territorio', 'consultar-risco']);
         Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web'])
             ->givePermissionTo([
                 'acessar-gestao',
@@ -52,6 +54,8 @@ class RolesAndPermissionsSeeder extends Seeder
                 'consultar-cnaes',
                 'monitorar-emails',
                 'consultar-territorio',
+                'consultar-risco',
+                'manter-risco',
             ]);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
