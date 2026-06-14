@@ -14,6 +14,7 @@ use App\Http\Controllers\Gestao\RiscoController;
 use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\UserManagementController;
+use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -121,5 +122,16 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('simulacao', [LouosSandboxController::class, 'index'])->name('sandbox.index');
             Route::post('simulacao', [LouosSandboxController::class, 'simulate'])->name('sandbox.simular');
             Route::put('simulacao/publicar', [LouosSandboxController::class, 'publish'])->name('sandbox.publicar');
+        });
+
+        // Tipos de serviço da solicitação (HU-061 RN-005): dado administrável
+        // (CRUD) atrás de permissão própria — a listagem e o CRUD ficam sob
+        // manter-tipos-servico (sem consulta separada). A desativação preserva
+        // o histórico (toggle), nunca exclui o registro referenciado.
+        Route::middleware('permission:manter-tipos-servico')->prefix('tipos-servico')->name('tipos-servico.')->group(function () {
+            Route::get('/', [ViabilityServiceTypeController::class, 'index'])->name('index');
+            Route::post('/', [ViabilityServiceTypeController::class, 'store'])->name('store');
+            Route::put('{serviceType}', [ViabilityServiceTypeController::class, 'update'])->name('update');
+            Route::put('{serviceType}/ativacao', [ViabilityServiceTypeController::class, 'toggleActivation'])->name('ativacao.update');
         });
     });
