@@ -45,7 +45,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 6: Classificação de Risco** — Risco por CNAE com condicionante-pergunta reclassificadora (EP06 + HU-019, HU-020) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 519/519 SQLite + 15/15 @group postgis; motor real classificando sobre o Decreto 32.636/2020 com encaminhamento parametrizável e auditoria). Regras como dados versionados (rule_versions — infra herdada pela Fase 5)
 - [x] **Phase 7: Consulta Prévia de Viabilidade** — Simulação consumindo território + motores (EP07) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 657/657 SQLite + 15/15 @group postgis; comando viabilidade:consultar com geocode real). PRIMEIRO fluxo de decisão de ponta a ponta: orquestra território (4) + LOUOS (5) + risco (6) e PROPAGA o veredito (não recomputa). Honesto: risco/Quadro 7/restrições reais; veredito locacional fica "pendente" sem a zona (bloqueada SEDUR); inscrição imobiliária bloqueada atrás do contrato PropertyRegistryLookup.
 - [x] **Phase 8: Solicitação de Viabilidade** — Processo formal: criação, documentos, protocolo (EP08) — implementada; smoke navegável aguardando aprovação humana; DAM bloqueado → Fase 13
-- [ ] **Phase 9: Fluxo Expresso** — Deferimento/indeferimento automático, Regin + SEFAZ, prazo BAP (EP09 + HU-134)
+- [x] **Phase 9: Fluxo Expresso** — Deferimento/indeferimento automático, Regin + SEFAZ, prazo BAP (EP09 + HU-134) — implementada em 2026-06-14 (12/12 planos; suíte 931/931 SQLite + 22/22 @group postgis; motor real deferindo/indeferindo/encaminhando, evidência `expresso:decidir` → DEFERIDA + TVL). Regin/SEFAZ (HU-104/110) e HU-134 ativa bloqueados → Fase 13; TVL PDF (HU-132) → Fase 10; zona oficial Quadro 10 pendente SEDUR (sem ela, degradação honesta em_analise). Smoke navegável aguardando aprovação humana.
 - [ ] **Phase 10: Análise Técnica SEDUR** — Fila com SLA, ficha pré-analisada pelo motor, precedentes, malha fina, TVL PDF backoffice (EP10 + HU-132/135/136/140/142/144)
 - [ ] **Phase 11: Pendências e Comunicação** — Notificações, respostas e canais administráveis (EP11)
 - [ ] **Phase 12: Auditoria e Compliance** — Consulta, exportação e LGPD sobre a trilha registrada (EP12)
@@ -314,21 +314,23 @@ Status (fechamento 2026-06-14, plano 08-16): 16/16 planos implementados; verific
   4. Processos sem BAP vinculado no prazo parametrizado são indeferidos automaticamente (HU-134).
   5. Cidadão é notificado pelos canais habilitados **sem** anexo de TVL (HU-077).
   6. Decisão automática fica integralmente auditada: dados de entrada, regras aplicadas, versão das regras e resultado.
-**Plans**: 12 planos (Planned) — planejados em 2026-06-14 (7 waves do CONTEXT)
+**Plans**: 12 planos (12/12 implementados) — planejados e executados em 2026-06-14 (7 waves do CONTEXT)
+
+Status (fechamento 2026-06-14, plano 09-12): 12/12 planos implementados; verificação integral FRESCA verde (pint limpo; tsc/build; suíte 953/953 = 931 SQLite + 22 @group postgis). Critérios 1, 2, 5 e 6 validados com evidência fresca: o motor real defere/indefere/encaminha (seeds dev + zona fictícia SÓ dev/teste tornam um deferimento NAVEGÁVEL — `expresso:decidir 8` → DEFERIDA + TVL-2026-000001; `expresso:decidir 9` → EM ANÁLISE honesto sem zona; golden/smoke travam os três caminhos + a degradação anti-fachada). **Critério 3 (Regin HU-104 / SEFAZ HU-110) com a DECISÃO e a AUDITORIA reais, mas a TRANSMISSÃO BLOQUEADA → Fase 13** (contratos `Unavailable*` auditam pendência `bloqueado`, nunca "enviado"). **Critério 4 (HU-134 prazo BAP) com a rotina/estado/parâmetro prontos e DORMENTES (no-op) → ativação na Fase 13** (depende do Regin alimentar `bap_due_at`). TVL PDF (HU-132) → Fase 10 (mesma fonte `ViabilityDecision`). Zona oficial (Quadro 10/SEDUR) pendente — sem ela a maioria cai honestamente em `em_analise`; HU-137 (feriados) e canais plenos (EP11) registrados. Parâmetros 56 / permissões 19 (ZERO permissão nova). **Gate restante: aprovação do smoke navegável (checkpoint humano).**
 
 Plans:
-- [ ] 09-01-PLAN.md — Parâmetros HU-014 + fallback config (wave 1)
-- [ ] 09-02-PLAN.md — Schema da decisão + DecisionOutcome + ViabilityDecision + TvlNumberGenerator + transições da StateMachine (wave 1)
-- [ ] 09-03-PLAN.md — Contratos Regin/SEFAZ/BAP (bloqueados) + bindings + evento ResultadoEmitido (wave 1)
-- [ ] 09-04-PLAN.md — SolicitacaoViabilityResolver (extração de SimulacaoSolicitacaoService) (wave 1)
-- [ ] 09-05-PLAN.md — FluxoExpressoService: elegibilidade + defere/indefere + lock + auditoria síncrona + TVL + idempotência (wave 2)
-- [ ] 09-06-PLAN.md — Gatilho: listener AvaliarFluxoExpresso + DecidirFluxoExpressoJob + expresso:reavaliar (wave 3)
-- [ ] 09-07-PLAN.md — NotificarResultadoExpresso + ResultadoExpressoNotification (HU-077, sem anexo) (wave 4)
-- [ ] 09-08-PLAN.md — ComunicarResultadoRegin (HU-104, pendência auditada) (wave 4)
-- [ ] 09-09-PLAN.md — EnviarViabilidadeSefaz (HU-110, só deferida, pendência auditada) (wave 4)
-- [ ] 09-10-PLAN.md — HU-134 BAP dormente: expresso:indeferir-sem-bap + seam de prazo (wave 5)
-- [ ] 09-11-PLAN.md — UI retaguarda: resultado expresso (lista + detalhe ViabilityDecision) (wave 6)
-- [ ] 09-12-PLAN.md — Fechamento: seeds dev + zona fictícia + expresso:decidir + golden/smoke + verificação integral + checkpoint humano (wave 7)
+- [x] 09-01-PLAN.md — Parâmetros HU-014 + fallback config (wave 1) ✓ 2026-06-14
+- [x] 09-02-PLAN.md — Schema da decisão + DecisionOutcome + ViabilityDecision + TvlNumberGenerator + transições da StateMachine (wave 1) ✓ 2026-06-14
+- [x] 09-03-PLAN.md — Contratos Regin/SEFAZ/BAP (bloqueados) + bindings + evento ResultadoEmitido (wave 1) ✓ 2026-06-14
+- [x] 09-04-PLAN.md — SolicitacaoViabilityResolver (extração de SimulacaoSolicitacaoService) (wave 1) ✓ 2026-06-14
+- [x] 09-05-PLAN.md — FluxoExpressoService: elegibilidade + defere/indefere + lock + auditoria síncrona + TVL + idempotência (wave 2) ✓ 2026-06-14
+- [x] 09-06-PLAN.md — Gatilho: listener AvaliarFluxoExpresso + DecidirFluxoExpressoJob + expresso:reavaliar (wave 3) ✓ 2026-06-14
+- [x] 09-07-PLAN.md — NotificarResultadoExpresso + ResultadoExpressoNotification (HU-077, sem anexo) (wave 4) ✓ 2026-06-14
+- [x] 09-08-PLAN.md — ComunicarResultadoRegin (HU-104, pendência auditada) (wave 4) ✓ 2026-06-14
+- [x] 09-09-PLAN.md — EnviarViabilidadeSefaz (HU-110, só deferida, pendência auditada) (wave 4) ✓ 2026-06-14
+- [x] 09-10-PLAN.md — HU-134 BAP dormente: expresso:indeferir-sem-bap + seam de prazo (wave 5) ✓ 2026-06-14
+- [x] 09-11-PLAN.md — UI retaguarda: resultado expresso (lista + detalhe ViabilityDecision) (wave 6) ✓ 2026-06-14
+- [x] 09-12-PLAN.md — Fechamento: seeds dev + zona fictícia + expresso:decidir + golden/smoke + verificação integral + checkpoint humano (wave 7) ✓ 2026-06-14
 
 Nota (recursos do framework — levantamento 2026-06-12): emissão de resultado protegida por atomic lock (`Cache::lock`) — idempotência sob concorrência, sem dupla emissão; decisão dispara evento de domínio (`ResultadoEmitido`) consumido por notificação (HU-077), integrações Regin/SEFAZ e auditoria; indeferimento por prazo BAP (HU-134) roda como rotina agendada no scheduler ativado na Fase 3.1.
 
@@ -470,7 +472,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 6. Classificação de Risco | 9/9 | Complete | 2026-06-14 |
 | 7. Consulta Prévia de Viabilidade | 10/10 | Complete (veredito locacional/inscrição pendentes SEDUR) | 2026-06-14 |
 | 8. Solicitação de Viabilidade | 16/16 | Complete (guardião APROVADO; resta só o smoke navegável humano); DAM HU-071/072 + Regin bloqueados → Fase 13; HU-139 texto livre | 2026-06-14 |
-| 9. Fluxo Expresso | 0/12 | Planned (Regin/SEFAZ HU-104/110 e HU-134 ativa → Fase 13; TVL PDF HU-132 → Fase 10; zona oficial Quadro 10 pendente SEDUR) | - |
+| 9. Fluxo Expresso | 12/12 | Complete (resta só o smoke navegável humano); Regin/SEFAZ HU-104/110 e HU-134 ativa → Fase 13; TVL PDF HU-132 → Fase 10; zona oficial Quadro 10 pendente SEDUR | 2026-06-14 |
 | 10. Análise Técnica SEDUR | 0/TBD | Not started | - |
 | 11. Pendências e Comunicação | 0/TBD | Not started | - |
 | 12. Auditoria e Compliance | 0/TBD | Not started | - |
