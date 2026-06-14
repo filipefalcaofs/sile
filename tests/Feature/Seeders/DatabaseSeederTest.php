@@ -4,10 +4,13 @@ namespace Tests\Feature\Seeders;
 
 use App\Enums\CompanySource;
 use App\Enums\RuleDomain;
+use App\Enums\ViabilityRequestOrigin;
+use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
+use App\Models\DocumentRequirement;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\LouosQuadro10Permissao;
@@ -19,7 +22,10 @@ use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
 use App\Models\SanitaryRiskClassification;
 use App\Models\User;
+use App\Models\ViabilityRequest;
+use App\Models\ViabilityServiceType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -123,6 +129,73 @@ class DatabaseSeederTest extends TestCase
         $this->assertTrue($temPrincipal);
     }
 
+    public function test_seed_prepara_catalogo_e_solicitacoes_de_exemplo_da_fase_8(): void
+    {
+        $this->seed();
+
+        // Catálogo de tipos de serviço (HU-061) — seed MÍNIMO com códigos
+        // estáveis; a lista oficial é pendência SEDUR (substituível sem deploy).
+        $this->assertSame(4, ViabilityServiceType::query()->count());
+        $this->assertTrue(
+            ViabilityServiceType::query()
+                ->where('code', 'viabilidade-1-estabelecimento')
+                ->where('active', true)
+                ->exists()
+        );
+
+        // Requisitos documentais BASE (HU-067) referenciados pelo resolver por
+        // code: fachada (sempre) e concessão (área pública). A obrigatoriedade
+        // POR CNAE entra VAZIA — planilha oficial pendente SEDUR (honesto).
+        $this->assertTrue(
+            DocumentRequirement::query()->where('code', 'foto-fachada')->where('active', true)->exists()
+        );
+        $this->assertTrue(
+            DocumentRequirement::query()->where('code', 'termo-concessao')->where('active', true)->exists()
+        );
+        $this->assertSame(0, DB::table('cnae_document_requirement')->count());
+
+        // Solicitações de EXEMPLO do cidadão dev (dados fictícios, lógica REAL):
+        // rascunho instruído, protocolada (número/timeline reais via serviço),
+        // cancelada e contingência.
+        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
+
+        $rascunho = ViabilityRequest::query()
+            ->where('requester_user_id', $cidadao->id)
+            ->where('status', ViabilityRequestStatus::Rascunho)
+            ->first();
+        $this->assertNotNull($rascunho, 'Esperava um rascunho instruído de exemplo.');
+        $this->assertTrue($rascunho->primaryCnae()->exists());
+        $this->assertNotNull($rascunho->property_polygon_geojson);
+
+        $protocolada = ViabilityRequest::query()
+            ->where('requester_user_id', $cidadao->id)
+            ->where('status', ViabilityRequestStatus::Protocolada)
+            ->where('origin', ViabilityRequestOrigin::Portal)
+            ->first();
+        $this->assertNotNull($protocolada, 'Esperava uma solicitação protocolada de exemplo.');
+        $this->assertMatchesRegularExpression('/^VIA-\d{4}-\d{6}$/', (string) $protocolada->protocol_number);
+        // Timeline REAL: transição rascunho→protocolada gravada pelo serviço.
+        $this->assertSame(
+            1,
+            $protocolada->transitions()->where('to_status', ViabilityRequestStatus::Protocolada)->count()
+        );
+
+        $cancelada = ViabilityRequest::query()
+            ->where('requester_user_id', $cidadao->id)
+            ->where('status', ViabilityRequestStatus::Cancelada)
+            ->first();
+        $this->assertNotNull($cancelada, 'Esperava uma solicitação cancelada de exemplo.');
+        $this->assertNotNull($cancelada->cancelled_at);
+
+        $contingencia = ViabilityRequest::query()
+            ->where('requester_user_id', $cidadao->id)
+            ->where('origin', ViabilityRequestOrigin::Contingencia)
+            ->first();
+        $this->assertNotNull($contingencia, 'Esperava uma solicitação de contingência de exemplo.');
+        $this->assertSame(ViabilityRequestStatus::Protocolada, $contingencia->status);
+        $this->assertNotNull($contingencia->contingency_reason);
+    }
+
     public function test_seed_e_idempotente(): void
     {
         $this->seed();
@@ -149,6 +222,24 @@ class DatabaseSeederTest extends TestCase
             CompanyUser::query()
                 ->where('user_id', User::query()->where('email', 'cidadao@sile.dev')->value('id'))
                 ->whereNull('ended_at')
+                ->count()
+        );
+
+        // Catálogo e solicitações de exemplo da Fase 8 estáveis no re-seed
+        // (upsert/firstOrCreate por chave estável — nada é duplicado).
+        $this->assertSame(4, ViabilityServiceType::query()->count());
+        $this->assertSame(3, DocumentRequirement::query()->count());
+        $this->assertSame(0, DB::table('cnae_document_requirement')->count());
+
+        $cidadaoId = User::query()->where('email', 'cidadao@sile.dev')->value('id');
+        $this->assertSame(4, ViabilityRequest::query()->where('requester_user_id', $cidadaoId)->count());
+        // Os exemplos protocolados não ganham número novo a cada re-seed.
+        $this->assertSame(
+            1,
+            ViabilityRequest::query()
+                ->where('requester_user_id', $cidadaoId)
+                ->where('origin', ViabilityRequestOrigin::Portal)
+                ->where('status', ViabilityRequestStatus::Protocolada)
                 ->count()
         );
     }

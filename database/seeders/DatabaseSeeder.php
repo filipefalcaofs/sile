@@ -25,9 +25,13 @@ class DatabaseSeeder extends Seeder
             LouosQuadro7Seeder::class,
             LouosQuadro10Seeder::class,
             LouosQuadro11Seeder::class,
+            ViabilityServiceTypeSeeder::class,
+            DocumentRequirementSeeder::class,
             DevAdminSeeder::class,
             CompanySeeder::class,
             GeoLayerSeeder::class,
+            // Depende de empresas/CNAEs/catálogos acima — fecha o seed de dev.
+            SolicitacaoDevSeeder::class,
         ]);
     }
 }
