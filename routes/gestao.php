@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Gestao\AccessHistoryController;
+use App\Http\Controllers\Gestao\AssistedAttendanceController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\ContingenciaController;
 use App\Http\Controllers\Gestao\DashboardController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
 use App\Http\Controllers\Portal\CnaeSearchController;
+use App\Http\Middleware\ResolveAssistedAttendance;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -163,4 +165,22 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('cnaes-disponiveis', CnaeSearchController::class)->name('cnaes-disponiveis');
             Route::post('/', [ContingenciaController::class, 'store'])->name('store');
         });
+
+        // Atendimento presencial assistido (HU-150): canal de operador de balcão.
+        // O atendente opera "em nome de" o cidadão presente, REUSANDO o mecanismo
+        // de representação da Fase 1 — o middleware ResolveAssistedAttendance
+        // (aplicado por classe, como o ResolveRepresentation do portal) popula o
+        // MESMO Context/CurrentRepresentation, então a abertura grava
+        // requester = cidadão e created_by = atendente, com a auditoria
+        // registrando os dois (RN-001/RN-002). O vínculo expira e exige
+        // reabertura (CA-03); o escopo fica atrás de atendimento-presencial.
+        Route::middleware(['permission:atendimento-presencial', ResolveAssistedAttendance::class])
+            ->prefix('atendimento')
+            ->name('atendimento.')
+            ->group(function () {
+                Route::get('/', [AssistedAttendanceController::class, 'index'])->name('index');
+                Route::post('/', [AssistedAttendanceController::class, 'store'])->name('store');
+                Route::delete('/', [AssistedAttendanceController::class, 'destroy'])->name('destroy');
+                Route::post('solicitacoes', [AssistedAttendanceController::class, 'storeSolicitacao'])->name('solicitacoes.store');
+            });
     });

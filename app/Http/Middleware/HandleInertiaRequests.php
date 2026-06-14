@@ -46,6 +46,9 @@ class HandleInertiaRequests extends Middleware
             // Closure: avaliada na serialização da resposta, depois de o
             // ResolveRepresentation (middleware de rota) resolver o estado.
             'actingFor' => fn () => app(CurrentRepresentation::class)->grantor()?->only('id', 'name'),
+            // Banner do atendimento presencial assistido (HU-150): preenchido
+            // pelo ResolveAssistedAttendance nas rotas do atendimento (console).
+            'attendingFor' => fn () => app(CurrentRepresentation::class)->attendance()?->citizen?->only('id', 'name'),
             'flash' => [
                 'status' => $request->session()->get('status'),
                 'error' => $request->session()->get('error'),
