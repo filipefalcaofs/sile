@@ -1,0 +1,16 @@
+{
+    "nome": "Gatilho ZEIS derruba baixo risco para análise (semi-expresso)",
+    "descricao": "CNAE 0111-3/02 (Cultivo de milho) é Baixo Risco A e iria para o expresso; o gatilho zeis_especial (imóvel em Zona Especial de Interesse Social, vindo do território da Fase 4) força análise técnica mesmo em baixo risco (HU-051). Exige o RiskTriggerSeeder.",
+    "input": {
+        "cnae_code": "0111302",
+        "respostas_condicionantes": {},
+        "gatilhos_contexto": ["zeis_especial"],
+        "data": null
+    },
+    "esperado": {
+        "municipal_nivel": "baixo_a",
+        "dimensao_decisiva": "municipal",
+        "fluxo": "analise",
+        "gatilhos_acionados": ["zeis_especial"]
+    }
+}
