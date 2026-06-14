@@ -3,6 +3,7 @@
 namespace Tests\Feature\Seeders;
 
 use App\Enums\CompanySource;
+use App\Enums\RuleDomain;
 use App\Models\Activity;
 use App\Models\Cnae;
 use App\Models\Company;
@@ -10,6 +11,8 @@ use App\Models\CompanyUser;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\Parameter;
+use App\Models\RiskClassification;
+use App\Models\RuleVersion;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -31,6 +34,17 @@ class DatabaseSeederTest extends TestCase
             Activity::query()
                 ->where('log_name', 'cnaes')
                 ->where('event', 'importacao-oficial')
+                ->exists()
+        );
+
+        // Classificação de risco municipal (Decreto 32.636/2020): versão
+        // vigente única + 1.331 classificações carregadas e auditadas.
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
+        $this->assertSame(1331, RiskClassification::query()->count());
+        $this->assertTrue(
+            Activity::query()
+                ->where('log_name', 'risco')
+                ->where('event', 'importacao-classificacao-municipal')
                 ->exists()
         );
 
@@ -84,6 +98,8 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
         $this->assertSame(29, Parameter::query()->count());
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
+        $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(3, Company::query()->count());
         $this->assertSame(
             2,

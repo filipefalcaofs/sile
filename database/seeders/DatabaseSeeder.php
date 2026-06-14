@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             LegalTermSeeder::class,
             ParameterSeeder::class,
             CnaeSeeder::class,
+            RiscoMunicipalSeeder::class,
             DevAdminSeeder::class,
             CompanySeeder::class,
             GeoLayerSeeder::class,
