@@ -102,6 +102,21 @@ class ConsultaViabilidadeService
     }
 
     /**
+     * Consulta a partir de um PONTO já conhecido + CNAE (HU-141): ponto de
+     * entrada PÚBLICO reutilizado pela simulação pré-protocolo (08-09), que já
+     * tem o ponto (centroide do polígono da solicitação) e NÃO deve geocodificar
+     * de novo. Roda a MESMA pipeline central (território → motores) e PROPAGA o
+     * veredito do motor LOUOS — sem lógica de decisão paralela (RN-001). Não
+     * altera o comportamento das três entradas públicas (endereço/CNAE/inscrição).
+     */
+    public function consultarPorPontoConhecido(float $lat, float $lng, string $cnae, ?float $area = null): ConsultaViabilidadeResult
+    {
+        $input = ConsultaViabilidadeInput::paraPonto($cnae, $area);
+
+        return $this->consultarPorPonto($lat, $lng, $input, null);
+    }
+
+    /**
      * Análise por CNAE + área SEM território, reutilizada pela via CNAE pura
      * (HU-056) e pela inscrição degradada (HU-055, quando a base de lotes está
      * indisponível): enquadra com território NULL (Quadro 10 indisponível →

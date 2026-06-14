@@ -26,6 +26,8 @@ final readonly class ConsultaViabilidadeInput
 
     public const TIPO_INSCRICAO = 'inscricao';
 
+    public const TIPO_PONTO = 'ponto';
+
     public function __construct(
         public string $tipo,
         public string $cnae,
@@ -73,6 +75,21 @@ final readonly class ConsultaViabilidadeInput
             cnae: $cnae,
             area: $area,
             inscricao: $inscricao,
+        );
+    }
+
+    /**
+     * Consulta a partir de um PONTO já conhecido (HU-141): a solicitação de
+     * viabilidade já tem o ponto (centroide do polígono do imóvel), então a
+     * simulação pré-protocolo NÃO geocodifica de novo — roda a pipeline completa
+     * (território → motores) a partir do ponto. `area` alimenta o Quadro 7.
+     */
+    public static function paraPonto(string $cnae, ?float $area = null): self
+    {
+        return new self(
+            tipo: self::TIPO_PONTO,
+            cnae: $cnae,
+            area: $area,
         );
     }
 }
