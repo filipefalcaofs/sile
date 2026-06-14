@@ -11,6 +11,7 @@ use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\DocumentRequirement;
+use App\Models\GeoLayer;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\LouosQuadro10Permissao;
@@ -22,8 +23,11 @@ use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
 use App\Models\SanitaryRiskClassification;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
+use Database\Seeders\ExpressoDevSeeder;
+use Database\Seeders\ZonaFicticiaDevSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -196,6 +200,48 @@ class DatabaseSeederTest extends TestCase
         $this->assertNotNull($contingencia->contingency_reason);
     }
 
+    public function test_seed_prepara_exemplos_navegaveis_do_fluxo_expresso(): void
+    {
+        $this->seed();
+
+        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
+
+        // Dois exemplos do fluxo expresso (dados fictícios, lógica REAL): um
+        // sobre a zona fictícia (deferimento navegável) e um fora dela (em
+        // análise honesto). Identificados pelo marcador estável.
+        $deferimento = ViabilityRequest::query()
+            ->where('requester_user_id', $cidadao->id)
+            ->where('address_reference', ExpressoDevSeeder::MARK_DEFERIDA)
+            ->first();
+        $this->assertNotNull($deferimento, 'Esperava o exemplo de deferimento do fluxo expresso.');
+        $this->assertTrue($deferimento->primaryCnae()->where('code', '4712100')->exists());
+        $this->assertNotNull($deferimento->property_polygon_geojson);
+
+        $emAnalise = ViabilityRequest::query()
+            ->where('requester_user_id', $cidadao->id)
+            ->where('address_reference', ExpressoDevSeeder::MARK_EM_ANALISE)
+            ->first();
+        $this->assertNotNull($emAnalise, 'Esperava o exemplo de em análise (sem zona) do fluxo expresso.');
+
+        // Em SQLite a decisão NÃO roda (reexecuta os motores territoriais —
+        // exige PostGIS): os exemplos ficam protocolados, sem ViabilityDecision,
+        // e a zona fictícia não é carregada. A degradação honesta. O deferimento
+        // navegável (decisão + TVL sobre a zona real) é provado em @group postgis
+        // (ExpressoSeedPostgisTest). Espelha a decisão da Fase 8 (08-16).
+        $this->assertSame(ViabilityRequestStatus::Protocolada, $deferimento->status);
+        $this->assertNull($deferimento->decision);
+        $this->assertSame(ViabilityRequestStatus::Protocolada, $emAnalise->status);
+        $this->assertNull($emAnalise->decision);
+        $this->assertSame(0, ViabilityDecision::query()->count());
+
+        // Driver-aware: a camada de zona fictícia (geometria) não é carregada em
+        // SQLite — a zona segue como pendente_fonte (degradação honesta).
+        $this->assertSame(
+            0,
+            GeoLayer::query()->where('version', ZonaFicticiaDevSeeder::VERSION)->count(),
+        );
+    }
+
     public function test_seed_e_idempotente(): void
     {
         $this->seed();
@@ -231,11 +277,15 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(3, DocumentRequirement::query()->count());
         $this->assertSame(0, DB::table('cnae_document_requirement')->count());
 
+        // 4 exemplos da Fase 8 (rascunho/protocolada/cancelada/contingência) +
+        // 2 exemplos do fluxo expresso (deferimento/em análise) = 6, estáveis.
         $cidadaoId = User::query()->where('email', 'cidadao@sile.dev')->value('id');
-        $this->assertSame(4, ViabilityRequest::query()->where('requester_user_id', $cidadaoId)->count());
-        // Os exemplos protocolados não ganham número novo a cada re-seed.
+        $this->assertSame(6, ViabilityRequest::query()->where('requester_user_id', $cidadaoId)->count());
+        // Os exemplos protocolados não ganham número novo a cada re-seed: 1 da
+        // Fase 8 + 2 do expresso (em SQLite os exemplos do expresso ficam
+        // protocolados — a decisão real exige PostGIS, testes @group postgis).
         $this->assertSame(
-            1,
+            3,
             ViabilityRequest::query()
                 ->where('requester_user_id', $cidadaoId)
                 ->where('origin', ViabilityRequestOrigin::Portal)

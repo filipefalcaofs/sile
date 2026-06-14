@@ -32,6 +32,12 @@ class DatabaseSeeder extends Seeder
             GeoLayerSeeder::class,
             // Depende de empresas/CNAEs/catálogos acima — fecha o seed de dev.
             SolicitacaoDevSeeder::class,
+            // Fluxo expresso (EP09) — SÓ dev/teste (gate de ambiente nos próprios
+            // seeders). A zona fictícia (Centro) torna um deferimento navegável
+            // sobre a LÓGICA REAL; os exemplos protocolam e decidem de verdade.
+            // Em produção ambos são no-op (degradação honesta até a zona oficial).
+            ZonaFicticiaDevSeeder::class,
+            ExpressoDevSeeder::class,
         ]);
     }
 }
