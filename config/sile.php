@@ -26,6 +26,8 @@ return [
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,
+        'fluxo_expresso' => true,
+        'notificacao_resultado_expresso' => true,
     ],
     // Chaves pt-BR (geo.*, retencao.*, seguranca.*) espelham os parâmetros
     // HU-014 de mesmo nome — Settings::get lê config("sile.{chave}") no
@@ -87,6 +89,26 @@ return [
     ],
     'storage' => [
         'documentos' => ['disk' => 'local'],
+    ],
+    // Espelha os parâmetros HU-014 expresso.* / features.* do fluxo expresso
+    // (EP09). Settings::get lê config("sile.expresso.*") no fallback (banco
+    // indisponível). Os valores de negócio (prazo BAP, assuntos de e-mail,
+    // formato do número TVL) nascem administráveis no ParameterSeeder; aqui é
+    // só o espelho de fallback.
+    'expresso' => [
+        'bap' => ['prazo_horas' => 48],
+        'notificacao' => [
+            'assunto_deferida' => 'Resultado da sua solicitação de viabilidade: deferida',
+            'assunto_indeferida' => 'Resultado da sua solicitação de viabilidade: indeferida',
+        ],
+        'tvl' => ['prefixo' => 'TVL', 'padding' => 6],
+        // Constantes TÉCNICAS (fora do catálogo HU-014 — precedente [02-02]):
+        // idempotência/concorrência da emissão da decisão (TTL do Cache::lock)
+        // e resiliência do job de decisão (fila + tries/timeout/backoff). Não
+        // são valores de negócio; parametrizá-los no painel seria ruído.
+        'lock' => ['ttl_segundos' => 10],
+        'fila' => 'default',
+        'job' => ['tries' => 3, 'timeout' => 120, 'backoff' => [30, 60, 120]],
     ],
     'seguranca' => [
         'throttle' => [
