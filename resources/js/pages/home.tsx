@@ -29,6 +29,7 @@ interface ServiceItem {
     icon: ComponentType<SVGProps<SVGSVGElement>>;
     title: string;
     description: string;
+    href?: string;
 }
 
 const services: ServiceItem[] = [
@@ -37,6 +38,7 @@ const services: ServiceItem[] = [
         title: 'Consulta de viabilidade',
         description:
             'Verificação de que uma atividade econômica pode funcionar no endereço pretendido, aplicando as regras de uso e ocupação do solo da LOUOS.',
+        href: '/portal/viabilidade',
     },
     {
         icon: FileIcon,
@@ -239,22 +241,39 @@ function ServicesSection() {
                 </div>
 
                 <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                    {services.map((service) => (
-                        <div
-                            key={service.title}
-                            className="rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-brand-200 hover:shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-500/30"
-                        >
-                            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-500 dark:bg-brand-500/10 dark:text-brand-400">
-                                <service.icon className="size-6" aria-hidden="true" />
-                            </span>
-                            <h3 className="mt-5 text-base font-semibold text-gray-800 dark:text-white/90">
-                                {service.title}
-                            </h3>
-                            <p className="mt-2 text-theme-sm leading-6 text-gray-500 dark:text-gray-400">
-                                {service.description}
-                            </p>
-                        </div>
-                    ))}
+                    {services.map((service) => {
+                        const cardClasses =
+                            'rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-brand-200 hover:shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-500/30';
+                        const cardContent = (
+                            <>
+                                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-500 dark:bg-brand-500/10 dark:text-brand-400">
+                                    <service.icon className="size-6" aria-hidden="true" />
+                                </span>
+                                <h3 className="mt-5 text-base font-semibold text-gray-800 dark:text-white/90">
+                                    {service.title}
+                                </h3>
+                                <p className="mt-2 text-theme-sm leading-6 text-gray-500 dark:text-gray-400">
+                                    {service.description}
+                                </p>
+                                {service.href && (
+                                    <span className="mt-4 inline-flex items-center gap-1 text-theme-sm font-medium text-brand-500 dark:text-brand-400">
+                                        Consultar agora
+                                        <ArrowRightIcon className="size-4" aria-hidden="true" />
+                                    </span>
+                                )}
+                            </>
+                        );
+
+                        return service.href ? (
+                            <Link key={service.title} href={service.href} className={cardClasses}>
+                                {cardContent}
+                            </Link>
+                        ) : (
+                            <div key={service.title} className={cardClasses}>
+                                {cardContent}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </section>
