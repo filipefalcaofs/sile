@@ -17,6 +17,7 @@ use App\Http\Controllers\Portal\SolicitacaoAtividadeController;
 use App\Http\Controllers\Portal\SolicitacaoController;
 use App\Http\Controllers\Portal\SolicitacaoDocumentoController;
 use App\Http\Controllers\Portal\SolicitacaoImovelController;
+use App\Http\Controllers\Portal\SolicitacaoSimulacaoController;
 use App\Http\Middleware\ResolveRepresentation;
 use Illuminate\Support\Facades\Route;
 
@@ -121,5 +122,12 @@ Route::middleware(['auth:web', 'verified'])
             Route::post('solicitacoes/{solicitacao}/documentos', [SolicitacaoDocumentoController::class, 'store'])->name('solicitacoes.documentos.store');
             Route::get('solicitacoes/{solicitacao}/documentos/{documento}/download', [SolicitacaoDocumentoController::class, 'download'])->name('solicitacoes.documentos.download');
             Route::delete('solicitacoes/{solicitacao}/documentos/{documento}', [SolicitacaoDocumentoController::class, 'destroy'])->name('solicitacoes.documentos.destroy');
+
+            // Simulação pré-protocolo (HU-141) — rota com {solicitacao} DEPOIS
+            // das literais. Reusa o ConsultaViabilidadeService da Fase 7 por
+            // CNAE/ponto, propaga o veredito do motor LOUOS e persiste o snapshot;
+            // ORIENTATIVA, NÃO bloqueia o protocolo. Só do dono em rascunho
+            // (policy update); toggle features.simulacao_solicitacao degrada.
+            Route::post('solicitacoes/{solicitacao}/simular', [SolicitacaoSimulacaoController::class, 'store'])->name('solicitacoes.simular');
         });
     });
