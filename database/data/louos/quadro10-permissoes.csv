@@ -1,0 +1,19 @@
+zona,grupo_uso,subgrupo,permissao,condicionante_ref,base_legal
+ZPR-1,R,,permitido,,Quadro 10 da Lei nº 9.148/2016
+ZPR-1,nR1,,permitido,,Quadro 10 da Lei nº 9.148/2016
+ZPR-1,nR2,,permitido_condicionado,CU-01,Quadro 10 da Lei nº 9.148/2016
+ZPR-1,nR3,,proibido,,Quadro 10 da Lei nº 9.148/2016
+ZPR-2,R,,permitido,,Quadro 10 da Lei nº 9.148/2016
+ZPR-2,nR1,,permitido,,Quadro 10 da Lei nº 9.148/2016
+ZPR-2,nR2,,permitido_condicionado,CU-01,Quadro 10 da Lei nº 9.148/2016
+ZPR-2,nR3,,proibido,,Quadro 10 da Lei nº 9.148/2016
+ZCN-1,nR1,,permitido,,Quadro 10 da Lei nº 9.148/2016
+ZCN-1,nR2,,permitido,,Quadro 10 da Lei nº 9.148/2016
+ZCN-1,nR3,,permitido_condicionado,CU-02,Quadro 10 da Lei nº 9.148/2016
+ZM-1,nR1,,permitido,,Quadro 10 da Lei nº 9.148/2016
+ZM-1,nR2,,permitido,,Quadro 10 da Lei nº 9.148/2016
+ZM-1,nR3,,permitido_condicionado,CU-02,Quadro 10 da Lei nº 9.148/2016
+ZPAM,R,,permitido_condicionado,CA-01,Quadro 10 da Lei nº 9.148/2016
+ZPAM,nR1,,proibido,,Quadro 10 da Lei nº 9.148/2016
+ZPAM,nR2,,proibido,,Quadro 10 da Lei nº 9.148/2016
+ZPAM,nR3,,proibido,,Quadro 10 da Lei nº 9.148/2016
