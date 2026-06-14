@@ -235,4 +235,117 @@ class ViabilityRequestStateMachineTest extends TestCase
             'deferida→indeferida deve permanecer inválida (decisão é final).',
         );
     }
+
+    /**
+     * EP10 ADICIONA as saídas da análise humana a partir de em_analise (sem
+     * tocar a Fase 8/9): o analista abre pendência (HU-083/084) ou decide
+     * (HU-086/087). Cada transição grava timeline + auditoria (RN-002).
+     */
+    public function test_em_analise_transiciona_para_pendencia_e_decisao(): void
+    {
+        $destinos = [
+            ViabilityRequestStatus::EmPendencia,
+            ViabilityRequestStatus::Deferida,
+            ViabilityRequestStatus::Indeferida,
+        ];
+
+        foreach ($destinos as $i => $destino) {
+            $request = ViabilityRequest::factory()->protocoled()->create([
+                'protocol_number' => 'VIA-2026-'.str_pad((string) ($i + 1), 6, '0', STR_PAD_LEFT),
+            ]);
+            $request->forceFill(['status' => ViabilityRequestStatus::EmAnalise])->save();
+
+            $this->assertTrue(
+                $this->machine()->canTransition(ViabilityRequestStatus::EmAnalise, $destino),
+                "em_analise→{$destino->value} deveria ser válida no EP10.",
+            );
+
+            $this->machine()->transition($request, $destino);
+            $this->assertSame($destino, $request->fresh()->status);
+            $this->assertSame(1, $request->transitions()->count());
+        }
+    }
+
+    public function test_em_analise_para_em_pendencia_audita_transicao(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create();
+        $request->forceFill(['status' => ViabilityRequestStatus::EmAnalise])->save();
+
+        $this->machine()->transition($request, ViabilityRequestStatus::EmPendencia);
+
+        $activity = Activity::query()
+            ->where('log_name', 'solicitacoes')
+            ->where('event', 'transicao')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($activity);
+        $this->assertSame('sucesso', $activity->result);
+        $this->assertSame('em_analise', $activity->properties['from']);
+        $this->assertSame('em_pendencia', $activity->properties['to']);
+    }
+
+    /**
+     * Ciclo de pendência (HU-083/084): respondida/saneada a pendência, o
+     * processo VOLTA para a análise — só de em_analise se pode decidir.
+     */
+    public function test_em_pendencia_volta_para_em_analise(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create();
+        $request->forceFill(['status' => ViabilityRequestStatus::EmPendencia])->save();
+
+        $this->assertTrue(
+            $this->machine()->canTransition(ViabilityRequestStatus::EmPendencia, ViabilityRequestStatus::EmAnalise),
+        );
+
+        $this->machine()->transition($request, ViabilityRequestStatus::EmAnalise);
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);
+        $this->assertSame(1, $request->transitions()->count());
+    }
+
+    /**
+     * Anti-regressão da análise humana: a decisão é FINAL (HU-089 encerramento)
+     * e a pendência só decide via retorno a em_analise. Nenhuma dessas saídas
+     * entra no mapa — o EP10 só ADICIONA em_analise/em_pendencia.
+     */
+    public function test_decisao_final_e_ciclo_de_pendencia_travados(): void
+    {
+        $this->assertFalse(
+            $this->machine()->canTransition(ViabilityRequestStatus::Deferida, ViabilityRequestStatus::EmAnalise),
+            'deferida→em_analise deve ser inválida (decisão é final).',
+        );
+        $this->assertFalse(
+            $this->machine()->canTransition(ViabilityRequestStatus::Indeferida, ViabilityRequestStatus::EmAnalise),
+            'indeferida→em_analise deve ser inválida (decisão é final).',
+        );
+        $this->assertFalse(
+            $this->machine()->canTransition(ViabilityRequestStatus::EmPendencia, ViabilityRequestStatus::Deferida),
+            'em_pendencia→deferida deve ser inválida (decide só a partir de em_analise).',
+        );
+        $this->assertFalse(
+            $this->machine()->canTransition(ViabilityRequestStatus::EmPendencia, ViabilityRequestStatus::Indeferida),
+            'em_pendencia→indeferida deve ser inválida (decide só a partir de em_analise).',
+        );
+        $this->assertFalse(
+            $this->machine()->canTransition(ViabilityRequestStatus::EmAnalise, ViabilityRequestStatus::Protocolada),
+            'em_analise→protocolada deve ser inválida (não regride ao protocolo).',
+        );
+    }
+
+    public function test_decisao_final_lanca_excecao_e_nao_altera_estado(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create();
+        $request->forceFill(['status' => ViabilityRequestStatus::Deferida])->save();
+
+        try {
+            $this->machine()->transition($request, ViabilityRequestStatus::EmAnalise);
+            $this->fail('Esperava InvalidStatusTransitionException para deferida→em_analise (decisão é final).');
+        } catch (InvalidStatusTransitionException) {
+            // Encerramento HU-089: estado inalterado e nenhuma transição gravada.
+        }
+
+        $this->assertSame(ViabilityRequestStatus::Deferida, $request->fresh()->status);
+        $this->assertSame(0, $request->transitions()->count());
+    }
 }
