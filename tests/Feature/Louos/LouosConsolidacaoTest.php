@@ -8,6 +8,7 @@ use App\Enums\RuleDomain;
 use App\Models\Activity;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro7Faixa;
+use App\Models\Parameter;
 use App\Models\RuleVersion;
 use App\Services\Geo\TerritoryResult;
 use App\Services\Louos\EnquadramentoInput;
@@ -300,5 +301,152 @@ class LouosConsolidacaoTest extends TestCase
         );
         $this->assertSame('lei-9148-2016-quadro7', $activity->properties['versoes']['quadro7']);
         $this->assertSame('lei-9148-2016-quadro10', $activity->properties['versoes']['quadro10']);
+    }
+
+    public function test_vagas_nao_parametrizadas_geram_condicionante_informativa_sem_bloquear(): void
+    {
+        // HU-042 (degradação honesta): sem exigência de vagas parametrizada para o
+        // grupo, o motor gera uma condicionante INFORMATIVA (conforme null) que
+        // alimenta a ficha — mas NÃO rebaixa o veredito (não bloqueia).
+        $this->seedQuadro7('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
+            100,
+            '4712-1/00',
+            $this->territorio($this->zonaIdentificada('ZR-1')),
+        ));
+
+        $this->assertSame(ResultadoViabilidade::Permitido->value, $result->resultado());
+
+        $vagas = $this->condicionantePorTipo($result->consolidado['condicionantes'], 'vagas');
+        $this->assertNotNull($vagas);
+        $this->assertNull($vagas['conforme']);
+    }
+
+    public function test_vagas_nao_conformes_geram_permitido_com_condicoes(): void
+    {
+        // HU-042: com exigência parametrizada acima do declarado, o imóvel é Não
+        // Conforme quanto a vagas → permitido_com_condicoes (insumo da análise,
+        // HU-135). Não conforme NÃO vira nao_permitido.
+        $this->seedQuadro7('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+        $this->parametrizarVagas(['nR1' => ['vagas' => 5]]);
+
+        $result = $this->service()->enquadrar(new EnquadramentoInput(
+            area: 100,
+            cnaePrincipal: '4712-1/00',
+            territory: $this->territorio($this->zonaIdentificada('ZR-1')),
+            vagasDeclaradas: ['vagas' => 2],
+        ));
+
+        $this->assertSame(ResultadoViabilidade::PermitidoComCondicoes->value, $result->resultado());
+
+        $vagas = $this->condicionantePorTipo($result->consolidado['condicionantes'], 'vagas');
+        $this->assertNotNull($vagas);
+        $this->assertFalse($vagas['conforme']);
+        $this->assertSame(5, $vagas['exigido']['vagas']);
+        $this->assertSame(2, $vagas['declarado']['vagas']);
+    }
+
+    public function test_restricao_zeis_incidente_gera_permitido_com_condicoes(): void
+    {
+        // HU-043: restrição territorial incidente (ZEIS, camada ambiental da Fase
+        // 4) entra como condicionante e rebaixa para permitido_com_condicoes — sem
+        // decidir sozinha (o roteamento à análise é do motor de risco, Fase 6).
+        $this->seedQuadro7('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
+            100,
+            '4712-1/00',
+            $this->territorio($this->zonaIdentificada('ZR-1'), $this->restricoesZeis()),
+        ));
+
+        $this->assertSame(ResultadoViabilidade::PermitidoComCondicoes->value, $result->resultado());
+
+        $restricao = $this->condicionantePorTipo($result->consolidado['condicionantes'], 'restricao');
+        $this->assertNotNull($restricao);
+        $this->assertStringContainsString('ZEIS', (string) $restricao['nome']);
+    }
+
+    public function test_vagas_parametrizadas_sem_deploy(): void
+    {
+        // HU-042/HU-014: a mesma entrada muda de veredito ao gravar o parâmetro
+        // louos.vagas.exigencia_por_grupo — efeito sem deploy (cache invalidado na
+        // gravação do Parameter).
+        $this->seedQuadro7('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $input = fn (): EnquadramentoInput => new EnquadramentoInput(
+            area: 100,
+            cnaePrincipal: '4712-1/00',
+            territory: $this->territorio($this->zonaIdentificada('ZR-1')),
+            vagasDeclaradas: ['vagas' => 2],
+        );
+
+        // Sem exigência parametrizada: condicionante informativa, veredito permitido.
+        $antes = $this->service()->enquadrar($input());
+        $this->assertSame(ResultadoViabilidade::Permitido->value, $antes->resultado());
+
+        // Grava a exigência (5 vagas > 2 declaradas) — sem novo deploy.
+        $this->parametrizarVagas(['nR1' => ['vagas' => 5]]);
+
+        $depois = $this->service()->enquadrar($input());
+        $this->assertSame(ResultadoViabilidade::PermitidoComCondicoes->value, $depois->resultado());
+    }
+
+    /**
+     * Grava o parâmetro de exigência de vagas por grupo (HU-042/HU-014). O hook
+     * Parameter::saved invalida o cache da chave — efeito sem deploy.
+     *
+     * @param  array<string, mixed>  $exigencia
+     */
+    private function parametrizarVagas(array $exigencia): void
+    {
+        Parameter::query()->create([
+            'key' => 'louos.vagas.exigencia_por_grupo',
+            'group' => 'louos',
+            'type' => 'json',
+            'value' => json_encode($exigencia),
+            'default_value' => '{}',
+            'validation_rules' => ['required', 'json'],
+            'description' => 'Exigência de vagas por grupo de uso (HU-042).',
+        ]);
+    }
+
+    /**
+     * Restrições territoriais com uma ZEIS incidente (camada ambiental da Fase 4,
+     * shape de TerritoryResult::restricoes).
+     *
+     * @return array<string, mixed>
+     */
+    private function restricoesZeis(): array
+    {
+        return [
+            'status' => 'identificado',
+            'itens' => [
+                ['nome' => 'ZEIS — Zona Especial de Interesse Social', 'propriedades' => ['TIPO' => 'ZEIS']],
+            ],
+            'motivo' => null,
+            'versao_camada' => 'restricoes-pddu-2016',
+        ];
+    }
+
+    /**
+     * Primeira condicionante de um tipo na lista consolidada (null se ausente).
+     *
+     * @param  list<array<string, mixed>>  $condicionantes
+     * @return array<string, mixed>|null
+     */
+    private function condicionantePorTipo(array $condicionantes, string $tipo): ?array
+    {
+        foreach ($condicionantes as $condicionante) {
+            if (($condicionante['tipo'] ?? null) === $tipo) {
+                return $condicionante;
+            }
+        }
+
+        return null;
     }
 }

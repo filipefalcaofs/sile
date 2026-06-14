@@ -10,6 +10,7 @@ use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Support\Audit\AuditService;
+use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -328,11 +329,11 @@ class LouosEnquadramentoService
     }
 
     /**
-     * Coleta as condicionantes incidentes que alimentam a ficha do parecer
-     * (HU-135) e podem rebaixar o veredito para permitido_com_condicoes:
-     * a condicionante urbanística do Quadro 10 (permitido_condicionado) e as
-     * condições de instalação pela via (Quadros 11/11A). 05-05 Task 2 acrescenta
-     * vagas (HU-042) e restrições especiais (HU-043).
+     * Coleta as condicionantes que alimentam a ficha do parecer (HU-135) e podem
+     * rebaixar o veredito para permitido_com_condicoes: a condicionante
+     * urbanística do Quadro 10 (permitido_condicionado), as condições de
+     * instalação pela via (Quadros 11/11A), as vagas parametrizadas (HU-042) e as
+     * restrições especiais incidentes — ZEIS (HU-043). Nenhuma bloqueia sozinha.
      *
      * @param  array<string, mixed>  $quadro7
      * @param  array<string, mixed>  $quadro10
@@ -361,6 +362,114 @@ class LouosEnquadramentoService
                     'motivo' => "Condições de instalação pela via ({$rotulo})",
                 ];
             }
+        }
+
+        $vagas = $this->avaliarVagas($quadro7, $input);
+
+        if ($vagas !== null) {
+            $condicionantes[] = $vagas;
+        }
+
+        return [...$condicionantes, ...$this->avaliarRestricoes($input)];
+    }
+
+    /**
+     * Condicionante de VAGAS (HU-042) — dado parametrizado, sem hardcode: lê a
+     * exigência por grupo de uso de `louos.vagas.exigencia_por_grupo` (HU-014) e
+     * a compara com as vagas declaradas pelo requerente.
+     *
+     * - Sem exigência parametrizada para o grupo → condicionante INFORMATIVA
+     *   (conforme null): degradação honesta, alimenta a ficha e NÃO rebaixa.
+     * - Com exigência → conforme = declarado >= exigido em cada item; Não Conforme
+     *   vira condicionante incidente (permitido_com_condicoes), insumo da análise
+     *   (HU-135), NUNCA nao_permitido.
+     *
+     * @param  array<string, mixed>  $quadro7
+     * @return array<string, mixed>|null
+     */
+    private function avaliarVagas(array $quadro7, EnquadramentoInput $input): ?array
+    {
+        $grupo = $quadro7['grupo'] ?? null;
+
+        // Sem grupo de uso (Quadro 7 não identificado) não há exigência a aferir —
+        // mas a precedência do consolidado já garante que só chegamos aqui com o
+        // Quadro 7 identificado; a guarda é defensiva.
+        if (! is_string($grupo) || $grupo === '') {
+            return null;
+        }
+
+        /** @var array<string, mixed> $exigenciaPorGrupo */
+        $exigenciaPorGrupo = Settings::get('louos.vagas.exigencia_por_grupo', []);
+        $exigido = $exigenciaPorGrupo[$grupo] ?? null;
+
+        if (! is_array($exigido) || $exigido === []) {
+            return [
+                'tipo' => 'vagas',
+                'conforme' => null,
+                'exigido' => null,
+                'declarado' => $input->vagasDeclaradas,
+                'motivo' => 'Exigência de vagas não parametrizada para o grupo',
+            ];
+        }
+
+        $conforme = $this->vagasConformes($exigido, $input->vagasDeclaradas);
+
+        return [
+            'tipo' => 'vagas',
+            'conforme' => $conforme,
+            'exigido' => $exigido,
+            'declarado' => $input->vagasDeclaradas,
+            'motivo' => $conforme
+                ? 'Imóvel Conforme quanto a vagas'
+                : 'Imóvel Não Conforme quanto a vagas',
+        ];
+    }
+
+    /**
+     * Conformidade de vagas: o declarado deve atender (>=) cada item exigido.
+     * Item não declarado conta como zero — não conforme se a exigência for > 0.
+     *
+     * @param  array<string, mixed>  $exigido
+     * @param  array<string, mixed>  $declarado
+     */
+    private function vagasConformes(array $exigido, array $declarado): bool
+    {
+        foreach ($exigido as $item => $quantidade) {
+            if ((float) ($declarado[$item] ?? 0) < (float) $quantidade) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Condicionantes de RESTRIÇÕES ESPECIAIS (HU-043): lê a camada de restrições
+     * ambientais do território (Fase 4 — ex.: ZEIS). Cada item incidente vira uma
+     * condicionante que rebaixa para permitido_com_condicoes — não decide sozinha
+     * (o roteamento à análise é do motor de risco, Fase 6). Território
+     * nulo/sem restrições incidentes → [].
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function avaliarRestricoes(EnquadramentoInput $input): array
+    {
+        $restricoes = $input->territory?->restricoes;
+
+        if (! is_array($restricoes) || ($restricoes['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
+            return [];
+        }
+
+        $condicionantes = [];
+
+        foreach (($restricoes['itens'] ?? []) as $item) {
+            $nome = is_array($item) ? ($item['nome'] ?? null) : $item;
+
+            $condicionantes[] = [
+                'tipo' => 'restricao',
+                'nome' => $nome,
+                'motivo' => 'Restrição territorial incidente (ex.: ZEIS) — observar condicionantes especiais',
+            ];
         }
 
         return $condicionantes;
