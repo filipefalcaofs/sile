@@ -135,6 +135,11 @@ return [
             'disk' => 'local',
             'assinatura' => ['modo' => 'imagem', 'imagem_path' => ''],
             'download' => ['ttl_minutos' => 5],
+            // Constantes TÉCNICAS do PDF (fora do catálogo HU-014 — precedente
+            // [02-02]): tamanho do papel e orientação do dompdf. São detalhe de
+            // renderização, não decisão de negócio.
+            'paper' => 'a4',
+            'orientation' => 'portrait',
         ],
         // Constante TÉCNICA (fora do catálogo HU-014 — precedente [02-02]):
         // debounce (ms) do autosave da ficha de análise. É detalhe de UX/UI,
