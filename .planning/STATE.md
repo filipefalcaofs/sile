@@ -3,15 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed Phase 4 (Georreferenciamento e Território) — PostGIS (geo_layers/geo_features versionados com vigência, migrations driver-aware), geocodificação Nominatim atrás de contrato (throttle/retry parametrizados), TerritoryService/SpatialRepository (ST_Contains/ST_DWithin/ST_Intersects reais), LocationValidationService (sobreposição ST_Area/ST_Intersection com limiar parametrizado), mapa Leaflet (react-leaflet v5, client-side/SSR-safe) e página de consulta territorial no console SEDUR, comando geo:importar auditado + carga REAL do GeoSalvador (bairro 171, via 800, restrição ZEIS 234), CI real com PostGIS (.github/workflows/tests.yml + POSTGIS_TESTS_REQUIRED). gsd-verifier: passed 5/5. Suíte 448/448 SQLite + 15/15 @group postgis; evidência real: Nominatim (Elevador Lacerda) + consulta espacial (Farol da Barra → bairro "Barra").
+stopped_at: Completed Phase 6 (Classificação de Risco) — regras como dados versionados (rule_versions genérico + RuleVersionService publish 4-olhos; infra herdada pela Fase 5), risco municipal (Decreto 32.636/2020: 767 baixo_a/328 baixo_b/236 alto = 1.331) e sanitário (VISA: 261) como dimensões SEPARADAS, condicionante-pergunta que reclassifica (67; golden 1031-7/00), encaminhamento parametrizável (risco.mapa_encaminhamento — decreto NÃO tem "médio"; mapeia para baixo_b), gatilhos CNAE (risk_triggers, semi-expresso) + exceção ZEIS, mantenedores versionados + UI console, comando risco:classificar, golden cases. guardião de entrega: APROVADO. Suíte 519/519 SQLite + 15/15 @group postgis; evidência real do motor (0111-3/01→expresso, frigorífico→análise, sem-regra→análise, ZEIS→análise). [PHASE 4 também concluída antes: PostGIS, geocodificação Nominatim, mapa Leaflet; zona/lote bloqueados pendente SEDUR.]
+last_updated: "2026-06-14T04:05:00.000Z"
+last_activity: 2026-06-14 -- Phase 6 COMPLETE (guardião de entrega APROVADO; classificação de risco real)
+_prev_stopped_at: Completed Phase 4 (Georreferenciamento e Território) — PostGIS (geo_layers/geo_features versionados com vigência, migrations driver-aware), geocodificação Nominatim atrás de contrato (throttle/retry parametrizados), TerritoryService/SpatialRepository (ST_Contains/ST_DWithin/ST_Intersects reais), LocationValidationService (sobreposição ST_Area/ST_Intersection com limiar parametrizado), mapa Leaflet (react-leaflet v5, client-side/SSR-safe) e página de consulta territorial no console SEDUR, comando geo:importar auditado + carga REAL do GeoSalvador (bairro 171, via 800, restrição ZEIS 234), CI real com PostGIS (.github/workflows/tests.yml + POSTGIS_TESTS_REQUIRED). gsd-verifier: passed 5/5. Suíte 448/448 SQLite + 15/15 @group postgis; evidência real: Nominatim (Elevador Lacerda) + consulta espacial (Farol da Barra → bairro "Barra").
 last_updated: "2026-06-13T23:55:00.000Z"
 last_activity: 2026-06-13 -- Phase 4 COMPLETE (verificação passed; bairro/via/restrição reais; zona/lote bloqueados pendente SEDUR)
 progress:
   total_phases: 15
-  completed_phases: 5
-  total_plans: 39
-  completed_plans: 39
-  percent: 30
+  completed_phases: 6
+  total_plans: 48
+  completed_plans: 48
+  percent: 34
 ---
 
 # Project State
@@ -21,18 +24,28 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-09)
 
 **Core value:** Responder a viabilidade locacional de atividade econômica de forma automática, correta e auditável — fluxo expresso quando a lei permite, fundamentação legal em toda decisão.
-**Current focus:** Phases 3, 3.1 e 4 concluídas — próxima acionável: Phase 5 (Motor de Regras da LOUOS) ‖ Phase 6 (Classificação de Risco). ATENÇÃO: a Fase 5 consome a ZONA urbanística, hoje BLOQUEADA (sem fonte vetorial pública — pendente SEDUR). O motor nasce parametrizável e roda com seeds derivados da Lei 9.148/2016 até a base oficial chegar. Phase 3.2 (GOV.BR) implementada e desligada, aguardando credenciamento.
+**Current focus:** Phases 3, 3.1, 4 e 6 concluídas — próxima acionável: Phase 5 (Motor de Regras da LOUOS). ATENÇÃO: a Fase 5 consome a ZONA urbanística, hoje BLOQUEADA (sem fonte vetorial pública — pendente SEDUR): o Quadro 7 (área) roda, mas o Quadro 10 (permissão por zona) degrada para "análise técnica" até a base chegar. O motor nasce parametrizável (herda a infra rule_versions da Fase 6) e roda com seeds derivados da Lei 9.148/2016. Phase 3.2 (GOV.BR) implementada e desligada, aguardando credenciamento.
 
 ## Current Position
 
-Phase: 4 (Georreferenciamento e Território) — COMPLETE (verificação passed em 2026-06-13)
-Plan: 8 of 8 (todos concluídos)
-Status: Fase 4 fechada; próxima é a Fase 5 (Motor LOUOS) ou 6 (Risco) — exigem brainstorming
-Last activity: 2026-06-13 -- Phase 4 COMPLETE (bairro/via/restrição reais; zona/lote bloqueados pendente SEDUR)
+Phase: 6 (Classificação de Risco) — COMPLETE (guardião de entrega APROVADO em 2026-06-14)
+Plan: 9 of 9 (todos concluídos)
+Status: Fase 6 fechada; próxima é a Fase 5 (Motor LOUOS) — exige brainstorming (Quadros 7/10/11/11A, golden cases, degradação sem zona)
+Last activity: 2026-06-14 -- Phase 6 COMPLETE (classificação de risco real; rule_versions herdado pela Fase 5)
 
-Progress: [███░░░░░░░] 30% (5/15 fases; 39 planos executados)
+Progress: [███▍░░░░░░] 34% (6/15 fases; 48 planos executados)
 
-Next step: `/gsd-plan-phase 5` (Motor LOUOS) ou `/gsd-plan-phase 6` (Risco) — ambos exigem brainstorming (quadros parametrizados, golden cases, condicionante-pergunta). A zona urbanística (insumo do motor) segue bloqueada até a SEDUR liberar SIGIS/CA 2000.
+Next step: `/gsd-plan-phase 5` (Motor LOUOS) — herda rule_versions (Fase 6); Quadro 7 buildável com seeds da Lei 9.148/2016, Quadro 10 degrada sem a zona (pendente SEDUR). Depois Fase 7 (Consulta Prévia, consome 4/5/6).
+
+### Fase 6 (Classificação de Risco) — concluída 2026-06-14
+
+- Regras como DADOS VERSIONADOS: cabeçalho genérico `rule_versions` (domain/version/status rascunho|vigente|substituida/vigência/4-olhos) espelhando geo_layers + `RuleVersion` (scopes vigente/naData/versao) + `RuleVersionService` (openDraft/publish — fecha a vigente sem apagar, audita). **A Fase 5 (Motor LOUOS) HERDA essa infra** para os Quadros 7/10/11/11A.
+- Risco MUNICIPAL (Decreto 32.636/2020) e SANITÁRIO (VISA) como dimensões SEPARADAS (tabelas/enums/versões distintas — RN-009). Seed real: municipal 1.331 (767 baixo_a/328 baixo_b/236 alto), sanitário 261, condicionantes-pergunta 67, gatilhos 3.
+- Enum `RiscoMunicipal` = baixo_a|baixo_b|alto — **o decreto NÃO tem "médio"** (fromDecreto rejeita desconhecido). "Médio operacional" mapeia para baixo_b via parâmetro `risco.mapa_encaminhamento` (default {baixo_a:expresso, baixo_b:expresso, alto:analise}); nível ausente/CNAE sem regra → análise (nunca inventa nível).
+- `RiscoClassificationService` espelha o `TerritoryService` (DTOs readonly RiscoInput/RiscoResult, dimensões separadas, toArray snake_case, versoes(), auditoria 'risco/classificacao' com rules_version). Encaminhamento é DECISÃO DE ROTEAMENTO auditada (não o processo expresso — Fases 8/9).
+- Gatilhos CNAE como tabela administrável `risk_triggers` (semi-expresso, motivo auditável); exceção ZEIS usa a restrição da Fase 4. Condicionante-pergunta reclassifica (golden 1031-7/00). Comando `risco:classificar {cnae}` dá evidência real do motor.
+- Mantenedores HU-019/020/052/053 no console (consulta vigente + publicação versionada 4-olhos + CRUD de condicionantes); UI no padrão console. Golden cases (#[DataProvider]) + RiscoSeedDistributionTest travam a regressão de domínio. Parâmetros novos: risco.mapa_encaminhamento, risco.dimensao_tvl (catálogo 29→31). Permissões consultar-risco/manter-risco (total 12).
+- PENDÊNCIAS SEDUR (parametrizadas, NÃO bloqueiam — registradas): correspondência "médio"↔baixo_b (parâmetro mapa_encaminhamento), lista completa de gatilhos CNAE (tabela risk_triggers, 3 conhecidos), dimensão decisiva no TVL (parâmetro dimensao_tvl, default municipal).
 
 ### Fase 2.1 (INSERTED) — Template TailAdmin (concluída 2026-06-10)
 

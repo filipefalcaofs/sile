@@ -30,8 +30,8 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 - [ ] **HU-016**: Manter Quadro 10
 - [ ] **HU-017**: Manter Quadro 11
 - [ ] **HU-018**: Manter Quadro 11A
-- [ ] **HU-019**: Manter condicionantes
-- [ ] **HU-020**: Manter classificação de risco
+- [x] **HU-019**: Manter condicionantes
+- [x] **HU-020**: Manter classificação de risco
 
 ### EP03 — Cadastro Empresarial
 
@@ -70,13 +70,13 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 
 ### EP06 — Classificação de Risco
 
-- [ ] **HU-047**: Classificar CNAE por risco
-- [ ] **HU-048**: Aplicar regra de baixo risco
-- [ ] **HU-049**: Aplicar regra de médio risco
-- [ ] **HU-050**: Aplicar regra de alto risco
-- [ ] **HU-051**: Aplicar exceções de risco
-- [ ] **HU-052**: Consultar tabela de risco
-- [ ] **HU-053**: Atualizar classificação de risco
+- [x] **HU-047**: Classificar CNAE por risco
+- [x] **HU-048**: Aplicar regra de baixo risco
+- [x] **HU-049**: Aplicar regra de médio risco (mapeado para baixo_b — decreto não tem "médio")
+- [x] **HU-050**: Aplicar regra de alto risco
+- [x] **HU-051**: Aplicar exceções de risco (ZEIS; demais gatilhos parametrizáveis)
+- [x] **HU-052**: Consultar tabela de risco
+- [x] **HU-053**: Atualizar classificação de risco
 
 ### EP07 — Consulta Prévia de Viabilidade
 
@@ -233,8 +233,8 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-016 | Fase 5 | Pending |
 | HU-017 | Fase 5 | Pending |
 | HU-018 | Fase 5 | Pending |
-| HU-019 | Fase 6 | Pending |
-| HU-020 | Fase 6 | Pending |
+| HU-019 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-020 | Fase 6 | Complete (EP06 2026-06-14) |
 | HU-021 | Fase 3 | Done |
 | HU-022 | Fase 3 | Complete (03-03) |
 | HU-023 | Fase 3 | Complete (03-04) |
@@ -261,13 +261,13 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-044 | Fase 5 | Pending |
 | HU-045 | Fase 5 | Pending |
 | HU-046 | Fase 5 | Pending |
-| HU-047 | Fase 6 | Pending |
-| HU-048 | Fase 6 | Pending |
-| HU-049 | Fase 6 | Pending |
-| HU-050 | Fase 6 | Pending |
-| HU-051 | Fase 6 | Pending |
-| HU-052 | Fase 6 | Pending |
-| HU-053 | Fase 6 | Pending |
+| HU-047 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-048 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-049 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-050 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-051 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-052 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-053 | Fase 6 | Complete (EP06 2026-06-14) |
 | HU-054 | Fase 7 | Pending |
 | HU-055 | Fase 7 | Pending |
 | HU-056 | Fase 7 | Pending |

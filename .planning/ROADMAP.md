@@ -42,7 +42,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [ ] **Phase 3.2 (INSERTED): Autenticação GOV.BR no portal** — Login Único (OAuth/OIDC, Authorization Code + PKCE S256) convivendo com o login local: vínculo determinístico por CPF, criação de conta real no primeiro acesso, nível de confiabilidade parametrizável, credenciais sensíveis administráveis (HU-014) e toggle `features.govbr_login` (HU-151); sem credenciamento da SEDUR a validação contra staging real permanece bloqueada — spec `docs/superpowers/specs/2026-06-12-autenticacao-govbr-design.md`
 - [x] **Phase 4: Georreferenciamento e Território** — Geocodificação, zona, via, lote, bairro e restrições (EP04) — concluída em 2026-06-13 (verificação: passed 5/5; suíte 448/448 SQLite + 15/15 @group postgis; geocodificação Nominatim e consulta espacial reais). ESCOPO HONESTO: bairro/via/restrições entregues com dado público real do GeoSalvador; **zona urbanística (HU-031) e lote cadastral (HU-033) BLOQUEADOS pendente SEDUR** (sem fonte vetorial pública — comunicados na UI, nunca inventados). A zona é insumo crítico da Fase 5.
 - [ ] **Phase 5: Motor de Regras da LOUOS** — Quadros 7/10/11/11A como dados versionados + motor de enquadramento (EP05 + HU-015 a HU-018)
-- [ ] **Phase 6: Classificação de Risco** — Risco por CNAE com condicionante-pergunta reclassificadora (EP06 + HU-019, HU-020)
+- [x] **Phase 6: Classificação de Risco** — Risco por CNAE com condicionante-pergunta reclassificadora (EP06 + HU-019, HU-020) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 519/519 SQLite + 15/15 @group postgis; motor real classificando sobre o Decreto 32.636/2020 com encaminhamento parametrizável e auditoria). Regras como dados versionados (rule_versions — infra herdada pela Fase 5)
 - [ ] **Phase 7: Consulta Prévia de Viabilidade** — Simulação consumindo território + motores (EP07)
 - [ ] **Phase 8: Solicitação de Viabilidade** — Processo formal: criação, documentos, protocolo (EP08)
 - [ ] **Phase 9: Fluxo Expresso** — Deferimento/indeferimento automático, Regin + SEFAZ, prazo BAP (EP09 + HU-134)
@@ -214,21 +214,21 @@ Nota: a correspondência "Quadro 11" ↔ Quadro 11B oficial e as planilhas param
   1. Administrador mantém condicionantes e classificação de risco como dados versionados, com seed oficial do Decreto nº 32.636/2020 (767 Baixo A / 328 Baixo B / 236 Alto).
   2. Sistema classifica qualquer CNAE por risco, mantendo risco municipal e risco sanitário como dimensões separadas.
   3. Condicionante operacionalizada como pergunta ao requerente reclassifica o risco conforme a resposta (mecanismo "DI" do decreto).
-  4. Regras de baixo e **médio** risco produzem encaminhamento ao fluxo expresso quando elegíveis; alto risco e gatilhos CNAE encaminham à análise técnica, incluindo exceções por localização (HU-051).
+  4. Regras de baixo risco (baixo_a/baixo_b do Decreto — o decreto municipal NÃO tem "médio"; o "médio operacional" mapeia para baixo_b via parâmetro `risco.mapa_encaminhamento`) produzem encaminhamento ao fluxo expresso quando elegíveis; alto risco e gatilhos CNAE encaminham à análise técnica, incluindo exceções por localização (HU-051).
   5. Tabela de risco vigente é consultável e atualizável com trilha de auditoria.
   6. Golden cases de classificação de risco (incluindo reclassificação por condicionante-pergunta) integram a suíte de regressão de domínio iniciada na Fase 5.
 **Plans**: 9 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Fundação: regras como dados versionados (rule_versions + RuleVersion + RuleVersionService openDraft/publish/4-olhos + enums) — infra que a Fase 5 herda (wave 1)
-- [ ] 06-02-PLAN.md — HU-020/047: classificação municipal — risk_classifications + seed oficial do Decreto 32.636/2020 (767/328/236) versionado e auditado (wave 2)
-- [ ] 06-03-PLAN.md — HU-019/047/048: dimensão sanitária (VISA) separada + condicionante-pergunta com regra de reclassificação (golden 1031-7/00) (wave 3)
-- [ ] 06-04-PLAN.md — HU-049/050/051: encaminhamento parametrizável (mapa risk_level→fluxo + dimensao_tvl) + gatilhos (tabela) + DTOs RiscoInput/RiscoResult (wave 4)
-- [ ] 06-05-PLAN.md — HU-047/048/049/050/051: motor RiscoClassificationService (2 dimensões separadas + reclassificação + encaminhamento + gatilhos/ZEIS + auditoria) (wave 5)
-- [ ] 06-06-PLAN.md — HU-019/020/052/053: mantenedores backend + consulta da tabela vigente + publicação versionada 4-olhos + permissões (wave 6, ‖ 06-07)
-- [ ] 06-07-PLAN.md — Golden cases entrada→esperado (#[DataProvider]) sobre o seed real + regressão da distribuição 767/328/236 (wave 6, ‖ 06-06)
-- [ ] 06-08-PLAN.md — HU-019/020/052/053 UI: telas do console (consulta/publicação de risco + condicionantes) + navegação por permissão (wave 7)
-- [ ] 06-09-PLAN.md — Fechamento: comando risco:classificar (evidência real) + verificação integral + checkpoint humano (wave 8)
+- [x] 06-01-PLAN.md — Fundação: regras como dados versionados (rule_versions + RuleVersion + RuleVersionService openDraft/publish/4-olhos + enums) — infra que a Fase 5 herda (wave 1)
+- [x] 06-02-PLAN.md — HU-020/047: classificação municipal — risk_classifications + seed oficial do Decreto 32.636/2020 (767/328/236) versionado e auditado (wave 2)
+- [x] 06-03-PLAN.md — HU-019/047/048: dimensão sanitária (VISA) separada + condicionante-pergunta com regra de reclassificação (golden 1031-7/00) (wave 3)
+- [x] 06-04-PLAN.md — HU-049/050/051: encaminhamento parametrizável (mapa risk_level→fluxo + dimensao_tvl) + gatilhos (tabela) + DTOs RiscoInput/RiscoResult (wave 4)
+- [x] 06-05-PLAN.md — HU-047/048/049/050/051: motor RiscoClassificationService (2 dimensões separadas + reclassificação + encaminhamento + gatilhos/ZEIS + auditoria) (wave 5)
+- [x] 06-06-PLAN.md — HU-019/020/052/053: mantenedores backend + consulta da tabela vigente + publicação versionada 4-olhos + permissões (wave 6, ‖ 06-07)
+- [x] 06-07-PLAN.md — Golden cases entrada→esperado (#[DataProvider]) sobre o seed real + regressão da distribuição 767/328/236 (wave 6, ‖ 06-06)
+- [x] 06-08-PLAN.md — HU-019/020/052/053 UI: telas do console (consulta/publicação de risco + condicionantes) + navegação por permissão (wave 7)
+- [x] 06-09-PLAN.md — Fechamento: comando risco:classificar (evidência real) + verificação integral + checkpoint humano (wave 8)
 
 ### Phase 7: Consulta Prévia de Viabilidade
 **Goal**: Cidadão consulta a viabilidade de uma atividade em um endereço sem criar processo formal — primeira entrega que executa o fluxo de decisão de ponta a ponta.
@@ -410,7 +410,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 3.2. Autenticação GOV.BR no portal (INSERTED) | 1/1 | Implemented — aguardando credenciamento p/ validar staging | - |
 | 4. Georreferenciamento e Território | 8/8 | Complete (zona/lote bloqueados — pendente SEDUR) | 2026-06-13 |
 | 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |
-| 6. Classificação de Risco | 0/9 | Planned | - |
+| 6. Classificação de Risco | 9/9 | Complete | 2026-06-14 |
 | 7. Consulta Prévia de Viabilidade | 0/TBD | Not started | - |
 | 8. Solicitação de Viabilidade | 0/TBD | Not started | - |
 | 9. Fluxo Expresso | 0/TBD | Not started | - |
