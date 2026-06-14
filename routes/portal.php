@@ -15,6 +15,7 @@ use App\Http\Controllers\Portal\ProcurationController;
 use App\Http\Controllers\Portal\RepresentationController;
 use App\Http\Controllers\Portal\SolicitacaoAtividadeController;
 use App\Http\Controllers\Portal\SolicitacaoController;
+use App\Http\Controllers\Portal\SolicitacaoImovelController;
 use App\Http\Middleware\ResolveRepresentation;
 use Illuminate\Support\Facades\Route;
 
@@ -104,5 +105,11 @@ Route::middleware(['auth:web', 'verified'])
             // DEPOIS das literais. Define o CNAE principal + complementares
             // (até o limite parametrizável) só do dono em rascunho (policy).
             Route::put('solicitacoes/{solicitacao}/atividades', [SolicitacaoAtividadeController::class, 'update'])->name('solicitacoes.atividades');
+
+            // Imóvel + área da solicitação (HU-062/HU-063) — rota com
+            // {solicitacao} DEPOIS das literais. Grava o polígono (fonte GeoJSON),
+            // identifica o território (Fase 4) e valida área×polígono; só do dono
+            // em rascunho (policy update).
+            Route::put('solicitacoes/{solicitacao}/imovel', [SolicitacaoImovelController::class, 'update'])->name('solicitacoes.imovel');
         });
     });
