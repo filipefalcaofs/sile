@@ -2,13 +2,16 @@
 
 namespace App\Services\Expresso;
 
+use App\Enums\AnalysisStage;
 use App\Enums\DecisionOutcome;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\ViabilityRequestStatus;
+use App\Events\EncaminhadoParaAnalise;
 use App\Events\ResultadoEmitido;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\AnalysisSlaService;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
@@ -48,6 +51,7 @@ class FluxoExpressoService
         private ViabilityRequestStateMachine $stateMachine,
         private TvlNumberGenerator $tvl,
         private AuditService $audit,
+        private AnalysisSlaService $sla,
     ) {}
 
     /**
@@ -124,11 +128,19 @@ class FluxoExpressoService
     }
 
     /**
-     * Encaminha a solicitação à análise técnica (HU-073): transição
-     * protocolada→em_analise (timeline + auditoria de transição) e auditoria
-     * SÍNCRONA da decisão (resultado 'analise', com o motivo e — quando houve
-     * resolução — o por-CNAE e as versões de regra), numa transação. NÃO cria
-     * ViabilityDecision e NÃO dispara ResultadoEmitido.
+     * Encaminha a solicitação à análise técnica (HU-073/HU-079): transição
+     * protocolada→em_analise (timeline + auditoria de transição), MATERIALIZAÇÃO
+     * do SLA da fila (HU-144 — analysis_due_at na etapa de distribuição, via
+     * AnalysisSlaService) e auditoria SÍNCRONA da decisão (resultado 'analise',
+     * com o motivo e — quando houve resolução — o por-CNAE e as versões de
+     * regra), tudo numa transação. NÃO cria ViabilityDecision e NÃO dispara
+     * ResultadoEmitido.
+     *
+     * APÓS o commit, dispara EncaminhadoParaAnalise (gatilho da pré-análise
+     * HU-140, 10-08 — listener AUTO-DESCOBERTO): só encaminhamentos efetivados
+     * geram efeitos. A auditoria autoritativa já está gravada na transação e NÃO
+     * depende do evento (lição das Fases 8/9). O setor/analista ficam nulos — a
+     * distribuição (HU-080/081) é uma ação posterior na caixa do setor.
      */
     private function encaminharAnalise(
         ViabilityRequest $request,
@@ -144,6 +156,15 @@ class FluxoExpressoService
                 reason: $reason,
                 publicLabel: ViabilityRequestStatus::EmAnalise->publicLabel(),
             );
+
+            // HU-144: o prazo da fila nasce no encaminhamento (etapa distribuição).
+            // Colunas fora do fillable → forceFill (escrita controlada pelo serviço).
+            $startedAt = now();
+            $request->forceFill([
+                'analysis_stage' => AnalysisStage::Distribuicao,
+                'analysis_stage_started_at' => $startedAt,
+                'analysis_due_at' => $this->sla->dueAtFor(AnalysisStage::Distribuicao, $startedAt),
+            ])->save();
 
             $this->audit->log(
                 logName: 'expresso',
@@ -162,6 +183,10 @@ class FluxoExpressoService
                 rulesVersion: $resolved !== null ? $this->rulesVersionRepresentativa($resolved->rules_versions) : null,
             );
         });
+
+        // APÓS o commit: gatilho da pré-análise (10-08). Sem listener no ambiente
+        // atual é inerte; o ShouldDispatchAfterCommit do evento é defesa extra.
+        EncaminhadoParaAnalise::dispatch($request);
 
         return DecisionResult::paraAnalise($reason);
     }
