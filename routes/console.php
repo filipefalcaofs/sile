@@ -27,3 +27,13 @@ Schedule::command('expresso:reavaliar')
     ->everyTenMinutes()
     ->withoutOverlapping()
     ->onOneServer();
+
+// HU-134 DORMENTE (EP09): indefere "sem atuação" as solicitações paradas em
+// aguardando_bap além do prazo (expresso.bap.prazo_horas). Hoje é NO-OP em
+// produção — nada entra em aguardando_bap até o Regin alimentar bap_due_at
+// (Fase 13); a varredura encontra zero. Reprocessa a cada hora (RN-004) e é
+// segura em multi-instância (withoutOverlapping/onOneServer).
+Schedule::command('expresso:indeferir-sem-bap')
+    ->hourly()
+    ->withoutOverlapping()
+    ->onOneServer();
