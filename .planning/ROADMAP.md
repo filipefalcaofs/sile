@@ -41,7 +41,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 3.1 (INSERTED): Fundação assíncrona — scheduler, jobs e retenção** — ativa capacidades prontas do Laravel 13 ainda não usadas (levantamento 2026-06-12): scheduler com primeira rotina real, importações REDESIM/CNAE como jobs em fila com retry e relatório, throttle parametrizado nas rotas públicas, retenção de access_logs via pruning agendado e retry/backoff no HTTP client — infraestrutura habilitadora para prazo BAP (HU-134), SLA (HU-144/147) e integrações (HU-146) — concluída em 2026-06-13 (verificação: passed 5/5; suíte 385/385; produção documentada em docs/deploy/producao-assincrona.md)
 - [ ] **Phase 3.2 (INSERTED): Autenticação GOV.BR no portal** — Login Único (OAuth/OIDC, Authorization Code + PKCE S256) convivendo com o login local: vínculo determinístico por CPF, criação de conta real no primeiro acesso, nível de confiabilidade parametrizável, credenciais sensíveis administráveis (HU-014) e toggle `features.govbr_login` (HU-151); sem credenciamento da SEDUR a validação contra staging real permanece bloqueada — spec `docs/superpowers/specs/2026-06-12-autenticacao-govbr-design.md`
 - [x] **Phase 4: Georreferenciamento e Território** — Geocodificação, zona, via, lote, bairro e restrições (EP04) — concluída em 2026-06-13 (verificação: passed 5/5; suíte 448/448 SQLite + 15/15 @group postgis; geocodificação Nominatim e consulta espacial reais). ESCOPO HONESTO: bairro/via/restrições entregues com dado público real do GeoSalvador; **zona urbanística (HU-031) e lote cadastral (HU-033) BLOQUEADOS pendente SEDUR** (sem fonte vetorial pública — comunicados na UI, nunca inventados). A zona é insumo crítico da Fase 5.
-- [ ] **Phase 5: Motor de Regras da LOUOS** — Quadros 7/10/11/11A como dados versionados + motor de enquadramento (EP05 + HU-015 a HU-018)
+- [x] **Phase 5: Motor de Regras da LOUOS** — Quadros 7/10/11/11A como dados versionados + motor de enquadramento (EP05 + HU-015 a HU-018) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 600/600 SQLite + 15/15 @group postgis; motor real decidindo permitido/não permitido/pendente). ESCOPO HONESTO: Quadro 7 (área) entregue com seed real da Lei 9.148/2016; **Quadro 10 (permissão por zona) degrada para "pendente" sem a zona — BLOQUEADO pendente SEDUR (SIGIS/CA 2000)**; Quadros 11/11A parciais (atributo viário LOUOS pendente). Reusa rule_versions (Fase 6); sandbox HU-143 com 4 olhos.
 - [x] **Phase 6: Classificação de Risco** — Risco por CNAE com condicionante-pergunta reclassificadora (EP06 + HU-019, HU-020) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 519/519 SQLite + 15/15 @group postgis; motor real classificando sobre o Decreto 32.636/2020 com encaminhamento parametrizável e auditoria). Regras como dados versionados (rule_versions — infra herdada pela Fase 5)
 - [ ] **Phase 7: Consulta Prévia de Viabilidade** — Simulação consumindo território + motores (EP07)
 - [ ] **Phase 8: Solicitação de Viabilidade** — Processo formal: criação, documentos, protocolo (EP08)
@@ -204,15 +204,15 @@ Nota: a geocodificação (Nominatim/OSM) e a lógica de identificação operam s
 **Plans**: 9 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Fundação: RuleDomain louos_* (reusa rule_versions) + tabelas tipadas + enums + DTOs EnquadramentoInput/Result + parâmetros vagas/sandbox (wave 1)
-- [ ] 05-02-PLAN.md — Seeds: Quadro 7 REAL (Lei 9.148/2016) + Quadros 10/11/11A modelados, versionados e auditados + distribuição (wave 2)
-- [ ] 05-03-PLAN.md — Motor Quadro 7: enquadramento por área + resolução de versão (3 modos) + auditoria (HU-038/046) (wave 3)
-- [ ] 05-04-PLAN.md — Motor Quadro 10 (degradação sem zona) + Quadros 11/11A parciais (HU-039/040/041) (wave 4)
-- [ ] 05-05-PLAN.md — Consolidação + fundamentação legal + vagas + restrições ZEIS (HU-044/045/042/043) (wave 5)
-- [ ] 05-06-PLAN.md — Mantenedores backend dos Quadros: permissões + publicação 4-olhos (HU-015/016/017/018) (wave 3, ‖ 05-03)
-- [ ] 05-07-PLAN.md — Mantenedores UI no console + navegação (HU-015..018) (wave 4, ‖ 05-04)
-- [ ] 05-08-PLAN.md — Sandbox HU-143: simula rascunho contra cenários reais (motor real) + publicação 4-olhos (wave 6)
-- [ ] 05-09-PLAN.md — Golden cases (#[DataProvider], requer_zona=pendente) + comando louos:enquadrar + verificação integral (wave 7)
+- [x] 05-01-PLAN.md — Fundação: RuleDomain louos_* (reusa rule_versions) + tabelas tipadas + enums + DTOs EnquadramentoInput/Result + parâmetros vagas/sandbox (wave 1)
+- [x] 05-02-PLAN.md — Seeds: Quadro 7 REAL (Lei 9.148/2016) + Quadros 10/11/11A modelados, versionados e auditados + distribuição (wave 2)
+- [x] 05-03-PLAN.md — Motor Quadro 7: enquadramento por área + resolução de versão (3 modos) + auditoria (HU-038/046) (wave 3)
+- [x] 05-04-PLAN.md — Motor Quadro 10 (degradação sem zona) + Quadros 11/11A parciais (HU-039/040/041) (wave 4)
+- [x] 05-05-PLAN.md — Consolidação + fundamentação legal + vagas + restrições ZEIS (HU-044/045/042/043) (wave 5)
+- [x] 05-06-PLAN.md — Mantenedores backend dos Quadros: permissões + publicação 4-olhos (HU-015/016/017/018) (wave 3, ‖ 05-03)
+- [x] 05-07-PLAN.md — Mantenedores UI no console + navegação (HU-015..018) (wave 4, ‖ 05-04)
+- [x] 05-08-PLAN.md — Sandbox HU-143: simula rascunho contra cenários reais (motor real) + publicação 4-olhos (wave 6)
+- [x] 05-09-PLAN.md — Golden cases (#[DataProvider], requer_zona=pendente) + comando louos:enquadrar + verificação integral (wave 7)
 
 Nota: a correspondência "Quadro 11" ↔ Quadro 11B oficial e as planilhas parametrizadas vigentes estão pendentes de confirmação com a SEDUR; o motor nasce parametrizável e recebe a carga oficial quando entregue (seeds derivados da Lei nº 9.148/2016 até lá). Mapeamento de HUs confirmado pelos arquivos oficiais: HU-015=Quadro 7, HU-016=Quadro 10, HU-017=Quadro 11, HU-018=Quadro 11A (o spec havia invertido 015↔016).
 
@@ -420,7 +420,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 3.1. Fundação assíncrona — scheduler, jobs e retenção (INSERTED) | 5/5 | Complete | 2026-06-13 |
 | 3.2. Autenticação GOV.BR no portal (INSERTED) | 1/1 | Implemented — aguardando credenciamento p/ validar staging | - |
 | 4. Georreferenciamento e Território | 8/8 | Complete (zona/lote bloqueados — pendente SEDUR) | 2026-06-13 |
-| 5. Motor de Regras da LOUOS | 0/9 | Planned | - |
+| 5. Motor de Regras da LOUOS | 9/9 | Complete (Quadro 10/zona pendente SEDUR) | 2026-06-14 |
 | 6. Classificação de Risco | 9/9 | Complete | 2026-06-14 |
 | 7. Consulta Prévia de Viabilidade | 0/TBD | Not started | - |
 | 8. Solicitação de Viabilidade | 0/TBD | Not started | - |

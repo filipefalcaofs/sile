@@ -229,10 +229,10 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-012 | Fase 2 | Complete |
 | HU-013 | Fase 2 | Complete |
 | HU-014 | Fase 2 | Complete |
-| HU-015 | Fase 5 | Pending |
-| HU-016 | Fase 5 | Pending |
-| HU-017 | Fase 5 | Pending |
-| HU-018 | Fase 5 | Pending |
+| HU-015 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-016 | Fase 5 | Complete (Q10 modelado; zona real pendente SEDUR) |
+| HU-017 | Fase 5 | Complete (Q11 modelado; atributo viário/11B pendente SEDUR) |
+| HU-018 | Fase 5 | Complete (Q11A modelado; atributo viário/11B pendente SEDUR) |
 | HU-019 | Fase 6 | Complete (EP06 2026-06-14) |
 | HU-020 | Fase 6 | Complete (EP06 2026-06-14) |
 | HU-021 | Fase 3 | Done |
@@ -252,15 +252,15 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-035 | Fase 4 | Complete (04-04/04-05) |
 | HU-036 | Fase 4 | Complete (04-04/04-06/04-07) |
 | HU-037 | Fase 4 | Complete (04-06/04-07) — RN-005/lote pendente SEDUR |
-| HU-038 | Fase 5 | Pending |
-| HU-039 | Fase 5 | Pending |
-| HU-040 | Fase 5 | Pending |
-| HU-041 | Fase 5 | Pending |
-| HU-042 | Fase 5 | Pending |
-| HU-043 | Fase 5 | Pending |
-| HU-044 | Fase 5 | Pending |
-| HU-045 | Fase 5 | Pending |
-| HU-046 | Fase 5 | Pending |
+| HU-038 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-039 | Fase 5 | Complete (degrada pendente; zona real pendente SEDUR) |
+| HU-040 | Fase 5 | Complete (degrada sem atributo viário — pendente SEDUR) |
+| HU-041 | Fase 5 | Complete (degrada sem atributo viário — pendente SEDUR) |
+| HU-042 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-043 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-044 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-045 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-046 | Fase 5 | Complete (EP05 2026-06-14) |
 | HU-047 | Fase 6 | Complete (EP06 2026-06-14) |
 | HU-048 | Fase 6 | Complete (EP06 2026-06-14) |
 | HU-049 | Fase 6 | Complete (EP06 2026-06-14) |

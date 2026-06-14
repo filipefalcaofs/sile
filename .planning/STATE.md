@@ -3,7 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed Phase 6 (Classificação de Risco) — regras como dados versionados (rule_versions genérico + RuleVersionService publish 4-olhos; infra herdada pela Fase 5), risco municipal (Decreto 32.636/2020: 767 baixo_a/328 baixo_b/236 alto = 1.331) e sanitário (VISA: 261) como dimensões SEPARADAS, condicionante-pergunta que reclassifica (67; golden 1031-7/00), encaminhamento parametrizável (risco.mapa_encaminhamento — decreto NÃO tem "médio"; mapeia para baixo_b), gatilhos CNAE (risk_triggers, semi-expresso) + exceção ZEIS, mantenedores versionados + UI console, comando risco:classificar, golden cases. guardião de entrega: APROVADO. Suíte 519/519 SQLite + 15/15 @group postgis; evidência real do motor (0111-3/01→expresso, frigorífico→análise, sem-regra→análise, ZEIS→análise). [PHASE 4 também concluída antes: PostGIS, geocodificação Nominatim, mapa Leaflet; zona/lote bloqueados pendente SEDUR.]
+stopped_at: Completed Phase 5 (Motor de Regras da LOUOS) — Quadros 7/10/11/11A como dados versionados (REUSANDO rule_versions da Fase 6, RuleDomain estendido com louos_*), LouosEnquadramentoService (enquadrar/consolidar/fundamentação/vagas HU-042/restrições ZEIS HU-043 + auditoria RN-002 com rules_version), mantenedores HU-015..018 (publicação 4-olhos) + UI console, sandbox HU-143 (simula rascunho sobre cenários reais sem afetar a vigente — RN-001 por transação revertida; 4-olhos), comando louos:enquadrar, golden cases (#[DataProvider]). guardião de entrega: APROVADO. Suíte 600/600 SQLite + 15/15 @group postgis; evidência real: sem zona→pendente (fundamentação não cita Q10), ZPAM→nao_permitido, ZPR-1→permitido. ESCOPO HONESTO: Quadro 7 real (40 faixas/24 CNAEs, Lei 9.148/2016); Quadro 10 DEGRADA para pendente sem zona (bloqueado SEDUR); Quadros 11/11A parciais (atributo viário pendente). [Antes: Fase 6 (risco) e Fase 4 (georref) concluídas.]
+last_updated: "2026-06-14T07:15:00.000Z"
+last_activity: 2026-06-14 -- Phase 5 COMPLETE (guardião APROVADO; motor LOUOS real; Quadro 10/zona pendente SEDUR)
+_prev_stopped_at_p6: Completed Phase 6 (Classificação de Risco) — regras como dados versionados (rule_versions genérico + RuleVersionService publish 4-olhos; infra herdada pela Fase 5), risco municipal (Decreto 32.636/2020: 767 baixo_a/328 baixo_b/236 alto = 1.331) e sanitário (VISA: 261) como dimensões SEPARADAS, condicionante-pergunta que reclassifica (67; golden 1031-7/00), encaminhamento parametrizável (risco.mapa_encaminhamento — decreto NÃO tem "médio"; mapeia para baixo_b), gatilhos CNAE (risk_triggers, semi-expresso) + exceção ZEIS, mantenedores versionados + UI console, comando risco:classificar, golden cases. guardião de entrega: APROVADO. Suíte 519/519 SQLite + 15/15 @group postgis; evidência real do motor (0111-3/01→expresso, frigorífico→análise, sem-regra→análise, ZEIS→análise). [PHASE 4 também concluída antes: PostGIS, geocodificação Nominatim, mapa Leaflet; zona/lote bloqueados pendente SEDUR.]
 last_updated: "2026-06-14T04:05:00.000Z"
 last_activity: 2026-06-14 -- Phase 6 COMPLETE (guardião de entrega APROVADO; classificação de risco real)
 _prev_stopped_at: Completed Phase 4 (Georreferenciamento e Território) — PostGIS (geo_layers/geo_features versionados com vigência, migrations driver-aware), geocodificação Nominatim atrás de contrato (throttle/retry parametrizados), TerritoryService/SpatialRepository (ST_Contains/ST_DWithin/ST_Intersects reais), LocationValidationService (sobreposição ST_Area/ST_Intersection com limiar parametrizado), mapa Leaflet (react-leaflet v5, client-side/SSR-safe) e página de consulta territorial no console SEDUR, comando geo:importar auditado + carga REAL do GeoSalvador (bairro 171, via 800, restrição ZEIS 234), CI real com PostGIS (.github/workflows/tests.yml + POSTGIS_TESTS_REQUIRED). gsd-verifier: passed 5/5. Suíte 448/448 SQLite + 15/15 @group postgis; evidência real: Nominatim (Elevador Lacerda) + consulta espacial (Farol da Barra → bairro "Barra").
@@ -11,10 +14,10 @@ last_updated: "2026-06-13T23:55:00.000Z"
 last_activity: 2026-06-13 -- Phase 4 COMPLETE (verificação passed; bairro/via/restrição reais; zona/lote bloqueados pendente SEDUR)
 progress:
   total_phases: 15
-  completed_phases: 6
-  total_plans: 48
-  completed_plans: 48
-  percent: 34
+  completed_phases: 7
+  total_plans: 57
+  completed_plans: 57
+  percent: 39
 ---
 
 # Project State
@@ -24,18 +27,27 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-09)
 
 **Core value:** Responder a viabilidade locacional de atividade econômica de forma automática, correta e auditável — fluxo expresso quando a lei permite, fundamentação legal em toda decisão.
-**Current focus:** Phases 3, 3.1, 4 e 6 concluídas — próxima acionável: Phase 5 (Motor de Regras da LOUOS). ATENÇÃO: a Fase 5 consome a ZONA urbanística, hoje BLOQUEADA (sem fonte vetorial pública — pendente SEDUR): o Quadro 7 (área) roda, mas o Quadro 10 (permissão por zona) degrada para "análise técnica" até a base chegar. O motor nasce parametrizável (herda a infra rule_versions da Fase 6) e roda com seeds derivados da Lei 9.148/2016. Phase 3.2 (GOV.BR) implementada e desligada, aguardando credenciamento.
+**Current focus:** Phases 3, 3.1, 4, 5 e 6 concluídas — próxima acionável: Phase 7 (Consulta Prévia de Viabilidade), a PRIMEIRA entrega que executa o fluxo de decisão de ponta a ponta (consome território da Fase 4 + motor LOUOS da Fase 5 + risco da Fase 6). ATENÇÃO: a consulta herda a degradação honesta — sem zona real (bloqueada SEDUR), o resultado de viabilidade fica "pendente/análise"; risco e enquadramento por área rodam. Phase 3.2 (GOV.BR) implementada e desligada, aguardando credenciamento.
 
 ## Current Position
 
-Phase: 6 (Classificação de Risco) — COMPLETE (guardião de entrega APROVADO em 2026-06-14)
+Phase: 5 (Motor de Regras da LOUOS) — COMPLETE (guardião de entrega APROVADO em 2026-06-14)
 Plan: 9 of 9 (todos concluídos)
-Status: Fase 6 fechada; próxima é a Fase 5 (Motor LOUOS) — exige brainstorming (Quadros 7/10/11/11A, golden cases, degradação sem zona)
-Last activity: 2026-06-14 -- Phase 6 COMPLETE (classificação de risco real; rule_versions herdado pela Fase 5)
+Status: Fase 5 fechada; próxima é a Fase 7 (Consulta Prévia) — consome Fases 4/5/6 (motores reais)
+Last activity: 2026-06-14 -- Phase 5 COMPLETE (motor LOUOS real; Quadro 10/zona pendente SEDUR)
 
-Progress: [███▍░░░░░░] 34% (6/15 fases; 48 planos executados)
+Progress: [███▉░░░░░░] 39% (7/15 fases; 57 planos executados)
 
-Next step: `/gsd-plan-phase 5` (Motor LOUOS) — herda rule_versions (Fase 6); Quadro 7 buildável com seeds da Lei 9.148/2016, Quadro 10 degrada sem a zona (pendente SEDUR). Depois Fase 7 (Consulta Prévia, consome 4/5/6).
+Next step: `/gsd-plan-phase 7` (Consulta Prévia) — orquestra TerritoryService (4) + LouosEnquadramentoService (5) + RiscoClassificationService (6); sem processo formal (Fase 8). Brainstorm via agents. Pares 5‖6 já concluídos.
+
+### Fase 5 (Motor de Regras da LOUOS) — concluída 2026-06-14
+
+- Quadros 7/10/11/11A como DADOS VERSIONADOS reusando `rule_versions`/`RuleVersionService` da Fase 6 (RuleDomain estendido com louos_quadro7|10|11|11a, todos sensíveis/4-olhos). HU-046 é essa reutilização.
+- `LouosEnquadramentoService` espelha o TerritoryService/RiscoClassificationService: DTOs readonly EnquadramentoInput {area, cnaes, TerritoryResult} / EnquadramentoResult (cada Quadro = dimensão {status identificado|nao_encontrado|indisponivel} + consolidado {permitido|permitido_com_condicoes|nao_permitido|pendente} + fundamentacao[] + versoes() + toArray()). Resolução de versão 3 modos (vigente/naData/versao p/ sandbox). Auditoria 'louos'/'enquadramento' com rules_version.
+- Quadro 7 (HU-015/038): seed REAL da Lei 9.148/2016 (40 faixas, 24 CNAEs; modelo enquadramento TVL do SAPS). Enquadra por área (faixa inclusiva; area_max nula = sem teto); CNAE sem faixa → nao_encontrado.
+- DEGRADAÇÃO honesta (sem fachada): Quadro 10 (HU-016/039) lê zona do TerritoryResult; zona indisponivel → quadro10 indisponivel SEM consultar a tabela → consolidado PENDENTE (nunca permitido/nao_permitido sem zona). Quadros 11/11A (HU-017/018/040/041) degradam sem o atributo CLASSE_VIA_LOUOS. Consolidação HU-044 (precedência: Q7 ausente→pendente; Q10 indisponível→pendente; proibido→nao_permitido; condicionante→permitido_com_condicoes; senão permitido), fundamentação HU-045, vagas parametrizado HU-042 (louos.vagas.exigencia_por_grupo), restrições ZEIS HU-043 (camada da Fase 4).
+- Sandbox HU-143: simula uma versão rascunho contra cenários reais (derivados dos CNAEs do Quadro 7 vigente) reexecutando o motor real em transação SEMPRE revertida (RN-001 — vigente intacta); publicação 4-olhos (autor≠publicador). Mantenedores HU-015..018 no console; comando louos:enquadrar; golden cases (#[DataProvider], requer_zona=pendente). Parâmetros novos louos.vagas.exigencia_por_grupo / louos.sandbox.amostra_padrao (catálogo 31→33). Permissões consultar-louos/manter-louos (total 14).
+- BLOQUEADO pendente SEDUR (degrada honesto, registrado): Quadro 10 sobre zona real (SIGIS/CA 2000), atributo viário LOUOS (CLASSE_VIA_LOUOS — Quadros 11/11A), correspondência Quadro 11↔11B, planilhas oficiais dos Quadros. Quando a base chegar, muda a carga, não a lógica.
 
 ### Fase 6 (Classificação de Risco) — concluída 2026-06-14
 
