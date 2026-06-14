@@ -6,7 +6,10 @@ import PageHeader from '@/components/app/page-header';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import EtapaAtividades from '@/components/solicitacao/etapa-atividades';
+import EtapaDocumentos from '@/components/solicitacao/etapa-documentos';
 import EtapaImovel from '@/components/solicitacao/etapa-imovel';
+import EtapaRevisao from '@/components/solicitacao/etapa-revisao';
+import EtapaSimulacao, { type SimulacaoData } from '@/components/solicitacao/etapa-simulacao';
 import { CheckCircleIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
@@ -53,13 +56,6 @@ interface Requisito {
     description?: string | null;
 }
 
-interface SimulationData {
-    resultado: string;
-    resultado_label: string;
-    por_cnae: Array<Record<string, unknown>>;
-    simulated_at: string | null;
-}
-
 export interface SolicitacaoDraft {
     id: number;
     protocol_number: string | null;
@@ -84,7 +80,7 @@ export interface SolicitacaoDraft {
     };
     cnaes: CnaeItem[];
     documentos: DocumentoItem[];
-    simulation: SimulationData | null;
+    simulation: SimulacaoData | null;
 }
 
 interface TerritorioResumo {
@@ -114,12 +110,18 @@ interface WizardProps {
     areaAlert: AreaAlert | null;
 }
 
-type StepId = 'imovel' | 'atividades';
+type StepId = 'imovel' | 'atividades' | 'documentos' | 'simulacao' | 'revisao';
 
 const STEPS: Array<{ id: StepId; label: string }> = [
     { id: 'imovel', label: 'Imóvel e área' },
     { id: 'atividades', label: 'Atividades' },
+    { id: 'documentos', label: 'Documentos' },
+    { id: 'simulacao', label: 'Simulação' },
+    { id: 'revisao', label: 'Revisão' },
 ];
+
+/** Etapas obrigatórias (na ordem) para retomar no primeiro ponto incompleto. */
+const MANDATORY_STEPS: StepId[] = ['imovel', 'atividades', 'documentos'];
 
 function imovelCompleto(draft: SolicitacaoDraft): boolean {
     return (
@@ -132,20 +134,6 @@ function imovelCompleto(draft: SolicitacaoDraft): boolean {
 
 function atividadesCompleto(draft: SolicitacaoDraft): boolean {
     return draft.cnaes.some((cnae) => cnae.is_primary);
-}
-
-function stepConcluido(draft: SolicitacaoDraft, step: StepId): boolean {
-    if (step === 'imovel') {
-        return imovelCompleto(draft);
-    }
-
-    return atividadesCompleto(draft);
-}
-
-function primeiraEtapaIncompleta(draft: SolicitacaoDraft): StepId {
-    const proxima = STEPS.find((step) => !stepConcluido(draft, step.id));
-
-    return proxima?.id ?? STEPS[STEPS.length - 1].id;
 }
 
 /**
@@ -316,15 +304,9 @@ function Stepper({
     );
 }
 
-export default function Wizard({
-    solicitacao,
-    serviceTypes,
-    companies,
-    cnaesComplementaresMax,
-    solicitacaoEnabled,
-    territorio,
-    areaAlert,
-}: WizardProps) {
+export default function Wizard(props: WizardProps) {
+    const { solicitacao, serviceTypes, companies, solicitacaoEnabled } = props;
+
     if (!solicitacao) {
         return (
             <>
@@ -341,29 +323,29 @@ export default function Wizard({
         );
     }
 
-    return <WizardEdicao solicitacao={solicitacao} max={cnaesComplementaresMax} territorio={territorio} areaAlert={areaAlert} />;
+    return <WizardEdicao {...props} solicitacao={solicitacao} />;
 }
 
 function WizardEdicao({
     solicitacao,
-    max,
+    cnaesComplementaresMax,
+    requisitosObrigatorios,
+    requisitosFaltantes,
+    anexosConfig,
+    simulacaoEnabled,
     territorio,
     areaAlert,
-}: {
-    solicitacao: SolicitacaoDraft;
-    max: number;
-    territorio: TerritorioResumo | null;
-    areaAlert: AreaAlert | null;
-}) {
-    const [step, setStep] = useState<StepId>(() => primeiraEtapaIncompleta(solicitacao));
+}: WizardProps & { solicitacao: SolicitacaoDraft }) {
+    const concluidos: Record<StepId, boolean> = {
+        imovel: imovelCompleto(solicitacao),
+        atividades: atividadesCompleto(solicitacao),
+        documentos: requisitosFaltantes.length === 0,
+        simulacao: solicitacao.simulation !== null,
+        revisao: false,
+    };
 
-    const concluidos = STEPS.reduce(
-        (acc, item) => {
-            acc[item.id] = stepConcluido(solicitacao, item.id);
-
-            return acc;
-        },
-        {} as Record<StepId, boolean>,
+    const [step, setStep] = useState<StepId>(
+        () => MANDATORY_STEPS.find((id) => !concluidos[id]) ?? 'revisao',
     );
 
     function avancar() {
@@ -412,8 +394,36 @@ function WizardEdicao({
                 <EtapaAtividades
                     solicitacaoId={solicitacao.id}
                     cnaes={solicitacao.cnaes}
-                    max={max}
+                    max={cnaesComplementaresMax}
                     onSaved={avancar}
+                />
+            )}
+
+            {step === 'documentos' && (
+                <EtapaDocumentos
+                    solicitacaoId={solicitacao.id}
+                    documentos={solicitacao.documentos}
+                    requisitosObrigatorios={requisitosObrigatorios}
+                    requisitosFaltantes={requisitosFaltantes}
+                    anexosConfig={anexosConfig}
+                    onContinue={avancar}
+                />
+            )}
+
+            {step === 'simulacao' && (
+                <EtapaSimulacao
+                    solicitacaoId={solicitacao.id}
+                    simulation={solicitacao.simulation}
+                    simulacaoEnabled={simulacaoEnabled}
+                    onContinue={avancar}
+                />
+            )}
+
+            {step === 'revisao' && (
+                <EtapaRevisao
+                    solicitacao={solicitacao}
+                    requisitosFaltantes={requisitosFaltantes}
+                    simulation={solicitacao.simulation}
                 />
             )}
         </>
