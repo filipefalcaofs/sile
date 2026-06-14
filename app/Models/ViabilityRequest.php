@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Concerns\HasAuditoria;
+use App\Enums\AnalysisCategory;
+use App\Enums\AnalysisStage;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use Database\Factories\ViabilityRequestFactory;
@@ -21,6 +23,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * ViabilityRequestStateMachine (que audita a transição). A geometry derivada
  * property_polygon (só pgsql) também fica fora do fillable — a fonte é o jsonb
  * property_polygon_geojson, e a derivada é gravada via ST_* no plano 08-06.
+ *
+ * As colunas da análise técnica (EP10 — sector_id, assigned_user_id,
+ * assigned_at, analysis_category, in_fine_mesh, analysis_stage,
+ * analysis_stage_started_at, analysis_due_at) também ficam FORA do fillable:
+ * são escritas pelos serviços de distribuição (HU-080/081) e de SLA (HU-144),
+ * nunca pelo cidadão.
  */
 #[Fillable([
     'origin',
@@ -60,6 +68,14 @@ class ViabilityRequest extends Model
             'cancelled_at' => 'datetime',
             'bap_due_at' => 'datetime',
             'bap_linked_at' => 'datetime',
+            // Colunas da análise técnica (EP10) — FORA do fillable (escritas por
+            // serviços de distribuição/SLA, nunca pelo cidadão).
+            'analysis_category' => AnalysisCategory::class,
+            'analysis_stage' => AnalysisStage::class,
+            'in_fine_mesh' => 'boolean',
+            'assigned_at' => 'datetime',
+            'analysis_stage_started_at' => 'datetime',
+            'analysis_due_at' => 'datetime',
         ];
     }
 
@@ -187,5 +203,68 @@ class ViabilityRequest extends Model
     public function decision(): HasOne
     {
         return $this->hasOne(ViabilityDecision::class);
+    }
+
+    /**
+     * Setor (caixa) que recebeu o processo na distribuição (HU-080). sector_id
+     * fica fora do fillable — gravado pelo serviço de distribuição.
+     *
+     * @return BelongsTo<Sector, $this>
+     */
+    public function sector(): BelongsTo
+    {
+        return $this->belongsTo(Sector::class);
+    }
+
+    /**
+     * Analista que assumiu o processo (HU-081). assigned_user_id fica fora do
+     * fillable — gravado ao assumir.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function assignedTo(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
+    /**
+     * Fichas de análise versionadas (HU-135/140) — uma linha por revisão.
+     *
+     * @return HasMany<AnalysisRecord, $this>
+     */
+    public function analysisRecords(): HasMany
+    {
+        return $this->hasMany(AnalysisRecord::class);
+    }
+
+    /**
+     * Ficha vigente = a de MAIOR revisão (RN-003 — versionamento). A finalizada
+     * é imutável; recalcular gera nova revisão, que passa a ser a current.
+     *
+     * @return HasOne<AnalysisRecord, $this>
+     */
+    public function currentAnalysisRecord(): HasOne
+    {
+        return $this->hasOne(AnalysisRecord::class)->latestOfMany('revision');
+    }
+
+    /**
+     * Pendências abertas/respondidas/expiradas do processo (HU-083/084).
+     *
+     * @return HasMany<AnalysisPendency, $this>
+     */
+    public function pendencies(): HasMany
+    {
+        return $this->hasMany(AnalysisPendency::class);
+    }
+
+    /**
+     * Encaminhamentos à malha fina (HU-136) — ortogonais ao status, repetíveis.
+     *
+     * @return HasMany<FineMeshReferral, $this>
+     */
+    public function fineMeshReferrals(): HasMany
+    {
+        return $this->hasMany(FineMeshReferral::class);
     }
 }

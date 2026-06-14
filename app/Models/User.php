@@ -10,6 +10,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -95,5 +96,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasAcceptedTerm(LegalTerm $term): bool
     {
         return $this->termAcceptances()->where('legal_term_id', $term->id)->exists();
+    }
+
+    /**
+     * Setores (caixas de análise) aos quais o analista está vinculado
+     * (HU-138 RN-005 — vínculo N:N administrável pelo gestor).
+     *
+     * @return BelongsToMany<Sector, $this>
+     */
+    public function sectors(): BelongsToMany
+    {
+        return $this->belongsToMany(Sector::class, 'sector_user')->withTimestamps();
     }
 }
