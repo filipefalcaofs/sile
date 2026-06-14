@@ -3,7 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed Phase 5 (Motor de Regras da LOUOS) — Quadros 7/10/11/11A como dados versionados (REUSANDO rule_versions da Fase 6, RuleDomain estendido com louos_*), LouosEnquadramentoService (enquadrar/consolidar/fundamentação/vagas HU-042/restrições ZEIS HU-043 + auditoria RN-002 com rules_version), mantenedores HU-015..018 (publicação 4-olhos) + UI console, sandbox HU-143 (simula rascunho sobre cenários reais sem afetar a vigente — RN-001 por transação revertida; 4-olhos), comando louos:enquadrar, golden cases (#[DataProvider]). guardião de entrega: APROVADO. Suíte 600/600 SQLite + 15/15 @group postgis; evidência real: sem zona→pendente (fundamentação não cita Q10), ZPAM→nao_permitido, ZPR-1→permitido. ESCOPO HONESTO: Quadro 7 real (40 faixas/24 CNAEs, Lei 9.148/2016); Quadro 10 DEGRADA para pendente sem zona (bloqueado SEDUR); Quadros 11/11A parciais (atributo viário pendente). [Antes: Fase 6 (risco) e Fase 4 (georref) concluídas.]
+stopped_at: Completed Phase 7 (Consulta Prévia de Viabilidade) — PRIMEIRO fluxo de decisão de ponta a ponta. ConsultaViabilidadeService (app/Services/Viabilidade/) orquestra Geocoder→TerritoryService→LouosEnquadramentoService→RiscoClassificationService e PROPAGA o veredito do motor LOUOS (NÃO recomputa a HU-044); ConsultaViabilidadeResult readonly (snake_case, versoes de todas as regras). 3 entradas: endereço (geocode real Nominatim), CNAE (risco+Quadro 7 sem território), inscrição (BLOQUEADA atrás do contrato PropertyRegistryLookup — provider UnavailablePropertyRegistryLookup sempre lança; degrada para via CNAE com aviso, nunca ponto inventado; fake prova a lógica p/ Fase 13). Consulta PÚBLICA (/portal/viabilidade/*) com throttle (seguranca.throttle.consulta_viabilidade.por_minuto) + toggle (features.consulta_viabilidade) + auditoria RN-002 (causer null quando anônimo + IP); histórico AUTENTICADO (viability_queries imutável, snapshot result+rules_versions, só do dono). UI portal light reusa o mapa Leaflet (Fase 4). Comando viabilidade:consultar + golden cases (#[DataProvider]). guardião de entrega: APROVADO. Suíte 657/657 SQLite + 15/15 @group postgis; evidência real: CNAE baixo→expresso/Quadro 7, endereço→geocode Nominatim real + veredito pendente sem zona. [Antes: Fases 5 (LOUOS), 6 (risco), 4 (georref) concluídas.]
+last_updated: "2026-06-14T09:45:00.000Z"
+last_activity: 2026-06-14 -- Phase 7 COMPLETE (guardião APROVADO; consulta prévia de ponta a ponta; veredito locacional/inscrição pendentes SEDUR)
+_prev_stopped_at_p5: Completed Phase 5 (Motor de Regras da LOUOS) — Quadros 7/10/11/11A como dados versionados (REUSANDO rule_versions da Fase 6, RuleDomain estendido com louos_*), LouosEnquadramentoService (enquadrar/consolidar/fundamentação/vagas HU-042/restrições ZEIS HU-043 + auditoria RN-002 com rules_version), mantenedores HU-015..018 (publicação 4-olhos) + UI console, sandbox HU-143 (simula rascunho sobre cenários reais sem afetar a vigente — RN-001 por transação revertida; 4-olhos), comando louos:enquadrar, golden cases (#[DataProvider]). guardião de entrega: APROVADO. Suíte 600/600 SQLite + 15/15 @group postgis; evidência real: sem zona→pendente (fundamentação não cita Q10), ZPAM→nao_permitido, ZPR-1→permitido. ESCOPO HONESTO: Quadro 7 real (40 faixas/24 CNAEs, Lei 9.148/2016); Quadro 10 DEGRADA para pendente sem zona (bloqueado SEDUR); Quadros 11/11A parciais (atributo viário pendente). [Antes: Fase 6 (risco) e Fase 4 (georref) concluídas.]
 last_updated: "2026-06-14T07:15:00.000Z"
 last_activity: 2026-06-14 -- Phase 5 COMPLETE (guardião APROVADO; motor LOUOS real; Quadro 10/zona pendente SEDUR)
 _prev_stopped_at_p6: Completed Phase 6 (Classificação de Risco) — regras como dados versionados (rule_versions genérico + RuleVersionService publish 4-olhos; infra herdada pela Fase 5), risco municipal (Decreto 32.636/2020: 767 baixo_a/328 baixo_b/236 alto = 1.331) e sanitário (VISA: 261) como dimensões SEPARADAS, condicionante-pergunta que reclassifica (67; golden 1031-7/00), encaminhamento parametrizável (risco.mapa_encaminhamento — decreto NÃO tem "médio"; mapeia para baixo_b), gatilhos CNAE (risk_triggers, semi-expresso) + exceção ZEIS, mantenedores versionados + UI console, comando risco:classificar, golden cases. guardião de entrega: APROVADO. Suíte 519/519 SQLite + 15/15 @group postgis; evidência real do motor (0111-3/01→expresso, frigorífico→análise, sem-regra→análise, ZEIS→análise). [PHASE 4 também concluída antes: PostGIS, geocodificação Nominatim, mapa Leaflet; zona/lote bloqueados pendente SEDUR.]
@@ -14,10 +17,10 @@ last_updated: "2026-06-13T23:55:00.000Z"
 last_activity: 2026-06-13 -- Phase 4 COMPLETE (verificação passed; bairro/via/restrição reais; zona/lote bloqueados pendente SEDUR)
 progress:
   total_phases: 15
-  completed_phases: 7
-  total_plans: 57
-  completed_plans: 57
-  percent: 39
+  completed_phases: 8
+  total_plans: 67
+  completed_plans: 67
+  percent: 44
 ---
 
 # Project State
@@ -27,18 +30,28 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-09)
 
 **Core value:** Responder a viabilidade locacional de atividade econômica de forma automática, correta e auditável — fluxo expresso quando a lei permite, fundamentação legal em toda decisão.
-**Current focus:** Phases 3, 3.1, 4, 5 e 6 concluídas — próxima acionável: Phase 7 (Consulta Prévia de Viabilidade), a PRIMEIRA entrega que executa o fluxo de decisão de ponta a ponta (consome território da Fase 4 + motor LOUOS da Fase 5 + risco da Fase 6). ATENÇÃO: a consulta herda a degradação honesta — sem zona real (bloqueada SEDUR), o resultado de viabilidade fica "pendente/análise"; risco e enquadramento por área rodam. Phase 3.2 (GOV.BR) implementada e desligada, aguardando credenciamento.
+**Current focus:** Phases 3, 3.1, 4, 5, 6 e 7 concluídas — próxima acionável: Phase 8 (Solicitação de Viabilidade), o processo formal que protocola a solicitação (consome cadastro empresarial da Fase 3 + território da Fase 4 + reusa o ConsultaViabilidadeService da Fase 7 para a simulação pré-protocolo HU-141). ATENÇÃO Fase 8: HU-071/072 (DAM) têm escopo a confirmar com a SEDUR (consulta SEFAZ, não geração); HU-148 contingência é o caminho enquanto o contrato Regin não chega; anexos via Storage. Phase 3.2 (GOV.BR) implementada e desligada, aguardando credenciamento.
 
 ## Current Position
 
-Phase: 5 (Motor de Regras da LOUOS) — COMPLETE (guardião de entrega APROVADO em 2026-06-14)
-Plan: 9 of 9 (todos concluídos)
-Status: Fase 5 fechada; próxima é a Fase 7 (Consulta Prévia) — consome Fases 4/5/6 (motores reais)
-Last activity: 2026-06-14 -- Phase 5 COMPLETE (motor LOUOS real; Quadro 10/zona pendente SEDUR)
+Phase: 7 (Consulta Prévia de Viabilidade) — COMPLETE (guardião de entrega APROVADO em 2026-06-14)
+Plan: 10 of 10 (todos concluídos)
+Status: Fase 7 fechada; próxima é a Fase 8 (Solicitação de Viabilidade) — processo formal, reusa ConsultaViabilidadeService (HU-141)
+Last activity: 2026-06-14 -- Phase 7 COMPLETE (consulta prévia de ponta a ponta; veredito locacional/inscrição pendentes SEDUR)
 
-Progress: [███▉░░░░░░] 39% (7/15 fases; 57 planos executados)
+Progress: [████▍░░░░░] 44% (8/15 fases; 67 planos executados)
 
-Next step: `/gsd-plan-phase 7` (Consulta Prévia) — orquestra TerritoryService (4) + LouosEnquadramentoService (5) + RiscoClassificationService (6); sem processo formal (Fase 8). Brainstorm via agents. Pares 5‖6 já concluídos.
+Next step: `/gsd-plan-phase 8` (Solicitação de Viabilidade) — brainstorm via agents. ATENÇÃO: pendências SEDUR da Fase 8 (escopo DAM HU-071/072, tipos de serviço HU-061, edifício comercial HU-139, contingência HU-148, atendimento presencial HU-150); pode precisar de dependência nova (Storage para anexos — local/S3 já no Laravel, sem dep nova; PDF só na Fase 9/10). Pares 5‖6 e 4 concluídos; o ConsultaViabilidadeService (Fase 7) é reusado na simulação pré-protocolo.
+
+### Fase 7 (Consulta Prévia de Viabilidade) — concluída 2026-06-14
+
+- PRIMEIRO fluxo de decisão de ponta a ponta. `ConsultaViabilidadeService` (app/Services/Viabilidade/) orquestra Geocoder→TerritoryService→LouosEnquadramentoService→RiscoClassificationService; `ConsultaViabilidadeResult` readonly (toArray snake_case, versoes() de território+louos+risco). O orquestrador NÃO recomputa o veredito — PROPAGA o consolidado do motor LOUOS (vereditoLocacional lê enquadramento->resultado()).
+- 3 entradas: endereço (geocode real Nominatim → território → motores); CNAE (risco real + Quadro 7 por área, sem território); inscrição imobiliária BLOQUEADA atrás do contrato `PropertyRegistryLookup` (provider `UnavailablePropertyRegistryLookup` sempre lança; degrada para via CNAE com aviso, NUNCA inventa ponto; fake nos testes prova a lógica — Fase 13 troca o binding).
+- Honesto sem zona: risco + Quadro 7 + restrições/bairro/via reais; veredito locacional = pendente (motivo "zona pendente SEDUR"); UI nunca mostra permitido/não permitido sem zona (golden endereco-sem-zona-pendente trava a regressão).
+- Consulta PÚBLICA (/portal/viabilidade/* — index GET + endereco/cnae/inscricao POST) com throttle:consulta-viabilidade (parâmetro seguranca.throttle.consulta_viabilidade.por_minuto) + toggle features.consulta_viabilidade (422 comunicado) + auditoria 'viabilidade'/'consulta' (causer null quando anônimo + IP, versões das regras). Histórico AUTENTICADO (HU-060): tabela imutável viability_queries (input+result jsonb snapshot+rules_versions+user_id), gravada SÓ quando autenticado e SÓ no sucesso; usuário vê só o próprio (scopeForUser); UI mostra o snapshot da época em Modal (não reprocessa).
+- UI portal light reusa o mapa Leaflet MapaSection/MapImovel (Fase 4). Comando viabilidade:consultar {cnae} {--area=}{--endereco=}. Golden cases (#[DataProvider]). Parâmetros novos (catálogo 33→35). ZERO dependência nova.
+- BLOQUEADO pendente SEDUR (degrada honesto, registrado): veredito locacional permitido/não permitido (Quadro 10/zona — SIGIS/CA 2000); resolução por inscrição imobiliária (lote/Cadastro Multifinalitário — contrato pronto, binding trocado na Fase 13). HU-141 (simulação dentro da solicitação) reusa este service na Fase 8.
+- Nota operacional: cache Redis stale do `composer run dev` de longa duração pode causar __PHP_Incomplete_Class em DTOs após mudanças — `php artisan cache:clear` resolve. Avaliar invalidação de cache de DTOs entre deploys (Fase 13).
 
 ### Fase 5 (Motor de Regras da LOUOS) — concluída 2026-06-14
 

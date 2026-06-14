@@ -80,13 +80,13 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 
 ### EP07 — Consulta Prévia de Viabilidade
 
-- [ ] **HU-054**: Consultar viabilidade por endereço
-- [ ] **HU-055**: Consultar viabilidade por inscrição imobiliária
-- [ ] **HU-056**: Consultar viabilidade por CNAE
-- [ ] **HU-057**: Simular enquadramento da atividade
-- [ ] **HU-058**: Simular classificação de risco
-- [ ] **HU-059**: Simular restrições urbanísticas
-- [ ] **HU-060**: Consultar histórico de consultas
+- [x] **HU-054**: Consultar viabilidade por endereço
+- [~] **HU-055**: Consultar viabilidade por inscrição imobiliária — BLOQUEADA (lote/Cadastro pendente SEDUR; contrato pronto)
+- [x] **HU-056**: Consultar viabilidade por CNAE
+- [x] **HU-057**: Simular enquadramento da atividade
+- [x] **HU-058**: Simular classificação de risco
+- [x] **HU-059**: Simular restrições urbanísticas
+- [x] **HU-060**: Consultar histórico de consultas
 
 ### EP08 — Solicitação de Viabilidade
 
@@ -268,13 +268,13 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-051 | Fase 6 | Complete (EP06 2026-06-14) |
 | HU-052 | Fase 6 | Complete (EP06 2026-06-14) |
 | HU-053 | Fase 6 | Complete (EP06 2026-06-14) |
-| HU-054 | Fase 7 | Pending |
-| HU-055 | Fase 7 | Pending |
-| HU-056 | Fase 7 | Pending |
-| HU-057 | Fase 7 | Pending |
-| HU-058 | Fase 7 | Pending |
-| HU-059 | Fase 7 | Pending |
-| HU-060 | Fase 7 | Pending |
+| HU-054 | Fase 7 | Complete (EP07 2026-06-14) |
+| HU-055 | Fase 7 | Blocked — pendente SEDUR (lote/Cadastro; contrato pronto) |
+| HU-056 | Fase 7 | Complete (EP07 2026-06-14) |
+| HU-057 | Fase 7 | Complete (EP07 2026-06-14) |
+| HU-058 | Fase 7 | Complete (EP07 2026-06-14) |
+| HU-059 | Fase 7 | Complete (EP07 2026-06-14) |
+| HU-060 | Fase 7 | Complete (EP07 2026-06-14) |
 | HU-061 | Fase 8 | Pending |
 | HU-062 | Fase 8 | Pending |
 | HU-063 | Fase 8 | Pending |

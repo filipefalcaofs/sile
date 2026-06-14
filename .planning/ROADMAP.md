@@ -43,7 +43,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 4: Georreferenciamento e Território** — Geocodificação, zona, via, lote, bairro e restrições (EP04) — concluída em 2026-06-13 (verificação: passed 5/5; suíte 448/448 SQLite + 15/15 @group postgis; geocodificação Nominatim e consulta espacial reais). ESCOPO HONESTO: bairro/via/restrições entregues com dado público real do GeoSalvador; **zona urbanística (HU-031) e lote cadastral (HU-033) BLOQUEADOS pendente SEDUR** (sem fonte vetorial pública — comunicados na UI, nunca inventados). A zona é insumo crítico da Fase 5.
 - [x] **Phase 5: Motor de Regras da LOUOS** — Quadros 7/10/11/11A como dados versionados + motor de enquadramento (EP05 + HU-015 a HU-018) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 600/600 SQLite + 15/15 @group postgis; motor real decidindo permitido/não permitido/pendente). ESCOPO HONESTO: Quadro 7 (área) entregue com seed real da Lei 9.148/2016; **Quadro 10 (permissão por zona) degrada para "pendente" sem a zona — BLOQUEADO pendente SEDUR (SIGIS/CA 2000)**; Quadros 11/11A parciais (atributo viário LOUOS pendente). Reusa rule_versions (Fase 6); sandbox HU-143 com 4 olhos.
 - [x] **Phase 6: Classificação de Risco** — Risco por CNAE com condicionante-pergunta reclassificadora (EP06 + HU-019, HU-020) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 519/519 SQLite + 15/15 @group postgis; motor real classificando sobre o Decreto 32.636/2020 com encaminhamento parametrizável e auditoria). Regras como dados versionados (rule_versions — infra herdada pela Fase 5)
-- [ ] **Phase 7: Consulta Prévia de Viabilidade** — Simulação consumindo território + motores (EP07)
+- [x] **Phase 7: Consulta Prévia de Viabilidade** — Simulação consumindo território + motores (EP07) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 657/657 SQLite + 15/15 @group postgis; comando viabilidade:consultar com geocode real). PRIMEIRO fluxo de decisão de ponta a ponta: orquestra território (4) + LOUOS (5) + risco (6) e PROPAGA o veredito (não recomputa). Honesto: risco/Quadro 7/restrições reais; veredito locacional fica "pendente" sem a zona (bloqueada SEDUR); inscrição imobiliária bloqueada atrás do contrato PropertyRegistryLookup.
 - [ ] **Phase 8: Solicitação de Viabilidade** — Processo formal: criação, documentos, protocolo (EP08)
 - [ ] **Phase 9: Fluxo Expresso** — Deferimento/indeferimento automático, Regin + SEFAZ, prazo BAP (EP09 + HU-134)
 - [ ] **Phase 10: Análise Técnica SEDUR** — Fila com SLA, ficha pré-analisada pelo motor, precedentes, malha fina, TVL PDF backoffice (EP10 + HU-132/135/136/140/142/144)
@@ -253,16 +253,16 @@ Plans:
 **Plans**: 10 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — Fundação: parâmetros toggle/throttle + RateLimiter + fallbacks + 2 testes de seeder (33→35) (wave 1)
-- [ ] 07-02-PLAN.md — HU-055: contrato PropertyRegistryLookup (inscrição bloqueada) + provider indisponível + binding (wave 1, ‖ 07-01)
-- [ ] 07-03-PLAN.md — HU-060: persistência viability_queries (tabela imutável + model + factory) (wave 1, ‖ 07-01)
-- [ ] 07-04-PLAN.md — DTOs ConsultaViabilidadeInput/Result (veredito propagado + versoes de todas as regras) (wave 1, ‖ 07-01)
-- [ ] 07-05-PLAN.md — ConsultaViabilidadeService: orquestra Geocoder→Território→LOUOS→Risco; propaga degradação; audita (HU-054/056/055) (wave 2)
-- [ ] 07-06-PLAN.md — Controller público + rotas + requests + throttle + toggle + render JSON (HU-054/055/056) (wave 3)
-- [ ] 07-07-PLAN.md — HU-060: persistência quando autenticado + listagem escopada ao dono (wave 4)
-- [ ] 07-08-PLAN.md — UI pública: 3 entradas + mapa reusado + resultado honesto (HU-054/055/056/057/058/059) (wave 4, ‖ 07-07)
-- [ ] 07-09-PLAN.md — HU-060 UI: página do histórico autenticado + navegação (wave 5)
-- [ ] 07-10-PLAN.md — Golden cases de consulta + comando viabilidade:consultar + verificação integral (checkpoint) (wave 6)
+- [x] 07-01-PLAN.md — Fundação: parâmetros toggle/throttle + RateLimiter + fallbacks + 2 testes de seeder (33→35) (wave 1)
+- [x] 07-02-PLAN.md — HU-055: contrato PropertyRegistryLookup (inscrição bloqueada) + provider indisponível + binding (wave 1, ‖ 07-01)
+- [x] 07-03-PLAN.md — HU-060: persistência viability_queries (tabela imutável + model + factory) (wave 1, ‖ 07-01)
+- [x] 07-04-PLAN.md — DTOs ConsultaViabilidadeInput/Result (veredito propagado + versoes de todas as regras) (wave 1, ‖ 07-01)
+- [x] 07-05-PLAN.md — ConsultaViabilidadeService: orquestra Geocoder→Território→LOUOS→Risco; propaga degradação; audita (HU-054/056/055) (wave 2)
+- [x] 07-06-PLAN.md — Controller público + rotas + requests + throttle + toggle + render JSON (HU-054/055/056) (wave 3)
+- [x] 07-07-PLAN.md — HU-060: persistência quando autenticado + listagem escopada ao dono (wave 4)
+- [x] 07-08-PLAN.md — UI pública: 3 entradas + mapa reusado + resultado honesto (HU-054/055/056/057/058/059) (wave 4, ‖ 07-07)
+- [x] 07-09-PLAN.md — HU-060 UI: página do histórico autenticado + navegação (wave 5)
+- [x] 07-10-PLAN.md — Golden cases de consulta + comando viabilidade:consultar + verificação integral (checkpoint) (wave 6)
 
 ### Phase 8: Solicitação de Viabilidade
 **Goal**: Requerente cria, instrui e protocola a solicitação formal de viabilidade que alimentará o fluxo expresso e a análise técnica.
@@ -434,7 +434,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 4. Georreferenciamento e Território | 8/8 | Complete (zona/lote bloqueados — pendente SEDUR) | 2026-06-13 |
 | 5. Motor de Regras da LOUOS | 9/9 | Complete (Quadro 10/zona pendente SEDUR) | 2026-06-14 |
 | 6. Classificação de Risco | 9/9 | Complete | 2026-06-14 |
-| 7. Consulta Prévia de Viabilidade | 0/10 | Planned | - |
+| 7. Consulta Prévia de Viabilidade | 10/10 | Complete (veredito locacional/inscrição pendentes SEDUR) | 2026-06-14 |
 | 8. Solicitação de Viabilidade | 0/TBD | Not started | - |
 | 9. Fluxo Expresso | 0/TBD | Not started | - |
 | 10. Análise Técnica SEDUR | 0/TBD | Not started | - |
