@@ -52,11 +52,46 @@ class DuplicateRequestDetector
             return null;
         }
 
+        return $this->toArray($previous);
+    }
+
+    /**
+     * Duplicidade por REFERÊNCIA EXTERNA (BAP/Regin) — HU-148 RN-004: o mesmo
+     * identificador externo mapeia para UM único processo, logo a vinculação
+     * posterior não pode duplicar. Diferente da reincidência por CNPJ (alerta,
+     * direito de petição), aqui o vínculo repetido é bloqueado pelo chamador.
+     * Retorna o processo não cancelado que já carrega a referência, ou null.
+     *
+     * @return array{request_id: int, protocol_number: string|null, status: string, created_at: string|null}|null
+     */
+    public function detectByExternalReference(string $externalReference, ?int $excludeRequestId = null): ?array
+    {
+        $reference = trim($externalReference);
+
+        if ($reference === '') {
+            return null;
+        }
+
+        $existing = ViabilityRequest::query()
+            ->where('external_reference', $reference)
+            ->where('status', '!=', ViabilityRequestStatus::Cancelada->value)
+            ->when($excludeRequestId !== null, fn ($query) => $query->whereKeyNot($excludeRequestId))
+            ->latest()
+            ->first();
+
+        return $existing === null ? null : $this->toArray($existing);
+    }
+
+    /**
+     * @return array{request_id: int, protocol_number: string|null, status: string, created_at: string|null}
+     */
+    private function toArray(ViabilityRequest $request): array
+    {
         return [
-            'request_id' => $previous->id,
-            'protocol_number' => $previous->protocol_number,
-            'status' => $previous->status->value,
-            'created_at' => $previous->created_at?->toISOString(),
+            'request_id' => $request->id,
+            'protocol_number' => $request->protocol_number,
+            'status' => $request->status->value,
+            'created_at' => $request->created_at?->toISOString(),
         ];
     }
 }

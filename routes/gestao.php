@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\CnaeController;
+use App\Http\Controllers\Gestao\ContingenciaController;
 use App\Http\Controllers\Gestao\DashboardController;
 use App\Http\Controllers\Gestao\DocumentRequirementController;
 use App\Http\Controllers\Gestao\EmailLogController;
@@ -149,5 +150,17 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [ViabilityServiceTypeController::class, 'store'])->name('store');
             Route::put('{serviceType}', [ViabilityServiceTypeController::class, 'update'])->name('update');
             Route::put('{serviceType}/ativacao', [ViabilityServiceTypeController::class, 'toggleActivation'])->name('ativacao.update');
+        });
+
+        // Registro em contingência (HU-148): canal de operador na retaguarda e o
+        // caminho REAL de operação enquanto o contrato Regin não chega (Fase 13).
+        // Protocola pelo MESMO motor do canal normal (ProtocolarSolicitacaoService),
+        // sem atalho decisório — muda só a origem (`contingencia`, auditada) e o
+        // ator (operador). A busca de CNAEs do picker reusa o CnaeSearchController
+        // (só ativos), como em requisitos-documentais.
+        Route::middleware('permission:registrar-contingencia')->prefix('contingencia')->name('contingencia.')->group(function () {
+            Route::get('/', [ContingenciaController::class, 'create'])->name('create');
+            Route::get('cnaes-disponiveis', CnaeSearchController::class)->name('cnaes-disponiveis');
+            Route::post('/', [ContingenciaController::class, 'store'])->name('store');
         });
     });
