@@ -24,6 +24,8 @@ return [
         'govbr_login' => false,
         'geocoding' => true,
         'consulta_viabilidade' => true,
+        'solicitacao_viabilidade' => true,
+        'simulacao_solicitacao' => true,
     ],
     // Chaves pt-BR (geo.*, retencao.*, seguranca.*) espelham os parâmetros
     // HU-014 de mesmo nome — Settings::get lê config("sile.{chave}") no
@@ -58,11 +60,29 @@ return [
         'vagas' => ['exigencia_por_grupo' => []],
         'sandbox' => ['amostra_padrao' => 50],
     ],
+    // Espelha os parâmetros HU-014 solicitacao.* e storage.documentos.* (Fase 8).
+    // Settings::get lê config("sile.solicitacao.*") / config("sile.storage.*") no
+    // fallback (banco indisponível). mime_permitidos é o ARRAY já decodificado —
+    // typedValue() do parâmetro json também devolve array. O disk dos documentos
+    // NUNCA é público (precedente de LGPD/anexos).
+    'solicitacao' => [
+        'cnaes_complementares' => ['max' => 99],
+        'protocolo' => ['prefixo' => 'VIA', 'padding' => 6],
+        'consulta_publica' => ['assinatura_ttl_dias' => 30],
+        'anexos' => ['max_mb' => 10, 'mime_permitidos' => ['application/pdf', 'image/jpeg', 'image/png']],
+        'area_poligono' => ['tolerancia_percentual' => 10],
+        'prazo_estimado_dias' => 30,
+        'atendimento' => ['expiracao_minutos' => 30],
+    ],
+    'storage' => [
+        'documentos' => ['disk' => 'local'],
+    ],
     'seguranca' => [
         'throttle' => [
             'cnpj_lookup' => ['por_minuto' => 30],
             'geocoding' => ['por_minuto' => 60],
             'consulta_viabilidade' => ['por_minuto' => 20],
+            'consulta_protocolo' => ['por_minuto' => 30],
         ],
     ],
     'integrations' => [

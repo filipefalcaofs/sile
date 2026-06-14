@@ -285,6 +285,100 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
                 'description' => 'Limite de consultas de viabilidade por minuto por usuário/IP no portal',
             ],
+            'features.solicitacao_viabilidade' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a solicitação de viabilidade no portal do cidadão',
+            ],
+            'features.simulacao_solicitacao' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a simulação de viabilidade dentro do formulário de solicitação (HU-141; orientativa, não bloqueia)',
+            ],
+            'solicitacao.cnaes_complementares.max' => [
+                'group' => 'solicitacao',
+                'type' => 'integer',
+                'default_value' => '99',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:99'],
+                'description' => 'Máximo de CNAEs complementares por solicitação',
+            ],
+            'solicitacao.protocolo.prefixo' => [
+                'group' => 'solicitacao',
+                'type' => 'string',
+                'default_value' => 'VIA',
+                'validation_rules' => ['required', 'string', 'max:10'],
+                'description' => 'Prefixo do número de protocolo da viabilidade ({prefixo}-AAAA-NNNNNN) — formato oficial a confirmar SEDUR',
+            ],
+            'solicitacao.protocolo.padding' => [
+                'group' => 'solicitacao',
+                'type' => 'integer',
+                'default_value' => '6',
+                'validation_rules' => ['required', 'integer', 'min:4', 'max:10'],
+                'description' => 'Quantidade de dígitos da sequência do número de protocolo',
+            ],
+            'solicitacao.consulta_publica.assinatura_ttl_dias' => [
+                'group' => 'solicitacao',
+                'type' => 'integer',
+                'default_value' => '30',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
+                'description' => 'Validade (dias) do link assinado de consulta pública de protocolo (HU-069)',
+            ],
+            'solicitacao.anexos.max_mb' => [
+                'group' => 'solicitacao',
+                'type' => 'integer',
+                'default_value' => '10',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:100'],
+                'description' => 'Tamanho máximo (MB) por documento anexado à solicitação',
+            ],
+            'solicitacao.anexos.mime_permitidos' => [
+                'group' => 'solicitacao',
+                'type' => 'json',
+                'default_value' => '["application/pdf","image/jpeg","image/png"]',
+                'validation_rules' => ['required', 'json'],
+                'description' => 'Tipos de arquivo aceitos no anexo de documentos da solicitação',
+            ],
+            // O key usa o domínio técnico 'storage' mas pertence ao grupo de
+            // negócio 'solicitacao' (key ≠ group é a norma — security.* fica em
+            // 'seguranca'): é o disk dos documentos da solicitação.
+            'storage.documentos.disk' => [
+                'group' => 'solicitacao',
+                'type' => 'string',
+                'default_value' => 'local',
+                'validation_rules' => ['required', 'string', 'max:50'],
+                'description' => 'Disk de armazenamento dos documentos da solicitação (local, s3...) — nunca disk público',
+            ],
+            'solicitacao.area_poligono.tolerancia_percentual' => [
+                'group' => 'solicitacao',
+                'type' => 'integer',
+                'default_value' => '10',
+                'validation_rules' => ['required', 'integer', 'min:0', 'max:100'],
+                'description' => 'Tolerância (%) entre a área declarada e a área do polígono antes de alertar (HU-063 RN-004; alerta, não bloqueia)',
+            ],
+            'solicitacao.prazo_estimado_dias' => [
+                'group' => 'solicitacao',
+                'type' => 'integer',
+                'default_value' => '30',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
+                'description' => 'Prazo estimado (dias) exibido na consulta de protocolo — ressalva de estimativa; medição real depende da HU-129/Fase 15',
+            ],
+            'solicitacao.atendimento.expiracao_minutos' => [
+                'group' => 'solicitacao',
+                'type' => 'integer',
+                'default_value' => '30',
+                'validation_rules' => ['required', 'integer', 'min:5', 'max:240'],
+                'description' => 'Expiração (minutos) do vínculo de atendimento presencial assistido (HU-150)',
+            ],
+            'seguranca.throttle.consulta_protocolo.por_minuto' => [
+                'group' => 'seguranca',
+                'type' => 'integer',
+                'default_value' => '30',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
+                'description' => 'Limite de consultas públicas de protocolo por minuto por IP/assinatura (HU-069)',
+            ],
         ];
     }
 }
