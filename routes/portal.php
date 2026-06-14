@@ -15,6 +15,7 @@ use App\Http\Controllers\Portal\ProcurationController;
 use App\Http\Controllers\Portal\RepresentationController;
 use App\Http\Controllers\Portal\SolicitacaoAtividadeController;
 use App\Http\Controllers\Portal\SolicitacaoController;
+use App\Http\Controllers\Portal\SolicitacaoDocumentoController;
 use App\Http\Controllers\Portal\SolicitacaoImovelController;
 use App\Http\Middleware\ResolveRepresentation;
 use Illuminate\Support\Facades\Route;
@@ -111,5 +112,14 @@ Route::middleware(['auth:web', 'verified'])
             // identifica o território (Fase 4) e valida área×polígono; só do dono
             // em rascunho (policy update).
             Route::put('solicitacoes/{solicitacao}/imovel', [SolicitacaoImovelController::class, 'update'])->name('solicitacoes.imovel');
+
+            // Documentos da solicitação (HU-066) — rotas com {solicitacao} DEPOIS
+            // das literais. Upload via Storage (disk parametrizado, nunca público)
+            // com sha256; download por STREAMING só do dono autenticado (LGPD);
+            // substituição/remoção só em rascunho. {documento} é validado contra a
+            // solicitação no controller (anti-IDOR).
+            Route::post('solicitacoes/{solicitacao}/documentos', [SolicitacaoDocumentoController::class, 'store'])->name('solicitacoes.documentos.store');
+            Route::get('solicitacoes/{solicitacao}/documentos/{documento}/download', [SolicitacaoDocumentoController::class, 'download'])->name('solicitacoes.documentos.download');
+            Route::delete('solicitacoes/{solicitacao}/documentos/{documento}', [SolicitacaoDocumentoController::class, 'destroy'])->name('solicitacoes.documentos.destroy');
         });
     });
