@@ -12,7 +12,9 @@ use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\Parameter;
 use App\Models\RiskClassification;
+use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
+use App\Models\SanitaryRiskClassification;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -45,6 +47,18 @@ class DatabaseSeederTest extends TestCase
             Activity::query()
                 ->where('log_name', 'risco')
                 ->where('event', 'importacao-classificacao-municipal')
+                ->exists()
+        );
+
+        // Classificação de risco sanitário (VISA): dimensão SEPARADA, versão
+        // vigente própria + 261 classificações e 67 condicionantes-pergunta.
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
+        $this->assertSame(261, SanitaryRiskClassification::query()->count());
+        $this->assertSame(67, RiskCondicionante::query()->count());
+        $this->assertTrue(
+            Activity::query()
+                ->where('log_name', 'risco')
+                ->where('event', 'importacao-classificacao-sanitaria')
                 ->exists()
         );
 
@@ -100,6 +114,9 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(29, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
+        $this->assertSame(261, SanitaryRiskClassification::query()->count());
+        $this->assertSame(67, RiskCondicionante::query()->count());
         $this->assertSame(3, Company::query()->count());
         $this->assertSame(
             2,
