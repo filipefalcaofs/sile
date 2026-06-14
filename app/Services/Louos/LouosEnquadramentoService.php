@@ -4,6 +4,7 @@ namespace App\Services\Louos;
 
 use App\Enums\ResultadoViabilidade;
 use App\Enums\RuleDomain;
+use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Support\Audit\AuditService;
@@ -31,6 +32,14 @@ class LouosEnquadramentoService
 
     private const MOTIVO_CONSOLIDADO_PENDENTE = 'Enquadramento por área realizado; permissão por zona e condições pela via ainda não avaliadas';
 
+    private const MOTIVO_ZONA_PENDENTE = 'Permissão por zona pendente da base oficial (SEDUR)';
+
+    private const MOTIVO_SEM_ENQUADRAMENTO = 'Sem enquadramento (Quadro 7) não há permissão a verificar';
+
+    private const MOTIVO_QUADRO10_SEM_VERSAO = 'Quadro 10 sem versão vigente';
+
+    private const MOTIVO_ZONA_SEM_REGRA = 'Combinação zona × grupo de uso sem regra no Quadro 10 vigente';
+
     public function __construct(private AuditService $audit) {}
 
     /**
@@ -45,7 +54,7 @@ class LouosEnquadramentoService
         $cnae = (string) preg_replace('/\D/', '', $input->cnaePrincipal);
 
         $quadro7 = $this->enquadrarQuadro7($cnae, $input->area, $input);
-        $quadro10 = $this->quadro10NaoAvaliado();
+        $quadro10 = $this->enquadrarQuadro10($quadro7, $input);
         $quadro11 = $this->quadro11NaoAvaliado();
         $quadro11a = $this->quadro11NaoAvaliado();
 
@@ -174,18 +183,135 @@ class LouosEnquadramentoService
     }
 
     /**
-     * Placeholder honesto do Quadro 10 (permissão por zona) — 05-04 substitui
-     * pela resolução real. Mantém o shape do contrato ({permissao,
-     * condicionante_ref}) com valores nulos.
+     * Dimensão QUADRO 10 (HU-039): permissão da atividade na zona. O motor
+     * RECEBE a zona do território (Fase 4) — não a consulta. Espelha a
+     * degradação do TerritoryService::isBlocked, mas sobre o dado recebido:
      *
+     * - Sem território OU zona não `identificado` (ex.: base de zoneamento
+     *   pendente SEDUR) → `indisponivel` SEM consultar a tabela nem inventar
+     *   permissão (anti-fachada).
+     * - Sem enquadramento (Quadro 7 não identificado) → `indisponivel`: não há
+     *   grupo de uso para verificar permissão.
+     * - Com zona e grupo de uso → resolve a versão do Quadro 10 e busca a
+     *   permissão por (zona × grupo de uso); ausente → `nao_encontrado`.
+     *
+     * @param  array<string, mixed>  $quadro7
      * @return array<string, mixed>
      */
-    private function quadro10NaoAvaliado(): array
+    private function enquadrarQuadro10(array $quadro7, EnquadramentoInput $input): array
     {
-        return $this->dimIndisponivel(self::MOTIVO_NAO_AVALIADA, null, [
-            'permissao' => null,
-            'condicionante_ref' => null,
+        $zona = $input->territory?->zona;
+
+        // Degradação honesta (anti-fachada): sem zona identificada o motor não
+        // consulta louos_quadro10_permissoes nem inventa permissão.
+        if ($zona === null || ($zona['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
+            return $this->dimIndisponivel(
+                $zona['motivo'] ?? self::MOTIVO_ZONA_PENDENTE,
+                null,
+                ['permissao' => null, 'condicionante_ref' => null, 'base_legal' => null],
+            );
+        }
+
+        // Pré-condição: sem grupo de uso (Quadro 7) não há o que permitir.
+        if (($quadro7['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
+            return $this->dimIndisponivel(
+                self::MOTIVO_SEM_ENQUADRAMENTO,
+                null,
+                ['permissao' => null, 'condicionante_ref' => null, 'base_legal' => null],
+            );
+        }
+
+        $version = $this->resolveVersion(RuleDomain::LouosQuadro10, $input);
+
+        if ($version === null) {
+            return $this->dimNaoEncontrado(
+                self::MOTIVO_QUADRO10_SEM_VERSAO,
+                null,
+                ['permissao' => null, 'condicionante_ref' => null, 'base_legal' => null],
+            );
+        }
+
+        $permissao = $this->buscarPermissaoQuadro10(
+            $version,
+            $this->zonaNome($zona),
+            $quadro7['grupo'] ?? null,
+            $quadro7['subgrupo'] ?? null,
+        );
+
+        if ($permissao === null) {
+            return $this->dimNaoEncontrado(
+                self::MOTIVO_ZONA_SEM_REGRA,
+                $version->version,
+                ['permissao' => null, 'condicionante_ref' => null, 'base_legal' => null],
+            );
+        }
+
+        return $this->dimIdentificado($version->version, [
+            'permissao' => $permissao->permissao->value,
+            'condicionante_ref' => $permissao->condicionante_ref,
+            'base_legal' => $permissao->base_legal,
         ]);
+    }
+
+    /**
+     * Nome da zona usado na busca do Quadro 10: o `nome` derivado pelo território
+     * tem precedência; senão as chaves usuais das propriedades da feição
+     * (atributo a confirmar com a base oficial da SEDUR). Null quando ausente —
+     * a busca degrada para `nao_encontrado`, nunca inventa zona.
+     *
+     * @param  array<string, mixed>  $zona
+     */
+    private function zonaNome(array $zona): ?string
+    {
+        $nome = $zona['nome'] ?? null;
+
+        if (is_string($nome) && $nome !== '') {
+            return $nome;
+        }
+
+        /** @var array<string, mixed> $propriedades */
+        $propriedades = $zona['propriedades'] ?? [];
+
+        foreach (['ZONA', 'zona', 'SIGLA_ZONA'] as $chave) {
+            $valor = $propriedades[$chave] ?? null;
+
+            if (is_string($valor) && $valor !== '') {
+                return $valor;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Busca a permissão do Quadro 10 por (versão, zona, grupo de uso). Quando o
+     * Quadro 7 traz subgrupo, prefere a regra do subgrupo específico, caindo para
+     * a regra geral do grupo (subgrupo vazio/nulo) — espelha o seed real.
+     */
+    private function buscarPermissaoQuadro10(
+        RuleVersion $version,
+        ?string $zona,
+        ?string $grupo,
+        ?string $subgrupo,
+    ): ?LouosQuadro10Permissao {
+        $base = fn (): Builder => LouosQuadro10Permissao::query()
+            ->where('rule_version_id', $version->getKey())
+            ->where('zona', $zona)
+            ->where('grupo_uso', $grupo);
+
+        if ($subgrupo !== null && $subgrupo !== '') {
+            $especifica = $base()->where('subgrupo', $subgrupo)->first();
+
+            if ($especifica !== null) {
+                return $especifica;
+            }
+        }
+
+        return $base()
+            ->where(function (Builder $query): void {
+                $query->whereNull('subgrupo')->orWhere('subgrupo', '');
+            })
+            ->first();
     }
 
     /**
