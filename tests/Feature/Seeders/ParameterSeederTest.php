@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(49, Parameter::query()->count());
+        $this->assertSame(56, Parameter::query()->count());
         $this->assertSame(
-            ['features', 'geo', 'integracoes', 'louos', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
+            ['expresso', 'features', 'geo', 'integracoes', 'louos', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -365,11 +365,74 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['rascunho', 'protocolada'], $estados->typedValue());
     }
 
+    public function test_seeder_registra_parametros_do_fluxo_expresso(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $toggle = Parameter::query()->where('key', 'features.fluxo_expresso')->first();
+        $this->assertNotNull($toggle);
+        $this->assertSame('features', $toggle->group);
+        $this->assertSame('boolean', $toggle->type);
+        $this->assertSame('1', $toggle->default_value);
+        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
+        $this->assertNull($toggle->value);
+
+        $notificacao = Parameter::query()->where('key', 'features.notificacao_resultado_expresso')->first();
+        $this->assertNotNull($notificacao);
+        $this->assertSame('features', $notificacao->group);
+        $this->assertSame('boolean', $notificacao->type);
+        $this->assertSame('1', $notificacao->default_value);
+        $this->assertSame(['required', 'boolean'], $notificacao->validation_rules);
+        $this->assertNull($notificacao->value);
+
+        $prazoBap = Parameter::query()->where('key', 'expresso.bap.prazo_horas')->first();
+        $this->assertNotNull($prazoBap);
+        $this->assertSame('expresso', $prazoBap->group);
+        $this->assertSame('integer', $prazoBap->type);
+        $this->assertSame('48', $prazoBap->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:720'], $prazoBap->validation_rules);
+        $this->assertNull($prazoBap->value);
+        $this->assertSame(48, $prazoBap->typedValue());
+
+        $assuntoDeferida = Parameter::query()->where('key', 'expresso.notificacao.assunto_deferida')->first();
+        $this->assertNotNull($assuntoDeferida);
+        $this->assertSame('expresso', $assuntoDeferida->group);
+        $this->assertSame('string', $assuntoDeferida->type);
+        $this->assertSame('Resultado da sua solicitação de viabilidade: deferida', $assuntoDeferida->default_value);
+        $this->assertSame(['required', 'string', 'max:150'], $assuntoDeferida->validation_rules);
+        $this->assertNull($assuntoDeferida->value);
+
+        $assuntoIndeferida = Parameter::query()->where('key', 'expresso.notificacao.assunto_indeferida')->first();
+        $this->assertNotNull($assuntoIndeferida);
+        $this->assertSame('expresso', $assuntoIndeferida->group);
+        $this->assertSame('string', $assuntoIndeferida->type);
+        $this->assertSame('Resultado da sua solicitação de viabilidade: indeferida', $assuntoIndeferida->default_value);
+        $this->assertSame(['required', 'string', 'max:150'], $assuntoIndeferida->validation_rules);
+        $this->assertNull($assuntoIndeferida->value);
+
+        $prefixoTvl = Parameter::query()->where('key', 'expresso.tvl.prefixo')->first();
+        $this->assertNotNull($prefixoTvl);
+        $this->assertSame('expresso', $prefixoTvl->group);
+        $this->assertSame('string', $prefixoTvl->type);
+        $this->assertSame('TVL', $prefixoTvl->default_value);
+        $this->assertSame(['required', 'string', 'max:10'], $prefixoTvl->validation_rules);
+        $this->assertNull($prefixoTvl->value);
+
+        $paddingTvl = Parameter::query()->where('key', 'expresso.tvl.padding')->first();
+        $this->assertNotNull($paddingTvl);
+        $this->assertSame('expresso', $paddingTvl->group);
+        $this->assertSame('integer', $paddingTvl->type);
+        $this->assertSame('6', $paddingTvl->default_value);
+        $this->assertSame(['required', 'integer', 'min:4', 'max:10'], $paddingTvl->validation_rules);
+        $this->assertNull($paddingTvl->value);
+        $this->assertSame(6, $paddingTvl->typedValue());
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(49, Parameter::query()->count());
+        $this->assertSame(56, Parameter::query()->count());
     }
 }

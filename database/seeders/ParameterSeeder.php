@@ -386,6 +386,55 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
                 'description' => 'Limite de consultas públicas de protocolo por minuto por IP/assinatura (HU-069)',
             ],
+            'features.fluxo_expresso' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita o deferimento/indeferimento automático (fluxo expresso); desligado, toda solicitação protocolada vai para análise técnica (degradação comunicada)',
+            ],
+            'features.notificacao_resultado_expresso' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a notificação por e-mail do resultado do fluxo expresso ao requerente (sem anexo de TVL; canais plenos no EP11)',
+            ],
+            'expresso.bap.prazo_horas' => [
+                'group' => 'expresso',
+                'type' => 'integer',
+                'default_value' => '48',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:720'],
+                'description' => 'Prazo (horas) sem BAP vinculado antes do indeferimento automático por prazo (HU-134; ativação bloqueada até o Regin — Fase 13)',
+            ],
+            'expresso.notificacao.assunto_deferida' => [
+                'group' => 'expresso',
+                'type' => 'string',
+                'default_value' => 'Resultado da sua solicitação de viabilidade: deferida',
+                'validation_rules' => ['required', 'string', 'max:150'],
+                'description' => 'Assunto do e-mail de notificação de deferimento (HU-077 RN-005)',
+            ],
+            'expresso.notificacao.assunto_indeferida' => [
+                'group' => 'expresso',
+                'type' => 'string',
+                'default_value' => 'Resultado da sua solicitação de viabilidade: indeferida',
+                'validation_rules' => ['required', 'string', 'max:150'],
+                'description' => 'Assunto do e-mail de notificação de indeferimento (HU-077 RN-005)',
+            ],
+            'expresso.tvl.prefixo' => [
+                'group' => 'expresso',
+                'type' => 'string',
+                'default_value' => 'TVL',
+                'validation_rules' => ['required', 'string', 'max:10'],
+                'description' => 'Prefixo do número de produto TVL do deferimento ({prefixo}-AAAA-NNNNNN) — numeração oficial do SAPS a confirmar SEDUR',
+            ],
+            'expresso.tvl.padding' => [
+                'group' => 'expresso',
+                'type' => 'integer',
+                'default_value' => '6',
+                'validation_rules' => ['required', 'integer', 'min:4', 'max:10'],
+                'description' => 'Quantidade de dígitos da sequência do número de produto TVL',
+            ],
         ];
     }
 }
