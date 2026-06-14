@@ -17,6 +17,7 @@ use App\Services\Rules\RuleVersionService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -44,6 +45,16 @@ class LouosSandboxTest extends TestCase
     private function sandbox(): LouosSandboxSimulationService
     {
         return app(LouosSandboxSimulationService::class);
+    }
+
+    private function administrador(): User
+    {
+        return User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+    }
+
+    private function analista(): User
+    {
+        return User::factory()->analista()->withAcceptedLgpdTerm()->create();
     }
 
     /**
@@ -276,5 +287,111 @@ class LouosSandboxTest extends TestCase
         $this->assertSame(0, Activity::query()->where('event', 'publicacao-versao')->count());
 
         Notification::assertNothingSent();
+    }
+
+    public function test_gestor_simula_pela_rota_sem_publicar(): void
+    {
+        // CA-01: o gestor simula pela rota e recebe o relatório; a versão vigente
+        // permanece intacta (a rota simula, não publica).
+        $author = User::factory()->create();
+
+        $this->seedQuadro7Vigente([
+            ['cnae' => '4712100', 'grupo' => 'nR1', 'area_min' => 0, 'area_max' => 350],
+        ]);
+        $q10Vigente = $this->seedQuadro10Vigente([
+            ['zona' => 'ZPR-1', 'grupo_uso' => 'nR1', 'permissao' => Quadro10Permissao::Permitido],
+        ]);
+        $this->abrirRascunhoQuadro10('q10-rascunho', $author->id, [
+            'zona' => 'ZPR-1', 'grupo_uso' => 'nR1', 'permissao' => Quadro10Permissao::Proibido,
+        ]);
+
+        $this->actingAs($this->administrador(), 'gestao')
+            ->post('/gestao/louos/simulacao', [
+                'quadro' => 'quadro10',
+                'versao_rascunho' => 'q10-rascunho',
+            ])
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/louos/sandbox')
+                ->where('simulacao.dominio', 'louos_quadro10')
+                ->where('simulacao.versao_rascunho', 'q10-rascunho')
+                ->where('simulacao.mudariam', 1)
+                ->has('simulacao.divergencias', 1));
+
+        // vigente intacta: mesma versão, sem nova versão promovida
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro10)->firstOrFail();
+        $this->assertSame($q10Vigente->id, $vigente->id);
+        $this->assertSame('q10-vigente', $vigente->version);
+    }
+
+    public function test_publicar_exige_quatro_olhos(): void
+    {
+        // RN-005 (HU-046/HU-053): autor = publicador é bloqueado (flash.error) e
+        // o rascunho segue rascunho; publicador distinto promove a nova vigente.
+        $autor = $this->administrador();
+        $publicador = $this->administrador();
+
+        $this->seedQuadro7Vigente([
+            ['cnae' => '4712100', 'grupo' => 'nR1', 'area_min' => 0, 'area_max' => 350],
+        ]);
+        $this->seedQuadro10Vigente([
+            ['zona' => 'ZPR-1', 'grupo_uso' => 'nR1', 'permissao' => Quadro10Permissao::Permitido],
+        ]);
+        $draft = $this->abrirRascunhoQuadro10('q10-rascunho', $autor->id, [
+            'zona' => 'ZPR-1', 'grupo_uso' => 'nR1', 'permissao' => Quadro10Permissao::Proibido,
+        ]);
+
+        // autor = publicador → bloqueio de quatro olhos, rascunho preservado
+        $this->actingAs($autor, 'gestao')
+            ->put('/gestao/louos/simulacao/publicar', [
+                'quadro' => 'quadro10',
+                'versao_rascunho' => 'q10-rascunho',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertSame(RuleVersionStatus::Rascunho, $draft->fresh()->status);
+        $this->assertSame('q10-vigente', RuleVersion::vigente(RuleDomain::LouosQuadro10)->firstOrFail()->version);
+
+        // publicador distinto → nova versão vigente
+        $this->actingAs($publicador, 'gestao')
+            ->put('/gestao/louos/simulacao/publicar', [
+                'quadro' => 'quadro10',
+                'versao_rascunho' => 'q10-rascunho',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro10)->firstOrFail();
+        $this->assertSame('q10-rascunho', $vigente->version);
+        $this->assertSame(RuleVersionStatus::Vigente, $vigente->status);
+    }
+
+    public function test_simulacao_sem_permissao_manter_louos_bloqueada(): void
+    {
+        // CA-04: simular/publicar é manutenção (manter-louos). O analista consulta
+        // os Quadros mas NÃO mantém — é bloqueado (403) no sandbox.
+        $author = User::factory()->create();
+
+        $this->seedQuadro7Vigente([
+            ['cnae' => '4712100', 'grupo' => 'nR1', 'area_min' => 0, 'area_max' => 350],
+        ]);
+        $this->seedQuadro10Vigente([
+            ['zona' => 'ZPR-1', 'grupo_uso' => 'nR1', 'permissao' => Quadro10Permissao::Permitido],
+        ]);
+        $this->abrirRascunhoQuadro10('q10-rascunho', $author->id);
+
+        $analista = $this->analista();
+
+        $this->actingAs($analista, 'gestao')
+            ->get('/gestao/louos/simulacao')
+            ->assertForbidden();
+
+        $this->actingAs($analista, 'gestao')
+            ->post('/gestao/louos/simulacao', [
+                'quadro' => 'quadro10',
+                'versao_rascunho' => 'q10-rascunho',
+            ])
+            ->assertForbidden();
     }
 }

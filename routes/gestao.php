@@ -7,6 +7,7 @@ use App\Http\Controllers\Gestao\EmailLogController;
 use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\LouosController;
+use App\Http\Controllers\Gestao\LouosSandboxController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\RiscoCondicionanteController;
 use App\Http\Controllers\Gestao\RiscoController;
@@ -112,5 +113,13 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
 
         Route::middleware('permission:manter-louos')->prefix('louos')->name('louos.')->group(function () {
             Route::put('publicar', [LouosController::class, 'publish'])->name('publicar');
+
+            // Sandbox de parametrização (HU-143): simular o impacto de um rascunho
+            // contra cenários reais antes de publicar por quatro olhos. Simular e
+            // publicar são manutenção (manter-louos). GET e POST compartilham o
+            // caminho `simulacao` (um refresh recai na consulta sem o relatório).
+            Route::get('simulacao', [LouosSandboxController::class, 'index'])->name('sandbox.index');
+            Route::post('simulacao', [LouosSandboxController::class, 'simulate'])->name('sandbox.simular');
+            Route::put('simulacao/publicar', [LouosSandboxController::class, 'publish'])->name('sandbox.publicar');
         });
     });
