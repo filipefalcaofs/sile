@@ -23,10 +23,12 @@ use App\Support\Audit\AuditService;
 class ViabilityRequestStateMachine
 {
     /**
-     * Transições ativas, por valor de estado. O EP09 (fluxo expresso) só
-     * ADICIONA as saídas de decisão de protocolada e a antessala aguardando_bap
-     * (HU-134) — sem tocar nas entradas da Fase 8 (rascunho/protocolada→cancelada
-     * seguem intactas). A decisão (deferida/indeferida) é final: não há saída.
+     * Transições ativas, por valor de estado. O EP09 (fluxo expresso) ADICIONOU
+     * as saídas de decisão de protocolada e a antessala aguardando_bap (HU-134);
+     * o EP10 (análise técnica) ADICIONA as saídas da análise humana — em_analise
+     * abre pendência (HU-083/084) ou decide (HU-086/087) e em_pendencia retorna à
+     * análise — sem tocar nas entradas das Fases 8/9. A decisão (deferida/
+     * indeferida) é FINAL: não há saída (= encerramento HU-089).
      *
      * @var array<string, list<string>>
      */
@@ -34,6 +36,8 @@ class ViabilityRequestStateMachine
         'rascunho' => ['protocolada', 'cancelada'],
         'protocolada' => ['cancelada', 'em_analise', 'deferida', 'indeferida', 'aguardando_bap'],
         'aguardando_bap' => ['deferida', 'indeferida', 'em_analise'],
+        'em_analise' => ['em_pendencia', 'deferida', 'indeferida'],
+        'em_pendencia' => ['em_analise'],
     ];
 
     public function __construct(private AuditService $audit) {}
