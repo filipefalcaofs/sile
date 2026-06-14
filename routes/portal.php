@@ -14,6 +14,7 @@ use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\GovBrLoginController;
 use App\Http\Controllers\Portal\HistoricoConsultaController;
 use App\Http\Controllers\Portal\LgpdTermController;
+use App\Http\Controllers\Portal\PendenciaRespostaController;
 use App\Http\Controllers\Portal\ProcurationController;
 use App\Http\Controllers\Portal\ProtocoloController;
 use App\Http\Controllers\Portal\RepresentationController;
@@ -175,5 +176,15 @@ Route::middleware(['auth:web', 'verified'])
             // (solicitacao.cancelamento.estados_cancelaveis); fora deles, bloqueia
             // com aviso e audita.
             Route::delete('solicitacoes/{solicitacao}', [CancelamentoSolicitacaoController::class, 'destroy'])->name('solicitacoes.cancelar');
+
+            // Pendências da análise técnica (HU-083/084) — resposta do requerente
+            // pelo portal. Rotas com {solicitacao} DEPOIS das literais (padrão
+            // 08-11). Escopo do dono/representado (ViabilityRequestPolicy::view)
+            // no controller; a pendência {pendency} é validada contra a solicitação
+            // (anti-IDOR). Responder reabre a análise (em_pendencia→em_analise) via
+            // PendenciaService; o convite via Simplifica/Regin e os canais plenos
+            // ficam para o EP11 (este é o ciclo interno REAL: portal + e-mail).
+            Route::get('solicitacoes/{solicitacao}/pendencias', [PendenciaRespostaController::class, 'show'])->name('solicitacoes.pendencias');
+            Route::post('solicitacoes/{solicitacao}/pendencias/{pendency}/responder', [PendenciaRespostaController::class, 'responder'])->name('solicitacoes.pendencias.responder');
         });
     });
