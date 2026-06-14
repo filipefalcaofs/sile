@@ -12,6 +12,7 @@ use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\LouosController;
 use App\Http\Controllers\Gestao\LouosSandboxController;
 use App\Http\Controllers\Gestao\ParameterController;
+use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RiscoCondicionanteController;
 use App\Http\Controllers\Gestao\RiscoController;
 use App\Http\Controllers\Gestao\RoleController;
@@ -164,6 +165,17 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('/', [ContingenciaController::class, 'create'])->name('create');
             Route::get('cnaes-disponiveis', CnaeSearchController::class)->name('cnaes-disponiveis');
             Route::post('/', [ContingenciaController::class, 'store'])->name('store');
+        });
+
+        // Resultado do fluxo expresso (HU-076/HU-078): consulta da decisão
+        // automática (deferida/indeferida) na retaguarda — lista filtrável e
+        // detalhe imutável da ViabilityDecision. REUSO da permissão
+        // consultar-solicitacoes: a decisão é parte da solicitação, então NÃO se
+        // cria permissão nova (permanecem 19; decisão a validar com a SEDUR).
+        // Somente leitura — a decisão é append-only (09-02/09-05).
+        Route::middleware('permission:consultar-solicitacoes')->prefix('resultados-expresso')->name('resultados-expresso.')->group(function () {
+            Route::get('/', [ResultadoExpressoController::class, 'index'])->name('index');
+            Route::get('{viabilityRequest}', [ResultadoExpressoController::class, 'show'])->name('show');
         });
 
         // Atendimento presencial assistido (HU-150): canal de operador de balcão.
