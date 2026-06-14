@@ -197,5 +197,13 @@ class FortifyServiceProvider extends ServiceProvider
                 (int) Settings::get('seguranca.throttle.consulta_viabilidade.por_minuto', 20),
             )->by($request->user()?->id ?: $request->ip());
         });
+
+        // Throttle da consulta PÚBLICA de protocolo por link assinado (HU-069) —
+        // limite administrável sem deploy; espelha consulta-viabilidade (EP07).
+        RateLimiter::for('consulta-protocolo', function (Request $request) {
+            return Limit::perMinute(
+                (int) Settings::get('seguranca.throttle.consulta_protocolo.por_minuto', 30),
+            )->by($request->user()?->id ?: $request->ip());
+        });
     }
 }
