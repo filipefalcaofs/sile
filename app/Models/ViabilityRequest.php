@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 #[Fillable([
     'origin',
-    'service_type_id', 'company_id', 'requester_user_id', 'created_by_user_id',
+    'service_type_id', 'company_id', 'requester_user_id', 'created_by_user_id', 'assisted_attendance_id',
     'used_area_m2', 'property_registration',
     'address_street', 'address_number', 'address_complement', 'address_neighborhood', 'address_zip', 'address_reference',
     'property_polygon_geojson',
@@ -120,6 +120,17 @@ class ViabilityRequest extends Model
     public function cancelledBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cancelled_by_user_id');
+    }
+
+    /**
+     * Atendimento presencial que originou a solicitação, quando aberta no balcão
+     * "em nome de" o cidadão (HU-150 RN-005 — dimensão balcão dos relatórios).
+     *
+     * @return BelongsTo<AssistedAttendance, $this>
+     */
+    public function assistedAttendance(): BelongsTo
+    {
+        return $this->belongsTo(AssistedAttendance::class);
     }
 
     /**
