@@ -13,6 +13,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -290,5 +291,21 @@ class ContingenciaTest extends TestCase
         $documento = $solicitacao->documents()->where('requirement_id', $requisito->id)->firstOrFail();
         $this->assertNotNull($documento->sha256);
         Storage::disk('local')->assertExists($documento->path);
+    }
+
+    public function test_operador_acessa_tela_de_contingencia(): void
+    {
+        // A tela do console existe e recebe os insumos do formulário oficial
+        // (tipos de serviço, requisitos documentais e configuração do mapa).
+        $operador = $this->operador();
+
+        $this->actingAs($operador, 'gestao')
+            ->get(route('gestao.contingencia.create'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/contingencia/create')
+                ->has('serviceTypes')
+                ->has('documentRequirements')
+                ->has('mapa'));
     }
 }

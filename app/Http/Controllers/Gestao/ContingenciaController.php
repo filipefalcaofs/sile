@@ -58,6 +58,13 @@ class ContingenciaController extends Controller
                 ->active()
                 ->orderBy('name')
                 ->get(['id', 'code', 'name', 'flow_hint']),
+            // Requisitos documentais ativos para a seção de anexos (mapeados por
+            // requirement_id). Hoje a tabela pode estar vazia (carga oficial
+            // pendente SEDUR, 08-16) — a tela degrada honesto.
+            'documentRequirements' => DocumentRequirement::query()
+                ->where('active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'required']),
             'mapa' => [
                 'centro' => ['lat' => -12.9714, 'lng' => -38.5014],
                 'zoom' => 13,

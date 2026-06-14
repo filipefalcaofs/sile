@@ -31,6 +31,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     icon: <UserCircleIcon />,
                     visible: auth.permissions.includes('atendimento-presencial'),
                 },
+                {
+                    name: 'Nova solicitação (contingência)',
+                    href: '/gestao/contingencia',
+                    icon: <FileIcon />,
+                    visible: auth.permissions.includes('registrar-contingencia'),
+                },
             ],
         },
         {
