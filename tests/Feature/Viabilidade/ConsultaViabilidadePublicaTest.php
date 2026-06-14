@@ -6,6 +6,7 @@ use App\Enums\GeoLayerType;
 use App\Models\Activity;
 use App\Models\GeoLayer;
 use App\Models\Parameter;
+use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
@@ -249,6 +250,104 @@ class ConsultaViabilidadePublicaTest extends TestCase
         $this->postJson('/portal/viabilidade/cnae', ['area' => 120])
             ->assertStatus(422)
             ->assertJsonValidationErrors('cnae');
+    }
+
+    public function test_consulta_por_inscricao_degrada_com_aviso_e_nunca_inventa_ponto(): void
+    {
+        // HU-055/CA-03: com o binding REAL (base de lotes pendente SEDUR), a
+        // resolução do ponto degrada para a via CNAE — o serviço captura a
+        // indisponibilidade e devolve 200 com o resultado degradado + aviso. O
+        // controller NÃO trata essa exceção (a consulta "funcionou", só não
+        // resolveu o ponto); NUNCA inventa coordenada.
+        $this->postJson('/portal/viabilidade/inscricao', [
+            'inscricao' => '123',
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+        ])
+            ->assertOk()
+            ->assertJsonPath('avisos.0', self::AVISO_INSCRICAO_INDISPONIVEL)
+            // Sem ponto inventado: geocode e território nulos no snapshot.
+            ->assertJsonPath('geocode', null)
+            ->assertJsonPath('territorio', null)
+            // Risco REAL presente e veredito pendente (sem análise territorial).
+            ->assertJsonPath('risco.municipal.status', 'classificado')
+            ->assertJsonPath('veredito_locacional.resultado', 'pendente');
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'viabilidade',
+            'event' => 'consulta',
+            'result' => 'sucesso',
+        ]);
+    }
+
+    public function test_inscricao_respeita_toggle(): void
+    {
+        // HU-014: o toggle desligado bloqueia também a via inscrição.
+        $this->seed(ParameterSeeder::class);
+        Parameter::query()
+            ->where('key', 'features.consulta_viabilidade')
+            ->first()
+            ->update(['value' => '0']);
+
+        $this->postJson('/portal/viabilidade/inscricao', [
+            'inscricao' => '123',
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+        ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'A consulta de viabilidade está temporariamente desativada. Tente novamente mais tarde.');
+    }
+
+    public function test_inscricao_invalida_e_rejeitada_sem_executar(): void
+    {
+        // FormRequest valida antes de orquestrar: inscrição/CNAE ausentes → 422.
+        $this->postJson('/portal/viabilidade/inscricao', ['area' => 120])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['inscricao', 'cnae']);
+    }
+
+    public function test_throttle_limita_consultas_publicas(): void
+    {
+        // HU-014: o limite por minuto é administrável sem deploy. Com 2/min, a 3ª
+        // consulta pública dentro da janela é bloqueada (429) — usa a via CNAE
+        // (sem geocoder/território), que exercita o mesmo middleware.
+        $this->seed(ParameterSeeder::class);
+        Parameter::query()
+            ->where('key', 'seguranca.throttle.consulta_viabilidade.por_minuto')
+            ->first()
+            ->update(['value' => '2']);
+
+        for ($i = 0; $i < 2; $i++) {
+            $this->postJson('/portal/viabilidade/cnae', [
+                'cnae' => self::CNAE_MINIMERCADO,
+                'area' => 120,
+            ])->assertOk();
+        }
+
+        $this->postJson('/portal/viabilidade/cnae', [
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+        ])->assertStatus(429);
+    }
+
+    public function test_consulta_anonima_nao_grava_historico(): void
+    {
+        // Anônima é AUDITADA (RN-002), mas NÃO gera histórico pessoal — a
+        // persistência só-quando-autenticado é do 07-07. Aqui garantimos que a
+        // consulta anônima não grava nenhuma linha em viability_queries.
+        $this->postJson('/portal/viabilidade/cnae', [
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+        ])->assertOk();
+
+        $this->assertSame(0, ViabilityQuery::count());
+
+        // ...mas foi auditada.
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'viabilidade',
+            'event' => 'consulta',
+            'result' => 'sucesso',
+        ]);
     }
 
     public function test_toggle_desligado_bloqueia_antes_de_executar(): void

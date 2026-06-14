@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\ConsultaViabilidadeCnaeRequest;
 use App\Http\Requests\Portal\ConsultaViabilidadeEnderecoRequest;
+use App\Http\Requests\Portal\ConsultaViabilidadeInscricaoRequest;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\GeocoderException;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
@@ -83,6 +84,29 @@ class ConsultaViabilidadeController extends Controller
         }
 
         $result = $this->service->consultarPorCnae(
+            $request->validated('cnae'),
+            $request->validated('area') !== null ? (float) $request->validated('area') : null,
+        );
+
+        return response()->json($result->toArray());
+    }
+
+    /**
+     * Consulta por INSCRIÇÃO imobiliária (HU-055): o serviço resolve o ponto pelo
+     * contrato (pipeline completa) OU degrada para a via CNAE com aviso quando a
+     * base de lotes está indisponível (pendente SEDUR). A degradação é comunicada
+     * via `avisos` no resultado (200) — não é erro HTTP: a consulta funcionou, só
+     * não resolveu o ponto. O serviço captura a indisponibilidade; o controller
+     * não trata exceção aqui (nunca inventa coordenada).
+     */
+    public function inscricao(ConsultaViabilidadeInscricaoRequest $request): JsonResponse
+    {
+        if ($bloqueio = $this->guardToggle()) {
+            return $bloqueio;
+        }
+
+        $result = $this->service->consultarPorInscricao(
+            $request->validated('inscricao'),
             $request->validated('cnae'),
             $request->validated('area') !== null ? (float) $request->validated('area') : null,
         );
