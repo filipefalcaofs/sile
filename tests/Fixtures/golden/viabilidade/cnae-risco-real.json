@@ -1,0 +1,16 @@
+{
+    "nome": "Consulta por CNAE roda risco e Quadro 7 reais sem avaliar o local",
+    "descricao": "CNAE 4712-1/00 (minimercado) com área 120 m² consultado SEM endereço/inscrição: o risco (Baixo Risco B no Decreto 32.636/2020) e o enquadramento por área (nR1 no Quadro 7) rodam reais, mas não há ponto nem território (tem_territorio false) — o veredito locacional fica pendente e a consulta avisa que não avalia o local. Prova que a via CNAE entrega o que pode (risco + área) sem inventar local nem veredito.",
+    "input": {
+        "tipo": "cnae",
+        "cnae": "4712-1/00",
+        "area": 120
+    },
+    "esperado": {
+        "veredito": "pendente",
+        "risco_municipal_status": "classificado",
+        "quadro7_status": "identificado",
+        "tem_territorio": false,
+        "avisos_contem": "não avalia o local"
+    }
+}
