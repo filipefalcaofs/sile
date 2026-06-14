@@ -250,7 +250,19 @@ Plans:
   1. Cidadão consulta a viabilidade por endereço, por inscrição imobiliária ou por CNAE, sem criar processo formal.
   2. Simulação retorna enquadramento, classificação de risco e restrições urbanísticas com fundamentação legal — executando os motores reais das Fases 5 e 6.
   3. Usuário autenticado consulta o histórico das próprias consultas.
-**Plans**: TBD
+**Plans**: 10 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Fundação: parâmetros toggle/throttle + RateLimiter + fallbacks + 2 testes de seeder (33→35) (wave 1)
+- [ ] 07-02-PLAN.md — HU-055: contrato PropertyRegistryLookup (inscrição bloqueada) + provider indisponível + binding (wave 1, ‖ 07-01)
+- [ ] 07-03-PLAN.md — HU-060: persistência viability_queries (tabela imutável + model + factory) (wave 1, ‖ 07-01)
+- [ ] 07-04-PLAN.md — DTOs ConsultaViabilidadeInput/Result (veredito propagado + versoes de todas as regras) (wave 1, ‖ 07-01)
+- [ ] 07-05-PLAN.md — ConsultaViabilidadeService: orquestra Geocoder→Território→LOUOS→Risco; propaga degradação; audita (HU-054/056/055) (wave 2)
+- [ ] 07-06-PLAN.md — Controller público + rotas + requests + throttle + toggle + render JSON (HU-054/055/056) (wave 3)
+- [ ] 07-07-PLAN.md — HU-060: persistência quando autenticado + listagem escopada ao dono (wave 4)
+- [ ] 07-08-PLAN.md — UI pública: 3 entradas + mapa reusado + resultado honesto (HU-054/055/056/057/058/059) (wave 4, ‖ 07-07)
+- [ ] 07-09-PLAN.md — HU-060 UI: página do histórico autenticado + navegação (wave 5)
+- [ ] 07-10-PLAN.md — Golden cases de consulta + comando viabilidade:consultar + verificação integral (checkpoint) (wave 6)
 
 ### Phase 8: Solicitação de Viabilidade
 **Goal**: Requerente cria, instrui e protocola a solicitação formal de viabilidade que alimentará o fluxo expresso e a análise técnica.
@@ -422,7 +434,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 4. Georreferenciamento e Território | 8/8 | Complete (zona/lote bloqueados — pendente SEDUR) | 2026-06-13 |
 | 5. Motor de Regras da LOUOS | 9/9 | Complete (Quadro 10/zona pendente SEDUR) | 2026-06-14 |
 | 6. Classificação de Risco | 9/9 | Complete | 2026-06-14 |
-| 7. Consulta Prévia de Viabilidade | 0/TBD | Not started | - |
+| 7. Consulta Prévia de Viabilidade | 0/10 | Planned | - |
 | 8. Solicitação de Viabilidade | 0/TBD | Not started | - |
 | 9. Fluxo Expresso | 0/TBD | Not started | - |
 | 10. Análise Técnica SEDUR | 0/TBD | Not started | - |
