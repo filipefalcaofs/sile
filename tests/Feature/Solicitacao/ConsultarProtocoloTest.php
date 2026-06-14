@@ -3,12 +3,16 @@
 namespace Tests\Feature\Solicitacao;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\TimelineSolicitacao;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
+use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 /**
@@ -39,6 +43,23 @@ class ConsultarProtocoloTest extends TestCase
     private function timeline(): TimelineSolicitacao
     {
         return app(TimelineSolicitacao::class);
+    }
+
+    /**
+     * Solicitação PROTOCOLADA de verdade (número único + transição real) cujo
+     * requerente é o usuário — caminho anti-fachada (sem inventar timeline).
+     */
+    private function protocoladaDoUsuario(User $user): ViabilityRequest
+    {
+        $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
+            'requester_user_id' => $user->id,
+            'created_by_user_id' => $user->id,
+            'used_area_m2' => 120.0,
+        ]);
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $user);
+
+        return $solicitacao->refresh();
     }
 
     public function test_timeline_reflete_as_transicoes_reais_em_linguagem_simples(): void
@@ -108,5 +129,101 @@ class ConsultarProtocoloTest extends TestCase
 
         $this->assertSame([], $timeline['etapas']);
         $this->assertNotEmpty($timeline['pendencias']);
+    }
+
+    public function test_dono_consulta_protocolo(): void
+    {
+        // CA-01: o dono autenticado consulta o protocolo e recebe a página com o
+        // número, o status em linguagem simples (publicLabel), a timeline real e
+        // o link público de acompanhamento.
+        $user = $this->portalUser();
+        $solicitacao = $this->protocoladaDoUsuario($user);
+
+        $this->actingAs($user)
+            ->get(route('portal.solicitacoes.show', $solicitacao))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('portal/solicitacoes/protocolo')
+                ->where('solicitacao.protocol_number', $solicitacao->protocol_number)
+                ->where('solicitacao.status.public_label', ViabilityRequestStatus::Protocolada->publicLabel())
+                ->has('timeline.etapas', 1)
+                ->where('timeline.status_atual.public_label', ViabilityRequestStatus::Protocolada->publicLabel())
+                ->has('publicLink')
+            );
+    }
+
+    public function test_timeline_em_linguagem_simples(): void
+    {
+        // RN-004/006: a página entrega a timeline em linguagem simples
+        // (publicLabel) e o rótulo técnico fica disponível ao dono autenticado.
+        $user = $this->portalUser();
+        $solicitacao = $this->protocoladaDoUsuario($user);
+
+        $this->actingAs($user)
+            ->get(route('portal.solicitacoes.show', $solicitacao))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('timeline.etapas.0.rotulo', ViabilityRequestStatus::Protocolada->publicLabel())
+                ->where('timeline.status_atual.label', ViabilityRequestStatus::Protocolada->label())
+            );
+    }
+
+    public function test_terceiro_nao_consulta(): void
+    {
+        // CA-04: terceiro não vê o protocolo de outro (403 auditado globalmente).
+        $owner = $this->portalUser();
+        $stranger = $this->portalUser();
+        $solicitacao = $this->protocoladaDoUsuario($owner);
+
+        $this->actingAs($stranger)
+            ->get(route('portal.solicitacoes.show', $solicitacao))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'seguranca',
+            'result' => 'bloqueado',
+        ]);
+    }
+
+    public function test_prazo_estimado_parametrizado_com_ressalva(): void
+    {
+        // RN-005: o prazo estimado vem do parâmetro solicitacao.prazo_estimado_dias
+        // (efeito sem deploy) e SEMPRE acompanha a ressalva de estimativa.
+        $this->seed(ParameterSeeder::class);
+        Parameter::query()
+            ->where('key', 'solicitacao.prazo_estimado_dias')
+            ->first()
+            ->update(['value' => '45']);
+
+        $user = $this->portalUser();
+        $solicitacao = $this->protocoladaDoUsuario($user);
+
+        $this->actingAs($user)
+            ->get(route('portal.solicitacoes.show', $solicitacao))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('timeline.prazo_estimado.dias', 45)
+                ->where('timeline.prazo_estimado.ressalva', fn (string $ressalva) => str_contains(mb_strtolower($ressalva), 'estimativa'))
+            );
+    }
+
+    public function test_consulta_auditada(): void
+    {
+        // RN-002/CA-02: a consulta autenticada é registrada na trilha
+        // (solicitacoes/consulta-protocolo) com o causer do dono.
+        $user = $this->portalUser();
+        $solicitacao = $this->protocoladaDoUsuario($user);
+
+        $this->actingAs($user)
+            ->get(route('portal.solicitacoes.show', $solicitacao))
+            ->assertOk();
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'solicitacoes',
+            'event' => 'consulta-protocolo',
+            'subject_type' => $solicitacao->getMorphClass(),
+            'subject_id' => $solicitacao->id,
+            'causer_id' => $user->id,
+        ]);
     }
 }

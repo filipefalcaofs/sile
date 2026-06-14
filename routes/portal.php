@@ -7,6 +7,8 @@ use App\Http\Controllers\Portal\CnpjLookupController;
 use App\Http\Controllers\Portal\CompanyCnaeController;
 use App\Http\Controllers\Portal\CompanyController;
 use App\Http\Controllers\Portal\CompanyLinkController;
+use App\Http\Controllers\Portal\ConsultaProtocoloController;
+use App\Http\Controllers\Portal\ConsultaProtocoloPublicaController;
 use App\Http\Controllers\Portal\ConsultaViabilidadeController;
 use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\GovBrLoginController;
@@ -44,6 +46,18 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::post('viabilidade/cnae', [ConsultaViabilidadeController::class, 'cnae'])->name('viabilidade.cnae');
         Route::post('viabilidade/inscricao', [ConsultaViabilidadeController::class, 'inscricao'])->name('viabilidade.inscricao');
     });
+});
+
+// Consulta PÚBLICA do protocolo por link assinado (HU-069) — SEM login. Fora de
+// auth: o acesso é exclusivamente pelo link assinado (middleware signed, TTL
+// parametrizável gerado no controller autenticado) + throttle parametrizado;
+// mostra status simples + timeline + prazo estimado, NUNCA dados sensíveis nem
+// anexos (LGPD). Auditada com causer null + IP (RN-002). Link inválido/expirado
+// → 403 (InvalidSignatureException, comportamento padrão em bootstrap/app.php).
+Route::prefix('portal')->name('portal.')->group(function () {
+    Route::get('protocolo/{solicitacao}', [ConsultaProtocoloPublicaController::class, 'show'])
+        ->middleware(['signed', 'throttle:consulta-protocolo'])
+        ->name('protocolo.publico');
 });
 
 // Termo LGPD é compartilhado pelos dois ambientes (a gestão também exige o
@@ -104,6 +118,12 @@ Route::middleware(['auth:web', 'verified'])
             // comunicada com o toggle features.solicitacao_viabilidade off.
             Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->name('solicitacoes.index');
             Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->name('solicitacoes.store');
+
+            // Consulta AUTENTICADA do protocolo (HU-069) — rota com {solicitacao}
+            // DEPOIS das literais. Dono/representado (policy view) acompanha a
+            // timeline em linguagem simples + prazo estimado com ressalva e gera o
+            // link público assinado de acompanhamento. Auditada (RN-002).
+            Route::get('solicitacoes/{solicitacao}', [ConsultaProtocoloController::class, 'show'])->name('solicitacoes.show');
 
             // Atividades da solicitação (HU-064/HU-065) — rota com {solicitacao}
             // DEPOIS das literais. Define o CNAE principal + complementares
