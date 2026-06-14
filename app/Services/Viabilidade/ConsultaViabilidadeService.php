@@ -37,6 +37,8 @@ class ConsultaViabilidadeService
 {
     private const AVISO_ZONA_PENDENTE = 'Veredito locacional pendente: zona urbanística pendente da base oficial (SEDUR).';
 
+    private const AVISO_CNAE_SEM_LOCAL = 'Consulta por CNAE não avalia o local: o veredito locacional depende do endereço/zona. Para a viabilidade locacional, consulte por endereço.';
+
     public function __construct(
         private Geocoder $geocoder,
         private TerritoryService $territory,
@@ -61,6 +63,37 @@ class ConsultaViabilidadeService
         $input = ConsultaViabilidadeInput::paraEndereco($endereco, $cnae, $area);
 
         return $this->consultarPorPonto($geocode->latitude, $geocode->longitude, $input, $geocode);
+    }
+
+    /**
+     * Consulta por CNAE (HU-056): risco real e, quando há área, Quadro 7 — SEM
+     * território (sem ponto, sem zona/via). O veredito locacional fica pendente
+     * (o motor degrada sozinho) e a consulta avisa que não avalia o local.
+     */
+    public function consultarPorCnae(string $cnae, ?float $area = null): ConsultaViabilidadeResult
+    {
+        $input = ConsultaViabilidadeInput::paraCnae($cnae, $area);
+
+        return $this->consultarPorCnaeComEntrada($input, [self::AVISO_CNAE_SEM_LOCAL]);
+    }
+
+    /**
+     * Análise por CNAE + área SEM território, reutilizada pela via CNAE pura
+     * (HU-056) e pela inscrição degradada (HU-055, quando a base de lotes está
+     * indisponível): enquadra com território NULL (Quadro 10 indisponível →
+     * consolidado pendente; Quadro 7 por área roda) e classifica o risco real.
+     * Os avisos comunicam a degradação específica de cada caminho.
+     *
+     * @param  list<string>  $avisos
+     */
+    private function consultarPorCnaeComEntrada(ConsultaViabilidadeInput $input, array $avisos): ConsultaViabilidadeResult
+    {
+        $enquadramento = $this->louos->enquadrar(
+            EnquadramentoInput::paraConsulta((float) ($input->area ?? 0.0), $input->cnae, null),
+        );
+        $risco = $this->risco->classify(RiscoInput::paraCnae($input->cnae));
+
+        return $this->comporEResultar($input, null, null, $enquadramento, $risco, $avisos);
     }
 
     /**

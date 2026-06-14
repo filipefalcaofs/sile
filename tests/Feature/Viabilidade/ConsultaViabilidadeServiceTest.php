@@ -37,7 +37,11 @@ class ConsultaViabilidadeServiceTest extends TestCase
 
     private const CNAE_MINIMERCADO = '4712-1/00';
 
+    private const CNAE_SOFTWARE_FORA_QUADRO7 = '6201-5/01';
+
     private const AVISO_ZONA_PENDENTE = 'Veredito locacional pendente: zona urbanística pendente da base oficial (SEDUR).';
+
+    private const AVISO_CNAE_SEM_LOCAL = 'Consulta por CNAE não avalia o local: o veredito locacional depende do endereço/zona. Para a viabilidade locacional, consulte por endereço.';
 
     protected function setUp(): void
     {
@@ -194,5 +198,52 @@ class ConsultaViabilidadeServiceTest extends TestCase
         $this->expectException(AddressNotFoundException::class);
 
         $this->service()->consultarPorEndereco('Endereço inexistente', self::CNAE_MINIMERCADO, 120.0);
+    }
+
+    public function test_consulta_por_cnae_roda_risco_real_e_quadro7_sem_territorio(): void
+    {
+        // HU-056/CA-01: sem endereço/inscrição não há ponto — o risco e o Quadro
+        // 7 por área rodam REAIS; o veredito locacional fica pendente (sem zona).
+        $result = $this->service()->consultarPorCnae(self::CNAE_MINIMERCADO, 120.0);
+
+        // Sem ponto: nenhum geocode e nenhum território (não inventa local).
+        $this->assertNull($result->geocode);
+        $this->assertNull($result->territory);
+
+        // Risco real classificado e Quadro 7 enquadrado por área.
+        $this->assertSame('classificado', $result->risco->municipal['status']);
+        $this->assertSame('identificado', $result->enquadramento->quadro7['status']);
+
+        // Veredito pendente (sem local) + aviso de que a consulta não avalia o local.
+        $this->assertSame('pendente', $result->vereditoLocacional()['resultado']);
+        $this->assertContains(self::AVISO_CNAE_SEM_LOCAL, $result->avisos);
+    }
+
+    public function test_consulta_por_cnae_fora_do_quadro7_fica_pendente_sem_inventar_grupo(): void
+    {
+        // CNAE classificado no risco municipal, porém SEM faixa no Quadro 7,
+        // consultado SEM área: o motor devolve nao_encontrado (não inventa grupo)
+        // e o veredito fica pendente — o risco continua real.
+        $result = $this->service()->consultarPorCnae(self::CNAE_SOFTWARE_FORA_QUADRO7, null);
+
+        $this->assertSame('nao_encontrado', $result->enquadramento->quadro7['status']);
+        $this->assertNull($result->enquadramento->quadro7['grupo']);
+
+        $this->assertSame('pendente', $result->vereditoLocacional()['resultado']);
+        $this->assertSame('classificado', $result->risco->municipal['status']);
+    }
+
+    public function test_consulta_por_cnae_sem_area_nao_forca_veredito(): void
+    {
+        // Anti-fachada do caminho null→0.0: um CNAE enquadrável consultado SEM
+        // área continua com veredito pendente (sem território) — JAMAIS um
+        // permitido inventado — e o risco segue real.
+        $result = $this->service()->consultarPorCnae(self::CNAE_MINIMERCADO, null);
+
+        $veredito = $result->vereditoLocacional();
+        $this->assertSame('pendente', $veredito['resultado']);
+        $this->assertNotSame('permitido', $veredito['resultado']);
+        $this->assertNotSame('nao_permitido', $veredito['resultado']);
+        $this->assertSame('classificado', $result->risco->municipal['status']);
     }
 }
