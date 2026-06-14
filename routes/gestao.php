@@ -14,6 +14,7 @@ use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\LouosController;
 use App\Http\Controllers\Gestao\LouosSandboxController;
 use App\Http\Controllers\Gestao\ParameterController;
+use App\Http\Controllers\Gestao\PrecedenteController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RiscoCondicionanteController;
 use App\Http\Controllers\Gestao\RiscoController;
@@ -241,6 +242,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::patch('ficha', [AnalysisRecordController::class, 'autosave'])->name('ficha.autosave');
             Route::post('ficha/finalizar', [AnalysisRecordController::class, 'finalizar'])->name('ficha.finalizar');
             Route::post('ficha/nova-revisao', [AnalysisRecordController::class, 'novaRevisao'])->name('ficha.nova-revisao');
+            Route::get('ficha/diff', [AnalysisRecordController::class, 'diff'])->name('ficha.diff');
+            Route::get('precedentes', [PrecedenteController::class, 'show'])->name('precedentes');
         });
 
         // Atendimento presencial assistido (HU-150): canal de operador de balcão.

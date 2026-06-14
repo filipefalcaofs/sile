@@ -7,6 +7,7 @@ use App\Http\Requests\Gestao\AnalysisRecordRequest;
 use App\Http\Resources\AnalysisRecordResource;
 use App\Models\StandardText;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\AnalysisRecordDiff;
 use App\Services\Analise\AnalysisRecordImutavelException;
 use App\Services\Analise\AnalysisRecordService;
 use App\Support\Audit\AuditService;
@@ -127,6 +128,44 @@ class AnalysisRecordController extends Controller
         return response()->json([
             'ficha' => (new AnalysisRecordResource($record))->resolve(),
             'status' => 'Nova revisão criada.',
+        ]);
+    }
+
+    /**
+     * Compara duas revisões da ficha (RN-007) e devolve só o que mudou — serve o
+     * painel de histórico. 404 quando uma das revisões informadas não existe.
+     */
+    public function diff(Request $request, ViabilityRequest $viabilityRequest, AnalysisRecordDiff $diff): JsonResponse
+    {
+        $de = $request->integer('de');
+        $para = $request->integer('para');
+
+        $revisoes = $viabilityRequest->analysisRecords()
+            ->whereIn('revision', array_unique([$de, $para]))
+            ->get()
+            ->keyBy('revision');
+
+        $a = $revisoes->get($de);
+        $b = $revisoes->get($para);
+
+        abort_if($a === null || $b === null, 404, 'Revisão da ficha não encontrada.');
+
+        $this->audit->log(
+            logName: 'analise',
+            event: 'ficha-diff',
+            description: "Comparação de revisões da ficha do processo #{$viabilityRequest->id} ({$de} → {$para})",
+            properties: [
+                'viability_request_id' => $viabilityRequest->id,
+                'de' => $de,
+                'para' => $para,
+            ],
+            subject: $viabilityRequest,
+        );
+
+        return response()->json([
+            'de' => $de,
+            'para' => $para,
+            'diff' => $diff->between($a, $b),
         ]);
     }
 
