@@ -2,6 +2,7 @@
 
 namespace App\Services\Louos;
 
+use App\Enums\Quadro10Permissao;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\RuleDomain;
 use App\Models\LouosQuadro10Permissao;
@@ -18,18 +19,30 @@ use Illuminate\Database\Eloquent\Builder;
  * o sandbox) e devolve o EnquadramentoResult com cada Quadro como uma dimensão
  * de shape estável, auditando a execução com a versão aplicada (RN-002).
  *
- * Esta etapa (05-03) entrega o Quadro 7 REAL (enquadramento por área → faixa →
- * grupo/subgrupo de uso). Os Quadros 10/11/11A ainda NÃO são avaliados — ficam
- * `indisponivel` com motivo honesto (05-04 substitui pela lógica real) e, por
- * consequência, o consolidado fica `pendente` (05-05 reescreve o consolidar()).
+ * O motor entrega o Quadro 7 (enquadramento por área), as dimensões
+ * territoriais (Quadro 10 por zona; Quadros 11/11A pela via) e a CONSOLIDAÇÃO
+ * final (HU-044): combina as dimensões num parecer único — permitido /
+ * permitido_com_condicoes / nao_permitido / pendente — com fundamentação legal
+ * real (HU-045), condicionantes de vagas parametrizadas (HU-042) e restrições
+ * especiais via camada ZEIS do território (HU-043).
  *
- * Sem fachada: CNAE sem faixa na versão vigente devolve `nao_encontrado` (nunca
- * um grupo inventado); o limite inferior da faixa é inclusivo e area_max nula
- * significa sem teto.
+ * Sem fachada: sem zona (Quadro 10 indisponível) ou sem enquadramento (Quadro 7
+ * nao_encontrado) o consolidado é SEMPRE `pendente` — o motor jamais declara
+ * permitido/nao_permitido sem o dado real. CNAE sem faixa na versão vigente
+ * devolve `nao_encontrado` (nunca um grupo inventado); o limite inferior da
+ * faixa é inclusivo e area_max nula significa sem teto.
  */
 class LouosEnquadramentoService
 {
-    private const MOTIVO_CONSOLIDADO_PENDENTE = 'Enquadramento por área realizado; permissão por zona e condições pela via ainda não avaliadas';
+    private const FUNDAMENTO_LOUOS = 'Lei nº 9.148/2016 (LOUOS)';
+
+    private const MOTIVO_SEM_ENQUADRAMENTO_CONSOLIDADO = 'Atividade sem enquadramento no Quadro 7 — segue para análise técnica';
+
+    private const MOTIVO_PROIBIDO = 'Atividade proibida na zona pelo Quadro 10';
+
+    private const MOTIVO_PERMITIDO = 'Atividade permitida na zona, sem condicionantes incidentes';
+
+    private const MOTIVO_PERMITIDO_COM_CONDICOES = 'Atividade permitida na zona mediante observância das condicionantes';
 
     private const MOTIVO_ZONA_PENDENTE = 'Permissão por zona pendente da base oficial (SEDUR)';
 
@@ -72,7 +85,7 @@ class LouosEnquadramentoService
             'quadro11a' => $quadro11a['versao_regra'] ?? null,
         ];
 
-        $consolidado = $this->consolidar($quadro7, $quadro10, $quadro11, $quadro11a);
+        $consolidado = $this->consolidar($quadro7, $quadro10, $quadro11, $quadro11a, $input);
 
         $result = new EnquadramentoResult(
             quadro7: $quadro7,
@@ -92,6 +105,7 @@ class LouosEnquadramentoService
                 'area' => $input->area,
                 'quadro7_status' => $quadro7['status'],
                 'resultado_consolidado' => $consolidado['resultado'],
+                'fundamentacao' => $consolidado['fundamentacao'],
                 'versoes' => $versoes,
             ],
             result: 'sucesso',
@@ -169,9 +183,21 @@ class LouosEnquadramentoService
     }
 
     /**
-     * Consolida o veredito (HU-044). Nesta etapa o motor ainda não avalia zona
-     * (Quadro 10) nem via (Quadro 11/11A), logo o resultado é honestamente
-     * `pendente` — 05-05 reescreve com a lógica final dos 4 Quadros.
+     * Consolida o veredito (HU-044) combinando as dimensões dos Quadros, com a
+     * precedência anti-fachada (o que não pode ser decidido vira `pendente`):
+     *
+     * 1. Quadro 7 não identificado → `pendente` (sem grupo de uso não há o que
+     *    permitir; segue para análise técnica).
+     * 2. Quadro 10 indisponível/nao_encontrado → `pendente` com o motivo da
+     *    dimensão (ex.: zona pendente SEDUR). NUNCA permitido/nao_permitido sem
+     *    a permissão real.
+     * 3. Quadro 10 identificado:
+     *    - permissão `proibido` → `nao_permitido` (RN-005);
+     *    - permissão `permitido_condicionado` OU condicionante incidente (vagas
+     *      não conforme, restrição ZEIS, condição pela via) → `permitido_com_condicoes` (RN-006);
+     *    - senão → `permitido`.
+     *
+     * O retorno é `{resultado, fundamentacao[], condicionantes[], motivo}`.
      *
      * @param  array<string, mixed>  $quadro7
      * @param  array<string, mixed>  $quadro10
@@ -179,14 +205,190 @@ class LouosEnquadramentoService
      * @param  array<string, mixed>  $quadro11a
      * @return array<string, mixed>
      */
-    private function consolidar(array $quadro7, array $quadro10, array $quadro11, array $quadro11a): array
+    private function consolidar(array $quadro7, array $quadro10, array $quadro11, array $quadro11a, EnquadramentoInput $input): array
+    {
+        // Precedência 1 — anti-fachada: sem enquadramento (Quadro 7) não há grupo
+        // de uso para verificar permissão; o consolidado é honestamente pendente.
+        if (($quadro7['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
+            return $this->consolidadoPendente(
+                self::MOTIVO_SEM_ENQUADRAMENTO_CONSOLIDADO,
+                $this->buildFundamentacao($quadro7, $quadro10, $quadro11, $quadro11a, self::MOTIVO_SEM_ENQUADRAMENTO_CONSOLIDADO),
+            );
+        }
+
+        // Precedência 2 — anti-fachada central: sem a permissão por zona (Quadro
+        // 10 indisponível por base pendente, ou sem regra) o motor JAMAIS decide;
+        // propaga a degradação como pendência com o motivo da própria dimensão.
+        if (in_array($quadro10['status'] ?? null, [EnquadramentoResult::STATUS_INDISPONIVEL, EnquadramentoResult::STATUS_NAO_ENCONTRADO], true)) {
+            $motivo = (string) ($quadro10['motivo'] ?? self::MOTIVO_ZONA_PENDENTE);
+
+            return $this->consolidadoPendente(
+                $motivo,
+                $this->buildFundamentacao($quadro7, $quadro10, $quadro11, $quadro11a, $motivo),
+            );
+        }
+
+        // Precedência 3 — Quadro 10 identificado: a permissão da zona decide.
+        if (($quadro10['permissao'] ?? null) === Quadro10Permissao::Proibido->value) {
+            return [
+                'resultado' => ResultadoViabilidade::NaoPermitido->value,
+                'fundamentacao' => $this->buildFundamentacao($quadro7, $quadro10, $quadro11, $quadro11a),
+                'condicionantes' => [],
+                'motivo' => self::MOTIVO_PROIBIDO,
+            ];
+        }
+
+        $condicionantes = $this->coletarCondicionantes($quadro7, $quadro10, $quadro11, $quadro11a, $input);
+
+        $resultado = $this->temCondicionanteIncidente($condicionantes)
+            ? ResultadoViabilidade::PermitidoComCondicoes
+            : ResultadoViabilidade::Permitido;
+
+        return [
+            'resultado' => $resultado->value,
+            'fundamentacao' => $this->buildFundamentacao($quadro7, $quadro10, $quadro11, $quadro11a),
+            'condicionantes' => $condicionantes,
+            'motivo' => $resultado === ResultadoViabilidade::PermitidoComCondicoes
+                ? self::MOTIVO_PERMITIDO_COM_CONDICOES
+                : self::MOTIVO_PERMITIDO,
+        ];
+    }
+
+    /**
+     * Consolidado pendente (degradação honesta) — sem zona/enquadramento, sem
+     * condicionantes a aplicar; carrega o motivo da pendência e a fundamentação
+     * já montada (sem citar regra não aplicada).
+     *
+     * @param  list<string>  $fundamentacao
+     * @return array<string, mixed>
+     */
+    private function consolidadoPendente(string $motivo, array $fundamentacao): array
     {
         return [
             'resultado' => ResultadoViabilidade::Pendente->value,
-            'fundamentacao' => [],
+            'fundamentacao' => $fundamentacao,
             'condicionantes' => [],
-            'motivo' => self::MOTIVO_CONSOLIDADO_PENDENTE,
+            'motivo' => $motivo,
         ];
+    }
+
+    /**
+     * Fundamentação legal real da decisão (HU-045), espelhando
+     * RiscoClassificationService::buildFundamentacao: cita a Lei nº 9.148/2016
+     * (LOUOS) e os quadros EFETIVAMENTE aplicados (com a base_legal da regra
+     * quando presente). Honesto: só inclui o quadro quando a dimensão foi
+     * identificada; quando o parecer é pendente por degradação, registra o
+     * motivo da pendência SEM citar a regra que não pôde ser aplicada.
+     *
+     * @param  array<string, mixed>  $quadro7
+     * @param  array<string, mixed>  $quadro10
+     * @param  array<string, mixed>  $quadro11
+     * @param  array<string, mixed>  $quadro11a
+     * @return list<string>
+     */
+    private function buildFundamentacao(array $quadro7, array $quadro10, array $quadro11, array $quadro11a, ?string $motivoPendencia = null): array
+    {
+        $referencias = [];
+
+        if (($quadro7['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
+            $referencias[] = self::FUNDAMENTO_LOUOS.' — Quadro 7';
+        }
+
+        if (($quadro10['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
+            $referencias = [...$referencias, ...$this->baseLegal($quadro10)];
+            $referencias[] = self::FUNDAMENTO_LOUOS.' — Quadro 10';
+        }
+
+        foreach ([[$quadro11, 'Quadro 11'], [$quadro11a, 'Quadro 11A']] as [$via, $rotulo]) {
+            if (($via['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
+                $referencias = [...$referencias, ...$this->baseLegal($via)];
+                $referencias[] = self::FUNDAMENTO_LOUOS.' — '.$rotulo;
+            }
+        }
+
+        if ($motivoPendencia !== null) {
+            $referencias[] = $motivoPendencia;
+        }
+
+        return array_values(array_unique($referencias));
+    }
+
+    /**
+     * Extrai a base_legal de uma dimensão identificada (referência específica da
+     * regra versionada), quando presente — insumo da fundamentação.
+     *
+     * @param  array<string, mixed>  $dimensao
+     * @return list<string>
+     */
+    private function baseLegal(array $dimensao): array
+    {
+        $baseLegal = $dimensao['base_legal'] ?? null;
+
+        return is_string($baseLegal) && $baseLegal !== '' ? [$baseLegal] : [];
+    }
+
+    /**
+     * Coleta as condicionantes incidentes que alimentam a ficha do parecer
+     * (HU-135) e podem rebaixar o veredito para permitido_com_condicoes:
+     * a condicionante urbanística do Quadro 10 (permitido_condicionado) e as
+     * condições de instalação pela via (Quadros 11/11A). 05-05 Task 2 acrescenta
+     * vagas (HU-042) e restrições especiais (HU-043).
+     *
+     * @param  array<string, mixed>  $quadro7
+     * @param  array<string, mixed>  $quadro10
+     * @param  array<string, mixed>  $quadro11
+     * @param  array<string, mixed>  $quadro11a
+     * @return list<array<string, mixed>>
+     */
+    private function coletarCondicionantes(array $quadro7, array $quadro10, array $quadro11, array $quadro11a, EnquadramentoInput $input): array
+    {
+        $condicionantes = [];
+
+        if (($quadro10['permissao'] ?? null) === Quadro10Permissao::PermitidoCondicionado->value) {
+            $condicionantes[] = [
+                'tipo' => 'zona',
+                'condicionante_ref' => $quadro10['condicionante_ref'] ?? null,
+                'motivo' => 'Uso permitido condicionado na zona — observar a condicionante urbanística do Quadro 10',
+            ];
+        }
+
+        foreach ([[$quadro11, 'Quadro 11'], [$quadro11a, 'Quadro 11A']] as [$via, $rotulo]) {
+            if (($via['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO && ! empty($via['condicoes'])) {
+                $condicionantes[] = [
+                    'tipo' => 'via',
+                    'quadro' => $rotulo,
+                    'condicoes' => $via['condicoes'],
+                    'motivo' => "Condições de instalação pela via ({$rotulo})",
+                ];
+            }
+        }
+
+        return $condicionantes;
+    }
+
+    /**
+     * Verdadeiro quando há condicionante INCIDENTE — a que rebaixa o veredito
+     * para permitido_com_condicoes. Vagas conforme/não parametrizada (HU-042) é
+     * informativa e NÃO rebaixa; só vagas NÃO CONFORME incide. As demais
+     * (zona condicionada, via, restrição ZEIS) sempre incidem.
+     *
+     * @param  list<array<string, mixed>>  $condicionantes
+     */
+    private function temCondicionanteIncidente(array $condicionantes): bool
+    {
+        foreach ($condicionantes as $condicionante) {
+            if (($condicionante['tipo'] ?? null) === 'vagas') {
+                if (($condicionante['conforme'] ?? null) === false) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
