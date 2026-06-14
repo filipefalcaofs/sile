@@ -57,6 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*')
                 || ($request->is('portal/empresas/consultar-cnpj') && $request->expectsJson())
+                || ($request->is('portal/viabilidade/*') && $request->expectsJson())
                 || ($request->is('gestao/territorio/*') && $request->expectsJson()),
         );
 

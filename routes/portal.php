@@ -6,6 +6,7 @@ use App\Http\Controllers\Portal\CnpjLookupController;
 use App\Http\Controllers\Portal\CompanyCnaeController;
 use App\Http\Controllers\Portal\CompanyController;
 use App\Http\Controllers\Portal\CompanyLinkController;
+use App\Http\Controllers\Portal\ConsultaViabilidadeController;
 use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\GovBrLoginController;
 use App\Http\Controllers\Portal\LgpdTermController;
@@ -22,6 +23,18 @@ Route::middleware('guest')
         Route::get('login/govbr', [GovBrLoginController::class, 'redirect'])->name('govbr.redirect');
         Route::get('login/govbr/callback', [GovBrLoginController::class, 'callback'])->name('govbr.callback');
     });
+
+// Consulta prévia de viabilidade (EP07) — PÚBLICA (cidadão anônimo acessa).
+// Fora de auth:web: a página não tem throttle; os endpoints JSON têm o throttle
+// parametrizado (07-01) e a guarda do toggle features.consulta_viabilidade no
+// controller (degradação comunicada quando desligado, nunca falha silenciosa).
+Route::prefix('portal')->name('portal.')->group(function () {
+    Route::get('viabilidade', [ConsultaViabilidadeController::class, 'index'])->name('viabilidade.index');
+
+    Route::middleware('throttle:consulta-viabilidade')->group(function () {
+        Route::post('viabilidade/endereco', [ConsultaViabilidadeController::class, 'endereco'])->name('viabilidade.endereco');
+    });
+});
 
 // Termo LGPD é compartilhado pelos dois ambientes (a gestão também exige o
 // aceite): auth multi-guard, fora do gate lgpd.accepted (evita loop).
