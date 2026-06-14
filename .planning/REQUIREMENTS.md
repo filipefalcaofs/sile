@@ -90,18 +90,18 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 
 ### EP08 — Solicitação de Viabilidade
 
-- [ ] **HU-061**: Criar solicitação de viabilidade
-- [ ] **HU-062**: Informar imóvel
-- [ ] **HU-063**: Informar área utilizada
-- [ ] **HU-064**: Informar atividade econômica
-- [ ] **HU-065**: Informar CNAEs complementares
-- [ ] **HU-066**: Anexar documentos
-- [ ] **HU-067**: Validar documentos obrigatórios
-- [ ] **HU-068**: Protocolar solicitação
-- [ ] **HU-069**: Consultar protocolo
-- [ ] **HU-070**: Cancelar solicitação
-- [ ] **HU-071**: Gerar DAM da solicitação ⚠️ *pendente de confirmação de escopo com a SEDUR*
-- [ ] **HU-072**: Confirmar pagamento do DAM ⚠️ *pendente de confirmação de escopo com a SEDUR*
+- [x] **HU-061**: Criar solicitação de viabilidade
+- [x] **HU-062**: Informar imóvel
+- [x] **HU-063**: Informar área utilizada
+- [x] **HU-064**: Informar atividade econômica
+- [x] **HU-065**: Informar CNAEs complementares
+- [x] **HU-066**: Anexar documentos
+- [x] **HU-067**: Validar documentos obrigatórios
+- [x] **HU-068**: Protocolar solicitação
+- [x] **HU-069**: Consultar protocolo
+- [x] **HU-070**: Cancelar solicitação
+- [~] **HU-071**: Gerar/exibir DAM da solicitação — BLOQUEADA → Fase 13 (DAM é da SEFAZ; SILE consulta/exibe; sem contrato especulativo)
+- [~] **HU-072**: Confirmar pagamento do DAM — BLOQUEADA → Fase 13 (sincronização SEFAZ)
 
 ### EP09 — Fluxo Expresso
 
@@ -275,18 +275,18 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-058 | Fase 7 | Complete (EP07 2026-06-14) |
 | HU-059 | Fase 7 | Complete (EP07 2026-06-14) |
 | HU-060 | Fase 7 | Complete (EP07 2026-06-14) |
-| HU-061 | Fase 8 | Pending |
-| HU-062 | Fase 8 | Pending |
-| HU-063 | Fase 8 | Pending |
-| HU-064 | Fase 8 | Pending |
-| HU-065 | Fase 8 | Pending |
-| HU-066 | Fase 8 | Pending |
-| HU-067 | Fase 8 | Pending |
-| HU-068 | Fase 8 | Pending |
-| HU-069 | Fase 8 | Pending |
-| HU-070 | Fase 8 | Pending |
-| HU-071 | Fase 8 | Pending ⚠️ escopo a confirmar (SEDUR) |
-| HU-072 | Fase 8 | Pending ⚠️ escopo a confirmar (SEDUR) |
+| HU-061 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-062 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-063 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-064 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-065 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-066 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-067 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-068 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-069 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-070 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-071 | Fase 8 | Blocked → Fase 13 (DAM/SEFAZ; sem contrato especulativo) |
+| HU-072 | Fase 8 | Blocked → Fase 13 (sincronização pagamento SEFAZ) |
 | HU-073 | Fase 9 | Pending |
 | HU-074 | Fase 9 | Pending |
 | HU-075 | Fase 9 | Pending |

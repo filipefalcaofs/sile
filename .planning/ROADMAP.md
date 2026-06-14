@@ -455,7 +455,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 5. Motor de Regras da LOUOS | 9/9 | Complete (Quadro 10/zona pendente SEDUR) | 2026-06-14 |
 | 6. Classificação de Risco | 9/9 | Complete | 2026-06-14 |
 | 7. Consulta Prévia de Viabilidade | 10/10 | Complete (veredito locacional/inscrição pendentes SEDUR) | 2026-06-14 |
-| 8. Solicitação de Viabilidade | 16/16 | Implemented — aguardando smoke navegável (checkpoint humano); DAM (HU-071/072) bloqueado → Fase 13 | 2026-06-14 |
+| 8. Solicitação de Viabilidade | 16/16 | Complete (guardião APROVADO; resta só o smoke navegável humano); DAM HU-071/072 + Regin bloqueados → Fase 13; HU-139 texto livre | 2026-06-14 |
 | 9. Fluxo Expresso | 0/TBD | Not started | - |
 | 10. Análise Técnica SEDUR | 0/TBD | Not started | - |
 | 11. Pendências e Comunicação | 0/TBD | Not started | - |
