@@ -5,6 +5,7 @@ namespace App\Services\Louos;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\RuleDomain;
 use App\Models\LouosQuadro10Permissao;
+use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Support\Audit\AuditService;
@@ -28,8 +29,6 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class LouosEnquadramentoService
 {
-    private const MOTIVO_NAO_AVALIADA = 'Dimensão ainda não avaliada nesta etapa do motor';
-
     private const MOTIVO_CONSOLIDADO_PENDENTE = 'Enquadramento por área realizado; permissão por zona e condições pela via ainda não avaliadas';
 
     private const MOTIVO_ZONA_PENDENTE = 'Permissão por zona pendente da base oficial (SEDUR)';
@@ -39,6 +38,14 @@ class LouosEnquadramentoService
     private const MOTIVO_QUADRO10_SEM_VERSAO = 'Quadro 10 sem versão vigente';
 
     private const MOTIVO_ZONA_SEM_REGRA = 'Combinação zona × grupo de uso sem regra no Quadro 10 vigente';
+
+    private const MOTIVO_VIA_PENDENTE = 'Condições pela via dependem da classificação viária LOUOS (pendente SEDUR)';
+
+    private const MOTIVO_VIA_SEM_ATRIBUTO = 'Via identificada, porém sem o atributo de classificação viária LOUOS (pendente SEDUR)';
+
+    private const MOTIVO_VIA_SEM_VERSAO = 'Quadro de condições pela via sem versão vigente';
+
+    private const MOTIVO_VIA_SEM_REGRA = 'Classe viária × grupo de uso sem regra no quadro de via vigente';
 
     public function __construct(private AuditService $audit) {}
 
@@ -55,8 +62,8 @@ class LouosEnquadramentoService
 
         $quadro7 = $this->enquadrarQuadro7($cnae, $input->area, $input);
         $quadro10 = $this->enquadrarQuadro10($quadro7, $input);
-        $quadro11 = $this->quadro11NaoAvaliado();
-        $quadro11a = $this->quadro11NaoAvaliado();
+        $quadro11 = $this->enquadrarCondicoesVia(RuleDomain::LouosQuadro11, $quadro7, $input);
+        $quadro11a = $this->enquadrarCondicoesVia(RuleDomain::LouosQuadro11a, $quadro7, $input);
 
         $versoes = [
             'quadro7' => $quadro7['versao_regra'] ?? null,
@@ -315,16 +322,111 @@ class LouosEnquadramentoService
     }
 
     /**
-     * Placeholder honesto do Quadro 11/11A (condições pela via) — 05-04
-     * substitui pela resolução real. Mantém o shape do contrato ({condicoes}).
+     * Dimensões QUADRO 11 e 11A (HU-040/HU-041): condições de instalação pela
+     * via, compartilhando a lógica (o `$domain` distingue o quadro). Escopo
+     * honesto: a geometria viária existe (Fase 4), mas o ATRIBUTO de
+     * classificação viária LOUOS pende SEDUR.
      *
+     * - Sem território OU via não `identificado` → `indisponivel` (degradação).
+     * - Via identificada SEM o atributo `CLASSE_VIA_LOUOS` (caso atual) →
+     *   `indisponivel` SEM inventar a classe (anti-fachada).
+     * - Com a classe → resolve a versão do quadro e busca as condições por
+     *   (classe viária × grupo de uso); ausente → `nao_encontrado`.
+     *
+     * @param  array<string, mixed>  $quadro7
      * @return array<string, mixed>
      */
-    private function quadro11NaoAvaliado(): array
+    private function enquadrarCondicoesVia(RuleDomain $domain, array $quadro7, EnquadramentoInput $input): array
     {
-        return $this->dimIndisponivel(self::MOTIVO_NAO_AVALIADA, null, [
-            'condicoes' => null,
+        $via = $input->territory?->via;
+
+        // Degradação honesta: sem via identificada não há o que condicionar.
+        if ($via === null || ($via['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
+            return $this->dimIndisponivel(
+                $via['motivo'] ?? self::MOTIVO_VIA_PENDENTE,
+                null,
+                ['classe_via' => null, 'condicoes' => [], 'base_legal' => null],
+            );
+        }
+
+        // Anti-fachada: sem o atributo de classificação viária LOUOS (pendente
+        // SEDUR), o motor NÃO infere a classe a partir da geometria.
+        $classeVia = $this->classeViaLouos($via);
+
+        if ($classeVia === null) {
+            return $this->dimIndisponivel(
+                self::MOTIVO_VIA_SEM_ATRIBUTO,
+                null,
+                ['classe_via' => null, 'condicoes' => [], 'base_legal' => null],
+            );
+        }
+
+        $version = $this->resolveVersion($domain, $input);
+
+        if ($version === null) {
+            return $this->dimNaoEncontrado(
+                self::MOTIVO_VIA_SEM_VERSAO,
+                null,
+                ['classe_via' => $classeVia, 'condicoes' => [], 'base_legal' => null],
+            );
+        }
+
+        $condicao = $this->buscarCondicaoVia($version, $classeVia, $quadro7['grupo'] ?? null);
+
+        if ($condicao === null) {
+            return $this->dimNaoEncontrado(
+                self::MOTIVO_VIA_SEM_REGRA,
+                $version->version,
+                ['classe_via' => $classeVia, 'condicoes' => [], 'base_legal' => null],
+            );
+        }
+
+        return $this->dimIdentificado($version->version, [
+            'classe_via' => $classeVia,
+            'condicoes' => $condicao->condicoes ?? [],
+            'base_legal' => $condicao->base_legal,
         ]);
+    }
+
+    /**
+     * Classe viária da LOUOS lida SOMENTE do atributo oficial da via
+     * (`CLASSE_VIA_LOUOS`, a confirmar com a base da SEDUR). Null quando ausente
+     * — o motor degrada, nunca infere a classe a partir da geometria.
+     *
+     * @param  array<string, mixed>  $via
+     */
+    private function classeViaLouos(array $via): ?string
+    {
+        $propriedades = $via['propriedades'] ?? [];
+        $classe = is_array($propriedades) ? ($propriedades['CLASSE_VIA_LOUOS'] ?? null) : null;
+
+        return is_string($classe) && $classe !== '' ? $classe : null;
+    }
+
+    /**
+     * Busca a condição de via por (versão, classe viária). Quando o Quadro 7 traz
+     * grupo de uso, prefere a regra do grupo específico, caindo para a regra
+     * geral da classe (grupo vazio/nulo).
+     */
+    private function buscarCondicaoVia(RuleVersion $version, string $classeVia, ?string $grupo): ?LouosQuadro11CondicaoVia
+    {
+        $base = fn (): Builder => LouosQuadro11CondicaoVia::query()
+            ->where('rule_version_id', $version->getKey())
+            ->where('classe_via', $classeVia);
+
+        if ($grupo !== null && $grupo !== '') {
+            $especifica = $base()->where('grupo_uso', $grupo)->first();
+
+            if ($especifica !== null) {
+                return $especifica;
+            }
+        }
+
+        return $base()
+            ->where(function (Builder $query): void {
+                $query->whereNull('grupo_uso')->orWhere('grupo_uso', '');
+            })
+            ->first();
     }
 
     /**
