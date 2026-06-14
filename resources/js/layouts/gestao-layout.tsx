@@ -37,6 +37,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     icon: <FileIcon />,
                     visible: auth.permissions.includes('registrar-contingencia'),
                 },
+                {
+                    name: 'Resultados do fluxo expresso',
+                    href: '/gestao/resultados-expresso',
+                    icon: <ListIcon />,
+                    visible: auth.permissions.includes('consultar-solicitacoes'),
+                },
             ],
         },
         {
