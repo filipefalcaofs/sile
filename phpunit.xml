@@ -18,6 +18,11 @@
         </include>
     </source>
     <php>
+        <!-- A suíte cresce a cada fase; o result cache do PHPUnit é serializado
+             no shutdown e estourava o memory_limit baixo (128M) de alguns
+             ambientes locais ao final de uma run verde. Fixar aqui garante que
+             o comando canônico (php artisan test) saia limpo em qualquer host. -->
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
