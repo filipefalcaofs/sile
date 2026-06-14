@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Enums\ViabilityRequestOrigin;
+use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreSolicitacaoRequest;
 use App\Models\Company;
@@ -60,6 +61,8 @@ class SolicitacaoController extends Controller
 
         $search = (string) $request->string('search')->trim();
 
+        $cancelableStates = $this->cancelableStates();
+
         $solicitacoes = ViabilityRequest::query()
             ->where('requester_user_id', $effectiveUser->id)
             ->with(['company', 'serviceType'])
@@ -88,6 +91,11 @@ class SolicitacaoController extends Controller
                     'formatted_cnpj' => $solicitacao->company->formatted_cnpj,
                 ] : null,
                 'created_at' => $solicitacao->created_at?->toDateTimeString(),
+                // Só rascunho pode continuar a edição no wizard (policy update).
+                'editable' => $solicitacao->status === ViabilityRequestStatus::Rascunho,
+                // A ação de cancelar só aparece nos estados canceláveis (HU-070,
+                // parâmetro solicitacao.cancelamento.estados_cancelaveis).
+                'cancelable' => in_array($solicitacao->status->value, $cancelableStates, true),
             ]);
 
         return Inertia::render('portal/solicitacoes/index', [
@@ -100,7 +108,28 @@ class SolicitacaoController extends Controller
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'solicitacaoEnabled' => Settings::enabled('solicitacao_viabilidade'),
+            // Alerta de reincidência (RN-007) vindo do store — nunca bloqueia,
+            // só aponta o processo anterior. Exibido uma vez após criar.
+            'duplicateAlert' => $request->session()->get('duplicateAlert'),
         ]);
+    }
+
+    /**
+     * Estados em que a solicitação pode ser cancelada pelo requerente (HU-070):
+     * parâmetro administrável (efeito sem deploy), mesmo contrato lido pelo
+     * CancelarSolicitacaoService — default honesto rascunho + protocolada.
+     *
+     * @return array<int, string>
+     */
+    private function cancelableStates(): array
+    {
+        /** @var array<int, string> $states */
+        $states = (array) Settings::get(
+            'solicitacao.cancelamento.estados_cancelaveis',
+            config('sile.solicitacao.cancelamento.estados_cancelaveis', ['rascunho', 'protocolada']),
+        );
+
+        return $states;
     }
 
     /**
