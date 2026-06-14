@@ -12,6 +12,8 @@ use App\Services\Geo\PostgisSpatialRepository;
 use App\Services\Geo\SpatialRepository;
 use App\Services\GovBr\GovBrIdTokenValidator;
 use App\Services\GovBr\GovBrProvider;
+use App\Services\Realty\PropertyRegistryLookup;
+use App\Services\Realty\UnavailablePropertyRegistryLookup;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
 use Illuminate\Database\Events\ModelsPruned;
@@ -44,6 +46,11 @@ class AppServiceProvider extends ServiceProvider
         // TerritoryService e o motor da Fase 5 dependem da interface, não do
         // SQL — os testes dos consumidores usam um fake em memória.
         $this->app->bind(SpatialRepository::class, PostgisSpatialRepository::class);
+
+        // Resolução por inscrição imobiliária (HU-055) atrás de contrato. A base
+        // de lotes/Cadastro está PENDENTE SEDUR — o provider degrada honestamente
+        // (nunca inventa ponto). A Fase 13 (HU-106) troca SÓ este binding.
+        $this->app->bind(PropertyRegistryLookup::class, UnavailablePropertyRegistryLookup::class);
     }
 
     /**
