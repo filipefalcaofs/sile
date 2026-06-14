@@ -16,6 +16,7 @@ use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RiscoCondicionanteController;
 use App\Http\Controllers\Gestao\RiscoController;
 use App\Http\Controllers\Gestao\RoleController;
+use App\Http\Controllers\Gestao\SectorController;
 use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
@@ -153,6 +154,19 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [ViabilityServiceTypeController::class, 'store'])->name('store');
             Route::put('{serviceType}', [ViabilityServiceTypeController::class, 'update'])->name('update');
             Route::put('{serviceType}/ativacao', [ViabilityServiceTypeController::class, 'toggleActivation'])->name('ativacao.update');
+        });
+
+        // Setores da SEDUR (HU-138): a "caixa de análise" da distribuição
+        // (pré-requisito de 10-07/HU-144). CRUD administrável atrás de
+        // manter-setores; o vínculo analista↔setor é N:N (RN-005 — um analista
+        // cobre vários setores). NÃO há destroy: o setor não é excluído — só
+        // inativado (RN-004; o toggle preserva histórico e vínculo). Telas em 10-17.
+        Route::middleware('permission:manter-setores')->prefix('setores')->name('setores.')->group(function () {
+            Route::get('/', [SectorController::class, 'index'])->name('index');
+            Route::post('/', [SectorController::class, 'store'])->name('store');
+            Route::put('{sector}', [SectorController::class, 'update'])->name('update');
+            Route::put('{sector}/ativacao', [SectorController::class, 'toggleActivation'])->name('ativacao.update');
+            Route::put('{sector}/analistas', [SectorController::class, 'syncAnalysts'])->name('analistas.update');
         });
 
         // Registro em contingência (HU-148): canal de operador na retaguarda e o
