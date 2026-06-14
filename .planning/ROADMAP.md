@@ -44,7 +44,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 5: Motor de Regras da LOUOS** — Quadros 7/10/11/11A como dados versionados + motor de enquadramento (EP05 + HU-015 a HU-018) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 600/600 SQLite + 15/15 @group postgis; motor real decidindo permitido/não permitido/pendente). ESCOPO HONESTO: Quadro 7 (área) entregue com seed real da Lei 9.148/2016; **Quadro 10 (permissão por zona) degrada para "pendente" sem a zona — BLOQUEADO pendente SEDUR (SIGIS/CA 2000)**; Quadros 11/11A parciais (atributo viário LOUOS pendente). Reusa rule_versions (Fase 6); sandbox HU-143 com 4 olhos.
 - [x] **Phase 6: Classificação de Risco** — Risco por CNAE com condicionante-pergunta reclassificadora (EP06 + HU-019, HU-020) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 519/519 SQLite + 15/15 @group postgis; motor real classificando sobre o Decreto 32.636/2020 com encaminhamento parametrizável e auditoria). Regras como dados versionados (rule_versions — infra herdada pela Fase 5)
 - [x] **Phase 7: Consulta Prévia de Viabilidade** — Simulação consumindo território + motores (EP07) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 657/657 SQLite + 15/15 @group postgis; comando viabilidade:consultar com geocode real). PRIMEIRO fluxo de decisão de ponta a ponta: orquestra território (4) + LOUOS (5) + risco (6) e PROPAGA o veredito (não recomputa). Honesto: risco/Quadro 7/restrições reais; veredito locacional fica "pendente" sem a zona (bloqueada SEDUR); inscrição imobiliária bloqueada atrás do contrato PropertyRegistryLookup.
-- [ ] **Phase 8: Solicitação de Viabilidade** — Processo formal: criação, documentos, protocolo (EP08)
+- [x] **Phase 8: Solicitação de Viabilidade** — Processo formal: criação, documentos, protocolo (EP08) — implementada; smoke navegável aguardando aprovação humana; DAM bloqueado → Fase 13
 - [ ] **Phase 9: Fluxo Expresso** — Deferimento/indeferimento automático, Regin + SEFAZ, prazo BAP (EP09 + HU-134)
 - [ ] **Phase 10: Análise Técnica SEDUR** — Fila com SLA, ficha pré-analisada pelo motor, precedentes, malha fina, TVL PDF backoffice (EP10 + HU-132/135/136/140/142/144)
 - [ ] **Phase 11: Pendências e Comunicação** — Notificações, respostas e canais administráveis (EP11)
@@ -273,32 +273,34 @@ Plans:
   1. Requerente cria solicitação com origem (Regin ou portal direto) e tipo de serviço parametrizável, informando imóvel (polígono, fachada, escritório virtual, área pública, complemento por edifício comercial — HU-139), área utilizada, atividade principal e CNAEs complementares (até 99).
   2. Documentos são anexados e a obrigatoriedade documental por CNAE é validada antes do protocolo.
   3. Solicitação é protocolada com número único rastreável; o protocolo é consultável (status em linguagem simples, timeline e prazo estimado real para o cidadão — HU-069) e a solicitação pode ser cancelada conforme regras.
-  4. Analista **visualiza** DAM de viabilidade quando emitido pela SEFAZ (HU-071); status de pagamento sincronizado quando aplicável (HU-072) — **sem geração de DAM** no SILE para fluxo Regin.
+  4. Analista **visualiza** DAM de viabilidade quando emitido pela SEFAZ (HU-071); status de pagamento sincronizado quando aplicável (HU-072) — **sem geração de DAM** no SILE para fluxo Regin. **[BLOQUEADO → Fase 13]** — escopo SEFAZ não confirmado; nenhum contrato agora (registrado, não simulado; 08-16).
   5. Antes do protocolo, o requerente vê a simulação de viabilidade com os dados digitados (HU-141 — motores reais do EP07; orientativa, não bloqueia) e é alertado de duplicidade/reincidência (HU-061 RN-007) e de inconsistências área × polígono (HU-063/HU-037).
   6. Operador autorizado registra solicitação em **contingência** com origem auditada (HU-148) — também é o caminho de operação real enquanto o contrato Regin não chega — e atende cidadão presencialmente "em nome de" com trilha completa (HU-150, reusando a representação da Fase 1).
 **Plans**: 16 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Fundação: schema driver-aware (todas as tabelas), enums Status/Origin (com ganchos), models+factories, ProtocolNumberGenerator e ViabilityRequestStateMachine (wave 1, ‖ 08-02)
-- [ ] 08-02-PLAN.md — Fundação: 13 parâmetros novos (grupo solicitacao) + fallbacks + 5 permissões aditivas; catálogo 35→48, permissões 14→19 (wave 1, ‖ 08-01)
-- [ ] 08-03-PLAN.md — HU-061 RN-005: tipos de serviço (CRUD backend + UI console) (wave 2, ‖ 08-04)
-- [ ] 08-04-PLAN.md — HU-067: requisitos documentais por CNAE (CRUD + vínculo N:N + UI console) (wave 2, ‖ 08-03)
-- [ ] 08-05-PLAN.md — HU-061: criar rascunho + ViabilityRequestPolicy (representação) + duplicidade RN-007 (wave 3)
-- [ ] 08-06-PLAN.md — HU-062/063: imóvel (polígono+geometry driver-aware+TerritoryService+validação) + área/tolerância — @group postgis (wave 4, ‖ 08-07)
-- [ ] 08-07-PLAN.md — HU-064/065: atividade principal + CNAEs complementares (até 99) (wave 4, ‖ 08-06)
-- [ ] 08-08-PLAN.md — HU-066/067: anexar (Storage, disk param, sha256) + DocumentRequirementResolver (wave 5, ‖ 08-09)
-- [ ] 08-09-PLAN.md — HU-141: SimulacaoSolicitacaoService reusando o motor da Fase 7 (ponto+CNAE) (wave 5, ‖ 08-08)
-- [ ] 08-10-PLAN.md — HU-068: protocolar (número único, transição, SolicitacaoProtocolada+listener, bloqueio documental, ciência) — concorrência @group postgis (wave 6)
-- [ ] 08-11-PLAN.md — HU-069: consultar protocolo (autenticado + público assinado + throttle + timeline) backend+UI (wave 7, ‖ 08-12/14/15)
-- [ ] 08-12-PLAN.md — HU-070: cancelar (estados canceláveis parametrizáveis + transição auditada) backend+UI (wave 7, ‖ 08-11/14/15)
-- [ ] 08-13-PLAN.md — UI: wizard de solicitação (imóvel/área/atividades/documentos/simulação/protocolar) + Minhas solicitações (wave 8)
-- [ ] 08-14-PLAN.md — HU-148: contingência (mesmo fluxo/motor, origem auditada) backend+UI console (wave 7, ‖ 08-15)
-- [ ] 08-15-PLAN.md — HU-150: atendimento presencial assistido (AssistedAttendance + middleware reusando representação) backend+UI (wave 7, ‖ 08-14)
-- [ ] 08-16-PLAN.md — Fechamento: seeds dev + comando + golden/smoke + verificação integral (@group postgis) + smoke navegável (checkpoint humano) (wave 9)
+- [x] 08-01-PLAN.md — Fundação: schema driver-aware (todas as tabelas), enums Status/Origin (com ganchos), models+factories, ProtocolNumberGenerator e ViabilityRequestStateMachine (wave 1, ‖ 08-02)
+- [x] 08-02-PLAN.md — Fundação: 13 parâmetros novos (grupo solicitacao) + fallbacks + 5 permissões aditivas; catálogo 35→48, permissões 14→19 (wave 1, ‖ 08-01)
+- [x] 08-03-PLAN.md — HU-061 RN-005: tipos de serviço (CRUD backend + UI console) (wave 2, ‖ 08-04)
+- [x] 08-04-PLAN.md — HU-067: requisitos documentais por CNAE (CRUD + vínculo N:N + UI console) (wave 2, ‖ 08-03)
+- [x] 08-05-PLAN.md — HU-061: criar rascunho + ViabilityRequestPolicy (representação) + duplicidade RN-007 (wave 3)
+- [x] 08-06-PLAN.md — HU-062/063: imóvel (polígono+geometry driver-aware+TerritoryService+validação) + área/tolerância — @group postgis (wave 4, ‖ 08-07)
+- [x] 08-07-PLAN.md — HU-064/065: atividade principal + CNAEs complementares (até 99) (wave 4, ‖ 08-06)
+- [x] 08-08-PLAN.md — HU-066/067: anexar (Storage, disk param, sha256) + DocumentRequirementResolver (wave 5, ‖ 08-09)
+- [x] 08-09-PLAN.md — HU-141: SimulacaoSolicitacaoService reusando o motor da Fase 7 (ponto+CNAE) (wave 5, ‖ 08-08)
+- [x] 08-10-PLAN.md — HU-068: protocolar (número único, transição, SolicitacaoProtocolada+listener, bloqueio documental, ciência) — concorrência @group postgis (wave 6)
+- [x] 08-11-PLAN.md — HU-069: consultar protocolo (autenticado + público assinado + throttle + timeline) backend+UI (wave 7, ‖ 08-12/14/15)
+- [x] 08-12-PLAN.md — HU-070: cancelar (estados canceláveis parametrizáveis + transição auditada) backend+UI (wave 7, ‖ 08-11/14/15)
+- [x] 08-13-PLAN.md — UI: wizard de solicitação (imóvel/área/atividades/documentos/simulação/protocolar) + Minhas solicitações (wave 8)
+- [x] 08-14-PLAN.md — HU-148: contingência (mesmo fluxo/motor, origem auditada) backend+UI console (wave 7, ‖ 08-15)
+- [x] 08-15-PLAN.md — HU-150: atendimento presencial assistido (AssistedAttendance + middleware reusando representação) backend+UI (wave 7, ‖ 08-14)
+- [x] 08-16-PLAN.md — Fechamento: seeds dev + comando + golden/smoke + verificação integral (@group postgis) + smoke navegável (checkpoint humano) (wave 9)
 
 Nota (reunião SEDUR 2026-06-11): HU-071/072 tiveram escopo **revisado** — DAM de viabilidade via Regin é da SEFAZ; SILE consulta/exibe. Renovação direta pelo portal Simplifica pode ter regras distintas (confirmar).
 
 Nota (recursos do framework — levantamento 2026-06-12): anexos de documentos via Storage/Filesystem com disk parametrizado (local/S3) e download por streaming; consulta de protocolo sem login (HU-069) com URLs temporárias assinadas (`temporarySignedRoute`); protocolo dispara evento de domínio (`SolicitacaoProtocolada`) — primeiro evento próprio do sistema, base para notificação, auditoria e integrações desacopladas (Fases 9, 11 e 13).
+
+Status (fechamento 2026-06-14, plano 08-16): 16/16 planos implementados; verificação integral FRESCA verde (pint/typecheck/build; suíte 848/848 = 829 SQLite + 19 @group postgis). Critérios 1, 2, 3, 5 e 6 validados com evidência fresca (seeds dev + comando `solicitacao:protocolar` + golden/smoke provando bloqueio documental e pendente sem zona). **Critério 4 (DAM HU-071/072) BLOQUEADO → Fase 13** (escopo SEFAZ não confirmado; não simulado). Origem `regin` bloqueada → Fase 13 (contingência HU-148 é o caminho real). Pendências SEDUR: lista oficial de tipos de serviço (seed mínimo, substituível sem deploy), requisitos documentais por CNAE (`cnae_document_requirement` vazio até a planilha), HU-139 edifício comercial (texto livre), prazo estimado real (HU-129/Fase 15), zona urbanística (Quadro 10), ciência presencial e regra fina de duplicidade/cancelamento (HU-150/HU-070). **Gate restante: aprovação do smoke navegável (checkpoint humano).**
 
 ### Phase 9: Fluxo Expresso
 **Goal**: Solicitações elegíveis (baixo e médio risco) são deferidas ou indeferidas automaticamente — com parecer ao Regin, envio à SEFAZ quando deferido, indeferimento por prazo BAP e auditoria integral. PDF/TVL **não** vai ao cidadão (HU-132 na Fase 10).
@@ -453,7 +455,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 5. Motor de Regras da LOUOS | 9/9 | Complete (Quadro 10/zona pendente SEDUR) | 2026-06-14 |
 | 6. Classificação de Risco | 9/9 | Complete | 2026-06-14 |
 | 7. Consulta Prévia de Viabilidade | 10/10 | Complete (veredito locacional/inscrição pendentes SEDUR) | 2026-06-14 |
-| 8. Solicitação de Viabilidade | 0/16 | Planned | - |
+| 8. Solicitação de Viabilidade | 16/16 | Implemented — aguardando smoke navegável (checkpoint humano); DAM (HU-071/072) bloqueado → Fase 13 | 2026-06-14 |
 | 9. Fluxo Expresso | 0/TBD | Not started | - |
 | 10. Análise Técnica SEDUR | 0/TBD | Not started | - |
 | 11. Pendências e Comunicação | 0/TBD | Not started | - |
