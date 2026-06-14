@@ -3,6 +3,7 @@
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\DashboardController;
+use App\Http\Controllers\Gestao\DocumentRequirementController;
 use App\Http\Controllers\Gestao\EmailLogController;
 use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\LoginController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
+use App\Http\Controllers\Portal\CnaeSearchController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -122,6 +124,20 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('simulacao', [LouosSandboxController::class, 'index'])->name('sandbox.index');
             Route::post('simulacao', [LouosSandboxController::class, 'simulate'])->name('sandbox.simular');
             Route::put('simulacao/publicar', [LouosSandboxController::class, 'publish'])->name('sandbox.publicar');
+        });
+
+        // Requisitos documentais (HU-067): cadastro administrável do modelo
+        // "Requisito" (SIGVISA) e do vínculo N:N com CNAEs — a obrigatoriedade
+        // documental por CNAE é DADO administrável (HU-014), consumido pelo
+        // resolver da validação documental (08-08). Gate único manter-...; a
+        // busca de CNAEs do picker reusa o CnaeSearchController (só ativos).
+        Route::middleware('permission:manter-requisitos-documentais')->prefix('requisitos-documentais')->name('requisitos-documentais.')->group(function () {
+            Route::get('/', [DocumentRequirementController::class, 'index'])->name('index');
+            Route::get('cnaes-disponiveis', CnaeSearchController::class)->name('cnaes-disponiveis');
+            Route::post('/', [DocumentRequirementController::class, 'store'])->name('store');
+            Route::put('{requirement}', [DocumentRequirementController::class, 'update'])->name('update');
+            Route::put('{requirement}/toggle', [DocumentRequirementController::class, 'toggle'])->name('toggle');
+            Route::put('{requirement}/cnaes', [DocumentRequirementController::class, 'syncCnaes'])->name('cnaes');
         });
 
         // Tipos de serviço da solicitação (HU-061 RN-005): dado administrável
