@@ -67,6 +67,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('manter-louos'),
                 },
                 {
+                    name: 'Requisitos documentais',
+                    href: '/gestao/requisitos-documentais',
+                    icon: <FileIcon />,
+                    visible: auth.permissions.includes('manter-requisitos-documentais'),
+                },
+                {
                     name: 'Usuários',
                     href: '/gestao/usuarios',
                     icon: <GroupIcon />,
