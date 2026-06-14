@@ -15,6 +15,8 @@ Fora do escopo: a base GIS de zona (SIGIS/CA 2000 — Fase 13, pendente SEDUR); 
 <decisions>
 ## Implementation Decisions
 
+> **Correção de mapeamento de HUs (2026-06-14, planejamento):** os arquivos oficiais das HUs definem **HU-015 = Manter Quadro 7**, **HU-016 = Manter Quadro 10**, **HU-017 = Manter Quadro 11**, **HU-018 = Manter Quadro 11A**. A prosa abaixo (e o spec) cita os mantenedores invertidos (ex.: "Quadro 7 (HU-016)"); o mapeamento correto é o dos arquivos de HU e é o que os PLAN.md usam. Motor: HU-038=Q7, HU-039=Q10, HU-040=Q11, HU-041=Q11A.
+
 ### Escopo honesto (analista-negocio + bloqueio Fase 4)
 - **Quadro 7 (HU-016/038)**: ENTREGÁVEL — enquadra por CNAE (carregado) + área (entrada). Seed derivado da Lei 9.148/2016 (modelo "Enquadramento TVL" do SAPS: código LOUOS → classificação + faixas de área + flag risco).
 - **Quadro 10 (HU-015/039)**: MODELADO, DEGRADA — consome zona (Fase 4 retorna indisponivel/pendente SEDUR). Sem zona real, NÃO inventa permissão: quadro10.status=indisponivel → consolidado pendente. Liga quando a SEDUR entregar SIGIS/CA 2000.
