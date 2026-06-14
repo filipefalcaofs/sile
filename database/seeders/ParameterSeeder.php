@@ -257,6 +257,20 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'in:municipal,sanitario'],
                 'description' => 'Dimensão de risco que prevalece no encaminhamento/TVL (default municipal; confirmar com a SEDUR)',
             ],
+            'louos.vagas.exigencia_por_grupo' => [
+                'group' => 'louos',
+                'type' => 'json',
+                'default_value' => '{}',
+                'validation_rules' => ['required', 'json'],
+                'description' => 'Exigência de vagas (estacionamento, carga/descarga) por grupo de uso da LOUOS — base do veredito de conformidade (HU-042); vazio enquanto a SEDUR não parametriza (motor registra "não parametrizado", não bloqueia)',
+            ],
+            'louos.sandbox.amostra_padrao' => [
+                'group' => 'louos',
+                'type' => 'integer',
+                'default_value' => '50',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:1000'],
+                'description' => 'Tamanho padrão da amostra de cenários reprocessados na simulação de impacto de regra (HU-143)',
+            ],
         ];
     }
 }

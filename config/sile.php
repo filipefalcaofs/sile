@@ -47,6 +47,16 @@ return [
         'mapa_encaminhamento' => ['baixo_a' => 'expresso', 'baixo_b' => 'expresso', 'alto' => 'analise'],
         'dimensao_tvl' => 'municipal',
     ],
+    // Espelha os parâmetros HU-014 louos.* (motor de regras da LOUOS).
+    // Settings::get lê config("sile.louos.*") no fallback (banco indisponível).
+    // exigencia_por_grupo é o ARRAY já decodificado — typedValue() do parâmetro
+    // json também devolve array, de modo que o motor sempre recebe array. Vazio
+    // = vagas não parametrizadas (a SEDUR ainda não entregou): o motor registra
+    // "não parametrizado", nunca bloqueia silenciosamente.
+    'louos' => [
+        'vagas' => ['exigencia_por_grupo' => []],
+        'sandbox' => ['amostra_padrao' => 50],
+    ],
     'seguranca' => [
         'throttle' => [
             'cnpj_lookup' => ['por_minuto' => 30],

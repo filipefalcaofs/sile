@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(31, Parameter::query()->count());
+        $this->assertSame(33, Parameter::query()->count());
         $this->assertSame(
-            ['features', 'geo', 'integracoes', 'retencao', 'risco', 'seguranca', 'ui'],
+            ['features', 'geo', 'integracoes', 'louos', 'retencao', 'risco', 'seguranca', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -258,11 +258,36 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($dimensao->value);
     }
 
+    public function test_seeder_registra_parametros_do_motor_louos(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $vagas = Parameter::query()->where('key', 'louos.vagas.exigencia_por_grupo')->first();
+
+        $this->assertNotNull($vagas);
+        $this->assertSame('louos', $vagas->group);
+        $this->assertSame('json', $vagas->type);
+        $this->assertSame('{}', $vagas->default_value);
+        $this->assertSame(['required', 'json'], $vagas->validation_rules);
+        $this->assertNull($vagas->value);
+        $this->assertSame([], $vagas->typedValue());
+
+        $sandbox = Parameter::query()->where('key', 'louos.sandbox.amostra_padrao')->first();
+
+        $this->assertNotNull($sandbox);
+        $this->assertSame('louos', $sandbox->group);
+        $this->assertSame('integer', $sandbox->type);
+        $this->assertSame('50', $sandbox->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:1000'], $sandbox->validation_rules);
+        $this->assertNull($sandbox->value);
+        $this->assertSame(50, $sandbox->typedValue());
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(31, Parameter::query()->count());
+        $this->assertSame(33, Parameter::query()->count());
     }
 }
