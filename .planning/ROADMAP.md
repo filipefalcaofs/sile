@@ -314,7 +314,21 @@ Status (fechamento 2026-06-14, plano 08-16): 16/16 planos implementados; verific
   4. Processos sem BAP vinculado no prazo parametrizado são indeferidos automaticamente (HU-134).
   5. Cidadão é notificado pelos canais habilitados **sem** anexo de TVL (HU-077).
   6. Decisão automática fica integralmente auditada: dados de entrada, regras aplicadas, versão das regras e resultado.
-**Plans**: TBD
+**Plans**: 12 planos (Planned) — planejados em 2026-06-14 (7 waves do CONTEXT)
+
+Plans:
+- [ ] 09-01-PLAN.md — Parâmetros HU-014 + fallback config (wave 1)
+- [ ] 09-02-PLAN.md — Schema da decisão + DecisionOutcome + ViabilityDecision + TvlNumberGenerator + transições da StateMachine (wave 1)
+- [ ] 09-03-PLAN.md — Contratos Regin/SEFAZ/BAP (bloqueados) + bindings + evento ResultadoEmitido (wave 1)
+- [ ] 09-04-PLAN.md — SolicitacaoViabilityResolver (extração de SimulacaoSolicitacaoService) (wave 1)
+- [ ] 09-05-PLAN.md — FluxoExpressoService: elegibilidade + defere/indefere + lock + auditoria síncrona + TVL + idempotência (wave 2)
+- [ ] 09-06-PLAN.md — Gatilho: listener AvaliarFluxoExpresso + DecidirFluxoExpressoJob + expresso:reavaliar (wave 3)
+- [ ] 09-07-PLAN.md — NotificarResultadoExpresso + ResultadoExpressoNotification (HU-077, sem anexo) (wave 4)
+- [ ] 09-08-PLAN.md — ComunicarResultadoRegin (HU-104, pendência auditada) (wave 4)
+- [ ] 09-09-PLAN.md — EnviarViabilidadeSefaz (HU-110, só deferida, pendência auditada) (wave 4)
+- [ ] 09-10-PLAN.md — HU-134 BAP dormente: expresso:indeferir-sem-bap + seam de prazo (wave 5)
+- [ ] 09-11-PLAN.md — UI retaguarda: resultado expresso (lista + detalhe ViabilityDecision) (wave 6)
+- [ ] 09-12-PLAN.md — Fechamento: seeds dev + zona fictícia + expresso:decidir + golden/smoke + verificação integral + checkpoint humano (wave 7)
 
 Nota (recursos do framework — levantamento 2026-06-12): emissão de resultado protegida por atomic lock (`Cache::lock`) — idempotência sob concorrência, sem dupla emissão; decisão dispara evento de domínio (`ResultadoEmitido`) consumido por notificação (HU-077), integrações Regin/SEFAZ e auditoria; indeferimento por prazo BAP (HU-134) roda como rotina agendada no scheduler ativado na Fase 3.1.
 
@@ -456,7 +470,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 6. Classificação de Risco | 9/9 | Complete | 2026-06-14 |
 | 7. Consulta Prévia de Viabilidade | 10/10 | Complete (veredito locacional/inscrição pendentes SEDUR) | 2026-06-14 |
 | 8. Solicitação de Viabilidade | 16/16 | Complete (guardião APROVADO; resta só o smoke navegável humano); DAM HU-071/072 + Regin bloqueados → Fase 13; HU-139 texto livre | 2026-06-14 |
-| 9. Fluxo Expresso | 0/TBD | Not started | - |
+| 9. Fluxo Expresso | 0/12 | Planned (Regin/SEFAZ HU-104/110 e HU-134 ativa → Fase 13; TVL PDF HU-132 → Fase 10; zona oficial Quadro 10 pendente SEDUR) | - |
 | 10. Análise Técnica SEDUR | 0/TBD | Not started | - |
 | 11. Pendências e Comunicação | 0/TBD | Not started | - |
 | 12. Auditoria e Compliance | 0/TBD | Not started | - |
