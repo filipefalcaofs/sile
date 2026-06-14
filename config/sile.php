@@ -28,6 +28,7 @@ return [
         'simulacao_solicitacao' => true,
         'fluxo_expresso' => true,
         'notificacao_resultado_expresso' => true,
+        'analise_tecnica' => true,
     ],
     // Chaves pt-BR (geo.*, retencao.*, seguranca.*) espelham os parâmetros
     // HU-014 de mesmo nome — Settings::get lê config("sile.{chave}") no
@@ -109,6 +110,36 @@ return [
         'lock' => ['ttl_segundos' => 10],
         'fila' => 'default',
         'job' => ['tries' => 3, 'timeout' => 120, 'backoff' => [30, 60, 120]],
+    ],
+    // Espelha os parâmetros HU-014 analise.* / features.analise_tecnica da
+    // análise técnica (EP10). Settings::get lê config("sile.analise.*") no
+    // fallback (banco indisponível). Os valores de NEGÓCIO (SLA por etapa,
+    // limiar do semáforo, prazo de pendência, janela/itens de precedentes e o
+    // TVL PDF) nascem administráveis no ParameterSeeder; aqui é só o espelho.
+    'analise' => [
+        'sla' => [
+            'distribuicao_dias' => 2,
+            'analise_dias' => 10,
+            'semaforo' => ['amarelo_percentual' => 80],
+        ],
+        'pendencia' => ['prazo_resposta_dias' => 15],
+        'precedentes' => [
+            'janela_meses' => 12,
+            'max_itens' => 10,
+            // Constante TÉCNICA (fora do catálogo HU-014 — precedente [02-02]):
+            // TTL (segundos) do cache das estatísticas de precedentes. Não é
+            // valor de negócio; parametrizá-la no painel seria ruído.
+            'cache_ttl_segundos' => 300,
+        ],
+        'tvl' => [
+            'disk' => 'local',
+            'assinatura' => ['modo' => 'imagem', 'imagem_path' => ''],
+            'download' => ['ttl_minutos' => 5],
+        ],
+        // Constante TÉCNICA (fora do catálogo HU-014 — precedente [02-02]):
+        // debounce (ms) do autosave da ficha de análise. É detalhe de UX/UI,
+        // não decisão de negócio.
+        'autosave' => ['debounce_ms' => 1500],
     ],
     'seguranca' => [
         'throttle' => [

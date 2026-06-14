@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(56, Parameter::query()->count());
+        $this->assertSame(67, Parameter::query()->count());
         $this->assertSame(
-            ['expresso', 'features', 'geo', 'integracoes', 'louos', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
+            ['analise', 'expresso', 'features', 'geo', 'integracoes', 'louos', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -428,11 +428,105 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(6, $paddingTvl->typedValue());
     }
 
+    public function test_seeder_registra_parametros_da_analise_tecnica(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $toggle = Parameter::query()->where('key', 'features.analise_tecnica')->first();
+        $this->assertNotNull($toggle);
+        $this->assertSame('features', $toggle->group);
+        $this->assertSame('boolean', $toggle->type);
+        $this->assertSame('1', $toggle->default_value);
+        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
+        $this->assertNull($toggle->value);
+
+        $distribuicao = Parameter::query()->where('key', 'analise.sla.distribuicao_dias')->first();
+        $this->assertNotNull($distribuicao);
+        $this->assertSame('analise', $distribuicao->group);
+        $this->assertSame('integer', $distribuicao->type);
+        $this->assertSame('2', $distribuicao->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:60'], $distribuicao->validation_rules);
+        $this->assertNull($distribuicao->value);
+
+        $analise = Parameter::query()->where('key', 'analise.sla.analise_dias')->first();
+        $this->assertNotNull($analise);
+        $this->assertSame('analise', $analise->group);
+        $this->assertSame('integer', $analise->type);
+        $this->assertSame('10', $analise->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:180'], $analise->validation_rules);
+        $this->assertNull($analise->value);
+
+        $semaforo = Parameter::query()->where('key', 'analise.sla.semaforo.amarelo_percentual')->first();
+        $this->assertNotNull($semaforo);
+        $this->assertSame('analise', $semaforo->group);
+        $this->assertSame('integer', $semaforo->type);
+        $this->assertSame('80', $semaforo->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:99'], $semaforo->validation_rules);
+        $this->assertNull($semaforo->value);
+
+        $pendencia = Parameter::query()->where('key', 'analise.pendencia.prazo_resposta_dias')->first();
+        $this->assertNotNull($pendencia);
+        $this->assertSame('analise', $pendencia->group);
+        $this->assertSame('integer', $pendencia->type);
+        $this->assertSame('15', $pendencia->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:180'], $pendencia->validation_rules);
+        $this->assertNull($pendencia->value);
+
+        $janela = Parameter::query()->where('key', 'analise.precedentes.janela_meses')->first();
+        $this->assertNotNull($janela);
+        $this->assertSame('analise', $janela->group);
+        $this->assertSame('integer', $janela->type);
+        $this->assertSame('12', $janela->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:120'], $janela->validation_rules);
+        $this->assertNull($janela->value);
+        $this->assertSame(12, $janela->typedValue());
+
+        $maxItens = Parameter::query()->where('key', 'analise.precedentes.max_itens')->first();
+        $this->assertNotNull($maxItens);
+        $this->assertSame('analise', $maxItens->group);
+        $this->assertSame('integer', $maxItens->type);
+        $this->assertSame('10', $maxItens->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:50'], $maxItens->validation_rules);
+        $this->assertNull($maxItens->value);
+
+        $disk = Parameter::query()->where('key', 'analise.tvl.disk')->first();
+        $this->assertNotNull($disk);
+        $this->assertSame('analise', $disk->group);
+        $this->assertSame('string', $disk->type);
+        $this->assertSame('local', $disk->default_value);
+        $this->assertSame(['required', 'string', 'max:50'], $disk->validation_rules);
+        $this->assertNull($disk->value);
+
+        $modo = Parameter::query()->where('key', 'analise.tvl.assinatura.modo')->first();
+        $this->assertNotNull($modo);
+        $this->assertSame('analise', $modo->group);
+        $this->assertSame('string', $modo->type);
+        $this->assertSame('imagem', $modo->default_value);
+        $this->assertSame(['required', 'in:imagem,nenhuma'], $modo->validation_rules);
+        $this->assertNull($modo->value);
+
+        $imagemPath = Parameter::query()->where('key', 'analise.tvl.assinatura.imagem_path')->first();
+        $this->assertNotNull($imagemPath);
+        $this->assertSame('analise', $imagemPath->group);
+        $this->assertSame('string', $imagemPath->type);
+        $this->assertSame('', $imagemPath->default_value);
+        $this->assertSame(['nullable', 'string', 'max:255'], $imagemPath->validation_rules);
+        $this->assertNull($imagemPath->value);
+
+        $ttl = Parameter::query()->where('key', 'analise.tvl.download.ttl_minutos')->first();
+        $this->assertNotNull($ttl);
+        $this->assertSame('analise', $ttl->group);
+        $this->assertSame('integer', $ttl->type);
+        $this->assertSame('5', $ttl->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:1440'], $ttl->validation_rules);
+        $this->assertNull($ttl->value);
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(56, Parameter::query()->count());
+        $this->assertSame(67, Parameter::query()->count());
     }
 }
