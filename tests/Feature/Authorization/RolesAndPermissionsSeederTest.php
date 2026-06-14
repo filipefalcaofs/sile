@@ -32,6 +32,8 @@ class RolesAndPermissionsSeederTest extends TestCase
             'consultar-cnaes',
             'consultar-risco',
             'manter-risco',
+            'consultar-louos',
+            'manter-louos',
         ];
 
         foreach ($permissions as $permission) {
@@ -112,6 +114,31 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->assertFalse(Role::findByName('cidadao', 'web')->hasPermissionTo('consultar-risco'));
     }
 
+    public function test_papeis_recebem_permissoes_de_louos(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        foreach (['consultar-louos', 'manter-louos'] as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Consulta dos Quadros vigentes: analista, gestor e administrador (espelha CNAEs/risco).
+        foreach (['administrador', 'analista', 'gestor'] as $role) {
+            $this->assertTrue(
+                Role::findByName($role, 'web')->hasPermissionTo('consultar-louos'),
+            );
+        }
+
+        // Manutenção (publicação versionada dos Quadros): só o administrador.
+        $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('manter-louos'));
+        $this->assertFalse(Role::findByName('analista', 'web')->hasPermissionTo('manter-louos'));
+        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('manter-louos'));
+        $this->assertFalse(Role::findByName('cidadao', 'web')->hasPermissionTo('consultar-louos'));
+    }
+
     public function test_estados_da_factory_atribuem_papel(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
@@ -128,7 +155,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(12, Permission::query()->count());
+        $this->assertSame(14, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void
