@@ -6,6 +6,7 @@ use App\Http\Controllers\Gestao\DashboardController;
 use App\Http\Controllers\Gestao\EmailLogController;
 use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\LoginController;
+use App\Http\Controllers\Gestao\LouosController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\RiscoCondicionanteController;
 use App\Http\Controllers\Gestao\RiscoController;
@@ -99,5 +100,17 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('condicionantes', [RiscoCondicionanteController::class, 'store'])->name('condicionantes.store');
             Route::put('condicionantes/{condicionante}', [RiscoCondicionanteController::class, 'update'])->name('condicionantes.update');
             Route::delete('condicionantes/{condicionante}', [RiscoCondicionanteController::class, 'destroy'])->name('condicionantes.destroy');
+        });
+
+        // Quadros da LOUOS (HU-015..018/HU-046): a consulta da versão vigente dos
+        // 4 Quadros (analista/gestor/admin) é separada da publicação versionada
+        // (admin). Gate cross-guard via permission: (PADRÃO 04-03/06). Publicar
+        // gera NOVA versão por quatro olhos, nunca edição destrutiva da vigente.
+        Route::middleware('permission:consultar-louos')->prefix('louos')->name('louos.')->group(function () {
+            Route::get('/', [LouosController::class, 'index'])->name('index');
+        });
+
+        Route::middleware('permission:manter-louos')->prefix('louos')->name('louos.')->group(function () {
+            Route::put('publicar', [LouosController::class, 'publish'])->name('publicar');
         });
     });
