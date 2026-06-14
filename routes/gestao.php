@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
+use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\ContingenciaController;
 use App\Http\Controllers\Gestao\DashboardController;
@@ -205,6 +206,23 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:consultar-solicitacoes')->prefix('resultados-expresso')->name('resultados-expresso.')->group(function () {
             Route::get('/', [ResultadoExpressoController::class, 'index'])->name('index');
             Route::get('{viabilityRequest}', [ResultadoExpressoController::class, 'show'])->name('show');
+        });
+
+        // Caixa do setor (HU-080/081): a fila da distribuição da análise técnica.
+        // O analista vê e ASSUME os processos em_analise do(s) seu(s) setor(es)
+        // (analisar-processos); o gestor DISTRIBUI — single ou lote (RN-007) — a
+        // um analista do setor (distribuir-processos). A caixa NÃO tira o processo
+        // do setor (RN-004) e o 403 é auditado no ponto único (bootstrap/app.php).
+        // Telas em 10-16; ÚNICO editor de rotas da Wave 3.
+        Route::prefix('caixa-setor')->name('caixa-setor.')->group(function () {
+            Route::middleware('permission:analisar-processos')->group(function () {
+                Route::get('/', [CaixaSetorController::class, 'index'])->name('index');
+                Route::post('{viabilityRequest}/assumir', [CaixaSetorController::class, 'assumir'])->name('assumir');
+            });
+
+            Route::middleware('permission:distribuir-processos')->group(function () {
+                Route::post('distribuir', [CaixaSetorController::class, 'distribuir'])->name('distribuir');
+            });
         });
 
         // Atendimento presencial assistido (HU-150): canal de operador de balcão.
