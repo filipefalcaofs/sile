@@ -73,6 +73,12 @@ return [
         'area_poligono' => ['tolerancia_percentual' => 10],
         'prazo_estimado_dias' => 30,
         'atendimento' => ['expiracao_minutos' => 30],
+        // Janela (em dias) da detecção de reincidência por CNPJ (HU-061 RN-007).
+        // É uma CONSTANTE técnica/de negócio aqui, NÃO um parâmetro do catálogo
+        // HU-014: a definição oficial de "duplicidade/reincidência" é pendência
+        // SEDUR — este é um default honesto e ajustável sem deploy. O detector
+        // só ALERTA (link ao processo anterior), nunca bloqueia.
+        'duplicidade' => ['janela_dias' => 180],
     ],
     'storage' => [
         'documentos' => ['disk' => 'local'],
