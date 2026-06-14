@@ -3,6 +3,7 @@
 namespace Tests\Feature\Expresso;
 
 use App\Enums\DecisionOutcome;
+use App\Http\Resources\ViabilityDecisionResource;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -36,6 +37,51 @@ class ViabilityDecisionTest extends TestCase
         $this->assertInstanceOf(Carbon::class, $decision->decided_at);
         $this->assertNull($decision->decided_by_user_id);
         $this->assertTrue($decision->isDeferida());
+    }
+
+    public function test_factory_reflete_o_contrato_real_do_fluxo_expresso(): void
+    {
+        // O FluxoExpressoService grava fundamentacao como LISTA (array_values),
+        // per_cnae com shape completo e rules_versions ANINHADO por domínio. A
+        // factory DEVE refletir esse contrato real — senão mascara bugs de
+        // consumo (ex.: a tela de detalhe itera fundamentacao) e viola
+        // entrega-funcional (testes exercitam a lógica real).
+        $decision = ViabilityDecision::factory()->create();
+
+        $this->assertTrue(
+            array_is_list($decision->fundamentacao),
+            'fundamentacao deve ser uma LISTA de referências (contrato do FluxoExpressoService)'
+        );
+        $this->assertContainsOnly('string', $decision->fundamentacao);
+
+        $this->assertTrue(array_is_list($decision->per_cnae), 'per_cnae deve ser uma lista');
+        foreach (['cnae', 'cnae_formatado', 'is_primary', 'tendencia', 'tendencia_label', 'fluxo', 'fundamentacao'] as $chave) {
+            $this->assertArrayHasKey($chave, $decision->per_cnae[0], "per_cnae deve conter '{$chave}'");
+        }
+        $this->assertTrue(array_is_list($decision->per_cnae[0]['fundamentacao']));
+
+        // rules_versions é aninhado por domínio (territorio/louos/risco).
+        $this->assertIsArray($decision->rules_versions['louos'] ?? null);
+        $this->assertIsArray($decision->rules_versions['risco'] ?? null);
+    }
+
+    public function test_resource_entrega_fundamentacao_como_lista_mesmo_com_shape_legado(): void
+    {
+        // Defesa anti-quebra de SSR (HU-076 retaguarda): mesmo que um registro
+        // tenha fundamentacao em shape associativo (legado/edge), o Resource
+        // entrega uma LISTA (array_values) — a tela de detalhe itera sem derrubar
+        // a página inteira.
+        $request = ViabilityRequest::factory()->protocoled()->create();
+        $decision = ViabilityDecision::factory()->create([
+            'viability_request_id' => $request->id,
+            'fundamentacao' => ['louos' => 'Lei nº 9.148/2016', 'risco' => 'Decreto nº 32.636/2020'],
+        ]);
+
+        $payload = ViabilityDecisionResource::make($decision->fresh())->resolve();
+
+        $this->assertTrue(array_is_list($payload['fundamentacao']));
+        $this->assertSame(['Lei nº 9.148/2016', 'Decreto nº 32.636/2020'], $payload['fundamentacao']);
+        $this->assertTrue(array_is_list($payload['per_cnae']));
     }
 
     public function test_state_indeferida_nao_tem_tvl(): void

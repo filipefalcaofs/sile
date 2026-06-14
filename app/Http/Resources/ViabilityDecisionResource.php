@@ -38,9 +38,11 @@ class ViabilityDecisionResource extends JsonResource
             'consolidated_result' => $this->consolidated_result,
             'consolidated_result_label' => $this->consolidatedResultLabel(),
             'tvl_product_number' => $this->tvl_product_number,
-            'per_cnae' => $this->per_cnae ?? [],
+            'per_cnae' => array_values((array) ($this->per_cnae ?? [])),
             'rules_versions' => $this->rules_versions ?? [],
-            'fundamentacao' => $this->fundamentacao ?? [],
+            // Sempre uma LISTA (array_values): a tela de detalhe itera a
+            // fundamentação; um shape associativo legado não pode derrubar o SSR.
+            'fundamentacao' => array_values((array) ($this->fundamentacao ?? [])),
             'reason' => $this->reason,
             'decided_at' => $this->decided_at?->toIso8601String(),
             'decided_by' => $this->decided_by_user_id === null ? null : $this->decidedBy?->name,

@@ -30,21 +30,28 @@ class ViabilityDecisionFactory extends Factory
             'outcome' => DecisionOutcome::Deferida,
             'consolidated_result' => 'permitido',
             'tvl_product_number' => 'TVL-'.$year.'-000001',
+            // Shapes idênticos aos gravados pelo FluxoExpressoService (RN-005/009):
+            // per_cnae completo, rules_versions ANINHADO por domínio e fundamentacao
+            // como LISTA — para os testes exercitarem o contrato real de consumo.
             'per_cnae' => [
                 [
                     'cnae' => '4712100',
-                    'resultado' => 'permitido',
+                    'cnae_formatado' => '4712-1/00',
+                    'is_primary' => true,
+                    'tendencia' => 'permitido',
+                    'tendencia_label' => 'Permitido',
                     'fluxo' => 'expresso',
+                    'fundamentacao' => ['Lei nº 9.148/2016 (LOUOS) — Quadro 7'],
                 ],
             ],
             'rules_versions' => [
-                'territorio' => '2026.1',
-                'louos' => '2026.1',
-                'risco' => '2026.1',
+                'territorio' => ['camadas' => '2026.1'],
+                'louos' => ['quadro7' => '2026.1', 'quadro10' => '2026.1'],
+                'risco' => ['decreto' => '2026.1'],
             ],
             'fundamentacao' => [
-                'louos' => 'Lei nº 9.148/2016',
-                'risco' => 'Decreto nº 32.636/2020',
+                'Lei nº 9.148/2016 (LOUOS) — Quadro 7',
+                'Decreto nº 32.636/2020 — classificação de risco',
             ],
             'reason' => null,
             'decided_by_user_id' => null,
@@ -64,8 +71,12 @@ class ViabilityDecisionFactory extends Factory
             'per_cnae' => [
                 [
                     'cnae' => '4712100',
-                    'resultado' => 'nao_permitido',
+                    'cnae_formatado' => '4712-1/00',
+                    'is_primary' => true,
+                    'tendencia' => 'nao_permitido',
+                    'tendencia_label' => 'Não permitido',
                     'fluxo' => 'expresso',
+                    'fundamentacao' => ['Lei nº 9.148/2016 (LOUOS) — Quadro 10'],
                 ],
             ],
         ]);

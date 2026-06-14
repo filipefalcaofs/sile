@@ -147,6 +147,10 @@ function DescItem({ label, children }: { label: string; children: ReactNode }) {
 export default function ResultadoExpressoShow({ decisao, transmissao }: ResultadoExpressoShowProps) {
     const solicitacao = decisao.solicitacao;
     const regras = flattenRegras(decisao.rules_versions);
+    // Defensivo: a fundamentação é sempre uma lista vinda do backend, mas um
+    // shape inesperado não pode derrubar o SSR da página inteira.
+    const fundamentacao = Array.isArray(decisao.fundamentacao) ? decisao.fundamentacao : [];
+    const perCnae = Array.isArray(decisao.per_cnae) ? decisao.per_cnae : [];
 
     return (
         <>
@@ -243,13 +247,13 @@ export default function ResultadoExpressoShow({ decisao, transmissao }: Resultad
                         description="Veredito e encaminhamento de cada atividade econômica da solicitação."
                     />
                     <CardContent>
-                        {decisao.per_cnae.length === 0 ? (
+                        {perCnae.length === 0 ? (
                             <p className="text-theme-sm text-gray-500 dark:text-gray-400">
                                 Sem detalhamento por CNAE registrado nesta decisão.
                             </p>
                         ) : (
                             <ul className="space-y-4">
-                                {decisao.per_cnae.map((item, index) => (
+                                {perCnae.map((item, index) => (
                                     <li
                                         key={`${item.cnae}-${index}`}
                                         className="rounded-xl border border-gray-200 p-4 dark:border-gray-800"
@@ -324,13 +328,13 @@ export default function ResultadoExpressoShow({ decisao, transmissao }: Resultad
                             description="Referências normativas que embasam a decisão (produzidas pelos motores LOUOS/risco)."
                         />
                         <CardContent>
-                            {decisao.fundamentacao.length === 0 ? (
+                            {fundamentacao.length === 0 ? (
                                 <p className="text-theme-sm text-gray-500 dark:text-gray-400">
                                     Sem fundamentação registrada.
                                 </p>
                             ) : (
                                 <ul className="list-inside list-disc space-y-1 text-theme-sm text-gray-600 dark:text-gray-300">
-                                    {decisao.fundamentacao.map((ref, index) => (
+                                    {fundamentacao.map((ref, index) => (
                                         <li key={index}>{ref}</li>
                                     ))}
                                 </ul>
