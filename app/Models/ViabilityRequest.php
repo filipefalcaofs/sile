@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Solicitação de viabilidade (EP08) — aggregate root com o imóvel embutido 1:1.
@@ -57,6 +58,8 @@ class ViabilityRequest extends Model
             'simulated_at' => 'datetime',
             'protocoled_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'bap_due_at' => 'datetime',
+            'bap_linked_at' => 'datetime',
         ];
     }
 
@@ -171,5 +174,18 @@ class ViabilityRequest extends Model
     public function transitions(): HasMany
     {
         return $this->hasMany(ViabilityRequestTransition::class)->latest();
+    }
+
+    /**
+     * Decisão do fluxo expresso (EP09) — 1:1 imutável, existe só após
+     * deferir/indeferir. bap_due_at/bap_linked_at (HU-134) ficam fora do
+     * fillable (como protocol_number/status): são gravados via forceFill pela
+     * rotina do BAP quando o Regin entrar (Fase 13).
+     *
+     * @return HasOne<ViabilityDecision, $this>
+     */
+    public function decision(): HasOne
+    {
+        return $this->hasOne(ViabilityDecision::class);
     }
 }

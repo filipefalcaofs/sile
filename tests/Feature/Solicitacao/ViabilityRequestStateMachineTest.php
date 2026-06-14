@@ -115,4 +115,124 @@ class ViabilityRequestStateMachineTest extends TestCase
         $this->assertSame('Recebida — em processamento', $transition->public_label);
         $this->assertSame('Protocolo efetuado pelo requerente.', $transition->reason);
     }
+
+    /**
+     * EP09 ADICIONA as saídas de decisão de protocolada (sem tocar o protocolo
+     * da Fase 8): o fluxo expresso defere/indefere automático, roteia para
+     * análise (semi-expresso) ou aguarda a Junta (BAP).
+     */
+    public function test_protocolada_transiciona_para_estados_de_decisao(): void
+    {
+        $destinos = [
+            ViabilityRequestStatus::EmAnalise,
+            ViabilityRequestStatus::Deferida,
+            ViabilityRequestStatus::Indeferida,
+            ViabilityRequestStatus::AguardandoBap,
+        ];
+
+        foreach ($destinos as $i => $destino) {
+            $request = ViabilityRequest::factory()->protocoled()->create([
+                'protocol_number' => 'VIA-2026-'.str_pad((string) ($i + 1), 6, '0', STR_PAD_LEFT),
+            ]);
+
+            $this->assertTrue(
+                $this->machine()->canTransition(ViabilityRequestStatus::Protocolada, $destino),
+                "protocolada→{$destino->value} deveria ser válida no EP09.",
+            );
+
+            $this->machine()->transition($request, $destino);
+            $this->assertSame($destino, $request->fresh()->status);
+            $this->assertSame(1, $request->transitions()->count());
+        }
+    }
+
+    public function test_protocolada_para_deferida_audita_transicao(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create();
+
+        $this->machine()->transition($request, ViabilityRequestStatus::Deferida);
+
+        $activity = Activity::query()
+            ->where('log_name', 'solicitacoes')
+            ->where('event', 'transicao')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($activity);
+        $this->assertSame('sucesso', $activity->result);
+        $this->assertSame('protocolada', $activity->properties['from']);
+        $this->assertSame('deferida', $activity->properties['to']);
+    }
+
+    /**
+     * aguardando_bap (HU-134) é a antessala da decisão final pós-Junta: pode
+     * deferir, indeferir (prazo BAP vencido) ou cair em análise.
+     */
+    public function test_aguardando_bap_transiciona_para_decisao_e_analise(): void
+    {
+        $destinos = [
+            ViabilityRequestStatus::Deferida,
+            ViabilityRequestStatus::Indeferida,
+            ViabilityRequestStatus::EmAnalise,
+        ];
+
+        foreach ($destinos as $i => $destino) {
+            $request = ViabilityRequest::factory()->protocoled()->create([
+                'protocol_number' => 'VIA-2026-'.str_pad((string) ($i + 1), 6, '0', STR_PAD_LEFT),
+            ]);
+            $request->forceFill(['status' => ViabilityRequestStatus::AguardandoBap])->save();
+
+            $this->assertTrue(
+                $this->machine()->canTransition(ViabilityRequestStatus::AguardandoBap, $destino),
+                "aguardando_bap→{$destino->value} deveria ser válida no EP09.",
+            );
+
+            $this->machine()->transition($request, $destino);
+            $this->assertSame($destino, $request->fresh()->status);
+        }
+    }
+
+    public function test_aguardando_bap_nao_volta_para_protocolada(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create();
+        $request->forceFill(['status' => ViabilityRequestStatus::AguardandoBap])->save();
+
+        $this->assertFalse(
+            $this->machine()->canTransition(ViabilityRequestStatus::AguardandoBap, ViabilityRequestStatus::Protocolada),
+        );
+
+        try {
+            $this->machine()->transition($request, ViabilityRequestStatus::Protocolada);
+            $this->fail('aguardando_bap→protocolada não deveria ser transicionável.');
+        } catch (InvalidStatusTransitionException) {
+            // esperado
+        }
+
+        $this->assertSame(ViabilityRequestStatus::AguardandoBap, $request->fresh()->status);
+    }
+
+    /**
+     * Anti-regressão: o EP09 só ADICIONA entradas no mapa. Transições que a
+     * Fase 8 nunca permitiu seguem bloqueadas (estado final cancelada não
+     * "revive" como deferida; protocolada não regride a rascunho).
+     */
+    public function test_transicoes_invalidas_antigas_continuam_bloqueadas(): void
+    {
+        $this->assertFalse(
+            $this->machine()->canTransition(ViabilityRequestStatus::Cancelada, ViabilityRequestStatus::Deferida),
+            'cancelada→deferida deve permanecer inválida.',
+        );
+        $this->assertFalse(
+            $this->machine()->canTransition(ViabilityRequestStatus::Protocolada, ViabilityRequestStatus::Rascunho),
+            'protocolada→rascunho deve permanecer inválida.',
+        );
+        $this->assertFalse(
+            $this->machine()->canTransition(ViabilityRequestStatus::Rascunho, ViabilityRequestStatus::EmAnalise),
+            'rascunho→em_analise deve permanecer inválida.',
+        );
+        $this->assertFalse(
+            $this->machine()->canTransition(ViabilityRequestStatus::Deferida, ViabilityRequestStatus::Indeferida),
+            'deferida→indeferida deve permanecer inválida (decisão é final).',
+        );
+    }
 }

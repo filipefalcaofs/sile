@@ -23,14 +23,17 @@ use App\Support\Audit\AuditService;
 class ViabilityRequestStateMachine
 {
     /**
-     * Transições ativas, por valor de estado. As fases seguintes estendem este
-     * mapa — nesta fase só rascunho/protocolada têm saídas.
+     * Transições ativas, por valor de estado. O EP09 (fluxo expresso) só
+     * ADICIONA as saídas de decisão de protocolada e a antessala aguardando_bap
+     * (HU-134) — sem tocar nas entradas da Fase 8 (rascunho/protocolada→cancelada
+     * seguem intactas). A decisão (deferida/indeferida) é final: não há saída.
      *
      * @var array<string, list<string>>
      */
     private const array TRANSITIONS = [
         'rascunho' => ['protocolada', 'cancelada'],
-        'protocolada' => ['cancelada'],
+        'protocolada' => ['cancelada', 'em_analise', 'deferida', 'indeferida', 'aguardando_bap'],
+        'aguardando_bap' => ['deferida', 'indeferida', 'em_analise'],
     ];
 
     public function __construct(private AuditService $audit) {}

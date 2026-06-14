@@ -23,11 +23,13 @@ return new class extends Migration
         Schema::create('viability_decisions', function (Blueprint $table) {
             $table->id();
 
-            // 1:1 com a solicitação — unique garante uma única decisão por processo.
+            // 1:1 com a solicitação — unique ANTES de constrained() para criar o
+            // índice único na COLUNA (encadeado após constrained() ele recai
+            // sobre a FK e o índice não é gerado).
             $table->foreignId('viability_request_id')
+                ->unique()
                 ->constrained('viability_requests')
-                ->cascadeOnDelete()
-                ->unique();
+                ->cascadeOnDelete();
 
             $table->string('flow')->default('expresso');
 
