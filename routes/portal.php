@@ -13,6 +13,7 @@ use App\Http\Controllers\Portal\HistoricoConsultaController;
 use App\Http\Controllers\Portal\LgpdTermController;
 use App\Http\Controllers\Portal\ProcurationController;
 use App\Http\Controllers\Portal\RepresentationController;
+use App\Http\Controllers\Portal\SolicitacaoController;
 use App\Http\Middleware\ResolveRepresentation;
 use Illuminate\Support\Facades\Route;
 
@@ -91,5 +92,11 @@ Route::middleware(['auth:web', 'verified'])
 
             // Busca da tabela oficial para os selects de CNAE (só ativos).
             Route::get('cnaes', CnaeSearchController::class)->name('cnaes.search');
+
+            // Solicitações de viabilidade (HU-061) — rotas literais; as rotas
+            // com {solicitacao} entram em 08-06/08-11. O store degrada de forma
+            // comunicada com o toggle features.solicitacao_viabilidade off.
+            Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->name('solicitacoes.index');
+            Route::post('solicitacoes', [SolicitacaoController::class, 'store'])->name('solicitacoes.store');
         });
     });
