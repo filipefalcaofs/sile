@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Portal\AccessHistoryController;
+use App\Http\Controllers\Portal\CancelamentoSolicitacaoController;
 use App\Http\Controllers\Portal\CnaeSearchController;
 use App\Http\Controllers\Portal\CnpjLookupController;
 use App\Http\Controllers\Portal\CompanyCnaeController;
@@ -138,5 +139,13 @@ Route::middleware(['auth:web', 'verified'])
             // evento de domínio após o commit. Só do dono em rascunho (policy
             // protocol); toggle features.solicitacao_viabilidade degrada.
             Route::post('solicitacoes/{solicitacao}/protocolar', [ProtocoloController::class, 'store'])->name('solicitacoes.protocolar');
+
+            // Cancelar a solicitação (HU-070) — rota com {solicitacao} DEPOIS das
+            // literais. Só o dono enquanto não decidida (policy cancel); o
+            // CancelarSolicitacaoService transiciona para cancelada (timeline +
+            // auditoria) com os estados canceláveis parametrizáveis
+            // (solicitacao.cancelamento.estados_cancelaveis); fora deles, bloqueia
+            // com aviso e audita.
+            Route::delete('solicitacoes/{solicitacao}', [CancelamentoSolicitacaoController::class, 'destroy'])->name('solicitacoes.cancelar');
         });
     });
