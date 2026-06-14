@@ -201,9 +201,20 @@ Nota: a geocodificação (Nominatim/OSM) e a lógica de identificação operam s
   5. Toda execução do motor registra fundamentação legal e a versão das regras aplicadas.
   6. Gestor simula o impacto de uma alteração de regra contra processos/cenários reais antes de publicar (HU-143 — sandbox; publicação 4 olhos para domínios sensíveis).
   7. Suíte de **golden cases** do motor (casos de entrada → resultado esperado, validados pela SEDUR) roda verde no CI a cada mudança de regra ou deploy — proteção contra regressão de domínio, complementar ao sandbox da HU-143.
-**Plans**: TBD
+**Plans**: 9 plans
 
-Nota: a correspondência "Quadro 11" ↔ Quadro 11B oficial e as planilhas parametrizadas vigentes estão pendentes de confirmação com a SEDUR; o motor nasce parametrizável e recebe a carga oficial quando entregue (seeds derivados da Lei nº 9.148/2016 até lá).
+Plans:
+- [ ] 05-01-PLAN.md — Fundação: RuleDomain louos_* (reusa rule_versions) + tabelas tipadas + enums + DTOs EnquadramentoInput/Result + parâmetros vagas/sandbox (wave 1)
+- [ ] 05-02-PLAN.md — Seeds: Quadro 7 REAL (Lei 9.148/2016) + Quadros 10/11/11A modelados, versionados e auditados + distribuição (wave 2)
+- [ ] 05-03-PLAN.md — Motor Quadro 7: enquadramento por área + resolução de versão (3 modos) + auditoria (HU-038/046) (wave 3)
+- [ ] 05-04-PLAN.md — Motor Quadro 10 (degradação sem zona) + Quadros 11/11A parciais (HU-039/040/041) (wave 4)
+- [ ] 05-05-PLAN.md — Consolidação + fundamentação legal + vagas + restrições ZEIS (HU-044/045/042/043) (wave 5)
+- [ ] 05-06-PLAN.md — Mantenedores backend dos Quadros: permissões + publicação 4-olhos (HU-015/016/017/018) (wave 3, ‖ 05-03)
+- [ ] 05-07-PLAN.md — Mantenedores UI no console + navegação (HU-015..018) (wave 4, ‖ 05-04)
+- [ ] 05-08-PLAN.md — Sandbox HU-143: simula rascunho contra cenários reais (motor real) + publicação 4-olhos (wave 6)
+- [ ] 05-09-PLAN.md — Golden cases (#[DataProvider], requer_zona=pendente) + comando louos:enquadrar + verificação integral (wave 7)
+
+Nota: a correspondência "Quadro 11" ↔ Quadro 11B oficial e as planilhas parametrizadas vigentes estão pendentes de confirmação com a SEDUR; o motor nasce parametrizável e recebe a carga oficial quando entregue (seeds derivados da Lei nº 9.148/2016 até lá). Mapeamento de HUs confirmado pelos arquivos oficiais: HU-015=Quadro 7, HU-016=Quadro 10, HU-017=Quadro 11, HU-018=Quadro 11A (o spec havia invertido 015↔016).
 
 ### Phase 6: Classificação de Risco
 **Goal**: CNAEs classificados por risco municipal (Decreto nº 32.636/2020) com condicionantes operacionalizadas como perguntas que reclassificam o risco, determinando o encaminhamento — **baixo e médio risco → fluxo expresso**; **alto risco → análise humana**; gatilhos CNAE parametrizados derrubam casos pontuais para análise (semi-expresso).
@@ -409,7 +420,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 3.1. Fundação assíncrona — scheduler, jobs e retenção (INSERTED) | 5/5 | Complete | 2026-06-13 |
 | 3.2. Autenticação GOV.BR no portal (INSERTED) | 1/1 | Implemented — aguardando credenciamento p/ validar staging | - |
 | 4. Georreferenciamento e Território | 8/8 | Complete (zona/lote bloqueados — pendente SEDUR) | 2026-06-13 |
-| 5. Motor de Regras da LOUOS | 0/TBD | Not started | - |
+| 5. Motor de Regras da LOUOS | 0/9 | Planned | - |
 | 6. Classificação de Risco | 9/9 | Complete | 2026-06-14 |
 | 7. Consulta Prévia de Viabilidade | 0/TBD | Not started | - |
 | 8. Solicitação de Viabilidade | 0/TBD | Not started | - |
