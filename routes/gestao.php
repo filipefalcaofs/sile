@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Gestao\AccessHistoryController;
+use App\Http\Controllers\Gestao\AnalysisRecordController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
@@ -223,6 +224,21 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::middleware('permission:distribuir-processos')->group(function () {
                 Route::post('distribuir', [CaixaSetorController::class, 'distribuir'])->name('distribuir');
             });
+        });
+
+        // Ficha de análise técnica (HU-135/140/142): a superfície da análise
+        // humana. Abre a revisão vigente (pré-analisada em 10-08), faz autosave do
+        // rascunho (RN-008), finaliza tornando a revisão IMUTÁVEL (RN-003) e
+        // materializando as divergências analista×motor (HU-140), cria uma nova
+        // revisão para reedição/recálculo e compara duas revisões (diff — RN-007).
+        // O painel de precedentes (HU-142) consome o PrecedentService (10-06).
+        // Tudo gated por analisar-processos e auditado (RN-002); o 403 é auditado
+        // no ponto único (bootstrap/app.php). A decisão (deferir/indeferir) NÃO
+        // está aqui — é 10-10, a partir da ficha finalizada. ÚNICO editor de rotas
+        // da Wave 4; telas em 10-17.
+        Route::middleware('permission:analisar-processos')->prefix('processos/{viabilityRequest}')->name('processos.')->group(function () {
+            Route::get('ficha', [AnalysisRecordController::class, 'show'])->name('ficha.show');
+            Route::patch('ficha', [AnalysisRecordController::class, 'autosave'])->name('ficha.autosave');
         });
 
         // Atendimento presencial assistido (HU-150): canal de operador de balcão.
