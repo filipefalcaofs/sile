@@ -2,12 +2,16 @@
 
 namespace Tests\Feature\Solicitacao;
 
+use App\Http\Middleware\ResolveAssistedAttendance;
 use App\Models\AssistedAttendance;
 use App\Models\Procuration;
 use App\Models\User;
 use App\Support\Representation\CurrentRepresentation;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Context;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
 /**
@@ -76,5 +80,70 @@ class AtendimentoPresencialTest extends TestCase
         // O caminho de procuração da Fase 1 NÃO pode regredir ao reusar o
         // CurrentRepresentation para o atendimento presencial.
         $this->assertSame($grantor->id, $representation->grantor()?->id);
+    }
+
+    /**
+     * Invoca o middleware isoladamente (padrão do projeto: o comportamento da
+     * representação é provado pelos fluxos, não há teste de middleware com rota
+     * dedicada). Aqui basta uma request com sessão e usuário resolvidos.
+     */
+    private function runMiddleware(User $attendant, ?int $attendanceIdInSession): Request
+    {
+        $request = Request::create('/gestao/atendimento', 'GET');
+        $request->setLaravelSession($this->app['session']->driver());
+        $request->setUserResolver(fn () => $attendant);
+
+        if ($attendanceIdInSession !== null) {
+            $request->session()->put('attending_attendance_id', $attendanceIdInSession);
+        }
+
+        (new ResolveAssistedAttendance)->handle($request, fn (Request $req): Response => new Response('ok'));
+
+        return $request;
+    }
+
+    public function test_middleware_resolve_atendimento_ativo_para_representacao(): void
+    {
+        $attendant = User::factory()->gestor()->create();
+        $citizen = User::factory()->cidadao()->create();
+        $attendance = AssistedAttendance::factory()->active()->create([
+            'attendant_user_id' => $attendant->id,
+            'citizen_user_id' => $citizen->id,
+        ]);
+
+        $this->runMiddleware($attendant, $attendance->id);
+
+        $this->assertSame($citizen->id, app(CurrentRepresentation::class)->grantor()?->id);
+        $this->assertSame($citizen->id, Context::get('acting_for_user_id'));
+    }
+
+    public function test_middleware_limpa_estado_quando_expirado(): void
+    {
+        $attendant = User::factory()->gestor()->create();
+        $attendance = AssistedAttendance::factory()->expired()->create([
+            'attendant_user_id' => $attendant->id,
+        ]);
+
+        $request = $this->runMiddleware($attendant, $attendance->id);
+
+        $this->assertNull(app(CurrentRepresentation::class)->grantor());
+        $this->assertNull(Context::get('acting_for_user_id'));
+        // Vínculo expirado some da sessão: a próxima ação exige reabertura (CA-03).
+        $this->assertFalse($request->session()->has('attending_attendance_id'));
+    }
+
+    public function test_middleware_ignora_atendimento_de_outro_atendente(): void
+    {
+        $attendant = User::factory()->gestor()->create();
+        $outro = User::factory()->gestor()->create();
+        $attendance = AssistedAttendance::factory()->active()->create([
+            'attendant_user_id' => $outro->id,
+        ]);
+
+        $this->runMiddleware($attendant, $attendance->id);
+
+        // Atendimento de outro atendente nunca vira representação do atual.
+        $this->assertNull(app(CurrentRepresentation::class)->grantor());
+        $this->assertNull(Context::get('acting_for_user_id'));
     }
 }
