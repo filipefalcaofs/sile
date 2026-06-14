@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(48, Parameter::query()->count());
+        $this->assertSame(49, Parameter::query()->count());
         $this->assertSame(
             ['features', 'geo', 'integracoes', 'louos', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -347,11 +347,29 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($throttle->value);
     }
 
+    public function test_seeder_registra_parametro_de_estados_cancelaveis(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $estados = Parameter::query()->where('key', 'solicitacao.cancelamento.estados_cancelaveis')->first();
+
+        $this->assertNotNull($estados);
+        $this->assertSame('solicitacao', $estados->group);
+        $this->assertSame('json', $estados->type);
+        $this->assertSame('["rascunho","protocolada"]', $estados->default_value);
+        $this->assertSame(['required', 'json'], $estados->validation_rules);
+        $this->assertNull($estados->value);
+
+        // O parâmetro json é decodificado para array em typedValue() — o
+        // serviço de cancelamento sempre recebe a lista como array.
+        $this->assertSame(['rascunho', 'protocolada'], $estados->typedValue());
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(48, Parameter::query()->count());
+        $this->assertSame(49, Parameter::query()->count());
     }
 }

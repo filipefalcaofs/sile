@@ -73,6 +73,11 @@ return [
         'area_poligono' => ['tolerancia_percentual' => 10],
         'prazo_estimado_dias' => 30,
         'atendimento' => ['expiracao_minutos' => 30],
+        // Estados em que o requerente pode cancelar a solicitação (HU-070).
+        // Default honesto enquanto não decidido (rascunho + protocolada); a
+        // definição fina é pendência SEDUR. typedValue() do parâmetro json
+        // também devolve array, então o serviço sempre recebe array.
+        'cancelamento' => ['estados_cancelaveis' => ['rascunho', 'protocolada']],
         // Janela (em dias) da detecção de reincidência por CNPJ (HU-061 RN-007).
         // É uma CONSTANTE técnica/de negócio aqui, NÃO um parâmetro do catálogo
         // HU-014: a definição oficial de "duplicidade/reincidência" é pendência

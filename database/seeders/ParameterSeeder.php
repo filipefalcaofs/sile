@@ -372,6 +372,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:5', 'max:240'],
                 'description' => 'Expiração (minutos) do vínculo de atendimento presencial assistido (HU-150)',
             ],
+            'solicitacao.cancelamento.estados_cancelaveis' => [
+                'group' => 'solicitacao',
+                'type' => 'json',
+                'default_value' => '["rascunho","protocolada"]',
+                'validation_rules' => ['required', 'json'],
+                'description' => 'Estados em que a solicitação pode ser cancelada pelo requerente (antes da decisão) — definição fina pendente SEDUR (HU-070)',
+            ],
             'seguranca.throttle.consulta_protocolo.por_minuto' => [
                 'group' => 'seguranca',
                 'type' => 'integer',
