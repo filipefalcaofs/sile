@@ -17,6 +17,7 @@ use App\Http\Controllers\Gestao\RiscoCondicionanteController;
 use App\Http\Controllers\Gestao\RiscoController;
 use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\SectorController;
+use App\Http\Controllers\Gestao\StandardTextController;
 use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
@@ -167,6 +168,20 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('{sector}', [SectorController::class, 'update'])->name('update');
             Route::put('{sector}/ativacao', [SectorController::class, 'toggleActivation'])->name('ativacao.update');
             Route::put('{sector}/analistas', [SectorController::class, 'syncAnalysts'])->name('analistas.update');
+        });
+
+        // Biblioteca de textos-padrão do parecer (HU-085): trechos versionados
+        // pré-aprovados, administráveis atrás de manter-parametros (reuso da
+        // permissão de admin de configuração — sem 6ª permissão; a leitura da
+        // lista ativa pelo parecer fica sob analisar-processos em 10-09.
+        // Pendência SEDUR: a coordenação pode exigir permissão própria). Editar o
+        // conteúdo incrementa a versão (RN-005); inativar preserva o histórico
+        // (sem destroy). Telas de console em 10-17.
+        Route::middleware('permission:manter-parametros')->prefix('textos-padrao')->name('textos-padrao.')->group(function () {
+            Route::get('/', [StandardTextController::class, 'index'])->name('index');
+            Route::post('/', [StandardTextController::class, 'store'])->name('store');
+            Route::put('{standardText}', [StandardTextController::class, 'update'])->name('update');
+            Route::put('{standardText}/ativacao', [StandardTextController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
         // Registro em contingência (HU-148): canal de operador na retaguarda e o
