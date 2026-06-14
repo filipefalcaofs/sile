@@ -239,6 +239,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:analisar-processos')->prefix('processos/{viabilityRequest}')->name('processos.')->group(function () {
             Route::get('ficha', [AnalysisRecordController::class, 'show'])->name('ficha.show');
             Route::patch('ficha', [AnalysisRecordController::class, 'autosave'])->name('ficha.autosave');
+            Route::post('ficha/finalizar', [AnalysisRecordController::class, 'finalizar'])->name('ficha.finalizar');
+            Route::post('ficha/nova-revisao', [AnalysisRecordController::class, 'novaRevisao'])->name('ficha.nova-revisao');
         });
 
         // Atendimento presencial assistido (HU-150): canal de operador de balcão.

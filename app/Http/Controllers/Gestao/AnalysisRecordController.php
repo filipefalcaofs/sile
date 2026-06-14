@@ -11,6 +11,7 @@ use App\Services\Analise\AnalysisRecordImutavelException;
 use App\Services\Analise\AnalysisRecordService;
 use App\Support\Audit\AuditService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -92,6 +93,40 @@ class AnalysisRecordController extends Controller
         return response()->json([
             'ficha' => (new AnalysisRecordResource($record))->resolve(),
             'status' => 'Rascunho salvo.',
+        ]);
+    }
+
+    /**
+     * Finaliza a revisão vigente (RN-003): torna-a imutável e grava as divergências
+     * analista×motor (HU-140). Finalizar uma revisão já finalizada recusa com 422.
+     */
+    public function finalizar(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
+    {
+        $record = $this->records->current($viabilityRequest);
+
+        try {
+            $record = $this->records->finalizar($record, $request->user());
+        } catch (AnalysisRecordImutavelException $e) {
+            abort(422, $e->getMessage());
+        }
+
+        return response()->json([
+            'ficha' => (new AnalysisRecordResource($record))->resolve(),
+            'status' => 'Ficha finalizada.',
+        ]);
+    }
+
+    /**
+     * Cria a próxima revisão (rascunho) copiando a anterior para reedição/recálculo
+     * após a finalização — a revisão finalizada permanece intacta (append-only).
+     */
+    public function novaRevisao(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
+    {
+        $record = $this->records->novaRevisao($viabilityRequest, $request->user());
+
+        return response()->json([
+            'ficha' => (new AnalysisRecordResource($record))->resolve(),
+            'status' => 'Nova revisão criada.',
         ]);
     }
 
