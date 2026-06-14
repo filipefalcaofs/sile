@@ -87,11 +87,11 @@ class RiscoConsultaTest extends TestCase
         $this->actingAs($this->analista(), 'gestao')
             ->get('/gestao/risco')
             ->assertOk()
-            // A página React 'gestao/risco/index' é entregue no 06-08; aqui
-            // asseguramos o nome do componente sem exigir o arquivo em disco
-            // (precedente 03-04). O contrato das props é validado abaixo.
+            // A página React 'gestao/risco/index' foi entregue no 06-08: o
+            // component é validado contra o arquivo em disco. O contrato das
+            // props é validado abaixo.
             ->assertInertia(fn (Assert $page) => $page
-                ->component('gestao/risco/index', false)
+                ->component('gestao/risco/index')
                 ->has('classificacoes.data', 4)
                 ->where('versaoMunicipal.version', 'decreto-32636-2020')
                 ->where('versaoSanitaria.version', 'visa-unificada-2026-04-30')

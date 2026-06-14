@@ -70,7 +70,7 @@ class RiscoCondicionanteMaintenanceTest extends TestCase
             ->get('/gestao/risco/condicionantes')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('gestao/risco/condicionantes', false)
+                ->component('gestao/risco/condicionantes')
                 ->has('condicionantes.data', 3)
                 ->where('versaoSanitaria.version', 'visa-unificada-2026-04-30'));
     }
