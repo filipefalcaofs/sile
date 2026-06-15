@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ComunicacaoHistoricoController;
+use App\Http\Controllers\Gestao\AbusoController;
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\AnalysisRecordController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
@@ -97,6 +98,23 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // inventada. ÚNICO editor de routes/gestao.php na Wave 3; tela em 12-10.
         Route::middleware('permission:monitorar-lgpd')->prefix('lgpd')->name('lgpd.')->group(function () {
             Route::get('/', [LgpdMonitorController::class, 'index'])->name('index');
+        });
+
+        // Painel de alertas de abuso (HU-149): a superfície HUMANA de revisão dos
+        // alertas gerados pelos detectores (12-06/12-08) — lista filtrável
+        // (rule_key/severity/status/período) + indicador de EFETIVIDADE
+        // (confirmados ÷ gerados, geral e por regra — RN-005, para calibrar
+        // regras) e as ações confirmar/descartar com justificativa OBRIGATÓRIA
+        // (RN-003), tudo auditado (RN-002). Anti-fachada CA-02: confirmar/
+        // descartar muda SÓ o status do ALERTA — NUNCA transiciona o status do
+        // processo nem mexe na malha fina já criada (ortogonal). Gated por
+        // gerenciar-alertas-abuso; o 403 é auditado no ponto único
+        // (bootstrap/app.php). Somente leitura + resolução; o motor não é tocado.
+        // A rota estática index (/) vem ANTES das ações com {abuseAlert}; as
+        // ações são POST de dois segmentos — não colidem com o index. ÚNICO editor
+        // de routes/gestao.php na Wave 4; tela em 12-11.
+        Route::middleware('permission:gerenciar-alertas-abuso')->prefix('abuso')->name('abuso.')->group(function () {
+            Route::get('/', [AbusoController::class, 'index'])->name('index');
         });
 
         // Consulta granular separada da manutenção (HU-011 CA-04)
