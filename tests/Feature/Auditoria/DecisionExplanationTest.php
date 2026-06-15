@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Auditoria;
 
+use App\Enums\ViabilityRequestStatus;
 use App\Http\Resources\DecisionExplanationResource;
+use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Auditoria\DecisionExplanationService;
@@ -11,6 +13,7 @@ use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -156,15 +159,140 @@ class DecisionExplanationTest extends TestCase
     }
 
     /**
-     * Decisão expressa de 2 CNAEs com decision_trace REAL montado pelo
-     * DecisionTraceBuilder (a mesma fonte da 12-02) — garante que a projeção
+     * Task 2 — o detalhe do resultado expresso passa a enviar a prop ADITIVA
+     * 'explicacao' (projeção do trace), sob a permissão consultar-solicitacoes
+     * que já existe (sem rota nem permissão nova), sem mexer nas demais props.
+     */
+    public function test_show_resultado_expresso_envia_prop_explicacao_projetada(): void
+    {
+        $request = $this->requestDeferida(comTrace: true);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/resultados-expresso/{$request->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/resultados-expresso/show')
+                ->has('decisao')
+                ->has('transmissao')
+                ->where('explicacao.legado', false)
+                ->has('explicacao.por_cnae', 2)
+                ->has('explicacao.por_cnae.0.passos'));
+    }
+
+    /**
+     * Decisão LEGADA no resultado expresso: a prop 'explicacao' está presente e
+     * marcada como legada (degradação honesta) — nunca ausente nem inventada.
+     */
+    public function test_show_resultado_expresso_marca_explicacao_legada(): void
+    {
+        $request = $this->requestDeferida(comTrace: false);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/resultados-expresso/{$request->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('explicacao.legado', true)
+                ->has('explicacao.por_cnae'));
+    }
+
+    /**
+     * A explicação também aparece no detalhe do processo (análise técnica)
+     * quando há decisão: prop ADITIVA 'explicacao', preservando o gate
+     * consultar-solicitacoes, a auditoria e as demais props.
+     */
+    public function test_show_processo_envia_prop_explicacao_quando_ha_decisao(): void
+    {
+        $processo = $this->processoEmAnalise(comDecisao: true);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/processos/show')
+                ->has('processo')
+                ->where('explicacao.legado', false)
+                ->has('explicacao.por_cnae', 2));
+    }
+
+    /**
+     * Processo SEM decisão (ainda em análise, sem desfecho): a prop 'explicacao'
+     * é null — nunca uma explicação inventada (anti-fachada).
+     */
+    public function test_show_processo_sem_decisao_nao_envia_explicacao(): void
+    {
+        $processo = $this->processoEmAnalise(comDecisao: false);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/processos/show')
+                ->where('explicacao', null));
+    }
+
+    private function analista(): User
+    {
+        return User::factory()->analista()->withAcceptedLgpdTerm()->create();
+    }
+
+    /**
+     * Solicitação decidida (deferida) com decisão real; com ou sem decision_trace
+     * (legado) conforme o caso de teste.
+     */
+    private function requestDeferida(bool $comTrace): ViabilityRequest
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create([
+            'status' => ViabilityRequestStatus::Deferida,
+        ]);
+
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $request->id,
+            'decision_trace' => $comTrace ? $this->traceStub() : null,
+        ]);
+
+        return $request;
+    }
+
+    /**
+     * Processo em análise; com decisão (trace) anexada ou sem decisão alguma.
+     */
+    private function processoEmAnalise(bool $comDecisao): ViabilityRequest
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+        ]);
+
+        if ($comDecisao) {
+            ViabilityDecision::factory()->create([
+                'viability_request_id' => $request->id,
+                'decision_trace' => $this->traceStub(),
+            ]);
+        }
+
+        return $request;
+    }
+
+    /**
+     * Decisão (com seu request) cujo decision_trace REAL de 2 CNAEs foi montado
+     * pelo DecisionTraceBuilder (a mesma fonte da 12-02) — garante que a projeção
      * consome o shape de verdade, não um literal divergente.
      */
     private function decisionComTrace(): ViabilityDecision
     {
+        return ViabilityDecision::factory()->create(['decision_trace' => $this->traceStub()]);
+    }
+
+    /**
+     * decision_trace REAL de 2 CNAEs (principal + complementar) montado pelo
+     * DecisionTraceBuilder — reutilizado pelos testes de projeção e de exposição.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function traceStub(): array
+    {
         $builder = new DecisionTraceBuilder;
 
-        $trace = [
+        return [
             $builder->cnaeExpresso(
                 $this->consultaArrayStub('8888881', '8888-8/81'),
                 ['cnae' => '8888881', 'cnae_formatado' => '8888-8/81', 'is_primary' => true, 'ponto' => ['lat' => -12.9714, 'lng' => -38.5014]],
@@ -174,8 +302,6 @@ class DecisionExplanationTest extends TestCase
                 ['cnae' => '8888882', 'cnae_formatado' => '8888-8/82', 'is_primary' => false, 'ponto' => ['lat' => -12.9714, 'lng' => -38.5014]],
             ),
         ];
-
-        return ViabilityDecision::factory()->create(['decision_trace' => $trace]);
     }
 
     /**

@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ProcessoResource;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\ProcessoQueryService;
+use App\Services\Auditoria\DecisionExplanationService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
@@ -34,6 +36,7 @@ class ProcessoController extends Controller
     public function __construct(
         private ProcessoQueryService $processos,
         private AuditService $audit,
+        private DecisionExplanationService $explanations,
     ) {}
 
     /**
@@ -133,6 +136,13 @@ class ProcessoController extends Controller
 
         return Inertia::render('gestao/processos/show', [
             'processo' => (new ProcessoResource($viabilityRequest))->resolve(),
+            // Explicabilidade passo a passo (HU-099): projeção PURA do
+            // decision_trace gravado (RN-005), só quando há decisão — sem
+            // desfecho não há explicação inventada. Prop ADITIVA sob o gate
+            // consultar-solicitacoes já vigente.
+            'explicacao' => $viabilityRequest->decision === null
+                ? null
+                : (new DecisionExplanationResource($this->explanations->explain($viabilityRequest->decision)))->resolve(),
             'timeline' => $viabilityRequest->transitions->map(fn ($transicao): array => [
                 'from' => $transicao->from_status?->value,
                 'from_label' => $transicao->from_status?->label(),

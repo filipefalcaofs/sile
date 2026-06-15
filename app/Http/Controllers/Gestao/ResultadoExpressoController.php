@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Enums\DecisionOutcome;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ViabilityDecisionResource;
 use App\Models\Activity;
 use App\Models\ViabilityRequest;
+use App\Services\Auditoria\DecisionExplanationService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Collection;
@@ -32,7 +34,10 @@ class ResultadoExpressoController extends Controller
     /** Itens por página aceitos — reusa o padrão do console (ui.cnaes.per_page). */
     private const PER_PAGE_OPTIONS = [10, 15, 25, 50];
 
-    public function __construct(private AuditService $audit) {}
+    public function __construct(
+        private AuditService $audit,
+        private DecisionExplanationService $explanations,
+    ) {}
 
     /**
      * Lista as solicitações com decisão (join em viability_decisions — só
@@ -151,6 +156,10 @@ class ResultadoExpressoController extends Controller
         return Inertia::render('gestao/resultados-expresso/show', [
             'decisao' => (new ViabilityDecisionResource($decision))->resolve(),
             'transmissao' => $this->transmissao($viabilityRequest),
+            // Explicabilidade passo a passo (HU-099): projeção PURA do
+            // decision_trace gravado (RN-005), sem reexecutar o motor; legado
+            // degrada honesto. Prop ADITIVA sob o mesmo gate consultar-solicitacoes.
+            'explicacao' => (new DecisionExplanationResource($this->explanations->explain($decision)))->resolve(),
         ]);
     }
 
