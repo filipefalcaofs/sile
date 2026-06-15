@@ -10,6 +10,7 @@ use App\Models\AnalysisRecord;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Auditoria\DecisionTraceBuilder;
 use App\Services\Expresso\TvlNumberGenerator;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
@@ -44,6 +45,7 @@ class AnaliseTecnicaDecisionService
         private ViabilityRequestStateMachine $stateMachine,
         private TvlNumberGenerator $tvl,
         private AuditService $audit,
+        private DecisionTraceBuilder $traceBuilder,
     ) {}
 
     /**
@@ -128,6 +130,7 @@ class AnaliseTecnicaDecisionService
             'per_cnae' => $perCnae,
             'rules_versions' => $record->engine_rules_versions ?? [],
             'fundamentacao' => $this->fundamentacao($perCnae),
+            'decision_trace' => $this->decisionTrace($record, $perCnae),
             'reason' => null,
             'decided_by_user_id' => $analista->id,
             'decided_at' => now(),
@@ -230,6 +233,58 @@ class AnaliseTecnicaDecisionService
         }
 
         return $itens;
+    }
+
+    /**
+     * decision_trace ADITIVO da decisão HUMANA (HU-099 RN-004/RN-005): nasce da
+     * FICHA (não recomputa o motor). Por CNAE, reaproveita os passos do motor do
+     * engine_snapshot (quando a ficha foi pré-analisada) e acrescenta a decisão do
+     * analista; no caso pendente sem motor (FA-01), registra a entrada + a decisão
+     * e marca os passos do motor como "não registrado" — honesto, nunca inventado.
+     *
+     * @param  list<array<string, mixed>>  $perCnae
+     * @return list<array<string, mixed>>
+     */
+    private function decisionTrace(AnalysisRecord $record, array $perCnae): array
+    {
+        $snapshot = is_array($record->engine_snapshot) ? $record->engine_snapshot : [];
+        $ponto = is_array($snapshot['ponto'] ?? null) ? $snapshot['ponto'] : null;
+        $consultaPorCnae = $this->consultaPorCnaeDoSnapshot($snapshot);
+
+        return array_map(
+            fn (array $item): array => $this->traceBuilder->cnaeAnaliseTecnica(
+                $item,
+                $consultaPorCnae[(string) ($item['cnae'] ?? '')] ?? null,
+                [
+                    'cnae' => $item['cnae'] ?? null,
+                    'cnae_formatado' => $item['cnae_formatado'] ?? null,
+                    'is_primary' => $item['is_primary'] ?? false,
+                    'ponto' => $ponto,
+                ],
+            ),
+            $perCnae,
+        );
+    }
+
+    /**
+     * Indexa por CNAE o consulta_array do snapshot do motor
+     * (engine_snapshot.por_cnae[].consulta) — fonte dos passos do motor no trace
+     * da decisão humana, sem recomputo.
+     *
+     * @param  array<string, mixed>  $snapshot
+     * @return array<string, array<string, mixed>>
+     */
+    private function consultaPorCnaeDoSnapshot(array $snapshot): array
+    {
+        $indexado = [];
+
+        foreach ($snapshot['por_cnae'] ?? [] as $item) {
+            if (is_array($item) && isset($item['cnae']) && is_array($item['consulta'] ?? null)) {
+                $indexado[(string) $item['cnae']] = $item['consulta'];
+            }
+        }
+
+        return $indexado;
     }
 
     /**

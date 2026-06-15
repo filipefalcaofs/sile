@@ -2,8 +2,14 @@
 
 namespace Tests\Feature\Auditoria;
 
+use App\Enums\DecisionOutcome;
 use App\Enums\ResultadoViabilidade;
+use App\Enums\ViabilityRequestStatus;
+use App\Models\AnalysisRecord;
+use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\AnaliseTecnicaDecisionService;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Risco\RiscoResult;
@@ -90,6 +96,147 @@ class DecisionTraceEnrichmentTest extends TestCase
         // Consolidação reflete o veredito locacional propagado do motor.
         $consolidacao = $this->passo($trace[0]['passos'], 'consolidacao');
         $this->assertSame('permitido', $consolidacao['resultado_parcial']['resultado']);
+    }
+
+    /**
+     * Caso ANÁLISE TÉCNICA com snapshot do motor (Fase 10, SQLite): a ficha
+     * finalizada traz o engine_snapshot por CNAE; a decisão humana grava o trace
+     * reusando os passos do motor (Quadro 7→10→11→11A) e ACRESCENTA a decisão do
+     * analista (sugerido × escolhido) — origem 'analista', sem recomputo.
+     */
+    public function test_decisao_tecnica_grava_decision_trace_da_ficha_com_snapshot_do_motor(): void
+    {
+        Event::fake();
+
+        $consulta = $this->consultaResult('4712100', '4712-1/00')->toArray();
+        $ficha = $this->fichaFinalizada(
+            perCnae: [[
+                'cnae' => '4712100',
+                'cnae_formatado' => '4712-1/00',
+                'is_primary' => true,
+                'status_sugerido' => 'deferida',
+                'status_escolhido' => 'deferida',
+                'fundamentacao' => ['Lei nº 9.148/2016 (LOUOS) — Quadro 10'],
+            ]],
+            override: [
+                'engine_available' => true,
+                'engine_snapshot' => [
+                    'ponto' => ['lat' => -12.9714, 'lng' => -38.5014],
+                    'area_m2' => 120.0,
+                    'por_cnae' => [[
+                        'cnae' => '4712100',
+                        'cnae_formatado' => '4712-1/00',
+                        'is_primary' => true,
+                        'tendencia' => ResultadoViabilidade::Permitido->value,
+                        'tendencia_label' => ResultadoViabilidade::Permitido->label(),
+                        'consulta' => $consulta,
+                    ]],
+                ],
+            ],
+        );
+
+        $result = app(AnaliseTecnicaDecisionService::class)->decide($ficha, User::factory()->create());
+
+        $this->assertSame(DecisionOutcome::Deferida, $result->outcome);
+
+        $decision = $ficha->viabilityRequest->fresh()->decision;
+        $trace = $decision->decision_trace;
+        $this->assertIsArray($trace);
+        $this->assertCount(1, $trace);
+        $this->assertSame('analista', $trace[0]['origem']);
+        $this->assertSame('4712100', $trace[0]['cnae']);
+
+        // Reusa os passos do motor do snapshot (mesma ordenação do Task 2).
+        $quadro10 = $this->passo($trace[0]['passos'], 'louos.quadro10');
+        $this->assertTrue($quadro10['registrado']);
+        $this->assertSame('lei-9148-2016-quadro10', $quadro10['versao_regra']);
+
+        // E acrescenta a decisão do analista (sugerido × escolhido).
+        $humana = $this->passo($trace[0]['passos'], 'decisao_humana');
+        $this->assertSame('deferida', $humana['entrada']['status_sugerido']);
+        $this->assertSame('deferida', $humana['resultado_parcial']['status_escolhido']);
+    }
+
+    /**
+     * Caso ANÁLISE TÉCNICA PENDENTE sem motor (FA-01): a ficha nasceu sem
+     * snapshot (engine_available=false) e o analista decide o caso pendente; o
+     * trace registra a entrada e a decisão humana e marca os passos do motor como
+     * "não registrado" — honesto, jamais inventado nem recomputado.
+     */
+    public function test_decisao_tecnica_pendente_sem_motor_marca_passos_nao_registrados(): void
+    {
+        Event::fake();
+
+        $ficha = $this->fichaFinalizada(
+            perCnae: [[
+                'cnae' => '4712100',
+                'cnae_formatado' => '4712-1/00',
+                'is_primary' => true,
+                'status_sugerido' => 'analise',
+                'status_escolhido' => 'deferida',
+                'fundamentacao' => ['Decisão técnica do analista — uso compatível com a vizinhança.'],
+            ]],
+            override: [
+                'engine_available' => false,
+                'engine_snapshot' => null,
+                'engine_rules_versions' => null,
+            ],
+        );
+
+        $result = app(AnaliseTecnicaDecisionService::class)->decide($ficha, User::factory()->create());
+
+        $this->assertSame(DecisionOutcome::Deferida, $result->outcome);
+
+        $trace = $ficha->viabilityRequest->fresh()->decision->decision_trace;
+        $this->assertIsArray($trace);
+        $this->assertCount(1, $trace);
+        $this->assertSame('analista', $trace[0]['origem']);
+
+        // Entrada e decisão humana são registradas; o motor não.
+        $this->assertTrue($this->passo($trace[0]['passos'], 'entrada')['registrado']);
+        $this->assertTrue($this->passo($trace[0]['passos'], 'decisao_humana')['registrado']);
+
+        $risco = $this->passo($trace[0]['passos'], 'risco');
+        $this->assertFalse($risco['registrado']);
+        $this->assertSame('não registrado nesta decisão', $risco['motivo']);
+
+        $quadro10 = $this->passo($trace[0]['passos'], 'louos.quadro10');
+        $this->assertFalse($quadro10['registrado']);
+    }
+
+    /**
+     * Decisão LEGADA (anterior a esta fase): sem decision_trace gravado, a coluna
+     * fica null e a decisão segue válida — a degradação honesta ("não registrado
+     * nesta decisão") é exercida na projeção (12-05), nunca inventando.
+     */
+    public function test_decisao_legada_permanece_valida_com_decision_trace_null(): void
+    {
+        $decision = ViabilityDecision::factory()->create();
+
+        $this->assertNull($decision->fresh()->decision_trace);
+        $this->assertDatabaseHas('viability_decisions', [
+            'id' => $decision->id,
+            'decision_trace' => null,
+        ]);
+    }
+
+    /**
+     * Ficha FINALIZADA (revisão 1) de um processo em análise, com o per_cnae
+     * escolhido pelo analista — espelha o helper da AnaliseTecnicaDecisionTest.
+     *
+     * @param  list<array<string, mixed>>  $perCnae
+     * @param  array<string, mixed>  $override
+     */
+    private function fichaFinalizada(array $perCnae, array $override = []): AnalysisRecord
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create();
+        $request->forceFill(['status' => ViabilityRequestStatus::EmAnalise])->save();
+
+        return AnalysisRecord::factory()->finalizada()->create(array_merge([
+            'viability_request_id' => $request->id,
+            'revision' => 1,
+            'per_cnae' => $perCnae,
+        ], $override));
     }
 
     /**
