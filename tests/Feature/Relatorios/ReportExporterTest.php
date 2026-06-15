@@ -160,8 +160,9 @@ class ReportExporterTest extends TestCase
     #[Test]
     public function formato_nao_disponivel_e_recusado(): void
     {
-        // Anti-fachada: xlsx está no catálogo (config) mas o driver só nasce em
-        // 15-08 — recusar honestamente em vez de oferecer um formato quebrado.
+        // Anti-fachada: um formato sem driver (fora de csv/xlsx/pdf) é recusado
+        // honestamente, em vez de oferecer uma exportação quebrada. O xlsx passou a
+        // ser disponível em 15-08; o guarda permanece para formatos desconhecidos.
         ViabilityRequest::factory()->create();
 
         $this->expectException(\InvalidArgumentException::class);
@@ -169,7 +170,7 @@ class ReportExporterTest extends TestCase
         $this->exporter()->export(
             new ProcessoBairroSource,
             ReportFilters::fromArray([]),
-            'xlsx',
+            'json',
             User::factory()->create(),
         );
     }

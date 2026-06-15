@@ -2,13 +2,20 @@
 
 namespace Tests\Feature\Relatorios;
 
+use App\Jobs\GerarExportacaoJob;
+use App\Models\Activity;
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\Export\ReportDefinition;
+use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\XlsxExporter;
+use App\Services\Relatorios\ReportFilters;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use OpenSpout\Reader\XLSX\Reader;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Feature\Relatorios\Stubs\ProcessoBairroSource;
 use Tests\TestCase;
 
 /**
@@ -84,5 +91,63 @@ class XlsxExporterTest extends TestCase
         // NÃO entra na planilha.
         $this->assertCount(2, $linhas);
         $this->assertSame('Pituba', $linhas[1][0]);
+    }
+
+    #[Test]
+    public function export_xlsx_abaixo_do_limiar_streama_e_audita(): void
+    {
+        Queue::fake();
+        ViabilityRequest::factory()->create(['address_neighborhood' => 'Pituba']);
+        ViabilityRequest::factory()->create(['address_neighborhood' => 'Itapua']);
+
+        $response = app(ReportExporter::class)->export(
+            new ProcessoBairroSource,
+            ReportFilters::fromArray([]),
+            'xlsx',
+            User::factory()->create(),
+        );
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString(
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            (string) $response->headers->get('Content-Type'),
+        );
+        Queue::assertNothingPushed();
+
+        $activity = Activity::query()
+            ->where('log_name', 'relatorios')
+            ->where('event', 'exporta-processos-xlsx')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($activity, 'Toda exportação é auditada (RN-008).');
+        $this->assertSame('xlsx', $activity->properties['formato']);
+        $this->assertSame(2, $activity->properties['volume']);
+    }
+
+    #[Test]
+    public function export_xlsx_acima_do_limiar_despacha_o_job_com_o_formato_xlsx(): void
+    {
+        Queue::fake();
+        config(['sile.relatorios.export.assincrono_limiar_linhas' => 1]);
+        ViabilityRequest::factory()->create(['address_neighborhood' => 'Pituba']);
+        ViabilityRequest::factory()->create(['address_neighborhood' => 'Itapua']);
+
+        $user = User::factory()->create();
+
+        $response = app(ReportExporter::class)->export(
+            new ProcessoBairroSource,
+            ReportFilters::fromArray([]),
+            'xlsx',
+            $user,
+        );
+
+        $this->assertSame(202, $response->getStatusCode());
+
+        Queue::assertPushed(GerarExportacaoJob::class, function (GerarExportacaoJob $job) use ($user): bool {
+            return $job->sourceClass === ProcessoBairroSource::class
+                && $job->formato === 'xlsx'
+                && $job->userId === $user->id;
+        });
     }
 }

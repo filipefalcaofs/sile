@@ -30,12 +30,13 @@ use Symfony\Component\HttpFoundation\Response;
 class ReportExporter
 {
     /**
-     * Formatos com driver disponível HOJE. XLSX (openspout) entra em 15-08; até
-     * lá é honestamente recusado, mesmo constando do catálogo (anti-fachada).
+     * Formatos com driver disponível. CSV/PDF nascem em 15-02; XLSX (openspout,
+     * streaming de baixa memória) entra em 15-08 — os três formatos do contrato
+     * único (HU-131) ficam habilitados.
      *
      * @var list<string>
      */
-    private const DRIVERS_DISPONIVEIS = ['csv', 'pdf'];
+    private const DRIVERS_DISPONIVEIS = ['csv', 'xlsx', 'pdf'];
 
     public function __construct(private readonly AuditService $audit) {}
 
@@ -94,6 +95,7 @@ class ReportExporter
     {
         return match ($formato) {
             'csv' => app(CsvExporter::class),
+            'xlsx' => app(XlsxExporter::class),
             'pdf' => app(PdfExporter::class),
             default => throw new InvalidArgumentException("Formato de exportação não suportado: {$formato}."),
         };
