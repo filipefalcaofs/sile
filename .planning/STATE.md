@@ -21,7 +21,7 @@ progress:
   total_phases: 15
   completed_phases: 12
   total_plans: 138
-  completed_plans: 124
+  completed_plans: 125
   percent: 68
 ---
 
@@ -65,6 +65,15 @@ Phase: 15 (Relatórios e Indicadores — EP15) — EM ANDAMENTO. Planos 15-01 (f
 - Commits (staging seletivo dos 10 arquivos do plano; NADA da Fase 14 do usuário commitado): `a80c30c` (Task 1: Holiday+migration+factory+seeder+HolidayCadastroTest), `6ec9e9f` (Task 2: HolidayProvider+DatabaseHolidayProvider+binding+businessDurationBetween), `94b28a2` (Task 3: testes cravados).
 - Verificação FRESCA: `--filter=HolidayCadastroTest` 5/5, `--filter=BusinessDeadlineCalculatorTest` 7/7, `--filter=Holiday` 7/7, `--filter=AnalysisSla` 9/9; migration up/down isolada; binding resolve `DatabaseHolidayProvider` no container (tinker: 1440 min com fim de semana descontado). pint limpo nos meus arquivos (caminhos explícitos).
 - PENDÊNCIAS registradas (sem fachada): lista municipal oficial de feriados (SEDUR); wiring do `HolidaySeeder` no `DatabaseSeeder` + invalidação de cache no CRUD de feriados (fora do escopo de arquivos deste plano — próximos planos; hoje efeito limitado ao TTL, padrão HU-014); prazo SLA em dias úteis (critério legal SEDUR).
+
+### Fase 15 — Plano 15-07 (captura estruturada da queda HU-145 + relatório de quedas) — concluído 2026-06-15
+
+- **Captura ADITIVA da queda (HU-145, pré-requisito anti-fachada):** `ExpressoQueda` (model `#[Fillable]` + relação `viabilityRequest` + migration `2026_06_15_000004_create_expresso_quedas_table` com `cnae/tipo_gatilho/dimensao` nullable, `motivo` text, índice `(tipo_gatilho, created_at)`; up/down validados ISOLADOS em pgsql via `--path`) + factory. Gravada por `FluxoExpressoService::capturarQueda()` chamado DENTRO da `DB::transaction` de `encaminharAnalise`, APÓS o `audit->log` — aditivo, mesma atomicidade, SEM tocar decisão/transição/SLA/auditoria das Fases 9/10.
+- **Chaves lidas** de `$item['consulta_array']['risco']['encaminhamento']` (shape do `RiscoClassificationService`: `fluxo`/`dimensao_decisiva`/`motivo`/`gatilhos_acionados[]{codigo,motivo}`): `tipo_gatilho ← gatilhos_acionados[0]['codigo']`, `dimensao ← dimensao_decisiva`, `motivo ← motivo ?? $reason`, só para `$item['fluxo']===Fluxo::Analise`. ANTI-FACHADA (RN-001): `$resolved===null` (toggle off) grava 1 linha de nível-processo (`cnae/tipo_gatilho/dimensao` NULL); CNAE caído sem gatilho de contexto grava `tipo_gatilho` NULL com `cnae` — gatilho NUNCA inventado.
+- **`ExpressoQuedaService`** (route-free, agregação SQL): `taxaRespostaExpressa` (respondidas = `viability_decisions` flow='expresso' & `decided_by_user_id` IS NULL ÷ elegíveis = transições `protocolada→{deferida|indeferida|em_analise}`; `taxa` null sem base; `meta` de `relatorios.expresso.meta_taxa` cast float, null quando não definida — RN-004), `serieTemporal` (taxa por dia na janela parametrizável, `date()` portável), `rankingMotivos` (groupBy `tipo_gatilho` desc, null→'não classificado'), `drillDown` (reusa `ProcessoQueryService::filtered` ∩ processos com queda → base p/ divergências analista×motor). **`ExpressoQuedaReportSource`** (HU-131, `personalData=false`, `event='exporta-quedas-expresso'`).
+- **ANTI-REGRESSÃO Fases 9/10 (crítica):** captura 100% aditiva — `--filter=FluxoExpresso` 20/20, `--filter=Expresso` 123/123 (558 asserções) verdes. Testes: `--filter=ExpressoQuedaCapturaTest` 3/3 (gatilho real via stub do resolver — wiring do `gatilhosContexto` só no EP07; motor degradado; queda real CNAE alto + anti-regressão), `--filter=ExpressoQuedaServiceTest` 7/7 (taxa 75.0 = 6÷8, taxa null, meta null/80.0, ranking, série, drill-down, report source). Suíte de relatórios junta: `--filter=Relatorios` 63/63.
+- Commits (staging seletivo dos 8 arquivos do plano; NADA da Fase 14/outras waves commitado): `5a35e88` (Task 1: ExpressoQueda + captura aditiva), `5de0208` (Task 2: ExpressoQuedaService + ExpressoQuedaReportSource). pint limpo (caminhos explícitos). Sem dependência nova.
+- PENDÊNCIAS registradas (sem fachada): meta da taxa expressa (RN-004, hoje "não definida" — SEDUR); wiring do `gatilhosContexto` (EP07 — a captura já extrai o `tipo_gatilho` real quando ligado, sem mudança de código); telas/controller do relatório de quedas (15-06).
 
 ### Fase 12 (Auditoria e Compliance) — concluída 2026-06-15
 
