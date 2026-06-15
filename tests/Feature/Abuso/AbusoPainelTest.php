@@ -267,4 +267,141 @@ class AbusoPainelTest extends TestCase
         $this->assertFalse($dados['encaminhado_malha_fina']);
         $this->assertNull($dados['resolucao']);
     }
+
+    public function test_confirmar_exige_justificativa_e_nada_muda(): void
+    {
+        $alerta = AbuseAlert::factory()->create(['rule_key' => 'volume_cnpj']);
+
+        $this->actingAs($this->gestor(), 'gestao')
+            ->post("/gestao/abuso/{$alerta->id}/confirmar", ['justification' => ''])
+            ->assertSessionHasErrors('justification');
+
+        $alerta->refresh();
+        $this->assertSame(AbuseAlertStatus::Aberto, $alerta->status);
+        $this->assertNull($alerta->resolved_by_user_id);
+        $this->assertNull($alerta->resolved_at);
+        $this->assertNull($alerta->justification);
+    }
+
+    public function test_descartar_rejeita_justificativa_so_de_espacos(): void
+    {
+        // Espelha o motivo obrigatório da malha fina: só espaços também é vazio.
+        $alerta = AbuseAlert::factory()->create(['rule_key' => 'volume_cnpj']);
+
+        $this->actingAs($this->gestor(), 'gestao')
+            ->post("/gestao/abuso/{$alerta->id}/descartar", ['justification' => '   '])
+            ->assertSessionHasErrors('justification');
+
+        $this->assertSame(AbuseAlertStatus::Aberto, $alerta->fresh()->status);
+    }
+
+    public function test_confirmar_grava_resolucao_e_audita(): void
+    {
+        $alerta = AbuseAlert::factory()->create(['rule_key' => 'volume_cnpj']);
+        $gestor = $this->gestor();
+
+        $this->actingAs($gestor, 'gestao')
+            ->post("/gestao/abuso/{$alerta->id}/confirmar", [
+                'justification' => 'Reincidência confirmada na triagem.',
+            ])
+            ->assertRedirect();
+
+        $alerta->refresh();
+        $this->assertSame(AbuseAlertStatus::Confirmado, $alerta->status);
+        $this->assertSame($gestor->id, $alerta->resolved_by_user_id);
+        $this->assertNotNull($alerta->resolved_at);
+        $this->assertSame('Reincidência confirmada na triagem.', $alerta->justification);
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'abuso',
+            'event' => 'confirmar-alerta',
+            'result' => 'sucesso',
+            'causer_id' => $gestor->id,
+        ]);
+    }
+
+    public function test_descartar_grava_resolucao_e_audita(): void
+    {
+        $alerta = AbuseAlert::factory()->create(['rule_key' => 'volume_contador']);
+        $gestor = $this->gestor();
+
+        $this->actingAs($gestor, 'gestao')
+            ->post("/gestao/abuso/{$alerta->id}/descartar", [
+                'justification' => 'Falso positivo: volume legítimo do escritório.',
+            ])
+            ->assertRedirect();
+
+        $alerta->refresh();
+        $this->assertSame(AbuseAlertStatus::Descartado, $alerta->status);
+        $this->assertSame($gestor->id, $alerta->resolved_by_user_id);
+        $this->assertNotNull($alerta->resolved_at);
+        $this->assertSame('Falso positivo: volume legítimo do escritório.', $alerta->justification);
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'abuso',
+            'event' => 'descartar-alerta',
+            'result' => 'sucesso',
+            'causer_id' => $gestor->id,
+        ]);
+    }
+
+    public function test_confirmar_nunca_altera_status_do_processo_nem_a_malha_fina(): void
+    {
+        // CA-02 ANTI-FACHADA: confirmar/descartar muda SÓ o status do ALERTA. O
+        // processo vinculado (deferido) e a malha fina já criada pelo motor são
+        // ORTOGONAIS — permanecem intactos (nunca indefere/cassa/transiciona).
+        $processo = $this->processo(ViabilityRequestStatus::Deferida);
+        $processo->forceFill(['in_fine_mesh' => true])->save();
+
+        $referral = FineMeshReferral::factory()->create([
+            'viability_request_id' => $processo->id,
+            'reason' => 'suspeita de abuso: volume_cnpj',
+            'resolved_at' => null,
+        ]);
+
+        $alerta = AbuseAlert::factory()->alta()->create([
+            'rule_key' => 'volume_cnpj',
+            'viability_request_id' => $processo->id,
+            'fine_mesh_referral_id' => $referral->id,
+        ]);
+
+        $this->actingAs($this->gestor(), 'gestao')
+            ->post("/gestao/abuso/{$alerta->id}/confirmar", [
+                'justification' => 'Suspeita procede; manter em malha fina.',
+            ])
+            ->assertRedirect();
+
+        // O alerta mudou...
+        $this->assertSame(AbuseAlertStatus::Confirmado, $alerta->fresh()->status);
+
+        // ...mas o PROCESSO continua DEFERIDO (CA-02 — nunca punição automática).
+        $processo->refresh();
+        $this->assertSame(ViabilityRequestStatus::Deferida, $processo->status);
+        $this->assertTrue((bool) $processo->in_fine_mesh);
+
+        // A malha fina já criada permanece intacta: nenhum novo encaminhamento e
+        // o existente segue aberto (não foi resolvido nem duplicado).
+        $this->assertDatabaseCount('fine_mesh_referrals', 1);
+        $this->assertNull($referral->fresh()->resolved_at);
+    }
+
+    public function test_sem_permissao_confirmar_recebe_403_auditado(): void
+    {
+        $alerta = AbuseAlert::factory()->create(['rule_key' => 'volume_cnpj']);
+
+        $this->actingAs($this->semPermissao(), 'gestao')
+            ->post("/gestao/abuso/{$alerta->id}/confirmar", [
+                'justification' => 'tentativa sem permissão',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'seguranca',
+            'event' => 'acesso-negado',
+            'result' => 'bloqueado',
+        ]);
+
+        // Nada mudou no alerta.
+        $this->assertSame(AbuseAlertStatus::Aberto, $alerta->fresh()->status);
+    }
 }

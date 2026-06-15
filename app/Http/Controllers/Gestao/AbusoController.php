@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Gestao;
 use App\Enums\AbuseAlertStatus;
 use App\Enums\AbuseSeverity;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Gestao\ResolverAbuseAlertRequest;
 use App\Http\Resources\AbuseAlertResource;
 use App\Models\AbuseAlert;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -105,6 +107,61 @@ class AbusoController extends Controller
                 AbuseAlertStatus::cases(),
             ),
         ]);
+    }
+
+    /**
+     * Confirma um alerta (procede): muda SÓ o status do ALERTA para confirmado,
+     * com justificativa obrigatória e auditoria (RN-003). NUNCA toca o processo.
+     */
+    public function confirmar(ResolverAbuseAlertRequest $request, AbuseAlert $abuseAlert): RedirectResponse
+    {
+        return $this->resolver($request, $abuseAlert, AbuseAlertStatus::Confirmado);
+    }
+
+    /**
+     * Descarta um alerta (falso positivo): muda SÓ o status do ALERTA para
+     * descartado, com justificativa obrigatória e auditoria (RN-003).
+     */
+    public function descartar(ResolverAbuseAlertRequest $request, AbuseAlert $abuseAlert): RedirectResponse
+    {
+        return $this->resolver($request, $abuseAlert, AbuseAlertStatus::Descartado);
+    }
+
+    /**
+     * Núcleo da resolução humana (RN-003): grava status + resolved_by/resolved_at
+     * + justification no ALERTA e audita. CA-02 ANTI-FACHADA: não transiciona o
+     * status do processo, não indefere/cassa e não mexe na malha fina já criada
+     * pelo motor — a malha fina é ortogonal e o alerta é apenas insumo de revisão.
+     */
+    private function resolver(ResolverAbuseAlertRequest $request, AbuseAlert $abuseAlert, AbuseAlertStatus $status): RedirectResponse
+    {
+        $justificativa = (string) $request->validated('justification');
+
+        $abuseAlert->update([
+            'status' => $status,
+            'resolved_by_user_id' => $request->user()->id,
+            'resolved_at' => now(),
+            'justification' => $justificativa,
+        ]);
+
+        [$event, $rotulo] = $status === AbuseAlertStatus::Confirmado
+            ? ['confirmar-alerta', 'confirmado']
+            : ['descartar-alerta', 'descartado'];
+
+        $this->audit->log(
+            logName: 'abuso',
+            event: $event,
+            description: "Alerta de abuso #{$abuseAlert->id} {$rotulo} (regra {$abuseAlert->rule_key}).",
+            properties: [
+                'abuse_alert_id' => $abuseAlert->id,
+                'rule_key' => $abuseAlert->rule_key,
+                'status' => $status->value,
+                'justification' => $justificativa,
+            ],
+            subject: $abuseAlert,
+        );
+
+        return back()->with('status', "Alerta {$rotulo}.");
     }
 
     /**

@@ -115,6 +115,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // de routes/gestao.php na Wave 4; tela em 12-11.
         Route::middleware('permission:gerenciar-alertas-abuso')->prefix('abuso')->name('abuso.')->group(function () {
             Route::get('/', [AbusoController::class, 'index'])->name('index');
+            Route::post('{abuseAlert}/confirmar', [AbusoController::class, 'confirmar'])->name('confirmar');
+            Route::post('{abuseAlert}/descartar', [AbusoController::class, 'descartar'])->name('descartar');
         });
 
         // Consulta granular separada da manutenção (HU-011 CA-04)
