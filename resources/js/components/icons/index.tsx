@@ -443,3 +443,16 @@ export function TagIcon(props: IconProps) {
         </svg>
     );
 }
+
+export function BellIcon(props: IconProps) {
+    return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+            <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M12 2.25c-3.728 0-6.75 3.022-6.75 6.75v2.69l-1.31 2.62A1.75 1.75 0 0 0 5.505 16.75H8.4a3.75 3.75 0 0 0 7.2 0h2.895a1.75 1.75 0 0 0 1.565-2.44l-1.31-2.62V9c0-3.728-3.022-6.75-6.75-6.75ZM14.024 16.75H9.976a2.25 2.25 0 0 0 4.048 0ZM6.75 9a5.25 5.25 0 0 1 10.5 0v2.69c0 .272.063.54.184.782l1.31 2.62a.25.25 0 0 1-.224.348H5.48a.25.25 0 0 1-.224-.348l1.31-2.62c.121-.243.184-.51.184-.782V9Z"
+                fill="currentColor"
+            />
+        </svg>
+    );
+}

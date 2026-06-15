@@ -10,6 +10,7 @@ import {
     MoonIcon,
     SunIcon,
 } from '@/components/icons';
+import NotificationBell from '@/components/notificacoes/NotificationBell';
 import { Dropdown } from '@/components/ui/dropdown';
 import { DropdownItem } from '@/components/ui/dropdown-item';
 import { useSidebar } from '@/contexts/sidebar-context';
@@ -169,6 +170,7 @@ export default function AppHeader({ homeHref, logoutHref }: AppHeaderProps) {
                 >
                     <div className="flex items-center gap-2 2xsm:gap-3">
                         <ThemeToggleButton />
+                        <NotificationBell homeHref={homeHref} />
                     </div>
                     <UserDropdown logoutHref={logoutHref} />
                 </div>
