@@ -231,16 +231,20 @@ class DatabaseSeederTest extends TestCase
             ->first();
         $this->assertNotNull($emAnalise, 'Esperava o exemplo de em análise (sem zona) do fluxo expresso.');
 
-        // Em SQLite a decisão NÃO roda (reexecuta os motores territoriais —
-        // exige PostGIS): os exemplos ficam protocolados, sem ViabilityDecision,
-        // e a zona fictícia não é carregada. A degradação honesta. O deferimento
-        // navegável (decisão + TVL sobre a zona real) é provado em @group postgis
-        // (ExpressoSeedPostgisTest). Espelha a decisão da Fase 8 (08-16).
+        // Em SQLite a decisão do EXPRESSO não roda (reexecuta os motores
+        // territoriais — exige PostGIS): os exemplos do expresso ficam
+        // protocolados, sem ViabilityDecision, e a zona fictícia não é carregada.
+        // Degradação honesta — o deferimento navegável (decisão + TVL sobre a zona
+        // real) é provado em @group postgis (ExpressoSeedPostgisTest).
         $this->assertSame(ViabilityRequestStatus::Protocolada, $deferimento->status);
         $this->assertNull($deferimento->decision);
         $this->assertSame(ViabilityRequestStatus::Protocolada, $emAnalise->status);
         $this->assertNull($emAnalise->decision);
-        $this->assertSame(0, ViabilityDecision::query()->count());
+        // O EP12 (AuditoriaDevSeeder) acrescenta 2 decisões SQLite-safe pela
+        // ANÁLISE TÉCNICA (territorial-agnóstica, em requerentes/empresas
+        // dedicados): uma decidida com decision_trace e uma legada sem trace —
+        // tornando a explicabilidade (HU-099) navegável no dev mesmo em SQLite.
+        $this->assertSame(2, ViabilityDecision::query()->count());
 
         // Driver-aware: a camada de zona fictícia (geometria) não é carregada em
         // SQLite — a zona segue como pendente_fonte (degradação honesta).
@@ -319,7 +323,10 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11)->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
         $this->assertSame(40, LouosQuadro7Faixa::query()->count());
-        $this->assertSame(3, Company::query()->count());
+        // 3 empresas do cidadão (CompanySeeder) + 2 dedicadas do EP12
+        // (AuditoriaDevSeeder: padrão de abuso e exemplos de decisão) = 5,
+        // estáveis no re-seed (firstOrCreate por CNPJ).
+        $this->assertSame(5, Company::query()->count());
         $this->assertSame(
             2,
             CompanyUser::query()

@@ -57,6 +57,16 @@ class DatabaseSeeder extends Seeder
             // histórico (HU-096) navegáveis. Roda também em SQLite (não exige
             // PostGIS). Idempotente por marcador estável.
             ComunicacaoDevSeeder::class,
+            // Auditoria e compliance (EP12) — fechamento. SÓ dev/teste, com LÓGICA
+            // REAL e territorial-agnóstica: semeia um padrão de abuso DEDICADO e
+            // roda a detecção real (habilita o toggle só no seed → abuse_alerts +
+            // 1 malha fina por sistema; restaura OFF), registra um acesso a dado
+            // pessoal pelo AuditService real (painel LGPD) e leva um processo à
+            // decisão pela análise técnica (decision_trace) além de uma decisão
+            // legada sem trace — deixando trilha/explicabilidade/LGPD/abuso
+            // navegáveis. Roda em SQLite e pgsql. Idempotente por marcadores
+            // próprios (não perturba os exemplos do cidadão das fases anteriores).
+            AuditoriaDevSeeder::class,
         ]);
     }
 }
