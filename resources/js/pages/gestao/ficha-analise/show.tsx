@@ -315,9 +315,9 @@ export default function FichaAnaliseShow({
     }>({ per_cnae: [], conditions: [], parking: {}, parecer: null });
 
     const acao = useHttp<Record<string, never>>({});
-    const pendencia = useHttp<{ descricao: string }>({ descricao: '' });
-    const malhaFina = useHttp<{ request_ids: number[]; motivo: string }>({ request_ids: [], motivo: '' });
     const tvl = useHttp<Record<string, never>, { download_url?: string; url?: string }>({});
+    const [pendenciaProcessing, setPendenciaProcessing] = useState(false);
+    const [malhaFinaProcessing, setMalhaFinaProcessing] = useState(false);
     const precedentes = useHttp<Record<string, never>, PrecedentesResponse>({});
     const diff = useHttp<{ de: number; para: number }, DiffResponse>({ de: 0, para: 0 });
 
@@ -468,27 +468,35 @@ export default function FichaAnaliseShow({
     }
 
     function abrirPendencia() {
-        pendencia.transform(() => ({ descricao: descricaoPendencia }));
-        pendencia.post(`/gestao/processos/${processo.id}/pendencias`, {
-            onSuccess: () => {
-                setShowPendencia(false);
-                setDescricaoPendencia('');
-                router.reload();
+        router.post(
+            `/gestao/processos/${processo.id}/pendencias`,
+            { descricao: descricaoPendencia },
+            {
+                preserveScroll: true,
+                onStart: () => setPendenciaProcessing(true),
+                onFinish: () => setPendenciaProcessing(false),
+                onSuccess: () => {
+                    setShowPendencia(false);
+                    setDescricaoPendencia('');
+                },
             },
-            onHttpException: () => false,
-        });
+        );
     }
 
     function encaminharMalhaFina() {
-        malhaFina.transform(() => ({ request_ids: [processo.id], motivo: motivoMalhaFina }));
-        malhaFina.post('/gestao/processos/malha-fina', {
-            onSuccess: () => {
-                setShowMalhaFina(false);
-                setMotivoMalhaFina('');
-                router.reload();
+        router.post(
+            '/gestao/processos/malha-fina',
+            { request_ids: [processo.id], motivo: motivoMalhaFina },
+            {
+                preserveScroll: true,
+                onStart: () => setMalhaFinaProcessing(true),
+                onFinish: () => setMalhaFinaProcessing(false),
+                onSuccess: () => {
+                    setShowMalhaFina(false);
+                    setMotivoMalhaFina('');
+                },
             },
-            onHttpException: () => false,
-        });
+        );
     }
 
     function emitirTvl() {
@@ -1105,7 +1113,7 @@ export default function FichaAnaliseShow({
                             size="sm"
                             onClick={abrirPendencia}
                             disabled={descricaoPendencia.trim() === ''}
-                            loading={pendencia.processing}
+                            loading={pendenciaProcessing}
                         >
                             Abrir pendência
                         </Button>
@@ -1139,7 +1147,7 @@ export default function FichaAnaliseShow({
                             size="sm"
                             onClick={encaminharMalhaFina}
                             disabled={motivoMalhaFina.trim() === ''}
-                            loading={malhaFina.processing}
+                            loading={malhaFinaProcessing}
                         >
                             Encaminhar
                         </Button>
