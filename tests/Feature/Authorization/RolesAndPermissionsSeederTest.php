@@ -278,13 +278,49 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
     }
 
+    public function test_papeis_recebem_permissoes_de_relatorios(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $novas = ['consultar-relatorios', 'relatorios.produtividade.nominal'];
+
+        foreach ($novas as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Consultar relatórios e ver a produtividade nominal (HU-130): gestor e
+        // administrador. A exportação NÃO tem permissão própria — herda a leitura
+        // da tela (RN-007).
+        foreach (['gestor', 'administrador'] as $role) {
+            foreach ($novas as $permission) {
+                $this->assertTrue(Role::findByName($role, 'web')->hasPermissionTo($permission));
+            }
+        }
+
+        // Analista não consulta os relatórios gerenciais nem vê produtividade
+        // nominal (default conservador RH/LGPD — vê só o próprio recorte).
+        $analista = Role::findByName('analista', 'web');
+        foreach ($novas as $permission) {
+            $this->assertFalse($analista->hasPermissionTo($permission));
+        }
+
+        // Cidadão tampouco recebe qualquer permissão de relatórios.
+        $cidadao = Role::findByName('cidadao', 'web');
+        foreach ($novas as $permission) {
+            $this->assertFalse($cidadao->hasPermissionTo($permission));
+        }
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(27, Permission::query()->count());
+        $this->assertSame(29, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void

@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(85, Parameter::query()->count());
+        $this->assertSame(90, Parameter::query()->count());
         $this->assertSame(
-            ['abuso', 'analise', 'expresso', 'features', 'geo', 'integracoes', 'louos', 'notificacoes', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
+            ['abuso', 'analise', 'expresso', 'features', 'geo', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -704,11 +704,63 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($severidade->value);
     }
 
+    public function test_seeder_registra_parametros_de_relatorios(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $limiar = Parameter::query()->where('key', 'relatorios.export.assincrono_limiar_linhas')->first();
+        $this->assertNotNull($limiar);
+        $this->assertSame('relatorios', $limiar->group);
+        $this->assertSame('integer', $limiar->type);
+        $this->assertSame('5000', $limiar->default_value);
+        $this->assertSame(['required', 'integer', 'min:100', 'max:1000000'], $limiar->validation_rules);
+        $this->assertNull($limiar->value);
+        $this->assertSame(5000, $limiar->typedValue());
+
+        $formatos = Parameter::query()->where('key', 'relatorios.export.formatos_habilitados')->first();
+        $this->assertNotNull($formatos);
+        $this->assertSame('relatorios', $formatos->group);
+        $this->assertSame('json', $formatos->type);
+        $this->assertSame('["csv","xlsx","pdf"]', $formatos->default_value);
+        $this->assertSame(['required', 'json'], $formatos->validation_rules);
+        $this->assertNull($formatos->value);
+        // O parâmetro json é decodificado para array em typedValue() — as telas
+        // de gestão recebem a lista de formatos como array, nunca string.
+        $this->assertSame(['csv', 'xlsx', 'pdf'], $formatos->typedValue());
+
+        $retencao = Parameter::query()->where('key', 'relatorios.export.retencao_dias')->first();
+        $this->assertNotNull($retencao);
+        $this->assertSame('relatorios', $retencao->group);
+        $this->assertSame('integer', $retencao->type);
+        $this->assertSame('7', $retencao->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:365'], $retencao->validation_rules);
+        $this->assertNull($retencao->value);
+
+        // Meta da taxa de resposta expressa: nasce SEM valor (pendência SEDUR) —
+        // default null, degradação honesta "meta não definida" (nunca inventada).
+        $metaTaxa = Parameter::query()->where('key', 'relatorios.expresso.meta_taxa')->first();
+        $this->assertNotNull($metaTaxa);
+        $this->assertSame('relatorios', $metaTaxa->group);
+        $this->assertSame('string', $metaTaxa->type);
+        $this->assertNull($metaTaxa->default_value);
+        $this->assertSame(['nullable', 'numeric', 'min:0', 'max:100'], $metaTaxa->validation_rules);
+        $this->assertNull($metaTaxa->value);
+
+        $janela = Parameter::query()->where('key', 'relatorios.expresso.janela_dias')->first();
+        $this->assertNotNull($janela);
+        $this->assertSame('relatorios', $janela->group);
+        $this->assertSame('integer', $janela->type);
+        $this->assertSame('30', $janela->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:365'], $janela->validation_rules);
+        $this->assertNull($janela->value);
+        $this->assertSame(30, $janela->typedValue());
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(85, Parameter::query()->count());
+        $this->assertSame(90, Parameter::query()->count());
     }
 }
