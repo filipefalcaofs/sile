@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Label from '@/components/form/label';
-import { EyeIcon, PencilIcon, TrashIcon } from '@/components/icons';
+import { AlertIcon, EyeIcon, PencilIcon, TrashIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
@@ -196,6 +196,15 @@ export default function SolicitacoesIndex({
             cellClassName: 'whitespace-nowrap',
             cell: (solicitacao) => (
                 <div className="flex justify-end gap-1">
+                    {solicitacao.status.value === 'em_pendencia' && (
+                        <TableAction
+                            tone="warning"
+                            icon={<AlertIcon className="size-4.5" />}
+                            label="Responder pendência"
+                            title="Responder pendência"
+                            href={`/portal/solicitacoes/${solicitacao.id}/pendencias`}
+                        />
+                    )}
                     {solicitacao.editable && (
                         <TableAction
                             tone="brand"
@@ -253,6 +262,16 @@ export default function SolicitacoesIndex({
                         variant="info"
                         title="Novas solicitações temporariamente indisponíveis"
                         message="A abertura de novas solicitações de viabilidade está desativada no momento. Você ainda pode consultar e acompanhar as suas solicitações."
+                    />
+                </div>
+            )}
+
+            {solicitacoes.data.some((solicitacao) => solicitacao.status.value === 'em_pendencia') && (
+                <div className="mb-6">
+                    <Alert
+                        variant="warning"
+                        title="Você tem pendências aguardando resposta"
+                        message="As solicitações em pendência estão destacadas abaixo. Use a ação Responder pendência na linha para enviar sua resposta e reabrir a análise."
                     />
                 </div>
             )}

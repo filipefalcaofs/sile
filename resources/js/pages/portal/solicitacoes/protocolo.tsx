@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
@@ -216,9 +216,17 @@ export default function Protocolo({ solicitacao, timeline, publicLink }: Protoco
                     { label: 'Minhas solicitações', href: '/portal/solicitacoes' },
                 ]}
                 actions={
-                    <Badge size="sm" color={statusColor(solicitacao.status.value)}>
-                        {solicitacao.status.public_label}
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Badge size="sm" color={statusColor(solicitacao.status.value)}>
+                            {solicitacao.status.public_label}
+                        </Badge>
+                        <Link
+                            href={`/portal/solicitacoes/${solicitacao.id}/comunicacoes`}
+                            className="text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
+                        >
+                            Histórico de comunicações
+                        </Link>
+                    </div>
                 }
             />
 

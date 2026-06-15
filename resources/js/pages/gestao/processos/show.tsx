@@ -164,20 +164,30 @@ export default function Show({ processo, timeline, geo }: ShowProps) {
                             </dl>
                         </div>
 
-                        {podeAnalisar && (
-                            <div className="mt-5 border-t border-gray-100 pt-5 dark:border-gray-800">
+                        <div className="mt-5 border-t border-gray-100 pt-5 dark:border-gray-800">
+                            <div className="flex flex-wrap items-center gap-3">
+                                {podeAnalisar && (
+                                    <Link
+                                        href={`/gestao/processos/${processo.id}/ficha`}
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3 text-sm text-white shadow-theme-xs transition hover:bg-brand-600 focus:outline-hidden"
+                                    >
+                                        Abrir ficha de análise
+                                        <ArrowRightIcon className="size-4" />
+                                    </Link>
+                                )}
                                 <Link
-                                    href={`/gestao/processos/${processo.id}/ficha`}
-                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3 text-sm text-white shadow-theme-xs transition hover:bg-brand-600 focus:outline-hidden"
+                                    href={`/gestao/processos/${processo.id}/comunicacoes`}
+                                    className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 focus:outline-hidden dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03]"
                                 >
-                                    Abrir ficha de análise
-                                    <ArrowRightIcon className="size-4" />
+                                    Histórico de comunicações
                                 </Link>
+                            </div>
+                            {podeAnalisar && (
                                 <p className="mt-2 text-theme-xs text-gray-400 dark:text-gray-500">
                                     A análise, os precedentes e as decisões ficam na ficha. Esta tela é somente leitura.
                                 </p>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
 
