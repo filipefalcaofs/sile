@@ -223,6 +223,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // capturadas pelo wildcard. ÚNICO editor de routes/gestao.php na Wave 6.
         Route::middleware('permission:consultar-solicitacoes')->prefix('processos')->name('processos.')->group(function () {
             Route::get('/', [ProcessoController::class, 'index'])->name('index');
+            Route::get('fila', [ProcessoController::class, 'fila'])->name('fila');
             Route::get('{viabilityRequest}', [ProcessoController::class, 'show'])->name('show');
         });
 

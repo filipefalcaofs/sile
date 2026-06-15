@@ -7,6 +7,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Construção da query da consulta de processos (HU-082) e da fila do analista
@@ -84,26 +85,101 @@ class ProcessoQueryService
 
     /**
      * Monta o Builder da fila do analista (HU-144), ordenado por prazo
-     * (analysis_due_at — coluna indexada de 10-02) ascendente. Modo `meus` =
-     * processos atribuídos ao usuário; `setor` = processos das caixas do(s)
-     * setor(es) do usuário (respeita o vínculo analista↔setor — RN-005). Só os
-     * status de trabalho (em análise / em pendência).
+     * (analysis_due_at — coluna indexada de 10-02) ascendente. Só os status de
+     * trabalho (em análise / em pendência); o escopo (meus/setor) vem do
+     * escopo().
      *
      * @return Builder<ViabilityRequest>
      */
     public function fila(User $user, string $modo): Builder
     {
-        $query = ViabilityRequest::query()
+        return $this->escopo($user, $modo)
             ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision'])
-            ->whereIn('status', self::STATUS_FILA);
+            ->whereIn('status', self::STATUS_FILA)
+            ->orderBy('analysis_due_at')
+            ->orderBy('id');
+    }
+
+    /**
+     * Contadores da fila por status (HU-144), no MESMO escopo (meus/setor):
+     * aguardando análise (em_analise sem analista), em análise (atribuído), em
+     * pendência e vencendo hoje (prazo <= fim do dia).
+     *
+     * @return array{aguardando_analise: int, em_analise: int, em_pendencia: int, vencendo_hoje: int}
+     */
+    public function contadores(User $user, string $modo): array
+    {
+        $emAnalise = ViabilityRequestStatus::EmAnalise->value;
+        $emPendencia = ViabilityRequestStatus::EmPendencia->value;
+
+        return [
+            'aguardando_analise' => $this->escopo($user, $modo)->where('status', $emAnalise)->whereNull('assigned_user_id')->count(),
+            'em_analise' => $this->escopo($user, $modo)->where('status', $emAnalise)->whereNotNull('assigned_user_id')->count(),
+            'em_pendencia' => $this->escopo($user, $modo)->where('status', $emPendencia)->count(),
+            'vencendo_hoje' => $this->escopo($user, $modo)
+                ->whereIn('status', self::STATUS_FILA)
+                ->whereNotNull('analysis_due_at')
+                ->where('analysis_due_at', '<=', now()->endOfDay())
+                ->count(),
+        ];
+    }
+
+    /**
+     * Visão agregada do setor para o gestor (HU-144 CA-03): carga por analista
+     * (quantos processos de trabalho cada um carrega) e total de processos em
+     * vermelho (prazo estourado) nos setores do gestor. Ponte com a HU-130/147.
+     *
+     * @return array{carga: list<array{analista_id: int, analista: string, total: int}>, vermelhos: int}
+     */
+    public function visaoSetor(User $user): array
+    {
+        $sectorIds = $user->sectors()->pluck('sectors.id');
+
+        $carga = ViabilityRequest::query()
+            ->join('users', 'users.id', '=', 'viability_requests.assigned_user_id')
+            ->whereIn('viability_requests.sector_id', $sectorIds)
+            ->whereIn('viability_requests.status', self::STATUS_FILA)
+            ->groupBy('users.id', 'users.name')
+            ->orderByDesc('total')
+            ->get([
+                'users.id as analista_id',
+                'users.name as analista',
+                DB::raw('count(*) as total'),
+            ])
+            ->map(fn ($linha): array => [
+                'analista_id' => (int) $linha->analista_id,
+                'analista' => (string) $linha->analista,
+                'total' => (int) $linha->total,
+            ])
+            ->all();
+
+        $vermelhos = ViabilityRequest::query()
+            ->whereIn('sector_id', $sectorIds)
+            ->whereIn('status', self::STATUS_FILA)
+            ->whereNotNull('analysis_due_at')
+            ->where('analysis_due_at', '<', now())
+            ->count();
+
+        return ['carga' => $carga, 'vermelhos' => $vermelhos];
+    }
+
+    /**
+     * Escopo da fila por modo: `meus` (atribuídos ao usuário) ou `setor`
+     * (processos das caixas do(s) setor(es) do usuário — respeita o vínculo
+     * analista↔setor, RN-005). Sem filtro de status nem ordenação (reaproveitado
+     * pela fila e pelos contadores).
+     *
+     * @return Builder<ViabilityRequest>
+     */
+    private function escopo(User $user, string $modo): Builder
+    {
+        $query = ViabilityRequest::query();
 
         if ($modo === 'setor') {
-            $query->whereIn('sector_id', $user->sectors()->pluck('sectors.id'));
-        } else {
-            $query->where('assigned_user_id', $user->id);
+            return $query->whereIn('sector_id', $user->sectors()->pluck('sectors.id'));
         }
 
-        return $query->orderBy('analysis_due_at')->orderBy('id');
+        return $query->where('assigned_user_id', $user->id);
     }
 
     /**

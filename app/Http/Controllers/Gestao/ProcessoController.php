@@ -71,6 +71,40 @@ class ProcessoController extends Controller
     }
 
     /**
+     * Fila de trabalho do analista (HU-144): "meus processos" (atribuídos) ou
+     * "caixa do setor" (processos do(s) setor(es) do usuário — respeita o
+     * vínculo), ordenada por prazo (analysis_due_at) com semáforo on-the-fly e
+     * contadores por status. O gestor (distribuir-processos) ganha a visão
+     * agregada do setor (carga por analista + processos em vermelho — CA-03). O
+     * acesso é auditado.
+     */
+    public function fila(Request $request): Response
+    {
+        $modo = $request->string('modo')->toString();
+        $modo = in_array($modo, ['meus', 'setor'], true) ? $modo : 'meus';
+
+        $user = $request->user();
+
+        $processos = $this->processos->fila($user, $modo)
+            ->get()
+            ->map(fn (ViabilityRequest $processo): array => (new ProcessoResource($processo))->resolve())
+            ->all();
+
+        $this->audit->log('analise', 'consulta-fila', 'Consulta da fila de trabalho do analista', [
+            'modo' => $modo,
+        ]);
+
+        return Inertia::render('gestao/processos/fila', [
+            'modo' => $modo,
+            'processos' => $processos,
+            'contadores' => $this->processos->contadores($user, $modo),
+            // A visão agregada do setor é só do gestor (distribuir-processos);
+            // o analista recebe null e a UI (10-16) não a renderiza.
+            'visaoSetor' => $user->can('distribuir-processos') ? $this->processos->visaoSetor($user) : null,
+        ]);
+    }
+
+    /**
      * Detalhe do processo (HU-082 RN-006/007): dados, decisão, ficha vigente e
      * timeline como props para a UI (mini-mapa/abas em 10-16). A consulta é
      * auditada. 404 honesto via route model binding (processo inexistente).
