@@ -487,8 +487,8 @@ Regra da fase: integração sem documentação/credencial/acesso permanece **exp
 **Plans**: 15 plans (7 waves)
 
 Plans:
-- [ ] 15-01-PLAN.md — Fundação: deps (openspout/echarts) + índices aditivos + 5 parâmetros/2 permissões + ReportFilters (wave 1)
-- [ ] 15-02-PLAN.md — Contrato único de export: ReportDefinition/ReportSource/CsvExporter/PdfExporter/ReportExporter + Job + Notification + ExportFile (wave 1)
+- [ ] 15-01-PLAN.md — Fundação: deps (openspout/echarts) + índices aditivos + 5 parâmetros/2 permissões + testes de seeder (wave 1)
+- [ ] 15-02-PLAN.md — Contrato único de export: ReportFilters (bag serializável + toProcessoFiltros) + ReportDefinition/ReportSource/SyncOnlyReportSource/CsvExporter/PdfExporter/ReportExporter + Job + Notification + ExportFile (wave 1)
 - [ ] 15-03-PLAN.md — IndicadoresViabilidadeService (HU-123/124/125/126/127/128) + SolicitacoesReportSource (wave 2)
 - [ ] 15-04-PLAN.md — HU-137 feriados (Holiday + HolidayProvider) + businessDurationBetween no BusinessDeadlineCalculator (wave 2)
 - [ ] 15-05-PLAN.md — HU-129 TempoAnaliseService (tempo por etapa útil) + relatórios SAPS (TVL/escritório virtual) + sources (wave 3)
