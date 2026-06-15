@@ -114,17 +114,17 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 
 ### EP10 — Análise Técnica SEDUR
 
-- [ ] **HU-079**: Encaminhar para análise técnica
-- [ ] **HU-080**: Distribuir processo
-- [ ] **HU-081**: Assumir análise
-- [ ] **HU-082**: Consultar processo
-- [ ] **HU-083**: Solicitar pendência
-- [ ] **HU-084**: Receber complementação
-- [ ] **HU-085**: Emitir parecer
-- [ ] **HU-086**: Deferir solicitação
-- [ ] **HU-087**: Indeferir solicitação
-- [ ] **HU-088**: Aplicar condicionantes
-- [ ] **HU-089**: Encerrar processo
+- [x] **HU-079**: Encaminhar para análise técnica
+- [x] **HU-080**: Distribuir processo
+- [x] **HU-081**: Assumir análise
+- [x] **HU-082**: Consultar processo
+- [~] **HU-083**: Solicitar pendência — ciclo interno (portal+e-mail) entregue; convite Simplifica/Regin + multicanal → EP11
+- [~] **HU-084**: Receber complementação — resposta pelo portal entregue; multicanal → EP11
+- [x] **HU-085**: Emitir parecer
+- [x] **HU-086**: Deferir solicitação
+- [x] **HU-087**: Indeferir solicitação
+- [x] **HU-088**: Aplicar condicionantes
+- [x] **HU-089**: Encerrar processo
 
 ### EP11 — Pendências e Comunicação
 
@@ -293,17 +293,17 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-076 | Fase 9 | Complete (decisão+TVL; transmissão Regin/SEFAZ → Fase 13) |
 | HU-077 | Fase 9 | Complete (e-mail; canais plenos → EP11) |
 | HU-078 | Fase 9 | Complete (EP09 2026-06-14) |
-| HU-079 | Fase 10 | Pending |
-| HU-080 | Fase 10 | Pending |
-| HU-081 | Fase 10 | Pending |
-| HU-082 | Fase 10 | Pending |
-| HU-083 | Fase 10 | Pending |
-| HU-084 | Fase 10 | Pending |
-| HU-085 | Fase 10 | Pending |
-| HU-086 | Fase 10 | Pending |
-| HU-087 | Fase 10 | Pending |
-| HU-088 | Fase 10 | Pending |
-| HU-089 | Fase 10 | Pending |
+| HU-079 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-080 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-081 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-082 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-083 | Fase 10 | Complete (ciclo interno; convite Regin/multicanal → EP11) |
+| HU-084 | Fase 10 | Complete (resposta portal; multicanal → EP11) |
+| HU-085 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-086 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-087 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-088 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-089 | Fase 10 | Complete (EP10 2026-06-15) |
 | HU-090 | Fase 11 | Pending |
 | HU-091 | Fase 11 | Pending |
 | HU-092 | Fase 11 | Pending |
