@@ -163,6 +163,7 @@ return [
         'mapa_canais' => [
             'pendencia_aberta' => ['email', 'in_app'],
             'pendencia_respondida' => ['in_app'],
+            'pendencia_expirada' => ['email', 'in_app'],
             'prazo_vencendo' => ['email', 'in_app'],
             'escalonamento_sla' => ['email', 'in_app'],
             'resultado' => ['email', 'in_app'],

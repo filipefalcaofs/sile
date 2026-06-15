@@ -539,7 +539,7 @@ class ParameterSeeder extends Seeder
             'notificacoes.mapa_canais' => [
                 'group' => 'notificacoes',
                 'type' => 'json',
-                'default_value' => '{"pendencia_aberta":["email","in_app"],"pendencia_respondida":["in_app"],"prazo_vencendo":["email","in_app"],"escalonamento_sla":["email","in_app"],"resultado":["email","in_app"]}',
+                'default_value' => '{"pendencia_aberta":["email","in_app"],"pendencia_respondida":["in_app"],"pendencia_expirada":["email","in_app"],"prazo_vencendo":["email","in_app"],"escalonamento_sla":["email","in_app"],"resultado":["email","in_app"]}',
                 'validation_rules' => ['required', 'json'],
                 'description' => 'Canais por tipo de notificação (intersecção com os toggles; WhatsApp fica fora por default)',
             ],

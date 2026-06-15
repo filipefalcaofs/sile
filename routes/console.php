@@ -60,3 +60,14 @@ Schedule::command('notificacoes:escalonar-sla')
     ->hourly()
     ->withoutOverlapping()
     ->onOneServer();
+
+// HU-091 RN-005 (EP11): expira as pendências abertas vencidas sem resposta
+// (Expirada) e notifica o analista responsável. SEM decisão automática — NÃO
+// indefere por não-resposta (rito SEDUR não inventado); o estado do processo é
+// mantido. Idempotente pela própria transição Aberta→Expirada (a 2ª passada não
+// acha mais Aberta vencida). Segura em multi-instância (withoutOverlapping/
+// onOneServer).
+Schedule::command('pendencias:expirar')
+    ->dailyAt('06:00')
+    ->withoutOverlapping()
+    ->onOneServer();
