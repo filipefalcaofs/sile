@@ -13,6 +13,7 @@ use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\LouosController;
 use App\Http\Controllers\Gestao\LouosSandboxController;
+use App\Http\Controllers\Gestao\MalhaFinaController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\PrecedenteController;
 use App\Http\Controllers\Gestao\ProcessoBuscaController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\SectorController;
 use App\Http\Controllers\Gestao\StandardTextController;
 use App\Http\Controllers\Gestao\TerritoryController;
+use App\Http\Controllers\Gestao\TvlDocumentController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
 use App\Http\Controllers\Portal\CnaeSearchController;
@@ -284,6 +286,23 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::middleware('permission:analisar-processos')->group(function () {
                 Route::post('{viabilityRequest}/decidir', ProcessoDecisaoController::class)->name('decidir');
                 Route::post('{viabilityRequest}/pendencias', [ProcessoPendenciaController::class, 'store'])->name('pendencias.store');
+            });
+
+            // Malha fina (encaminhar single+lote) — ortogonal ao status (RN-001):
+            // atinge inclusive deferida. O lote é o caso geral (single = lote de um).
+            Route::middleware('permission:encaminhar-malha-fina')->group(function () {
+                Route::post('malha-fina', [MalhaFinaController::class, 'store'])->name('malha-fina.store');
+            });
+
+            // TVL: emitir (decisão deferida) + download por URL TEMPORÁRIA ASSINADA
+            // (signed) servindo o disco NÃO público por streaming (HU-132 CA-02). As
+            // rotas estáticas (malha-fina, tvl/...) convivem com o wildcard
+            // {viabilityRequest} por método/estrutura distintos.
+            Route::middleware('permission:emitir-tvl')->group(function () {
+                Route::post('{viabilityRequest}/tvl', [TvlDocumentController::class, 'store'])->name('tvl.store');
+                Route::get('tvl/{tvlDocument}/download', [TvlDocumentController::class, 'download'])
+                    ->middleware('signed')
+                    ->name('tvl.download');
             });
         });
 
