@@ -4,6 +4,7 @@ use App\Http\Controllers\ComunicacaoHistoricoController;
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\AnalysisRecordController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
+use App\Http\Controllers\Gestao\AuditoriaController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\ContingenciaController;
@@ -68,6 +69,21 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::get('acessos/{user}', AccessHistoryController::class)
             ->middleware('permission:consultar-acessos-de-qualquer-conta')
             ->name('acessos.show');
+
+        // Trilha de auditoria (HU-098/100/101): consulta unificada server-driven
+        // sobre activity_log (índices de 12-01) com filtros por período/usuário/
+        // entidade/ação/resultado e fonte (atividade/alterações/acessos),
+        // paginação no servidor e export CSV do conjunto filtrado (export pleno
+        // XLSX/PDF → HU-131/Fase 15, bloqueado honesto). Gated por
+        // consultar-auditoria (gestor/admin — 12-03); a própria consulta e o
+        // export são auditados (meta-auditoria CA-02, personal_data) e o 403 é
+        // auditado no ponto único (bootstrap/app.php). A rota estática `export`
+        // vem ANTES do index para não ser capturada por wildcards futuros do
+        // grupo. ÚNICO editor de routes/gestao.php na Wave 2; telas em 12-10.
+        Route::middleware('permission:consultar-auditoria')->prefix('auditoria')->name('auditoria.')->group(function () {
+            Route::get('export', [AuditoriaController::class, 'export'])->name('export');
+            Route::get('/', [AuditoriaController::class, 'index'])->name('index');
+        });
 
         // Consulta granular separada da manutenção (HU-011 CA-04)
         Route::middleware('permission:consultar-cnaes')->group(function () {

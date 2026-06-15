@@ -49,6 +49,13 @@ return [
     'retencao' => [
         'access_logs' => ['dias' => 365],
     ],
+    // Constante TÉCNICA da exportação da trilha (HU-101): teto de linhas por
+    // arquivo CSV para a guarda de volume do streaming — NÃO materializa
+    // exportações gigantes. Fora do catálogo HU-014 (precedente [02-02]): é
+    // resiliência/volume, não valor de negócio; ajustável sem deploy se preciso.
+    'auditoria' => [
+        'export' => ['max_linhas' => 50000],
+    ],
     // Espelha os parâmetros HU-014 risco.* (encaminhamento). Settings::get lê
     // config("sile.risco.*") no fallback (banco indisponível). O mapa é o ARRAY
     // já decodificado — typedValue() do parâmetro json também devolve array, de
