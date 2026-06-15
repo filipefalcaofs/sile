@@ -4,10 +4,12 @@ namespace App\Services\Expresso;
 
 use App\Enums\AnalysisStage;
 use App\Enums\DecisionOutcome;
+use App\Enums\Fluxo;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\EncaminhadoParaAnalise;
 use App\Events\ResultadoEmitido;
+use App\Models\ExpressoQueda;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -184,6 +186,8 @@ class FluxoExpressoService
                 result: 'analise',
                 rulesVersion: $resolved !== null ? $this->rulesVersionRepresentativa($resolved->rules_versions) : null,
             );
+
+            $this->capturarQueda($request, $reason, $resolved);
         });
 
         // APÓS o commit: gatilho da pré-análise (10-08). Sem listener no ambiente
@@ -191,6 +195,52 @@ class FluxoExpressoService
         EncaminhadoParaAnalise::dispatch($request);
 
         return DecisionResult::paraAnalise($reason);
+    }
+
+    /**
+     * Captura ESTRUTURADA da queda ao analista (HU-145), gravada na MESMA
+     * transação do encaminhamento (ADITIVA — não altera a decisão/transição/
+     * auditoria das Fases 9/10). Fecha o ciclo de melhoria do expresso medindo
+     * sobre dado real: para cada CNAE que o motor encaminhou à análise, persiste
+     * o gatilho semi-expresso (TipoGatilho), a dimensão decisiva e o motivo lidos
+     * de `consulta_array.risco.encaminhamento` (shape do RiscoClassificationService).
+     *
+     * ANTI-FACHADA (RN-001): quando o motor degradou (`$resolved === null` —
+     * toggle off; ou veredito pendente sem zona, em que `por_cnae` ainda traz o
+     * encaminhamento real), grava-se a linha honesta: motor degradado vira 1
+     * linha de nível-processo (cnae/tipo_gatilho/dimensao NULL) com o motivo do
+     * roteamento; e CNAE sem gatilho de contexto registra `tipo_gatilho` NULL —
+     * NUNCA um gatilho inventado.
+     */
+    private function capturarQueda(ViabilityRequest $request, string $reason, ?ResolvedViability $resolved): void
+    {
+        if ($resolved === null) {
+            ExpressoQueda::create([
+                'viability_request_id' => $request->id,
+                'cnae' => null,
+                'tipo_gatilho' => null,
+                'dimensao' => null,
+                'motivo' => $reason,
+            ]);
+
+            return;
+        }
+
+        foreach ($resolved->por_cnae as $item) {
+            if (($item['fluxo'] ?? null) !== Fluxo::Analise->value) {
+                continue;
+            }
+
+            $encaminhamento = $item['consulta_array']['risco']['encaminhamento'] ?? [];
+
+            ExpressoQueda::create([
+                'viability_request_id' => $request->id,
+                'cnae' => $item['cnae'] ?? null,
+                'tipo_gatilho' => $encaminhamento['gatilhos_acionados'][0]['codigo'] ?? null,
+                'dimensao' => $encaminhamento['dimensao_decisiva'] ?? null,
+                'motivo' => $encaminhamento['motivo'] ?? $reason,
+            ]);
+        }
     }
 
     /**
