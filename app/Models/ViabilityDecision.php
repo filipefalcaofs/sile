@@ -15,7 +15,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * dentro da transação da decisão; nunca atualizado por negócio. É a fonte do
  * PDF/TVL (Fase 10) e da explicabilidade (Fase 12): guarda o veredito
  * consolidado, o veredito por CNAE (RN-009), as versões de regras da época
- * (RN-005) e a fundamentação legal. tvl_product_number só existe no deferimento
+ * (RN-005), a fundamentação legal e o decision_trace passo a passo (HU-099 —
+ * snapshot ADITIVO e imutável que a explicabilidade projeta sem recomputar;
+ * null nas decisões legadas). tvl_product_number só existe no deferimento
  * (RN-007).
  *
  * NÃO usa HasAuditoria: a auditoria da decisão é SÍNCRONA no service (HU-078),
@@ -30,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'per_cnae',
     'rules_versions',
     'fundamentacao',
+    'decision_trace',
     'reason',
     'decided_by_user_id',
     'decided_at',
@@ -49,6 +52,7 @@ class ViabilityDecision extends Model
             'per_cnae' => 'array',
             'rules_versions' => 'array',
             'fundamentacao' => 'array',
+            'decision_trace' => 'array',
             'decided_at' => 'datetime',
         ];
     }
