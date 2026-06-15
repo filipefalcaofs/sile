@@ -231,6 +231,30 @@ return [
             'backoff_ms' => 1000,
         ],
     ],
+    // Espelha os parâmetros HU-014 relatorios.* (EP15). Settings::get lê
+    // config("sile.relatorios.*") no fallback (banco indisponível). As
+    // constantes TÉCNICAS (max_linhas, chunk, disk, pdf, cache_ttl_segundos,
+    // job) ficam SÓ aqui, fora do catálogo (precedente [02-02]).
+    // formatos_habilitados é o ARRAY já decodificado — typedValue() do parâmetro
+    // json também devolve array. meta_taxa é OMITIDO de propósito: a meta nasce
+    // "não definida" (pendência SEDUR); espelhá-la como null faria config()
+    // devolver null em vez do default do call site — Settings::get(chave,
+    // "indefinida") só cai em "indefinida" quando a CHAVE está ausente (Arr::get).
+    'relatorios' => [
+        'export' => [
+            'assincrono_limiar_linhas' => 5000,
+            'formatos_habilitados' => ['csv', 'xlsx', 'pdf'],
+            'retencao_dias' => 7,
+            'max_linhas' => 100000,
+            'chunk' => 200,
+            'disk' => 'local',
+            'pdf' => ['paper' => 'a4', 'orientation' => 'portrait'],
+        ],
+        'expresso' => ['janela_dias' => 30],
+        'cache_ttl_segundos' => 300,
+        'job' => ['tries' => 3, 'timeout' => 300, 'backoff' => [30, 60, 120], 'fila' => 'default'],
+        'tempo' => ['etapas' => []],
+    ],
     'parameters' => [
         'cache_ttl' => 300,
     ],

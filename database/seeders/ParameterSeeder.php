@@ -648,6 +648,49 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'in:baixa,media,alta'],
                 'description' => 'Severidade mínima do alerta que dispara encaminhamento à malha fina (alertas iguais ou acima são encaminhados; nunca indeferidos)',
             ],
+            // Relatórios e indicadores (EP15). Os valores de negócio (limiar de
+            // exportação assíncrona, formatos habilitados, retenção, meta/janela
+            // da taxa expressa) nascem administráveis no catálogo; as constantes
+            // técnicas (max_linhas, chunk, disk, pdf, cache_ttl, job) ficam SÓ no
+            // config/sile.php (precedente [02-02]).
+            'relatorios.export.assincrono_limiar_linhas' => [
+                'group' => 'relatorios',
+                'type' => 'integer',
+                'default_value' => '5000',
+                'validation_rules' => ['required', 'integer', 'min:100', 'max:1000000'],
+                'description' => 'Acima deste número de linhas a exportação roda em segundo plano',
+            ],
+            'relatorios.export.formatos_habilitados' => [
+                'group' => 'relatorios',
+                'type' => 'json',
+                'default_value' => '["csv","xlsx","pdf"]',
+                'validation_rules' => ['required', 'json'],
+                'description' => 'Formatos de exportação habilitados nas telas de gestão',
+            ],
+            'relatorios.export.retencao_dias' => [
+                'group' => 'relatorios',
+                'type' => 'integer',
+                'default_value' => '7',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
+                'description' => 'Dias de retenção dos arquivos de exportação gerados em segundo plano',
+            ],
+            // Meta da taxa de resposta expressa: nasce SEM valor (pendência SEDUR).
+            // default null + NÃO espelhada no config/sile.php → Settings::get cai
+            // no fallback do call site ("meta não definida"), nunca inventa meta.
+            'relatorios.expresso.meta_taxa' => [
+                'group' => 'relatorios',
+                'type' => 'string',
+                'default_value' => null,
+                'validation_rules' => ['nullable', 'numeric', 'min:0', 'max:100'],
+                'description' => 'Meta (%) da taxa de resposta expressa (vazio = meta não definida)',
+            ],
+            'relatorios.expresso.janela_dias' => [
+                'group' => 'relatorios',
+                'type' => 'integer',
+                'default_value' => '30',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
+                'description' => 'Janela (dias) da série temporal da taxa de resposta expressa',
+            ],
         ];
     }
 }

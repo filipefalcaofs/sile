@@ -44,6 +44,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'consultar-auditoria',
             'monitorar-lgpd',
             'gerenciar-alertas-abuso',
+            'consultar-relatorios',
+            'relatorios.produtividade.nominal',
         ];
 
         foreach ($permissions as $permission) {
@@ -85,6 +87,8 @@ class RolesAndPermissionsSeeder extends Seeder
                 'manter-setores',
                 'consultar-auditoria',
                 'gerenciar-alertas-abuso',
+                'consultar-relatorios',
+                'relatorios.produtividade.nominal',
             ]);
         Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web'])
             ->givePermissionTo([
@@ -114,6 +118,8 @@ class RolesAndPermissionsSeeder extends Seeder
                 'consultar-auditoria',
                 'monitorar-lgpd',
                 'gerenciar-alertas-abuso',
+                'consultar-relatorios',
+                'relatorios.produtividade.nominal',
             ]);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
