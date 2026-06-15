@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Expresso;
 
+use App\Enums\CommunicationChannel;
+use App\Enums\CommunicationStatus;
+use App\Enums\CommunicationType;
 use App\Enums\DecisionOutcome;
 use App\Events\ResultadoEmitido;
 use App\Models\Parameter;
@@ -15,11 +18,13 @@ use Tests\TestCase;
 
 /**
  * NotificarResultadoExpresso — listener AUTO-DESCOBERTO do ResultadoEmitido
- * (HU-077). Efeito colateral desacoplado: notifica o requerente do desfecho por
- * e-mail (sem anexo de TVL). Registro ÚNICO por auto-descoberta — notifica
- * EXATAMENTE 1× (lição Fase 8: Event::listen duplicaria). Toggle
- * features.notificacao_resultado_expresso off → NÃO envia e AUDITA a degradação
- * (nunca falha silenciosa). Sem destinatário com e-mail → audita e não envia.
+ * (HU-077). A partir do EP11 (11-06) o aviso percorre o NotificationDispatcher
+ * (ganha in-app + histórico communications, HU-096) em vez do e-mail direto.
+ * Registro ÚNICO por auto-descoberta — notifica EXATAMENTE 1× (lição Fase 8:
+ * Event::listen duplicaria). O toggle de TIPO features.notificacao_resultado_expresso
+ * off → NÃO notifica e AUDITA a degradação (nunca falha silenciosa); os CANAIS
+ * passam a ser resolvidos pelo dispatcher (mapa ∩ toggles). Sem destinatário com
+ * e-mail → audita e não notifica.
  */
 class NotificarResultadoExpressoListenerTest extends TestCase
 {
@@ -55,12 +60,21 @@ class NotificarResultadoExpressoListenerTest extends TestCase
         // duplicar a notificação (lição Fase 8).
         Notification::assertSentToTimes($request->requester, ResultadoExpressoNotification::class, 1);
 
-        // Anti-fachada: o envio passa pela infra real de e-mail — o EmailLog
-        // registra o disparo (status na_fila até o worker marcar enviado).
-        $this->assertDatabaseHas('email_logs', [
-            'recipient_email' => $request->requester->email,
-            'notification_class' => ResultadoExpressoNotification::class,
-            'status' => 'na_fila',
+        // Anti-fachada: o aviso percorre o NotificationDispatcher e ganha o ledger
+        // communications (in-app + histórico HU-096) — não mais email_logs. O mapa
+        // default de 'resultado' = [email, in_app] → duas linhas na_fila.
+        $this->assertDatabaseHas('communications', [
+            'viability_request_id' => $request->id,
+            'recipient_user_id' => $request->requester->id,
+            'channel' => CommunicationChannel::Email->value,
+            'type' => CommunicationType::Resultado->value,
+            'status' => CommunicationStatus::NaFila->value,
+        ]);
+        $this->assertDatabaseHas('communications', [
+            'viability_request_id' => $request->id,
+            'channel' => CommunicationChannel::InApp->value,
+            'type' => CommunicationType::Resultado->value,
+            'status' => CommunicationStatus::NaFila->value,
         ]);
     }
 

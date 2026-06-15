@@ -3,15 +3,18 @@
 namespace App\Listeners;
 
 use App\Events\ResultadoEmitido;
-use App\Models\EmailLog;
 use App\Notifications\ResultadoExpressoNotification;
+use App\Services\Comunicacao\NotificationDispatcher;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 
 /**
  * Efeito colateral DESACOPLADO do ResultadoEmitido (HU-077): notifica o
- * requerente do desfecho do fluxo expresso por e-mail complementar — SEM anexo
- * de TVL (o canal oficial de entrega é o Regin/SEFAZ).
+ * requerente do desfecho do fluxo expresso. A partir do EP11 (11-06) o aviso
+ * percorre o NotificationDispatcher (HU-090/094) — ganha in-app + histórico
+ * (communications) além do e-mail, unificando as notificações de processo num só
+ * roteador. O e-mail segue SEM anexo de TVL (o canal oficial de entrega é o
+ * Regin/SEFAZ).
  *
  * Registro ÚNICO por AUTO-DESCOBERTA (type-hint do evento no handle); NÃO
  * registrar via Event::listen — duplicaria a notificação e a auditoria (lição
@@ -20,13 +23,18 @@ use App\Support\Settings;
  * cidadão. Mantém-se SÍNCRONO — quem enfileira é a notificação (ShouldQueue),
  * espelhando o padrão da casa (RegistrarTrilhaProtocolo/VerifyEmailQueued).
  *
- * Toggle features.notificacao_resultado_expresso off → degradação COMUNICADA:
- * não envia e AUDITA (nunca falha silenciosa). Sem destinatário com e-mail →
- * audita 'sem-destinatario' e retorna (honesto — não inventa envio).
+ * Toggle de TIPO features.notificacao_resultado_expresso off → degradação
+ * COMUNICADA: não notifica e AUDITA (nunca falha silenciosa). Os CANAIS (e o
+ * ledger communications) passam a ser resolvidos pelo dispatcher (mapa ∩ toggles
+ * de canal). Sem destinatário com e-mail → audita 'sem-destinatario' e retorna
+ * (honesto — não inventa envio).
  */
 class NotificarResultadoExpresso
 {
-    public function __construct(private AuditService $audit) {}
+    public function __construct(
+        private AuditService $audit,
+        private NotificationDispatcher $dispatcher,
+    ) {}
 
     public function handle(ResultadoEmitido $event): void
     {
@@ -74,17 +82,9 @@ class NotificarResultadoExpresso
             return;
         }
 
-        $log = EmailLog::create([
-            'recipient_email' => $requester->email,
-            'recipient_name' => $requester->name,
-            'notification_class' => ResultadoExpressoNotification::class,
-            'status' => 'na_fila',
-            'queued_at' => now(),
-        ]);
-
-        $notification = new ResultadoExpressoNotification($request->protocol_number, $decision->outcome);
-        $notification->emailLogId = $log->id;
-
-        $requester->notify($notification);
+        $this->dispatcher->deliver(
+            $requester,
+            new ResultadoExpressoNotification($request->protocol_number, $decision->outcome, $request->id),
+        );
     }
 }
