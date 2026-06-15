@@ -418,7 +418,21 @@ Nota de planejamento (2026-06-15): 10 planos em 6 waves de execução (alinhadas
   3. Trilha de auditoria completa é consultável e exportável.
   4. Conformidade LGPD é monitorada (consentimentos, acessos a dados pessoais, retenção).
   5. Padrões de abuso/fraude detectados por regras parametrizáveis geram alertas e envio à malha fina — nunca punição automática (HU-149; regras simples podem antecipar para a Fase 9 se a SEDUR priorizar).
-**Plans**: TBD
+**Plans**: 12 plans (planejado)
+
+Plans:
+- [ ] 12-01-PLAN.md — Wave 1: índices de consulta + personal_data no activity_log + AuditService::log personalData (aditivo)
+- [ ] 12-02-PLAN.md — Wave 1: decision_trace em viability_decisions + enriquecimento Fases 9/10 (anti-regressão)
+- [ ] 12-03-PLAN.md — Wave 1: abuse_alerts + AbuseAlert/factory + 7 parâmetros HU-014 + 3 permissões (baseline 85/27)
+- [ ] 12-04-PLAN.md — Wave 2: AuditTrailQueryService + AuditoriaController + CSV + rotas (HU-098/100/101)
+- [ ] 12-05-PLAN.md — Wave 2: DecisionExplanationService (projeção pura, spy=0) + exposição no detalhe (HU-099)
+- [ ] 12-06-PLAN.md — Wave 2: motor de abuso (contrato + 2 detectores de volume + AbuseDetectionService + scheduler) (HU-149)
+- [ ] 12-07-PLAN.md — Wave 3: LgpdMonitorService + painel + marcação personal_data nos call sites reais (HU-102)
+- [ ] 12-08-PLAN.md — Wave 3: 3 detectores estruturais (polígono/inscrição/condicionante) (HU-149)
+- [ ] 12-09-PLAN.md — Wave 4: AbusoController (painel: efetividade + confirmar/descartar) (HU-149)
+- [ ] 12-10-PLAN.md — Wave 4: UI trilha + explicabilidade no detalhe + painel LGPD
+- [ ] 12-11-PLAN.md — Wave 5: UI painel de abuso + navegação + Cmd+K (gated)
+- [ ] 12-12-PLAN.md — Wave 6: seeds dev (fluxo real) + verificação integral (composer test) + smoke navegável + guardião
 
 ### Phase 13: Integrações
 **Goal**: Serviços externos integrados de verdade — cada adaptador implementado atrás de contrato e validado contra o ambiente de homologação real, com evidência de chamada registrada.
