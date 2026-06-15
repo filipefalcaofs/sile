@@ -128,13 +128,13 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 
 ### EP11 — Pendências e Comunicação
 
-- [ ] **HU-090**: Notificar pendência
-- [ ] **HU-091**: Responder pendência
-- [ ] **HU-092**: Reabrir análise
-- [ ] **HU-093**: Notificar vencimentos
-- [ ] **HU-094**: Enviar e-mail
-- [ ] **HU-095**: Enviar WhatsApp
-- [ ] **HU-096**: Consultar histórico de comunicações
+- [x] **HU-090**: Notificar pendência
+- [x] **HU-091**: Responder pendência (pelo portal SILE; convite Simplifica/Regin → Fase 13)
+- [x] **HU-092**: Reabrir análise
+- [x] **HU-093**: Notificar vencimentos
+- [x] **HU-094**: Enviar e-mail
+- [~] **HU-095**: Enviar WhatsApp — canal/toggle/contrato prontos (bloqueado honesto); provedor real → Fase 13
+- [x] **HU-096**: Consultar histórico de comunicações
 
 ### EP12 — Auditoria e Compliance
 
@@ -304,13 +304,13 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-087 | Fase 10 | Complete (EP10 2026-06-15) |
 | HU-088 | Fase 10 | Complete (EP10 2026-06-15) |
 | HU-089 | Fase 10 | Complete (EP10 2026-06-15) |
-| HU-090 | Fase 11 | Pending |
-| HU-091 | Fase 11 | Pending |
-| HU-092 | Fase 11 | Pending |
-| HU-093 | Fase 11 | Pending |
-| HU-094 | Fase 11 | Pending |
-| HU-095 | Fase 11 | Pending |
-| HU-096 | Fase 11 | Pending |
+| HU-090 | Fase 11 | Complete (EP11 2026-06-15) |
+| HU-091 | Fase 11 | Complete (EP11 2026-06-15) |
+| HU-092 | Fase 11 | Complete (EP11 2026-06-15) |
+| HU-093 | Fase 11 | Complete (EP11 2026-06-15) |
+| HU-094 | Fase 11 | Complete (EP11 2026-06-15) |
+| HU-095 | Fase 11 | Blocked → Fase 13 (canal/toggle/contrato prontos; provedor real) |
+| HU-096 | Fase 11 | Complete (EP11 2026-06-15) |
 | HU-097 | Fase 12 | Pending |
 | HU-098 | Fase 12 | Pending |
 | HU-099 | Fase 12 | Pending |

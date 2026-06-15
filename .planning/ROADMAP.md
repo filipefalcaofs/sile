@@ -47,7 +47,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 8: Solicitação de Viabilidade** — Processo formal: criação, documentos, protocolo (EP08) — implementada; smoke navegável aguardando aprovação humana; DAM bloqueado → Fase 13
 - [x] **Phase 9: Fluxo Expresso** — Deferimento/indeferimento automático, Regin + SEFAZ, prazo BAP (EP09 + HU-134) — implementada em 2026-06-14 (12/12 planos; suíte 931/931 SQLite + 22/22 @group postgis; motor real deferindo/indeferindo/encaminhando, evidência `expresso:decidir` → DEFERIDA + TVL). Regin/SEFAZ (HU-104/110) e HU-134 ativa bloqueados → Fase 13; TVL PDF (HU-132) → Fase 10; zona oficial Quadro 10 pendente SEDUR (sem ela, degradação honesta em_analise). Smoke navegável aguardando aprovação humana.
 - [x] **Phase 10: Análise Técnica SEDUR** — Fila com SLA, ficha pré-analisada pelo motor, precedentes, malha fina, TVL PDF backoffice (EP10 + HU-132/135/136/140/142/144) — concluída em 2026-06-15 (guardião de entrega: APROVADO; 18/18 planos; verificação por `composer test` = 1132/1132 SQLite + 29/29 @group postgis, em DOIS processos isolados — o CI roda os 2 steps; decisão humana real flow `analise_tecnica` + TVL, evidência `analise:decidir 7` → DEFERIDA + TVL). Regin/SEFAZ (HU-104/110) → Fase 13; HU-083/084 pleno → EP11; export HU-131 → Fase 15; zona oficial Quadro 10 e **roteamento automático ao setor** pendentes SEDUR (no dev: caixa de triagem). Smoke navegável aguardando aprovação humana.
-- [x] **Phase 11: Pendências e Comunicação** — Notificações, respostas e canais administráveis (EP11)
+- [x] **Phase 11: Pendências e Comunicação** — Notificações, respostas e canais administráveis (EP11) — concluída em 2026-06-15 (guardião de entrega: APROVADO; 10/10 planos; `composer test` = 1205/1205 SQLite + 29/29 @group postgis). Multicanal real: e-mail + in-app (canal database) + escalonamento/vencimento no scheduler (HU-093/147 reusam analysis_due_at) + histórico unificado (HU-096, ledger communications). WhatsApp (HU-095) atrás de toggle off + contrato Unavailable (bloqueado honesto, provado por teste de integração — nunca "enviado") → provedor real Fase 13; convite Simplifica/Regin → Fase 13.
 - [ ] **Phase 12: Auditoria e Compliance** — Consulta, exportação e LGPD sobre a trilha registrada (EP12)
 - [ ] **Phase 13: Integrações** — REDESIM, Junta, Receita, GIS, SEFAZ e legado contra homologação real (EP13)
 - [ ] **Phase 14: Inteligência Artificial** — OCR, resumos, sugestão de parecer e assistentes (EP14)
@@ -392,16 +392,16 @@ Nota de planejamento (2026-06-14): 18 planos em 8 waves (CONTEXT). Estratégia d
 **Status**: Planned (2026-06-15) — aguardando execução
 
 Plans:
-- [ ] 11-01-PLAN.md — Fundação: notifications table (canal database) + ledger communications (model/enums/factory/marcadores honestos) + contrato ProcessNotification (wave 1, ‖ 11-02)
-- [ ] 11-02-PLAN.md — Parâmetros HU-014: toggles features.notificacao_* + grupo novo `notificacoes` + credenciais WhatsApp; fallback config; seeder-tests 67→78 (dono único do ParameterSeeder) (wave 1, ‖ 11-01)
-- [ ] 11-03-PLAN.md — WhatsApp stack: contrato+DTO+Unavailable+Exception+binding + WhatsAppChannel (bloqueado honesto) + routeNotificationForWhatsapp (dono único de AppServiceProvider/User) (wave 2, ‖ 11-04)
-- [ ] 11-04-PLAN.md — NotificationDispatcher (mapa_canais ∩ toggles → communications na_fila/desativado + congela canais) + RegistrarEnvioComunicacao (NotificationSent/Failed, auto-descoberto) (wave 2, ‖ 11-03)
-- [ ] 11-05-PLAN.md — HU-090/091/092: NotificarPendencia + REMOVER notificarRequerente do PendenciaService; PendenciaRespondida (after-commit) + NotificarRespostaPendencia (analista); Notification multicanal; MIGRA PendenciaServiceTest (wave 3, ‖ 11-06/11-07)
-- [ ] 11-06-PLAN.md — Refactor NotificarResultadoExpresso → dispatcher (in-app+histórico); ResultadoExpressoNotification ProcessNotification; ANTI-REGRESSÃO Fase 9 (testes migrados verdes) (wave 3, ‖ 11-05/11-07)
-- [ ] 11-07-PLAN.md — Scheduler: notificacoes:alertar-vencimentos (HU-093), notificacoes:escalonar-sla (HU-147, fonte única analysis_due_at), pendencias:expirar (HU-091 RN-005); idempotente por communications (dono único de routes/console.php) (wave 3, ‖ 11-05/11-06)
-- [ ] 11-08-PLAN.md — Central in-app backend (index/markAsRead/markAllAsRead) + shared prop do sininho + HU-096 histórico unificado; rotas portal+gestão (dono único de routes/portal.php, routes/gestao.php, HandleInertiaRequests; sem permissão nova) (wave 4)
-- [ ] 11-09-PLAN.md — Frontend: sininho/badge + central de notificações + central de pendências (reusa fluxo de resposta) + histórico de comunicações; smoke navegável Inertia (wave 5)
-- [ ] 11-10-PLAN.md — Fechamento: seeds dev (comunicações/notificações via fluxo REAL) + verificação integral fresca (`composer test` 2 processos) + evidência anti-fachada + smoke navegável (checkpoint humano) + guardião-entrega (wave 6)
+- [x] 11-01-PLAN.md — Fundação: notifications table (canal database) + ledger communications (model/enums/factory/marcadores honestos) + contrato ProcessNotification (wave 1, ‖ 11-02)
+- [x] 11-02-PLAN.md — Parâmetros HU-014: toggles features.notificacao_* + grupo novo `notificacoes` + credenciais WhatsApp; fallback config; seeder-tests 67→78 (dono único do ParameterSeeder) (wave 1, ‖ 11-01)
+- [x] 11-03-PLAN.md — WhatsApp stack: contrato+DTO+Unavailable+Exception+binding + WhatsAppChannel (bloqueado honesto) + routeNotificationForWhatsapp (dono único de AppServiceProvider/User) (wave 2, ‖ 11-04)
+- [x] 11-04-PLAN.md — NotificationDispatcher (mapa_canais ∩ toggles → communications na_fila/desativado + congela canais) + RegistrarEnvioComunicacao (NotificationSent/Failed, auto-descoberto) (wave 2, ‖ 11-03)
+- [x] 11-05-PLAN.md — HU-090/091/092: NotificarPendencia + REMOVER notificarRequerente do PendenciaService; PendenciaRespondida (after-commit) + NotificarRespostaPendencia (analista); Notification multicanal; MIGRA PendenciaServiceTest (wave 3, ‖ 11-06/11-07)
+- [x] 11-06-PLAN.md — Refactor NotificarResultadoExpresso → dispatcher (in-app+histórico); ResultadoExpressoNotification ProcessNotification; ANTI-REGRESSÃO Fase 9 (testes migrados verdes) (wave 3, ‖ 11-05/11-07)
+- [x] 11-07-PLAN.md — Scheduler: notificacoes:alertar-vencimentos (HU-093), notificacoes:escalonar-sla (HU-147, fonte única analysis_due_at), pendencias:expirar (HU-091 RN-005); idempotente por communications (dono único de routes/console.php) (wave 3, ‖ 11-05/11-06)
+- [x] 11-08-PLAN.md — Central in-app backend (index/markAsRead/markAllAsRead) + shared prop do sininho + HU-096 histórico unificado; rotas portal+gestão (dono único de routes/portal.php, routes/gestao.php, HandleInertiaRequests; sem permissão nova) (wave 4)
+- [x] 11-09-PLAN.md — Frontend: sininho/badge + central de notificações + central de pendências (reusa fluxo de resposta) + histórico de comunicações; smoke navegável Inertia (wave 5)
+- [x] 11-10-PLAN.md — Fechamento: seeds dev (comunicações/notificações via fluxo REAL) + verificação integral fresca (`composer test` 2 processos) + evidência anti-fachada + smoke navegável (checkpoint humano) + guardião-entrega (wave 6)
 
 Nota (recursos do framework — levantamento 2026-06-12): central de notificações in-app usa o canal `database` nativo de Notifications (lidas/não lidas, sem tabela própria); WhatsApp entra como canal customizado de Notification com feature toggle e degradação controlada; o escalonamento por SLA (HU-147) roda no scheduler ativado na Fase 3.1.
 
@@ -513,7 +513,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 8. Solicitação de Viabilidade | 16/16 | Complete (guardião APROVADO; resta só o smoke navegável humano); DAM HU-071/072 + Regin bloqueados → Fase 13; HU-139 texto livre | 2026-06-14 |
 | 9. Fluxo Expresso | 12/12 | Complete (resta só o smoke navegável humano); Regin/SEFAZ HU-104/110 e HU-134 ativa → Fase 13; TVL PDF HU-132 → Fase 10; zona oficial Quadro 10 pendente SEDUR | 2026-06-14 |
 | 10. Análise Técnica SEDUR | 18/18 | Complete (resta só o smoke navegável humano); Regin/SEFAZ HU-104/110 → Fase 13; HU-083/084 pleno → EP11; export HU-131 → Fase 15; zona oficial Quadro 10 + roteamento automático ao setor pendentes SEDUR | 2026-06-15 |
-| 11. Pendências e Comunicação | 0/TBD | Not started | - |
+| 11. Pendências e Comunicação | 10/10 | Complete (guardião APROVADO; resta smoke navegável humano); WhatsApp provedor + Regin → Fase 13 | 2026-06-15 |
 | 12. Auditoria e Compliance | 0/TBD | Not started | - |
 | 13. Integrações | 0/TBD | Not started | - |
 | 14. Inteligência Artificial | 0/TBD | Not started | - |
