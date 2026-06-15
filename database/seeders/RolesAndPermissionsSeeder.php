@@ -41,6 +41,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'emitir-tvl',
             'encaminhar-malha-fina',
             'manter-setores',
+            'consultar-auditoria',
+            'monitorar-lgpd',
+            'gerenciar-alertas-abuso',
         ];
 
         foreach ($permissions as $permission) {
@@ -80,6 +83,8 @@ class RolesAndPermissionsSeeder extends Seeder
                 'encaminhar-malha-fina',
                 'emitir-tvl',
                 'manter-setores',
+                'consultar-auditoria',
+                'gerenciar-alertas-abuso',
             ]);
         Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web'])
             ->givePermissionTo([
@@ -106,6 +111,9 @@ class RolesAndPermissionsSeeder extends Seeder
                 'emitir-tvl',
                 'encaminhar-malha-fina',
                 'manter-setores',
+                'consultar-auditoria',
+                'monitorar-lgpd',
+                'gerenciar-alertas-abuso',
             ]);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();

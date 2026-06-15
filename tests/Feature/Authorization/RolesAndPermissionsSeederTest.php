@@ -240,13 +240,51 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
     }
 
+    public function test_papeis_recebem_permissoes_de_auditoria_e_compliance(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $novas = ['consultar-auditoria', 'monitorar-lgpd', 'gerenciar-alertas-abuso'];
+
+        foreach ($novas as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Consultar a trilha (HU-097..101) e gerenciar alertas de abuso (HU-149):
+        // gestor e administrador.
+        foreach (['gestor', 'administrador'] as $role) {
+            $this->assertTrue(Role::findByName($role, 'web')->hasPermissionTo('consultar-auditoria'));
+            $this->assertTrue(Role::findByName($role, 'web')->hasPermissionTo('gerenciar-alertas-abuso'));
+        }
+
+        // Painel LGPD (HU-102; DPO/admin): só o administrador.
+        $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('monitorar-lgpd'));
+        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('monitorar-lgpd'));
+
+        // Analista NÃO recebe nenhuma das três (default gestor/admin; sem papel
+        // auditor dedicado — decisão CONTEXT).
+        $analista = Role::findByName('analista', 'web');
+        foreach ($novas as $permission) {
+            $this->assertFalse($analista->hasPermissionTo($permission));
+        }
+
+        // Cidadão tampouco recebe qualquer permissão de auditoria/compliance.
+        $cidadao = Role::findByName('cidadao', 'web');
+        foreach ($novas as $permission) {
+            $this->assertFalse($cidadao->hasPermissionTo($permission));
+        }
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(24, Permission::query()->count());
+        $this->assertSame(27, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void

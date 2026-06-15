@@ -45,10 +45,11 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
 
         $this->assertSame(4, Role::query()->count());
-        // 24 permissões (HU-013): as 19 base + as 5 aditivas da análise técnica
+        // 27 permissões (HU-013): as 19 base + as 5 da análise técnica
         // (analisar-processos, distribuir-processos, emitir-tvl,
-        // encaminhar-malha-fina, manter-setores) — confirmadas no fechamento.
-        $this->assertSame(24, Permission::query()->count());
+        // encaminhar-malha-fina, manter-setores) + as 3 de auditoria e
+        // compliance (consultar-auditoria, monitorar-lgpd, gerenciar-alertas-abuso).
+        $this->assertSame(27, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
         $this->assertSame(85, Parameter::query()->count());
