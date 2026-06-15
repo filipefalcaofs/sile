@@ -82,6 +82,8 @@ class UserManagementController extends Controller
      * Alterna a situação da conta. inactivated_at está fora do fillable
      * por decisão do 02-03 — gravação só por forceFill em fluxo autorizado.
      * Auditoria explícita: HasAuditoria não cobre atributos fora do fillable.
+     * personalData: gestão da conta de um terceiro = acesso a dado pessoal
+     * (LGPD HU-102), medido no painel. Marcação ADITIVA à auditoria existente.
      */
     public function toggleActivation(ToggleUserActivationRequest $request, User $user): RedirectResponse
     {
@@ -94,6 +96,7 @@ class UserManagementController extends Controller
                 "Conta de {$user->email} reativada",
                 ['target_user_id' => $user->id],
                 $user,
+                personalData: true,
             );
         } else {
             $user->forceFill(['inactivated_at' => now()])->save();
@@ -104,6 +107,7 @@ class UserManagementController extends Controller
                 "Conta de {$user->email} inativada",
                 ['target_user_id' => $user->id],
                 $user,
+                personalData: true,
             );
         }
 
@@ -112,7 +116,9 @@ class UserManagementController extends Controller
 
     /**
      * Vincula um papel ao usuário (um papel por conta — modelo da Fase 1),
-     * com auditoria de papel anterior/novo (HU-012 CA-02).
+     * com auditoria de papel anterior/novo (HU-012 CA-02). personalData:
+     * gestão da conta de um terceiro = acesso a dado pessoal (LGPD HU-102),
+     * medido no painel. Marcação ADITIVA à auditoria existente.
      */
     public function updateRole(UpdateUserRoleRequest $request, User $user): RedirectResponse
     {
@@ -130,6 +136,7 @@ class UserManagementController extends Controller
                 'papel_novo' => $request->validated('role'),
             ],
             $user,
+            personalData: true,
         );
 
         return back()->with('status', 'Papel atualizado com sucesso.');

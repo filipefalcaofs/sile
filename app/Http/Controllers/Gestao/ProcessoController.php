@@ -123,6 +123,9 @@ class ProcessoController extends Controller
             'transitions',
         ]);
 
+        // personalData: leitura do detalhe do processo de um cidadão expõe dados
+        // da empresa/requerente — acesso a dado pessoal de terceiro, medido pelo
+        // painel LGPD (HU-102). Marcação ADITIVA, sem mudar a auditoria existente.
         $this->audit->log(
             logName: 'analise',
             event: 'consulta-processo',
@@ -132,6 +135,7 @@ class ProcessoController extends Controller
                 'protocol_number' => $viabilityRequest->protocol_number,
             ],
             subject: $viabilityRequest,
+            personalData: true,
         );
 
         return Inertia::render('gestao/processos/show', [

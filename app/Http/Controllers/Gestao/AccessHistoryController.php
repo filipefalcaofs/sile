@@ -21,11 +21,15 @@ class AccessHistoryController extends Controller
      */
     public function __invoke(Request $request, User $user): Response
     {
+        // personalData: consultar o histórico de acessos de OUTRA conta é leitura
+        // de dado pessoal de terceiro — medido pelo painel LGPD (HU-102).
+        // Marcação ADITIVA, sem mudar a auditoria existente.
         app(AuditService::class)->log(
             'acessos',
             'consulta-acessos',
             'Consulta administrativa do histórico de acessos de outro usuário',
             ['target_user_id' => $user->id],
+            personalData: true,
         );
 
         return Inertia::render('gestao/acessos', [
