@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import CommandSearch from '@/components/app/command-search';
 import AppShell from '@/components/app/app-shell';
 import type { SidebarGroup } from '@/components/app/app-sidebar';
 import { FileIcon, GearIcon, GridIcon, GroupIcon, ListIcon, LockIcon, MailIcon, MapPinIcon, PlugInIcon, ShieldIcon, TableIcon, TagIcon, UserCircleIcon } from '@/components/icons';
@@ -42,6 +43,35 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     href: '/gestao/resultados-expresso',
                     icon: <ListIcon />,
                     visible: auth.permissions.includes('consultar-solicitacoes'),
+                },
+            ],
+        },
+        {
+            label: 'Análise técnica',
+            items: [
+                {
+                    name: 'Fila de trabalho',
+                    href: '/gestao/processos/fila',
+                    icon: <ListIcon />,
+                    visible: auth.permissions.includes('analisar-processos'),
+                },
+                {
+                    name: 'Processos',
+                    href: '/gestao/processos',
+                    icon: <FileIcon />,
+                    visible: auth.permissions.includes('consultar-solicitacoes'),
+                },
+                {
+                    name: 'Setores',
+                    href: '/gestao/setores',
+                    icon: <GroupIcon />,
+                    visible: auth.permissions.includes('manter-setores'),
+                },
+                {
+                    name: 'Textos-padrão',
+                    href: '/gestao/textos-padrao',
+                    icon: <TableIcon />,
+                    visible: auth.permissions.includes('manter-parametros'),
                 },
             ],
         },
@@ -138,6 +168,7 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                 )}
                 {children}
             </AppShell>
+            <CommandSearch />
         </ThemeProvider>
     );
 }
