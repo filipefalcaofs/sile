@@ -48,3 +48,15 @@ Schedule::command('notificacoes:alertar-vencimentos')
     ->dailyAt('07:00')
     ->withoutOverlapping()
     ->onOneServer();
+
+// HU-147 (EP11): escalonamento por SLA. A cada hora lê o semáforo da FONTE ÚNICA
+// (analysis_due_at via AnalysisSlaService — mesma origem da fila/badge da Fase
+// 10): amarelo alerta o analista, vencido escala ao(s) gestor(es) (role
+// parametrizável). Tratamento por notificacoes.escalonamento.tratamento (default
+// só notificar). SÓ notifica (sem decisão automática, RN-003; sem dupla contagem
+// HU-129). Idempotente pelo ledger communications (RN-004); cadência TÉCNICA,
+// segura em multi-instância (withoutOverlapping/onOneServer).
+Schedule::command('notificacoes:escalonar-sla')
+    ->hourly()
+    ->withoutOverlapping()
+    ->onOneServer();
