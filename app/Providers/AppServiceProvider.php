@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Notifications\Channels\WhatsAppChannel;
 use App\Services\Analise\PostgisPrecedentRepository;
 use App\Services\Analise\PrecedentRepository;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
@@ -24,6 +25,7 @@ use App\Services\Whatsapp\UnavailableWhatsAppGateway;
 use App\Services\Whatsapp\WhatsAppGateway;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Socialite\Facades\Socialite;
@@ -99,6 +101,12 @@ class AppServiceProvider extends ServiceProvider
         // manualmente aqui: o Event::listen duplicaria o registro (auditoria 2×).
         // Fases futuras só ADICIONAM classes de listener ao mesmo evento
         // (notificação EP11, elegibilidade EP09, resposta Regin EP13).
+
+        // Canal de notificação por WhatsApp (HU-095): driver customizado resolvido
+        // pelo container (injeta WhatsAppGateway + AuditService). É o dono único da
+        // linha communications do canal whatsapp — marca enviado/bloqueado e audita
+        // o bloqueio quando o provedor está indisponível (Fase 13).
+        Notification::extend('whatsapp', fn ($app): WhatsAppChannel => $app->make(WhatsAppChannel::class));
 
         Password::defaults(function () {
             $rule = Password::min((int) Settings::get('security.password.min_length', 8));

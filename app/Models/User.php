@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\Notification;
 use Spatie\Activitylog\Models\Concerns\CausesActivity;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -81,6 +82,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isInactive(): bool
     {
         return $this->inactivated_at !== null;
+    }
+
+    /**
+     * Destino do canal WhatsApp (HU-095): o telefone do usuário em E.164. É o
+     * "para onde" lido pelo WhatsAppChannel; sem telefone, o canal degrada honesto
+     * (não envia). O provedor real entra na Fase 13 (troca só o binding do gateway).
+     */
+    public function routeNotificationForWhatsapp(?Notification $notification = null): ?string
+    {
+        return $this->phone;
     }
 
     public function termAcceptances(): HasMany
