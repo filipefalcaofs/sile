@@ -37,3 +37,14 @@ Schedule::command('expresso:indeferir-sem-bap')
     ->hourly()
     ->withoutOverlapping()
     ->onOneServer();
+
+// HU-093 (EP11): alerta ANTECIPADO de vencimentos. Varre, na antecedência
+// parametrizável (notificacoes.vencimento.antecedencia_dias), os processos
+// em_analise (analysis_due_at — fonte única da Fase 10) e as pendências abertas
+// (due_at) próximos de vencer e notifica analista/requerente pelo dispatcher
+// multicanal. SÓ notifica (sem transição/timeline → sem dupla contagem HU-129).
+// Idempotente pela checagem no ledger communications (RN-004), sem schema novo.
+Schedule::command('notificacoes:alertar-vencimentos')
+    ->dailyAt('07:00')
+    ->withoutOverlapping()
+    ->onOneServer();
