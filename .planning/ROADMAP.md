@@ -48,7 +48,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 9: Fluxo Expresso** — Deferimento/indeferimento automático, Regin + SEFAZ, prazo BAP (EP09 + HU-134) — implementada em 2026-06-14 (12/12 planos; suíte 931/931 SQLite + 22/22 @group postgis; motor real deferindo/indeferindo/encaminhando, evidência `expresso:decidir` → DEFERIDA + TVL). Regin/SEFAZ (HU-104/110) e HU-134 ativa bloqueados → Fase 13; TVL PDF (HU-132) → Fase 10; zona oficial Quadro 10 pendente SEDUR (sem ela, degradação honesta em_analise). Smoke navegável aguardando aprovação humana.
 - [x] **Phase 10: Análise Técnica SEDUR** — Fila com SLA, ficha pré-analisada pelo motor, precedentes, malha fina, TVL PDF backoffice (EP10 + HU-132/135/136/140/142/144) — concluída em 2026-06-15 (guardião de entrega: APROVADO; 18/18 planos; verificação por `composer test` = 1132/1132 SQLite + 29/29 @group postgis, em DOIS processos isolados — o CI roda os 2 steps; decisão humana real flow `analise_tecnica` + TVL, evidência `analise:decidir 7` → DEFERIDA + TVL). Regin/SEFAZ (HU-104/110) → Fase 13; HU-083/084 pleno → EP11; export HU-131 → Fase 15; zona oficial Quadro 10 e **roteamento automático ao setor** pendentes SEDUR (no dev: caixa de triagem). Smoke navegável aguardando aprovação humana.
 - [x] **Phase 11: Pendências e Comunicação** — Notificações, respostas e canais administráveis (EP11) — concluída em 2026-06-15 (guardião de entrega: APROVADO; 10/10 planos; `composer test` = 1205/1205 SQLite + 29/29 @group postgis). Multicanal real: e-mail + in-app (canal database) + escalonamento/vencimento no scheduler (HU-093/147 reusam analysis_due_at) + histórico unificado (HU-096, ledger communications). WhatsApp (HU-095) atrás de toggle off + contrato Unavailable (bloqueado honesto, provado por teste de integração — nunca "enviado") → provedor real Fase 13; convite Simplifica/Regin → Fase 13.
-- [ ] **Phase 12: Auditoria e Compliance** — Consulta, exportação e LGPD sobre a trilha registrada (EP12)
+- [x] **Phase 12: Auditoria e Compliance** — Consulta, exportação e LGPD sobre a trilha registrada (EP12) — concluída em 2026-06-15 (guardião de entrega: APROVADO; 12/12 planos; `composer test` = 1315/1315 SQLite + 29/29 @group postgis). Trilha consultável/exportável (HU-098/100/101), explicabilidade passo a passo projetada do `decision_trace` sem recomputo (HU-099, spy do motor = 0), painel LGPD minimizado (HU-102) e detecção de abuso com 5 detectores determinísticos + malha fina que NUNCA pune, toggle OFF default (HU-149). Correção transversal anti-fachada: tela ausente da **caixa do setor** (Fase 10, HU-080/081) criada — rota que renderizava página inexistente foi removida como fachada. Bloqueios honestos registrados: export pleno XLSX/PDF → Fase 15; limiares de fraude, matriz de CNAEs incompatíveis, captura de respostas de condicionante, retenção/eliminação/anonimização LGPD, papel auditor → SEDUR/DPO; EscritorioVirtualEncadeado → 2ª onda.
 - [ ] **Phase 13: Integrações** — REDESIM, Junta, Receita, GIS, SEFAZ e legado contra homologação real (EP13)
 - [ ] **Phase 14: Inteligência Artificial** — OCR, resumos, sugestão de parecer e assistentes (EP14)
 - [ ] **Phase 15: Relatórios e Indicadores** — Dashboard executivo e relatórios exportáveis (EP15)
@@ -418,21 +418,23 @@ Nota de planejamento (2026-06-15): 10 planos em 6 waves de execução (alinhadas
   3. Trilha de auditoria completa é consultável e exportável.
   4. Conformidade LGPD é monitorada (consentimentos, acessos a dados pessoais, retenção).
   5. Padrões de abuso/fraude detectados por regras parametrizáveis geram alertas e envio à malha fina — nunca punição automática (HU-149; regras simples podem antecipar para a Fase 9 se a SEDUR priorizar).
-**Plans**: 12 plans (planejado)
+**Plans**: 12 plans (6 waves) — planejados e executados em 2026-06-15
+
+Status (fechamento 2026-06-15, plano 12-12): 12/12 planos implementados em 6 waves paralelas, cada wave verificada por integração; verificação integral FRESCA verde (pint limpo; `composer test` 2 processos = **1315/1315 SQLite + 29/29 @group postgis**; 85 parâmetros / 27 permissões). **Guardião-entrega: APROVADO** com evidência fresca própria (filtros dirigidos 68/68; build com chunks abuso/auditoria/lgpd). Invariantes anti-fachada confirmados em código + teste: abuso nunca pune (toggle OFF, no-op, confirmar/descartar só no alerta — RN-001); explicabilidade é projeção pura (spy do motor = 0 — RN-005), legado degrada honesto; `personal_data` só em call sites reais; `decision_trace`/`AuditService::log(personalData)` aditivos (Fases 9/10 verdes). **Achado do guardião corrigido (Fase 10): caixa do setor renderizava página inexistente → tela criada (lista + assumir + distribuir), backend exposto com `analistas`/`podeDistribuir` (TDD).** Bloqueios SEDUR/DPO registrados, nunca simulados. Gate restante: smoke navegável humano (dispensado pelo usuário com base na verificação automatizada + guardião).
 
 Plans:
-- [ ] 12-01-PLAN.md — Wave 1: índices de consulta + personal_data no activity_log + AuditService::log personalData (aditivo)
-- [ ] 12-02-PLAN.md — Wave 1: decision_trace em viability_decisions + enriquecimento Fases 9/10 (anti-regressão)
-- [ ] 12-03-PLAN.md — Wave 1: abuse_alerts + AbuseAlert/factory + 7 parâmetros HU-014 + 3 permissões (baseline 85/27)
-- [ ] 12-04-PLAN.md — Wave 2: AuditTrailQueryService + AuditoriaController + CSV + rotas (HU-098/100/101)
-- [ ] 12-05-PLAN.md — Wave 2: DecisionExplanationService (projeção pura, spy=0) + exposição no detalhe (HU-099)
-- [ ] 12-06-PLAN.md — Wave 2: motor de abuso (contrato + 2 detectores de volume + AbuseDetectionService + scheduler) (HU-149)
-- [ ] 12-07-PLAN.md — Wave 3: LgpdMonitorService + painel + marcação personal_data nos call sites reais (HU-102)
-- [ ] 12-08-PLAN.md — Wave 3: 3 detectores estruturais (polígono/inscrição/condicionante) (HU-149)
-- [ ] 12-09-PLAN.md — Wave 4: AbusoController (painel: efetividade + confirmar/descartar) (HU-149)
-- [ ] 12-10-PLAN.md — Wave 4: UI trilha + explicabilidade no detalhe + painel LGPD
-- [ ] 12-11-PLAN.md — Wave 5: UI painel de abuso + navegação + Cmd+K (gated)
-- [ ] 12-12-PLAN.md — Wave 6: seeds dev (fluxo real) + verificação integral (composer test) + smoke navegável + guardião
+- [x] 12-01-PLAN.md — Wave 1: índices de consulta + personal_data no activity_log + AuditService::log personalData (aditivo) ✓ 2026-06-15
+- [x] 12-02-PLAN.md — Wave 1: decision_trace em viability_decisions + enriquecimento Fases 9/10 (anti-regressão) ✓ 2026-06-15
+- [x] 12-03-PLAN.md — Wave 1: abuse_alerts + AbuseAlert/factory + 7 parâmetros HU-014 + 3 permissões (baseline 85/27) ✓ 2026-06-15
+- [x] 12-04-PLAN.md — Wave 2: AuditTrailQueryService + AuditoriaController + CSV + rotas (HU-098/100/101) ✓ 2026-06-15
+- [x] 12-05-PLAN.md — Wave 2: DecisionExplanationService (projeção pura, spy=0) + exposição no detalhe (HU-099) ✓ 2026-06-15
+- [x] 12-06-PLAN.md — Wave 2: motor de abuso (contrato + 2 detectores de volume + AbuseDetectionService + scheduler) (HU-149) ✓ 2026-06-15
+- [x] 12-07-PLAN.md — Wave 3: LgpdMonitorService + painel + marcação personal_data nos call sites reais (HU-102) ✓ 2026-06-15
+- [x] 12-08-PLAN.md — Wave 3: 3 detectores estruturais (polígono/inscrição/condicionante) (HU-149) ✓ 2026-06-15
+- [x] 12-09-PLAN.md — Wave 4: AbusoController (painel: efetividade + confirmar/descartar) (HU-149) ✓ 2026-06-15
+- [x] 12-10-PLAN.md — Wave 4: UI trilha + explicabilidade no detalhe + painel LGPD ✓ 2026-06-15
+- [x] 12-11-PLAN.md — Wave 5: UI painel de abuso + navegação + Cmd+K (gated) ✓ 2026-06-15
+- [x] 12-12-PLAN.md — Wave 6: seeds dev (fluxo real) + verificação integral (composer test) + smoke navegável + guardião ✓ 2026-06-15
 
 ### Phase 13: Integrações
 **Goal**: Serviços externos integrados de verdade — cada adaptador implementado atrás de contrato e validado contra o ambiente de homologação real, com evidência de chamada registrada.
@@ -528,7 +530,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 9. Fluxo Expresso | 12/12 | Complete (resta só o smoke navegável humano); Regin/SEFAZ HU-104/110 e HU-134 ativa → Fase 13; TVL PDF HU-132 → Fase 10; zona oficial Quadro 10 pendente SEDUR | 2026-06-14 |
 | 10. Análise Técnica SEDUR | 18/18 | Complete (resta só o smoke navegável humano); Regin/SEFAZ HU-104/110 → Fase 13; HU-083/084 pleno → EP11; export HU-131 → Fase 15; zona oficial Quadro 10 + roteamento automático ao setor pendentes SEDUR | 2026-06-15 |
 | 11. Pendências e Comunicação | 10/10 | Complete (guardião APROVADO; resta smoke navegável humano); WhatsApp provedor + Regin → Fase 13 | 2026-06-15 |
-| 12. Auditoria e Compliance | 0/TBD | Not started | - |
+| 12. Auditoria e Compliance | 12/12 | Complete (guardião APROVADO; smoke humano dispensado pelo usuário); corrige fachada da caixa do setor (Fase 10); limiares de fraude/retenção LGPD/auditor pendentes SEDUR/DPO | 2026-06-15 |
 | 13. Integrações | 0/TBD | Not started | - |
 | 14. Inteligência Artificial | 0/TBD | Not started | - |
 | 15. Relatórios e Indicadores | 0/TBD | Not started | - |

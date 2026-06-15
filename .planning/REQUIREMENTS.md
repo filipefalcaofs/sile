@@ -138,12 +138,12 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 
 ### EP12 — Auditoria e Compliance
 
-- [ ] **HU-097**: Registrar log das decisões
-- [ ] **HU-098**: Consultar histórico de alterações
-- [ ] **HU-099**: Consultar regras aplicadas
-- [ ] **HU-100**: Consultar trilha de auditoria
-- [ ] **HU-101**: Exportar auditoria
-- [ ] **HU-102**: Monitorar conformidade LGPD
+- [x] **HU-097**: Registrar log das decisões
+- [x] **HU-098**: Consultar histórico de alterações
+- [x] **HU-099**: Consultar regras aplicadas
+- [x] **HU-100**: Consultar trilha de auditoria
+- [x] **HU-101**: Exportar auditoria
+- [x] **HU-102**: Monitorar conformidade LGPD
 
 ### EP13 — Integrações
 
@@ -311,12 +311,12 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-094 | Fase 11 | Complete (EP11 2026-06-15) |
 | HU-095 | Fase 11 | Blocked → Fase 13 (canal/toggle/contrato prontos; provedor real) |
 | HU-096 | Fase 11 | Complete (EP11 2026-06-15) |
-| HU-097 | Fase 12 | Pending |
-| HU-098 | Fase 12 | Pending |
-| HU-099 | Fase 12 | Pending |
-| HU-100 | Fase 12 | Pending |
-| HU-101 | Fase 12 | Pending |
-| HU-102 | Fase 12 | Pending |
+| HU-097 | Fase 12 | Complete (EP12 2026-06-15) |
+| HU-098 | Fase 12 | Complete (EP12 2026-06-15) |
+| HU-099 | Fase 12 | Complete (EP12 2026-06-15) |
+| HU-100 | Fase 12 | Complete (EP12 2026-06-15) |
+| HU-101 | Fase 12 | Complete (EP12 2026-06-15) |
+| HU-102 | Fase 12 | Complete (EP12 2026-06-15) |
 | HU-103 | Fase 13 | Pending |
 | HU-104 | Fase 13 | Pending |
 | HU-105 | Fase 13 | Pending |

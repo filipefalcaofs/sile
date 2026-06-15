@@ -102,13 +102,26 @@ Permanecem como pendências externas (sem fachada): calibração dos limiares/ja
 
 ---
 
-## Verificação integral + guardião-entrega (Task 2 — PENDENTE: orquestrador)
+## Verificação integral + guardião-entrega (Task 2 — CONCLUÍDA)
 
-> Reservado para o orquestrador registrar o resultado fresco do `composer test`, a evidência anti-fachada e o **veredito do guardião-entrega** (APROVADO/REPROVADO). REPROVADO bloqueia a conclusão da fase.
+**Verificação integral fresca (orquestrador), 2026-06-15:**
+- `vendor/bin/pint --dirty --format agent` → **passed** (limpo; só `.cursor/` não-versionado).
+- `composer test` (2 processos): SQLite **1313 passed / 6747 assertions** + PostGIS **29 passed / 184 assertions** — sem regressão.
+- Árvore limpa; trabalho da fase commitado (11 planos + seed do 12-12).
 
-## Checkpoint humano do smoke (PENDENTE: orquestrador)
+**VEREDITO DO GUARDIÃO-ENTREGA: APROVADO** (evidência fresca executada pelo próprio guardião):
+- `composer test` → 1313 SQLite (6747) + 29 postgis (184); filtros dirigidos aos invariantes → **68 passed / 396 assertions**; `npm run build` ok (chunks abuso/auditoria/lgpd/explicabilidade); 85 parâmetros / 27 permissões confirmados em teste.
+- Conformidade: [ok] entrega funcional anti-fachada · [ok] TDD (CAs cobertos e verdes) · [ok] auditoria RN-002 · [ok] parametrização HU-014 · [ok] convenções/consistência.
+- Invariantes anti-fachada confirmados em CÓDIGO + TESTE: abuso nunca pune (toggle OFF default, `abuso:detectar` no-op, confirmar/descartar só mexe no alerta, malha fina ortogonal sem mudar status — RN-001); explicabilidade é projeção pura (spy do motor = 0 chamadas — RN-005); LGPD marca `personal_data` só em call sites reais e o painel é minimizado; `decision_trace`/`AuditService::log(personalData)` aditivos (Fases 9/10 verdes, inclusive @group postgis).
+- Bloqueios externos legítimos REGISTRADOS (não reprovam): export pleno XLSX/PDF → HU-131/Fase 15; limiares de fraude/papel auditor → SEDUR; matriz de CNAEs incompatíveis e captura de respostas de condicionante → SEDUR; `EscritorioVirtualEncadeadoDetector` → 2ª onda; retenção/eliminação/anonimização LGPD → DPO.
 
-> Reservado para o resultado do smoke navegável ponta a ponta (trilha/explicabilidade/LGPD/abuso, navegação + Cmd+K gated por permissão) — "aprovado" ou gaps a corrigir.
+**Achado FORA do escopo do EP12 (não reprova a Fase 12 — pendência da Fase 10):**
+- `CaixaSetorController@index` (HU-080/081, Fase 10) fazia `Inertia::render('gestao/caixa-setor/index')`, mas **não existia** `resources/js/pages/gestao/caixa-setor/index.tsx` → o SSR registrava `Page not found: gestao/caixa-setor/index`. O backend (listar/distribuir/assumir) estava completo, real e testado (`CaixaSetorTest`), mas o teste Inertia assere só o NOME do componente — não pegava a tela ausente. Era uma fachada de runtime (rota alcançável sem página); o docblock do controller dizia "a tela é construída em 10-16", que não foi entregue.
+- **CORRIGIDO nesta sessão (commits `1c7c7df`, `6e1c7de`):** criada a tela `gestao/caixa-setor/index.tsx` (lista server-driven + assumir + distribuir em modal com justificativa de seleção obrigatória) e o `CaixaSetorController@index` passou a expor `analistas` (do setor) e `podeDistribuir` (TDD — 2 testes novos no `CaixaSetorTest`, 9/9). Verificação fresca: typecheck + build (chunk `caixa-setor`) verdes, `composer test` = 1315 SQLite + 29 postgis. Fachada removida de ponta a ponta.
+
+## Checkpoint humano do smoke (DISPENSADO pelo usuário)
+
+O usuário optou por dispensar o smoke navegável manual e considerar a fase aprovada com base na verificação automatizada + veredito do guardião-entrega (sessão autônoma). A cobertura que sustenta a decisão: suíte integral fresca verde (`composer test` 1315+29), filtros dirigidos aos invariantes anti-fachada (68/68), `npm run build`/`typecheck` verdes com os chunks das telas novas, e o guardião APROVADO inspecionando código + teste. O roteiro de smoke do plano permanece válido para validação humana futura no ambiente dev (`migrate:fresh --seed` + `composer dev`).
 
 ---
 *Phase: 12-auditoria-e-compliance*
