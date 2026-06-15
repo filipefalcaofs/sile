@@ -46,7 +46,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 - [x] **Phase 7: Consulta Prévia de Viabilidade** — Simulação consumindo território + motores (EP07) — concluída em 2026-06-14 (guardião de entrega: APROVADO; suíte 657/657 SQLite + 15/15 @group postgis; comando viabilidade:consultar com geocode real). PRIMEIRO fluxo de decisão de ponta a ponta: orquestra território (4) + LOUOS (5) + risco (6) e PROPAGA o veredito (não recomputa). Honesto: risco/Quadro 7/restrições reais; veredito locacional fica "pendente" sem a zona (bloqueada SEDUR); inscrição imobiliária bloqueada atrás do contrato PropertyRegistryLookup.
 - [x] **Phase 8: Solicitação de Viabilidade** — Processo formal: criação, documentos, protocolo (EP08) — implementada; smoke navegável aguardando aprovação humana; DAM bloqueado → Fase 13
 - [x] **Phase 9: Fluxo Expresso** — Deferimento/indeferimento automático, Regin + SEFAZ, prazo BAP (EP09 + HU-134) — implementada em 2026-06-14 (12/12 planos; suíte 931/931 SQLite + 22/22 @group postgis; motor real deferindo/indeferindo/encaminhando, evidência `expresso:decidir` → DEFERIDA + TVL). Regin/SEFAZ (HU-104/110) e HU-134 ativa bloqueados → Fase 13; TVL PDF (HU-132) → Fase 10; zona oficial Quadro 10 pendente SEDUR (sem ela, degradação honesta em_analise). Smoke navegável aguardando aprovação humana.
-- [ ] **Phase 10: Análise Técnica SEDUR** — Fila com SLA, ficha pré-analisada pelo motor, precedentes, malha fina, TVL PDF backoffice (EP10 + HU-132/135/136/140/142/144)
+- [x] **Phase 10: Análise Técnica SEDUR** — Fila com SLA, ficha pré-analisada pelo motor, precedentes, malha fina, TVL PDF backoffice (EP10 + HU-132/135/136/140/142/144) — implementada em 2026-06-15 (18/18 planos; suíte 1161/1161 = SQLite + @group postgis com POSTGIS_TESTS_REQUIRED; decisão humana real flow `analise_tecnica` + TVL, evidência `analise:decidir 7` → DEFERIDA + TVL-2026-000003). Regin/SEFAZ (HU-104/110) → Fase 13; HU-083/084 pleno → EP11; export HU-131 → Fase 15; zona oficial Quadro 10 e **roteamento automático ao setor** pendentes SEDUR (no dev: caixa de triagem). Smoke navegável aguardando aprovação humana.
 - [ ] **Phase 11: Pendências e Comunicação** — Notificações, respostas e canais administráveis (EP11)
 - [ ] **Phase 12: Auditoria e Compliance** — Consulta, exportação e LGPD sobre a trilha registrada (EP12)
 - [ ] **Phase 13: Integrações** — REDESIM, Junta, Receita, GIS, SEFAZ e legado contra homologação real (EP13)
@@ -351,25 +351,27 @@ Nota (recursos do framework — levantamento 2026-06-12): emissão de resultado 
   7. Processo encerrado com status final e trilha completa.
 **Plans**: 18 plans (8 waves do CONTEXT) — planejados em 2026-06-14
 
+Status (fechamento 2026-06-15, plano 10-18): 18/18 planos implementados; verificação integral FRESCA verde (pint limpo; tsc/build; suíte **1161/1161** = SQLite + @group postgis com `POSTGIS_TESTS_REQUIRED=true`). A análise técnica humana opera de ponta a ponta com LÓGICA REAL: encaminhar→fila/SLA→caixa/distribuir→ficha pré-analisada→divergências→decidir (ViabilityDecision flow `analise_tecnica` + TVL PDF interno)→pendência↔→malha fina. Critérios 1, 1b, 2, 2b, 5, 6, 7 validados; critério 4 com a DECISÃO/TVL/auditoria reais e a **transmissão Regin/SEFAZ BLOQUEADA → Fase 13** (auditam `bloqueado`, nunca "enviado"); critério 3 (HU-083/084) PARCIAL (ciclo interno portal+e-mail) — convite Simplifica/Regin + multicanal → EP11. Seeds dev (dados fictícios, lógica real) + comando `analise:decidir` (evidência: `analise:decidir 7 --finalizar` → DEFERIDA + TVL-2026-000003) + golden/smoke + precedentes @group postgis. **Roteamento automático ao setor** é pendência SEDUR (no dev: caixa de triagem; em produção o gestor atribui manualmente). ZERO dependência nova além do `barryvdh/laravel-dompdf` (10-13). Parâmetros 67 / permissões 24. ÚNICO gate restante: smoke navegável humano.
+
 Plans:
-- [ ] 10-01-PLAN.md — Fundação: 11 parâmetros grupo `analise` (56→67) + 5 permissões (19→24) + fallback config (dono do catálogo) (wave 1)
-- [ ] 10-02-PLAN.md — Schema: 8 tabelas (setores+pivot, ficha versionada, divergências, pendências, malha fina, textos-padrão, tvl_documents) + colunas de análise em viability_requests + 4 enums + models/factories (wave 1)
-- [ ] 10-03-PLAN.md — StateMachine: transições da análise humana (em_analise/em_pendencia, decisão final) + evento EncaminhadoParaAnalise (wave 1)
-- [ ] 10-04-PLAN.md — HU-138 setores (CRUD + analistas N:N) + HU-085 textos-padrão (CRUD versionado) — backend, route-owner W2 (wave 2)
-- [ ] 10-05-PLAN.md — AnalysisSlaService (reusa BusinessDeadlineCalculator) + semáforo on-the-fly (HU-144) (wave 2)
-- [ ] 10-06-PLAN.md — PrecedentRepository (contrato+postgis+fake) + PrecedentService (HU-142, @group postgis, LGPD) (wave 2)
-- [ ] 10-07-PLAN.md — HU-079/080/081: encaminhar (dispara EncaminhadoParaAnalise + SLA) + caixa do setor/distribuir(lote)/assumir, route-owner W3 (wave 3)
-- [ ] 10-08-PLAN.md — HU-140 PreAnalisarProcesso (listener auto-descoberto, reusa resolver, ficha rev 1; FA-01) (wave 3)
-- [ ] 10-09-PLAN.md — HU-135 ficha backend (autosave/finalizar imutável/revisões/diff) + HU-140 divergências + HU-142 endpoint, route-owner W4 (wave 4)
-- [ ] 10-10-PLAN.md — HU-085/086/087/088/089 AnaliseTecnicaDecisionService → ViabilityDecision (flow analise_tecnica) + ResultadoEmitido (serviço) (wave 5)
-- [ ] 10-11-PLAN.md — HU-083/084 pendências (ciclo interno: serviço + evento gancho EP11 + e-mail + resposta no portal), route-owner portal W5 (wave 5)
-- [ ] 10-12-PLAN.md — HU-136 malha fina (flag+tabela ortogonal ao status, qualquer status, lote) — serviço (wave 5)
-- [ ] 10-13-PLAN.md — HU-132 TVL PDF (barryvdh/laravel-dompdf — única dep nova) + TvlPdfService (só deferida, disco não público, auditado) (wave 6)
-- [ ] 10-14-PLAN.md — HU-082 consulta (filtros SAPS+analista+categoria, índices, busca global, CSV) + HU-144 fila por SLA, route-owner W6 (wave 6)
-- [ ] 10-15-PLAN.md — Ações backend (decidir/encerrar, abrir pendência, malha fina lote, emitir/baixar TVL por URL assinada), route-owner W7 (wave 7)
-- [ ] 10-16-PLAN.md — UI: fila com SLA + consulta + detalhe (timeline/mini-mapa) + lote de malha fina/CSV (wave 7)
-- [ ] 10-17-PLAN.md — UI: ficha SAPS (HU-135/140/142 + ações) + telas admin (setores/textos-padrão) + navegação do console + busca global Cmd+K (wave 7)
-- [ ] 10-18-PLAN.md — Fechamento: seeds dev + analise:decidir + golden/smoke + precedentes @group postgis + verificação integral + smoke navegável (checkpoint humano) (wave 8)
+- [x] 10-01-PLAN.md — Fundação: 11 parâmetros grupo `analise` (56→67) + 5 permissões (19→24) + fallback config (dono do catálogo) (wave 1)
+- [x] 10-02-PLAN.md — Schema: 8 tabelas (setores+pivot, ficha versionada, divergências, pendências, malha fina, textos-padrão, tvl_documents) + colunas de análise em viability_requests + 4 enums + models/factories (wave 1)
+- [x] 10-03-PLAN.md — StateMachine: transições da análise humana (em_analise/em_pendencia, decisão final) + evento EncaminhadoParaAnalise (wave 1)
+- [x] 10-04-PLAN.md — HU-138 setores (CRUD + analistas N:N) + HU-085 textos-padrão (CRUD versionado) — backend, route-owner W2 (wave 2)
+- [x] 10-05-PLAN.md — AnalysisSlaService (reusa BusinessDeadlineCalculator) + semáforo on-the-fly (HU-144) (wave 2)
+- [x] 10-06-PLAN.md — PrecedentRepository (contrato+postgis+fake) + PrecedentService (HU-142, @group postgis, LGPD) (wave 2)
+- [x] 10-07-PLAN.md — HU-079/080/081: encaminhar (dispara EncaminhadoParaAnalise + SLA) + caixa do setor/distribuir(lote)/assumir, route-owner W3 (wave 3)
+- [x] 10-08-PLAN.md — HU-140 PreAnalisarProcesso (listener auto-descoberto, reusa resolver, ficha rev 1; FA-01) (wave 3)
+- [x] 10-09-PLAN.md — HU-135 ficha backend (autosave/finalizar imutável/revisões/diff) + HU-140 divergências + HU-142 endpoint, route-owner W4 (wave 4)
+- [x] 10-10-PLAN.md — HU-085/086/087/088/089 AnaliseTecnicaDecisionService → ViabilityDecision (flow analise_tecnica) + ResultadoEmitido (serviço) (wave 5)
+- [x] 10-11-PLAN.md — HU-083/084 pendências (ciclo interno: serviço + evento gancho EP11 + e-mail + resposta no portal), route-owner portal W5 (wave 5)
+- [x] 10-12-PLAN.md — HU-136 malha fina (flag+tabela ortogonal ao status, qualquer status, lote) — serviço (wave 5)
+- [x] 10-13-PLAN.md — HU-132 TVL PDF (barryvdh/laravel-dompdf — única dep nova) + TvlPdfService (só deferida, disco não público, auditado) (wave 6)
+- [x] 10-14-PLAN.md — HU-082 consulta (filtros SAPS+analista+categoria, índices, busca global, CSV) + HU-144 fila por SLA, route-owner W6 (wave 6)
+- [x] 10-15-PLAN.md — Ações backend (decidir/encerrar, abrir pendência, malha fina lote, emitir/baixar TVL por URL assinada), route-owner W7 (wave 7)
+- [x] 10-16-PLAN.md — UI: fila com SLA + consulta + detalhe (timeline/mini-mapa) + lote de malha fina/CSV (wave 7)
+- [x] 10-17-PLAN.md — UI: ficha SAPS (HU-135/140/142 + ações) + telas admin (setores/textos-padrão) + navegação do console + busca global Cmd+K (wave 7)
+- [x] 10-18-PLAN.md — Fechamento: seeds dev + analise:decidir + golden/smoke + precedentes @group postgis + verificação integral + smoke navegável (checkpoint humano) (wave 8)
 
 Nota (recursos do framework — levantamento 2026-06-12): TVL em PDF (HU-132) gerado e armazenado via Storage/Filesystem, com download no backoffice por URL temporária assinada — nunca arquivo público.
 
@@ -495,7 +497,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 7. Consulta Prévia de Viabilidade | 10/10 | Complete (veredito locacional/inscrição pendentes SEDUR) | 2026-06-14 |
 | 8. Solicitação de Viabilidade | 16/16 | Complete (guardião APROVADO; resta só o smoke navegável humano); DAM HU-071/072 + Regin bloqueados → Fase 13; HU-139 texto livre | 2026-06-14 |
 | 9. Fluxo Expresso | 12/12 | Complete (resta só o smoke navegável humano); Regin/SEFAZ HU-104/110 e HU-134 ativa → Fase 13; TVL PDF HU-132 → Fase 10; zona oficial Quadro 10 pendente SEDUR | 2026-06-14 |
-| 10. Análise Técnica SEDUR | 0/18 | Planned | - |
+| 10. Análise Técnica SEDUR | 18/18 | Complete (resta só o smoke navegável humano); Regin/SEFAZ HU-104/110 → Fase 13; HU-083/084 pleno → EP11; export HU-131 → Fase 15; zona oficial Quadro 10 + roteamento automático ao setor pendentes SEDUR | 2026-06-15 |
 | 11. Pendências e Comunicação | 0/TBD | Not started | - |
 | 12. Auditoria e Compliance | 0/TBD | Not started | - |
 | 13. Integrações | 0/TBD | Not started | - |
