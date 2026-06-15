@@ -594,6 +594,60 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['nullable', 'string', 'max:255'],
                 'description' => 'Token/credencial da API de WhatsApp (armazenado criptografado, nunca reexibido)',
             ],
+            // Auditoria e compliance (EP12). A paginação da trilha fica no grupo
+            // 'ui'; o toggle de detecção de abuso (HU-149) nasce DESLIGADO (nunca
+            // pune — só registra alerta e encaminha à malha fina).
+            'ui.auditoria.per_page' => [
+                'group' => 'ui',
+                'type' => 'integer',
+                'default_value' => '20',
+                'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
+                'description' => 'Itens por página na consulta da trilha de auditoria (HU-100)',
+            ],
+            'features.deteccao_abuso' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a detecção de padrões de abuso/fraude (HU-149); nasce desligada e NUNCA pune — apenas registra alerta e encaminha à malha fina',
+            ],
+            // Limiares dos detectores determinísticos (HU-149) — grupo 'abuso'.
+            // Defaults conservadores; a SEDUR ajusta sem deploy (HU-014).
+            'abuso.janela_dias' => [
+                'group' => 'abuso',
+                'type' => 'integer',
+                'default_value' => '30',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
+                'description' => 'Janela (dias) analisada pelos detectores de abuso a cada execução do scheduler',
+            ],
+            'abuso.volume_cnpj.limite' => [
+                'group' => 'abuso',
+                'type' => 'integer',
+                'default_value' => '5',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:1000'],
+                'description' => 'Quantidade de solicitações do mesmo CNPJ na janela antes de gerar alerta (detector de volume por CNPJ)',
+            ],
+            'abuso.volume_contador.limite' => [
+                'group' => 'abuso',
+                'type' => 'integer',
+                'default_value' => '20',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:1000'],
+                'description' => 'Quantidade de solicitações do mesmo contador na janela antes de gerar alerta (detector de volume por contador)',
+            ],
+            'abuso.escritorio_virtual.limite' => [
+                'group' => 'abuso',
+                'type' => 'integer',
+                'default_value' => '3',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:1000'],
+                'description' => 'Quantidade de empresas no mesmo endereço de escritório virtual na janela antes de gerar alerta',
+            ],
+            'abuso.severidade_malha_fina' => [
+                'group' => 'abuso',
+                'type' => 'string',
+                'default_value' => 'alta',
+                'validation_rules' => ['required', 'in:baixa,media,alta'],
+                'description' => 'Severidade mínima do alerta que dispara encaminhamento à malha fina (alertas iguais ou acima são encaminhados; nunca indeferidos)',
+            ],
         ];
     }
 }

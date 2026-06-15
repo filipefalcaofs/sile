@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(78, Parameter::query()->count());
+        $this->assertSame(85, Parameter::query()->count());
         $this->assertSame(
-            ['analise', 'expresso', 'features', 'geo', 'integracoes', 'louos', 'notificacoes', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
+            ['abuso', 'analise', 'expresso', 'features', 'geo', 'integracoes', 'louos', 'notificacoes', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -644,11 +644,71 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($token->value);
     }
 
+    public function test_seeder_registra_parametros_de_auditoria_e_abuso(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $perPage = Parameter::query()->where('key', 'ui.auditoria.per_page')->first();
+        $this->assertNotNull($perPage);
+        $this->assertSame('ui', $perPage->group);
+        $this->assertSame('integer', $perPage->type);
+        $this->assertSame('20', $perPage->default_value);
+        $this->assertSame(['required', 'integer', 'min:5', 'max:100'], $perPage->validation_rules);
+        $this->assertNull($perPage->value);
+
+        // Toggle da detecção de abuso (HU-149): nasce DESLIGADO (nunca pune).
+        $toggle = Parameter::query()->where('key', 'features.deteccao_abuso')->first();
+        $this->assertNotNull($toggle);
+        $this->assertSame('features', $toggle->group);
+        $this->assertSame('boolean', $toggle->type);
+        $this->assertSame('0', $toggle->default_value);
+        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
+        $this->assertFalse($toggle->typedValue());
+        $this->assertNull($toggle->value);
+
+        $janela = Parameter::query()->where('key', 'abuso.janela_dias')->first();
+        $this->assertNotNull($janela);
+        $this->assertSame('abuso', $janela->group);
+        $this->assertSame('integer', $janela->type);
+        $this->assertSame('30', $janela->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:365'], $janela->validation_rules);
+        $this->assertSame(30, $janela->typedValue());
+
+        $volumeCnpj = Parameter::query()->where('key', 'abuso.volume_cnpj.limite')->first();
+        $this->assertNotNull($volumeCnpj);
+        $this->assertSame('abuso', $volumeCnpj->group);
+        $this->assertSame('integer', $volumeCnpj->type);
+        $this->assertSame('5', $volumeCnpj->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:1000'], $volumeCnpj->validation_rules);
+
+        $volumeContador = Parameter::query()->where('key', 'abuso.volume_contador.limite')->first();
+        $this->assertNotNull($volumeContador);
+        $this->assertSame('abuso', $volumeContador->group);
+        $this->assertSame('integer', $volumeContador->type);
+        $this->assertSame('20', $volumeContador->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:1000'], $volumeContador->validation_rules);
+
+        $escritorio = Parameter::query()->where('key', 'abuso.escritorio_virtual.limite')->first();
+        $this->assertNotNull($escritorio);
+        $this->assertSame('abuso', $escritorio->group);
+        $this->assertSame('integer', $escritorio->type);
+        $this->assertSame('3', $escritorio->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:1000'], $escritorio->validation_rules);
+
+        $severidade = Parameter::query()->where('key', 'abuso.severidade_malha_fina')->first();
+        $this->assertNotNull($severidade);
+        $this->assertSame('abuso', $severidade->group);
+        $this->assertSame('string', $severidade->type);
+        $this->assertSame('alta', $severidade->default_value);
+        $this->assertSame(['required', 'in:baixa,media,alta'], $severidade->validation_rules);
+        $this->assertNull($severidade->value);
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(78, Parameter::query()->count());
+        $this->assertSame(85, Parameter::query()->count());
     }
 }
