@@ -30,6 +30,7 @@ use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\TvlDocumentController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
+use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\Portal\CnaeSearchController;
 use App\Http\Middleware\ResolveAssistedAttendance;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +55,14 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
     ->name('gestao.')
     ->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
+
+        // Central de notificações in-app (HU-090) — canal database nativo do
+        // próprio servidor (escopo do dono). SEM permissão nova: a central é do
+        // usuário autenticado, não da retaguarda. Mesmo controller do portal; o
+        // badge de não-lidas é shared prop (HandleInertiaRequests).
+        Route::get('notificacoes', [NotificationCenterController::class, 'index'])->name('notificacoes.index');
+        Route::post('notificacoes/ler-todas', [NotificationCenterController::class, 'markAllAsRead'])->name('notificacoes.ler-todas');
+        Route::post('notificacoes/{notification}/ler', [NotificationCenterController::class, 'markAsRead'])->name('notificacoes.ler');
 
         Route::get('acessos/{user}', AccessHistoryController::class)
             ->middleware('permission:consultar-acessos-de-qualquer-conta')

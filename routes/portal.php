@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\Portal\AccessHistoryController;
 use App\Http\Controllers\Portal\CancelamentoSolicitacaoController;
 use App\Http\Controllers\Portal\CnaeSearchController;
@@ -186,5 +187,12 @@ Route::middleware(['auth:web', 'verified'])
             // ficam para o EP11 (este é o ciclo interno REAL: portal + e-mail).
             Route::get('solicitacoes/{solicitacao}/pendencias', [PendenciaRespostaController::class, 'show'])->name('solicitacoes.pendencias');
             Route::post('solicitacoes/{solicitacao}/pendencias/{pendency}/responder', [PendenciaRespostaController::class, 'responder'])->name('solicitacoes.pendencias.responder');
+
+            // Central de notificações in-app (HU-090) — canal database nativo do
+            // próprio usuário (escopo do dono). Listar + marcar uma + marcar
+            // todas; o badge de não-lidas é shared prop (HandleInertiaRequests).
+            Route::get('notificacoes', [NotificationCenterController::class, 'index'])->name('notificacoes.index');
+            Route::post('notificacoes/ler-todas', [NotificationCenterController::class, 'markAllAsRead'])->name('notificacoes.ler-todas');
+            Route::post('notificacoes/{notification}/ler', [NotificationCenterController::class, 'markAsRead'])->name('notificacoes.ler');
         });
     });
