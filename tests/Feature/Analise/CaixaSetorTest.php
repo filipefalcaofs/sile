@@ -104,6 +104,42 @@ class CaixaSetorTest extends TestCase
         );
     }
 
+    public function test_index_do_gestor_expoe_analistas_do_setor_e_pode_distribuir(): void
+    {
+        $setor = Sector::factory()->create();
+        $gestor = $this->gestor();
+        $gestor->sectors()->attach($setor);
+        $analista = $this->analistaDoSetor($setor);
+        $this->processoNaCaixa($setor);
+
+        $response = $this->actingAs($gestor, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertOk();
+
+        $props = $response->viewData('page')['props'];
+
+        $this->assertTrue($props['podeDistribuir'], 'O gestor (distribuir-processos) deve poder distribuir.');
+
+        $analistaIds = collect($props['analistas'])->pluck('id')->all();
+        $this->assertContains($analista->id, $analistaIds, 'A lista de analistas do setor deve alimentar o seletor de distribuição.');
+    }
+
+    public function test_index_do_analista_nao_expoe_distribuicao(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $this->processoNaCaixa($setor);
+
+        $response = $this->actingAs($analista, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertOk();
+
+        $props = $response->viewData('page')['props'];
+
+        $this->assertFalse($props['podeDistribuir'], 'O analista (sem distribuir-processos) não distribui — só assume.');
+        $this->assertSame([], $props['analistas'], 'Sem distribuição, não há lista de analistas no payload (minimização).');
+    }
+
     public function test_index_exige_analisar_processos_e_audita_o_403(): void
     {
         // Usuário acessa a gestão mas NÃO tem analisar-processos (CA-04).

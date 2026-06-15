@@ -73,6 +73,24 @@ class CaixaSetorController extends Controller
                 'analysis_due_at' => $processo->analysis_due_at?->toIso8601String(),
             ]);
 
+        // Só o gestor (distribuir-processos) distribui — e só para ele faz sentido
+        // carregar a lista de analistas do(s) setor(es) que alimenta o seletor. O
+        // analista apenas assume, então recebe a lista vazia (minimização do payload).
+        $podeDistribuir = $request->user()->can('distribuir-processos');
+
+        $analistas = $podeDistribuir
+            ? User::query()
+                ->permission('analisar-processos')
+                ->whereHas('sectors', fn ($query) => $query->whereIn('sectors.id', $sectorIds))
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn (User $analista): array => [
+                    'id' => $analista->id,
+                    'name' => $analista->name,
+                ])
+                ->all()
+            : [];
+
         $this->audit->log('analise', 'consulta-caixa', 'Consulta da caixa do setor', [
             'setores' => $sectorIds->all(),
         ]);
@@ -83,6 +101,8 @@ class CaixaSetorController extends Controller
                 'per_page' => $perPage,
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
+            'podeDistribuir' => $podeDistribuir,
+            'analistas' => $analistas,
         ]);
     }
 
