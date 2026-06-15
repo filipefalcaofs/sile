@@ -12,6 +12,7 @@ use App\Http\Controllers\Gestao\DashboardController;
 use App\Http\Controllers\Gestao\DocumentRequirementController;
 use App\Http\Controllers\Gestao\EmailLogController;
 use App\Http\Controllers\Gestao\GeocodeController;
+use App\Http\Controllers\Gestao\LgpdMonitorController;
 use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\LouosController;
 use App\Http\Controllers\Gestao\LouosSandboxController;
@@ -83,6 +84,19 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:consultar-auditoria')->prefix('auditoria')->name('auditoria.')->group(function () {
             Route::get('export', [AuditoriaController::class, 'export'])->name('export');
             Route::get('/', [AuditoriaController::class, 'index'])->name('index');
+        });
+
+        // Monitoramento de conformidade LGPD (HU-102): painel que AGREGA fontes
+        // REAIS — consentimentos (LegalTerm × LegalTermAcceptance), retenção
+        // (retencao.access_logs.dias + último pruning da trilha; decisões FORA
+        // do pruning por compliance) e acessos a dado pessoal
+        // (activity_log.personal_data). MINIMIZADO (métricas, nunca PII crua) e
+        // auditado (RN-002, personal_data); o 403 sem monitorar-lgpd é auditado
+        // no ponto único (bootstrap/app.php). Direitos do titular
+        // (eliminação/anonimização) ficam como pendência DPO — registrada, nunca
+        // inventada. ÚNICO editor de routes/gestao.php na Wave 3; tela em 12-10.
+        Route::middleware('permission:monitorar-lgpd')->prefix('lgpd')->name('lgpd.')->group(function () {
+            Route::get('/', [LgpdMonitorController::class, 'index'])->name('index');
         });
 
         // Consulta granular separada da manutenção (HU-011 CA-04)
