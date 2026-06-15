@@ -14,6 +14,8 @@ use App\Services\Analise\PostgisPrecedentRepository;
 use App\Services\Analise\PrecedentRepository;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjLookup;
+use App\Services\Expresso\DatabaseHolidayProvider;
+use App\Services\Expresso\HolidayProvider;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\NominatimGeocoder;
 use App\Services\Geo\PostgisSpatialRepository;
@@ -74,6 +76,13 @@ class AppServiceProvider extends ServiceProvider
         // de lotes/Cadastro está PENDENTE SEDUR — o provider degrada honestamente
         // (nunca inventa ponto). A Fase 13 (HU-106) troca SÓ este binding.
         $this->app->bind(PropertyRegistryLookup::class, UnavailablePropertyRegistryLookup::class);
+
+        // Fonte de feriados (HU-137) atrás de contrato: o BusinessDeadlineCalculator
+        // (HU-129) desconta os feriados ativos via este provider para medir
+        // duração em tempo útil. Singleton porque a lista é cacheada (TTL técnico).
+        // Sem feriado municipal cadastrado, degrada honesto (hasOfficialCalendar
+        // = false) — nunca inventa feriado. A lista oficial é pendência SEDUR.
+        $this->app->singleton(HolidayProvider::class, DatabaseHolidayProvider::class);
 
         // Integrações de saída do fluxo expresso BLOQUEADAS (sem contrato/
         // homologação): comunicar o parecer ao Regin/Junta (HU-104) e enviar a
