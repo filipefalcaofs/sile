@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import DecisionExplanation, { type DecisionExplanationData } from '@/components/auditoria/decision-explanation';
 import PageHeader from '@/components/app/page-header';
 import { ArrowRightIcon, InfoIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
@@ -62,6 +63,8 @@ interface ResultadoExpressoShowProps {
         regin: CanalTransmissao;
         sefaz: CanalTransmissao;
     };
+    /** Explicabilidade passo a passo (HU-099), projeção pura do decision_trace. */
+    explicacao?: DecisionExplanationData | null;
 }
 
 function outcomeColor(outcome: string): 'success' | 'error' | 'light' {
@@ -144,7 +147,7 @@ function DescItem({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-export default function ResultadoExpressoShow({ decisao, transmissao }: ResultadoExpressoShowProps) {
+export default function ResultadoExpressoShow({ decisao, transmissao, explicacao }: ResultadoExpressoShowProps) {
     const solicitacao = decisao.solicitacao;
     const regras = flattenRegras(decisao.rules_versions);
     // Defensivo: a fundamentação é sempre uma lista vinda do backend, mas um
@@ -342,6 +345,19 @@ export default function ResultadoExpressoShow({ decisao, transmissao }: Resultad
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Explicabilidade passo a passo (HU-099) — só quando há projeção */}
+                {explicacao && (
+                    <Card>
+                        <CardHeader
+                            title="Explicabilidade da decisão"
+                            description="Passo a passo de como a viabilidade foi decidida (RN-005) — projeção do que foi registrado, sem reexecutar o motor."
+                        />
+                        <CardContent>
+                            <DecisionExplanation explicacao={explicacao} />
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Transmissão Regin/SEFAZ */}
                 <Card>

@@ -8,6 +8,7 @@ import {
     type ProcessoItem,
     SemaforoBadge,
 } from '@/components/analise/processo-ui';
+import DecisionExplanation, { type DecisionExplanationData } from '@/components/auditoria/decision-explanation';
 import PageHeader from '@/components/app/page-header';
 import { MapaSection } from '@/components/geo/mapa-section';
 import { ArrowRightIcon, MapPinIcon } from '@/components/icons';
@@ -32,14 +33,11 @@ interface ShowProps {
     geo: {
         poligono: Polygon | null;
     };
+    /** Explicabilidade passo a passo (HU-099); null quando não há decisão. */
+    explicacao?: DecisionExplanationData | null;
 }
 
-type Aba = 'informacoes' | 'tramitacao';
-
-const ABAS: { value: Aba; label: string }[] = [
-    { value: 'informacoes', label: 'Informações do processo' },
-    { value: 'tramitacao', label: 'Tramitação' },
-];
+type Aba = 'informacoes' | 'tramitacao' | 'explicabilidade';
 
 /** Centroide do anel exterior do polígono (média dos vértices em [lng, lat]). */
 function centroide(poligono: Polygon | null): { lat: number; lng: number } | null {
@@ -100,11 +98,18 @@ function DescItem({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-export default function Show({ processo, timeline, geo }: ShowProps) {
+export default function Show({ processo, timeline, geo, explicacao }: ShowProps) {
     const { auth } = usePage<SharedProps>().props;
     const podeAnalisar = auth.permissions.includes('analisar-processos');
 
     const [aba, setAba] = useState<Aba>('informacoes');
+
+    // A aba de explicabilidade só existe quando há decisão (prop presente).
+    const abas: { value: Aba; label: string }[] = [
+        { value: 'informacoes', label: 'Informações do processo' },
+        { value: 'tramitacao', label: 'Tramitação' },
+        ...(explicacao ? [{ value: 'explicabilidade' as const, label: 'Explicabilidade' }] : []),
+    ];
 
     const centro = centroide(geo.poligono);
 
@@ -199,7 +204,7 @@ export default function Show({ processo, timeline, geo }: ShowProps) {
                             aria-label="Seções do processo"
                             className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-white/[0.03]"
                         >
-                            {ABAS.map((item) => {
+                            {abas.map((item) => {
                                 const ativa = item.value === aba;
 
                                 return (
@@ -221,7 +226,7 @@ export default function Show({ processo, timeline, geo }: ShowProps) {
                             })}
                         </div>
 
-                        {aba === 'informacoes' ? (
+                        {aba === 'informacoes' && (
                             <Card>
                                 <CardHeader title="Informações do processo" />
                                 <CardContent>
@@ -253,7 +258,9 @@ export default function Show({ processo, timeline, geo }: ShowProps) {
                                     </dl>
                                 </CardContent>
                             </Card>
-                        ) : (
+                        )}
+
+                        {aba === 'tramitacao' && (
                             <Card>
                                 <CardHeader
                                     title="Tramitação"
@@ -300,6 +307,18 @@ export default function Show({ processo, timeline, geo }: ShowProps) {
                                             })}
                                         </ol>
                                     )}
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {aba === 'explicabilidade' && explicacao && (
+                            <Card>
+                                <CardHeader
+                                    title="Explicabilidade da decisão"
+                                    description="Passo a passo de como a viabilidade foi decidida (RN-005) — projeção do que foi registrado, sem reexecutar o motor."
+                                />
+                                <CardContent>
+                                    <DecisionExplanation explicacao={explicacao} />
                                 </CardContent>
                             </Card>
                         )}
