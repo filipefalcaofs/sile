@@ -388,9 +388,24 @@ Nota de planejamento (2026-06-14): 18 planos em 8 waves (CONTEXT). Estratégia d
   3. Vencimentos e prazos geram notificações automáticas conforme parâmetros administráveis.
   4. E-mail e WhatsApp funcionam como canais administráveis por feature toggle, com histórico de comunicações consultável e degradação controlada quando desativados.
   5. Processos parados além do SLA da etapa escalonam automaticamente (analista → gestor), com rotina agendada idempotente e fonte única de prazo (HU-147).
-**Plans**: TBD
+**Plans**: 10 plans (6 waves do CONTEXT) — planejados em 2026-06-15
+**Status**: Planned (2026-06-15) — aguardando execução
+
+Plans:
+- [ ] 11-01-PLAN.md — Fundação: notifications table (canal database) + ledger communications (model/enums/factory/marcadores honestos) + contrato ProcessNotification (wave 1, ‖ 11-02)
+- [ ] 11-02-PLAN.md — Parâmetros HU-014: toggles features.notificacao_* + grupo novo `notificacoes` + credenciais WhatsApp; fallback config; seeder-tests 67→78 (dono único do ParameterSeeder) (wave 1, ‖ 11-01)
+- [ ] 11-03-PLAN.md — WhatsApp stack: contrato+DTO+Unavailable+Exception+binding + WhatsAppChannel (bloqueado honesto) + routeNotificationForWhatsapp (dono único de AppServiceProvider/User) (wave 2, ‖ 11-04)
+- [ ] 11-04-PLAN.md — NotificationDispatcher (mapa_canais ∩ toggles → communications na_fila/desativado + congela canais) + RegistrarEnvioComunicacao (NotificationSent/Failed, auto-descoberto) (wave 2, ‖ 11-03)
+- [ ] 11-05-PLAN.md — HU-090/091/092: NotificarPendencia + REMOVER notificarRequerente do PendenciaService; PendenciaRespondida (after-commit) + NotificarRespostaPendencia (analista); Notification multicanal; MIGRA PendenciaServiceTest (wave 3, ‖ 11-06/11-07)
+- [ ] 11-06-PLAN.md — Refactor NotificarResultadoExpresso → dispatcher (in-app+histórico); ResultadoExpressoNotification ProcessNotification; ANTI-REGRESSÃO Fase 9 (testes migrados verdes) (wave 3, ‖ 11-05/11-07)
+- [ ] 11-07-PLAN.md — Scheduler: notificacoes:alertar-vencimentos (HU-093), notificacoes:escalonar-sla (HU-147, fonte única analysis_due_at), pendencias:expirar (HU-091 RN-005); idempotente por communications (dono único de routes/console.php) (wave 3, ‖ 11-05/11-06)
+- [ ] 11-08-PLAN.md — Central in-app backend (index/markAsRead/markAllAsRead) + shared prop do sininho + HU-096 histórico unificado; rotas portal+gestão (dono único de routes/portal.php, routes/gestao.php, HandleInertiaRequests; sem permissão nova) (wave 4)
+- [ ] 11-09-PLAN.md — Frontend: sininho/badge + central de notificações + central de pendências (reusa fluxo de resposta) + histórico de comunicações; smoke navegável Inertia (wave 5)
+- [ ] 11-10-PLAN.md — Fechamento: seeds dev (comunicações/notificações via fluxo REAL) + verificação integral fresca (`composer test` 2 processos) + evidência anti-fachada + smoke navegável (checkpoint humano) + guardião-entrega (wave 6)
 
 Nota (recursos do framework — levantamento 2026-06-12): central de notificações in-app usa o canal `database` nativo de Notifications (lidas/não lidas, sem tabela própria); WhatsApp entra como canal customizado de Notification com feature toggle e degradação controlada; o escalonamento por SLA (HU-147) roda no scheduler ativado na Fase 3.1.
+
+Nota de planejamento (2026-06-15): 10 planos em 6 waves de execução (alinhadas às 6 waves do CONTEXT). Estratégia de paralelismo sem sobreposição de arquivos — pares/trios paralelos com dono ÚNICO por recurso: ParameterSeeder/config (11-02, W1), AppServiceProvider/User (11-03, W2), routes/console.php (11-07, W3), routes/portal.php + routes/gestao.php + HandleInertiaRequests (11-08, W4). Refactors anti-regressão (Fases 9/10) isolados em 11-05/11-06 com migração de testes (cobertura mantida, não removida). Sem permissão nova (central por dono; histórico HU-096 reusa `consultar-solicitacoes`); parâmetros 67→78. Bloqueios SEDUR/Fase 13 (degradam honesto, nunca simulados): provedor WhatsApp real (HU-095, toggle off + contrato Unavailable), convite/resposta Simplifica/Regin (HU-091 RN-004), destinatário "gestor do setor" (default role gestor parametrizável), rito de não-resposta da pendência (expira+notifica+mantém estado).
 
 ### Phase 12: Auditoria e Compliance
 **Goal**: A trilha de auditoria registrada desde a Fase 1 é consultável, exportável e monitorada para conformidade com a LGPD.
