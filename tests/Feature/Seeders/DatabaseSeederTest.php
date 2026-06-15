@@ -334,9 +334,11 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(0, DB::table('cnae_document_requirement')->count());
 
         // 4 exemplos da Fase 8 (rascunho/protocolada/cancelada/contingência) +
-        // 2 exemplos do fluxo expresso (deferimento/em análise) = 6, estáveis.
+        // 2 exemplos do fluxo expresso (deferimento/em análise) + 1 exemplo
+        // dedicado de comunicação do EP11 (em_analise após o ciclo de pendência,
+        // ComunicacaoDevSeeder) = 7, estáveis no re-seed.
         $cidadaoId = User::query()->where('email', 'cidadao@sile.dev')->value('id');
-        $this->assertSame(6, ViabilityRequest::query()->where('requester_user_id', $cidadaoId)->count());
+        $this->assertSame(7, ViabilityRequest::query()->where('requester_user_id', $cidadaoId)->count());
         // Os exemplos protocolados não ganham número novo a cada re-seed: 1 da
         // Fase 8 + 2 do expresso (em SQLite os exemplos do expresso ficam
         // protocolados — a decisão real exige PostGIS, testes @group postgis).

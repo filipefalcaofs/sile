@@ -49,6 +49,14 @@ class DatabaseSeeder extends Seeder
             SectorSeeder::class,
             StandardTextSeeder::class,
             AnaliseDevSeeder::class,
+            // Comunicação multicanal (EP11) — fechamento. SÓ dev/teste, com LÓGICA
+            // REAL e territorial-agnóstica: cria um processo dedicado, leva-o a
+            // em_analise pelo caminho legítimo e roda o ciclo de pendência de
+            // verdade (abrir → notifica o requerente in-app/e-mail; responder →
+            // notifica o analista), deixando a central de notificações e o
+            // histórico (HU-096) navegáveis. Roda também em SQLite (não exige
+            // PostGIS). Idempotente por marcador estável.
+            ComunicacaoDevSeeder::class,
         ]);
     }
 }
