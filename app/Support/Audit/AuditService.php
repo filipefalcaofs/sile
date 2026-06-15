@@ -10,8 +10,9 @@ use Illuminate\Database\Eloquent\Model;
  * passam por model events: ação, resultado e versão de regras.
  *
  * O enriquecimento de origem (ip/user_agent/channel/acting_for) acontece na
- * RecordActivityAction; o forceFill pós-log apenas sobrepõe resultado e
- * versão de regras sem depender da API interna do builder v5.
+ * RecordActivityAction; o forceFill pós-log apenas sobrepõe resultado, versão
+ * de regras e a marca de acesso a dado pessoal (LGPD) sem depender da API
+ * interna do builder v5.
  */
 class AuditService
 {
@@ -26,6 +27,7 @@ class AuditService
         ?Model $subject = null,
         string $result = 'sucesso',
         ?string $rulesVersion = null,
+        bool $personalData = false,
     ): Activity {
         $logger = activity($logName)->withProperties($properties)->event($event);
 
@@ -43,6 +45,7 @@ class AuditService
         $activity->forceFill([
             'result' => $result,
             'rules_version' => $rulesVersion,
+            'personal_data' => $personalData,
         ])->save();
 
         return $activity;
