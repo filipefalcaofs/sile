@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\TipoGatilho;
+use App\Enums\ViabilityRequestStatus;
 use App\Models\ExpressoQueda;
 use App\Models\ViabilityRequest;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -21,7 +22,13 @@ class ExpressoQuedaFactory extends Factory
     public function definition(): array
     {
         return [
-            'viability_request_id' => ViabilityRequest::factory()->protocoled(),
+            // Protocolada sem protocol_number fixo (nullable) — permite count(N)
+            // no factory sem colidir no único do protocolo, ao contrário do state
+            // protocoled() que fixa o mesmo número.
+            'viability_request_id' => ViabilityRequest::factory()->state([
+                'status' => ViabilityRequestStatus::Protocolada,
+                'protocoled_at' => now(),
+            ]),
             'cnae' => fake()->numerify('#######'),
             'tipo_gatilho' => TipoGatilho::ZeisEspecial->value,
             'dimensao' => 'municipal',
