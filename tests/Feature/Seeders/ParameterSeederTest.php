@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(67, Parameter::query()->count());
+        $this->assertSame(78, Parameter::query()->count());
         $this->assertSame(
-            ['analise', 'expresso', 'features', 'geo', 'integracoes', 'louos', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
+            ['analise', 'expresso', 'features', 'geo', 'integracoes', 'louos', 'notificacoes', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -522,11 +522,132 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($ttl->value);
     }
 
+    public function test_seeder_registra_parametros_de_notificacoes(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        // Toggles de canal (HU-014): e-mail e in-app nascem ligados; WhatsApp
+        // nasce DESLIGADO (bloqueio honesto — provedor real só na Fase 13).
+        $email = Parameter::query()->where('key', 'features.notificacao_email')->first();
+        $this->assertNotNull($email);
+        $this->assertSame('features', $email->group);
+        $this->assertSame('boolean', $email->type);
+        $this->assertSame('1', $email->default_value);
+        $this->assertSame(['required', 'boolean'], $email->validation_rules);
+        $this->assertNull($email->value);
+
+        $inApp = Parameter::query()->where('key', 'features.notificacao_in_app')->first();
+        $this->assertNotNull($inApp);
+        $this->assertSame('features', $inApp->group);
+        $this->assertSame('boolean', $inApp->type);
+        $this->assertSame('1', $inApp->default_value);
+        $this->assertSame(['required', 'boolean'], $inApp->validation_rules);
+        $this->assertNull($inApp->value);
+
+        $whatsapp = Parameter::query()->where('key', 'features.notificacao_whatsapp')->first();
+        $this->assertNotNull($whatsapp);
+        $this->assertSame('features', $whatsapp->group);
+        $this->assertSame('boolean', $whatsapp->type);
+        $this->assertSame('0', $whatsapp->default_value);
+        $this->assertSame(['required', 'boolean'], $whatsapp->validation_rules);
+        $this->assertFalse($whatsapp->typedValue());
+        $this->assertNull($whatsapp->value);
+
+        // Grupo NOVO notificacoes: mapa de canais por tipo (intersecção com os
+        // toggles; WhatsApp fora por default).
+        $mapaCanais = Parameter::query()->where('key', 'notificacoes.mapa_canais')->first();
+        $this->assertNotNull($mapaCanais);
+        $this->assertSame('notificacoes', $mapaCanais->group);
+        $this->assertSame('json', $mapaCanais->type);
+        $this->assertSame(['required', 'json'], $mapaCanais->validation_rules);
+        $this->assertNull($mapaCanais->value);
+        // O parâmetro json é decodificado para array em typedValue() — o
+        // dispatcher (11-04) sempre recebe o mapa como array, nunca string.
+        $this->assertSame(
+            [
+                'pendencia_aberta' => ['email', 'in_app'],
+                'pendencia_respondida' => ['in_app'],
+                'prazo_vencendo' => ['email', 'in_app'],
+                'escalonamento_sla' => ['email', 'in_app'],
+                'resultado' => ['email', 'in_app'],
+            ],
+            $mapaCanais->typedValue(),
+        );
+
+        $antecedencia = Parameter::query()->where('key', 'notificacoes.vencimento.antecedencia_dias')->first();
+        $this->assertNotNull($antecedencia);
+        $this->assertSame('notificacoes', $antecedencia->group);
+        $this->assertSame('integer', $antecedencia->type);
+        $this->assertSame('3', $antecedencia->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:60'], $antecedencia->validation_rules);
+        $this->assertNull($antecedencia->value);
+        $this->assertSame(3, $antecedencia->typedValue());
+
+        $tratamento = Parameter::query()->where('key', 'notificacoes.escalonamento.tratamento')->first();
+        $this->assertNotNull($tratamento);
+        $this->assertSame('notificacoes', $tratamento->group);
+        $this->assertSame('json', $tratamento->type);
+        $this->assertSame(['required', 'json'], $tratamento->validation_rules);
+        $this->assertNull($tratamento->value);
+        // Default só NOTIFICA (sem decisão automática — HU-147).
+        $this->assertSame(
+            ['amarelo' => 'notificar_analista', 'vencido' => 'notificar_gestor'],
+            $tratamento->typedValue(),
+        );
+
+        $gestorRole = Parameter::query()->where('key', 'notificacoes.escalonamento.gestor_role')->first();
+        $this->assertNotNull($gestorRole);
+        $this->assertSame('notificacoes', $gestorRole->group);
+        $this->assertSame('string', $gestorRole->type);
+        $this->assertSame('gestor', $gestorRole->default_value);
+        $this->assertSame(['required', 'string', 'max:50'], $gestorRole->validation_rules);
+        $this->assertNull($gestorRole->value);
+
+        $assunto = Parameter::query()->where('key', 'notificacoes.pendencia.assunto')->first();
+        $this->assertNotNull($assunto);
+        $this->assertSame('notificacoes', $assunto->group);
+        $this->assertSame('string', $assunto->type);
+        $this->assertSame('Pendência na sua solicitação de viabilidade {protocolo}', $assunto->default_value);
+        $this->assertSame(['required', 'string', 'max:150'], $assunto->validation_rules);
+        $this->assertNull($assunto->value);
+
+        $corpo = Parameter::query()->where('key', 'notificacoes.pendencia.corpo')->first();
+        $this->assertNotNull($corpo);
+        $this->assertSame('notificacoes', $corpo->group);
+        $this->assertSame('string', $corpo->type);
+        $this->assertSame(['required', 'string', 'max:2000'], $corpo->validation_rules);
+        // Template pt-BR honesto com os placeholders substituíveis.
+        $this->assertStringContainsString('{protocolo}', $corpo->default_value);
+        $this->assertStringContainsString('{pendencia}', $corpo->default_value);
+        $this->assertNull($corpo->value);
+
+        // Credenciais do WhatsApp (integração com teste de conexão + segredo
+        // criptografado), prontas para a Fase 13 ligar só o binding.
+        $baseUrl = Parameter::query()->where('key', 'integrations.whatsapp.base_url')->first();
+        $this->assertNotNull($baseUrl);
+        $this->assertSame('integracoes', $baseUrl->group);
+        $this->assertSame('string', $baseUrl->type);
+        $this->assertSame('', $baseUrl->default_value);
+        $this->assertSame(['nullable', 'url'], $baseUrl->validation_rules);
+        $this->assertTrue($baseUrl->requires_connection_test);
+        $this->assertFalse($baseUrl->sensitive);
+        $this->assertNull($baseUrl->value);
+
+        $token = Parameter::query()->where('key', 'integrations.whatsapp.token')->first();
+        $this->assertNotNull($token);
+        $this->assertSame('integracoes', $token->group);
+        $this->assertSame('string', $token->type);
+        $this->assertNull($token->default_value);
+        $this->assertSame(['nullable', 'string', 'max:255'], $token->validation_rules);
+        $this->assertTrue($token->sensitive);
+        $this->assertNull($token->value);
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(67, Parameter::query()->count());
+        $this->assertSame(78, Parameter::query()->count());
     }
 }
