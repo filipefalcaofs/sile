@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Notifications\Channels\WhatsAppChannel;
+use App\Services\Abuso\Detectors\VolumeCnpjDetector;
+use App\Services\Abuso\Detectors\VolumeContadorDetector;
 use App\Services\Analise\PostgisPrecedentRepository;
 use App\Services\Analise\PrecedentRepository;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
@@ -85,6 +87,15 @@ class AppServiceProvider extends ServiceProvider
         // este binding pelo adaptador HTTP real (integrations.whatsapp.*), sem tocar
         // o WhatsAppChannel que o consome.
         $this->app->bind(WhatsAppGateway::class, UnavailableWhatsAppGateway::class);
+
+        // Detectores de abuso (HU-149) registrados por TAG ADITIVA: o
+        // AbuseDetectionService recebe iterable<AbuseDetector> resolvido por ela.
+        // A 12-08 ACRESCENTA os detectores estruturais à MESMA tag sem tocar o
+        // serviço. Determinísticos sobre dado real (queries Eloquent, SEM IA).
+        $this->app->tag([
+            VolumeCnpjDetector::class,
+            VolumeContadorDetector::class,
+        ], 'abuse.detectors');
     }
 
     /**
