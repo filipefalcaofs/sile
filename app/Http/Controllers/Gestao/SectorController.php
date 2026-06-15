@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\SectorRequest;
 use App\Http\Resources\SectorResource;
 use App\Models\Sector;
+use App\Models\User;
 use App\Support\Audit\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 /**
  * Manutenção dos setores da SEDUR (HU-138) — a "caixa de análise" da
@@ -69,6 +71,7 @@ class SectorController extends Controller
 
         return Inertia::render('gestao/setores/index', [
             'sectors' => $sectors,
+            'analistasDisponiveis' => $this->analistasDisponiveis(),
             'filters' => [
                 'search' => $request->string('search')->toString(),
                 'sort' => $sort,
@@ -78,6 +81,29 @@ class SectorController extends Controller
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);
+    }
+
+    /**
+     * Candidatos reais ao vínculo analista↔setor (RN-005): usuários ativos cujo
+     * papel concede `analisar-processos` (analista/gestor/admin) — a mesma
+     * permissão que governa a caixa. Alimenta o multiselect da tela sem inventar
+     * opções; a permissão vive no guard web (padrão cross-guard do projeto).
+     *
+     * @return list<array{id: int, name: string}>
+     */
+    private function analistasDisponiveis(): array
+    {
+        $roleIds = Role::query()
+            ->whereHas('permissions', fn ($query) => $query->where('name', 'analisar-processos'))
+            ->pluck('id');
+
+        return User::query()
+            ->whereHas('roles', fn ($query) => $query->whereIn('roles.id', $roleIds))
+            ->whereNull('inactivated_at')
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (User $user): array => ['id' => $user->id, 'name' => $user->name])
+            ->all();
     }
 
     public function store(SectorRequest $request): RedirectResponse
