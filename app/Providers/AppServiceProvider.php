@@ -20,6 +20,8 @@ use App\Services\Regin\UnavailableBapRegistry;
 use App\Services\Regin\UnavailableReginParecerNotifier;
 use App\Services\Sefaz\SefazViabilidadeGateway;
 use App\Services\Sefaz\UnavailableSefazViabilidadeGateway;
+use App\Services\Whatsapp\UnavailableWhatsAppGateway;
+use App\Services\Whatsapp\WhatsAppGateway;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
 use Illuminate\Support\ServiceProvider;
@@ -73,6 +75,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ReginParecerNotifier::class, UnavailableReginParecerNotifier::class);
         $this->app->bind(SefazViabilidadeGateway::class, UnavailableSefazViabilidadeGateway::class);
         $this->app->bind(BapRegistry::class, UnavailableBapRegistry::class);
+
+        // Canal de notificação por WhatsApp (HU-095) BLOQUEADO honesto: não há
+        // provedor/credencial (API comercial) — o binding default LANÇA
+        // WhatsAppUnavailableException (a transmissão não ocorre), nunca simula. O
+        // toggle features.notificacao_whatsapp nasce OFF (11-02). A Fase 13 troca SÓ
+        // este binding pelo adaptador HTTP real (integrations.whatsapp.*), sem tocar
+        // o WhatsAppChannel que o consome.
+        $this->app->bind(WhatsAppGateway::class, UnavailableWhatsAppGateway::class);
     }
 
     /**
