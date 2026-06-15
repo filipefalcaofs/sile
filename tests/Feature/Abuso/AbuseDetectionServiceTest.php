@@ -6,6 +6,7 @@ use App\Enums\AbuseSeverity;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AbuseAlert;
 use App\Models\Activity;
+use App\Models\Company;
 use App\Models\FineMeshReferral;
 use App\Models\Parameter;
 use App\Models\ViabilityRequest;
@@ -16,6 +17,7 @@ use App\Services\Abuso\DetectionWindow;
 use App\Services\Analise\MalhaFinaService;
 use App\Support\Audit\AuditService;
 use Carbon\CarbonImmutable;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -226,5 +228,48 @@ class AbuseDetectionServiceTest extends TestCase
         $this->assertNotNull($activity);
         $this->assertSame('sistema', $activity->properties['ator']);
         $this->assertSame('deferida', $activity->properties['status']);
+    }
+
+    public function test_comando_com_toggle_off_e_no_op_honesto(): void
+    {
+        // O comando abuso:detectar só orquestra o serviço (RN-001/RN-003). Com o
+        // toggle OFF (default), sai 0 e NÃO cria nada — prova de dormência honesta.
+        Company::factory()->create();
+        ViabilityRequest::factory()->count(6)->create(['company_id' => Company::query()->first()->id]);
+
+        $this->artisan('abuso:detectar')
+            ->expectsOutputToContain('desligada')
+            ->assertExitCode(0);
+
+        $this->assertSame(0, AbuseAlert::query()->count());
+    }
+
+    public function test_comando_com_toggle_on_cria_alertas_reais_e_e_idempotente(): void
+    {
+        // ON + padrão real (6 solicitações do mesmo CNPJ > limite 5) → o detector
+        // REAL (via tag) gera 1 alerta; 2ª chamada NÃO duplica (idempotência).
+        $this->ligarDeteccao();
+        $empresa = Company::factory()->create();
+        ViabilityRequest::factory()->count(6)->create(['company_id' => $empresa->id]);
+
+        $this->artisan('abuso:detectar')->assertExitCode(0);
+        $this->assertSame(1, AbuseAlert::query()->where('rule_key', 'volume_cnpj')->count());
+
+        $this->artisan('abuso:detectar')->assertExitCode(0);
+        $this->assertSame(1, AbuseAlert::query()->where('rule_key', 'volume_cnpj')->count());
+    }
+
+    public function test_deteccao_esta_agendada_diariamente_de_forma_idempotente(): void
+    {
+        // Scheduler diário, seguro em multi-instância (withoutOverlapping/onOneServer)
+        // — espelha o padrão das Fases 9/11. No-op enquanto o toggle estiver OFF.
+        $schedule = app(Schedule::class);
+        $event = collect($schedule->events())
+            ->first(fn ($e) => str_contains((string) $e->command, 'abuso:detectar'));
+
+        $this->assertNotNull($event, 'A detecção de abuso deve estar registrada no scheduler');
+        $this->assertSame('0 0 * * *', $event->expression);
+        $this->assertTrue($event->withoutOverlapping);
+        $this->assertTrue($event->onOneServer);
     }
 }

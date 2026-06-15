@@ -71,3 +71,15 @@ Schedule::command('pendencias:expirar')
     ->dailyAt('06:00')
     ->withoutOverlapping()
     ->onOneServer();
+
+// HU-149 (EP12): detecção de abuso/fraude. Varre as solicitações na janela
+// (abuso.janela_dias) com detectores determinísticos sobre dado REAL (SEM IA) e
+// gera alertas idempotentes; acima de abuso.severidade_malha_fina encaminha à
+// malha fina (ator=sistema) — NUNCA pune nem transiciona status (RN-001). NO-OP
+// honesto enquanto features.deteccao_abuso=0 (default; a SEDUR liga após validar
+// os limiares). Idempotente (índice único parcial da 12-03) e seguro em
+// multi-instância (withoutOverlapping/onOneServer), como as Fases 9/11.
+Schedule::command('abuso:detectar')
+    ->daily()
+    ->withoutOverlapping()
+    ->onOneServer();
