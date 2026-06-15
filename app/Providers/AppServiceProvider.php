@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Notifications\Channels\WhatsAppChannel;
 use App\Services\Abuso\AbuseDetectionService;
+use App\Services\Abuso\Detectors\CondicionanteEvasaoDetector;
+use App\Services\Abuso\Detectors\InscricaoAtividadesIncompativeisDetector;
+use App\Services\Abuso\Detectors\PoligonoRepetidoDetector;
 use App\Services\Abuso\Detectors\VolumeCnpjDetector;
 use App\Services\Abuso\Detectors\VolumeContadorDetector;
 use App\Services\Analise\MalhaFinaService;
@@ -93,11 +96,16 @@ class AppServiceProvider extends ServiceProvider
 
         // Detectores de abuso (HU-149) registrados por TAG ADITIVA: o
         // AbuseDetectionService recebe iterable<AbuseDetector> resolvido por ela.
-        // A 12-08 ACRESCENTA os detectores estruturais à MESMA tag sem tocar o
-        // serviço. Determinísticos sobre dado real (queries Eloquent, SEM IA).
+        // A 12-06 registrou os 2 de volume; a 12-08 ACRESCENTA os 3 estruturais à
+        // MESMA tag sem tocar o serviço (passa a iterar 5). Todos determinísticos
+        // sobre dado real (queries Eloquent, SEM IA). O EscritorioVirtualEncadeado
+        // fica para a 2ª onda (depende de marcação estruturada — HU-139 texto livre).
         $this->app->tag([
             VolumeCnpjDetector::class,
             VolumeContadorDetector::class,
+            PoligonoRepetidoDetector::class,
+            InscricaoAtividadesIncompativeisDetector::class,
+            CondicionanteEvasaoDetector::class,
         ], 'abuse.detectors');
 
         // O motor de detecção consome os detectores resolvidos pela tag (iterable

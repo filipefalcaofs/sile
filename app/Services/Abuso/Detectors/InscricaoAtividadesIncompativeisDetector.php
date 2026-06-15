@@ -45,25 +45,33 @@ class InscricaoAtividadesIncompativeisDetector implements AbuseDetector
             ->orderBy('id')
             ->get();
 
-        /** @var array<string, array{ids: list<int>, cnaes: array<string, true>, requerentes: array<int, true>}> $grupos */
+        /** @var array<string, array{inscricao: string, ids: list<int>, cnaes: list<string>, requerentes: list<int>}> $grupos */
         $grupos = [];
 
         foreach ($solicitacoes as $solicitacao) {
             $inscricao = (string) $solicitacao->property_registration;
-            $grupos[$inscricao]['ids'][] = (int) $solicitacao->id;
+            // Prefixo evita a coerção de chave numérica do PHP (ex.: inscrições com
+            // zeros à esquerda) — o agrupamento é sempre por string exata.
+            $chave = 'inscricao:'.$inscricao;
+
+            if (! isset($grupos[$chave])) {
+                $grupos[$chave] = ['inscricao' => $inscricao, 'ids' => [], 'cnaes' => [], 'requerentes' => []];
+            }
+
+            $grupos[$chave]['ids'][] = (int) $solicitacao->id;
 
             $cnae = $solicitacao->primaryCnae->first()?->code;
             if ($cnae !== null) {
-                $grupos[$inscricao]['cnaes'][(string) $cnae] = true;
+                $grupos[$chave]['cnaes'][] = (string) $cnae;
             }
 
             if ($solicitacao->requester_user_id !== null) {
-                $grupos[$inscricao]['requerentes'][(int) $solicitacao->requester_user_id] = true;
+                $grupos[$chave]['requerentes'][] = (int) $solicitacao->requester_user_id;
             }
         }
 
-        foreach ($grupos as $inscricao => $grupo) {
-            $cnaes = array_keys($grupo['cnaes'] ?? []);
+        foreach ($grupos as $grupo) {
+            $cnaes = array_values(array_unique($grupo['cnaes']));
             $cnaesDistintos = count($cnaes);
 
             if ($cnaesDistintos < self::MINIMO_ATIVIDADES) {
@@ -75,12 +83,12 @@ class InscricaoAtividadesIncompativeisDetector implements AbuseDetector
             yield new AbuseFinding(
                 ruleKey: $this->key(),
                 severity: $cnaesDistintos > self::MINIMO_ATIVIDADES * 2 ? AbuseSeverity::Alta : AbuseSeverity::Media,
-                fingerprint: hash('sha256', $this->key().'|'.$inscricao),
+                fingerprint: hash('sha256', $this->key().'|'.$grupo['inscricao']),
                 evidence: [
-                    'inscricao' => $inscricao,
+                    'inscricao' => $grupo['inscricao'],
                     'cnaes_primarios' => $cnaes,
                     'cnaes_distintos' => $cnaesDistintos,
-                    'requerentes' => array_keys($grupo['requerentes'] ?? []),
+                    'requerentes' => array_values(array_unique($grupo['requerentes'])),
                     'minimo' => self::MINIMO_ATIVIDADES,
                     'ids' => $ids,
                 ],
