@@ -1,8 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import Logo, { LogoMark } from '@/components/app/logo';
-import { HorizontalDotsIcon } from '@/components/icons';
+import { AlertIcon, HorizontalDotsIcon, ListIcon, LockIcon } from '@/components/icons';
 import { useSidebar } from '@/contexts/sidebar-context';
+import type { SharedProps } from '@/types';
 
 export interface SidebarItem {
     name: string;
@@ -36,7 +37,8 @@ interface AppSidebarProps {
  */
 export default function AppSidebar({ groups, homeHref, subtitle, variant = 'light' }: AppSidebarProps) {
     const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
-    const { url } = usePage();
+    const { url, props } = usePage<SharedProps>();
+    const permissions = Array.isArray(props.auth?.permissions) ? props.auth.permissions : [];
 
     const currentPath = url.split('?')[0] ?? '';
 
@@ -48,12 +50,41 @@ export default function AppSidebar({ groups, homeHref, subtitle, variant = 'ligh
         return currentPath === href || currentPath.startsWith(`${href}/`);
     };
 
-    const visibleGroups = groups
+    const isConsole = variant === 'console';
+
+    // Grupo de auditoria/compliance (HU-098/100/102/149): só na retaguarda
+    // (console) e gated por permissão — quem não tem a permissão não vê o item.
+    // Aponta para as superfícies reais entregues em 12-09/12-10.
+    const complianceGroup: SidebarGroup = {
+        label: 'Auditoria e compliance',
+        items: [
+            {
+                name: 'Trilha de auditoria',
+                href: '/gestao/auditoria',
+                icon: <ListIcon />,
+                visible: permissions.includes('consultar-auditoria'),
+            },
+            {
+                name: 'Conformidade LGPD',
+                href: '/gestao/lgpd',
+                icon: <LockIcon />,
+                visible: permissions.includes('monitorar-lgpd'),
+            },
+            {
+                name: 'Alertas de abuso',
+                href: '/gestao/abuso',
+                icon: <AlertIcon />,
+                visible: permissions.includes('gerenciar-alertas-abuso'),
+            },
+        ],
+    };
+
+    const sourceGroups = isConsole ? [...groups, complianceGroup] : groups;
+
+    const visibleGroups = sourceGroups
         .map((group) => ({ ...group, items: group.items.filter((item) => item.visible !== false) }))
         .filter((group) => group.items.length > 0);
     const showText = isExpanded || isHovered || isMobileOpen;
-
-    const isConsole = variant === 'console';
 
     const surfaceStyles = isConsole
         ? 'bg-gray-950 border-white/[0.06]'
