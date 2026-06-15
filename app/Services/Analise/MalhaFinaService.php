@@ -42,6 +42,42 @@ class MalhaFinaService
     }
 
     /**
+     * Caminho de SISTEMA (aditivo, HU-149): encaminha um processo à malha fina SEM
+     * ator humano (referred_by_user_id = null) quando um detector de abuso supera o
+     * limiar. Espelha registrar() — cria o fine_mesh_referrals, liga in_fine_mesh
+     * via forceFill e audita por processo (marcador ator=sistema, RN-002), SEM
+     * transicionar o status (RN-001 — ortogonal). NÃO altera os caminhos humanos
+     * (encaminhar/encaminharLote/registrar). Motivo é obrigatório (RN-002).
+     */
+    public function encaminharSistema(ViabilityRequest $request, string $motivo): FineMeshReferral
+    {
+        $motivo = $this->motivoObrigatorio($motivo);
+
+        return DB::transaction(function () use ($request, $motivo): FineMeshReferral {
+            /** @var FineMeshReferral $referral */
+            $referral = $request->fineMeshReferrals()->create([
+                'referred_by_user_id' => null,
+                'reason' => $motivo,
+                'resolved_at' => null,
+            ]);
+
+            $request->forceFill(['in_fine_mesh' => true])->save();
+
+            $this->audit->log('analise', 'malha-fina-encaminhar', "Processo encaminhado à malha fina pelo sistema (solicitação #{$request->id}).", [
+                'viability_request_id' => $request->id,
+                'protocol_number' => $request->protocol_number,
+                'fine_mesh_referral_id' => $referral->id,
+                'status' => $request->status->value,
+                'motivo' => $motivo,
+                'ator' => 'sistema',
+                'ator_id' => null,
+            ], $request);
+
+            return $referral;
+        });
+    }
+
+    /**
      * Encaminha em LOTE (RN-004): o mesmo motivo aplicado a vários processos, com
      * auditoria POR processo e isolamento de falhas (uma não aborta as demais). O
      * motivo é validado uma vez (precondição do lote inteiro).

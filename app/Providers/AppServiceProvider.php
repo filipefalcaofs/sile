@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Notifications\Channels\WhatsAppChannel;
+use App\Services\Abuso\AbuseDetectionService;
 use App\Services\Abuso\Detectors\VolumeCnpjDetector;
 use App\Services\Abuso\Detectors\VolumeContadorDetector;
+use App\Services\Analise\MalhaFinaService;
 use App\Services\Analise\PostgisPrecedentRepository;
 use App\Services\Analise\PrecedentRepository;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
@@ -25,6 +27,7 @@ use App\Services\Sefaz\SefazViabilidadeGateway;
 use App\Services\Sefaz\UnavailableSefazViabilidadeGateway;
 use App\Services\Whatsapp\UnavailableWhatsAppGateway;
 use App\Services\Whatsapp\WhatsAppGateway;
+use App\Support\Audit\AuditService;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
 use Illuminate\Support\Facades\Notification;
@@ -96,6 +99,14 @@ class AppServiceProvider extends ServiceProvider
             VolumeCnpjDetector::class,
             VolumeContadorDetector::class,
         ], 'abuse.detectors');
+
+        // O motor de detecção consome os detectores resolvidos pela tag (iterable
+        // não auto-injetável): bind explícito com $app->tagged('abuse.detectors').
+        $this->app->bind(AbuseDetectionService::class, fn ($app): AbuseDetectionService => new AbuseDetectionService(
+            $app->tagged('abuse.detectors'),
+            $app->make(MalhaFinaService::class),
+            $app->make(AuditService::class),
+        ));
     }
 
     /**
