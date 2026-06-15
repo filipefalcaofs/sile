@@ -38,6 +38,17 @@ class DatabaseSeeder extends Seeder
             // Em produção ambos são no-op (degradação honesta até a zona oficial).
             ZonaFicticiaDevSeeder::class,
             ExpressoDevSeeder::class,
+            // Análise técnica SEDUR (EP10). Catálogos (setor + textos-padrão)
+            // rodam sempre; o setor inicial evita distribuição bloqueada. Os
+            // usuários de gestão dev (SectorSeeder) e os processos de exemplo em
+            // cada estágio (AnaliseDevSeeder) são SÓ dev/teste, com LÓGICA REAL:
+            // o AnaliseDevSeeder dirige distribuição/ficha/decisão/pendência/
+            // malha fina pelos serviços reais — driver-aware (a decisão reexecuta
+            // os motores territoriais, então só monta os estágios em pgsql; em
+            // SQLite degrada honesto, igual ao ExpressoDevSeeder).
+            SectorSeeder::class,
+            StandardTextSeeder::class,
+            AnaliseDevSeeder::class,
         ]);
     }
 }

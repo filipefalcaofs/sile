@@ -22,6 +22,8 @@ use App\Models\RiskClassification;
 use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
 use App\Models\SanitaryRiskClassification;
+use App\Models\Sector;
+use App\Models\StandardText;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -30,6 +32,7 @@ use Database\Seeders\ExpressoDevSeeder;
 use Database\Seeders\ZonaFicticiaDevSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -42,6 +45,10 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
 
         $this->assertSame(4, Role::query()->count());
+        // 24 permissões (HU-013): as 19 base + as 5 aditivas da análise técnica
+        // (analisar-processos, distribuir-processos, emitir-tvl,
+        // encaminhar-malha-fina, manter-setores) — confirmadas no fechamento.
+        $this->assertSame(24, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
         $this->assertSame(67, Parameter::query()->count());
@@ -242,10 +249,59 @@ class DatabaseSeederTest extends TestCase
         );
     }
 
+    public function test_seed_prepara_setores_textos_padrao_e_usuarios_da_analise(): void
+    {
+        $this->seed();
+
+        // Setor da SEDUR (HU-138) — a caixa de distribuição da análise técnica,
+        // criado como catálogo padrão (em produção o gestor mantém pela UI).
+        $setor = Sector::query()->where('name', 'Análise Locacional')->first();
+        $this->assertNotNull($setor, 'Esperava o setor padrão de análise locacional.');
+        $this->assertTrue($setor->active);
+
+        // Usuários dev da gestão (dados fictícios): um analista e um gestor,
+        // ambos com o termo LGPD aceito e VINCULADOS ao setor — tornam a caixa,
+        // a distribuição e a ficha navegáveis de ponta a ponta no dev.
+        $analista = User::query()->where('email', 'analista@sile.dev')->first();
+        $this->assertNotNull($analista, 'Esperava o analista dev (analista@sile.dev).');
+        $this->assertTrue($analista->hasRole('analista'));
+        $this->assertNotNull($analista->email_verified_at);
+        $this->assertTrue($analista->sectors()->whereKey($setor->id)->exists());
+
+        $gestor = User::query()->where('email', 'gestor@sile.dev')->first();
+        $this->assertNotNull($gestor, 'Esperava o gestor dev (gestor@sile.dev).');
+        $this->assertTrue($gestor->hasRole('gestor'));
+        $this->assertTrue($gestor->sectors()->whereKey($setor->id)->exists());
+
+        // Biblioteca de textos-padrão do parecer (HU-085): exemplos por categoria
+        // (deferimento/indeferimento/condicionante/pendência), ativos e na versão
+        // inicial — substituíveis pela SEDUR sem deploy (dados versionados).
+        foreach (['deferimento', 'indeferimento', 'condicionante', 'pendencia'] as $categoria) {
+            $texto = StandardText::query()->where('category', $categoria)->where('active', true)->first();
+            $this->assertNotNull($texto, "Esperava um texto-padrão ativo na categoria {$categoria}.");
+            $this->assertSame(1, $texto->version);
+        }
+    }
+
     public function test_seed_e_idempotente(): void
     {
         $this->seed();
         $this->seed();
+
+        // Setores/usuários/textos-padrão da análise estáveis no re-seed
+        // (firstOrCreate por chave estável — nada é duplicado).
+        $this->assertSame(1, Sector::query()->where('name', 'Análise Locacional')->count());
+        $this->assertSame(1, User::query()->where('email', 'analista@sile.dev')->count());
+        $this->assertSame(1, User::query()->where('email', 'gestor@sile.dev')->count());
+        $analistaId = User::query()->where('email', 'analista@sile.dev')->value('id');
+        $setorId = Sector::query()->where('name', 'Análise Locacional')->value('id');
+        $this->assertSame(
+            1,
+            DB::table('sector_user')->where('user_id', $analistaId)->where('sector_id', $setorId)->count(),
+        );
+        // Um texto-padrão por categoria (deferimento/indeferimento/condicionante/
+        // pendência) — estável no re-seed (não duplica por content+category).
+        $this->assertSame(4, StandardText::query()->count());
 
         $this->assertSame(1, User::query()->where('email', 'admin@sile.dev')->count());
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
