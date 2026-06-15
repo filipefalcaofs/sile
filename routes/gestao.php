@@ -17,6 +17,8 @@ use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\PrecedenteController;
 use App\Http\Controllers\Gestao\ProcessoBuscaController;
 use App\Http\Controllers\Gestao\ProcessoController;
+use App\Http\Controllers\Gestao\ProcessoDecisaoController;
+use App\Http\Controllers\Gestao\ProcessoPendenciaController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RiscoCondicionanteController;
 use App\Http\Controllers\Gestao\RiscoController;
@@ -263,6 +265,26 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('ficha/nova-revisao', [AnalysisRecordController::class, 'novaRevisao'])->name('ficha.nova-revisao');
             Route::get('ficha/diff', [AnalysisRecordController::class, 'diff'])->name('ficha.diff');
             Route::get('precedentes', [PrecedenteController::class, 'show'])->name('precedentes');
+        });
+
+        // Ações do analista sobre o processo (Wave 7 — HU-083/086/087/088/089/
+        // 132/136): os endpoints HTTP FINOS que expõem os serviços já testados das
+        // Waves 5/6 — decidir/encerrar (AnaliseTecnicaDecisionService), abrir
+        // pendência (PendenciaService), encaminhar à malha fina single+lote
+        // (MalhaFinaService) e emitir/baixar o TVL (TvlPdfService). Toda a regra e
+        // a auditoria vivem nos serviços; aqui só a casca gated/auditada que as
+        // telas (10-16/10-17) acionam. Cada endpoint é gated pela permissão da
+        // ação (403 auditado no ponto único — CA-04). O download do TVL é por URL
+        // TEMPORÁRIA ASSINADA (signed) servindo o disco NÃO público por streaming
+        // (HU-132 CA-02 — nunca URL pública, nunca ao cidadão). ÚNICO editor de
+        // routes/gestao.php na Wave 7 (10-16/10-17 só páginas).
+        Route::prefix('processos')->name('processos.')->group(function () {
+            // Decidir (deferir/indeferir/encerrar) e abrir pendência — sob a
+            // permissão da análise técnica (a regra de estado é do serviço).
+            Route::middleware('permission:analisar-processos')->group(function () {
+                Route::post('{viabilityRequest}/decidir', ProcessoDecisaoController::class)->name('decidir');
+                Route::post('{viabilityRequest}/pendencias', [ProcessoPendenciaController::class, 'store'])->name('pendencias.store');
+            });
         });
 
         // Atendimento presencial assistido (HU-150): canal de operador de balcão.
