@@ -487,7 +487,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Identidade, Acesso e Auditoria Transversal | 9/9 | Complete | 2026-06-10 |
-| 2. Administração Base | 0/8 | Planned | - |
+| 2. Administração Base | Complete | Complete (EP02 parcial; HU-138/139/143 redistribuídas p/ Fases 10/8/5) | 2026-06-10 |
 | 3. Cadastro Empresarial | 9/9 | Complete | 2026-06-13 |
 | 3.1. Fundação assíncrona — scheduler, jobs e retenção (INSERTED) | 5/5 | Complete | 2026-06-13 |
 | 3.2. Autenticação GOV.BR no portal (INSERTED) | 1/1 | Implemented — aguardando credenciamento p/ validar staging | - |
