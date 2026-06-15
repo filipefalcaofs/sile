@@ -484,7 +484,24 @@ Regra da fase: integração sem documentação/credencial/acesso permanece **exp
   3. Taxas de deferimento/indeferimento e tempo médio de análise são calculados sobre os processos reais — **por etapa da timeline** e com regras de prazo corretas (úteis/feriados via HU-137), eliminando a distorção do legado (19 dias reportados vs 42h medidos).
   4. Produtividade por analista é consultável e todos os relatórios são exportáveis; relatórios equivalentes aos administrativos do SAPS (Tempo de Emissão de TVL, Sedes de Escritório Virtual).
   5. Relatório de quedas por gatilho com taxa de resposta expressa em série temporal e drill-down até as divergências analista × motor (HU-145) — fecha o ciclo medir → parametrizar (HU-143) → medir.
-**Plans**: TBD
+**Plans**: 15 plans (7 waves)
+
+Plans:
+- [ ] 15-01-PLAN.md — Fundação: deps (openspout/echarts) + índices aditivos + 5 parâmetros/2 permissões + ReportFilters (wave 1)
+- [ ] 15-02-PLAN.md — Contrato único de export: ReportDefinition/ReportSource/CsvExporter/PdfExporter/ReportExporter + Job + Notification + ExportFile (wave 1)
+- [ ] 15-03-PLAN.md — IndicadoresViabilidadeService (HU-123/124/125/126/127/128) + SolicitacoesReportSource (wave 2)
+- [ ] 15-04-PLAN.md — HU-137 feriados (Holiday + HolidayProvider) + businessDurationBetween no BusinessDeadlineCalculator (wave 2)
+- [ ] 15-05-PLAN.md — HU-129 TempoAnaliseService (tempo por etapa útil) + relatórios SAPS (TVL/escritório virtual) + sources (wave 3)
+- [ ] 15-06-PLAN.md — HU-130 ProdutividadeAnalistaService (anônimo default/nominal sob permissão) + source (wave 2)
+- [ ] 15-07-PLAN.md — HU-145 captura estruturada da queda (FluxoExpressoService) + ExpressoQuedaService + source (wave 2)
+- [ ] 15-08-PLAN.md — HU-131 XlsxExporter (openspout) + ligação ao ReportExporter (wave 2)
+- [ ] 15-09-PLAN.md — HTTP: RelatorioController (?formato=) + ExportacaoController (download assinado) + HolidayController + rotas (wave 4)
+- [ ] 15-10-PLAN.md — Retrofit dos CSVs Auditoria/Processo → CsvExporter (anti-regressão, RN-009) (wave 5)
+- [ ] 15-11-PLAN.md — Retrofit das listagens Fases 1–2 (CNAEs/parâmetros/usuários/perfis/acessos) com export (wave 5)
+- [ ] 15-12-PLAN.md — UI base: wrapper ECharts client-only + ExportMenu + params do useServerTable (wave 5)
+- [ ] 15-13-PLAN.md — HU-122 dashboard executivo + página de Indicadores + navegação Relatórios (wave 6)
+- [ ] 15-14-PLAN.md — Páginas Tempo/Produtividade/Quedas + cadastro de Feriados (wave 6)
+- [ ] 15-15-PLAN.md — Fechamento: pruning de retenção + relatorios:exportar + seeds dev + verificação integral + guardião (wave 7)
 
 ## Pendências de confirmação (SEDUR)
 
@@ -533,7 +550,7 @@ As fases executam em ordem numérica: 1 → 2 → 3 → … → 15. Pares parale
 | 12. Auditoria e Compliance | 12/12 | Complete (guardião APROVADO; smoke humano dispensado pelo usuário); corrige fachada da caixa do setor (Fase 10); limiares de fraude/retenção LGPD/auditor pendentes SEDUR/DPO | 2026-06-15 |
 | 13. Integrações | 0/TBD | Not started | - |
 | 14. Inteligência Artificial | 0/TBD | Not started | - |
-| 15. Relatórios e Indicadores | 0/TBD | Not started | - |
+| 15. Relatórios e Indicadores | 0/15 | Planned (15 planos / 7 waves) | - |
 
 **Cobertura de requisitos:** 151 HUs catalogadas — HU-001 a HU-131 (catálogo original), HU-132 a HU-139 (reunião SEDUR + mapeamento do SAPS legado), HU-140 a HU-147 (melhorias além do legado: pré-análise pelo motor, simulação no formulário, precedentes, sandbox de parametrização, fila com SLA, feedback loop do expresso, painel de integrações, escalonamento), HU-148 a HU-150 (segunda rodada: contingência, antifraude, atendimento presencial) e HU-151 (autenticação GOV.BR — pedido do produto em 2026-06-12, Fase 3.2). Rastreabilidade em `.planning/REQUIREMENTS.md` *(atualizar REQUIREMENTS na próxima revisão de milestone)*.
 
