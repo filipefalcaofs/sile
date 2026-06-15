@@ -15,6 +15,7 @@ use App\Http\Controllers\Gestao\LouosController;
 use App\Http\Controllers\Gestao\LouosSandboxController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\PrecedenteController;
+use App\Http\Controllers\Gestao\ProcessoBuscaController;
 use App\Http\Controllers\Gestao\ProcessoController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RiscoCondicionanteController;
@@ -224,6 +225,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:consultar-solicitacoes')->prefix('processos')->name('processos.')->group(function () {
             Route::get('/', [ProcessoController::class, 'index'])->name('index');
             Route::get('fila', [ProcessoController::class, 'fila'])->name('fila');
+            Route::get('busca', ProcessoBuscaController::class)->name('busca');
             Route::get('{viabilityRequest}', [ProcessoController::class, 'show'])->name('show');
         });
 
