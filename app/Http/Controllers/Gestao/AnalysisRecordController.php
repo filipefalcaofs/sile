@@ -61,6 +61,7 @@ class AnalysisRecordController extends Controller
                 'status' => $viabilityRequest->status->value,
                 'status_label' => $viabilityRequest->status->label(),
             ],
+            'localizacao' => $this->localizacaoDoImovel($viabilityRequest),
             'textosPadrao' => $this->textosPadraoAtivos(),
             'autosaveDebounceMs' => (int) config('sile.analise.autosave.debounce_ms', 1500),
         ]);
@@ -167,6 +168,31 @@ class AnalysisRecordController extends Controller
             'para' => $para,
             'diff' => $diff->between($a, $b),
         ]);
+    }
+
+    /**
+     * Localização REAL do imóvel para o mini-mapa permanente da ficha (HU-142):
+     * o polígono cadastrado (GeoJSON, fonte única `property_polygon_geojson`) e o
+     * endereço formatado. Honesto por construção — devolve `null` em cada campo
+     * sem dado, nunca coordenada inventada. A zona/via oficiais seguem pendentes
+     * SEDUR (Quadro 10) e são comunicadas como tal na própria tela.
+     *
+     * @return array{poligono: array<string, mixed>|null, endereco: string|null}
+     */
+    private function localizacaoDoImovel(ViabilityRequest $request): array
+    {
+        $partes = array_filter([
+            trim((string) ($request->address_street ?? '')),
+            trim((string) ($request->address_number ?? '')),
+            trim((string) ($request->address_neighborhood ?? '')),
+        ], fn (string $parte): bool => $parte !== '');
+
+        $endereco = $partes === [] ? null : implode(', ', $partes);
+
+        return [
+            'poligono' => $request->property_polygon_geojson,
+            'endereco' => $endereco,
+        ];
     }
 
     /**

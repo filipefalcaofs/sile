@@ -1,0 +1,1424 @@
+import { Head, Link, router, useHttp, usePage } from '@inertiajs/react';
+import type { GeoJsonObject } from 'geojson';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import PageHeader from '@/components/app/page-header';
+import { MapaSection } from '@/components/geo/mapa-section';
+import Checkbox from '@/components/form/checkbox';
+import Input from '@/components/form/input';
+import Label from '@/components/form/label';
+import Select from '@/components/form/select';
+import { AlertIcon, ArrowRightIcon, CheckCircleIcon, MapPinIcon, TrashIcon } from '@/components/icons';
+import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import ConfirmDialog from '@/components/ui/confirm-dialog';
+import EmptyState from '@/components/ui/empty-state';
+import { Modal } from '@/components/ui/modal';
+import GestaoLayout from '@/layouts/gestao-layout';
+import type { SharedProps } from '@/types';
+
+type StatusFicha = 'deferida' | 'indeferida' | 'analise';
+
+interface PerCnae {
+    cnae: string;
+    cnae_formatado?: string | null;
+    is_primary?: boolean;
+    tendencia?: string | null;
+    tendencia_label?: string | null;
+    status_sugerido?: string | null;
+    status_escolhido?: string | null;
+    fluxo?: string | null;
+    grupo_uso?: string | null;
+    valor_tll?: number | string | null;
+    gatilhos?: string[] | null;
+    fundamentacao?: string[] | null;
+    condicionantes?: string[] | null;
+    justificativa?: string | null;
+}
+
+interface Parking {
+    vagas_requeridas?: number | null;
+    vagas_exigidas?: number | null;
+    vistoria?: boolean;
+}
+
+interface Ficha {
+    id: number;
+    viability_request_id: number;
+    revision: number;
+    status: string;
+    status_label: string;
+    editavel: boolean;
+    engine_available: boolean;
+    per_cnae: PerCnae[];
+    conditions: string[];
+    parking: Parking;
+    parecer: string | null;
+    analyst: string | null;
+    finalized_at: string | null;
+    updated_at: string | null;
+}
+
+interface Processo {
+    id: number;
+    protocol_number: string | null;
+    status: string;
+    status_label: string;
+}
+
+interface TextoPadrao {
+    id: number;
+    category: string;
+    content: string;
+    version: number;
+}
+
+interface Localizacao {
+    poligono: GeoJsonObject | null;
+    endereco: string | null;
+}
+
+interface PrecedenteImovel {
+    viability_request_id: number;
+    protocol_number: string | null;
+    outcome: string | null;
+    decided_at: string | null;
+    service_type: string | null;
+    analyst: string | null;
+}
+
+interface CnaeZona {
+    disponivel: boolean;
+    cnae?: string;
+    zona?: string;
+    janela_meses?: number;
+    deferidos?: number;
+    indeferidos?: number;
+    total?: number;
+    motivo?: string;
+}
+
+interface PrecedentesResponse {
+    imovel: PrecedenteImovel[];
+    cnae_zona: CnaeZona;
+}
+
+type DiffValor = { de: unknown; para: unknown };
+
+interface DiffResponse {
+    de: number;
+    para: number;
+    diff: Record<string, unknown>;
+}
+
+interface FichaAnaliseShowProps {
+    ficha: Ficha;
+    processo: Processo;
+    localizacao?: Localizacao;
+    textosPadrao: TextoPadrao[];
+    autosaveDebounceMs: number;
+}
+
+const STATUS_OPCOES: { value: StatusFicha; label: string }[] = [
+    { value: 'deferida', label: 'Deferida' },
+    { value: 'indeferida', label: 'Indeferida' },
+    { value: 'analise', label: 'Em análise' },
+];
+
+function statusLabel(status: string | null | undefined): string {
+    return STATUS_OPCOES.find((opcao) => opcao.value === status)?.label ?? (status ?? '—');
+}
+
+function statusColor(status: string | null | undefined): 'success' | 'error' | 'warning' | 'light' {
+    if (status === 'deferida') {
+        return 'success';
+    }
+
+    if (status === 'indeferida') {
+        return 'error';
+    }
+
+    if (status === 'analise') {
+        return 'warning';
+    }
+
+    return 'light';
+}
+
+function formatarDataHora(iso: string | null): string {
+    if (!iso) {
+        return '—';
+    }
+
+    const data = new Date(iso);
+
+    if (Number.isNaN(data.getTime())) {
+        return iso;
+    }
+
+    return data.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
+/**
+ * Centroide aproximado do anel externo do polígono (GeoJSON [lng, lat]) para
+ * centralizar o mini-mapa. Devolve null quando não há polígono confiável —
+ * nunca uma coordenada inventada (anti-fachada).
+ */
+function centroideDoPoligono(geojson: GeoJsonObject | null | undefined): { lat: number; lng: number } | null {
+    if (!geojson || typeof geojson !== 'object') {
+        return null;
+    }
+
+    const objeto = geojson as { type?: string; coordinates?: unknown; geometry?: { coordinates?: unknown } };
+    const coordenadas =
+        objeto.type === 'Feature' ? (objeto.geometry?.coordinates ?? null) : (objeto.coordinates ?? null);
+
+    if (!Array.isArray(coordenadas) || !Array.isArray(coordenadas[0])) {
+        return null;
+    }
+
+    const anel = coordenadas[0] as unknown[];
+    let somaLat = 0;
+    let somaLng = 0;
+    let total = 0;
+
+    for (const ponto of anel) {
+        if (Array.isArray(ponto) && typeof ponto[0] === 'number' && typeof ponto[1] === 'number') {
+            somaLng += ponto[0];
+            somaLat += ponto[1];
+            total += 1;
+        }
+    }
+
+    if (total === 0) {
+        return null;
+    }
+
+    return { lat: somaLat / total, lng: somaLng / total };
+}
+
+function DescItem({ label, children }: { label: string; children: ReactNode }) {
+    return (
+        <div>
+            <dt className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                {label}
+            </dt>
+            <dd className="mt-1 text-theme-sm text-gray-800 dark:text-white/90">{children}</dd>
+        </div>
+    );
+}
+
+/** Textarea no padrão visual do design system (sem componente dedicado no kit). */
+function Textarea({
+    value,
+    onChange,
+    rows = 4,
+    placeholder,
+    disabled,
+    id,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+    rows?: number;
+    placeholder?: string;
+    disabled?: boolean;
+    id?: string;
+}) {
+    return (
+        <textarea
+            id={id}
+            rows={rows}
+            value={value}
+            disabled={disabled}
+            placeholder={placeholder}
+            onChange={(event) => onChange(event.target.value)}
+            className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+        />
+    );
+}
+
+/** Seletor de status escolhido por CNAE (espelha os radios Deferida/Indeferida/Análise do SAPS). */
+function StatusEscolhido({
+    cnae,
+    valor,
+    onChange,
+    disabled,
+}: {
+    cnae: string;
+    valor: string | null | undefined;
+    onChange: (status: StatusFicha) => void;
+    disabled: boolean;
+}) {
+    return (
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={`Decisão do CNAE ${cnae}`}>
+            {STATUS_OPCOES.map((opcao) => {
+                const ativo = valor === opcao.value;
+
+                return (
+                    <button
+                        key={opcao.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={ativo}
+                        disabled={disabled}
+                        onClick={() => onChange(opcao.value)}
+                        className={`rounded-lg px-3 py-1.5 text-theme-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                            ativo
+                                ? opcao.value === 'deferida'
+                                    ? 'bg-success-500 text-white'
+                                    : opcao.value === 'indeferida'
+                                      ? 'bg-error-500 text-white'
+                                      : 'bg-warning-500 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
+                        }`}
+                    >
+                        {opcao.label}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
+export default function FichaAnaliseShow({
+    ficha,
+    processo,
+    localizacao,
+    textosPadrao,
+    autosaveDebounceMs,
+}: FichaAnaliseShowProps) {
+    const { auth } = usePage<SharedProps>().props;
+    const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
+    const podeEmitirTvl = auth.permissions.includes('emitir-tvl');
+
+    const editavel = ficha.editavel;
+
+    const [perCnae, setPerCnae] = useState<PerCnae[]>(() => ficha.per_cnae ?? []);
+    const [conditions, setConditions] = useState<string[]>(() => ficha.conditions ?? []);
+    const [parecer, setParecer] = useState<string>(() => ficha.parecer ?? '');
+    const [parking, setParking] = useState<Parking>(() => ficha.parking ?? {});
+    const [novaCondicao, setNovaCondicao] = useState('');
+    const [saveState, setSaveState] = useState<'idle' | 'salvando' | 'salvo' | 'erro'>('idle');
+
+    const autosave = useHttp<{
+        per_cnae: Array<{ cnae: string; status_escolhido: string; justificativa: string | null; condicionantes: string[] }>;
+        conditions: string[];
+        parking: Parking;
+        parecer: string | null;
+    }>({ per_cnae: [], conditions: [], parking: {}, parecer: null });
+
+    const acao = useHttp<Record<string, never>>({});
+    const pendencia = useHttp<{ descricao: string }>({ descricao: '' });
+    const malhaFina = useHttp<{ request_ids: number[]; motivo: string }>({ request_ids: [], motivo: '' });
+    const tvl = useHttp<Record<string, never>, { download_url?: string; url?: string }>({});
+    const precedentes = useHttp<Record<string, never>, PrecedentesResponse>({});
+    const diff = useHttp<{ de: number; para: number }, DiffResponse>({ de: 0, para: 0 });
+
+    const [precedentesData, setPrecedentesData] = useState<PrecedentesResponse | null>(null);
+    const [precedentesErro, setPrecedentesErro] = useState<string | null>(null);
+
+    const [showDiff, setShowDiff] = useState(false);
+    const [diffDe, setDiffDe] = useState(Math.max(1, ficha.revision - 1));
+    const [diffPara, setDiffPara] = useState(ficha.revision);
+    const [diffData, setDiffData] = useState<DiffResponse | null>(null);
+    const [diffErro, setDiffErro] = useState<string | null>(null);
+
+    const [showFinalizar, setShowFinalizar] = useState(false);
+    const [showDecidir, setShowDecidir] = useState(false);
+    const [showPendencia, setShowPendencia] = useState(false);
+    const [descricaoPendencia, setDescricaoPendencia] = useState('');
+    const [showMalhaFina, setShowMalhaFina] = useState(false);
+    const [motivoMalhaFina, setMotivoMalhaFina] = useState('');
+    const [pickerParaParecer, setPickerParaParecer] = useState(false);
+    const [pickerParaCondicao, setPickerParaCondicao] = useState(false);
+
+    const fichaUrl = `/gestao/processos/${processo.id}/ficha`;
+
+    const construirPayload = useCallback(
+        () => ({
+            per_cnae: perCnae.map((item) => ({
+                cnae: item.cnae,
+                status_escolhido: (item.status_escolhido ?? item.status_sugerido ?? 'analise') as string,
+                justificativa: item.justificativa ?? null,
+                condicionantes: item.condicionantes ?? [],
+            })),
+            conditions,
+            parking,
+            parecer: parecer.trim() === '' ? null : parecer,
+        }),
+        [perCnae, conditions, parking, parecer],
+    );
+
+    const salvarRascunho = useCallback(() => {
+        if (!editavel) {
+            return;
+        }
+
+        setSaveState('salvando');
+        autosave.transform(() => construirPayload());
+        autosave.patch(fichaUrl, {
+            onSuccess: () => setSaveState('salvo'),
+            onError: () => setSaveState('erro'),
+            onHttpException: () => {
+                setSaveState('erro');
+
+                return false;
+            },
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [editavel, construirPayload, fichaUrl]);
+
+    const primeiraRenderRef = useRef(true);
+
+    useEffect(() => {
+        if (!editavel) {
+            return;
+        }
+
+        if (primeiraRenderRef.current) {
+            primeiraRenderRef.current = false;
+
+            return;
+        }
+
+        const timer = window.setTimeout(() => salvarRascunho(), autosaveDebounceMs);
+
+        return () => window.clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [perCnae, conditions, parecer, parking]);
+
+    useEffect(() => {
+        precedentes.get(`/gestao/processos/${processo.id}/precedentes`, {
+            onSuccess: (resposta) => setPrecedentesData(resposta),
+            onError: () => setPrecedentesErro('Não foi possível carregar os precedentes.'),
+            onHttpException: () => {
+                setPrecedentesErro('Não foi possível carregar os precedentes.');
+
+                return false;
+            },
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [processo.id]);
+
+    function atualizarCnae(indice: number, patch: Partial<PerCnae>) {
+        setPerCnae((atual) => atual.map((item, i) => (i === indice ? { ...item, ...patch } : item)));
+    }
+
+    function adicionarCondicao(texto: string) {
+        const limpo = texto.trim();
+
+        if (limpo === '' || conditions.includes(limpo)) {
+            return;
+        }
+
+        setConditions((atual) => [...atual, limpo]);
+    }
+
+    function removerCondicao(indice: number) {
+        setConditions((atual) => atual.filter((_, i) => i !== indice));
+    }
+
+    function inserirTextoPadrao(conteudo: string) {
+        if (pickerParaParecer) {
+            setParecer((atual) => (atual.trim() === '' ? conteudo : `${atual}\n\n${conteudo}`));
+            setPickerParaParecer(false);
+
+            return;
+        }
+
+        if (pickerParaCondicao) {
+            adicionarCondicao(conteudo);
+            setPickerParaCondicao(false);
+        }
+    }
+
+    function finalizarFicha() {
+        acao.post(`${fichaUrl}/finalizar`, {
+            onSuccess: () => {
+                setShowFinalizar(false);
+                router.reload();
+            },
+            onHttpException: () => false,
+        });
+    }
+
+    function novaRevisao() {
+        acao.post(`${fichaUrl}/nova-revisao`, {
+            onSuccess: () => router.reload(),
+            onHttpException: () => false,
+        });
+    }
+
+    function decidirProcesso() {
+        router.post(
+            `/gestao/processos/${processo.id}/decidir`,
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setShowDecidir(false),
+            },
+        );
+    }
+
+    function abrirPendencia() {
+        pendencia.transform(() => ({ descricao: descricaoPendencia }));
+        pendencia.post(`/gestao/processos/${processo.id}/pendencias`, {
+            onSuccess: () => {
+                setShowPendencia(false);
+                setDescricaoPendencia('');
+                router.reload();
+            },
+            onHttpException: () => false,
+        });
+    }
+
+    function encaminharMalhaFina() {
+        malhaFina.transform(() => ({ request_ids: [processo.id], motivo: motivoMalhaFina }));
+        malhaFina.post('/gestao/processos/malha-fina', {
+            onSuccess: () => {
+                setShowMalhaFina(false);
+                setMotivoMalhaFina('');
+                router.reload();
+            },
+            onHttpException: () => false,
+        });
+    }
+
+    function emitirTvl() {
+        tvl.post(`/gestao/processos/${processo.id}/tvl`, {
+            onSuccess: (resposta) => {
+                const url = resposta?.download_url ?? resposta?.url ?? null;
+
+                if (url) {
+                    window.open(url, '_blank', 'noopener');
+                } else {
+                    router.reload();
+                }
+            },
+            onHttpException: () => false,
+        });
+    }
+
+    function compararRevisoes() {
+        setDiffErro(null);
+        setDiffData(null);
+        diff.transform(() => ({ de: diffDe, para: diffPara }));
+        diff.get(`${fichaUrl}/diff?de=${diffDe}&para=${diffPara}`, {
+            onSuccess: (resposta) => setDiffData(resposta),
+            onError: () => setDiffErro('Revisão informada não encontrada.'),
+            onHttpException: () => {
+                setDiffErro('Revisão informada não encontrada.');
+
+                return false;
+            },
+        });
+    }
+
+    const condicionantesSugeridas = useMemo(() => {
+        const conjunto = new Set<string>();
+
+        for (const item of perCnae) {
+            for (const condicionante of item.condicionantes ?? []) {
+                if (condicionante.trim() !== '') {
+                    conjunto.add(condicionante.trim());
+                }
+            }
+        }
+
+        return Array.from(conjunto);
+    }, [perCnae]);
+
+    const centro = centroideDoPoligono(localizacao?.poligono);
+    const temPoligono = centro !== null && localizacao?.poligono != null;
+
+    const vagasRequeridas = parking.vagas_requeridas;
+    const vagasExigidas = parking.vagas_exigidas;
+    const vagasConforme =
+        typeof vagasRequeridas === 'number' && typeof vagasExigidas === 'number'
+            ? vagasRequeridas >= vagasExigidas
+            : null;
+
+    return (
+        <>
+            <Head title={`Ficha de análise ${processo.protocol_number ?? ''}`.trim()} />
+            <PageHeader
+                title={`Ficha de análise ${processo.protocol_number ?? `#${processo.id}`}`}
+                breadcrumbs={[
+                    { label: 'Painel', href: '/gestao' },
+                    { label: 'Processos', href: '/gestao/processos' },
+                ]}
+                actions={
+                    <Badge color={editavel ? 'warning' : 'success'} size="sm">
+                        {ficha.status_label} · revisão {ficha.revision}
+                    </Badge>
+                }
+            />
+
+            <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Link
+                        href={`/gestao/processos/${processo.id}`}
+                        className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
+                    >
+                        <ArrowRightIcon className="size-4 rotate-180" />
+                        Voltar ao processo
+                    </Link>
+
+                    <div className="flex items-center gap-2 text-theme-xs text-gray-500 dark:text-gray-400">
+                        {saveState === 'salvando' && <span>Salvando rascunho…</span>}
+                        {saveState === 'salvo' && (
+                            <span className="inline-flex items-center gap-1 text-success-600 dark:text-success-500">
+                                <CheckCircleIcon className="size-4 fill-current" /> Rascunho salvo
+                            </span>
+                        )}
+                        {saveState === 'erro' && (
+                            <span className="inline-flex items-center gap-1 text-error-500">
+                                <AlertIcon className="size-4 fill-current" /> Falha ao salvar
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {!editavel && (
+                    <div className="flex items-start gap-3 rounded-xl border border-success-200 bg-success-50 p-4 dark:border-success-500/30 dark:bg-success-500/15">
+                        <CheckCircleIcon className="size-5 shrink-0 fill-current text-success-500" />
+                        <p className="text-theme-sm text-gray-600 dark:text-gray-300">
+                            Esta revisão está <strong>finalizada</strong> e é imutável (RN-003). Para reeditar, crie uma
+                            nova revisão. {ficha.analyst && <>Responsável: {ficha.analyst}. </>}
+                            {ficha.finalized_at && <>Finalizada em {formatarDataHora(ficha.finalized_at)}.</>}
+                        </p>
+                    </div>
+                )}
+
+                {!ficha.engine_available && (
+                    <div className="flex items-start gap-3 rounded-xl border border-warning-200 bg-warning-50 p-4 dark:border-warning-500/30 dark:bg-warning-500/15">
+                        <AlertIcon className="size-5 shrink-0 fill-current text-warning-500" />
+                        <p className="text-theme-sm text-gray-600 dark:text-gray-300">
+                            <strong>Modo manual:</strong> o motor não pôde pré-analisar este processo (sem dado
+                            confiável — ex.: zona urbanística pendente SEDUR). Os campos não têm sugestão automática;
+                            a análise é integralmente humana, com fundamentação própria.
+                        </p>
+                    </div>
+                )}
+
+                <div className="grid gap-6 lg:grid-cols-3">
+                    <div className="space-y-6 lg:col-span-2">
+                        {/* Enquadramento por CNAE (espelha a ficha SAPS) */}
+                        <Card>
+                            <CardHeader
+                                title="Enquadramento por atividade (CNAE)"
+                                description="Sugestão do motor (HU-140) ao lado da decisão do analista. A divergência é destacada e exige justificativa."
+                            />
+                            <CardContent>
+                                {perCnae.length === 0 ? (
+                                    <EmptyState
+                                        title="Sem CNAEs pré-analisados"
+                                        description="Nenhuma atividade foi pré-preenchida pelo motor para este processo."
+                                    />
+                                ) : (
+                                    <ul className="space-y-5">
+                                        {perCnae.map((item, indice) => {
+                                            const escolhido = item.status_escolhido ?? item.status_sugerido ?? null;
+                                            const diverge =
+                                                item.status_sugerido != null &&
+                                                escolhido != null &&
+                                                escolhido !== item.status_sugerido;
+
+                                            return (
+                                                <li
+                                                    key={`${item.cnae}-${indice}`}
+                                                    className="rounded-xl border border-gray-200 p-4 dark:border-gray-800"
+                                                >
+                                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                                        <div>
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <span className="font-medium text-gray-800 dark:text-white/90">
+                                                                    {item.cnae_formatado ?? item.cnae}
+                                                                </span>
+                                                                {item.is_primary && (
+                                                                    <Badge color="info" size="sm">
+                                                                        Principal
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                            {item.grupo_uso && (
+                                                                <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
+                                                                    Grupo de uso: {item.grupo_uso}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                                                                Sugerido pelo motor
+                                                            </p>
+                                                            <Badge color={statusColor(item.status_sugerido)} size="sm">
+                                                                {item.status_sugerido
+                                                                    ? statusLabel(item.status_sugerido)
+                                                                    : 'Sem sugestão'}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="mt-4">
+                                                        <Label className="mb-1.5">Decisão do analista</Label>
+                                                        <StatusEscolhido
+                                                            cnae={item.cnae}
+                                                            valor={escolhido}
+                                                            disabled={!editavel}
+                                                            onChange={(status) =>
+                                                                atualizarCnae(indice, { status_escolhido: status })
+                                                            }
+                                                        />
+                                                    </div>
+
+                                                    {diverge && (
+                                                        <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning-200 bg-warning-50 p-3 dark:border-warning-500/30 dark:bg-warning-500/15">
+                                                            <AlertIcon className="size-4 shrink-0 fill-current text-warning-500" />
+                                                            <p className="text-theme-xs text-gray-600 dark:text-gray-300">
+                                                                Divergência da sugestão do motor — registre a
+                                                                justificativa (HU-140/HU-145).
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {(item.gatilhos?.length ?? 0) > 0 && (
+                                                        <div className="mt-3">
+                                                            <p className="text-theme-xs font-medium text-gray-500 dark:text-gray-400">
+                                                                Gatilhos
+                                                            </p>
+                                                            <div className="mt-1 flex flex-wrap gap-1.5">
+                                                                {item.gatilhos?.map((gatilho, i) => (
+                                                                    <Badge key={i} color="warning" size="sm">
+                                                                        {gatilho}
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {(item.fundamentacao?.length ?? 0) > 0 && (
+                                                        <ul className="mt-3 list-inside list-disc text-theme-xs text-gray-500 dark:text-gray-400">
+                                                            {item.fundamentacao?.map((ref, i) => (
+                                                                <li key={i}>{ref}</li>
+                                                            ))}
+                                                        </ul>
+                                                    )}
+
+                                                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                                        <DescItem label="Valor TLL">
+                                                            {item.valor_tll != null && item.valor_tll !== '' ? (
+                                                                <span>{String(item.valor_tll)}</span>
+                                                            ) : (
+                                                                <span className="text-gray-400 dark:text-gray-500">
+                                                                    Pendente (tabela de taxas/DAM)
+                                                                </span>
+                                                            )}
+                                                        </DescItem>
+                                                        <DescItem label="Fluxo">
+                                                            {item.fluxo ?? '—'}
+                                                        </DescItem>
+                                                    </div>
+
+                                                    <div className="mt-3">
+                                                        <Label htmlFor={`justificativa-${indice}`} className="mb-1.5">
+                                                            Justificativa {diverge && <span className="text-error-500">*</span>}
+                                                        </Label>
+                                                        <Textarea
+                                                            id={`justificativa-${indice}`}
+                                                            rows={2}
+                                                            disabled={!editavel}
+                                                            placeholder="Fundamente a decisão desta atividade…"
+                                                            value={item.justificativa ?? ''}
+                                                            onChange={(valor) =>
+                                                                atualizarCnae(indice, { justificativa: valor })
+                                                            }
+                                                        />
+                                                    </div>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Condicionantes */}
+                        <Card>
+                            <CardHeader
+                                title="Condicionantes"
+                                description="Marque as sugeridas pelo motor, acrescente em texto livre ou insira da biblioteca de textos-padrão (HU-085 RN-009)."
+                            />
+                            <CardContent>
+                                {condicionantesSugeridas.length > 0 && (
+                                    <div className="mb-4 space-y-2">
+                                        <p className="text-theme-xs font-medium text-gray-500 dark:text-gray-400">
+                                            Sugeridas pelo motor
+                                        </p>
+                                        {condicionantesSugeridas.map((sugerida) => (
+                                            <Checkbox
+                                                key={sugerida}
+                                                label={sugerida}
+                                                disabled={!editavel}
+                                                checked={conditions.includes(sugerida)}
+                                                onChange={(marcada) =>
+                                                    marcada
+                                                        ? adicionarCondicao(sugerida)
+                                                        : setConditions((atual) =>
+                                                              atual.filter((c) => c !== sugerida),
+                                                          )
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
+                                {conditions.length > 0 ? (
+                                    <ul className="space-y-2">
+                                        {conditions.map((condicao, indice) => (
+                                            <li
+                                                key={`${condicao}-${indice}`}
+                                                className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-800"
+                                            >
+                                                <span className="text-theme-sm text-gray-700 dark:text-gray-300">
+                                                    {condicao}
+                                                </span>
+                                                {editavel && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removerCondicao(indice)}
+                                                        aria-label={`Remover condicionante ${indice + 1}`}
+                                                        className="shrink-0 text-error-500 transition hover:text-error-600"
+                                                    >
+                                                        <TrashIcon className="size-4.5" />
+                                                    </button>
+                                                )}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                        Nenhuma condicionante registrada.
+                                    </p>
+                                )}
+
+                                {editavel && (
+                                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+                                        <div className="flex-1">
+                                            <Label htmlFor="nova-condicao">Adicionar condicionante</Label>
+                                            <Input
+                                                id="nova-condicao"
+                                                type="text"
+                                                value={novaCondicao}
+                                                placeholder="Descreva a condicionante…"
+                                                onChange={(event) => setNovaCondicao(event.target.value)}
+                                                onKeyDown={(event) => {
+                                                    if (event.key === 'Enter') {
+                                                        event.preventDefault();
+                                                        adicionarCondicao(novaCondicao);
+                                                        setNovaCondicao('');
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => {
+                                                    adicionarCondicao(novaCondicao);
+                                                    setNovaCondicao('');
+                                                }}
+                                            >
+                                                Adicionar
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => setPickerParaCondicao(true)}
+                                            >
+                                                Da biblioteca
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Vagas */}
+                        <Card>
+                            <CardHeader
+                                title="Vagas de estacionamento"
+                                description="Compara as vagas informadas pelo requerente com as exigidas pela norma."
+                            />
+                            <CardContent>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <Label htmlFor="vagas-requeridas">Vagas informadas (requerente)</Label>
+                                        <Input
+                                            id="vagas-requeridas"
+                                            type="number"
+                                            min={0}
+                                            disabled={!editavel}
+                                            value={vagasRequeridas ?? ''}
+                                            onChange={(event) =>
+                                                setParking((atual) => ({
+                                                    ...atual,
+                                                    vagas_requeridas:
+                                                        event.target.value === '' ? null : Number(event.target.value),
+                                                }))
+                                            }
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="vagas-exigidas">Vagas exigidas (norma)</Label>
+                                        <Input
+                                            id="vagas-exigidas"
+                                            type="number"
+                                            min={0}
+                                            disabled={!editavel}
+                                            value={vagasExigidas ?? ''}
+                                            onChange={(event) =>
+                                                setParking((atual) => ({
+                                                    ...atual,
+                                                    vagas_exigidas:
+                                                        event.target.value === '' ? null : Number(event.target.value),
+                                                }))
+                                            }
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                                    <Checkbox
+                                        label="Exige vistoria de vagas"
+                                        disabled={!editavel}
+                                        checked={parking.vistoria ?? false}
+                                        onChange={(marcada) =>
+                                            setParking((atual) => ({ ...atual, vistoria: marcada }))
+                                        }
+                                    />
+                                    {vagasConforme === null ? (
+                                        <Badge color="light" size="sm">
+                                            Veredito pendente (informe as vagas)
+                                        </Badge>
+                                    ) : vagasConforme ? (
+                                        <Badge color="success" size="sm">
+                                            Imóvel conforme
+                                        </Badge>
+                                    ) : (
+                                        <Badge color="error" size="sm">
+                                            Imóvel não conforme
+                                        </Badge>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Parecer */}
+                        <Card>
+                            <CardHeader
+                                title="Parecer técnico"
+                                description="Fundamentação da análise. Use a biblioteca de textos-padrão para acelerar (HU-085)."
+                                actions={
+                                    editavel ? (
+                                        <Button size="xs" variant="ghost" onClick={() => setPickerParaParecer(true)}>
+                                            Inserir texto-padrão
+                                        </Button>
+                                    ) : undefined
+                                }
+                            />
+                            <CardContent>
+                                <Textarea
+                                    rows={6}
+                                    disabled={!editavel}
+                                    placeholder="Redija o parecer técnico…"
+                                    value={parecer}
+                                    onChange={setParecer}
+                                />
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Coluna lateral: mini-mapa, precedentes, ações */}
+                    <div className="space-y-6">
+                        <Card>
+                            <CardHeader title="Localização" description="Polígono cadastrado do imóvel." />
+                            <CardContent>
+                                {temPoligono && centro ? (
+                                    <>
+                                        <MapaSection
+                                            lat={centro.lat}
+                                            lng={centro.lng}
+                                            zoom={17}
+                                            draggable={false}
+                                            camadas={[
+                                                {
+                                                    id: 'imovel',
+                                                    type: 'imovel',
+                                                    geojson: localizacao!.poligono as GeoJsonObject,
+                                                },
+                                            ]}
+                                        />
+                                        <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
+                                            Mapa &copy; OpenStreetMap (ODbL).
+                                        </p>
+                                    </>
+                                ) : (
+                                    <div className="flex items-start gap-3 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+                                        <MapPinIcon className="size-5 shrink-0 text-gray-400" />
+                                        <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                            Polígono do imóvel não cadastrado neste processo.
+                                        </p>
+                                    </div>
+                                )}
+                                {localizacao?.endereco && (
+                                    <p className="mt-3 text-theme-sm text-gray-600 dark:text-gray-300">
+                                        {localizacao.endereco}
+                                    </p>
+                                )}
+                                <p className="mt-2 text-theme-xs text-gray-400 dark:text-gray-500">
+                                    Zona urbanística e via oficiais seguem pendentes SEDUR (Quadro 10).
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <PrecedentesPanel
+                            carregando={precedentes.processing}
+                            erro={precedentesErro}
+                            dados={precedentesData}
+                        />
+
+                        <Card>
+                            <CardHeader title="Ações" description="Conforme a fase da análise e a permissão." />
+                            <CardContent>
+                                <div className="flex flex-col gap-2">
+                                    {editavel ? (
+                                        <>
+                                            <Button onClick={salvarRascunho} variant="outline" size="sm">
+                                                Salvar rascunho
+                                            </Button>
+                                            <Button onClick={() => setShowFinalizar(true)} size="sm">
+                                                Finalizar ficha
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Button onClick={() => setShowDecidir(true)} size="sm">
+                                                Decidir processo (conforme ficha)
+                                            </Button>
+                                            <Button onClick={novaRevisao} variant="outline" size="sm" loading={acao.processing}>
+                                                Criar nova revisão
+                                            </Button>
+                                            {podeEmitirTvl && (
+                                                <Button onClick={emitirTvl} variant="outline" size="sm" loading={tvl.processing}>
+                                                    Emitir / baixar TVL
+                                                </Button>
+                                            )}
+                                        </>
+                                    )}
+
+                                    <Button onClick={() => setShowPendencia(true)} variant="ghost" size="sm">
+                                        Abrir pendência
+                                    </Button>
+
+                                    {podeMalhaFina && (
+                                        <Button onClick={() => setShowMalhaFina(true)} variant="ghost" size="sm">
+                                            Encaminhar à malha fina
+                                        </Button>
+                                    )}
+
+                                    {ficha.revision > 1 && (
+                                        <Button onClick={() => setShowDiff(true)} variant="ghost" size="sm">
+                                            Comparar revisões
+                                        </Button>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+
+            {/* Picker de textos-padrão */}
+            {(pickerParaParecer || pickerParaCondicao) && (
+                <TextosPadraoPicker
+                    textos={textosPadrao}
+                    onSelect={inserirTextoPadrao}
+                    onClose={() => {
+                        setPickerParaParecer(false);
+                        setPickerParaCondicao(false);
+                    }}
+                />
+            )}
+
+            <ConfirmDialog
+                isOpen={showFinalizar}
+                variant="info"
+                title="Finalizar ficha?"
+                description="A revisão ficará imutável (RN-003) e as divergências do motor serão registradas. Para reeditar depois, será necessário criar uma nova revisão."
+                confirmLabel="Finalizar"
+                processing={acao.processing}
+                onConfirm={finalizarFicha}
+                onClose={() => setShowFinalizar(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={showDecidir}
+                variant="warning"
+                title="Concluir a decisão do processo?"
+                description="O resultado (deferir/indeferir) é construído a partir da ficha finalizada e o processo é encerrado. A ação é auditada e dispara as comunicações cabíveis."
+                confirmLabel="Decidir"
+                onConfirm={decidirProcesso}
+                onClose={() => setShowDecidir(false)}
+            />
+
+            {showPendencia && (
+                <Modal isOpen onClose={() => setShowPendencia(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Abrir pendência</h4>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        O processo vai para “em pendência” e o requerente é notificado para complementar.
+                    </p>
+                    <div className="mt-4">
+                        <Label htmlFor="descricao-pendencia" required>
+                            Descrição da pendência
+                        </Label>
+                        <Textarea
+                            id="descricao-pendencia"
+                            rows={4}
+                            placeholder="Descreva o que falta…"
+                            value={descricaoPendencia}
+                            onChange={setDescricaoPendencia}
+                        />
+                    </div>
+                    <div className="mt-6 flex items-center justify-end gap-3">
+                        <Button variant="outline" size="sm" onClick={() => setShowPendencia(false)}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={abrirPendencia}
+                            disabled={descricaoPendencia.trim() === ''}
+                            loading={pendencia.processing}
+                        >
+                            Abrir pendência
+                        </Button>
+                    </div>
+                </Modal>
+            )}
+
+            {showMalhaFina && (
+                <Modal isOpen onClose={() => setShowMalhaFina(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar à malha fina</h4>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        A malha fina é ortogonal ao status e pode atingir qualquer fase. Informe o motivo (obrigatório).
+                    </p>
+                    <div className="mt-4">
+                        <Label htmlFor="motivo-malha-fina" required>
+                            Motivo
+                        </Label>
+                        <Textarea
+                            id="motivo-malha-fina"
+                            rows={3}
+                            placeholder="Motivo do encaminhamento…"
+                            value={motivoMalhaFina}
+                            onChange={setMotivoMalhaFina}
+                        />
+                    </div>
+                    <div className="mt-6 flex items-center justify-end gap-3">
+                        <Button variant="outline" size="sm" onClick={() => setShowMalhaFina(false)}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={encaminharMalhaFina}
+                            disabled={motivoMalhaFina.trim() === ''}
+                            loading={malhaFina.processing}
+                        >
+                            Encaminhar
+                        </Button>
+                    </div>
+                </Modal>
+            )}
+
+            {showDiff && (
+                <Modal isOpen onClose={() => setShowDiff(false)} className="m-4 max-h-[90vh] max-w-[640px] overflow-y-auto p-6 lg:p-8">
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Comparar revisões</h4>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Mostra apenas o que mudou entre as revisões (RN-007).
+                    </p>
+                    <div className="mt-4 flex flex-wrap items-end gap-3">
+                        <div className="w-28">
+                            <Label htmlFor="diff-de">De (revisão)</Label>
+                            <Input
+                                id="diff-de"
+                                type="number"
+                                min={1}
+                                max={ficha.revision}
+                                value={diffDe}
+                                onChange={(event) => setDiffDe(Number(event.target.value))}
+                            />
+                        </div>
+                        <div className="w-28">
+                            <Label htmlFor="diff-para">Para (revisão)</Label>
+                            <Input
+                                id="diff-para"
+                                type="number"
+                                min={1}
+                                max={ficha.revision}
+                                value={diffPara}
+                                onChange={(event) => setDiffPara(Number(event.target.value))}
+                            />
+                        </div>
+                        <Button size="sm" onClick={compararRevisoes} loading={diff.processing}>
+                            Comparar
+                        </Button>
+                    </div>
+
+                    {diffErro && <p className="mt-4 text-theme-sm text-error-500">{diffErro}</p>}
+
+                    {diffData && <DiffView diff={diffData.diff} />}
+                </Modal>
+            )}
+        </>
+    );
+}
+
+/** Painel de precedentes (HU-142): processos do imóvel + estatística do CNAE na zona. */
+function PrecedentesPanel({
+    carregando,
+    erro,
+    dados,
+}: {
+    carregando: boolean;
+    erro: string | null;
+    dados: PrecedentesResponse | null;
+}) {
+    return (
+        <Card>
+            <CardHeader title="Precedentes" description="Histórico do imóvel e estatística do CNAE na zona (HU-142)." />
+            <CardContent>
+                {carregando && (
+                    <div className="space-y-2">
+                        <div className="h-4 w-3/4 animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                        <div className="h-4 w-1/2 animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                    </div>
+                )}
+
+                {!carregando && erro && <p className="text-theme-sm text-error-500">{erro}</p>}
+
+                {!carregando && !erro && dados && (
+                    <div className="space-y-4">
+                        <div>
+                            <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                                Processos do imóvel
+                            </p>
+                            {dados.imovel.length === 0 ? (
+                                <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
+                                    Sem precedentes para este imóvel.
+                                </p>
+                            ) : (
+                                <ul className="mt-2 space-y-2">
+                                    {dados.imovel.map((precedente) => (
+                                        <li
+                                            key={precedente.viability_request_id}
+                                            className="rounded-lg border border-gray-200 p-3 dark:border-gray-800"
+                                        >
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <Link
+                                                    href={`/gestao/processos/${precedente.viability_request_id}`}
+                                                    className="text-theme-sm font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                                                >
+                                                    {precedente.protocol_number ?? `#${precedente.viability_request_id}`}
+                                                </Link>
+                                                {precedente.outcome && (
+                                                    <Badge color={statusColor(precedente.outcome)} size="sm">
+                                                        {statusLabel(precedente.outcome)}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
+                                                {[precedente.service_type, precedente.analyst, formatarDataHora(precedente.decided_at)]
+                                                    .filter(Boolean)
+                                                    .join(' · ')}
+                                            </p>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+
+                        <div>
+                            <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                                CNAE na zona
+                            </p>
+                            {dados.cnae_zona.disponivel ? (
+                                <p className="mt-1 text-theme-sm text-gray-600 dark:text-gray-300">
+                                    Últimos {dados.cnae_zona.janela_meses} meses:{' '}
+                                    <span className="font-medium text-success-600 dark:text-success-500">
+                                        {dados.cnae_zona.deferidos ?? 0} deferimentos
+                                    </span>
+                                    ,{' '}
+                                    <span className="font-medium text-error-600 dark:text-error-500">
+                                        {dados.cnae_zona.indeferidos ?? 0} indeferimentos
+                                    </span>{' '}
+                                    (de {dados.cnae_zona.total ?? 0}).
+                                </p>
+                            ) : (
+                                <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
+                                    {dados.cnae_zona.motivo ?? 'Estatística da zona indisponível (zona pendente SEDUR).'}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+/** Renderiza o diff {campo: {de, para}} de forma legível. */
+function DiffView({ diff }: { diff: Record<string, unknown> }) {
+    const entradas = Object.entries(diff);
+
+    if (entradas.length === 0) {
+        return (
+            <p className="mt-4 text-theme-sm text-gray-500 dark:text-gray-400">
+                As revisões são idênticas — nenhuma diferença.
+            </p>
+        );
+    }
+
+    return (
+        <div className="mt-4 space-y-3">
+            {entradas.map(([campo, valor]) => (
+                <div key={campo} className="rounded-lg border border-gray-200 p-3 dark:border-gray-800">
+                    <p className="text-theme-xs font-medium text-gray-500 uppercase dark:text-gray-400">{campo}</p>
+                    {ehDiffValor(valor) ? (
+                        <DiffLinha valor={valor} />
+                    ) : (
+                        <div className="mt-2 space-y-2">
+                            {Object.entries(valor as Record<string, unknown>).map(([subcampo, subvalor]) => (
+                                <div key={subcampo}>
+                                    <p className="text-theme-xs text-gray-400 dark:text-gray-500">{subcampo}</p>
+                                    {ehDiffValor(subvalor) ? (
+                                        <DiffLinha valor={subvalor} />
+                                    ) : (
+                                        <pre className="overflow-x-auto text-theme-xs text-gray-600 dark:text-gray-300">
+                                            {JSON.stringify(subvalor, null, 2)}
+                                        </pre>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function ehDiffValor(valor: unknown): valor is DiffValor {
+    return typeof valor === 'object' && valor !== null && 'de' in valor && 'para' in valor;
+}
+
+function DiffLinha({ valor }: { valor: DiffValor }) {
+    return (
+        <div className="mt-1 grid gap-2 sm:grid-cols-2">
+            <div className="rounded bg-error-50 p-2 text-theme-xs text-gray-700 dark:bg-error-500/10 dark:text-gray-300">
+                <span className="font-medium">De:</span> {formatarDiffValor(valor.de)}
+            </div>
+            <div className="rounded bg-success-50 p-2 text-theme-xs text-gray-700 dark:bg-success-500/10 dark:text-gray-300">
+                <span className="font-medium">Para:</span> {formatarDiffValor(valor.para)}
+            </div>
+        </div>
+    );
+}
+
+function formatarDiffValor(valor: unknown): string {
+    if (valor === null || valor === undefined || valor === '') {
+        return '—';
+    }
+
+    if (typeof valor === 'object') {
+        return JSON.stringify(valor);
+    }
+
+    return String(valor);
+}
+
+/** Modal de seleção de trechos da biblioteca de textos-padrão (HU-085). */
+function TextosPadraoPicker({
+    textos,
+    onSelect,
+    onClose,
+}: {
+    textos: TextoPadrao[];
+    onSelect: (conteudo: string) => void;
+    onClose: () => void;
+}) {
+    const [categoria, setCategoria] = useState('');
+
+    const categorias = useMemo(() => Array.from(new Set(textos.map((texto) => texto.category))), [textos]);
+    const filtrados = categoria === '' ? textos : textos.filter((texto) => texto.category === categoria);
+
+    return (
+        <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[640px] overflow-y-auto p-6 lg:p-8">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Biblioteca de textos-padrão</h4>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Selecione um trecho pré-aprovado para inserir.
+            </p>
+
+            {categorias.length > 0 && (
+                <div className="mt-4 w-56">
+                    <Select
+                        value={categoria}
+                        onChange={setCategoria}
+                        placeholder="Todas as categorias"
+                        options={categorias.map((cat) => ({ value: cat, label: cat }))}
+                    />
+                </div>
+            )}
+
+            <div className="mt-4 space-y-2">
+                {filtrados.length === 0 ? (
+                    <EmptyState
+                        title="Nenhum texto-padrão ativo"
+                        description="Cadastre trechos na administração de textos-padrão para reusá-los aqui."
+                    />
+                ) : (
+                    filtrados.map((texto) => (
+                        <button
+                            key={texto.id}
+                            type="button"
+                            onClick={() => onSelect(texto.content)}
+                            className="w-full rounded-lg border border-gray-200 p-3 text-left transition hover:border-brand-300 hover:bg-brand-50 dark:border-gray-800 dark:hover:border-brand-800 dark:hover:bg-brand-500/10"
+                        >
+                            <div className="flex items-center justify-between gap-2">
+                                <Badge color="light" size="sm">
+                                    {texto.category}
+                                </Badge>
+                                <span className="text-theme-xs text-gray-400 dark:text-gray-500">v{texto.version}</span>
+                            </div>
+                            <p className="mt-2 text-theme-sm text-gray-700 dark:text-gray-300">{texto.content}</p>
+                        </button>
+                    ))
+                )}
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+                <Button variant="outline" size="sm" onClick={onClose}>
+                    Fechar
+                </Button>
+            </div>
+        </Modal>
+    );
+}
+
+FichaAnaliseShow.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;
