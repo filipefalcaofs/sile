@@ -4,6 +4,7 @@ namespace App\Services\Analise;
 
 use App\Enums\AnalysisPendencyStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Events\PendenciaRespondida;
 use App\Events\PendenciaSolicitada;
 use App\Models\AnalysisPendency;
 use App\Models\User;
@@ -27,12 +28,14 @@ use Illuminate\Support\Facades\DB;
  *
  * responder(): o requerente responde pelo portal. Em UMA transação grava
  * response/responded_at (respondida) e transiciona em_pendencia→em_analise
- * (reabre a análise), auditando (RN-002).
+ * (reabre a análise), auditando (RN-002). APÓS o commit, dispara o evento gancho
+ * PendenciaRespondida — o listener auto-descoberto NotificarRespostaPendencia
+ * avisa o analista responsável que a análise reabriu (HU-091/092).
  *
  * Anti-fachada: estado em_pendencia, portal SILE e a comunicação multicanal real
- * executam de verdade; o evento é o gancho honesto, nunca um "enviado" simulado.
- * A expiração por prazo (HU-147) é gancho do scheduler do EP11 — fora do escopo;
- * o due_at já fica gravado.
+ * executam de verdade; os eventos são ganchos honestos, nunca um "enviado"
+ * simulado. A expiração por prazo (HU-147) é gancho do scheduler do EP11 — fora
+ * do escopo; o due_at já fica gravado.
  */
 class PendenciaService
 {
@@ -139,5 +142,10 @@ class PendenciaService
                 subject: $request,
             );
         });
+
+        // APÓS o commit: o evento gancho (EP11). O listener auto-descoberto
+        // NotificarRespostaPendencia avisa o analista responsável que a análise
+        // reabriu. Efeito só de uma resposta efetivada.
+        PendenciaRespondida::dispatch($request, $pendency);
     }
 }
