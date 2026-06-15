@@ -6,10 +6,8 @@ use App\Enums\AnalysisPendencyStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\PendenciaSolicitada;
 use App\Models\AnalysisPendency;
-use App\Models\EmailLog;
 use App\Models\User;
 use App\Models\ViabilityRequest;
-use App\Notifications\PendenciaSolicitadaNotification;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
@@ -22,18 +20,19 @@ use Illuminate\Support\Facades\DB;
  * analysis_pendencies (aberta, prazo = analise.pendencia.prazo_resposta_dias),
  * transiciona em_analise→em_pendencia (ViabilityRequestStateMachine, que grava a
  * timeline e audita a transição) e audita a abertura (RN-002). APÓS o commit,
- * dispara o evento gancho PendenciaSolicitada (comunicação plena → EP11) e envia
- * um e-mail SIMPLES e REAL ao requerente.
+ * dispara o evento gancho PendenciaSolicitada — o listener AUTO-DESCOBERTO
+ * NotificarPendencia (EP11) notifica o requerente de forma MULTICANAL. O serviço
+ * NÃO notifica direto (anti-duplicação): o aviso é responsabilidade exclusiva do
+ * listener.
  *
  * responder(): o requerente responde pelo portal. Em UMA transação grava
  * response/responded_at (respondida) e transiciona em_pendencia→em_analise
  * (reabre a análise), auditando (RN-002).
  *
- * Anti-fachada: o convite via Simplifica/Regin e os canais plenos (multicanal)
- * ficam BLOQUEADOS → EP11/Fase 13. O que existe aqui — estado em_pendencia,
- * portal SILE, e-mail simples — executa de verdade; o evento é o gancho honesto,
- * nunca um "enviado" simulado. A expiração por prazo (HU-147) é gancho do
- * scheduler do EP11 — fora do escopo; o due_at já fica gravado.
+ * Anti-fachada: estado em_pendencia, portal SILE e a comunicação multicanal real
+ * executam de verdade; o evento é o gancho honesto, nunca um "enviado" simulado.
+ * A expiração por prazo (HU-147) é gancho do scheduler do EP11 — fora do escopo;
+ * o due_at já fica gravado.
  */
 class PendenciaService
 {
@@ -91,10 +90,10 @@ class PendenciaService
             return $pendency;
         });
 
-        // APÓS o commit: o evento gancho (EP11) e o e-mail simples real ao
-        // requerente — efeitos colaterais só de uma abertura efetivada.
+        // APÓS o commit: o evento gancho (EP11). O listener auto-descoberto
+        // NotificarPendencia notifica o requerente (multicanal) — o serviço NÃO
+        // notifica direto (anti-duplicação). Efeito só de uma abertura efetivada.
         PendenciaSolicitada::dispatch($request, $pendency);
-        $this->notificarRequerente($request, $pendency);
 
         return $pendency;
     }
@@ -140,49 +139,5 @@ class PendenciaService
                 subject: $request,
             );
         });
-    }
-
-    /**
-     * E-mail simples e REAL ao requerente (sem anexo), pela infra de e-mail da
-     * casa (EmailLog + ShouldQueue). Degradação HONESTA: sem destinatário com
-     * e-mail válido, audita 'sem-destinatario' e não envia (nunca inventa envio).
-     */
-    private function notificarRequerente(ViabilityRequest $request, AnalysisPendency $pendency): void
-    {
-        $requester = $request->requester;
-
-        if ($requester === null || blank($requester->email)) {
-            $this->audit->log(
-                'notificacoes',
-                'pendencia-solicitada',
-                "Sem destinatário com e-mail para notificar a pendência #{$pendency->id} do protocolo {$request->protocol_number}.",
-                properties: [
-                    'viability_request_id' => $request->id,
-                    'analysis_pendency_id' => $pendency->id,
-                    'protocol_number' => $request->protocol_number,
-                ],
-                subject: $request,
-                result: 'sem-destinatario',
-            );
-
-            return;
-        }
-
-        $log = EmailLog::create([
-            'recipient_email' => $requester->email,
-            'recipient_name' => $requester->name,
-            'notification_class' => PendenciaSolicitadaNotification::class,
-            'status' => 'na_fila',
-            'queued_at' => now(),
-        ]);
-
-        $notification = new PendenciaSolicitadaNotification(
-            $request->protocol_number ?? '',
-            $pendency->description,
-            $request->id,
-        );
-        $notification->emailLogId = $log->id;
-
-        $requester->notify($notification);
     }
 }

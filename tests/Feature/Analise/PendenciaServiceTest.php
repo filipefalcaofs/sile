@@ -3,10 +3,12 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisPendencyStatus;
+use App\Enums\CommunicationChannel;
+use App\Enums\CommunicationStatus;
+use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\PendenciaSolicitada;
 use App\Models\AnalysisPendency;
-use App\Models\EmailLog;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Notifications\PendenciaSolicitadaNotification;
@@ -19,13 +21,14 @@ use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 /**
- * Ciclo de pendência interno (HU-083/084 — PARCIAL): o analista abre uma
+ * Ciclo de pendência interno (HU-083/084 + HU-090): o analista abre uma
  * pendência (em_analise→em_pendencia, grava analysis_pendencies com prazo
- * parametrizado), dispara o evento gancho PendenciaSolicitada (comunicação plena
- * → EP11) e envia um e-mail SIMPLES e REAL ao requerente (sem anexo). O
- * requerente responde (em_pendencia→em_analise, reabre a análise). Tudo auditado
- * (RN-002). Anti-fachada: o convite via Simplifica/Regin e os canais plenos
- * ficam bloqueados → EP11; o que existe aqui executa de verdade.
+ * parametrizado) e dispara o evento gancho PendenciaSolicitada — o listener
+ * auto-descoberto NotificarPendencia notifica o requerente de forma MULTICANAL
+ * (anti-duplicação: o serviço não notifica direto). O requerente responde
+ * (em_pendencia→em_analise, reabre a análise). Tudo auditado (RN-002).
+ * Anti-fachada: o convite via Simplifica/Regin fica bloqueado → Fase 13; o que
+ * existe aqui executa de verdade.
  */
 class PendenciaServiceTest extends TestCase
 {
@@ -96,7 +99,7 @@ class PendenciaServiceTest extends TestCase
         ]);
     }
 
-    public function test_abrir_envia_email_simples_real_ao_requerente(): void
+    public function test_abrir_notifica_o_requerente_multicanal_pelo_listener(): void
     {
         Notification::fake();
 
@@ -106,15 +109,31 @@ class PendenciaServiceTest extends TestCase
 
         $this->service()->abrir($request, $analista, 'Anexe o contrato de locação.');
 
-        // Anti-fachada: o envio percorre a infra real de e-mail — o EmailLog
-        // registra o disparo (na_fila até o worker marcar enviado).
-        $this->assertDatabaseHas('email_logs', [
-            'recipient_email' => $requester->email,
-            'notification_class' => PendenciaSolicitadaNotification::class,
-            'status' => 'na_fila',
+        // Anti-duplicação: o aviso vem do listener auto-descoberto (NotificarPendencia)
+        // — EXATAMENTE 1×. O serviço não envia mais e-mail direto.
+        Notification::assertSentToTimes($requester, PendenciaSolicitadaNotification::class, 1);
+
+        // Multicanal pelo dispatcher: o ledger communications nasce na_fila por
+        // canal (mapa default pendencia_aberta = [email, in_app]; HU-096).
+        $this->assertDatabaseHas('communications', [
+            'viability_request_id' => $request->id,
+            'recipient_user_id' => $requester->id,
+            'type' => CommunicationType::PendenciaAberta->value,
+            'channel' => CommunicationChannel::Email->value,
+            'status' => CommunicationStatus::NaFila->value,
+        ]);
+        $this->assertDatabaseHas('communications', [
+            'viability_request_id' => $request->id,
+            'recipient_user_id' => $requester->id,
+            'type' => CommunicationType::PendenciaAberta->value,
+            'channel' => CommunicationChannel::InApp->value,
+            'status' => CommunicationStatus::NaFila->value,
         ]);
 
-        Notification::assertSentTo($requester, PendenciaSolicitadaNotification::class);
+        // O e-mail direto (EmailLog) da Fase 10 foi REMOVIDO — sem dupla verdade.
+        $this->assertDatabaseMissing('email_logs', [
+            'notification_class' => PendenciaSolicitadaNotification::class,
+        ]);
     }
 
     public function test_abrir_dispara_o_evento_gancho_pendencia_solicitada(): void
@@ -156,29 +175,6 @@ class PendenciaServiceTest extends TestCase
         $this->assertSame(0, AnalysisPendency::query()->count());
         $this->assertSame(0, $request->transitions()->count());
         Notification::assertNothingSent();
-    }
-
-    public function test_abrir_sem_destinatario_com_email_audita_e_nao_envia(): void
-    {
-        Notification::fake();
-
-        $semEmail = User::factory()->create(['email' => '']);
-        $analista = User::factory()->create();
-        $request = $this->emAnalise($semEmail);
-
-        $this->service()->abrir($request, $analista, 'Pendência sem destinatário com e-mail.');
-
-        // Honesto: sem e-mail válido não há envio — mas a tentativa é auditada e
-        // o ciclo interno (em_pendencia + pendência gravada) acontece de verdade.
-        Notification::assertNothingSent();
-        $this->assertSame(ViabilityRequestStatus::EmPendencia, $request->refresh()->status);
-        $this->assertDatabaseHas('activity_log', [
-            'log_name' => 'notificacoes',
-            'event' => 'pendencia-solicitada',
-            'result' => 'sem-destinatario',
-            'subject_type' => $request->getMorphClass(),
-            'subject_id' => $request->id,
-        ]);
     }
 
     public function test_responder_grava_resposta_e_reabre_a_analise(): void
