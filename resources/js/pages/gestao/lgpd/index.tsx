@@ -126,6 +126,13 @@ const colunasAcessos: ColumnDef<AcessoPorEvento>[] = [
     },
 ];
 
+/**
+ * Painel de monitoramento de conformidade (página gestao/lgpd/index, HU-102):
+ * consome as agregações minimizadas do LgpdMonitorController — consentimentos,
+ * retenção/pruning e acessos a dado pessoal (apenas métricas, nunca PII crua) —
+ * e exibe a pendência DPO de forma honesta. Defensivo para o SSR não quebrar
+ * com props vazias/ausentes.
+ */
 export default function LgpdIndex({
     consentimentos,
     retencao,

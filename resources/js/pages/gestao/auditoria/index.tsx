@@ -198,9 +198,10 @@ function buildExportHref(fonte: string, form: FiltrosForm): string {
         }
     }
 
-    params.set('formato', 'csv');
-
-    return `/gestao/auditoria/export?${params.toString()}`;
+    // Export server-driven: aponta para a rota gestao.auditoria.export com os
+    // MESMOS filtros e o formato explícito (formato=csv). Download real (tag <a>),
+    // não visita Inertia.
+    return `/gestao/auditoria/export?${params.toString()}&formato=csv`;
 }
 
 export default function AuditoriaIndex({
