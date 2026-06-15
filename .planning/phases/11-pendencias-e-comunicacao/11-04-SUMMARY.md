@@ -15,7 +15,7 @@ provides:
   - "RegistrarEnvioComunicacao: listener AUTO-DESCOBERTO que fecha o ciclo do ledger (na_fila → enviado/falhou) por NotificationSent/NotificationFailed, só mail/database"
   - "Mapa congelado {driver→communicationId} na Notification (espelha emailLogId): contrato de referência da linha do ledger para o listener (mail/database) e o WhatsAppChannel (whatsapp)"
 affects:
-  - "11-03 (WhatsAppChannel lê communicationIds['whatsapp'] para marcar bloqueado/enviado na linha congelada)"
+  - "11-03 (WhatsAppChannel já entregue: resolve a linha whatsapp por lookup viability_request_id+type+channel+na_fila e a marca bloqueado/enviado; o communicationIds['whatsapp'] congelado pelo dispatcher fica disponível para o canal evoluir — ambos resolvem a MESMA linha)"
   - "11-05/06 (Notifications de processo implementam ProcessNotification + via() dinâmico + declaram public array communicationIds; listeners de domínio chamam deliver)"
   - "11-07 (rotinas de vencimento/escalonamento chamam deliver; idempotência via communications)"
 
@@ -86,7 +86,7 @@ Pipeline (espelha `VerifyEmailQueued::freezeUrlFor` — resolve no DISPARO, lê 
 ### Mapa congelado {driver→communicationId} (referência da linha, NÃO lookup)
 - Propriedade pública na Notification: `public array $communicationIds = []` — keyed pelo **driver nativo** (`'mail'`, `'database'`, `'whatsapp'`), valor = `communications.id` da linha `na_fila` daquele canal. Espelha o `emailLogId` único do `VerifyEmailQueued`/`LogNotificationSent`.
 - **11-05/06**: as Notifications de processo DEVEM declarar `public array $communicationIds = [];` (como já declaram `public ?int $emailLogId = null;`), implementar `ProcessNotification` (`viabilityRequestId`/`communicationType`/`freezeChannels`/`channels`) e o `via()` dinâmico que mapeia cada `CommunicationChannel` congelado para o driver (`Email=>mail`, `InApp=>database`, `Whatsapp=>whatsapp`). Os listeners de domínio (PendenciaSolicitada etc.) chamam `deliver()`.
-- **11-03**: o `WhatsAppChannel` localiza a sua linha por `$notification->communicationIds['whatsapp']` (id congelado) — sem lookup heurístico por chave.
+- **11-03** (já entregue): o `WhatsAppChannel` é o dono ÚNICO da linha whatsapp e a resolve por LOOKUP (`viability_request_id` + `communicationType` + `channel=whatsapp` + `na_fila`), marcando `bloqueado`/`enviado`. O dispatcher já congela `communicationIds['whatsapp']` (quando o toggle está on) — id explícito disponível para o canal evoluir (o 11-03 documentou essa evolução); ambos resolvem a MESMA linha `na_fila`.
 
 ### `RegistrarEnvioComunicacao` (listener auto-descoberto, registro único)
 - Dois handles type-hintados (auto-descoberta `Str::is('handle*')`, confirmada no `event:list`; NUNCA `Event::listen`): `handleNotificationSent(NotificationSent)` → `markAsSent()`; `handleNotificationFailed(NotificationFailed)` → `markAsFailed($motivo)` (motivo de `$event->data['exception']`).
@@ -110,7 +110,7 @@ None - plano executado exatamente como escrito. Escopo respeitado: tocados apena
 - O mapa `{driver→communicationId}` viaja como propriedade pública `communicationIds` na Notification (mesmo arranjo do `emailLogId`, que também não está em interface). 11-05/06 DEVEM declarar a propriedade para evitar dynamic property (PHP 8.2+) — documentado acima.
 
 ## Next Phase Readiness
-- **11-03** pode congelar/ler `communicationIds['whatsapp']` para fechar a linha whatsapp (bloqueado/enviado) — par paralelo já compatível.
+- **11-03** (já entregue) fecha a linha whatsapp (bloqueado/enviado) por lookup; o `communicationIds['whatsapp']` congelado pelo dispatcher é compatível e está disponível para evolução — ambos resolvem a mesma linha `na_fila`. O listener deste plano EXCLUI whatsapp, então o `bloqueado` do canal nunca vira `enviado` fictício.
 - **11-05/06** têm a assinatura de `deliver`, o contrato de `communicationIds` e a regra do `via()` dinâmico; os listeners de domínio chamam `deliver`.
 - **11-07** chama `deliver` nas rotinas; a idempotência continua via `communications` (sem schema novo).
 - **Sem bloqueios.** Zero dupla verdade; zero dependência nova. Os testes do dispatcher usam `Notification::fake` (independentes do driver whatsapp de 11-03).
