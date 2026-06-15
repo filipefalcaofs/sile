@@ -1,550 +1,475 @@
-# Fase 15: Relatórios e Indicadores (EP15) - Pesquisa
+# Phase 15: Relatórios e Indicadores - Research
 
 **Researched:** 2026-06-15
-**Domain:** Camada de leitura/análise gerencial (agregação SQL, exportação multiformato, dashboards) sobre dados reais já registrados nas Fases 1–12
-**Confidence:** HIGH (stack e padrões verificados no código real e na doc oficial; pontos LOW sinalizados)
+**Domain:** Camada de leitura/análise gerencial (agregação SQL + exportação multiformato + dashboard com gráficos) sobre os dados reais das Fases 1–12
+**Confidence:** HIGH (padrões de código internos verificados no repositório; APIs externas confirmadas em doc oficial/composer.json/npm)
 
 ## Summary
 
-A Fase 15 é a única fase do roadmap **autonomamente executável** (sem dependência externa): consome dados que as Fases 8–12 já gravam. O CONTEXT já fixou o "o quê" e o "como" macro (serviços route-free espelhando `ProcessoQueryService`; export único `ReportDefinition`/`ReportExporter` + drivers; gráficos Apache ECharts com wrapper próprio SSR-safe; openspout para XLSX; HU-137 feriados incluída; captura estruturada de queda HU-145). Esta pesquisa responde **como executar bem** cada uma dessas decisões, com a API exata das duas dependências novas e os padrões reais do código a reusar.
+A Fase 15 é uma camada de **leitura** sobre dados que já existem. Quase nada aqui é "tecnologia nova de verdade": 9 dos 11 indicadores são `GROUP BY`/`count`/`avg` sobre tabelas já modeladas, e os três pilares de execução (export streaming, job de fila com download assinado, KPI gated por permissão) já têm implementações de referência no código — `AuditoriaController::export` (CSV streaming), `DecidirFluxoExpressoJob` (fila tries/timeout/backoff), `TvlDocumentController` (URL assinada + disco não-público) e `Gestao\DashboardController` (KPI real gated). O trabalho de planejamento é, sobretudo, **replicar esses padrões com disciplina** e **abstrair o contrato de exportação** (`ReportDefinition`/`ReportExporter` + drivers) para que a dívida transversal da HU-131 seja paga uma vez e herdada por todas as telas.
 
-Achados principais que mudam o plano:
-1. **openspout v5.7.x exige PHP 8.4/8.5** — o runtime é 8.5.4 (OK), mas o `composer.json` declara `php: ^8.3`. A instalação resolve no ambiente atual; é preciso bumpar o constraint para `^8.4` (honestidade) ou aceitar que a fase eleva o piso efetivo. A API de escrita é **path-based** (`openToFile`), não stream — isso molda o contrato dos drivers.
-2. **`echarts-for-react` 3.0.6 tem bug ABERTO de crash com Vite 8 + React 19** (CJS interop, issue #619, 2026-03) — exatamente a stack do projeto. **Recomendação forte: wrapper próprio sobre `echarts/core` v6.1.x** (sem `echarts-for-react`), espelhando o wrapper hand-rolled do Leaflet. Menos dependência, sem o crash conhecido, alinhado ao CONTEXT.
-3. **Índices ausentes para os recortes por período/decisão**: `viability_requests.protocoled_at`, `viability_decisions.decided_at`, `viability_decisions.decided_by_user_id` e `viability_request_transitions(viability_request_id, created_at)` **NÃO têm índice**. O CONTEXT afirma que `protocoled_at`/`decided_at` estão indexados — está incorreto. Migration aditiva de índices é pré-requisito de performance (HU-082 RN-008 reforça "sistema lento" como dor do legado).
-4. **Risco (HU-126) e CNAE (HU-125) não são colunas do processo**: derivam de `viability_request_cnaes` (N CNAEs por processo) → join com `risk_classifications` (versão vigente). Decisão de contagem (CNAE principal vs todos; versão vigente vs da decisão) precisa ser fixada — recomendação abaixo.
-5. **HU-129 precisa de uma capacidade NOVA no `BusinessDeadlineCalculator`**: hoje ele só calcula prazo PARA FRENTE (`dueAt(from, hours)`); o tempo POR ETAPA mede tempo DECORRIDO entre dois timestamps reais em dias úteis. São duas mudanças adjacentes no mesmo seam (pular fins de semana/feriados no `dueAt` E adicionar `elapsedBusiness(from, to)`).
+O terreno genuinamente novo se resume a duas dependências aprovadas e a três ajustes de domínio. **openspout** (XLSX por streaming, baixa memória) tem API estável e pequena (`Writer`/`Options`/`Row::fromValues`/`openToFile`); a única decisão real é a **versão** por causa do PHP (ver Standard Stack — recomendo `^4.0`). **Apache ECharts 6** entra como wrapper próprio client-only, espelhando exatamente o padrão SSR-safe do `MapaSection`/`MapImovel` da Fase 4 (`lazy` + flag `mounted` + skeleton), com import tree-shakeable por `echarts/core`. Os três ajustes de domínio são: (1) estender o `BusinessDeadlineCalculator` para dias úteis + feriados (HU-137) — atenção: HU-129 precisa de uma operação **nova** (duração decorrida entre dois instantes), não só do `dueAt` forward que já existe; (2) o **cadastro de feriados** (HU-137) como tabela auditada/parametrizável; (3) a **captura estruturada do motivo/gatilho de queda** (HU-145), aditiva, dentro de `FluxoExpressoService::encaminharAnalise`.
 
-**Primary recommendation:** Executar nas waves do CONTEXT; tratar os 5 achados acima como tarefas explícitas (migration de índices na W1; capacidade `elapsedBusiness` + feriados na W2/HU-137; wrapper ECharts próprio na W5; contrato de driver path-based na W1/export base). O teste anti-fachada CA-03 ("não inventa número quando falta dado") é o de maior prioridade.
+O risco dominante não é técnico, é de **fachada**: todo indicador degrada honesto quando falta dado (sem delta histórico, "zona indisponível → bairro", feriado não inventado, gatilho null quando o motor degradou). O teste CA-03 anti-fachada é o mais importante da fase, e a Validation Architecture abaixo dedica uma dimensão inteira a prová-lo.
+
+**Primary recommendation:** Pagar a HU-131 primeiro como contrato único (`ReportDefinition` + `ReportExporter` + 3 drivers, sendo CSV a consolidação dos 2 streamings existentes e XLSX o único código novo via openspout `^4.0`); construir os serviços de relatório espelhando `ProcessoQueryService` (Builder + `when()` + agregação SQL, nunca loop PHP); adicionar **uma migration aditiva de índices** (`protocoled_at`, `viability_decisions.decided_at/flow/outcome`, `transitions(viability_request_id, created_at)`) porque as colunas de data/decisão dos relatórios **não estão indexadas hoje**; e tratar a notificação de "export pronto" como Notification standalone (database+mail), **não** pelo `NotificationDispatcher` (que é process-bound).
 
 ## Standard Stack
 
-### Dependências novas (APROVADAS no CONTEXT — exigem require)
+### Núcleo (já instalado — reusar)
+| Lib | Versão | Papel na Fase 15 | Por que é o padrão |
+|---|---|---|---|
+| `laravel/framework` | v13 | Builder Eloquent, `Cache::remember`, `Storage`, `URL::temporarySignedRoute`, fila, scheduler | Stack travada do projeto |
+| `barryvdh/laravel-dompdf` | ^3.1 | Driver PDF do export (HU-131 RN-010) | Já usado e validado no `TvlPdfService` |
+| `inertiajs/inertia-laravel` + `@inertiajs/react` | v3 / ^3.3 | Páginas dos relatórios e dashboard (SSR ativo via `@inertiajs/vite`) | Stack travada |
+| `spatie/laravel-activitylog` | ^5.0 | Trilha de auditoria de toda consulta/exportação (RN-002/RN-008) via `AuditService` | Espinha de auditoria do projeto |
+| `spatie/laravel-permission` | ^8.0 | Gates `consultar-relatorios`, `relatorios.produtividade.nominal` | Padrão de permissão do projeto |
+| `predis/predis` | ^3.5 | Cache (TTL do dashboard) e fila do job de export | Já instalado |
 
-| Lib | Versão | Propósito | Por que é o padrão |
-|-----|--------|-----------|--------------------|
-| `openspout/openspout` | **v5.7.2** (5.x) | Driver XLSX do export por streaming | Fork mantido do box/spout; escrita row-by-row com **memória < 3MB** independente do volume; MIT; encaixe natural no Job assíncrono. Preferido a `maatwebsite/excel` (que carrega PhpSpreadsheet inteiro em memória) e ao próprio PhpSpreadsheet. |
-| `echarts` | **v6.1.0** | Gráficos do dashboard (HU-122) e série temporal (HU-145) | Lib de chart única do projeto (decisão do usuário); import tree-shakeable via `echarts/core`; canvas/SVG renderers; ESM nativo (compatível com Vite 8). |
+### Dependências NOVAS (aprovadas no CONTEXT — exigem `require`)
 
-**NÃO instalar** `echarts-for-react` (ver Pitfall 2). **NÃO instalar** `maatwebsite/excel` nem `phpoffice/phpspreadsheet`.
+**`openspout/openspout` (composer)** — driver XLSX por streaming.
 
-### Instalação
+- **Última versão:** v5.7.2 (branch 5.x). **v4.x** mais recente também ativa.
+- **DECISÃO DE VERSÃO (ponto de atenção crítico):**
+  - O ambiente roda **PHP 8.5.4** (`php -v` confirmado), mas o `composer.json` do projeto declara `"php": "^8.3"`.
+  - **openspout v5** exige `php: ~8.4.0 || ~8.5.0` → instalaria no runtime 8.5, mas **quebra a promessa `^8.3`** do projeto (composer resolve pela plataforma real, então `composer require openspout/openspout` puxaria a v5 e o projeto deixaria de suportar 8.3 de fato).
+  - **openspout v4** exige `php: ~8.3.0 || ~8.4.0 || ~8.5.0` → **compatível com o `^8.3` declarado E com o runtime 8.5**.
+  - **Recomendação: `composer require "openspout/openspout:^4.0"`** (mantém a coerência do `^8.3`). A API de escrita streaming (`Writer`/`Options`/`Row`/`Style`) é **idêntica** entre v4 e v5 — não há ganho funcional em forçar a v5 para este uso. Só subir para v5 se a equipe decidir **explicitamente** elevar o piso de PHP para `^8.4` (aí bumpar o `"php"` do `composer.json` no mesmo commit).
+- **Extensões PHP exigidas:** `ext-dom`, `ext-zip`, `ext-xmlreader`, `ext-libxml`, `ext-filter`, `ext-fileinfo` (todas padrão na imagem PHP do projeto; conferir no `Dockerfile` como item de checklist).
+- **Memória:** < 3 MB mesmo em arquivos grandes (streaming real) — encaixa no `GerarExportacaoJob`.
 
+**`echarts` (npm)** — gráficos do dashboard/série temporal.
+
+- **Última versão:** 6.1.0 (npm `latest`, 2026-05). **Recomendação: `echarts@^6.1`**.
+- Framework-agnóstico (não depende de versão do React) → compatível com React 19.2 do projeto.
+- ECharts 6 traz **dark mode nativo** e **troca dinâmica de tema** (`chart.setTheme('dark'|'default')`) sem destruir a instância — relevante para console escuro × portal claro do DS TailAdmin.
+- **Sem wrapper de terceiros.** O CONTEXT decidiu wrapper próprio em `resources/js/components/ui/chart/`. Import tree-shakeable por `echarts/core` (ver Code Examples) mantém o bundle em ~150 KB vs ~1 MB do pacote cheio. Não usar `echarts-for-react` (abandona o controle de tema/SSR e infla o bundle).
+
+### Alternativas consideradas (e por que NÃO)
+| Em vez de | Poderia usar | Trade-off / veredito |
+|---|---|---|
+| openspout | `maatwebsite/excel` (citado na HU-131 RN-009) | Carrega PhpSpreadsheet (memória alta, sem streaming real para datasets grandes). CONTEXT já descartou. |
+| openspout | `phpoffice/phpspreadsheet` puro | Mesmo problema de memória; mais verboso. Descartado. |
+| ECharts (wrapper próprio) | `echarts-for-react` | SSR/React 19 frágil, bundle cheio, perde padronização de tema do DS. Descartado pelo CONTEXT. |
+| Materialized view / tabela-resumo | — | Desnecessário no volume de Salvador; `GROUP BY` + `Cache::remember(TTL=300s)` basta. Deferido no CONTEXT. |
+
+**Instalação (executor, na wave de fundação):**
 ```bash
-composer require openspout/openspout
-npm install echarts
+composer require "openspout/openspout:^4.0"
+npm install echarts@^6.1
 ```
-
-**Atenção composer (HIGH):** openspout v5 requer `php >=8.4`. Runtime atual = PHP 8.5.4 → resolve. Mas `composer.json` declara `"php": "^8.3"`. Ações: (a) bumpar para `"php": "^8.4"` no `composer.json` (recomendado — reflete a realidade), ou (b) se 8.3 for requisito de contrato, fixar `openspout/openspout:^4` (que ainda suporta 8.2+) — porém v4 tem API de fábrica diferente (`WriterEntityFactory`). Como STATE confirma PHP 8.5 em dev/CI/Docker, seguir (a).
-
-### Dependências já instaladas a REUSAR (sem novo require)
-
-| Lib | Uso na Fase 15 |
-|-----|----------------|
-| `barryvdh/laravel-dompdf` ^3.1 | Driver PDF do export (já usado em `TvlPdfService`) |
-| `predis/predis` ^3.5 | `Cache::remember` do dashboard (TTL curto) e `Cache::lock` se preciso |
-| `@inertiajs/react` ^3.3 + `@inertiajs/vite` ^3.3 | SSR ligado via plugin Vite — wrapper de chart precisa ser client-only |
-| `leaflet`/`react-leaflet` ^5 | **Referência de padrão** SSR-safe (não usar para chart) |
 
 ## Architecture Patterns
 
-### Estrutura de diretórios (a criar)
-
+### Estrutura de diretórios alvo (espelha a organização existente)
 ```
 app/Services/Relatorios/
-├── ReportFilters.php                 # Value Object compartilhado (período/setor/zona/CNAE/categoria/analista)
-├── IndicadoresViabilidadeService.php # HU-123/124/125/126/127/128
-├── TempoAnaliseService.php           # HU-129 (reusa BusinessDeadlineCalculator estendido)
-├── ProdutividadeAnalistaService.php  # HU-130
-├── ExpressoQuedaService.php          # HU-145 (ranking de motivos + taxa expressa + drill-down)
+├── ReportFilters.php                  # Value Object (período/setor/zona/CNAE/categoria/analista)
+├── IndicadoresViabilidadeService.php  # HU-123/124/125/126/127/128
+├── TempoAnaliseService.php            # HU-129 (reusa BusinessDeadlineCalculator estendido)
+├── ProdutividadeAnalistaService.php   # HU-130
+├── ExpressoQuedaService.php           # HU-145
 └── Export/
-    ├── ReportDefinition.php          # readonly: titulo, colunas, Builder filtrado, filtrosAplicados, logName, event, personalData, arquivoBase
-    ├── ReportFormatExporter.php       # interface (1 driver por formato)
-    ├── ReportExporter.php             # orquestra sync vs assíncrono (count vs limiar)
-    ├── CsvExporter.php
-    ├── XlsxExporter.php               # openspout
-    └── PdfExporter.php                # dompdf + Blade genérico
+    ├── ReportDefinition.php           # readonly: titulo, colunas, Builder, filtros, logName, event, personalData, arquivoBase
+    ├── ReportFormatExporter.php       # interface (1 driver/formato)
+    ├── CsvExporter.php                # consolida os 2 streamings CSV existentes
+    ├── XlsxExporter.php               # openspout (código novo)
+    ├── PdfExporter.php                # dompdf + Blade genérico (rodapé "Total de registros: N")
+    └── ReportExporter.php             # orquestra sync (streaming) OU async (Job) acima do limiar
 
-app/Jobs/GerarExportacaoJob.php        # padrão DecidirFluxoExpressoJob (tries/timeout/backoff/fila)
-app/Http/Controllers/Gestao/RelatorioController.php
-resources/js/components/ui/chart/      # wrapper ECharts SSR-safe + chart-section (mount client-only)
-resources/js/components/ui/data-table/export-menu.tsx
+app/Jobs/GerarExportacaoJob.php        # espelha DecidirFluxoExpressoJob
+app/Models/Holiday.php                 # HU-137 (cadastro auditado)
+app/Services/Expresso/BusinessDeadlineCalculator.php  # ESTENDER (dias úteis + feriados)
+
+resources/js/components/ui/chart/      # wrapper ECharts client-only (espelha MapaSection)
+├── chart.tsx                          # <Chart option={...}/> client-only (lazy + mounted)
+└── echarts-core.ts                    # echarts.use([...]) tree-shake central
+
+resources/js/components/ui/data-table/export-menu.tsx  # dropdown CSV/XLSX/PDF (irmão de table-toolbar)
+resources/js/pages/gestao/relatorios/  # páginas dos relatórios
 ```
 
-### Pattern 1: Serviço de agregação route-free (espelhar `ProcessoQueryService`)
+### Pattern 1: Serviço de relatório route-free (espelhar `ProcessoQueryService`)
+**O quê:** cada serviço expõe métodos que retornam dados agregados a partir de um `ReportFilters`, montando o Builder com `when()` (filtro só entra quando informado) e agregando em SQL com `groupBy` + `selectRaw`/`DB::raw`.
+**Quando:** HU-122 a HU-130 e HU-145.
+**Referência real:** `app/Services/Analise/ProcessoQueryService.php` (helpers `valor/inteiro/data/categoria`, `CATEGORIAS`, `GRUPOS_STATUS`, `whereLike(caseSensitive:false)`) e `ProcessoQueryService::visaoSetor` (exemplo de `GROUP BY` com `join` + `DB::raw('count(*) as total')` + `->map()` tipado).
+**Regra de ouro:** agregação SEMPRE em SQL (`count`/`avg`/`sum`/`group by`), NUNCA loop PHP sobre coleção carregada.
 
-O padrão canônico já existe e deve ser copiado: Builder reutilizável com `when()` por filtro, `whereLike(..., caseSensitive: false)` (case-insensitive em PostgreSQL E SQLite), helpers `valor/inteiro/data/categoria` normalizando a query string. Para relatórios, em vez de paginar, agrega com `count`/`avg`/`groupBy` **em SQL** (nunca loop PHP).
+### Pattern 2: Contrato único de exportação (HU-131 — coração da fase)
+**O quê:** `ReportDefinition` (readonly DTO) carrega o **MESMO Builder filtrado da tela** (RN-005, zero filtro duplicado) + metadados (título, colunas, logName/event de auditoria, `personalData`, base do nome do arquivo). `ReportExporter` compara `count()` com `relatorios.export.assincrono_limiar_linhas`: abaixo → streaming síncrono pelo driver; acima → despacha `GerarExportacaoJob` (RN-006). Cada driver implementa `ReportFormatExporter`.
+**Quando:** toda exportação (relatórios novos + retrofit das telas antigas).
+**Referência real:** CSV em `app/Http/Controllers/Gestao/AuditoriaController.php::export` e `ProcessoController::exportarCsv`; PDF em `app/Services/Analise/TvlPdfService.php`; async em `DecidirFluxoExpressoJob` + `TvlDocumentController` (download assinado).
+**Integração na tela:** controller existente ganha um branch `?formato=` (~3 linhas) que monta o `ReportDefinition` e delega ao `ReportExporter` — exatamente como `AuditoriaController::index` faz `if formato==='csv' return $this->export(...)`.
 
-```php
-// IndicadoresViabilidadeService — distribuição por status no período (HU-123)
-// Fonte: ProcessoQueryService::filtered() já monta o Builder filtrado;
-// o relatório reusa o MESMO Builder e só troca a projeção (RN-005 do export).
-public function porStatus(ReportFilters $filtros): array
-{
-    return $this->processos->filtered($filtros->toArray())
-        ->reorder() // remove o orderByDesc('id') do filtered antes do groupBy
-        ->groupBy('status')
-        ->selectRaw('status, count(*) as total')
-        ->pluck('total', 'status')
-        ->all();
-}
-```
+### Pattern 3: Wrapper de gráfico client-only SSR-safe (espelhar `MapaSection`)
+**O quê:** o ECharts acessa o DOM (`echarts.init`) e quebra no SSR do Inertia v3. Montar só no cliente com `lazy()` + dynamic import + flag `mounted` + skeleton de mesma altura — padrão **idêntico** ao `resources/js/components/geo/mapa-section.tsx` (Pitfall 9 documentado lá).
+**Quando:** todo gráfico do dashboard/série temporal.
+**Detalhes:** `echarts/core` + registro explícito (`echarts.use`) dos charts/components/renderers usados; `CanvasRenderer` (default, performático); `ResizeObserver` para responsividade; `chart.dispose()` no unmount; tema escuro/claro via `setTheme` (ECharts 6) sincronizado ao `dark` do Tailwind (a app usa classe `dark` no `<html>`, não `prefers-color-scheme` puro — ver Pitfall 5).
 
-Pontos de atenção reais:
-- `ProcessoQueryService::filtered()` termina com `->orderByDesc('id')`. Antes de `groupBy`, chamar `->reorder()` (senão o `id` entra no GROUP BY e quebra no PostgreSQL com "must appear in GROUP BY").
-- Agregação SQL nunca em PHP (CONTEXT). `count`/`avg`/`groupBy` sobre colunas indexadas; ver migration de índices abaixo.
-- Cache do dashboard: `Cache::remember("relatorios.dashboard.{$hashFiltros}", config('sile.relatorios.cache_ttl_segundos', 300), fn () => ...)`. Números sempre reais; cache é só TTL técnico curto.
+### Pattern 4: Job de export assíncrono (espelhar `DecidirFluxoExpressoJob`)
+**O quê:** `GerarExportacaoJob` com `tries/timeout/backoff/onQueue` lidos de `config('sile.relatorios.job.*')`, carrega só os parâmetros (filtros serializáveis + classe da definition + id do usuário), gera o arquivo no disco não-público, dispara a Notification de "pronto" e implementa `failed()` que **audita a falha** (RN-002, nunca silenciosa).
+**Download:** `URL::temporarySignedRoute` + `Storage::disk($disk)->download()` com middleware `signed` — cópia de `TvlDocumentController::downloadUrl/download`.
 
-### Pattern 2: Contrato de exportação único (HU-131) — API path-based por causa do openspout
+### Pattern 5: Seam de prazo HU-137 (estender `BusinessDeadlineCalculator`)
+**O quê:** hoje o calculator só faz **forward** (`dueAt(from, hours)` = `addHours`) e `isOverdue`. HU-137/HU-129 exigem DUAS coisas:
+1. `dueAt` passar a **pular fins de semana + feriados** (afeta SLA da fila, sem tocar call sites — o seam já está pronto, conforme docblock do arquivo).
+2. **NOVA operação para HU-129:** duração **decorrida** em tempo útil entre dois instantes (ex.: `protocoled_at → decided_at` descontando fins de semana/feriados). Isso NÃO é `dueAt`; é um método novo (ex.: `businessDurationBetween(from, to): CarbonInterval|int`). É a causa-raiz da distorção do legado (19 dias reportados vs 42h reais): medir por etapa **com a regra de prazo correta**.
+**Como:** injetar um `HolidayProvider` (interface) no calculator, lendo a tabela de feriados com cache; lista vazia = dias úteis sem feriados + **ressalva honesta visível** (nunca feriado inventado).
 
-**Decisão de design recomendada (CONTEXT deixa o shape à discrição do planner):** como `openspout` escreve para um **caminho de arquivo** (não para um stream), unificar os 3 drivers atrás de um contrato baseado em path para o caminho assíncrono/disco, e preservar o streaming nativo apenas onde a anti-regressão exige (os 2 CSVs existentes).
-
-```php
-interface ReportFormatExporter
-{
-    /** Escreve o relatório COMPLETO num caminho local (usado pelo Job e pelo download sync de XLSX/PDF). */
-    public function writeToPath(ReportDefinition $definition, string $absolutePath): void;
-
-    public function extension(): string;       // 'csv' | 'xlsx' | 'pdf'
-    public function mimeType(): string;
-}
-```
-
-`ReportExporter::export(ReportDefinition $def, string $formato)`:
-1. Audita SEMPRE (RN-008): usuário/tela/filtros/formato/volume via `AuditService::log(..., personalData: $def->personalData)`.
-2. `if ($def->builder->toBase()->getCountForPagination() > $limiar)` → despacha `GerarExportacaoJob` (assíncrono) → grava em disco não-público → notifica via `NotificationDispatcher` → download por `URL::temporarySignedRoute` (espelha `TvlDocumentController::downloadUrl`).
-3. Senão (sync): grava em arquivo temporário e devolve `response()->download($tmp, $nome)->deleteFileAfterSend()`.
-
-**Anti-regressão dos 2 CSVs existentes (W4):** `AuditoriaController::export` e `ProcessoController::exportarCsv` hoje usam `response()->streamDownload(fputcsv...)` (StreamedResponse). Ler os testes atuais ANTES de migrar e preservar o **contrato observável** (filename, colunas, conteúdo, auditoria `personalData`). Se os testes afirmam `StreamedResponse`/`streamedContent()`, manter o caminho sync do CSV como streaming nativo (o `CsvExporter` pode expor também um `streamTo(php://output)`), e usar `writeToPath` só no caminho assíncrono. XLSX é "primariamente assíncrono" no CONTEXT — não precisa de streaming sync.
-
-### Pattern 3: openspout XLSX por streaming (memória baixa) dentro do Job
-
-API verificada (openspout v5.7, Context7):
-
-```php
-use OpenSpout\Writer\XLSX\Writer;
-use OpenSpout\Writer\XLSX\Options;
-use OpenSpout\Common\Entity\Row;
-use OpenSpout\Common\Entity\Cell;
-use OpenSpout\Common\Entity\Style\Style;
-
-final class XlsxExporter implements ReportFormatExporter
-{
-    public function writeToPath(ReportDefinition $def, string $absolutePath): void
-    {
-        // Opcional: tempFolder controlável; inline strings = mais rápido.
-        $writer = new Writer(new Options(SHOULD_USE_INLINE_STRINGS: true));
-        $writer->openToFile($absolutePath);
-
-        // Cabeçalho (estilo opcional)
-        $header = new Style(fontBold: true);
-        $writer->addRow(Row::fromValuesWithStyles(
-            $def->colunas,
-            array_fill_keys(array_keys($def->colunas), $header),
-        ));
-
-        // STREAMING: chunk no Builder filtrado — uma "página" por vez na memória.
-        $def->builder->chunk(self::CHUNK, function ($linhas) use ($writer, $def): void {
-            foreach ($linhas as $modelo) {
-                $writer->addRow(Row::fromValues($def->mapRow($modelo)));
-            }
-        });
-
-        // RN-010: XLSX NÃO recebe linha de total no corpo (preserva integridade tabular);
-        // total/data/filtros vão em metadados (Properties) ou aba própria, se exigido.
-        $writer->close();
-    }
-}
-```
-
-Notas:
-- `Row::fromValues([...])` auto-detecta tipo; datas como `DateTimeImmutable` viram célula de data; `null` = célula vazia.
-- Para escrever no disco do Storage: openspout precisa de um path real. Como o disco do export é `local` (não-público, igual ao TVL), usar `$path = Storage::disk($disk)->path($relativo)` e passar a `openToFile`. Para discos remotos (S3 futuro), escrever em `tempnam()` e depois `Storage::disk($disk)->put($relativo, fopen($tmp,'r'))`.
-- **Não usar `openToBrowser()` dentro de `response()->streamDownload`** — o `openToBrowser` seta seus próprios headers (Content-Type/Disposition) e colide com os do Laravel. Para XLSX sync, escrever em arquivo temporário e `response()->download(...)->deleteFileAfterSend()`.
-
-### Pattern 4: Wrapper ECharts próprio, SSR-safe, tree-shakeable (espelhar `mapa-section.tsx`)
-
-O projeto já resolve "lib que toca `window`/DOM no import" com `lazy()` + guarda `mounted` + `Suspense` (ver `resources/js/components/geo/mapa-section.tsx`). Replicar para ECharts:
-
-```tsx
-// resources/js/components/ui/chart/echarts-core.ts — registro tree-shakeable único
-import * as echarts from 'echarts/core';
-import { BarChart, LineChart, PieChart } from 'echarts/charts';
-import {
-    GridComponent, TooltipComponent, LegendComponent,
-    TitleComponent, DatasetComponent,
-} from 'echarts/components';
-import { CanvasRenderer } from 'echarts/renderers';
-
-echarts.use([
-    BarChart, LineChart, PieChart,
-    GridComponent, TooltipComponent, LegendComponent, TitleComponent, DatasetComponent,
-    CanvasRenderer,
-]);
-
-export { echarts };
-```
-
-```tsx
-// resources/js/components/ui/chart/echart.tsx — wrapper imperativo (init/setOption/resize/dispose)
-import { useEffect, useRef } from 'react';
-import type { EChartsOption } from 'echarts';
-import { echarts } from './echarts-core';
-
-export function EChart({ option, theme = 'light', className }: { option: EChartsOption; theme?: 'light' | 'dark'; className?: string }) {
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (!ref.current) return;
-        // tema só é aplicável no init → dispose + re-init quando o tema muda
-        const chart = echarts.init(ref.current, theme === 'dark' ? 'dark' : undefined, { renderer: 'canvas' });
-        chart.setOption({ backgroundColor: 'transparent', ...option });
-
-        const ro = new ResizeObserver(() => chart.resize());
-        ro.observe(ref.current);
-
-        return () => { ro.disconnect(); chart.dispose(); };
-    }, [theme]); // re-init no tema
-
-    useEffect(() => {
-        const inst = ref.current && echarts.getInstanceByDom(ref.current);
-        inst?.setOption(option, { notMerge: true }); // dados mudam sem re-init
-    }, [option]);
-
-    return <div ref={ref} className={className} style={{ width: '100%', height: '100%' }} />;
-}
-```
-
-```tsx
-// resources/js/components/ui/chart/chart-section.tsx — mount client-only (idêntico ao MapaSection)
-import { lazy, Suspense, useEffect, useState } from 'react';
-const EChart = lazy(() => import('./echart').then((m) => ({ default: m.EChart })));
-
-export function ChartSection(props: { option: unknown; theme?: 'light' | 'dark'; className?: string }) {
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
-    if (!mounted) return <div className="h-72 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/[0.03]" />;
-    return <Suspense fallback={<div className="h-72 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/[0.03]" />}><EChart {...(props as never)} /></Suspense>;
-}
-```
-
-Tema claro/escuro do DS TailAdmin (console escuro × portal claro): derivar `theme` do estado de dark-mode da app (classe `dark` no `<html>` — checar como o gestao-layout alterna) e passar ao wrapper. ECharts aplica tema só no `init` → o wrapper re-inicializa no `useEffect([theme])`. `backgroundColor: 'transparent'` para herdar o card. Responsividade via `ResizeObserver` → `chart.resize()`.
-
-### Pattern 5: HU-129 — tempo por etapa + feriados (HU-137)
-
-`viability_request_transitions` é a fonte (from/to/created_at). A duração de uma etapa = diff entre transições consecutivas do MESMO processo. Etapas (CONTEXT):
-- **preenchimento**: `viability_requests.created_at` → `protocoled_at`
-- **espera/encaminhamento**: transição `protocolada` → `em_analise` (ou decisão direta = expresso)
-- **análise**: `em_analise` → decisão, descontando intervalos `em_pendencia`
-- **pendência**: somatório `em_pendencia` → `em_analise`
-
-**Implementação recomendada:** carregar as transições do conjunto filtrado ordenadas por `(viability_request_id, created_at)` e computar as durações por processo. O cálculo de duração consecutiva é inerentemente sequencial — não viola "nunca loop PHP" (que vale para CONTAGEM/AGREGAÇÃO); aqui o loop monta as durações e a MÉDIA final é agregada. Para o volume de Salvador, OK. Alternativa PostgreSQL (`LAG() OVER (PARTITION BY request ORDER BY created_at)`) é mais rápida mas SQLite (suíte) exige cuidado de portabilidade → preferir o cálculo em PHP sobre o conjunto carregado, ou window function com fallback.
-
-**Capacidade NOVA no `BusinessDeadlineCalculator` (seam HU-137):** hoje a classe só tem `dueAt(from, hours)` (prazo PARA FRENTE) e `isOverdue()`. HU-129 precisa do tempo **decorrido** entre dois timestamps em dias úteis. São DUAS mudanças no mesmo seam:
-1. `dueAt()` passa a pular fins de semana + feriados (intenção original de HU-137 para o prazo BAP/HU-134 e SLA/HU-144 — sem tocar call sites, que só dependem de `dueAt`/`isOverdue`).
-2. Adicionar `elapsedBusiness(from, to): float` (segundos/horas úteis entre dois instantes reais) para HU-129.
-
-```php
-// BusinessDeadlineCalculator estendido — consulta o cadastro de feriados (HU-137)
-public function __construct(private readonly HolidayCalendar $holidays) {}
-
-public function dueAt(DateTimeInterface $from, int $hours): Carbon
-{
-    $cursor = Carbon::instance($from);
-    $remaining = $hours;
-    while ($remaining > 0) {
-        $cursor->addHour();
-        if (! $this->isBusinessInstant($cursor)) { continue; } // pula fim de semana/feriado
-        $remaining--;
-    }
-    return $cursor;
-}
-
-private function isBusinessInstant(Carbon $i): bool
-{
-    return ! $i->isWeekend() && ! $this->holidays->isHoliday($i->toDateString());
-}
-```
-
-Onde `HolidayCalendar` lê a tabela `holidays` (HU-137) com cache. **Degradação honesta:** sem lista oficial de feriados (pendência SEDUR), o cadastro existe vazio → conta só dias úteis sem feriados, **com ressalva visível na UI** ("feriados municipais pendentes de cadastro"). Nunca feriado inventado.
-
-**HU-137 — modelagem do cadastro de feriados:**
-- Tabela `holidays`: `id`, `date` (date, unique ou unique+scope), `name`, `scope` (nacional/municipal/estadual), `recurring` (bool — ex.: 25/12 todo ano), `active`, timestamps. Versionado/auditado (RN-002) — reusar `AuditService` nos CRUDs; histórico via activity_log (padrão dos outros cadastros).
-- CRUD administrável em `routes/gestao.php` atrás de `manter-parametros` (reuso) ou permissão própria `manter-feriados` (decisão abaixo). UI nasce com `<ExportMenu>` (HU-131 RN-004 lista "feriados" explicitamente).
-- Modelo simples (cadastro versionado/auditado parametrizável); não confundir com os "dados versionados" pesados (rule_versions) — feriado é um cadastro CRUD comum auditado.
-
-**Relatórios SAPS (RN-006):**
-- **Tempo de Emissão de TVL** = `protocoled_at` → `viability_decisions.decided_at` onde `tvl_product_number IS NOT NULL`, em dias úteis (`elapsedBusiness`).
-- **Sedes de Escritório Virtual** = recorte com `is_virtual_office = true`.
-
-### Pattern 6: HU-145 — captura estruturada da queda (aditivo, anti-regressão Fases 9/10)
-
-Hoje a queda grava 3 categorias grossas em `transitions.reason` + auditoria; o gatilho específico (`TipoGatilho`) fica aninhado em `analysis_records.engine_snapshot` (cobertura parcial). A captura estruturada acontece em `FluxoExpressoService::encaminharAnalise()` (ver arquivo), DENTRO da transação já existente — puramente **aditiva**.
-
-Fonte do gatilho: `$resolved->por_cnae[i]` traz `cnae`, `cnae_formatado`, `is_primary`, `tendencia`, `fluxo` (`expresso`|`analise`) e `consulta`/`consulta_array` (o `ConsultaViabilidadeResult`). Um CNAE "caiu" quando `fluxo === 'analise'`. O `TipoGatilho` (enquadramento_ausente/zeis_especial/dados_do_processo) é produzido pelo motor de risco e exposto no resultado da consulta — o executor deve localizá-lo em `consulta_array` (seção de risco) ou no `RiscoResult`/`ConsultaViabilidadeResult` para gravá-lo estruturado.
-
-```php
-// Nova tabela: request_fall_reasons (ou expresso_fallbacks)
-Schema::create('request_fall_reasons', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('viability_request_id')->index()->constrained()->cascadeOnDelete();
-    $table->string('cnae');                 // por CNAE (RN-001)
-    $table->string('tipo_gatilho')->nullable(); // TipoGatilho->value; null quando a queda é locacional/pendente, não de risco
-    $table->string('dimensao');             // 'risco' | 'territorio' | 'processo'
-    $table->string('motivo');               // categoria estruturada (nunca texto livre — RN-001)
-    $table->timestamps();
-    $table->index(['tipo_gatilho']);
-    $table->index(['created_at']);
-});
-```
-
-Gravação em `encaminharAnalise`, no mesmo `DB::transaction`, iterando `$resolved->por_cnae` onde `fluxo==='analise'`. A auditoria e a transição atuais permanecem (rede anti-regressão). `ExpressoQuedaService` (HU-145) então lê esta tabela para o ranking de motivos + CNAEs que mais caem, e cruza `analysis_divergences` (analista×motor) para o drill-down; a **taxa de resposta expressa** = decisões `flow='expresso'` ÷ elegíveis no período (série temporal), com meta/janela parametrizáveis.
-
-**Anti-regressão:** rodar a suíte das Fases 9/10 ANTES e DEPOIS; o write é additivo e idempotente por natureza (uma queda gera N linhas, uma por CNAE caído). Spy do motor não muda (o resolver já roda; só lemos o resultado em memória).
-
-### Anti-Patterns a evitar
-
-- **Materialized view / tabela-resumo de indicadores**: deferido no CONTEXT — GROUP BY + cache TTL curto basta no volume de Salvador. Não construir.
-- **Mega-service de relatórios**: um serviço por domínio (espelhar a granularidade de `ProcessoQueryService`/`AnalysisSlaService`).
-- **`openToBrowser` dentro de `streamDownload`**: colisão de headers (ver Pattern 3).
-- **`echarts-for-react`**: bug aberto com Vite 8 + React 19 (Pitfall 2).
-- **Delta "+X%" inventado nos KPIs**: sem série histórica persistida, comparativos degradam honesto (sem delta) — precedente da Fase 2.4 (`DashboardController` "sem delta inventado").
-- **Risco/CNAE como coluna do processo**: não existe; derivar por join (Pattern do HU-125/126 abaixo).
+### Anti-patterns a evitar
+- **Loop PHP para agregar** (ex.: `->get()->groupBy()->map(count)`): mata performance e contradiz o padrão. Use SQL.
+- **Materialized view "preventiva":** complexidade sem necessidade no volume atual (deferido).
+- **Reimplementar export por tela:** viola RN-009; tudo passa pelo `ReportExporter`.
+- **Inventar delta histórico no KPI** ("+12%" sem janela persistida): o `KpiCard` já trata `delta` como opcional ("variação real, nunca inventada"); degradar sem delta.
+- **Notificar export via `NotificationDispatcher`:** ele exige `ProcessNotification` ligado a um `viabilityRequestId` — export não é processo. Usar Notification standalone (ver Open Questions).
 
 ## Don't Hand-Roll
 
 | Problema | Não construir | Usar | Por quê |
-|----------|---------------|------|---------|
-| Escrever XLSX | Gerador de XML OOXML próprio | `openspout` | OOXML é complexo; openspout faz streaming < 3MB |
-| Renderizar gráfico | SVG/Canvas próprio | `echarts/core` (wrapper fino) | Decisão do usuário; echarts cobre bar/line/pie/série temporal |
-| PDF de relatório | Montar PDF na mão | `dompdf` (já instalado) + Blade | Padrão já validado no `TvlPdfService` |
-| Filtros da query | Reescrever when/whereLike | `ProcessoQueryService` + `ReportFilters` | Filtros do SAPS já testados; reuso garante consistência tela↔export |
-| Job de fila resiliente | Job do zero | Padrão `DecidirFluxoExpressoJob` | tries/timeout/backoff/fila parametrizados + `failed()` auditado |
-| Download seguro | URL pública / token caseiro | `URL::temporarySignedRoute` + disco não-público | Padrão `TvlDocumentController` (CA-02/LGPD) |
-| Notificar export pronto | E-mail solto | `NotificationDispatcher` (EP11) | Multicanal + ledger honesto + toggles |
-| Auditoria | activity() cru | `AuditService::log(...)` | RN-002 com result/rulesVersion/personalData |
-| Cálculo de prazo útil | Lib de calendário externa | estender `BusinessDeadlineCalculator` | Seam já preparado; feriados via HU-137 |
-| Parâmetros/feature toggle | config hardcoded | `Settings::get` + `ParameterSeeder` + `config/sile.php` | HU-014: efeito sem deploy, fallback sem banco |
+|---|---|---|---|
+| Escrever XLSX | Gerador de OOXML/ZIP próprio | `openspout` `Writer` streaming | Formato OOXML é complexo; openspout faz em <3 MB |
+| CSV streaming | Novo `fputcsv` por tela | `CsvExporter` consolidando o padrão de `AuditoriaController::export` | RN-009 (componente único); evita 2 cópias divergentes |
+| PDF de relatório | HTML→PDF manual | `barryvdh/laravel-dompdf` (já no `TvlPdfService`) | Já validado, com disco não-público + URL assinada |
+| Gráficos | SVG/Canvas próprio | `echarts/core` (wrapper próprio fino) | Decisão do usuário; ECharts cobre tudo (resize, tema, série temporal) |
+| Download seguro de arquivo gerado | Rota pública para o disco | `URL::temporarySignedRoute` + `Storage::download` (padrão `TvlDocumentController`) | LGPD: arquivo pode conter PII; nunca URL pública |
+| Job resiliente | `dispatch` cru | `GerarExportacaoJob` espelhando `DecidirFluxoExpressoJob` | tries/timeout/backoff/`failed()` auditado já provados |
+| Contagem de dias úteis | Lógica ad-hoc por relatório | `BusinessDeadlineCalculator` estendido + `Holiday` | Centraliza a regra (HU-137) num único seam |
+| Leitura de parâmetro | `config()`/`env()` direto | `App\Support\Settings::get(chave, fallback_config)` | Resolução banco→config→default, cache e fallback sem banco |
+| Auditoria de consulta/export | `activity()` cru | `App\Support\Audit\AuditService::log(...)` | Assinatura única (result/rulesVersion/personalData) |
+
+**Key insight:** quase todo "problema novo" desta fase tem um **gêmeo já implementado** no repositório. O valor do plano é mapear cada tarefa ao seu gêmeo e reusar o padrão — não reinventar.
 
 ## Common Pitfalls
 
-### Pitfall 1: openspout exige PHP 8.4+ (composer.json declara ^8.3) — HIGH
-**O que dá errado:** `composer require openspout/openspout` num ambiente 8.3 falha; em 8.5 resolve mas o `composer.json` fica mentindo (`^8.3`).
-**Como evitar:** bumpar `"php": "^8.4"` no `composer.json` (runtime real = 8.5.4). Verificar `composer require` retorna v5.7.x e `composer test` segue verde.
-**Sinal de alerta:** "requires php >=8.4 but your php version (8.3.x) does not satisfy".
+### Pitfall 1: Colunas de data/decisão dos relatórios NÃO estão indexadas
+**O que acontece:** filtros por período (HU-123) e agregações de taxa/tempo varrem a tabela inteira.
+**Causa-raiz (verificada nas migrations):** `viability_requests.protocoled_at` **não tem índice**; `viability_decisions` só indexa `viability_request_id` (unique) e `tvl_product_number` (unique) — **`decided_at`, `flow`, `outcome`, `decided_by_user_id` sem índice**; `viability_request_transitions` só tem o FK (sem índice em `created_at`/`to_status`). O CONTEXT afirma "colunas já indexadas: protocoled_at, decided_at" — isso está **incorreto** à luz das migrations.
+**Como evitar:** uma **migration aditiva** na wave de fundação adicionando índices em `protocoled_at`, `viability_decisions.decided_at`, `(flow, outcome)`, `decided_by_user_id`, e `viability_request_transitions (viability_request_id, created_at)`. Aditiva, sem tocar colunas existentes (regra Laravel: alterar coluna exige repetir todos os atributos).
 
-### Pitfall 2: `echarts-for-react` quebra com Vite 8 + React 19 — HIGH
-**O que dá errado:** issue #619 (aberta 2026-03): `EChartsReactCore` crasha com "Element type is invalid... got: object" em Vite 8 + React 19 (CJS interop). É exatamente a stack do projeto (`vite ^8`, `react ^19`).
-**Como evitar:** não instalar `echarts-for-react`; usar wrapper próprio sobre `echarts/core` (Pattern 4). Bônus: controle total de tema/resize/dispose e bundle menor.
-**Sinal de alerta:** crash de runtime no primeiro render do chart, ou aviso de peer dep no `npm install`.
+### Pitfall 2: PostgreSQL é case-sensitive; SQLite não
+**O que acontece:** filtro de texto (nome/CNAE/bairro) funciona no teste SQLite e falha em produção pgsql.
+**Como evitar:** usar `whereLike(..., caseSensitive: false)` (já é o padrão do `ProcessoQueryService`). Nunca `where('col','like',...)` cru.
 
-### Pitfall 3: índices ausentes para período/decisão/transições — HIGH
-**O que dá errado:** recortes por `protocoled_at` (HU-123), `decided_at`/`decided_by_user_id` (HU-127/128/130) e o tempo por etapa lendo `transitions` por processo fazem full scan. O CONTEXT afirma erroneamente que `protocoled_at`/`decided_at` já estão indexados.
-**Como evitar:** migration ADITIVA na W1: índices em `viability_requests.protocoled_at`, `viability_decisions(decided_at)`, `viability_decisions(decided_by_user_id)`, `viability_decisions(flow, outcome)` e **composto** `viability_request_transitions(viability_request_id, created_at)`. Repetir o cuidado driver-aware (PostgreSQL/SQLite).
-**Sinal de alerta:** relatórios lentos no seed grande; `EXPLAIN` com Seq Scan.
+### Pitfall 3: HU-129 mede duração, o seam atual só faz prazo forward
+**O que acontece:** tenta-se reusar `dueAt` para medir tempo decorrido e o número sai errado (ou conta calendário, recriando a distorção do legado).
+**Como evitar:** adicionar método de **duração entre dois instantes em tempo útil** ao calculator (item explícito no plano). Tempo por etapa = diff entre transições consecutivas (`viability_request_transitions.created_at`) processado por essa nova operação.
 
-### Pitfall 4: GROUP BY com ordenação herdada do `filtered()` — MEDIUM
-**O que dá errado:** `ProcessoQueryService::filtered()` aplica `->orderByDesc('id')`. Em PostgreSQL, `GROUP BY status` com `ORDER BY id` exige `id` no GROUP BY → erro.
-**Como evitar:** `->reorder()` antes de `groupBy`/`selectRaw` nos serviços de relatório.
+### Pitfall 4: openspout `openToFile` precisa de caminho de filesystem real
+**O que acontece:** tentar escrever XLSX direto em `php://output` como no CSV, ou em disco remoto (S3) sem caminho local.
+**Como evitar:** no **síncrono**, usar `openToBrowser($filename)` (streama ao cliente). No **assíncrono** (Job), `openToFile()` num caminho local do disco (`Storage::disk($disk)->path($rel)` para disco local) e então registrar o arquivo; se o disco-alvo não for local, escrever em `tempnam()` e fazer `Storage::put` depois. XLSX usa arquivos temporários (não é stream puro como CSV).
 
-### Pitfall 5: contagem por CNAE/risco multiplica processos — MEDIUM
-**O que dá errado:** um processo tem N CNAEs (`viability_request_cnaes`) → contar "por CNAE"/"por risco" via join conta o processo N vezes (números > total real → parece "inventado").
-**Como evitar:** decidir e documentar o critério: contagem por **CNAE principal** (`is_primary=true`) para "volume de processos", e contagem por **ocorrência de CNAE** (todas) só quando a métrica for "atividades", deixando claro o denominador. Risco vem de `risk_classifications` (versão vigente via `RuleVersion::vigente(RuleDomain::RiscoMunicipal)`), por `cnae_code`. CNAE sem classificação → "não classificado" (degradação honesta, nunca dropar a linha).
+### Pitfall 5: Tema do ECharts preso ao SO em vez do toggle do DS
+**O que acontece:** o gráfico usa `prefers-color-scheme` e ignora o tema do TailAdmin (classe `dark` no `<html>`).
+**Como evitar:** o wrapper lê o tema atual da app (classe `dark` / contexto de tema) e chama `chart.setTheme()` quando muda (observar via `MutationObserver` na classe do `<html>` ou pelo mesmo mecanismo de tema já usado no projeto). Confirmar como o dark mode é alternado nos componentes existentes (`dark:` Tailwind) antes de fixar a fonte da verdade do tema.
 
-### Pitfall 6: SSR do Inertia v3 quebra com ECharts no import — MEDIUM
-**O que dá errado:** `echarts.init` toca DOM/canvas; se o componente renderizar no servidor, o SSR quebra (mesmo Pitfall 9 do Leaflet).
-**Como evitar:** `chart-section.tsx` com `lazy()` + guarda `mounted` + `Suspense` (Pattern 4). Nunca importar `echarts` no topo de uma página renderizada por `Inertia::render` sem o wrapper client-only.
+### Pitfall 6: Job/export "de fachada"
+**O que acontece:** o job grava um arquivo vazio/parcial e notifica "pronto", ou a notificação some.
+**Como evitar:** `failed()` audita a falha (RN-002); o arquivo só é registrado/baixável após `close()` bem-sucedido; teste que prova que export estourado/erro NÃO gera link válido.
 
-### Pitfall 7: suíte em 2 processos (SQLite + @group postgis) — MEDIUM
-**O que dá errado:** lição da Fase 10 — `composer test` roda 2 processos (`--exclude-group postgis` e `--group postgis`). Agregações com SQL específico de PostgreSQL (window functions, `to_char` para mês) podem passar num e falhar no outro.
-**Como evitar:** preferir agregação portável (Eloquent/`selectRaw` compatível) ou cobrir o ramo PostgreSQL com `@group postgis`. Para "agrupar por mês", evitar `DATE_FORMAT`/`to_char` divergentes — agrupar por data e formatar em PHP, ou usar `whereBetween` por janela.
+### Pitfall 7: Retrofit dos CSVs quebrando testes existentes
+**O que acontece:** ao migrar `AuditoriaController::export`/`ProcessoController::exportarCsv` para o `CsvExporter`, mudam colunas/nome de arquivo/`personalData` e os testes atuais quebram.
+**Como evitar:** os testes atuais são a **rede anti-regressão** — preservar colunas, nome do arquivo e a marca `personalData`/HU-101. Migrar 1 controller por vez, rodando o teste do controller a cada passo.
 
-### Pitfall 8: re-seed de parâmetros e contagem dos testes — MEDIUM
-**O que dá errado:** `ParameterSeederTest` afirma `assertSame(85, ...)` + lista de grupos; `RolesAndPermissionsSeederTest` afirma `assertSame(27, Permission::count())` e `assertSame(4, Role::count())`. Adicionar parâmetros/permissões sem atualizar esses testes quebra a suíte.
-**Como evitar:** dono único na W1 atualiza catálogo + contagens (85→85+N, 27→27+N) + grupos. `value` nunca entra no update do upsert (preserva o que o admin gravou).
-
-### Pitfall 9: marcador/asset de chart no bundle — LOW
-**O que dá errado:** menos provável que o Leaflet, mas temas/ícones de echarts importados por caminho podem não resolver no Vite.
-**Como evitar:** usar só `echarts/core` + módulos ESM; tema via objeto/`registerTheme`, não import de arquivo de tema legado.
+### Pitfall 8: Suíte com 2 bancos (SQLite + @group postgis)
+**O que acontece:** rodar só `php artisan test` e achar que está verde, mas o grupo postgis quebrou.
+**Como evitar:** rodar `composer test` (executa os 2 processos: `--exclude-group postgis` e depois `--group postgis`). Baseline declarado: ~1315 SQLite + 29 postgis — **verificar fresco** antes/depois.
 
 ## Code Examples
 
-### HU-127/128 — taxa de deferimento/indeferimento (real, sem inventar)
-
+### `XlsxExporter` com openspout (streaming, baixa memória)
 ```php
-// IndicadoresViabilidadeService
-public function taxas(ReportFilters $f): array
+<?php
+
+namespace App\Services\Relatorios\Export;
+
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Writer\XLSX\Options;
+use OpenSpout\Writer\XLSX\Writer;
+
+final class XlsxExporter implements ReportFormatExporter
 {
-    $base = $this->decisionsNoPeriodo($f); // Builder sobre viability_decisions join requests p/ filtros
-    $total = (clone $base)->count();
-    if ($total === 0) {
-        return ['deferimento' => null, 'indeferimento' => null, 'total' => 0]; // CA-03: sem dado, sem número
+    /** Síncrono: streama direto ao navegador (datasets abaixo do limiar). */
+    public function stream(ReportDefinition $definition): void
+    {
+        $options = new Options();
+        $options->SHOULD_USE_INLINE_STRINGS = true; // default; rápido e baixa memória
+
+        $writer = new Writer($options);
+        $writer->openToBrowser($definition->fileName('xlsx'));
+
+        $header = Style::default();
+        $header->setFontBold();
+        $writer->addRow(Row::fromValues($definition->columnLabels(), $header));
+
+        // cursor()/lazy() do Builder filtrado da tela (RN-005): nunca all() em memória
+        foreach ($definition->builder()->cursor() as $model) {
+            $writer->addRow(Row::fromValues($definition->mapRow($model)));
+        }
+
+        $writer->close();
     }
-    $deferidas = (clone $base)->where('outcome', DecisionOutcome::Deferida->value)->count();
-    $indeferidas = (clone $base)->where('outcome', DecisionOutcome::Indeferida->value)->count();
-    return [
-        'deferimento' => round($deferidas / $total * 100, 1),
-        'indeferimento' => round($indeferidas / $total * 100, 1),
-        'total' => $total,
-    ];
+
+    /** Assíncrono: grava no disco (caminho local) para download assinado posterior. */
+    public function writeTo(ReportDefinition $definition, string $absolutePath): void
+    {
+        $writer = new Writer();
+        $writer->openToFile($absolutePath);
+        $writer->addRow(Row::fromValues($definition->columnLabels()));
+
+        foreach ($definition->builder()->cursor() as $model) {
+            $writer->addRow(Row::fromValues($definition->mapRow($model)));
+        }
+
+        $writer->close();
+    }
 }
 ```
+Fonte: doc oficial openspout 4.x (`docs/documentation.md`) — `Writer`/`Options`/`Row::fromValues`/`Style::setFontBold`/`openToFile`/`openToBrowser`.
 
-### HU-145 — taxa de resposta expressa (série temporal real)
+### Wrapper ECharts client-only + tree-shake (espelha `MapaSection`)
+```ts
+// resources/js/components/ui/chart/echarts-core.ts — registro central (tree-shaking)
+import * as echarts from 'echarts/core';
+import { BarChart, LineChart, PieChart } from 'echarts/charts';
+import { GridComponent, TooltipComponent, LegendComponent, TitleComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
 
-```php
-// ExpressoQuedaService
-// elegíveis = protocoladas que foram resolvidas (deferida/indeferida/em_analise) no período
-// expressas = viability_decisions.flow='expresso' (decided_by_user_id IS NULL)
-$expressas = ViabilityDecision::query()
-    ->where('flow', 'expresso')
-    ->whereBetween('decided_at', [$f->de(), $f->ate()])
-    ->count();
-// taxa = expressas / elegíveis; meta via Settings::get('relatorios.expresso.meta_taxa')
+echarts.use([BarChart, LineChart, PieChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent, CanvasRenderer]);
+
+export { echarts };
 ```
-
-### Download assinado do export assíncrono (espelha TvlDocumentController)
-
-```php
-return URL::temporarySignedRoute(
-    'gestao.relatorios.download',
-    now()->addMinutes((int) config('sile.relatorios.export.download_ttl_minutos', 10)),
-    ['export' => $exportId],
-);
-```
-
-### `<ExportMenu>` no frontend (irmão de `table-toolbar`/`per-page-select`)
-
 ```tsx
-// monta dropdown CSV/XLSX/PDF apontando para {url do index}?formato={fmt}&...paramsAtuais (do useServerTable)
-// Qualquer tela com useServerTable+DataTable ganha export adicionando <ExportMenu> + branch ?formato= (~3 linhas) no controller.
+// resources/js/components/ui/chart/chart-impl.tsx — inicialização (só no cliente)
+import { useEffect, useRef } from 'react';
+import type { EChartsOption } from 'echarts';
+import { echarts } from './echarts-core';
+
+export function ChartImpl({ option, theme }: { option: EChartsOption; theme: 'dark' | 'light' }) {
+    const el = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!el.current) return;
+        const chart = echarts.init(el.current, theme === 'dark' ? 'dark' : undefined);
+        chart.setOption(option);
+        const ro = new ResizeObserver(() => chart.resize());
+        ro.observe(el.current);
+        return () => { ro.disconnect(); chart.dispose(); };
+    }, [option, theme]);
+
+    return <div ref={el} className="h-80 w-full" />;
+}
 ```
+```tsx
+// resources/js/components/ui/chart/chart.tsx — guarda SSR (Pitfall 9 do MapaSection)
+import { lazy, Suspense, useEffect, useState } from 'react';
+import type { EChartsOption } from 'echarts';
+
+const ChartImpl = lazy(() => import('./chart-impl').then((m) => ({ default: m.ChartImpl })));
+
+export function Chart(props: { option: EChartsOption; theme: 'dark' | 'light' }) {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
+    if (!mounted) return <div className="h-80 w-full animate-pulse rounded-2xl bg-gray-100 dark:bg-white/[0.03]" />;
+    return (
+        <Suspense fallback={<div className="h-80 w-full animate-pulse rounded-2xl bg-gray-100 dark:bg-white/[0.03]" />}>
+            <ChartImpl {...props} />
+        </Suspense>
+    );
+}
+```
+Fonte: padrão verificado em `resources/js/components/geo/mapa-section.tsx` + doc ECharts 6 (tree-shake `echarts/core` + `echarts.use`).
+
+### Tempo por etapa via transições consecutivas (HU-129) — agregação SQL
+```php
+// Esboço: durações por etapa derivadas de viability_request_transitions.
+// A duração de cada etapa = diff entre transições consecutivas; a média
+// por etapa é calculada em SQL, NUNCA em loop PHP. O desconto de fins de
+// semana/feriados (HU-137) entra via BusinessDeadlineCalculator::businessDurationBetween.
+$stageTimes = ViabilityRequestTransition::query()
+    ->selectRaw('from_status, to_status, AVG(...) as media_segundos') // janela/lag por request
+    ->whereBetween('created_at', [$filters->from(), $filters->to()])
+    ->groupBy('from_status', 'to_status')
+    ->get();
+```
+Nota: em PostgreSQL, usar `LAG(created_at) OVER (PARTITION BY viability_request_id ORDER BY created_at)` para o instante da transição anterior; manter um caminho portável para a suíte SQLite (a Fase 10 já lida com a divisão SQLite/postgis — espelhar). O desconto de tempo útil é aplicado no serviço após obter os pares (from→to, instantes), não na média bruta de calendário.
+
+### Captura estruturada da queda (HU-145) — aditivo em `FluxoExpressoService::encaminharAnalise`
+```php
+// DENTRO da DB::transaction existente de encaminharAnalise(), APÓS o audit->log.
+// Aditivo: nova tabela, nenhuma coluna/comportamento existente alterado.
+// Fonte por CNAE: $resolved->por_cnae[*]['consulta_array']['risco']['encaminhamento']
+//   -> gatilhos_acionados[0]['codigo'] (TipoGatilho), dimensao_decisiva, motivo.
+// $resolved === null (toggle off) OU consolidado pendente: grava 1 linha de
+// nível-processo com motivo=$reason e cnae/tipo_gatilho NULL (honesto, sem inventar gatilho).
+if ($resolved !== null) {
+    foreach ($resolved->por_cnae as $item) {
+        if (($item['fluxo'] ?? null) !== Fluxo::Analise->value) {
+            continue; // só os CNAEs que efetivamente caíram
+        }
+        $enc = $item['consulta_array']['risco']['encaminhamento'] ?? [];
+        ExpressoQueda::create([
+            'viability_request_id' => $request->id,
+            'cnae' => $item['cnae'],
+            'tipo_gatilho' => $enc['gatilhos_acionados'][0]['codigo'] ?? null,
+            'dimensao' => $enc['dimensao_decisiva'] ?? null,
+            'motivo' => $enc['motivo'] ?? $reason,
+        ]);
+    }
+} else {
+    ExpressoQueda::create([
+        'viability_request_id' => $request->id,
+        'cnae' => null, 'tipo_gatilho' => null, 'dimensao' => null, 'motivo' => $reason,
+    ]);
+}
+```
+Fonte: `app/Services/Expresso/FluxoExpressoService.php` (método `encaminharAnalise`, `$resolved` disponível) + `app/Services/Risco/RiscoClassificationService.php` (shape de `encaminhamento`: `fluxo/dimensao_decisiva/motivo/gatilhos_acionados[]`) + `app/Enums/TipoGatilho.php`.
+
+### Entrada do catálogo de parâmetro (HU-014) — shape exato
+```php
+// database/seeders/ParameterSeeder.php :: catalog()
+'relatorios.export.assincrono_limiar_linhas' => [
+    'group' => 'relatorios',
+    'type' => 'integer',
+    'default_value' => '5000',
+    'validation_rules' => ['required', 'integer', 'min:100', 'max:1000000'],
+    'description' => 'Acima deste número de linhas a exportação roda em segundo plano',
+],
+```
+Fonte: `database/seeders/ParameterSeeder.php::catalog()` (chave => group/type/default_value(string)/validation_rules(array)/description; `sensitive` para credenciais). Espelhar a chave em `config/sile.php` no bloco `relatorios` (fallback sem banco). Constantes técnicas (`max_linhas`, `chunk`, `pdf.paper`, `disk`, `cache_ttl_segundos`, `job.*`) ficam SÓ em `config/sile.php`, fora do catálogo (precedente [02-02]).
 
 ## State of the Art
 
-| Abordagem antiga | Abordagem atual | Impacto |
-|------------------|-----------------|---------|
-| `box/spout` (arquivado) | `openspout/openspout` v5 | Fork mantido; API `new Writer()` + `Row::fromValues()` (sem `WriterEntityFactory` da v3/v4) |
-| `maatwebsite/excel` (RN-009 da HU sugere) | `openspout` direto | Memória constante; CONTEXT sobrescreve a sugestão da HU |
-| echarts bundle cheio (`import echarts`) | `echarts/core` + `echarts.use([...])` | Bundle só com o que usa (~150KB vs ~1MB) |
-| `echarts-for-react` | wrapper próprio sobre `echarts/core` | Evita bug Vite 8 + React 19; controle total |
-| Inertia SSR via Node server | `@inertiajs/vite` (SSR no dev Vite) | Componentes que tocam DOM precisam de mount client-only |
+| Abordagem antiga | Abordagem atual | Quando mudou | Impacto |
+|---|---|---|---|
+| `box/spout` | `openspout/openspout` (fork mantido) | box/spout abandonado | Usar openspout; namespaces `OpenSpout\` |
+| openspout v3 `WriterEntityFactory` | v4/v5 `new Writer(new Options())` + `Row::fromValues` | v4 (breaking) | A doc/exemplos v3 (factory) NÃO valem; usar a API de objeto |
+| ECharts: trocar tema = `dispose()`+`init()` | ECharts 6 `setTheme()` dinâmico | ECharts 6 (2025/26) | Troca claro/escuro sem recriar a instância |
+| `echarts-for-react` | `echarts/core` + wrapper próprio | tendência atual p/ tree-shake/SSR | Bundle ~150 KB vs ~1 MB; controle de SSR/tema |
+| Inertia SSR com servidor Node separado | SSR automático via `@inertiajs/vite` (v3) | Inertia v3 | Confirma necessidade de componentes client-only (ECharts) |
 
-**Desatualizado/evitar:** `box/spout`; `WriterEntityFactory::createXLSXWriter()` (API v3/v4 — não existe na v5); `echarts-for-react` na stack atual; `next-transpile-modules`/`transpilePackages` (são específicos de Next.js — irrelevantes no Vite, que consome o ESM do echarts direto).
+**Obsoleto/evitar:**
+- Exemplos openspout com `WriterEntityFactory::createXLSXWriter()` (v3) e `setShouldUseInlineStrings()` (era box/spout): na v4+ é `new Writer($options)` e `$options->SHOULD_USE_INLINE_STRINGS`.
+- `maatwebsite/excel` (citado na HU-131 RN-009 como referência): substituído pela decisão openspout no CONTEXT.
 
-## Validation Architecture (Nyquist)
+## Key Files To Touch (mapa para o planner)
 
-Cada CA BDD das 11 HUs vira feature test PHPUnit (`tests/Feature/Relatorios/`). Estratégia por dimensão:
+**Criar:**
+- `app/Services/Relatorios/{ReportFilters, IndicadoresViabilidadeService, TempoAnaliseService, ProdutividadeAnalistaService, ExpressoQuedaService}.php`
+- `app/Services/Relatorios/Export/{ReportDefinition, ReportFormatExporter, CsvExporter, XlsxExporter, PdfExporter, ReportExporter}.php`
+- `app/Jobs/GerarExportacaoJob.php`
+- `app/Models/Holiday.php` + migration `create_holidays_table` + `HolidayController` (CRUD) + seeder
+- `app/Models/ExpressoQueda.php` (ou nome equivalente) + migration `create_*_drop_reasons_table`
+- migration aditiva de índices (Pitfall 1)
+- `app/Http/Controllers/Gestao/RelatorioController.php` + Notification `ExportacaoPronta` (database+mail)
+- Blade genérico de relatório PDF (`resources/views/relatorios/*.blade.php`)
+- Front: `resources/js/components/ui/chart/*`, `resources/js/components/ui/data-table/export-menu.tsx`, `resources/js/pages/gestao/relatorios/*`
 
-### Dimensão 1 — Anti-fachada (PRIORITÁRIA, CA-03 do CONTEXT)
-- **Indicador degrada honesto sem dado**: dado banco vazio (ou recorte sem registros), `taxas()`/`porStatus()`/série temporal retornam `null`/"indisponível", **nunca 0% apresentado como real nem número inventado**. Teste: asserta `null`/flag de indisponível, não um valor fabricado.
-- **Número sempre real sobre o banco**: teste com N processos conhecidos (factory) afirma que o indicador bate exatamente com a contagem real (ex.: 3 deferidas / 5 decididas → 60.0).
-- **Feriados sem lista oficial**: `BusinessDeadlineCalculator` com `holidays` vazio conta dias úteis sem feriados E expõe a ressalva (flag/aviso) — teste afirma a ressalva visível, nunca um feriado assumido.
-- **Delta de KPI sem série histórica**: dashboard não emite "+X%" — teste afirma ausência de delta inventado (precedente Fase 2.4).
+**Estender (aditivo, anti-regressão):**
+- `app/Services/Expresso/BusinessDeadlineCalculator.php` (dias úteis + feriados + duração entre instantes)
+- `app/Services/Expresso/FluxoExpressoService.php::encaminharAnalise` (captura HU-145)
+- `app/Http/Controllers/Gestao/DashboardController.php` (KPIs do EP15)
+- `database/seeders/ParameterSeeder.php` + `config/sile.php` (bloco `relatorios.*`)
+- `database/seeders/RolesAndPermissionsSeeder.php` (permissões `consultar-relatorios`, `relatorios.produtividade.nominal`)
+- `routes/gestao.php` (rotas dos relatórios + download assinado; **rota estática antes do wildcard**, dono único por wave)
+- `routes/console.php` (pruning de retenção dos exports, padrão Fase 3.1)
+- `resources/js/components/ui/data-table/use-server-table.ts` (expor os params atuais para o `ExportMenu` montar `?formato=`)
 
-### Dimensão 2 — Export reflete o conjunto filtrado (RN-005 / CA-05)
-- Mesma listagem com filtros A vs B → arquivos exportados contêm **exatamente** as linhas do filtro (contagem e ordenação). Teste compara linhas do export com `filtered()->get()`.
-- **Retrofit anti-regressão**: testes atuais de `AuditoriaController::export` e `ProcessoController::exportarCsv` permanecem verdes após migrar para o componente único (mesmas colunas/filename/conteúdo/`personalData`).
-- **3 formatos**: CSV/XLSX/PDF do MESMO `ReportDefinition` produzem os mesmos dados (paridade). XLSX: ler de volta com o Reader do openspout e afirmar linhas. PDF: afirmar `%PDF` no início + "Total de registros: N" no fim (CA-07/RN-010). CSV: afirmar cabeçalho + linhas.
+**Retrofit (sem novas rotas, preservando testes):**
+- `AuditoriaController::export` e `ProcessoController::exportarCsv` → `CsvExporter`
+- listagens Fases 1–2 (CNAEs/usuários/perfis/parâmetros/acessos), 1 controller por plano
 
-### Dimensão 3 — Assíncrono acima do limiar (RN-006 / CA-06)
-- `Queue::fake()`: abaixo do limiar → resposta sync (download), `assertNothingPushed`. Acima → `GerarExportacaoJob` despachado, tela não trava. Teste do `handle()` do Job: grava no disco não-público (`Storage::fake`) + notifica (`Notification::fake`/ledger) + URL assinada.
-- `failed()` do Job audita a falha (RN-002), nunca silenciosa.
+## Risks & Decision Points (remanescentes)
 
-### Dimensão 4 — Auditoria/meta-auditoria (RN-002/RN-008)
-- Toda consulta de relatório e toda exportação geram linha em `activity_log` com usuário/tela/filtros/formato/volume e `personalData` quando há PII (espelha `AuditoriaController`). Teste: spy/contagem de `AuditService` ou assert na `activity_log`.
+1. **Versão do openspout vs PHP `^8.3`** (ALTO) — recomendo `^4.0` (mantém `^8.3`); só `^5.0` se a equipe bumpar o piso PHP. Decisão do planner/usuário no início.
+2. **Notificação de export pronto** (MÉDIO) — `NotificationDispatcher` é process-bound (`ProcessNotification.viabilityRequestId()`). Para export, usar Notification standalone via canais `database` (surge no `NotificationCenterController`/tabela `notifications`) + `mail`. NÃO forçar o dispatcher. (CONTEXT diz "via EP11" de forma frouxa — reusar a INFRA de notificação, não o roteador de processo.)
+3. **Índices ausentes** (MÉDIO) — migration aditiva obrigatória (Pitfall 1); o CONTEXT subestima isso.
+4. **HU-129 duração ≠ dueAt** (MÉDIO) — método novo de duração útil no calculator.
+5. **Window function portável** (MÉDIO) — `LAG()` no pgsql; caminho alternativo para SQLite na suíte (espelhar a divisão SQLite/postgis da Fase 10).
+6. **Fonte do tema do gráfico** (BAIXO) — confirmar como o dark mode é alternado (classe `dark` no `<html>`) para sincronizar o `setTheme`.
+7. **Tabela de queda: nome/colunas e nullability** (BAIXO) — `cnae`/`tipo_gatilho`/`dimensao` nullable (linha de nível-processo quando degradado). Discrição do planner.
 
-### Dimensão 5 — Permissão (RN-003 / CA-04)
-- Sem `consultar-relatorios` → 403 auditado (ponto único `bootstrap/app.php`). Visão nominal (HU-130) só com `relatorios.produtividade.nominal`; analista vê só o próprio recorte. Teste por perfil (admin/gestor/analista/cidadão).
+### Pendências SEDUR/DPO (escalam, NÃO bloqueiam — degradam honesto)
+Lista oficial de feriados municipais (HU-137); zona urbanística oficial (HU-124 → bairro até GIS/Fase 13); metas/janela da taxa expressa (HU-145 RN-004); política de produtividade nominal (HU-130); layout/colunas oficiais dos relatórios SAPS; colunas sensíveis na exportação (RN-007 → DPO).
 
-### Dimensão 6 — Tempo por etapa correto (HU-129 RN-004/RN-005)
-- Cenário sintético com datas conhecidas atravessando fim de semana/feriado: `elapsedBusiness` desconta sábado/domingo/feriado. Teste afirma o número de horas úteis exato (prova que a distorção "+48h fim de semana / +24h feriado" do legado some).
-- Tempo por etapa: processo com transições conhecidas → durações por etapa batem com o diff esperado; intervalos `em_pendencia` descontados da análise.
+## Validation Architecture
 
-### Dimensão 7 — HU-145 captura sem regressão
-- Encaminhamento à análise grava N linhas em `request_fall_reasons` (uma por CNAE caído) com `tipo_gatilho`/`dimensao`/`motivo` estruturados (nunca texto livre). Suíte das Fases 9/10 permanece verde (rede anti-regressão). Spy do motor inalterado.
-- Drill-down: motivo → lista de processos (via `ProcessoQueryService::filtered`) → divergências (`analysis_divergences`).
+Estratégia de testes/validação por dimensão (Nyquist). Stack: **PHPUnit** feature tests em `tests/Feature/Relatorios/`, factories, suíte de 2 bancos (`composer test`). Cada CA BDD das HUs → ao menos um feature test. **A Dimensão 1 (anti-fachada) é prioritária — CA-03.**
 
-### Mecânica de suíte
-- `composer test` = 2 processos (SQLite ~1315 + 29 @group postgis). Cobrir SQL PostgreSQL-específico com `@group postgis` quando necessário; preferir agregação portável.
-- Seeds dev (W6): `RelatoriosDevSeeder` produz dados pelo FLUXO REAL (driver-aware, roda em SQLite), idempotente; comando de evidência (ex.: `relatorios:exportar`) gera um arquivo real; pruning de retenção no scheduler (`routes/console.php`, padrão Fase 3.1).
+### Dimensão 1 — Anti-fachada (número sempre real; degradação honesta) [PRIORITÁRIA]
+- **Indicador degrada sem inventar:** sem janela histórica, o KPI vem **sem delta** (assert: payload não traz `delta`/`+X%`); dado ausente vira "indisponível/pendente", nunca 0 disfarçado de real.
+- **HU-124 zona → bairro:** com zona indisponível, o recorte cai em bairro com ressalva visível (assert do rótulo de degradação).
+- **HU-137 feriado não inventado:** lista vazia ⇒ contagem = dias úteis sem feriados + ressalva; nenhum feriado fabricado (assert: cálculo bate com dias úteis puros e a flag de ressalva está presente).
+- **HU-145 gatilho honesto:** queda com `$resolved === null` (toggle off) grava motivo de nível-processo com `tipo_gatilho = null` (assert: NÃO há gatilho inventado); queda por gatilho real grava o `TipoGatilho` correto.
+- **Export reflete o conjunto filtrado (RN-005):** o arquivo exportado contém **exatamente** as linhas do Builder filtrado (assert: contagem e conteúdo do export == query filtrada; aplicar filtro e provar que linhas fora dele não aparecem).
+- **Export falho não vira "pronto":** job que estoura/erra chama `failed()` auditado e NÃO disponibiliza link válido (assert: ausência de arquivo baixável + linha de auditoria `result=falha`).
 
-## Open Questions / Pontos de decisão remanescentes
+### Dimensão 2 — Correção das agregações (números certos)
+- Taxas de deferimento/indeferimento (HU-127/128) com dataset factory conhecido → valor esperado exato.
+- Tempo por etapa (HU-129) com transições factory cravadas → média por etapa esperada; **caso fim de semana/feriado** prova o desconto (anti-distorção do legado).
+- Relatórios SAPS (RN-006): Tempo de Emissão de TVL (`protocoled_at→decided_at` com `tvl_product_number` não nulo) e Sedes de Escritório Virtual (`is_virtual_office=true`) com recortes período/setor/analista/categoria.
+- Taxa de resposta expressa (HU-145 RN-002): `flow='expresso' & decided_by_user_id IS NULL ÷ elegíveis` com dataset conhecido.
 
-1. **Critério de contagem CNAE/risco (HU-125/126)** — por CNAE principal (`is_primary`) ou todos os CNAEs? Risco da versão vigente ou da decisão? *Recomendação:* principal + versão vigente, "não classificado" honesto. **Confirmar com analista-negocio/SEDUR.**
-2. **Permissão de feriados (HU-137)** — reusar `manter-parametros` ou criar `manter-feriados`? *Recomendação:* `manter-feriados` própria (cadastro distinto), some à contagem 27→28+. Decisão do planner.
-3. **`relatorios.tempo.etapas` (json)** — declarar explicitamente quais transições compõem cada etapa só se a SEDUR exigir customização; default no código. **Pendência SEDUR** (degradação: default honesto).
-4. **Layout/colunas oficiais dos relatórios SAPS** (Tempo de Emissão de TVL, Sedes de Escritório Virtual) — **pendência SEDUR**; entregar com colunas razoáveis derivadas dos campos reais, ajustáveis.
-5. **Metas/janela da taxa expressa (HU-145 RN-004)** — parâmetro "meta não definida" até a SEDUR fixar (degrada honesto, não bloqueia).
-6. **Política de produtividade nominal (HU-130)** — quem vê ranking nominal; default conservador (anonimizado) registrado, **confirmação SEDUR/DPO**.
-7. **Contrato exato do `ReportFormatExporter`** (path-based unificado vs híbrido stream/path) — recomendação no Pattern 2; decisão final do planner ao ler os testes atuais dos 2 CSVs.
-8. **LGPD por coluna sensível na exportação (RN-007)** — quais colunas exigem permissão específica → **DPO**. Default: `cpf_masked` salvo permissão de PII (precedente Fase 12).
+### Dimensão 3 — Conformidade do contrato de exportação (HU-131)
+- Os 3 formatos (CSV/XLSX/PDF) geram conteúdo válido: CSV com cabeçalho + linhas; XLSX legível (reabrir com o `Reader` do openspout no teste e conferir linhas); PDF começa com `%PDF` e o rodapé exibe "Total de registros: N" coerente + data/hora + filtros (CA-07/RN-010).
+- Limiar assíncrono (CA-06/RN-006): abaixo → resposta de streaming síncrona; acima → `GerarExportacaoJob` despachado (assert com `Queue::fake()`), arquivo no disco não-público, link por `temporarySignedRoute`.
+- Retrofit anti-regressão: testes existentes de `AuditoriaController::export` e `ProcessoController::exportarCsv` continuam verdes após migrar ao `CsvExporter` (mesmas colunas/arquivo/`personalData`).
 
-## Key files to touch (mapa para o planner)
+### Dimensão 4 — Auditoria e segurança (RN-002/RN-007/RN-008)
+- Toda **consulta** de relatório e toda **exportação** geram linha de auditoria (usuário/tela/filtros/formato/volume) — espelha a meta-auditoria de `AuditoriaController` (`personalData` quando expõe PII).
+- Gate de permissão: sem `consultar-relatorios` → 403 auditado (ponto único `bootstrap/app.php`); `relatorios.produtividade.nominal` controla visão nominal (HU-130); analista vê só o próprio recorte.
+- LGPD: export minimiza PII (ex.: `cpf_masked`) salvo permissão específica; download só por URL assinada do disco não-público.
 
-**Reusar/estender (não recriar):**
-- `app/Services/Analise/ProcessoQueryService.php` — Builder filtrado + `CATEGORIAS`/`GRUPOS_STATUS`; base do `ReportFilters` e do drill-down HU-145.
-- `app/Services/Expresso/BusinessDeadlineCalculator.php` — estender (dias úteis/feriados + `elapsedBusiness`).
-- `app/Services/Analise/AnalysisSlaService.php` — referência de cálculo puro parametrizado.
-- `app/Services/Analise/TvlPdfService.php` — padrão dompdf + disco não-público + auditoria.
-- `app/Http/Controllers/Gestao/TvlDocumentController.php` — padrão `temporarySignedRoute` + streaming de disco não-público.
-- `app/Http/Controllers/Gestao/AuditoriaController.php` + `Gestao/ProcessoController.php` — os 2 CSVs a consolidar (anti-regressão).
-- `app/Http/Controllers/Gestao/DashboardController.php` — estender com KPIs reais (sem delta inventado).
-- `app/Jobs/DecidirFluxoExpressoJob.php` — padrão de Job resiliente (tries/timeout/backoff/`failed()` auditado).
-- `app/Services/Comunicacao/NotificationDispatcher.php` — notificar export pronto (EP11).
-- `app/Support/Audit/AuditService.php` — `log(...)` com result/rulesVersion/personalData.
-- `app/Support/Settings.php` + `config/sile.php` + `database/seeders/ParameterSeeder.php` — parâmetros HU-014.
-- `app/Services/Expresso/FluxoExpressoService.php` (`encaminharAnalise`) — captura estruturada HU-145.
-- `app/Services/Solicitacao/ResolvedViability.php` + `app/Enums/TipoGatilho.php` + `app/Enums/Fluxo.php` — fonte do gatilho da queda.
-- `resources/js/components/geo/{map-imovel,mapa-section}.tsx` — padrão SSR-safe client-only (modelo do wrapper ECharts).
-- `resources/js/components/ui/data-table/{use-server-table,table-toolbar,per-page-select}.tsx` + `data-table.tsx` — base do `<ExportMenu>`.
-- `resources/js/components/ui/kpi-card.tsx`, `resources/js/layouts/gestao-layout.tsx`, `resources/js/components/app/command-search.tsx` — dashboard/nav/Cmd+K.
-- `database/seeders/RolesAndPermissionsSeeder.php` + `routes/gestao.php` (dono único) + `routes/console.php` (pruning).
+### Dimensão 5 — Parametrização sem deploy (HU-014)
+- Mudar `relatorios.export.assincrono_limiar_linhas`/`meta_taxa`/`janela_dias` via `Settings` altera o comportamento (assert: limiar novo muda o caminho sync/async; meta nova muda o cálculo da HU-145) — efeito sem deploy, com histórico auditado.
+- Teste de contagem do catálogo (`ParameterSeeder`) e de permissões (`RolesAndPermissionsSeeder`) atualizado para o novo total (baseline declarado 85 parâmetros / 27 permissões — **verificar fresco** e somar os novos).
 
-**Criar:** ver "Estrutura de diretórios" (Architecture Patterns) + migrations (índices aditivos; `request_fall_reasons`; `holidays`).
+### Dimensão 6 — SSR/Front (gráficos não quebram o SSR)
+- Smoke do build (`npm run build` / `tsc --noEmit`) com o wrapper de chart; o componente não importa `echarts` no caminho do servidor (só client-only via `lazy`+`mounted`).
+- Verificação manual/visual: tema claro/escuro do gráfico acompanha o DS; resize responsivo.
 
-## Technical risks (resumo priorizado)
+**Comando de evidência (fresco, completo):** `composer test` (2 processos: SQLite + `@group postgis`) + `vendor/bin/pint --dirty --format agent` + `npm run build`. Recomendado um comando artisan de evidência ponta-a-ponta (ex.: `relatorios:exportar`) que gera um arquivo real de cada formato a partir de seeds (golden/smoke), provando a lógica real de export end-to-end.
 
-| Risco | Severidade | Mitigação |
-|-------|-----------|-----------|
-| openspout exige PHP 8.4 vs `composer.json ^8.3` | HIGH | bumpar para `^8.4`; verificar `composer test` verde |
-| `echarts-for-react` crash Vite 8 + React 19 | HIGH | wrapper próprio sobre `echarts/core` |
-| Índices ausentes (período/decisão/transições) | HIGH | migration aditiva driver-aware na W1 |
-| Refactor dos 2 CSVs quebra contrato/testes | MEDIUM | ler testes antes; preservar contrato observável; CSV sync mantém streaming |
-| HU-145 capture regride Fases 9/10 | MEDIUM | aditivo na transação existente; suíte 9/10 antes/depois |
-| SQL PostgreSQL-específico falha em SQLite | MEDIUM | agregação portável ou ramo `@group postgis` |
-| GROUP BY + orderBy herdado | MEDIUM | `->reorder()` antes de agregar |
-| Dupla contagem CNAE/risco | MEDIUM | contar por CNAE principal; denominador explícito |
-| Contagens de seeder-tests (85/27) | MEDIUM | dono único atualiza na W1 |
+## Open Questions
+
+1. **Notificação de export pronto via qual mecanismo?**
+   - O que sabemos: existe tabela `notifications` (canal database, criada 2026-06-15), `NotificationCenterController` e rotas `gestao.notificacoes.*`; o `NotificationDispatcher` é process-bound.
+   - Lacuna: o CONTEXT diz "via EP11 (NotificationDispatcher)", mas o contrato não serve a export não-processual.
+   - Recomendação: Notification standalone `ExportacaoPronta` (canais `database`+`mail`), surgindo no `NotificationCenterController`. Reusar a infra, não o roteador de processo.
+
+2. **Fonte da verdade do tema do gráfico (dark/light).**
+   - O que sabemos: DS TailAdmin usa classe `dark` (Tailwind `dark:`).
+   - Lacuna: não há ainda um theme context React confirmado para gráficos.
+   - Recomendação: o wrapper lê `document.documentElement.classList.contains('dark')` e observa mudanças (`MutationObserver`) ou consome o mesmo mecanismo de tema já em uso; confirmar no `app-shell`/layout antes de cravar.
+
+3. **Window function (`LAG`) na suíte SQLite (HU-129).**
+   - O que sabemos: SQLite moderno suporta window functions, mas a Fase 10 já separou caminhos SQLite/postgis.
+   - Recomendação: preferir cálculo de duração no serviço (PHP) a partir das transições ordenadas quando o caminho portável for mais simples e testável; usar SQL window só onde o ganho justifica, com teste nos 2 bancos.
+
+4. **Disco do export.**
+   - Recomendação: `relatorios.export.disk` = disco **não-público** (mesma guarda anti-`public` do `TvlPdfService`), com pruning de retenção (`relatorios.export.retencao_dias`) no scheduler.
 
 ## Sources
 
-### Primary (HIGH)
-- Código do repositório SILE (Fases 1–12): serviços, controllers, migrations, seeders, componentes React citados acima — fonte de verdade dos padrões reais.
-- `.planning/phases/15-relatorios-e-indicadores/15-CONTEXT.md` — decisões fixadas.
-- `.planning/STATE.md` — baseline (85 parâmetros / 27 permissões; suíte 1315 SQLite + 29 postgis; flows `expresso`/`analise_tecnica`).
-- HUs EP15: `docs/SILE_HUs_Completas_MD/EP15-Relatórios-e-Indicadores/HU-122..131.md`, `HU-145`; HU-137 em `EP02-Administracao`.
-- OpenSpout via Context7 (openspout/openspout, atualizado ~2 semanas): API v5 (`new Writer()`, `openToFile`, `Row::fromValues`, `Cell`, `Options`, `openToBrowser`, requisito PHP 8.4/8.5, memória <3MB).
-- npm `echarts` 6.1.0 (publicado 2026-05-19); `echarts-for-react` 3.0.6 peer deps + issue #619 (Vite 8 + React 19 crash, aberta 2026-03-19).
-- `hustcc/echarts-for-react` README — padrão de import tree-shakeable `echarts/core` + `echarts.use([...])`.
+### Primárias (HIGH)
+- Repositório (verificado): `app/Services/Analise/ProcessoQueryService.php`, `AnalysisSlaService.php`, `TvlPdfService.php`; `app/Services/Expresso/{BusinessDeadlineCalculator,FluxoExpressoService}.php`; `app/Services/Risco/RiscoClassificationService.php`; `app/Services/Comunicacao/NotificationDispatcher.php`; `app/Support/{Settings,Audit/AuditService}.php`; `app/Jobs/DecidirFluxoExpressoJob.php`; `app/Http/Controllers/Gestao/{DashboardController,AuditoriaController,TvlDocumentController}.php`; `app/Enums/TipoGatilho.php`; `app/Services/Solicitacao/ResolvedViability.php`; `routes/gestao.php`; `config/sile.php`; `database/seeders/ParameterSeeder.php`; migrations de `viability_requests`/`viability_decisions`/`viability_request_transitions`/`analysis_records`/`analysis_divergences`/`notifications`; front `resources/js/components/geo/{map-imovel,mapa-section}.tsx`, `ui/data-table/{use-server-table,table-toolbar,per-page-select}.tsx`, `ui/kpi-card.tsx`; `composer.json`, `package.json`, `vite.config.js`, `resources/js/app.tsx`.
+- openspout: `composer.json` das branches 4.x e 5.x (raw GitHub) — constraint PHP; doc oficial `docs/documentation.md` 4.x (API Writer/Options/Row/Style).
+- Versões: `npm view echarts version` → 6.1.0; Packagist openspout → v5.7.2; `php -v` → 8.5.4.
+- HUs: `docs/SILE_HUs_Completas_MD/EP15-Relatórios-e-Indicadores/HU-122..131,145.md`; `EP02/HU-137`.
 
-### Secondary (MEDIUM)
-- Packagist openspout (v5.7.2, 2026-05-29) — confirmação de versão estável.
-- Discussões SSR de canvas charts (Next.js) — confirmam o modo de falha (DOM/canvas no import) que o mount client-only resolve; transpilePackages é específico de Next, não se aplica ao Vite.
-
-### Verificações locais executadas
-- `php -v` → PHP 8.5.4; `composer.json` → `"php": "^8.3"`; `git check-ignore .planning` → TRACKED.
-- Schemas confirmados por leitura das migrations (índices presentes/ausentes).
-- `RolesAndPermissionsSeederTest` (27 permissões / 4 roles) e `ParameterSeederTest` (85 parâmetros) confirmados.
+### Secundárias (MEDIUM)
+- WebSearch openspout (laravel-news, nidup.io) — confirmação de streaming/baixa memória.
+- WebSearch/handbook ECharts 6 (apache.org) — dark mode dinâmico, `setTheme`, tree-shake `echarts/core`.
 
 ## Metadata
 
 **Confidence breakdown:**
-- Standard stack (openspout/echarts versões+API): HIGH — doc oficial + Context7 + npm.
-- Padrões a reusar (services/export/charts/audit/job): HIGH — lidos no código real.
-- Modelo de dados/índices: HIGH — migrations lidas diretamente.
-- HU-145 fonte do gatilho (`consulta_array`): MEDIUM — shape conhecido; o ponto exato do `TipoGatilho` no resultado da consulta o executor confirma ao implementar.
-- Pendências SEDUR/DPO (layout SAPS, metas, produtividade, LGPD por coluna): LOW — externas, degradam honesto.
+- Standard stack: HIGH — versões e constraints confirmados em composer.json/npm/packagist; APIs em doc oficial.
+- Architecture (reuso de padrões internos): HIGH — todos os arquivos-gêmeos lidos no repositório.
+- Pitfalls (índices, duração ≠ dueAt, SSR do chart): HIGH — verificados nas migrations e no código do calculator/MapaSection.
+- HU-145 capture shape: MEDIUM-HIGH — fonte do gatilho confirmada no `RiscoClassificationService`; nome exato da tabela/colunas fica a critério do planner.
+- Notificação de export: MEDIUM — infra (tabela `notifications` + controller) confirmada; o mecanismo exato é decisão de design.
 
 **Research date:** 2026-06-15
-**Valid until:** ~2026-07-15 (stack estável; revalidar versões de echarts/openspout se a fase começar depois)
+**Valid until:** ~2026-07-15 (openspout/echarts são estáveis; reavaliar se mudar o piso de PHP ou a major do ECharts)
