@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnalysisSlaService;
+use App\Services\Auditoria\DecisionTraceBuilder;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
@@ -52,6 +53,7 @@ class FluxoExpressoService
         private TvlNumberGenerator $tvl,
         private AuditService $audit,
         private AnalysisSlaService $sla,
+        private DecisionTraceBuilder $traceBuilder,
     ) {}
 
     /**
@@ -221,6 +223,7 @@ class FluxoExpressoService
                     'per_cnae' => $this->perCnae($resolved),
                     'rules_versions' => $resolved->rules_versions,
                     'fundamentacao' => $this->fundamentacaoConsolidada($resolved),
+                    'decision_trace' => $this->decisionTrace($resolved),
                     'reason' => null,
                     'decided_by_user_id' => $actor?->id,
                     'decided_at' => now(),
@@ -286,6 +289,27 @@ class FluxoExpressoService
             'fluxo' => $item['fluxo'],
             'fundamentacao' => $item['consulta']->fundamentacao(),
         ], $resolved->por_cnae);
+    }
+
+    /**
+     * decision_trace ADITIVO da decisão expressa (HU-099 RN-004/RN-005): o
+     * snapshot passo a passo por CNAE, montado pelo DecisionTraceBuilder a partir
+     * do consulta_array JÁ em memória ($resolved) — sem recomputar o motor e sem
+     * mudar o veredito. É a fonte que a explicabilidade (12-05) projeta.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function decisionTrace(ResolvedViability $resolved): array
+    {
+        return array_map(
+            fn (array $item): array => $this->traceBuilder->cnaeExpresso($item['consulta_array'], [
+                'cnae' => $item['cnae'],
+                'cnae_formatado' => $item['cnae_formatado'],
+                'is_primary' => $item['is_primary'],
+                'ponto' => $resolved->ponto,
+            ]),
+            $resolved->por_cnae,
+        );
     }
 
     /**
