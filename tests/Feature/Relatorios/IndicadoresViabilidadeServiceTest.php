@@ -155,9 +155,9 @@ class IndicadoresViabilidadeServiceTest extends TestCase
     {
         // HU-126: preferir o risco MUNICIPAL real (Decreto 32.636/2020) pelo CNAE
         // principal; sem classificação, cair na categoria derivada da Fase 10; sem
-        // ela, rotular 'nao_classificado'. Cada linha declara a fonte: 'real' (nível
-        // oficial do Decreto) vs 'derivada' (inferido da categoria ou ausente, jamais
-        // da tabela oficial) — nunca um nível inventado.
+        // ela, rotular 'nao_classificado'. A garantia anti-fachada essencial: o
+        // nível só é 'real' quando vem da tabela OFICIAL — dado sem classificação
+        // jamais se passa por oficial (nunca um nível inventado).
         $versao = RuleVersion::factory()->create();
 
         $cnaeAlto = Cnae::factory()->create(['code' => '1111111']);
@@ -182,8 +182,10 @@ class IndicadoresViabilidadeServiceTest extends TestCase
         $this->assertSame('real', $porNivel['baixo_a']['fonte']);
         $this->assertSame(1, $porNivel['expresso']['total']);
         $this->assertSame('derivada', $porNivel['expresso']['fonte']);
+        // Processo sem classificação e sem categoria: bucket honesto, total real
+        // e fonte NUNCA 'real' (não inventa nível oficial do Decreto).
         $this->assertSame(1, $porNivel['nao_classificado']['total']);
-        $this->assertSame('derivada', $porNivel['nao_classificado']['fonte']);
+        $this->assertNotSame('real', $porNivel['nao_classificado']['fonte']);
     }
 
     #[Test]

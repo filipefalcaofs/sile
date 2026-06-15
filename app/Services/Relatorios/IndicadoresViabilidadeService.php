@@ -3,8 +3,10 @@
 namespace App\Services\Relatorios;
 
 use App\Enums\AnalysisCategory;
+use App\Enums\DecisionOutcome;
 use App\Enums\RuleDomain;
 use App\Models\RuleVersion;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\ProcessoQueryService;
 use Illuminate\Database\Eloquent\Builder;
@@ -210,5 +212,77 @@ class IndicadoresViabilidadeService
             'semi_expresso' => $query->where('viability_requests.analysis_category', AnalysisCategory::SemiExpresso->value),
             default => $query,
         };
+    }
+
+    /**
+     * Taxa de DEFERIMENTO no período (HU-127): deferidas ÷ decididas, sobre as
+     * decisões vinculantes (viability_decisions) com `decided_at` no intervalo.
+     * `taxa` é null quando NÃO houve decisão no período — honesto, jamais 0%
+     * fabricado (CA-03).
+     *
+     * @return array{deferidas: int, total: int, taxa: float|null}
+     */
+    public function taxaDeferimento(ReportFilters $f): array
+    {
+        $total = $this->decisoesBase($f)->count();
+        $deferidas = $this->decisoesBase($f)
+            ->where('viability_decisions.outcome', DecisionOutcome::Deferida->value)
+            ->count();
+
+        return [
+            'deferidas' => $deferidas,
+            'total' => $total,
+            'taxa' => $total > 0 ? round($deferidas / $total * 100, 1) : null,
+        ];
+    }
+
+    /**
+     * Taxa de INDEFERIMENTO no período (HU-128): indeferidas ÷ decididas. Simétrica
+     * ao deferimento e medida sobre a MESMA base de decididas — NUNCA somam 100
+     * artificialmente (em_analise/pendente não viram decisão). `taxa` null sem
+     * decisões no período (CA-03).
+     *
+     * @return array{indeferidas: int, total: int, taxa: float|null}
+     */
+    public function taxaIndeferimento(ReportFilters $f): array
+    {
+        $total = $this->decisoesBase($f)->count();
+        $indeferidas = $this->decisoesBase($f)
+            ->where('viability_decisions.outcome', DecisionOutcome::Indeferida->value)
+            ->count();
+
+        return [
+            'indeferidas' => $indeferidas,
+            'total' => $total,
+            'taxa' => $total > 0 ? round($indeferidas / $total * 100, 1) : null,
+        ];
+    }
+
+    /**
+     * Builder base das taxas: decisões vinculantes (viability_decisions) juntadas
+     * à solicitação, recortadas pelo período sobre `decided_at` e pelos filtros
+     * comuns (setor/analista/bairro/categoria/cnae) sobre a solicitação — via
+     * `when()`, espelhando o ProcessoQueryService. Cada chamada devolve um Builder
+     * fresco (clonável para os dois counts sem efeito colateral).
+     *
+     * @return Builder<ViabilityDecision>
+     */
+    private function decisoesBase(ReportFilters $f): Builder
+    {
+        return ViabilityDecision::query()
+            ->join('viability_requests', 'viability_requests.id', '=', 'viability_decisions.viability_request_id')
+            ->when($f->from(), fn (Builder $q, $from): Builder => $q->where('viability_decisions.decided_at', '>=', $from))
+            ->when($f->to(), fn (Builder $q, $to): Builder => $q->where('viability_decisions.decided_at', '<=', $to))
+            ->when($f->setorId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.sector_id', $id))
+            ->when($f->analistaId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.assigned_user_id', $id))
+            ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike('viability_requests.address_neighborhood', "%{$b}%", caseSensitive: false))
+            ->when($f->categoria(), fn (Builder $q, string $c): Builder => $this->aplicarCategoria($q, $c))
+            ->when($f->cnae(), fn (Builder $q, string $cnae): Builder => $q->whereExists(function ($sub) use ($cnae): void {
+                $sub->selectRaw('1')
+                    ->from('viability_request_cnaes as vrc_f')
+                    ->join('cnaes as cnae_f', 'cnae_f.id', '=', 'vrc_f.cnae_id')
+                    ->whereColumn('vrc_f.viability_request_id', 'viability_requests.id')
+                    ->where('cnae_f.code', $cnae);
+            }));
     }
 }
