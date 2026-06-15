@@ -29,6 +29,12 @@ return [
         'fluxo_expresso' => true,
         'notificacao_resultado_expresso' => true,
         'analise_tecnica' => true,
+        // Toggles de canal da comunicação multicanal (EP11). E-mail e in-app
+        // ligados; WhatsApp DESLIGADO (provedor real só na Fase 13 — bloqueio
+        // honesto, degrada de forma comunicada).
+        'notificacao_email' => true,
+        'notificacao_in_app' => true,
+        'notificacao_whatsapp' => false,
     ],
     // Chaves pt-BR (geo.*, retencao.*, seguranca.*) espelham os parâmetros
     // HU-014 de mesmo nome — Settings::get lê config("sile.{chave}") no
@@ -146,6 +152,31 @@ return [
         // não decisão de negócio.
         'autosave' => ['debounce_ms' => 1500],
     ],
+    // Espelha os parâmetros HU-014 notificacoes.* da comunicação multicanal
+    // (EP11). Settings::get lê config("sile.notificacoes.*") no fallback (banco
+    // indisponível). mapa_canais e escalonamento.tratamento são os ARRAYS já
+    // decodificados — typedValue() do parâmetro json também devolve array, de
+    // modo que o dispatcher (11-04) sempre recebe array, nunca string. Os
+    // toggles de canal ficam no bloco `features`; as constantes técnicas do
+    // WhatsApp, em `integrations.whatsapp`.
+    'notificacoes' => [
+        'mapa_canais' => [
+            'pendencia_aberta' => ['email', 'in_app'],
+            'pendencia_respondida' => ['in_app'],
+            'prazo_vencendo' => ['email', 'in_app'],
+            'escalonamento_sla' => ['email', 'in_app'],
+            'resultado' => ['email', 'in_app'],
+        ],
+        'vencimento' => ['antecedencia_dias' => 3],
+        'escalonamento' => [
+            'tratamento' => ['amarelo' => 'notificar_analista', 'vencido' => 'notificar_gestor'],
+            'gestor_role' => 'gestor',
+        ],
+        'pendencia' => [
+            'assunto' => 'Pendência na sua solicitação de viabilidade {protocolo}',
+            'corpo' => 'Olá! Identificamos uma pendência na sua solicitação de viabilidade {protocolo}. Pendência: {pendencia}. Acesse o portal do SILE para responder dentro do prazo informado.',
+        ],
+    ],
     'seguranca' => [
         'throttle' => [
             'cnpj_lookup' => ['por_minuto' => 30],
@@ -177,6 +208,19 @@ return [
             'retries' => 2,
             'backoff_ms' => 1000,
             'cache_ttl' => 86400,
+        ],
+        // WhatsApp (HU-095): base_url/token são parametrizáveis (catálogo
+        // HU-014; token sensível/criptografado). As constantes TÉCNICAS
+        // (timeout/tries/backoff) ficam SÓ aqui — precedente [02-02] —, pois são
+        // cadência/resiliência do adaptador real (Fase 13), não valor de
+        // negócio. Provedor real bloqueado: toggle features.notificacao_whatsapp
+        // nasce off (degradação honesta).
+        'whatsapp' => [
+            'base_url' => '',
+            'token' => '',
+            'timeout' => 8,
+            'tries' => 3,
+            'backoff_ms' => 1000,
         ],
     ],
     'parameters' => [

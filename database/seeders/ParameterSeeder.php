@@ -512,6 +512,88 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:1440'],
                 'description' => 'Validade (minutos) da URL temporária assinada de download do TVL PDF no backoffice',
             ],
+            // Comunicação multicanal (EP11). Os toggles de canal nascem
+            // administráveis: e-mail e in-app ligados; WhatsApp DESLIGADO
+            // (provedor real bloqueado até a Fase 13 — degradação honesta).
+            'features.notificacao_email' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita o canal de e-mail nas notificações de processo',
+            ],
+            'features.notificacao_in_app' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita o canal in-app (central de notificações) nas notificações de processo',
+            ],
+            'features.notificacao_whatsapp' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita o canal WhatsApp (provedor real bloqueado até a Fase 13; desligado degrada de forma comunicada)',
+            ],
+            'notificacoes.mapa_canais' => [
+                'group' => 'notificacoes',
+                'type' => 'json',
+                'default_value' => '{"pendencia_aberta":["email","in_app"],"pendencia_respondida":["in_app"],"prazo_vencendo":["email","in_app"],"escalonamento_sla":["email","in_app"],"resultado":["email","in_app"]}',
+                'validation_rules' => ['required', 'json'],
+                'description' => 'Canais por tipo de notificação (intersecção com os toggles; WhatsApp fica fora por default)',
+            ],
+            'notificacoes.vencimento.antecedencia_dias' => [
+                'group' => 'notificacoes',
+                'type' => 'integer',
+                'default_value' => '3',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:60'],
+                'description' => 'Dias de antecedência do alerta de vencimento de prazo (HU-093)',
+            ],
+            'notificacoes.escalonamento.tratamento' => [
+                'group' => 'notificacoes',
+                'type' => 'json',
+                'default_value' => '{"amarelo":"notificar_analista","vencido":"notificar_gestor"}',
+                'validation_rules' => ['required', 'json'],
+                'description' => 'Tratamento do escalonamento por SLA por faixa (HU-147; default só notifica, sem decisão automática)',
+            ],
+            'notificacoes.escalonamento.gestor_role' => [
+                'group' => 'notificacoes',
+                'type' => 'string',
+                'default_value' => 'gestor',
+                'validation_rules' => ['required', 'string', 'max:50'],
+                'description' => "Papel destinatário do escalonamento de SLA (não há 'gestor do setor' no schema — pendência SEDUR; default role gestor)",
+            ],
+            'notificacoes.pendencia.assunto' => [
+                'group' => 'notificacoes',
+                'type' => 'string',
+                'default_value' => 'Pendência na sua solicitação de viabilidade {protocolo}',
+                'validation_rules' => ['required', 'string', 'max:150'],
+                'description' => 'Assunto do aviso de pendência (HU-090; placeholders substituíveis)',
+            ],
+            'notificacoes.pendencia.corpo' => [
+                'group' => 'notificacoes',
+                'type' => 'string',
+                'default_value' => 'Olá! Identificamos uma pendência na sua solicitação de viabilidade {protocolo}. Pendência: {pendencia}. Acesse o portal do SILE para responder dentro do prazo informado.',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Corpo-template do aviso de pendência (HU-090; placeholders {protocolo}/{pendencia})',
+            ],
+            'integrations.whatsapp.base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => '',
+                'validation_rules' => ['nullable', 'url'],
+                'requires_connection_test' => true,
+                'description' => 'URL base da API comercial de WhatsApp (provedor real na Fase 13)',
+            ],
+            'integrations.whatsapp.token' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'sensitive' => true,
+                'default_value' => null,
+                'validation_rules' => ['nullable', 'string', 'max:255'],
+                'description' => 'Token/credencial da API de WhatsApp (armazenado criptografado, nunca reexibido)',
+            ],
         ];
     }
 }
