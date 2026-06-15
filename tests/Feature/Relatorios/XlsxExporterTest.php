@@ -4,6 +4,7 @@ namespace Tests\Feature\Relatorios;
 
 use App\Jobs\GerarExportacaoJob;
 use App\Models\Activity;
+use App\Models\ExportFile;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\Export\ReportDefinition;
@@ -12,7 +13,9 @@ use App\Services\Relatorios\Export\XlsxExporter;
 use App\Services\Relatorios\ReportFilters;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use OpenSpout\Reader\XLSX\Reader;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Feature\Relatorios\Stubs\ProcessoBairroSource;
@@ -149,5 +152,33 @@ class XlsxExporterTest extends TestCase
                 && $job->formato === 'xlsx'
                 && $job->userId === $user->id;
         });
+    }
+
+    #[Test]
+    public function job_assincrono_grava_xlsx_legivel_e_filtrado_no_disco(): void
+    {
+        // Anti-fachada (ponta async de ponta a ponta): acima do limiar o xlsx vai
+        // ao GerarExportacaoJob, que precisa gravar um XLSX legível no disco
+        // não-público refletindo o conjunto filtrado (RN-005 no assíncrono).
+        Storage::fake('local');
+        Notification::fake();
+
+        $user = User::factory()->create();
+        ViabilityRequest::factory()->create(['address_neighborhood' => 'Pituba']);
+        ViabilityRequest::factory()->create(['address_neighborhood' => 'Itapua']);
+
+        (new GerarExportacaoJob(ProcessoBairroSource::class, ['bairro' => 'Pituba'], 'xlsx', $user->id))->handle();
+
+        $export = ExportFile::query()->firstOrFail();
+        $this->assertSame('xlsx', $export->format);
+        $this->assertSame(1, $export->row_count);
+
+        $linhas = $this->lerXlsx(Storage::disk($export->disk)->path($export->path));
+
+        // ProcessoBairroSource tem 1 coluna (Bairro); cabeçalho + 1 linha (Pituba),
+        // Itapua fora do filtro não entra (RN-005 async).
+        $this->assertSame(['Bairro'], $linhas[0]);
+        $this->assertCount(2, $linhas);
+        $this->assertSame('Pituba', $linhas[1][0]);
     }
 }

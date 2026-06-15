@@ -9,6 +9,7 @@ use App\Services\Relatorios\Export\CsvExporter;
 use App\Services\Relatorios\Export\PdfExporter;
 use App\Services\Relatorios\Export\ReportFormatExporter;
 use App\Services\Relatorios\Export\ReportSource;
+use App\Services\Relatorios\Export\XlsxExporter;
 use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -140,6 +141,7 @@ class GerarExportacaoJob implements ShouldQueue
     {
         return match ($formato) {
             'csv' => app(CsvExporter::class),
+            'xlsx' => app(XlsxExporter::class),
             'pdf' => app(PdfExporter::class),
             default => throw new InvalidArgumentException("Formato de exportação não suportado: {$formato}."),
         };
