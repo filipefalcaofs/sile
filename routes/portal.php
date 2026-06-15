@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ComunicacaoHistoricoController;
 use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\Portal\AccessHistoryController;
 use App\Http\Controllers\Portal\CancelamentoSolicitacaoController;
@@ -187,6 +188,13 @@ Route::middleware(['auth:web', 'verified'])
             // ficam para o EP11 (este é o ciclo interno REAL: portal + e-mail).
             Route::get('solicitacoes/{solicitacao}/pendencias', [PendenciaRespostaController::class, 'show'])->name('solicitacoes.pendencias');
             Route::post('solicitacoes/{solicitacao}/pendencias/{pendency}/responder', [PendenciaRespostaController::class, 'responder'])->name('solicitacoes.pendencias.responder');
+
+            // Histórico unificado de comunicações do processo (HU-096) — rota com
+            // {solicitacao} DEPOIS das literais. Fonte ÚNICA: o ledger
+            // communications (todos os canais/tipos), gated pela policy view
+            // (dono/representado). LGPD: o portal NÃO expõe o error_message
+            // interno do canal (diagnóstico fica só na gestão). Auditada (RN-002).
+            Route::get('solicitacoes/{solicitacao}/comunicacoes', [ComunicacaoHistoricoController::class, 'portal'])->name('solicitacoes.comunicacoes');
 
             // Central de notificações in-app (HU-090) — canal database nativo do
             // próprio usuário (escopo do dono). Listar + marcar uma + marcar

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ComunicacaoHistoricoController;
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\AnalysisRecordController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
@@ -239,6 +240,15 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('/', [ProcessoController::class, 'index'])->name('index');
             Route::get('fila', [ProcessoController::class, 'fila'])->name('fila');
             Route::get('busca', ProcessoBuscaController::class)->name('busca');
+
+            // Histórico unificado de comunicações do processo (HU-096): fonte
+            // ÚNICA (ledger communications, todos os canais/tipos), REUSO da
+            // permissão consultar-solicitacoes (a comunicação é parte da
+            // solicitação — sem permissão nova). A gestão VÊ o error_message do
+            // canal (diagnóstico interno). Auditada (RN-002). Rota com dois
+            // segmentos — não colide com o {viabilityRequest} show.
+            Route::get('{viabilityRequest}/comunicacoes', [ComunicacaoHistoricoController::class, 'gestao'])->name('comunicacoes');
+
             Route::get('{viabilityRequest}', [ProcessoController::class, 'show'])->name('show');
         });
 
