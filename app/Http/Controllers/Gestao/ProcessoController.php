@@ -141,6 +141,13 @@ class ProcessoController extends Controller
                 'reason' => $transicao->reason,
                 'em' => $transicao->created_at?->toIso8601String(),
             ])->all(),
+            // Geometria do imóvel para o mini-mapa Leaflet (RN-006): o polígono
+            // real do processo, exposto SÓ no detalhe (não infla a lista/fila). A
+            // zona/via oficiais (Quadro 10) seguem pendentes na SEDUR — o mapa
+            // mostra o que existe e degrada honestamente quando não há polígono.
+            'geo' => [
+                'poligono' => $viabilityRequest->property_polygon_geojson,
+            ],
         ]);
     }
 
