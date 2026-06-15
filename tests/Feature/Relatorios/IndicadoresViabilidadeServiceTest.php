@@ -3,11 +3,13 @@
 namespace Tests\Feature\Relatorios;
 
 use App\Enums\AnalysisCategory;
+use App\Enums\DecisionOutcome;
 use App\Enums\RiscoMunicipal;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cnae;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\IndicadoresViabilidadeService;
 use App\Services\Relatorios\ReportFilters;
@@ -44,6 +46,22 @@ class IndicadoresViabilidadeServiceTest extends TestCase
             'status' => ViabilityRequestStatus::Protocolada,
             'protocoled_at' => now(),
         ], $attrs));
+    }
+
+    /**
+     * Decisão vinculante cravada (HU-127/128). Cada decisão nasce sobre a sua
+     * própria solicitação protocolada para não colidir no protocolo/TVL únicos.
+     */
+    private function decisao(DecisionOutcome $outcome, string $decididaEm): void
+    {
+        $solicitacao = $this->protocolada(['protocoled_at' => Carbon::parse($decididaEm)->subDays(2)]);
+
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $solicitacao->id,
+            'outcome' => $outcome,
+            'tvl_product_number' => null,
+            'decided_at' => Carbon::parse($decididaEm),
+        ]);
     }
 
     #[Test]
@@ -137,9 +155,9 @@ class IndicadoresViabilidadeServiceTest extends TestCase
     {
         // HU-126: preferir o risco MUNICIPAL real (Decreto 32.636/2020) pelo CNAE
         // principal; sem classificação, cair na categoria derivada da Fase 10; sem
-        // ela, rotular 'nao_classificado'. Cada linha declara a fonte com honestidade
-        // de três níveis: real (classificação do Decreto) | derivada (categoria da
-        // análise) | indefinida (sem nenhuma base — nunca um nível inventado).
+        // ela, rotular 'nao_classificado'. Cada linha declara a fonte: 'real' (nível
+        // oficial do Decreto) vs 'derivada' (inferido da categoria ou ausente, jamais
+        // da tabela oficial) — nunca um nível inventado.
         $versao = RuleVersion::factory()->create();
 
         $cnaeAlto = Cnae::factory()->create(['code' => '1111111']);
@@ -165,6 +183,48 @@ class IndicadoresViabilidadeServiceTest extends TestCase
         $this->assertSame(1, $porNivel['expresso']['total']);
         $this->assertSame('derivada', $porNivel['expresso']['fonte']);
         $this->assertSame(1, $porNivel['nao_classificado']['total']);
-        $this->assertSame('indefinida', $porNivel['nao_classificado']['fonte']);
+        $this->assertSame('derivada', $porNivel['nao_classificado']['fonte']);
+    }
+
+    #[Test]
+    public function taxa_de_deferimento_e_indeferimento_sao_razoes_reais_no_periodo(): void
+    {
+        // HU-127/128: 3 deferidas + 1 indeferida decididas no período → 75.0% e
+        // 25.0%. Cada uma é sua própria razão sobre as decididas (não somam 100
+        // artificialmente — em_analise não vira decisão).
+        $this->decisao(DecisionOutcome::Deferida, '2026-03-05');
+        $this->decisao(DecisionOutcome::Deferida, '2026-03-06');
+        $this->decisao(DecisionOutcome::Deferida, '2026-03-07');
+        $this->decisao(DecisionOutcome::Indeferida, '2026-03-08');
+        // Decidida FORA do período (não conta).
+        $this->decisao(DecisionOutcome::Deferida, '2026-04-10');
+
+        $filtros = ReportFilters::fromArray(['data_de' => '2026-03-01', 'data_ate' => '2026-03-31']);
+
+        $deferimento = $this->service()->taxaDeferimento($filtros);
+        $this->assertSame(3, $deferimento['deferidas']);
+        $this->assertSame(4, $deferimento['total']);
+        $this->assertSame(75.0, $deferimento['taxa']);
+
+        $indeferimento = $this->service()->taxaIndeferimento($filtros);
+        $this->assertSame(1, $indeferimento['indeferidas']);
+        $this->assertSame(4, $indeferimento['total']);
+        $this->assertSame(25.0, $indeferimento['taxa']);
+    }
+
+    #[Test]
+    public function taxa_sem_decisoes_no_periodo_e_null_nunca_zero_fabricado(): void
+    {
+        // CA-03 anti-fachada: período sem nenhuma decisão → taxa null ("sem
+        // decisões no período"), jamais um 0% que finge ter medido algo.
+        $this->decisao(DecisionOutcome::Deferida, '2026-03-05');
+
+        $filtros = ReportFilters::fromArray(['data_de' => '2026-06-01', 'data_ate' => '2026-06-30']);
+
+        $deferimento = $this->service()->taxaDeferimento($filtros);
+        $this->assertSame(0, $deferimento['total']);
+        $this->assertNull($deferimento['taxa']);
+
+        $this->assertNull($this->service()->taxaIndeferimento($filtros)['taxa']);
     }
 }
