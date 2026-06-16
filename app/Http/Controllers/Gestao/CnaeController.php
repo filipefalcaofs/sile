@@ -6,11 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\StoreCnaeRequest;
 use App\Http\Requests\Gestao\UpdateCnaeRequest;
 use App\Models\Cnae;
+use App\Services\Relatorios\Export\ReportExporter;
+use App\Services\Relatorios\Export\Sources\CnaesReportSource;
+use App\Services\Relatorios\ReportFilters;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class CnaeController extends Controller
 {
@@ -28,8 +32,19 @@ class CnaeController extends Controller
      * server-driven (Fase 2.4). Paginação parametrizada — nenhum valor
      * de negócio hardcoded.
      */
-    public function index(Request $request): Response
+    public function index(Request $request): Response|HttpResponse
     {
+        // HU-131/RN-009: com ?formato=, exporta o conjunto filtrado da tela pelo
+        // contrato único — sem rota nova, sem reimplementar export.
+        if (in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
+            return app(ReportExporter::class)->export(
+                app(CnaesReportSource::class),
+                ReportFilters::fromArray($request->only(['search', 'active', 'sort', 'direction'])),
+                $request->string('formato')->lower()->toString(),
+                $request->user(),
+            );
+        }
+
         $sort = $request->string('sort')->toString();
         $sort = in_array($sort, self::SORTABLE_COLUMNS, true) ? $sort : 'code';
 
