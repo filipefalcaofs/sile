@@ -14,6 +14,7 @@ use App\Http\Controllers\Gestao\DocumentRequirementController;
 use App\Http\Controllers\Gestao\EmailLogController;
 use App\Http\Controllers\Gestao\ExportacaoController;
 use App\Http\Controllers\Gestao\GeocodeController;
+use App\Http\Controllers\Gestao\HolidayController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
 use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\LouosController;
@@ -280,6 +281,21 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [StandardTextController::class, 'store'])->name('store');
             Route::put('{standardText}', [StandardTextController::class, 'update'])->name('update');
             Route::put('{standardText}/ativacao', [StandardTextController::class, 'toggleActivation'])->name('ativacao.update');
+        });
+
+        // Calendário de feriados (HU-137): dado administrável que o
+        // BusinessDeadlineCalculator desconta no cálculo de dias úteis (HU-129). O
+        // CRUD reusa manter-parametros (como setores/textos-padrão — sem permissão
+        // nova; decisão registrada no SUMMARY). A data é única; NÃO há destroy —
+        // inativar (ativacao) preserva o histórico/auditoria (RN-004). Toda
+        // alteração é auditada (RN-002 via HasAuditoria); o 403 é auditado no ponto
+        // único (bootstrap/app.php). As rotas estáticas (index/store) vêm ANTES do
+        // wildcard {holiday}.
+        Route::middleware('permission:manter-parametros')->prefix('feriados')->name('feriados.')->group(function () {
+            Route::get('/', [HolidayController::class, 'index'])->name('index');
+            Route::post('/', [HolidayController::class, 'store'])->name('store');
+            Route::put('{holiday}', [HolidayController::class, 'update'])->name('update');
+            Route::put('{holiday}/ativacao', [HolidayController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
         // Registro em contingência (HU-148): canal de operador na retaguarda e o
