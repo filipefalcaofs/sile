@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AccessLog;
+use App\Models\ExportFile;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -14,6 +15,16 @@ Artisan::command('inspire', function () {
 // exige cache compartilhado — Redis em produção). Padrão herdado por
 // HU-134 (prazo BAP) e HU-147 (escalonamento por SLA).
 Schedule::command('model:prune', ['--model' => [AccessLog::class]])
+    ->daily()
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// HU-131 (EP15): retenção dos arquivos de exportação. Poda diária dos ExportFiles
+// além de relatorios.export.retencao_dias (Prunable: pruning() remove o arquivo do
+// Storage, sem órfão) — o disco não cresce sem limite. Entrada SEPARADA da de
+// access_logs (mutex distinto pelo --model, sem colisão) e idempotente/segura em
+// multi-instância (withoutOverlapping/onOneServer), no mesmo padrão da Fase 3.1.
+Schedule::command('model:prune', ['--model' => [ExportFile::class]])
     ->daily()
     ->withoutOverlapping()
     ->onOneServer();
