@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Relatorios;
 
+use App\Models\AccessLog;
 use App\Models\Cnae;
 use App\Models\Parameter;
 use App\Models\User;
@@ -186,5 +187,66 @@ class RetrofitListagensTest extends TestCase
             ->get('/gestao/perfis?formato=xlsx')
             ->assertOk();
         $this->assertStringContainsString('spreadsheetml', (string) $xlsx->headers->get('content-type'));
+    }
+
+    // ----------------------------------------------------------------------
+    // Task 3 — Histórico de acessos por usuário
+    // ----------------------------------------------------------------------
+
+    public function test_export_csv_de_acessos_traz_so_os_acessos_do_usuario_rn005(): void
+    {
+        $alvo = User::factory()->create();
+        $outro = User::factory()->create();
+
+        AccessLog::factory()->create([
+            'user_id' => $alvo->id,
+            'email' => $alvo->email,
+            'event' => 'login',
+            'ip_address' => '10.0.0.7',
+        ]);
+
+        AccessLog::factory()->create([
+            'user_id' => $outro->id,
+            'email' => $outro->email,
+            'event' => 'login',
+            'ip_address' => '10.9.9.9',
+        ]);
+
+        $response = $this->actingAs($this->admin(), 'gestao')
+            ->get("/gestao/acessos/{$alvo->id}?formato=csv")
+            ->assertOk();
+
+        $this->assertStringContainsString('csv', strtolower((string) $response->headers->get('content-type')));
+
+        $conteudo = $response->streamedContent();
+
+        // RN-005: o `user` viaja no bag; só os acessos daquele usuário entram.
+        $this->assertStringContainsString('10.0.0.7', $conteudo);
+        $this->assertStringNotContainsString('10.9.9.9', $conteudo);
+    }
+
+    public function test_export_de_acessos_e_auditado_rn008(): void
+    {
+        $alvo = User::factory()->create();
+
+        AccessLog::factory()->create([
+            'user_id' => $alvo->id,
+            'email' => $alvo->email,
+        ]);
+
+        $admin = $this->admin();
+
+        $this->actingAs($admin, 'gestao')
+            ->get("/gestao/acessos/{$alvo->id}?formato=csv")
+            ->assertOk()
+            ->streamedContent();
+
+        // RN-008: o contrato único audita toda exportação (tela/filtros/formato/volume).
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'acessos',
+            'event' => 'exporta-acessos-usuario-csv',
+            'result' => 'sucesso',
+            'causer_id' => $admin->id,
+        ]);
     }
 }
