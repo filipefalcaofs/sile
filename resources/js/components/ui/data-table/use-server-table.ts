@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { SortState } from './types';
 
 interface ServerTableState {
@@ -7,6 +7,34 @@ interface ServerTableState {
     sort: SortState;
     perPage: number;
     filters: Record<string, string>;
+}
+
+/** Snapshot de query enviado na navegação e reusado na exportação (?formato=). */
+export type ServerTableParams = Record<string, string | number>;
+
+/**
+ * Monta os parâmetros da listagem a partir do estado: ordenação, itens por
+ * página, busca (quando preenchida) e filtros não-vazios. Fonte única usada
+ * tanto pela navegação (`visit`) quanto pelo `currentParams` da exportação.
+ */
+function buildParams(state: ServerTableState): ServerTableParams {
+    const params: ServerTableParams = {
+        sort: state.sort.column,
+        direction: state.sort.direction,
+        per_page: state.perPage,
+    };
+
+    if (state.search.trim() !== '') {
+        params.search = state.search;
+    }
+
+    for (const [key, value] of Object.entries(state.filters)) {
+        if (value !== '') {
+            params[key] = value;
+        }
+    }
+
+    return params;
 }
 
 interface UseServerTableOptions {
@@ -46,21 +74,7 @@ export function useServerTable({
 
     const visit = useCallback(
         (state: ServerTableState) => {
-            const params: Record<string, string | number> = {
-                sort: state.sort.column,
-                direction: state.sort.direction,
-                per_page: state.perPage,
-            };
-
-            if (state.search.trim() !== '') {
-                params.search = state.search;
-            }
-
-            for (const [key, value] of Object.entries(state.filters)) {
-                if (value !== '') {
-                    params[key] = value;
-                }
-            }
+            const params = buildParams(state);
 
             router.get(url, params, {
                 preserveState: true,
@@ -116,5 +130,12 @@ export function useServerTable({
         [visit],
     );
 
-    return { search, setSearch, sort, setSort, perPage, setPerPage, filters, setFilter, processing };
+    // Mesmo snapshot enviado na navegação — exposto para o ExportMenu montar a
+    // URL de exportação (?formato=...) preservando os filtros atuais (RN-004).
+    const currentParams = useMemo(
+        () => buildParams({ search, sort, perPage, filters }),
+        [search, sort, perPage, filters],
+    );
+
+    return { search, setSearch, sort, setSort, perPage, setPerPage, filters, setFilter, processing, currentParams };
 }
