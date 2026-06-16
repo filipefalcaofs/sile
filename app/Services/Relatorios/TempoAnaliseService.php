@@ -4,8 +4,10 @@ namespace App\Services\Relatorios;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityDecision;
+use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestTransition;
 use App\Services\Expresso\BusinessDeadlineCalculator;
+use App\Services\Relatorios\Export\Sources\EscritorioVirtualReportSource;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -151,6 +153,28 @@ class TempoAnaliseService
     }
 
     /**
+     * Builder das SEDES de escritório virtual (SAPS, RN-006): recorte
+     * is_virtual_office=true + filtros comuns por when(). Retornar o Builder
+     * permite o {@see EscritorioVirtualReportSource}
+     * reusar EXATAMENTE o mesmo recorte (RN-005). Eager-load de company/decisão
+     * para o mapRow do export (empresa/CNPJ/quando/resultado).
+     *
+     * @return Builder<ViabilityRequest>
+     */
+    public function sedesEscritorioVirtual(ReportFilters $f): Builder
+    {
+        return ViabilityRequest::query()
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision'])
+            ->where('viability_requests.is_virtual_office', true)
+            ->when($f->from(), fn (Builder $q, $from): Builder => $q->where('viability_requests.protocoled_at', '>=', $from))
+            ->when($f->to(), fn (Builder $q, $to): Builder => $q->where('viability_requests.protocoled_at', '<=', $to))
+            ->when($f->setorId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.sector_id', $id))
+            ->when($f->analistaId(), fn (Builder $q, int $id): Builder => $q->where('viability_requests.assigned_user_id', $id))
+            ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike('viability_requests.address_neighborhood', "%{$b}%", caseSensitive: false))
+            ->orderByDesc('viability_requests.id');
+    }
+
+    /**
      * Minutos ÚTEIS por etapa de UM processo, a partir do seu created_at e das
      * transições ordenadas (asc por instante). Cada par (instante anterior →
      * instante da transição) é o tempo no status DEIXADO (from_status), convertido
@@ -179,6 +203,28 @@ class TempoAnaliseService
         }
 
         return $minutos;
+    }
+
+    /**
+     * Minutos úteis por etapa de UM processo já carregado (com `transitions`),
+     * para o detalhamento por processo do export. Ordena as transições asc (a
+     * relação vem `latest()`) e delega ao helper puro {@see minutosPorEtapa},
+     * reusando o MESMO pareamento da agregação.
+     *
+     * @return array<string, int>
+     */
+    public function minutosPorEtapaDoProcesso(ViabilityRequest $request): array
+    {
+        $transicoes = $request->transitions
+            ->sortBy([['created_at', 'asc'], ['id', 'asc']])
+            ->map(fn (ViabilityRequestTransition $t): array => [
+                'from' => $t->from_status?->value,
+                'at' => $t->created_at,
+            ])
+            ->values()
+            ->all();
+
+        return $this->minutosPorEtapa($request->created_at, $transicoes);
     }
 
     /**
