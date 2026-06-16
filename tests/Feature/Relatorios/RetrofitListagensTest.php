@@ -6,6 +6,7 @@ use App\Models\Cnae;
 use App\Models\Parameter;
 use App\Models\User;
 use App\Services\Relatorios\Export\Sources\CnaesReportSource;
+use App\Services\Relatorios\Export\Sources\UsuariosReportSource;
 use App\Services\Relatorios\ReportFilters;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -114,5 +115,76 @@ class RetrofitListagensTest extends TestCase
         // RN-009: valor sensível nunca sai em claro.
         $this->assertStringNotContainsString('SEGREDO-XYZ-123', $conteudo);
         $this->assertStringContainsString('[sensível]', $conteudo);
+    }
+
+    // ----------------------------------------------------------------------
+    // Task 2 — Usuários (cpf_masked) e Perfis
+    // ----------------------------------------------------------------------
+
+    public function test_export_csv_de_usuarios_mascara_cpf_por_default_rn007(): void
+    {
+        User::factory()->analista()->create(['name' => 'Fulano Pii Alvo', 'cpf' => '52998224725']);
+
+        $response = $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/usuarios?formato=csv')
+            ->assertOk();
+
+        $this->assertStringContainsString('csv', strtolower((string) $response->headers->get('content-type')));
+
+        $conteudo = $response->streamedContent();
+
+        $this->assertStringContainsString('Fulano Pii Alvo', $conteudo);
+        // RN-007: CPF mascarado por default; o número cru nunca sai sem permissão de PII.
+        $this->assertStringContainsString('***.***.***-25', $conteudo);
+        $this->assertStringNotContainsString('52998224725', $conteudo);
+    }
+
+    public function test_usuarios_report_source_com_pii_no_bag_emite_cpf_completo(): void
+    {
+        User::factory()->analista()->create(['name' => 'Fulano Pii Alvo', 'cpf' => '52998224725']);
+
+        // O gate de PII viaja no BAG (não no construtor): liberado → CPF completo.
+        $definition = app(UsuariosReportSource::class)
+            ->definition(ReportFilters::fromArray(['pii' => '1', 'tab' => 'gestao']));
+
+        $celulas = $definition->builder()->get()
+            ->flatMap(fn ($user) => $definition->mapRow($user))
+            ->all();
+
+        $this->assertContains('52998224725', $celulas);
+    }
+
+    public function test_export_csv_de_usuarios_reflete_busca_rn005(): void
+    {
+        User::factory()->analista()->create(['name' => 'Mariana Busca Presente']);
+        User::factory()->analista()->create(['name' => 'Carlos Ausente Filtro']);
+
+        $response = $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/usuarios?search=Mariana&formato=csv')
+            ->assertOk();
+
+        $conteudo = $response->streamedContent();
+
+        // RN-005: só o conjunto filtrado pela busca entra no arquivo.
+        $this->assertStringContainsString('Mariana Busca Presente', $conteudo);
+        $this->assertStringNotContainsString('Carlos Ausente Filtro', $conteudo);
+    }
+
+    public function test_export_de_perfis_traz_os_perfis_e_os_formatos(): void
+    {
+        $csv = $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/perfis?formato=csv')
+            ->assertOk();
+
+        $this->assertStringContainsString('csv', strtolower((string) $csv->headers->get('content-type')));
+
+        $conteudo = $csv->streamedContent();
+        $this->assertStringContainsString('Perfil', $conteudo);
+        $this->assertStringContainsString('administrador', $conteudo);
+
+        $xlsx = $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/perfis?formato=xlsx')
+            ->assertOk();
+        $this->assertStringContainsString('spreadsheetml', (string) $xlsx->headers->get('content-type'));
     }
 }
