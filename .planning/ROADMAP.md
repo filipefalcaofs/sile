@@ -184,7 +184,7 @@ Plans:
 - [x] 04-07-PLAN.md — HU-030/036/037 UI: mapa Leaflet reutilizável + página de consulta territorial (wave 5) ✓ 2026-06-13
 - [x] 04-08-PLAN.md — Fechamento: verificação integral + evidência real (Nominatim + consulta espacial sobre dado oficial) (wave 6) ✓ 2026-06-13
 
-Nota: a geocodificação (Nominatim/OSM) e a lógica de identificação operam sobre camadas carregadas de dados oficiais da LOUOS; a base GIS municipal oficial é o **SIGIS** com migração **S69 → CA 2000** (reunião SEDUR 2026-06-11) — a integração viva é a HU-107 (Fase 13). Polígono de 4 pontos validado no formulário Regin (HU-062).
+Nota: a geocodificação (Nominatim/OSM) e a lógica de identificação operam sobre camadas carregadas de dados oficiais da LOUOS; a base GIS municipal oficial é o **GeoServer da SEDUR sobre Oracle Spatial** (`https://geoserver.sedur.salvador.ba.gov.br`, WFS vetorial + WMS tiles; antes referida como "SIGIS/CA 2000/S69" — 2026-06-15) — a integração viva é a HU-107 (Fase 13), via importador WFS que alimenta as `geo_layers` versionadas; acesso externo bloqueado pelo firewall da PMS (pendente liberação de rede NTI). Polígono de 4 pontos validado no formulário Regin (HU-062).
 
 **Escopo honesto da fase (sem fachada — confirmado pela pesquisa 2026-06-13):** entregáveis com dado público REAL do GeoSalvador — **bairro** (HU-034), **eixo viário** (HU-032) e **restrições ambientais** (HU-035). **BLOQUEADAS pendente SEDUR** (sem fonte vetorial pública): **zona urbanística LOUOS** (HU-031, só PDF) e **lote cadastral** (HU-033, SEFAZ restrito) — e por consequência **HU-037 RN-005** (divergência por inscrição imobiliária). A arquitetura (camadas versionadas, TerritoryService, sobreposição, mapa) entra completa e genérica; as camadas bloqueadas são modeladas como `pendente_fonte` (feature_count 0) e comunicadas na UI — nunca polígono inventado. Quando a SEDUR entregar a base, a carga muda, a lógica não.
 
@@ -444,7 +444,7 @@ Plans:
 **Success Criteria** (o que deve ser VERDADE):
   1. Solicitações entram via **Regin** (formulário embed + webservice) com **recepção durável** (fila com ack, dead-letter e replay — HU-103 RN-009) e endpoint público protegido (token/rate limit/anti-bot — RN-010); protocolo **BAP** vinculado ao processo (HU-133) e parecer devolvido ao integrador — validado em homologação real.
   2. Deferimento de viabilidade é enviado à SEFAZ municipal via API com evidência de chamada real em homologação.
-  3. Receita Federal, Cadastro Imobiliário, **SIGIS/CA 2000**, Protocolo e Portal do Contribuinte integrados atrás de contratos, cada um validado contra ambiente real.
+  3. Receita Federal, Cadastro Imobiliário, **GIS oficial da SEDUR — Oracle Spatial via GeoServer (WFS/WMS)**, Protocolo e Portal do Contribuinte integrados atrás de contratos, cada um validado contra ambiente real.
   4. Dados do legado **SAPS/Simplifica** migrados/em convivência conforme estratégia confirmada (HU-111).
   5. Painel de saúde das integrações operacional: status real por serviço, fila de retentativas, reprocessamento idempotente e alerta de degradação (HU-146).
 **Plans**: TBD
@@ -453,7 +453,7 @@ Nota (recursos do framework — levantamento 2026-06-12): adaptadores herdam ret
 
 **Bloqueios conhecidos da fase** (detalhes em `docs/ANALISE-HUs-REUNIAO-SEDUR.md` seções 5 e 7.8):
 - Contrato **Regin**↔SAPS (webservice em produção; spec não pública) — aguardando documentação (HU-103, HU-104, HU-133).
-- Base **SIGIS / CA 2000** (substituir S69) — aguardando acesso (HU-107).
+- Base GIS oficial: **Oracle Spatial exposto pelo GeoServer da SEDUR** (`https://geoserver.sedur.salvador.ba.gov.br`), protocolos **WFS** (vetorial → GeoJSON, alimenta a camada `zona` em `geo_layers` para o `ST_Contains` do `TerritoryService` → destrava HU-031 e o Quadro 10/Fase 5) e **WMS** (tiles, overlay de zoneamento no mapa Leaflet). Substitui a referência genérica anterior "SIGIS / CA 2000 / S69". **Consumo via OGC (WFS/WMS), sem driver Oracle nem acoplamento ao banco da SEDUR** — reusa o versionamento/auditoria do `GeoLayerService` (Fase 4) através de um `WfsGeoLayerImporter` a criar. **Acesso externo BLOQUEADO pela política de segurança da PMS** (firewall "Salvador Digital" barra IPs externos — verificado 2026-06-15): bloqueio RECLASSIFICADO de "fonte vetorial inexistente" para "fonte existe, acesso de rede restrito" → pendente liberação de rede para o IP do servidor do SILE + confirmação das camadas expostas (zoneamento LOUOS? lote? classificação viária Mapa 04?) e de credenciais (NTI/SEDUR). Quando liberado, muda a carga, não a lógica (HU-107, HU-031).
 - HU-110 (SEFAZ): **confirmada** — API existente via SIGVISA; **endpoint de envio de viabilidade e credenciais SenhaWeb pendentes**.
 - HU-111 (migração legado SAPS): **pendente** export parametrizações e estratégia com SEDUR.
 - Acesso a ambiente de homologação (Regin/SEFAZ/GIS) — solicitado.
@@ -511,7 +511,7 @@ Plans:
 | Endpoint e credenciais SEFAZ (envio de deferimento) | HU-110 | 13 | API confirmada; contrato e credenciais pendentes |
 | Estratégia de migração/convivência legado SAPS/Simplifica | HU-111 | 13 | Aguardando export parametrizações + definição |
 | Contrato Regin/webservice (spec não pública) | HU-103, HU-104, HU-133 | 13 | Aguardando documentação JUCEB/SEDUR |
-| Base SIGIS / CA 2000 (substituir S69) | HU-107, EP04 | 4, 13 | Aguardando acesso |
+| Base GIS oficial — Oracle Spatial via **GeoServer SEDUR** (WFS/WMS; ex-"SIGIS/CA 2000/S69") | HU-107, HU-031, EP04 | 4, 13 | **Fonte identificada (2026-06-15)**; acesso externo bloqueado (firewall PMS) — aguardando liberação de rede p/ IP do SILE + confirmação de camadas/credenciais (NTI/SEDUR) |
 | Regra semi-expresso vs gatilho CNAE | HU-049, HU-135 | 6, 10 | Aguardando lista completa gatilhos |
 | Formato PDF/assinatura TVL backoffice | HU-132 | 10 | Aguardando Anderson |
 | Vistoria de viabilidade (aba do SAPS; vagas vistoria) | HU-135, HU-082 | 10 | Aguardando confirmação de escopo (pergunta 10) |
