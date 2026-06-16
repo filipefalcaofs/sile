@@ -251,6 +251,10 @@ return [
             'pdf' => ['paper' => 'a4', 'orientation' => 'portrait'],
         ],
         'expresso' => ['janela_dias' => 30],
+        // Janela (dias) dos KPIs do painel executivo (HU-122). Constante TÉCNICA
+        // fora do catálogo HU-014 (precedente [02-02]): recorte de leitura do
+        // dashboard, ajustável sem deploy; não é valor de negócio do licenciamento.
+        'dashboard' => ['janela_dias' => 30],
         'cache_ttl_segundos' => 300,
         'job' => ['tries' => 3, 'timeout' => 300, 'backoff' => [30, 60, 120], 'fila' => 'default'],
         'tempo' => ['etapas' => []],
