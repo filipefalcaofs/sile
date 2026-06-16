@@ -12,6 +12,7 @@ use App\Http\Controllers\Gestao\ContingenciaController;
 use App\Http\Controllers\Gestao\DashboardController;
 use App\Http\Controllers\Gestao\DocumentRequirementController;
 use App\Http\Controllers\Gestao\EmailLogController;
+use App\Http\Controllers\Gestao\EmailServerController;
 use App\Http\Controllers\Gestao\ExportacaoController;
 use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\HolidayController;
@@ -254,6 +255,18 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [ViabilityServiceTypeController::class, 'store'])->name('store');
             Route::put('{serviceType}', [ViabilityServiceTypeController::class, 'update'])->name('update');
             Route::put('{serviceType}/ativacao', [ViabilityServiceTypeController::class, 'toggleActivation'])->name('ativacao.update');
+        });
+
+        // Servidores de e-mail administráveis (HU-014 / ConfigEmail): CRUD sob
+        // permissão própria. A senha é criptografada e nunca reexibida; o teste
+        // de conexão envia um e-mail real; o servidor padrão ativo controla o
+        // envio via MailConfigServiceProvider.
+        Route::middleware('permission:manter-config-email')->prefix('config-email')->name('config-email.')->group(function () {
+            Route::get('/', [EmailServerController::class, 'index'])->name('index');
+            Route::post('/', [EmailServerController::class, 'store'])->name('store');
+            Route::put('{emailServer}', [EmailServerController::class, 'update'])->name('update');
+            Route::delete('{emailServer}', [EmailServerController::class, 'destroy'])->name('destroy');
+            Route::post('{emailServer}/testar', [EmailServerController::class, 'test'])->name('test');
         });
 
         // Setores da SEDUR (HU-138): a "caixa de análise" da distribuição

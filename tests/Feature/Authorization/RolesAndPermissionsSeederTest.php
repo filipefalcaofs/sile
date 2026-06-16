@@ -320,7 +320,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(29, Permission::query()->count());
+        $this->assertSame(30, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void

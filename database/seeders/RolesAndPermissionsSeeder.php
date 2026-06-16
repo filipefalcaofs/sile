@@ -44,6 +44,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'consultar-auditoria',
             'monitorar-lgpd',
             'gerenciar-alertas-abuso',
+            'manter-config-email',
             'consultar-relatorios',
             'relatorios.produtividade.nominal',
         ];
@@ -118,6 +119,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'consultar-auditoria',
                 'monitorar-lgpd',
                 'gerenciar-alertas-abuso',
+                'manter-config-email',
                 'consultar-relatorios',
                 'relatorios.produtividade.nominal',
             ]);
