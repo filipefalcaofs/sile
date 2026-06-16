@@ -45,14 +45,15 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
 
         $this->assertSame(4, Role::query()->count());
-        // 27 permissões (HU-013): as 19 base + as 5 da análise técnica
+        // 29 permissões (HU-013): as 19 base + as 5 da análise técnica
         // (analisar-processos, distribuir-processos, emitir-tvl,
         // encaminhar-malha-fina, manter-setores) + as 3 de auditoria e
-        // compliance (consultar-auditoria, monitorar-lgpd, gerenciar-alertas-abuso).
-        $this->assertSame(27, Permission::query()->count());
+        // compliance (consultar-auditoria, monitorar-lgpd, gerenciar-alertas-abuso)
+        // + as 2 de relatórios (consultar-relatorios, relatorios.produtividade.nominal).
+        $this->assertSame(29, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(85, Parameter::query()->count());
+        $this->assertSame(90, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -312,7 +313,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(85, Parameter::query()->count());
+        $this->assertSame(90, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
