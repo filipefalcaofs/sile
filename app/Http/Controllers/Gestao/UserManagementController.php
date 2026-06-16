@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\ToggleUserActivationRequest;
 use App\Http\Requests\Gestao\UpdateUserRoleRequest;
 use App\Models\User;
+use App\Services\Relatorios\Export\ReportExporter;
+use App\Services\Relatorios\Export\Sources\UsuariosReportSource;
+use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +16,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class UserManagementController extends Controller
 {
@@ -24,8 +28,21 @@ class UserManagementController extends Controller
      * perfis customizados da HU-013) e usuários do portal (os demais).
      * CPF nunca exposto em claro (LGPD) — apenas os dígitos verificadores.
      */
-    public function index(Request $request): Response
+    public function index(Request $request): Response|HttpResponse
     {
+        // HU-131/RN-009: com ?formato=, exporta o conjunto filtrado (aba + busca)
+        // pelo contrato único — sem rota nova. RN-007: o CPF sai mascarado; o gate
+        // de PII NÃO é setado (não há permissão de PII no projeto — pendência DPO),
+        // então o número completo nunca é emitido.
+        if (in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
+            return app(ReportExporter::class)->export(
+                app(UsuariosReportSource::class),
+                ReportFilters::fromArray($request->only(['search', 'tab'])),
+                $request->string('formato')->lower()->toString(),
+                $request->user(),
+            );
+        }
+
         $tab = $request->string('tab')->toString();
 
         if (! in_array($tab, self::TABS, true)) {
