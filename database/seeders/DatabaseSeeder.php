@@ -67,6 +67,12 @@ class DatabaseSeeder extends Seeder
             // navegáveis. Roda em SQLite e pgsql. Idempotente por marcadores
             // próprios (não perturba os exemplos do cidadão das fases anteriores).
             AuditoriaDevSeeder::class,
+            // Relatórios e indicadores (EP15) — SÓ dev (gate `local`, fora do
+            // testing): massa em estados variados (decisões/transições/quedas)
+            // pelas factories do fluxo real, para o dashboard e as telas
+            // calcularem sobre dado REAL (nunca número cravado). Idempotente por
+            // requerente dedicado; em produção é no-op (degradação honesta).
+            RelatoriosDevSeeder::class,
         ]);
     }
 }
