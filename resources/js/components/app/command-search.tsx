@@ -20,14 +20,19 @@ interface DestinoComando {
 }
 
 /**
- * Destinos das superfícies de auditoria/compliance (HU-098/100/102/149) — as
- * mesmas da sidebar. Cada um exige a permissão correspondente: quem não tem,
- * não vê o item (gating espelhando o do app-sidebar).
+ * Destinos das superfícies de gestão (auditoria/compliance HU-098/100/102/149 e
+ * relatórios do EP15) — os mesmos da sidebar. Cada um exige a permissão
+ * correspondente: quem não tem, não vê o item (gating espelhando o do layout).
  */
 const DESTINOS: DestinoComando[] = [
     { label: 'Trilha de auditoria', grupo: 'Auditoria e compliance', href: '/gestao/auditoria', permissao: 'consultar-auditoria' },
     { label: 'Conformidade LGPD', grupo: 'Auditoria e compliance', href: '/gestao/lgpd', permissao: 'monitorar-lgpd' },
     { label: 'Alertas de abuso', grupo: 'Auditoria e compliance', href: '/gestao/abuso', permissao: 'gerenciar-alertas-abuso' },
+    { label: 'Indicadores de viabilidade', grupo: 'Relatórios', href: '/gestao/relatorios/indicadores', permissao: 'consultar-relatorios' },
+    { label: 'Tempo de análise', grupo: 'Relatórios', href: '/gestao/relatorios/tempo', permissao: 'consultar-relatorios' },
+    { label: 'Produtividade', grupo: 'Relatórios', href: '/gestao/relatorios/produtividade', permissao: 'consultar-relatorios' },
+    { label: 'Quedas do expresso', grupo: 'Relatórios', href: '/gestao/relatorios/quedas', permissao: 'consultar-relatorios' },
+    { label: 'Feriados', grupo: 'Relatórios', href: '/gestao/feriados', permissao: 'manter-parametros' },
 ];
 
 /**
