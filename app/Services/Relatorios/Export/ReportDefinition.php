@@ -20,6 +20,7 @@ final readonly class ReportDefinition
      * @param  Closure(): Builder<*>  $builder  Fábrica do Builder filtrado (RN-005).
      * @param  Closure(mixed): array<int, scalar|null>  $mapRow  Mapeia um model para a linha exportada.
      * @param  array<string, scalar>  $filtrosAplicados  Filtros preenchidos (rodapé do PDF + auditoria).
+     * @param  int|null  $maxRows  Teto técnico de linhas emitidas (guarda de volume); null = sem teto. Honrado por TODO driver (CSV/XLSX/PDF), no síncrono e no assíncrono — a contagem real (builder()->count()) é preservada para a decisão de limiar.
      */
     public function __construct(
         public string $titulo,
@@ -31,6 +32,7 @@ final readonly class ReportDefinition
         public string $event = 'exporta',
         public bool $personalData = false,
         public string $arquivoBase = 'relatorio',
+        public ?int $maxRows = null,
     ) {}
 
     /**

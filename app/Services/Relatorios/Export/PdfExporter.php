@@ -44,7 +44,13 @@ class PdfExporter implements ReportFormatExporter
      */
     public function dados(ReportDefinition $definition): array
     {
-        $linhas = $definition->builder()->get()
+        $builder = $definition->builder();
+
+        if ($definition->maxRows !== null) {
+            $builder->limit($definition->maxRows);
+        }
+
+        $linhas = $builder->get()
             ->map(fn ($model): array => $definition->mapRow($model))
             ->all();
 

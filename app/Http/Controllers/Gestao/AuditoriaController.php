@@ -7,25 +7,30 @@ use App\Http\Resources\ActivityResource;
 use App\Models\AccessLog;
 use App\Models\Activity;
 use App\Services\Auditoria\AuditTrailQueryService;
+use App\Services\Relatorios\Export\ReportExporter;
+use App\Services\Relatorios\Export\Sources\AcessosReportSource;
+use App\Services\Relatorios\Export\Sources\AtividadesReportSource;
+use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
  * Consulta e exportação da trilha de auditoria (HU-098/100/101) na retaguarda,
  * server-driven sobre a espinha activity_log (espelha o ProcessoController). O
  * index roteia a fonte (atividade/alteracoes/acessos), pagina no servidor e
- * AUDITA a própria consulta; com ?formato=csv delega ao export, que aplica os
- * MESMOS filtros em streaming (chunk) com guarda de volume técnica e também é
- * auditado. A consulta da trilha pode expor PII — por isso a meta-auditoria
- * marca personal_data (CA-02, relevante p/ LGPD: quem viu a trilha de quem).
- * Gated por consultar-auditoria; o 403 é auditado no ponto único
- * (bootstrap/app.php). Export pleno XLSX/PDF → HU-131/Fase 15 (bloqueado honesto).
+ * AUDITA a própria consulta; com ?formato= delega ao contrato único de
+ * exportação (HU-131/RN-009): {@see ReportExporter} aplica os MESMOS filtros
+ * (RN-005/RN-007), audita (meta-auditoria personal_data, CA-02) e escolhe o
+ * caminho síncrono/assíncrono. As fontes {@see AtividadesReportSource}/
+ * {@see AcessosReportSource} preservam colunas, nome de arquivo e a guarda de
+ * volume técnica do CSV histórico — agora também em XLSX/PDF pelo mesmo
+ * mecanismo. Gated por consultar-auditoria; o 403 é auditado no ponto único
+ * (bootstrap/app.php).
  */
 class AuditoriaController extends Controller
 {
@@ -45,12 +50,13 @@ class AuditoriaController extends Controller
     ) {}
 
     /**
-     * Consulta filtrável e paginada da trilha (HU-098/100). Com ?formato=csv,
-     * delega ao export (HU-101). A consulta é auditada — meta-auditoria CA-02.
+     * Consulta filtrável e paginada da trilha (HU-098/100). Com ?formato=
+     * (csv/xlsx/pdf), delega ao export (HU-101/131). A consulta é auditada —
+     * meta-auditoria CA-02.
      */
-    public function index(Request $request): Response|StreamedResponse
+    public function index(Request $request): Response|HttpResponse
     {
-        if ($request->string('formato')->lower()->toString() === 'csv') {
+        if (in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
             return $this->export($request);
         }
 
@@ -78,34 +84,42 @@ class AuditoriaController extends Controller
     }
 
     /**
-     * CSV do conjunto filtrado (HU-101), respeitando a fonte e os MESMOS filtros
-     * do index, em streaming (fputcsv + chunk) com guarda de volume técnica
-     * (auditoria.export.max_linhas). A exportação é auditada — meta-auditoria
-     * CA-02 (personal_data). Export pleno (XLSX/PDF) é HU-131/Fase 15.
+     * Exportação do conjunto filtrado (HU-101/131), respeitando a fonte e os
+     * MESMOS filtros do index. Delega ao contrato único (RN-009): o
+     * {@see ReportExporter} audita (meta-auditoria personal_data, CA-02), valida
+     * o formato e escolhe o caminho síncrono/assíncrono — preservando colunas,
+     * nome de arquivo e a guarda de volume (auditoria.export.max_linhas via
+     * maxRows). O `fonte` viaja no bag para o source certo reconstruir o recorte
+     * no assíncrono (RN-005/RN-007). Default csv preserva o comportamento atual.
      */
-    public function export(Request $request): StreamedResponse
+    public function export(Request $request): HttpResponse
     {
         $fonte = $this->fonte($request);
-        $filtros = $this->filtros($request);
-        $maxLinhas = (int) config('sile.auditoria.export.max_linhas', 50000);
 
-        $this->audit->log(
-            logName: 'auditoria',
-            event: 'exporta-trilha-csv',
-            description: 'Exportação CSV da trilha de auditoria',
-            properties: ['fonte' => $fonte, 'filtros' => $this->filtrosPreenchidos($filtros)],
-            personalData: true,
+        $source = $fonte === 'acessos'
+            ? app(AcessosReportSource::class)
+            : app(AtividadesReportSource::class);
+
+        $bag = $this->filtros($request) + ['fonte' => $fonte];
+
+        return app(ReportExporter::class)->export(
+            $source,
+            ReportFilters::fromArray($bag),
+            $this->formato($request),
+            $request->user(),
         );
+    }
 
-        if ($fonte === 'acessos') {
-            return $this->exportarAcessos($this->trilha->acessos($filtros), $maxLinhas);
-        }
+    /**
+     * Formato de exportação solicitado (?formato=csv|xlsx|pdf), normalizado;
+     * valor ausente ou desconhecido cai em csv — preserva o comportamento
+     * histórico do /export (sempre CSV).
+     */
+    private function formato(Request $request): string
+    {
+        $formato = $request->string('formato')->lower()->toString();
 
-        $query = $fonte === 'alteracoes'
-            ? $this->trilha->apenasAlteracoes($filtros)
-            : $this->trilha->filtered($filtros);
-
-        return $this->exportarAtividades($query, $maxLinhas);
+        return in_array($formato, ['csv', 'xlsx', 'pdf'], true) ? $formato : 'csv';
     }
 
     /**
@@ -133,90 +147,6 @@ class AuditoriaController extends Controller
             ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Activity $activity): array => (new ActivityResource($activity))->resolve());
-    }
-
-    /**
-     * @param  Builder<Activity>  $query
-     */
-    private function exportarAtividades(Builder $query, int $maxLinhas): StreamedResponse
-    {
-        $colunas = ['Data/hora', 'Fonte', 'Ação', 'Descrição', 'Usuário', 'Em nome de', 'Entidade', 'Entidade ID', 'Resultado', 'Versão de regras', 'IP', 'Canal'];
-
-        return response()->streamDownload(function () use ($query, $colunas, $maxLinhas): void {
-            $saida = fopen('php://output', 'w');
-            fputcsv($saida, $colunas);
-
-            $emitidas = 0;
-
-            $query->chunk(200, function ($atividades) use ($saida, &$emitidas, $maxLinhas): bool {
-                foreach ($atividades as $atividade) {
-                    if ($emitidas >= $maxLinhas) {
-                        return false;
-                    }
-
-                    $dados = (new ActivityResource($atividade))->resolve();
-
-                    fputcsv($saida, [
-                        $dados['created_at'],
-                        $dados['log_name'],
-                        $dados['event'],
-                        $dados['description'],
-                        $dados['causer']['nome'] ?? null,
-                        $dados['acting_for']['nome'] ?? null,
-                        $dados['subject']['type'] ?? null,
-                        $dados['subject']['id'] ?? null,
-                        $dados['result'],
-                        $dados['rules_version'],
-                        $dados['ip_address'],
-                        $dados['channel'],
-                    ]);
-
-                    $emitidas++;
-                }
-
-                return $emitidas < $maxLinhas;
-            });
-
-            fclose($saida);
-        }, 'auditoria.csv', ['Content-Type' => 'text/csv']);
-    }
-
-    /**
-     * @param  Builder<AccessLog>  $query
-     */
-    private function exportarAcessos(Builder $query, int $maxLinhas): StreamedResponse
-    {
-        $colunas = ['Data/hora', 'Evento', 'Usuário', 'E-mail', 'IP', 'Canal'];
-
-        return response()->streamDownload(function () use ($query, $colunas, $maxLinhas): void {
-            $saida = fopen('php://output', 'w');
-            fputcsv($saida, $colunas);
-
-            $emitidas = 0;
-
-            $query->chunk(200, function ($acessos) use ($saida, &$emitidas, $maxLinhas): bool {
-                foreach ($acessos as $acesso) {
-                    if ($emitidas >= $maxLinhas) {
-                        return false;
-                    }
-
-                    fputcsv($saida, [
-                        $acesso->created_at?->toIso8601String(),
-                        $acesso->event,
-                        $acesso->user?->name,
-                        $acesso->email,
-                        $acesso->ip_address,
-                        $acesso->channel,
-                    ]);
-
-                    $emitidas++;
-                }
-
-                return $emitidas < $maxLinhas;
-            });
-
-            fclose($saida);
-        }, 'auditoria-acessos.csv', ['Content-Type' => 'text/csv']);
     }
 
     /**

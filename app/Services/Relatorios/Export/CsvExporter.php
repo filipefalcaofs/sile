@@ -31,19 +31,31 @@ class CsvExporter implements ReportFormatExporter
     /**
      * Cabeçalho (rótulos das colunas) + linhas do conjunto filtrado em chunks
      * (RN-005, baixa memória). O mesmo loop serve ao síncrono e ao assíncrono.
+     * Respeita o teto técnico de volume (maxRows) da definition, parando o chunk
+     * ao atingi-lo — guarda de volume herdada do export da trilha (HU-101).
      *
      * @param  resource  $saida
      */
     private function escrever(ReportDefinition $definition, $saida): void
     {
         $chunk = (int) config('sile.relatorios.export.chunk', 200);
+        $max = $definition->maxRows;
 
         fputcsv($saida, $definition->columnLabels());
 
-        $definition->builder()->chunk($chunk, function ($linhas) use ($saida, $definition): void {
+        $emitidas = 0;
+
+        $definition->builder()->chunk($chunk, function ($linhas) use ($saida, $definition, $max, &$emitidas): bool {
             foreach ($linhas as $model) {
+                if ($max !== null && $emitidas >= $max) {
+                    return false;
+                }
+
                 fputcsv($saida, $definition->mapRow($model));
+                $emitidas++;
             }
+
+            return $max === null || $emitidas < $max;
         });
     }
 }

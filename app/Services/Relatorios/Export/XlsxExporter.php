@@ -57,8 +57,16 @@ final class XlsxExporter implements ReportFormatExporter
 
         $writer->addRow(Row::fromValues($definition->columnLabels(), (new Style)->setFontBold()));
 
+        $max = $definition->maxRows;
+        $emitidas = 0;
+
         foreach ($definition->builder()->cursor() as $model) {
+            if ($max !== null && $emitidas >= $max) {
+                break;
+            }
+
             $writer->addRow(Row::fromValues(array_values($definition->mapRow($model))));
+            $emitidas++;
         }
 
         $writer->close();
