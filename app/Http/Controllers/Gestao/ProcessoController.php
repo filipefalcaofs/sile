@@ -9,20 +9,24 @@ use App\Http\Resources\ProcessoResource;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\ProcessoQueryService;
 use App\Services\Auditoria\DecisionExplanationService;
+use App\Services\Relatorios\Export\ReportExporter;
+use App\Services\Relatorios\Export\Sources\ProcessosReportSource;
+use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
  * Consulta de processos (HU-082) e fila do analista (HU-144) na retaguarda,
  * server-driven (espelha o ResultadoExpressoController/CaixaSetorController). O
  * index aplica os filtros completos do SAPS + analista + categoria via
- * ProcessoQueryService, pagina no servidor e exporta CSV simples do conjunto
- * filtrado (?formato=csv; export pleno XLSX/PDF → HU-131/Fase 15). O detalhe
+ * ProcessoQueryService, pagina no servidor e, com ?formato= (csv/xlsx/pdf),
+ * delega ao contrato único de exportação (HU-131/RN-009): o {@see ReportExporter}
+ * exporta o conjunto filtrado (RN-005) via {@see ProcessosReportSource},
+ * preservando as colunas/arquivo do CSV histórico e auditando (RN-008). O detalhe
  * (show) carrega dados/decisão/ficha/timeline como props (mini-mapa/abas
  * renderizados na UI 10-16). Tudo gated por consultar-solicitacoes (reuso —
  * decisão de 10-01) e auditado (RN-002); o 403 é auditado no ponto único
@@ -40,22 +44,27 @@ class ProcessoController extends Controller
     ) {}
 
     /**
-     * Consulta filtrável e paginada (HU-082). Com ?formato=csv, devolve o CSV
-     * simples do conjunto filtrado (RN-011 — versão simples; export pleno é
-     * HU-131). A consulta é auditada (CA-02).
+     * Consulta filtrável e paginada (HU-082). Com ?formato= (csv/xlsx/pdf),
+     * delega ao contrato único de exportação (HU-131/RN-009) o conjunto filtrado
+     * via {@see ProcessosReportSource} — o ReportExporter audita (RN-008) e
+     * escolhe o caminho síncrono/assíncrono. A consulta é auditada (CA-02).
      */
-    public function index(Request $request): Response|StreamedResponse
+    public function index(Request $request): Response|HttpResponse
     {
         $filtros = $this->filtros($request);
-        $query = $this->processos->filtered($filtros);
 
-        if ($request->string('formato')->lower()->toString() === 'csv') {
-            return $this->exportarCsv($query, $filtros);
+        if (in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
+            return app(ReportExporter::class)->export(
+                app(ProcessosReportSource::class),
+                ReportFilters::fromArray($filtros),
+                $request->string('formato')->lower()->toString(),
+                $request->user(),
+            );
         }
 
         $perPage = $this->perPage($request);
 
-        $processos = $query
+        $processos = $this->processos->filtered($filtros)
             ->paginate($perPage)
             ->withQueryString()
             ->through(fn (ViabilityRequest $processo): array => (new ProcessoResource($processo))->resolve());
@@ -163,49 +172,6 @@ class ProcessoController extends Controller
                 'poligono' => $viabilityRequest->property_polygon_geojson,
             ],
         ]);
-    }
-
-    /**
-     * CSV simples do conjunto filtrado (RN-011): cabeçalho + uma linha por
-     * processo, em streaming (chunk) para não materializar tudo em memória. A
-     * exportação é auditada. Export pleno (XLSX/PDF, layout/colunas configuráveis)
-     * fica para a HU-131 (Fase 15).
-     *
-     * @param  Builder<ViabilityRequest>  $query
-     * @param  array<string, mixed>  $filtros
-     */
-    private function exportarCsv(Builder $query, array $filtros): StreamedResponse
-    {
-        $this->audit->log('analise', 'exporta-processos-csv', 'Exportação CSV da consulta de processos', [
-            'filtros' => $this->filtrosPreenchidos($filtros),
-        ]);
-
-        $colunas = ['Processo', 'BAP', 'Produto TVL', 'Empresa', 'CNPJ', 'Status', 'Categoria', 'Analista', 'Prazo'];
-
-        return response()->streamDownload(function () use ($query, $colunas): void {
-            $saida = fopen('php://output', 'w');
-            fputcsv($saida, $colunas);
-
-            $query->chunk(200, function ($processos) use ($saida): void {
-                foreach ($processos as $processo) {
-                    $dados = (new ProcessoResource($processo))->resolve();
-
-                    fputcsv($saida, [
-                        $dados['protocol_number'],
-                        $dados['bap'],
-                        $dados['tvl_product_number'],
-                        $dados['empresa'],
-                        $dados['cnpj'],
-                        $dados['status_label'],
-                        $dados['categoria'],
-                        $dados['analista'],
-                        $dados['analysis_due_at'],
-                    ]);
-                }
-            });
-
-            fclose($saida);
-        }, 'processos.csv', ['Content-Type' => 'text/csv']);
     }
 
     /**

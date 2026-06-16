@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Relatorios;
 
+use App\Enums\ViabilityRequestStatus;
 use App\Jobs\GerarExportacaoJob;
 use App\Models\AccessLog;
 use App\Models\Activity;
 use App\Models\User;
+use App\Models\ViabilityRequest;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\AtividadesReportSource;
 use App\Services\Relatorios\ReportFilters;
@@ -33,6 +35,13 @@ class RetrofitCsvAuditoriaTest extends TestCase
         'Entidade', 'Entidade ID', 'Resultado', 'Versão de regras', 'IP', 'Canal',
     ];
 
+    private const COLUNAS_PROCESSOS = [
+        'Processo', 'BAP', 'Produto TVL', 'Empresa', 'CNPJ', 'Status',
+        'Categoria', 'Analista', 'Prazo',
+    ];
+
+    private int $seq = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -43,6 +52,24 @@ class RetrofitCsvAuditoriaTest extends TestCase
     private function gestor(): User
     {
         return User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+    }
+
+    private function analista(): User
+    {
+        return User::factory()->analista()->withAcceptedLgpdTerm()->create();
+    }
+
+    /**
+     * Processo com protocolo único e status informado (espelha o helper do
+     * ProcessoConsultaTest 10-14 — a rede anti-regressão).
+     */
+    private function processo(ViabilityRequestStatus $status = ViabilityRequestStatus::EmAnalise): ViabilityRequest
+    {
+        return ViabilityRequest::factory()->create([
+            'status' => $status,
+            'protocol_number' => 'VIA-'.now()->year.'-'.str_pad((string) ++$this->seq, 6, '0', STR_PAD_LEFT),
+            'protocoled_at' => now(),
+        ]);
     }
 
     /**
@@ -172,5 +199,59 @@ class RetrofitCsvAuditoriaTest extends TestCase
         $this->assertContains($alvo1->id, $ids);
         $this->assertContains($alvo2->id, $ids);
         $this->assertNotContains($fora->id, $ids);
+    }
+
+    public function test_export_de_processos_em_csv_preserva_as_colunas_historicas(): void
+    {
+        $alvo = $this->processo(ViabilityRequestStatus::EmAnalise);
+
+        $response = $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?formato=csv&status=em_analise')
+            ->assertOk();
+
+        $this->assertStringContainsString('text/csv', (string) $response->headers->get('content-type'));
+
+        $conteudo = $response->streamedContent();
+        $this->assertSame(self::COLUNAS_PROCESSOS, $this->cabecalhoCsv($conteudo));
+        $this->assertStringContainsString($alvo->protocol_number, $conteudo);
+    }
+
+    public function test_export_de_processos_em_xlsx_agora_streama_planilha(): void
+    {
+        $this->processo(ViabilityRequestStatus::EmAnalise);
+
+        $response = $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?formato=xlsx&status=em_analise')
+            ->assertOk();
+
+        $this->assertStringContainsString(
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            (string) $response->headers->get('content-type'),
+        );
+    }
+
+    public function test_export_de_processos_em_pdf_agora_streama_documento(): void
+    {
+        $this->processo(ViabilityRequestStatus::EmAnalise);
+
+        $response = $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?formato=pdf&status=em_analise')
+            ->assertOk();
+
+        $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
+    }
+
+    public function test_export_de_processos_reflete_o_filtro_rn005(): void
+    {
+        $alvo = $this->processo(ViabilityRequestStatus::EmAnalise);
+        $fora = $this->processo(ViabilityRequestStatus::Deferida);
+
+        $response = $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?formato=csv&status=em_analise')
+            ->assertOk();
+
+        $conteudo = $response->streamedContent();
+        $this->assertStringContainsString($alvo->protocol_number, $conteudo);
+        $this->assertStringNotContainsString($fora->protocol_number, $conteudo);
     }
 }

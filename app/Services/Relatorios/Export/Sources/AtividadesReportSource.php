@@ -60,27 +60,19 @@ final class AtividadesReportSource implements ReportSource
                 ['key' => 'ip_address', 'label' => 'IP'],
                 ['key' => 'channel', 'label' => 'Canal'],
             ],
-            builder: function () use ($trilhaFiltros, $alteracoes, $maxLinhas): Builder {
-                $base = $alteracoes
-                    ? $this->trilha->apenasAlteracoes($trilhaFiltros)
-                    : $this->trilha->filtered($trilhaFiltros);
-
-                // Guarda de volume técnica (sile.auditoria.export.max_linhas):
-                // recorta as N mais recentes por subquery para o teto SOBREVIVER ao
-                // count() do limiar e ao chunk()/cursor() dos drivers (um limit
-                // direto seria sobrescrito pelo forPage do chunk). Nunca
-                // materializa a trilha inteira (HU-101).
-                return Activity::query()
-                    ->with(['causer', 'actingFor', 'subject'])
-                    ->whereIn('id', $base->select('id')->limit($maxLinhas))
-                    ->orderByDesc('id');
-            },
+            builder: fn (): Builder => $alteracoes
+                ? $this->trilha->apenasAlteracoes($trilhaFiltros)
+                : $this->trilha->filtered($trilhaFiltros),
             mapRow: fn (Activity $atividade): array => $this->linha($atividade),
             filtrosAplicados: $filtros->aplicados(),
             logName: 'auditoria',
             event: 'exporta-trilha',
             personalData: true,
             arquivoBase: 'auditoria',
+            // Guarda de volume técnica (sile.auditoria.export.max_linhas) honrada
+            // por TODO driver (HU-101): o teto do streaming histórico é preservado
+            // sem materializar a trilha inteira; o count() real decide o limiar.
+            maxRows: $maxLinhas,
         );
     }
 

@@ -51,14 +51,7 @@ final class AcessosReportSource implements ReportSource
                 ['key' => 'ip_address', 'label' => 'IP'],
                 ['key' => 'channel', 'label' => 'Canal'],
             ],
-            builder: function () use ($acessoFiltros, $maxLinhas): Builder {
-                // Guarda de volume técnica via subquery (ver AtividadesReportSource):
-                // o teto sobrevive ao count()/chunk()/cursor().
-                return AccessLog::query()
-                    ->with('user:id,name')
-                    ->whereIn('id', $this->trilha->acessos($acessoFiltros)->select('id')->limit($maxLinhas))
-                    ->orderByDesc('id');
-            },
+            builder: fn (): Builder => $this->trilha->acessos($acessoFiltros),
             mapRow: fn (AccessLog $acesso): array => [
                 $acesso->created_at?->toIso8601String(),
                 $acesso->event,
@@ -72,6 +65,8 @@ final class AcessosReportSource implements ReportSource
             event: 'exporta-trilha',
             personalData: true,
             arquivoBase: 'auditoria-acessos',
+            // Guarda de volume técnica honrada por TODO driver (ver AtividadesReportSource).
+            maxRows: $maxLinhas,
         );
     }
 }
