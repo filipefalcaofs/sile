@@ -12,6 +12,7 @@ use App\Http\Controllers\Gestao\ContingenciaController;
 use App\Http\Controllers\Gestao\DashboardController;
 use App\Http\Controllers\Gestao\DocumentRequirementController;
 use App\Http\Controllers\Gestao\EmailLogController;
+use App\Http\Controllers\Gestao\ExportacaoController;
 use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
 use App\Http\Controllers\Gestao\LoginController;
@@ -133,6 +134,14 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // relatórios. Telas React em 15-13/15-14; RelatorioController é o ÚNICO
         // editor de routes/gestao.php nesta fase.
         Route::middleware('permission:consultar-relatorios')->prefix('relatorios')->name('relatorios.')->group(function () {
+            // Download do arquivo da exportação assíncrona (15-02): URL TEMPORÁRIA
+            // ASSINADA (signed) servindo o disco NÃO público por streaming, alvo do
+            // link da Notification ExportacaoPronta. Rota estática — vem ANTES dos
+            // relatórios (não há wildcard {relatorio}). Auditada no controller.
+            Route::get('exportacoes/{exportFile}/download', [ExportacaoController::class, 'download'])
+                ->middleware('signed')
+                ->name('exportacoes.download');
+
             Route::get('indicadores', [RelatorioController::class, 'indicadores'])->name('indicadores');
             Route::get('tempo', [RelatorioController::class, 'tempo'])->name('tempo');
             Route::get('produtividade', [RelatorioController::class, 'produtividade'])->name('produtividade');
