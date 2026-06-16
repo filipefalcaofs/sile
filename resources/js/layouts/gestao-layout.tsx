@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import CommandSearch from '@/components/app/command-search';
 import AppShell from '@/components/app/app-shell';
 import type { SidebarGroup } from '@/components/app/app-sidebar';
-import { FileIcon, GearIcon, GridIcon, GroupIcon, ListIcon, LockIcon, MailIcon, MapPinIcon, PlugInIcon, ShieldIcon, TableIcon, TagIcon, UserCircleIcon } from '@/components/icons';
+import { AlertIcon, FileIcon, GearIcon, GridIcon, GroupIcon, ListIcon, LockIcon, MailIcon, MapPinIcon, PlugInIcon, ShieldIcon, TableIcon, TagIcon, UserCircleIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import { ThemeProvider } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
@@ -17,9 +17,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
 
     const groups: SidebarGroup[] = [
         {
-            label: 'Visão geral',
+            label: 'Início',
+            items: [{ name: 'Painel', href: '/gestao', icon: <GridIcon /> }],
+        },
+        {
+            label: 'Atendimento e operação',
             items: [
-                { name: 'Painel', href: '/gestao', icon: <GridIcon /> },
                 {
                     name: 'Consulta territorial',
                     href: '/gestao/territorio',
@@ -76,7 +79,7 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
             ],
         },
         {
-            label: 'Cadastros',
+            label: 'Regras do licenciamento',
             items: [
                 {
                     name: 'CNAEs',
@@ -120,6 +123,69 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     icon: <FileIcon />,
                     visible: auth.permissions.includes('manter-requisitos-documentais'),
                 },
+            ],
+        },
+        {
+            label: 'Auditoria e compliance',
+            items: [
+                {
+                    name: 'Trilha de auditoria',
+                    href: '/gestao/auditoria',
+                    icon: <ListIcon />,
+                    visible: auth.permissions.includes('consultar-auditoria'),
+                },
+                {
+                    name: 'Conformidade LGPD',
+                    href: '/gestao/lgpd',
+                    icon: <LockIcon />,
+                    visible: auth.permissions.includes('monitorar-lgpd'),
+                },
+                {
+                    name: 'Alertas de abuso',
+                    href: '/gestao/abuso',
+                    icon: <AlertIcon />,
+                    visible: auth.permissions.includes('gerenciar-alertas-abuso'),
+                },
+            ],
+        },
+        {
+            label: 'Relatórios',
+            items: [
+                {
+                    name: 'Indicadores de viabilidade',
+                    href: '/gestao/relatorios/indicadores',
+                    icon: <GridIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
+                    name: 'Tempo de análise',
+                    href: '/gestao/relatorios/tempo',
+                    icon: <ListIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
+                    name: 'Produtividade',
+                    href: '/gestao/relatorios/produtividade',
+                    icon: <GroupIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
+                    name: 'Quedas do expresso',
+                    href: '/gestao/relatorios/quedas',
+                    icon: <AlertIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
+                    name: 'Feriados',
+                    href: '/gestao/feriados',
+                    icon: <TagIcon />,
+                    visible: auth.permissions.includes('manter-parametros'),
+                },
+            ],
+        },
+        {
+            label: 'Administração',
+            items: [
                 {
                     name: 'Usuários',
                     href: '/gestao/usuarios',
@@ -132,11 +198,6 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     icon: <LockIcon />,
                     visible: auth.permissions.includes('manter-perfis'),
                 },
-            ],
-        },
-        {
-            label: 'Sistema',
-            items: [
                 {
                     name: 'Parâmetros',
                     href: '/gestao/parametros',
@@ -155,7 +216,7 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
 
     return (
         <ThemeProvider>
-            <AppShell groups={groups} homeHref="/gestao" logoutHref="/gestao/logout" subtitle="Gestão SEDUR" variant="console">
+            <AppShell groups={groups} homeHref="/gestao" logoutHref="/gestao/logout" subtitle="Gestão SEDUR" variant="console" collapsibleGroups>
                 {flash.status && (
                     <div className="mb-6">
                         <Alert variant="success" title="Sucesso" message={flash.status} />

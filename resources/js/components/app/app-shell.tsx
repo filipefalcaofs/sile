@@ -11,15 +11,22 @@ interface AppShellProps {
     logoutHref?: string;
     subtitle?: string;
     variant?: SidebarVariant;
+    collapsibleGroups?: boolean;
     children: ReactNode;
 }
 
-function ShellContent({ groups, homeHref, logoutHref, subtitle, variant, children }: AppShellProps) {
+function ShellContent({ groups, homeHref, logoutHref, subtitle, variant, collapsibleGroups, children }: AppShellProps) {
     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
     return (
         <div className="min-h-screen">
-            <AppSidebar groups={groups} homeHref={homeHref} subtitle={subtitle} variant={variant} />
+            <AppSidebar
+                groups={groups}
+                homeHref={homeHref}
+                subtitle={subtitle}
+                variant={variant}
+                collapsibleGroups={collapsibleGroups}
+            />
             <Backdrop />
             <div
                 className={`transition-all duration-300 ease-in-out ${
