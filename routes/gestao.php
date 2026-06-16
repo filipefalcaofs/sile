@@ -24,6 +24,7 @@ use App\Http\Controllers\Gestao\ProcessoBuscaController;
 use App\Http\Controllers\Gestao\ProcessoController;
 use App\Http\Controllers\Gestao\ProcessoDecisaoController;
 use App\Http\Controllers\Gestao\ProcessoPendenciaController;
+use App\Http\Controllers\Gestao\RelatorioController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RiscoCondicionanteController;
 use App\Http\Controllers\Gestao\RiscoController;
@@ -117,6 +118,25 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('/', [AbusoController::class, 'index'])->name('index');
             Route::post('{abuseAlert}/confirmar', [AbusoController::class, 'confirmar'])->name('confirmar');
             Route::post('{abuseAlert}/descartar', [AbusoController::class, 'descartar'])->name('descartar');
+        });
+
+        // Relatórios e indicadores (HU-122..131/145): cada tela é servida com dado
+        // REAL dos serviços route-free (15-03/05/06/07) e exporta pelo contrato
+        // único via ?formato= (CSV/XLSX/PDF — HU-131/RN-004/009), delegando ao
+        // ReportExporter (que audita — RN-008). A produtividade nominal só sai sob
+        // relatorios.produtividade.nominal (gate no controller — RN-007); sem ela o
+        // default conservador anonimiza e restringe ao próprio analista. Tudo gated
+        // por consultar-relatorios e a consulta auditada (RN-002); o 403 é auditado
+        // no ponto único (bootstrap/app.php). Cada relatório é uma rota estática
+        // nomeada (sem wildcard {relatorio}); o download assinado das exportações
+        // assíncronas (exportacoes/{exportFile}/download) é estático e vem ANTES dos
+        // relatórios. Telas React em 15-13/15-14; RelatorioController é o ÚNICO
+        // editor de routes/gestao.php nesta fase.
+        Route::middleware('permission:consultar-relatorios')->prefix('relatorios')->name('relatorios.')->group(function () {
+            Route::get('indicadores', [RelatorioController::class, 'indicadores'])->name('indicadores');
+            Route::get('tempo', [RelatorioController::class, 'tempo'])->name('tempo');
+            Route::get('produtividade', [RelatorioController::class, 'produtividade'])->name('produtividade');
+            Route::get('quedas', [RelatorioController::class, 'quedas'])->name('quedas');
         });
 
         // Consulta granular separada da manutenção (HU-011 CA-04)
