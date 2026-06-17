@@ -26,6 +26,15 @@ class AiConfiguration extends Model
     use HasFactory;
 
     /**
+     * Defesa em profundidade: a credencial nunca vaza por serialização acidental
+     * (toArray/toJson). A exibição usa SEMPRE masked_api_key; o controller monta
+     * o DTO campo a campo e nunca serializa o model direto.
+     *
+     * @var list<string>
+     */
+    protected $hidden = ['api_key'];
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

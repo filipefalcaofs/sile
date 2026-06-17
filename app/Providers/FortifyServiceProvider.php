@@ -205,5 +205,15 @@ class FortifyServiceProvider extends ServiceProvider
                 (int) Settings::get('seguranca.throttle.consulta_protocolo.por_minuto', 30),
             )->by($request->user()?->id ?: $request->ip());
         });
+
+        // Throttle do teste de conexão de IA (Fase 14, Onda 0) — ação interna de
+        // admin (manter-config-ia); o limite por minuto é um teto técnico/de
+        // segurança lido via Settings (fallback config/sile.php), espelhando o
+        // padrão de throttle parametrizado da Fase 3.1.
+        RateLimiter::for('ai-connection-test', function (Request $request) {
+            return Limit::perMinute(
+                (int) Settings::get('seguranca.throttle.ai_test.por_minuto', 10),
+            )->by($request->user()?->id ?: $request->ip());
+        });
     }
 }

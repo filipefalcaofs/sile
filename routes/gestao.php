@@ -3,6 +3,7 @@
 use App\Http\Controllers\ComunicacaoHistoricoController;
 use App\Http\Controllers\Gestao\AbusoController;
 use App\Http\Controllers\Gestao\AccessHistoryController;
+use App\Http\Controllers\Gestao\AiConfigurationController;
 use App\Http\Controllers\Gestao\AnalysisRecordController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
 use App\Http\Controllers\Gestao\AuditoriaController;
@@ -267,6 +268,22 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('{emailServer}', [EmailServerController::class, 'update'])->name('update');
             Route::delete('{emailServer}', [EmailServerController::class, 'destroy'])->name('destroy');
             Route::post('{emailServer}/testar', [EmailServerController::class, 'test'])->name('test');
+        });
+
+        // Provedores de IA administráveis (Fase 14, Onda 0 / HU-014): CRUD
+        // multi-provider sob permissão própria, irmão do config-email. A api_key
+        // é criptografada e nunca reexibida (DTO com masked_api_key); na edição,
+        // chave em branco mantém a atual. O teste de conexão faz chamada HTTP
+        // REAL ao provedor (anti-fachada), com anti-SSRF na base_url (https +
+        // allowlist) e throttle parametrizado (limite interno de admin). A ponte
+        // de runtime do SDK (laravel/ai) é pendência da Onda 1 — sem fachada.
+        Route::middleware('permission:manter-config-ia')->prefix('config-ia')->name('config-ia.')->group(function () {
+            Route::get('/', [AiConfigurationController::class, 'index'])->name('index');
+            Route::post('/', [AiConfigurationController::class, 'store'])->name('store');
+            Route::put('{aiConfiguration}', [AiConfigurationController::class, 'update'])->name('update');
+            Route::delete('{aiConfiguration}', [AiConfigurationController::class, 'destroy'])->name('destroy');
+            Route::post('{aiConfiguration}/testar', [AiConfigurationController::class, 'test'])->middleware('throttle:ai-connection-test')->name('test');
+            Route::put('{aiConfiguration}/ativacao', [AiConfigurationController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
         // Setores da SEDUR (HU-138): a "caixa de análise" da distribuição

@@ -202,6 +202,10 @@ return [
             'geocoding' => ['por_minuto' => 60],
             'consulta_viabilidade' => ['por_minuto' => 20],
             'consulta_protocolo' => ['por_minuto' => 30],
+            // Teste de conexão de IA (Fase 14): ação interna de admin
+            // (manter-config-ia). Teto técnico/de segurança fora do catálogo
+            // HU-014 (precedente [02-02]) — ajustável sem deploy via Settings.
+            'ai_test' => ['por_minuto' => 10],
         ],
     ],
     'integrations' => [
