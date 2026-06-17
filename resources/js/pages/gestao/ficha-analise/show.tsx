@@ -1,4 +1,4 @@
-import { Head, Link, router, useHttp, usePage } from '@inertiajs/react';
+import { Head, Link, router, useHttp, usePage, WhenVisible } from '@inertiajs/react';
 import type { GeoJsonObject } from 'geojson';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -112,12 +112,40 @@ interface DiffResponse {
     diff: Record<string, unknown>;
 }
 
+type SeveridadeIa = 'baixa' | 'media' | 'alta';
+
+interface InconsistenciaIa {
+    campo: string;
+    declarado: string;
+    documento: string;
+    severidade: SeveridadeIa;
+}
+
+interface SugestaoIaOutput {
+    inconsistencias?: InconsistenciaIa[];
+    fonte?: string | null;
+    [chave: string]: unknown;
+}
+
+interface SugestaoIa {
+    id: number;
+    type: string;
+    type_label: string;
+    status: string;
+    status_label: string;
+    confianca: string | null;
+    output: SugestaoIaOutput;
+    created_at: string | null;
+}
+
 interface FichaAnaliseShowProps {
     ficha: Ficha;
     processo: Processo;
     localizacao?: Localizacao;
     textosPadrao: TextoPadrao[];
     autosaveDebounceMs: number;
+    /** Sugestões de IA (HU-115) — prop deferida, carregada sob demanda pelo card. */
+    sugestoesIa?: SugestaoIa[];
 }
 
 const STATUS_OPCOES: { value: StatusFicha; label: string }[] = [
@@ -293,6 +321,7 @@ export default function FichaAnaliseShow({
     localizacao,
     textosPadrao,
     autosaveDebounceMs,
+    sugestoesIa,
 }: FichaAnaliseShowProps) {
     const { auth } = usePage<SharedProps>().props;
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
@@ -618,6 +647,12 @@ export default function FichaAnaliseShow({
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="space-y-6 lg:col-span-2">
+                        {/* Alertas de IA (HU-115) — sugestão revisável, carregada sob
+                            demanda (deferida) quando o card entra em tela. */}
+                        <WhenVisible data="sugestoesIa" buffer={200} fallback={<AlertasIaSkeleton />}>
+                            <AlertasIaCard sugestoes={sugestoesIa ?? []} />
+                        </WhenVisible>
+
                         {/* Enquadramento por CNAE (espelha a ficha SAPS) */}
                         <Card>
                             <CardHeader
@@ -1195,6 +1230,156 @@ export default function FichaAnaliseShow({
                 </Modal>
             )}
         </>
+    );
+}
+
+/** Skeleton da prop deferida de alertas de IA (HU-115) enquanto carrega sob demanda. */
+function AlertasIaSkeleton() {
+    return (
+        <Card>
+            <CardHeader title="Alertas de IA (sugestão — revise)" description="Carregando sugestões da IA…" />
+            <CardContent>
+                <div className="space-y-3" aria-hidden="true">
+                    <div className="h-4 w-2/3 animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                    <div className="h-20 w-full animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                </div>
+                <p className="sr-only">Carregando alertas de inteligência artificial.</p>
+            </CardContent>
+        </Card>
+    );
+}
+
+/** Severidade da inconsistência → cor e rótulo em pt-BR (texto, nunca só cor). */
+function severidadeBadge(severidade: SeveridadeIa): { cor: 'error' | 'warning' | 'light'; label: string } {
+    if (severidade === 'alta') {
+        return { cor: 'error', label: 'Alta' };
+    }
+
+    if (severidade === 'media') {
+        return { cor: 'warning', label: 'Média' };
+    }
+
+    return { cor: 'light', label: 'Baixa' };
+}
+
+/** Rótulo legível do campo apontado pela IA (ex.: "endereco_numero" → "Endereco numero"). */
+function rotuloCampo(campo: string): string {
+    const limpo = campo.replace(/_/g, ' ').trim();
+
+    if (limpo === '') {
+        return 'Campo';
+    }
+
+    return limpo.charAt(0).toUpperCase() + limpo.slice(1);
+}
+
+/**
+ * Card "Alertas de IA" (HU-115): lista as inconsistências detectadas
+ * (campo/declarado/documento/severidade/fonte) sempre marcadas como
+ * "sugestão — revise". SINALIZA para a revisão humana — não decide nem penaliza
+ * (RN-004) — e COMPLEMENTA as validações determinísticas, sem substituí-las
+ * (RN-005). Espelha o padrão visual de divergência da própria ficha.
+ */
+function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
+    const inconsistencias = sugestoes.filter((sugestao) => sugestao.type === 'inconsistencias');
+
+    return (
+        <Card>
+            <CardHeader
+                title="Alertas de IA (sugestão — revise)"
+                description="Divergências apontadas pela IA entre o que foi declarado e o que os documentos/foto mostram. Complementa, não substitui, as validações técnicas."
+            />
+            <CardContent>
+                {inconsistencias.length === 0 ? (
+                    <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                        Nenhum alerta de IA para este processo.
+                    </p>
+                ) : (
+                    <ul className="space-y-4" aria-label="Alertas de inconsistência sugeridos pela IA">
+                        {inconsistencias.map((sugestao) => {
+                            const itens = sugestao.output.inconsistencias ?? [];
+                            const fonte = typeof sugestao.output.fonte === 'string' ? sugestao.output.fonte : null;
+
+                            return (
+                                <li
+                                    key={sugestao.id}
+                                    className="rounded-xl border border-warning-200 bg-warning-50 p-4 dark:border-warning-500/30 dark:bg-warning-500/15"
+                                >
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <span className="inline-flex items-center gap-2">
+                                            <AlertIcon className="size-4 shrink-0 fill-current text-warning-500" />
+                                            <Badge color="warning" size="sm">
+                                                Sugestão — revise
+                                            </Badge>
+                                        </span>
+                                        <Badge color={sugestao.status === 'escalada_humano' ? 'error' : 'light'} size="sm">
+                                            {sugestao.status_label}
+                                        </Badge>
+                                    </div>
+
+                                    {itens.length === 0 ? (
+                                        <p className="mt-3 text-theme-sm text-gray-600 dark:text-gray-300">
+                                            A IA não apontou divergências específicas nesta verificação.
+                                        </p>
+                                    ) : (
+                                        <ul className="mt-3 space-y-3">
+                                            {itens.map((item, indice) => {
+                                                const severidade = severidadeBadge(item.severidade);
+
+                                                return (
+                                                    <li
+                                                        key={indice}
+                                                        className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900"
+                                                    >
+                                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                                            <span className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                                                {rotuloCampo(item.campo)}
+                                                            </span>
+                                                            <Badge color={severidade.cor} size="sm">
+                                                                Severidade: {severidade.label}
+                                                            </Badge>
+                                                        </div>
+                                                        <dl className="mt-2 grid gap-2 sm:grid-cols-2">
+                                                            <div>
+                                                                <dt className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                                                                    Declarado
+                                                                </dt>
+                                                                <dd className="mt-1 text-theme-sm text-gray-800 dark:text-white/90">
+                                                                    {item.declarado}
+                                                                </dd>
+                                                            </div>
+                                                            <div>
+                                                                <dt className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                                                                    No documento
+                                                                </dt>
+                                                                <dd className="mt-1 text-theme-sm text-gray-800 dark:text-white/90">
+                                                                    {item.documento}
+                                                                </dd>
+                                                            </div>
+                                                        </dl>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    )}
+
+                                    {fonte && (
+                                        <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
+                                            Fonte: {fonte}
+                                        </p>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
+
+                <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
+                    Sinais para revisão humana — não decidem nem penalizam (RN-004). As validações de lote (GIS) e
+                    Receita seguem pendentes SEDUR (HU-037/105) e não são supridas por estes alertas.
+                </p>
+            </CardContent>
+        </Card>
     );
 }
 

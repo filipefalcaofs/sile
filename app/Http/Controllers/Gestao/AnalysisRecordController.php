@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Gestao;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\AnalysisRecordRequest;
 use App\Http\Resources\AnalysisRecordResource;
+use App\Models\AiSuggestion;
 use App\Models\StandardText;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnalysisRecordDiff;
@@ -64,6 +65,12 @@ class AnalysisRecordController extends Controller
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest),
             'textosPadrao' => $this->textosPadraoAtivos(),
             'autosaveDebounceMs' => (int) config('sile.analise.autosave.debounce_ms', 1500),
+            // Alertas de IA (HU-115) — prop DEFERIDA (carregada sob demanda pelo
+            // card, fora do load inicial). APENAS LEITURA das sugestões do
+            // processo: não toca o AnalysisRecord (ficha finalizada é imutável,
+            // RN-003) nem a lógica de decisão. São sugestões para revisão, jamais
+            // decisão (RN-004).
+            'sugestoesIa' => Inertia::optional(fn (): array => $this->sugestoesIa($viabilityRequest)),
         ]);
     }
 
@@ -193,6 +200,34 @@ class AnalysisRecordController extends Controller
             'poligono' => $request->property_polygon_geojson,
             'endereco' => $endereco,
         ];
+    }
+
+    /**
+     * Sugestões de IA do processo (HU-115) para o card "Alertas de IA" — APENAS
+     * LEITURA do ledger ai_suggestions, mais recentes primeiro. Cada item carrega
+     * o tipo/estado rotulados e a saída estruturada (no caso de inconsistências:
+     * campo/declarado/documento/severidade/fonte). Não decide nada: a ficha trata
+     * como sinal revisável (RN-004).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function sugestoesIa(ViabilityRequest $request): array
+    {
+        return AiSuggestion::query()
+            ->where('viability_request_id', $request->id)
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (AiSuggestion $sugestao): array => [
+                'id' => $sugestao->id,
+                'type' => $sugestao->type->value,
+                'type_label' => $sugestao->type->label(),
+                'status' => $sugestao->status->value,
+                'status_label' => $sugestao->status->label(),
+                'confianca' => $sugestao->confidence,
+                'output' => $sugestao->output,
+                'created_at' => $sugestao->created_at?->toIso8601String(),
+            ])
+            ->all();
     }
 
     /**
