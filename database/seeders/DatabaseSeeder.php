@@ -73,6 +73,12 @@ class DatabaseSeeder extends Seeder
             // calcularem sobre dado REAL (nunca número cravado). Idempotente por
             // requerente dedicado; em produção é no-op (degradação honesta).
             RelatoriosDevSeeder::class,
+            // Configuração de IA (EP14, Onda 0) — SÓ dev (gate `local`, fora do
+            // testing): um provedor openai/texto padrão e ativo para a tela de
+            // config e a ponte de runtime (config('ai.*')) ficarem navegáveis
+            // sobre a LÓGICA REAL. Credencial placeholder (NUNCA real);
+            // idempotente. Em produção é no-op (o admin cadastra pela tela).
+            AiConfigDevSeeder::class,
         ]);
     }
 }
