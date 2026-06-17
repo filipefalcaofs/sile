@@ -33,6 +33,7 @@ const DESTINOS: DestinoComando[] = [
     { label: 'Produtividade', grupo: 'Relatórios', href: '/gestao/relatorios/produtividade', permissao: 'consultar-relatorios' },
     { label: 'Quedas do expresso', grupo: 'Relatórios', href: '/gestao/relatorios/quedas', permissao: 'consultar-relatorios' },
     { label: 'Feriados', grupo: 'Relatórios', href: '/gestao/feriados', permissao: 'manter-parametros' },
+    { label: 'Configuração de IA', grupo: 'Administração', href: '/gestao/config-ia', permissao: 'manter-config-ia' },
 ];
 
 /**

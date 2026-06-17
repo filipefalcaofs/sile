@@ -210,6 +210,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     icon: <MailIcon />,
                     visible: auth.permissions.includes('monitorar-emails'),
                 },
+                {
+                    name: 'Configuração de IA',
+                    href: '/gestao/config-ia',
+                    icon: <GearIcon />,
+                    visible: auth.permissions.includes('manter-config-ia'),
+                },
             ],
         },
     ];
