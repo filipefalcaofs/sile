@@ -302,6 +302,19 @@ return [
         // exclusão de uma AiConfiguration invalida o cache na hora (evento do
         // model), então o TTL é só a rede de segurança.
         'config_cache_ttl' => 60,
+        // Resiliência do job de execução de IA (Onda 1+), espelhando
+        // sile.expresso.job: fila + tries/timeout/backoff. Constante TÉCNICA fora
+        // do catálogo HU-014 (precedente [02-02]) — não é valor de negócio.
+        'job' => ['tries' => 3, 'timeout' => 120, 'backoff' => [30, 60, 120], 'fila' => 'default'],
+        // Limiar de confiança do guardrail: sugestão com confiança ABAIXO deste
+        // nível é escalada para análise humana (AI-SPEC §6). Fallback técnico em
+        // config; lido via Settings::get('ai.limiar_confianca') — uma futura linha
+        // de catálogo HU-014 o torna administrável sem deploy, sem mudar call site.
+        'limiar_confianca' => 'media',
+        // Preço por 1.000 tokens (entrada + saída) por modelo, para estimar o
+        // custo da chamada (o SDK só entrega tokens). Vazio por padrão ⇒ custo
+        // null (NUNCA inventado — anti-fachada). Administrável via Settings.
+        'preco_por_modelo' => [],
     ],
     'parameters' => [
         'cache_ttl' => 300,
