@@ -296,6 +296,12 @@ return [
             'connect_timeout' => 3,
             'timeout_max_ms' => 15000,
         ],
+        // TTL (segundos) do cache da ponte de runtime (AiConfigResolver): evita
+        // ler o banco a cada boot. Constante TÉCNICA fora do catálogo HU-014
+        // (precedente [02-02]) — ajustável sem deploy via Settings. A gravação/
+        // exclusão de uma AiConfiguration invalida o cache na hora (evento do
+        // model), então o TTL é só a rede de segurança.
+        'config_cache_ttl' => 60,
     ],
     'parameters' => [
         'cache_ttl' => 300,

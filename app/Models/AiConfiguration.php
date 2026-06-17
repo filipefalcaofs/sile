@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Ai\AiConfigResolver;
 use Database\Factories\AiConfigurationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -33,6 +34,19 @@ class AiConfiguration extends Model
      * @var list<string>
      */
     protected $hidden = ['api_key'];
+
+    /**
+     * Invalida o cache da ponte de runtime (AiConfigResolver) sempre que uma
+     * configuração é gravada ou removida — a alteração na tela reflete em
+     * config('ai.*') sem deploy (HU-014). Cobre o CRUD da Onda 0 e o save() do
+     * setAsDefault(); o update em massa do setAsDefault não dispara eventos, mas
+     * o save() subsequente sim.
+     */
+    protected static function booted(): void
+    {
+        static::saved(static fn () => AiConfigResolver::flushCache());
+        static::deleted(static fn () => AiConfigResolver::flushCache());
+    }
 
     /**
      * @return array<string, string>
