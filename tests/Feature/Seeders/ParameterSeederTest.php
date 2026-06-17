@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(90, Parameter::query()->count());
+        $this->assertSame(97, Parameter::query()->count());
         $this->assertSame(
-            ['abuso', 'analise', 'expresso', 'features', 'geo', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
+            ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -756,11 +756,43 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(30, $janela->typedValue());
     }
 
+    public function test_seeder_registra_toggles_de_ia(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        // Funções de IA (Fase 14 — HU-014 aplicada à IA): 7 toggles por função,
+        // grupo 'ia', TODOS nascem DESLIGADOS (0). A fundação multi-provider
+        // (Onda 0) não liga função nenhuma — cada onda liga a sua ao entregar;
+        // desligado degrada controlado (a função some/avisa), nunca falha silenciosa.
+        $toggles = [
+            'features.ia_ocr',
+            'features.ia_classificacao',
+            'features.ia_inconsistencias',
+            'features.ia_resumo',
+            'features.ia_parecer',
+            'features.ia_explicacao',
+            'features.ia_assistente',
+        ];
+
+        foreach ($toggles as $key) {
+            $toggle = Parameter::query()->where('key', $key)->first();
+
+            $this->assertNotNull($toggle, "Esperava o toggle {$key} registrado.");
+            $this->assertSame('ia', $toggle->group);
+            $this->assertSame('boolean', $toggle->type);
+            $this->assertSame('0', $toggle->default_value, "O toggle {$key} deve nascer desligado.");
+            $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
+            $this->assertFalse($toggle->typedValue(), "O toggle {$key} deve resolver para false por padrão.");
+            $this->assertFalse($toggle->sensitive);
+            $this->assertNull($toggle->value);
+        }
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(90, Parameter::query()->count());
+        $this->assertSame(97, Parameter::query()->count());
     }
 }

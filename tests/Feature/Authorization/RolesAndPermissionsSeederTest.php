@@ -314,13 +314,35 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
     }
 
+    public function test_papel_administrador_recebe_permissao_de_config_ia(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertSame(
+            'manter-config-ia',
+            Permission::findByName('manter-config-ia', 'web')->name,
+        );
+
+        // Configuração de provedores de IA (Fase 14 — HU-014 aplicada à IA):
+        // só o administrador parametriza (credenciais criptografadas, egress
+        // externo). Espelha manter-config-email.
+        $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('manter-config-ia'));
+
+        foreach (['analista', 'gestor', 'cidadao'] as $role) {
+            $this->assertFalse(
+                Role::findByName($role, 'web')->hasPermissionTo('manter-config-ia'),
+                "O papel {$role} não pode manter a configuração de IA.",
+            );
+        }
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(30, Permission::query()->count());
+        $this->assertSame(31, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void
