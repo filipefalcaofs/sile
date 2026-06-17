@@ -100,9 +100,12 @@ abstract class RunAiAgentJob implements ShouldQueue
         $completionTokens = (int) ($response->usage->completionTokens ?? 0);
         $cost = $costs->estimate($model, $promptTokens, $completionTokens);
 
-        // 6. Guardrails (AI-SPEC §6): fonte obrigatória + limiar de confiança.
+        // 6. Guardrails (AI-SPEC §6): fonte obrigatória + limiar de confiança +
+        //    escalonamento específico da função (ex.: ilegibilidade na HU-114).
         $confidence = is_string($output['confianca'] ?? null) ? $output['confianca'] : null;
-        $status = $this->resolveStatus($confidence, $output['fonte'] ?? null);
+        $status = $this->shouldEscalate($output)
+            ? AiSuggestionStatus::EscaladaHumano
+            : $this->resolveStatus($confidence, $output['fonte'] ?? null);
 
         // 7. Persiste a sugestão (apenas no sucesso validado) — sempre revisável.
         $suggestion = AiSuggestion::query()->create([
@@ -150,6 +153,18 @@ abstract class RunAiAgentJob implements ShouldQueue
             result: 'falha',
             personalData: $this->personalData(),
         );
+    }
+
+    /**
+     * Hook de escalonamento específico da função: além de fonte/confiança, a
+     * subclasse pode forçar a revisão humana a partir da própria saída
+     * estruturada (ex.: HU-114 — documento ilegível). Padrão: nada a acrescentar.
+     *
+     * @param  array<string, mixed>  $output
+     */
+    protected function shouldEscalate(array $output): bool
+    {
+        return false;
     }
 
     /**
