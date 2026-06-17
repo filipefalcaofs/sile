@@ -270,6 +270,29 @@ return [
         'job' => ['tries' => 3, 'timeout' => 300, 'backoff' => [30, 60, 120], 'fila' => 'default'],
         'tempo' => ['etapas' => []],
     ],
+    // Configuração de IA (Fase 14, Onda 0). Os provedores administráveis vivem
+    // no banco (model AiConfiguration). Aqui ficam só os controles de SEGURANÇA
+    // do teste de conexão — constantes técnicas/de defesa, fora do catálogo
+    // HU-014 (precedente [02-02]).
+    'ai' => [
+        // Allowlist anti-SSRF de hosts permitidos para a integração de IA. A
+        // base_url é administrável → tratada como SSRF: SÓ estes hosts (sempre
+        // https) podem ser alvo do teste de conexão (e, na Onda 1, do runtime).
+        // Controle PRIMÁRIO de egress. Lida via Settings::get('ai.allowed_hosts')
+        // (uma futura linha de catálogo sobrescreve sem deploy); mantê-la
+        // deploy-controlada é a postura segura — evita SSRF por má configuração.
+        'allowed_hosts' => [
+            'api.openai.com',
+            'api.anthropic.com',
+            'generativelanguage.googleapis.com',
+        ],
+        // Tetos do teste de conexão: connectTimeout baixo + teto do timeout total
+        // (um timeout_ms enorme não pode prender o servidor — anti-SSRF/slowloris).
+        'test' => [
+            'connect_timeout' => 3,
+            'timeout_max_ms' => 15000,
+        ],
+    ],
     'parameters' => [
         'cache_ttl' => 300,
     ],

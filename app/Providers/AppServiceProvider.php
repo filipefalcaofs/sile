@@ -9,6 +9,8 @@ use App\Services\Abuso\Detectors\InscricaoAtividadesIncompativeisDetector;
 use App\Services\Abuso\Detectors\PoligonoRepetidoDetector;
 use App\Services\Abuso\Detectors\VolumeCnpjDetector;
 use App\Services\Abuso\Detectors\VolumeContadorDetector;
+use App\Services\Ai\AiProviderClient;
+use App\Services\Ai\OpenAiCompatibleClient;
 use App\Services\Analise\MalhaFinaService;
 use App\Services\Analise\PostgisPrecedentRepository;
 use App\Services\Analise\PrecedentRepository;
@@ -48,6 +50,12 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(CurrentRepresentation::class);
+
+        // Cliente de provedor de IA (Fase 14, Onda 0): por ora só o teste de
+        // conexão REAL via HTTP OpenAI-compatible. A ponte de runtime do SDK
+        // (laravel/ai) entra na Onda 1 trocando SÓ este binding, sem tocar os
+        // consumidores. NÃO instalar o SDK agora (decisão do arquiteto-técnico).
+        $this->app->bind(AiProviderClient::class, OpenAiCompatibleClient::class);
 
         // Provider público inicial (BrasilAPI / dados abertos RFB). A Fase 13
         // (HU-105) troca este binding pelo provider conveniado da Receita

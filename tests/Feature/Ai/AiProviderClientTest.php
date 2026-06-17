@@ -40,7 +40,7 @@ class AiProviderClientTest extends TestCase
         $result = app(AiProviderClient::class)->testConnection($config);
 
         $this->assertTrue($result->ok);
-        $this->assertStringContainsStringIgnoringCase('sucesso', $result->mensagem);
+        $this->assertStringContainsStringIgnoringCase('bem-sucedida', $result->mensagem);
 
         // Anti-fachada: chamada HTTP REAL ao endpoint {base_url}/models com
         // Authorization: Bearer {api_key} — sem chave válida, falha honesta.
