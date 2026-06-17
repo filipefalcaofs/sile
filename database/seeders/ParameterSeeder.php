@@ -691,6 +691,61 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
                 'description' => 'Janela (dias) da série temporal da taxa de resposta expressa',
             ],
+            // Funções de IA (Fase 14 — HU-014 aplicada à IA). Toggle por função
+            // (key features.ia_*, grupo de negócio 'ia' — key ≠ group é a norma).
+            // TODOS nascem DESLIGADOS (0): a fundação multi-provider (Onda 0) não
+            // liga função nenhuma — cada onda (1-3) liga a sua ao entregar.
+            // Desligado degrada controlado (a função some/avisa), nunca falha
+            // silenciosa. A saída de IA é sempre sugestão revisável, nunca decisão.
+            'features.ia_ocr' => [
+                'group' => 'ia',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a leitura/OCR de documentos por IA (HU-112); desligado degrada de forma comunicada',
+            ],
+            'features.ia_classificacao' => [
+                'group' => 'ia',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a classificação documental por IA (HU-113); desligado degrada de forma comunicada',
+            ],
+            'features.ia_inconsistencias' => [
+                'group' => 'ia',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a detecção de inconsistências documento × declaração por IA (HU-115); desligado degrada de forma comunicada',
+            ],
+            'features.ia_resumo' => [
+                'group' => 'ia',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita o resumo de solicitação/processo por IA (HU-116/117); desligado degrada de forma comunicada',
+            ],
+            'features.ia_parecer' => [
+                'group' => 'ia',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a sugestão de minuta de parecer por IA (HU-118); sempre sugestão revisável, nunca decisão; desligado degrada de forma comunicada',
+            ],
+            'features.ia_explicacao' => [
+                'group' => 'ia',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a explicação do resultado ao cidadão por IA (HU-119); desligado degrada de forma comunicada',
+            ],
+            'features.ia_assistente' => [
+                'group' => 'ia',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita os assistentes conversacionais por IA do cidadão e do analista (HU-120/121); desligado degrada de forma comunicada',
+            ],
         ];
     }
 }

@@ -35,6 +35,17 @@ return [
         'notificacao_email' => true,
         'notificacao_in_app' => true,
         'notificacao_whatsapp' => false,
+        // Toggles das funções de IA (Fase 14 — HU-014 aplicada à IA). TODOS
+        // nascem DESLIGADOS: a fundação (config multi-provider) não liga função
+        // nenhuma; cada onda (1-3) liga a sua quando entregar. Desligado degrada
+        // de forma controlada (a função some/avisa), nunca falha silenciosa.
+        'ia_ocr' => false,
+        'ia_classificacao' => false,
+        'ia_inconsistencias' => false,
+        'ia_resumo' => false,
+        'ia_parecer' => false,
+        'ia_explicacao' => false,
+        'ia_assistente' => false,
     ],
     // Chaves pt-BR (geo.*, retencao.*, seguranca.*) espelham os parâmetros
     // HU-014 de mesmo nome — Settings::get lê config("sile.{chave}") no
