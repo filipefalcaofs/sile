@@ -144,7 +144,7 @@ npm run build     -> exit 0 (chunk config-ia-*.js gerado)
 vendor/bin/pint --dirty --format agent -> passed
 ```
 
-Os 23 testes alvo (AiConfigurationTest 6 + AiProviderClientTest 6 + AiConfigurationControllerTest 11) estão entre os 222 (o filtro `Ai` é case-insensitive e varre amplo; tudo verde).
+Os 22 testes alvo (AiConfigurationTest 5 + AiProviderClientTest 6 + AiConfigurationControllerTest 11) passam (filtro preciso `--filter='/(AiConfigurationTest|AiProviderClientTest|AiConfigurationControllerTest)/'` → 22/22, 71 asserções).
 
 ## Deviations from Plan
 
