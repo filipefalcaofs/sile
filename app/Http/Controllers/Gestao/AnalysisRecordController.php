@@ -8,6 +8,7 @@ use App\Http\Resources\AnalysisRecordResource;
 use App\Models\AiSuggestion;
 use App\Models\StandardText;
 use App\Models\ViabilityRequest;
+use App\Services\Ai\ResumoProcessoService;
 use App\Services\Ai\SugestaoParecerService;
 use App\Services\Analise\AnalysisRecordDiff;
 use App\Services\Analise\AnalysisRecordImutavelException;
@@ -32,13 +33,14 @@ class AnalysisRecordController extends Controller
     public function __construct(
         private AnalysisRecordService $records,
         private AuditService $audit,
+        private ResumoProcessoService $resumos,
     ) {}
 
     /**
      * Abre a ficha na revisão vigente, com a biblioteca de textos-padrão ativos
      * para o picker do parecer (HU-085 RN-004) e o debounce do autosave (config).
      */
-    public function show(ViabilityRequest $viabilityRequest): Response
+    public function show(Request $request, ViabilityRequest $viabilityRequest): Response
     {
         $record = $this->records->current($viabilityRequest);
         $record->loadMissing('analyst');
@@ -66,12 +68,18 @@ class AnalysisRecordController extends Controller
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest),
             'textosPadrao' => $this->textosPadraoAtivos(),
             'autosaveDebounceMs' => (int) config('sile.analise.autosave.debounce_ms', 1500),
-            // Alertas de IA (HU-115) — prop DEFERIDA (carregada sob demanda pelo
-            // card, fora do load inicial). APENAS LEITURA das sugestões do
-            // processo: não toca o AnalysisRecord (ficha finalizada é imutável,
-            // RN-003) nem a lógica de decisão. São sugestões para revisão, jamais
-            // decisão (RN-004).
-            'sugestoesIa' => Inertia::optional(fn (): array => $this->sugestoesIa($viabilityRequest)),
+            // Sugestões de IA (HU-115 alertas + HU-117 resumo do processo) — prop
+            // DEFERIDA (carregada sob demanda pelo card, fora do load inicial).
+            // Ao resolver, dispara o resumo do processo (HU-117) de forma gated e
+            // idempotente (toggle ia_resumo off ou sem provedor ⇒ no-op; dedup por
+            // entrada evita reprocessar) e então LÊ o ledger. APENAS LEITURA do
+            // AnalysisRecord (ficha finalizada é imutável, RN-003) e da decisão:
+            // são sugestões para revisão, jamais decisão (RN-001/004).
+            'sugestoesIa' => Inertia::optional(function () use ($request, $viabilityRequest): array {
+                $this->resumos->processar($viabilityRequest, $request->user()?->id);
+
+                return $this->sugestoesIa($viabilityRequest);
+            }),
         ]);
     }
 
