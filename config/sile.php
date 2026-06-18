@@ -302,6 +302,14 @@ return [
         // exclusão de uma AiConfiguration invalida o cache na hora (evento do
         // model), então o TTL é só a rede de segurança.
         'config_cache_ttl' => 60,
+        // Infra de RAG (Onda 3): dimensão do vetor de embeddings. FONTE ÚNICA da
+        // coluna `vector(N)` da migration e do `->dimensions()` pedido ao SDK —
+        // coluna e vetor têm de casar. 1536 = padrão do text-embedding-3-small
+        // (OpenAI). Constante TÉCNICA atada ao modelo escolhido, fora do catálogo
+        // HU-014 (precedente [02-02]); trocar de modelo/dimensão exige reindexar.
+        'embeddings' => [
+            'dimensions' => 1536,
+        ],
         // Resiliência do job de execução de IA (Onda 1+), espelhando
         // sile.expresso.job: fila + tries/timeout/backoff. Constante TÉCNICA fora
         // do catálogo HU-014 (precedente [02-02]) — não é valor de negócio.
