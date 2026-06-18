@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Portal;
 
+use App\Enums\AiSuggestionType;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreSolicitacaoRequest;
+use App\Models\AiSuggestion;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
@@ -14,6 +16,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestDocument;
 use App\Models\ViabilityServiceType;
+use App\Services\Ai\ResumoSolicitacaoService;
 use App\Services\Solicitacao\DocumentRequirementResolver;
 use App\Services\Solicitacao\DuplicateRequestDetector;
 use App\Support\Representation\CurrentRepresentation;
@@ -48,6 +51,7 @@ class SolicitacaoController extends Controller
     public function __construct(
         private DuplicateRequestDetector $duplicateDetector,
         private DocumentRequirementResolver $requirementResolver,
+        private ResumoSolicitacaoService $resumos,
     ) {}
 
     /**
@@ -245,6 +249,18 @@ class SolicitacaoController extends Controller
             // identificado (degrada honesto sem zona) e alerta de área×polígono.
             'territorio' => $request->session()->get('territorio'),
             'areaAlert' => $request->session()->get('areaAlert'),
+            // Resumo da solicitação por IA (HU-116) para conferência pré-protocolo
+            // — prop DEFERIDA (carregada sob demanda pelo card na etapa de revisão,
+            // fora do load inicial). Ao resolver, dispara o resumo de forma gated e
+            // idempotente (toggle ia_resumo off ou sem provedor ⇒ no-op; dedup por
+            // entrada evita reprocessar) e então LÊ o ledger. Sempre SUGESTÃO de
+            // conferência revisável, jamais decisão nem afirmação de desfecho
+            // (RN-001/Failure Mode #1).
+            'sugestoesResumo' => Inertia::optional(function () use ($request, $solicitacao): array {
+                $this->resumos->processar($solicitacao, $request->user()?->id);
+
+                return $this->sugestoesResumo($solicitacao);
+            }),
         ]);
     }
 
@@ -366,6 +382,33 @@ class SolicitacaoController extends Controller
             'por_cnae' => $solicitacao->simulation_snapshot['por_cnae'] ?? [],
             'simulated_at' => $solicitacao->simulated_at->toIso8601String(),
         ];
+    }
+
+    /**
+     * Resumo da solicitação sugerido pela IA (HU-116) para o card de conferência
+     * da etapa de revisão — APENAS LEITURA do ledger ai_suggestions, escopado a
+     * esta solicitação e ao tipo resumo_solicitacao, mais recentes primeiro. Não
+     * decide nada: é sinal de conferência revisável, jamais afirmação de desfecho.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function sugestoesResumo(ViabilityRequest $solicitacao): array
+    {
+        return AiSuggestion::query()
+            ->where('viability_request_id', $solicitacao->id)
+            ->where('type', AiSuggestionType::ResumoSolicitacao)
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (AiSuggestion $sugestao): array => [
+                'id' => $sugestao->id,
+                'type' => $sugestao->type->value,
+                'type_label' => $sugestao->type->label(),
+                'status' => $sugestao->status->value,
+                'status_label' => $sugestao->status->label(),
+                'output' => $sugestao->output,
+                'created_at' => $sugestao->created_at?->toIso8601String(),
+            ])
+            ->all();
     }
 
     /**

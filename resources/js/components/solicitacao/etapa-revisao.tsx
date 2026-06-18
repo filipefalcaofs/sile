@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { router, WhenVisible } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Alert from '@/components/ui/alert';
@@ -34,10 +34,28 @@ interface RequisitoFaltante {
     name: string;
 }
 
+interface SugestaoResumoOutput {
+    resumo?: string | null;
+    fonte?: string | null;
+    [chave: string]: unknown;
+}
+
+export interface SugestaoResumo {
+    id: number;
+    type: string;
+    type_label: string;
+    status: string;
+    status_label: string;
+    output: SugestaoResumoOutput;
+    created_at: string | null;
+}
+
 interface EtapaRevisaoProps {
     solicitacao: RevisaoSolicitacao;
     requisitosFaltantes: RequisitoFaltante[];
     simulation: SimulacaoData | null;
+    /** Resumo de conferência por IA (HU-116) — prop deferida, sob demanda. */
+    sugestoesResumo?: SugestaoResumo[];
 }
 
 function InfoRow({ label, value }: { label: string; value: ReactNode }) {
@@ -56,7 +74,7 @@ function InfoRow({ label, value }: { label: string; value: ReactNode }) {
  * CIÊNCIA do requerente (proceed_despite) sem impedir o protocolo (direito de
  * petição). Protocolar chama POST solicitacoes.protocolar (08-10).
  */
-export default function EtapaRevisao({ solicitacao, requisitosFaltantes, simulation }: EtapaRevisaoProps) {
+export default function EtapaRevisao({ solicitacao, requisitosFaltantes, simulation, sugestoesResumo }: EtapaRevisaoProps) {
     const [ciente, setCiente] = useState(false);
     const [processing, setProcessing] = useState(false);
 
@@ -140,6 +158,14 @@ export default function EtapaRevisao({ solicitacao, requisitosFaltantes, simulat
                 </CardContent>
             </Card>
 
+            {/* Resumo de conferência por IA (HU-116): prop deferida, carregada sob
+                demanda quando a etapa de revisão entra em tela. Sempre "sugestão —
+                confira", nunca afirma desfecho. Indisponível (toggle off/sem
+                provedor) ⇒ não renderiza nada (degradação honesta, sem fachada). */}
+            <WhenVisible data="sugestoesResumo" buffer={200} fallback={<ResumoConferenciaSkeleton />}>
+                <ResumoConferenciaCard sugestoes={sugestoesResumo ?? []} />
+            </WhenVisible>
+
             {docsPendentes && (
                 <Alert
                     variant="warning"
@@ -181,5 +207,92 @@ export default function EtapaRevisao({ solicitacao, requisitosFaltantes, simulat
                 )}
             </div>
         </div>
+    );
+}
+
+/** Placeholder acessível enquanto o resumo de conferência por IA carrega. */
+function ResumoConferenciaSkeleton() {
+    return (
+        <Card>
+            <CardHeader
+                title="Resumo da solicitação (IA — sugestão, confira)"
+                description="Carregando o resumo de conferência…"
+            />
+            <CardContent>
+                <div className="space-y-3" aria-hidden="true">
+                    <div className="h-4 w-1/2 animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                    <div className="h-16 w-full animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                </div>
+                <p className="sr-only">Carregando o resumo de conferência gerado por inteligência artificial.</p>
+            </CardContent>
+        </Card>
+    );
+}
+
+/**
+ * Card "Resumo da solicitação" gerado pela IA (HU-116) para CONFERÊNCIA antes do
+ * protocolo: apresenta a síntese dos dados declarados (resumo + fonte), sempre
+ * marcada como "sugestão — confira". APENAS LEITURA — apoia o cidadão a revisar o
+ * que informou, não analisa, não decide e NUNCA antecipa o desfecho. Sem resumo
+ * disponível (toggle off/sem provedor/ainda processando) não renderiza nada —
+ * degradação honesta, jamais resultado simulado. Acessível (eMAG/WCAG): texto e
+ * rótulos em pt-BR, status por texto (não só cor), lista rotulada por aria-label.
+ */
+function ResumoConferenciaCard({ sugestoes }: { sugestoes: SugestaoResumo[] }) {
+    if (sugestoes.length === 0) {
+        return null;
+    }
+
+    return (
+        <Card>
+            <CardHeader
+                title="Resumo da solicitação (IA — sugestão, confira)"
+                description="Resumo dos dados que você informou, gerado pela IA para você conferir antes de protocolar. Não é análise nem garantia de resultado."
+            />
+            <CardContent>
+                <ul className="space-y-4" aria-label="Resumo da solicitação sugerido pela IA para conferência">
+                    {sugestoes.map((sugestao) => {
+                        const resumo = typeof sugestao.output.resumo === 'string' ? sugestao.output.resumo : '';
+                        const fonte = typeof sugestao.output.fonte === 'string' ? sugestao.output.fonte : null;
+                        const escalada = sugestao.status === 'escalada_humano';
+
+                        return (
+                            <li
+                                key={sugestao.id}
+                                className="rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10"
+                            >
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <Badge color="info" size="sm">
+                                        Sugestão — confira
+                                    </Badge>
+                                    <Badge color={escalada ? 'warning' : 'light'} size="sm">
+                                        {sugestao.status_label}
+                                    </Badge>
+                                </div>
+
+                                {resumo === '' ? (
+                                    <p className="mt-3 text-theme-sm text-gray-600 dark:text-gray-300">
+                                        A IA não retornou texto de resumo nesta geração. Confira os dados acima
+                                        normalmente.
+                                    </p>
+                                ) : (
+                                    <p className="mt-3 text-theme-sm whitespace-pre-line text-gray-800 dark:text-white/90">
+                                        {resumo}
+                                    </p>
+                                )}
+
+                                {fonte && (
+                                    <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">Fonte: {fonte}</p>
+                                )}
+                            </li>
+                        );
+                    })}
+                </ul>
+
+                <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
+                    Apoio à conferência, sempre revisável — não é análise de viabilidade nem antecipa o resultado.
+                </p>
+            </CardContent>
+        </Card>
     );
 }

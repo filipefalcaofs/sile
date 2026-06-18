@@ -8,7 +8,7 @@ import Select from '@/components/form/select';
 import EtapaAtividades from '@/components/solicitacao/etapa-atividades';
 import EtapaDocumentos from '@/components/solicitacao/etapa-documentos';
 import EtapaImovel from '@/components/solicitacao/etapa-imovel';
-import EtapaRevisao from '@/components/solicitacao/etapa-revisao';
+import EtapaRevisao, { type SugestaoResumo } from '@/components/solicitacao/etapa-revisao';
 import EtapaSimulacao, { type SimulacaoData } from '@/components/solicitacao/etapa-simulacao';
 import { CheckCircleIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
@@ -108,6 +108,8 @@ interface WizardProps {
     solicitacaoEnabled: boolean;
     territorio: TerritorioResumo | null;
     areaAlert: AreaAlert | null;
+    /** Resumo de conferência por IA (HU-116) — prop deferida (Inertia::optional). */
+    sugestoesResumo?: SugestaoResumo[];
 }
 
 type StepId = 'imovel' | 'atividades' | 'documentos' | 'simulacao' | 'revisao';
@@ -335,6 +337,7 @@ function WizardEdicao({
     simulacaoEnabled,
     territorio,
     areaAlert,
+    sugestoesResumo,
 }: WizardProps & { solicitacao: SolicitacaoDraft }) {
     const concluidos: Record<StepId, boolean> = {
         imovel: imovelCompleto(solicitacao),
@@ -424,6 +427,7 @@ function WizardEdicao({
                     solicitacao={solicitacao}
                     requisitosFaltantes={requisitosFaltantes}
                     simulation={solicitacao.simulation}
+                    sugestoesResumo={sugestoesResumo}
                 />
             )}
         </>
