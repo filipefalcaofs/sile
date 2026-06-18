@@ -69,7 +69,10 @@ abstract class RunAiAgentJob implements ShouldQueue
         $promptVersion = $this->promptVersion();
 
         // 1. Re-check do portão: desligado após o enfileiramento ⇒ no-op auditado.
-        if (! $gate->available($function, $this->capability())) {
+        //    O portão usa featureName() (o TOGGLE), não function() — uma família
+        //    de funções pode compartilhar um toggle (ex.: ia_resumo p/ 116 e 117)
+        //    mantendo function()/auditoria distintas por HU.
+        if (! $gate->available($this->featureName(), $this->capability())) {
             $auditor->record($function, $promptVersion, [], result: 'desativado', personalData: $this->personalData());
 
             return;
@@ -165,6 +168,18 @@ abstract class RunAiAgentJob implements ShouldQueue
     protected function shouldEscalate(array $output): bool
     {
         return false;
+    }
+
+    /**
+     * Nome do TOGGLE da função no portão (HU-014). Por padrão coincide com a
+     * function(); uma subclasse pode sobrescrever para COMPARTILHAR um toggle
+     * entre funções afins sem perder a identidade de auditoria/dedup — ex.: o
+     * resumo da solicitação (HU-116) e o do processo (HU-117) vivem ambos sob
+     * features.ia_resumo, enquanto function()/event de auditoria seguem por HU.
+     */
+    protected function featureName(): string
+    {
+        return $this->function();
     }
 
     /**

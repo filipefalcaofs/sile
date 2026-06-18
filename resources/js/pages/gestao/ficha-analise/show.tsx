@@ -123,6 +123,8 @@ interface InconsistenciaIa {
 
 interface SugestaoIaOutput {
     inconsistencias?: InconsistenciaIa[];
+    resumo?: string | null;
+    pontos_chave?: string[] | null;
     fonte?: string | null;
     [chave: string]: unknown;
 }
@@ -647,10 +649,15 @@ export default function FichaAnaliseShow({
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="space-y-6 lg:col-span-2">
-                        {/* Alertas de IA (HU-115) — sugestão revisável, carregada sob
-                            demanda (deferida) quando o card entra em tela. */}
-                        <WhenVisible data="sugestoesIa" buffer={200} fallback={<AlertasIaSkeleton />}>
-                            <AlertasIaCard sugestoes={sugestoesIa ?? []} />
+                        {/* Sugestões de IA (HU-117 resumo + HU-115 alertas) —
+                            revisáveis, carregadas sob demanda (deferida) quando a
+                            seção entra em tela. O resumo do processo abre o topo da
+                            ficha; os alertas seguem logo abaixo. */}
+                        <WhenVisible data="sugestoesIa" buffer={200} fallback={<SugestoesIaSkeleton />}>
+                            <div className="space-y-6">
+                                <ResumoProcessoCard sugestoes={sugestoesIa ?? []} />
+                                <AlertasIaCard sugestoes={sugestoesIa ?? []} />
+                            </div>
                         </WhenVisible>
 
                         {/* Enquadramento por CNAE (espelha a ficha SAPS) */}
@@ -1233,17 +1240,114 @@ export default function FichaAnaliseShow({
     );
 }
 
-/** Skeleton da prop deferida de alertas de IA (HU-115) enquanto carrega sob demanda. */
-function AlertasIaSkeleton() {
+/** Skeleton da prop deferida de sugestões de IA (resumo HU-117 + alertas HU-115) enquanto carrega sob demanda. */
+function SugestoesIaSkeleton() {
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader title="Resumo do processo (IA — sugestão, revise)" description="Carregando o resumo da IA…" />
+                <CardContent>
+                    <div className="space-y-3" aria-hidden="true">
+                        <div className="h-4 w-1/2 animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                        <div className="h-16 w-full animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                    </div>
+                    <p className="sr-only">Carregando o resumo de inteligência artificial.</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader title="Alertas de IA (sugestão — revise)" description="Carregando sugestões da IA…" />
+                <CardContent>
+                    <div className="space-y-3" aria-hidden="true">
+                        <div className="h-4 w-2/3 animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                        <div className="h-20 w-full animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                    </div>
+                    <p className="sr-only">Carregando alertas de inteligência artificial.</p>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+/**
+ * Card "Resumo do processo" (HU-117): apresenta a síntese gerada pela IA
+ * (resumo + pontos-chave + fonte) no TOPO da ficha, sempre marcada como
+ * "sugestão — revise". APENAS LEITURA — apoia a leitura do analista, não decide
+ * nem antecipa o desfecho (AI-SPEC Failure Mode #1). Lê do mesmo ledger
+ * ai_suggestions (prop deferida), filtrando o tipo resumo_processo; mostra a
+ * síntese mais recente primeiro (o controller ordena por id desc).
+ */
+function ResumoProcessoCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
+    const resumos = sugestoes.filter((sugestao) => sugestao.type === 'resumo_processo');
+
     return (
         <Card>
-            <CardHeader title="Alertas de IA (sugestão — revise)" description="Carregando sugestões da IA…" />
+            <CardHeader
+                title="Resumo do processo (IA — sugestão, revise)"
+                description="Síntese do processo (motor, enquadramento, inconsistências e pendências) gerada pela IA para apoiar a leitura. Não decide nem antecipa o desfecho."
+            />
             <CardContent>
-                <div className="space-y-3" aria-hidden="true">
-                    <div className="h-4 w-2/3 animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
-                    <div className="h-20 w-full animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
-                </div>
-                <p className="sr-only">Carregando alertas de inteligência artificial.</p>
+                {resumos.length === 0 ? (
+                    <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                        Nenhum resumo de IA para este processo.
+                    </p>
+                ) : (
+                    <ul className="space-y-4" aria-label="Resumo do processo sugerido pela IA">
+                        {resumos.map((sugestao) => {
+                            const resumo = typeof sugestao.output.resumo === 'string' ? sugestao.output.resumo : '';
+                            const pontos = Array.isArray(sugestao.output.pontos_chave) ? sugestao.output.pontos_chave : [];
+                            const fonte = typeof sugestao.output.fonte === 'string' ? sugestao.output.fonte : null;
+
+                            return (
+                                <li
+                                    key={sugestao.id}
+                                    className="rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10"
+                                >
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <Badge color="info" size="sm">
+                                            Sugestão — revise
+                                        </Badge>
+                                        <Badge color={sugestao.status === 'escalada_humano' ? 'error' : 'light'} size="sm">
+                                            {sugestao.status_label}
+                                        </Badge>
+                                    </div>
+
+                                    {resumo === '' ? (
+                                        <p className="mt-3 text-theme-sm text-gray-600 dark:text-gray-300">
+                                            A IA não retornou texto de resumo nesta geração.
+                                        </p>
+                                    ) : (
+                                        <p className="mt-3 text-theme-sm whitespace-pre-line text-gray-800 dark:text-white/90">
+                                            {resumo}
+                                        </p>
+                                    )}
+
+                                    {pontos.length > 0 && (
+                                        <div className="mt-3">
+                                            <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                                                Pontos de atenção
+                                            </p>
+                                            <ul className="mt-1 list-inside list-disc text-theme-sm text-gray-700 dark:text-gray-300">
+                                                {pontos.map((ponto, indice) => (
+                                                    <li key={indice}>{ponto}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {fonte && (
+                                        <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
+                                            Fonte: {fonte}
+                                        </p>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
+
+                <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
+                    Apoio à leitura, sempre revisável — não substitui a análise nem antecipa a decisão (RN-001/RN-004).
+                </p>
             </CardContent>
         </Card>
     );
