@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, WhenVisible } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
@@ -61,10 +61,30 @@ interface Solicitacao {
     cnaes: CnaeItem[];
 }
 
+interface ExplicacaoIaOutput {
+    explicacao?: string | null;
+    fonte?: string | null;
+    [chave: string]: unknown;
+}
+
+interface ExplicacaoIa {
+    id: number;
+    type: string;
+    type_label: string;
+    status: string;
+    status_label: string;
+    output: ExplicacaoIaOutput;
+    created_at: string | null;
+}
+
 interface ProtocoloProps {
     solicitacao: Solicitacao;
     timeline: Timeline;
     publicLink: string | null;
+    /** Há decisão registrada? Governa a exibição do card de explicação (HU-119). */
+    temDecisao: boolean;
+    /** Explicação da decisão em linguagem cidadã (HU-119) — prop deferida. */
+    explicacaoIa?: ExplicacaoIa[];
 }
 
 /** Cor do selo conforme o estado do processo (diferenciação visual, não estado). */
@@ -203,7 +223,109 @@ function PublicLinkCard({ link }: { link: string }) {
     );
 }
 
-export default function Protocolo({ solicitacao, timeline, publicLink }: ProtocoloProps) {
+/** Placeholder acessível enquanto a explicação da decisão por IA carrega. */
+function ExplicacaoSkeleton() {
+    return (
+        <Card>
+            <CardHeader
+                title="Entenda a decisão (explicação por IA — sugestão)"
+                description="Carregando a explicação em linguagem simples…"
+            />
+            <CardContent>
+                <div className="space-y-3" aria-hidden="true">
+                    <div className="h-4 w-1/2 animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                    <div className="h-20 w-full animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
+                </div>
+                <p className="sr-only">Carregando a explicação da decisão gerada por inteligência artificial.</p>
+            </CardContent>
+        </Card>
+    );
+}
+
+/**
+ * Card "Entenda a decisão" (HU-119): apresenta a explicação da decisão em
+ * LINGUAGEM CIDADÃ gerada pela IA, sempre marcada como "sugestão — revise". É a
+ * versão leiga da explicabilidade (HU-099), FIEL à decisão registrada — não
+ * decide, não reabre o mérito e não promete nada além do que a decisão garante.
+ * Indisponível (toggle off/sem provedor/ainda processando) ⇒ não renderiza nada
+ * (degradação honesta, sem fachada).
+ *
+ * Acessibilidade (eMAG/WCAG 2.1 AA): região com aria-live="polite" para anunciar
+ * a explicação quando ela chega; texto e rótulos em pt-BR; situação comunicada
+ * por TEXTO (não só cor); ícone com texto associado; contraste pelas cores do
+ * design system; ressalva clara de que o documento oficial prevalece.
+ */
+function ExplicacaoCidadaCard({ explicacoes }: { explicacoes: ExplicacaoIa[] }) {
+    if (explicacoes.length === 0) {
+        return null;
+    }
+
+    return (
+        <section aria-live="polite" aria-label="Explicação da decisão em linguagem simples">
+            <Card>
+                <CardHeader
+                    title="Entenda a decisão (explicação por IA — sugestão)"
+                    description="Explicação da decisão em linguagem simples, gerada pela IA para ajudar no seu entendimento. Em caso de dúvida, vale o documento oficial da decisão."
+                />
+                <CardContent>
+                    <ul className="space-y-4" aria-label="Explicação da decisão sugerida pela IA">
+                        {explicacoes.map((sugestao) => {
+                            const explicacao =
+                                typeof sugestao.output.explicacao === 'string' ? sugestao.output.explicacao : '';
+                            const fonte = typeof sugestao.output.fonte === 'string' ? sugestao.output.fonte : null;
+                            const escalada = sugestao.status === 'escalada_humano';
+
+                            return (
+                                <li
+                                    key={sugestao.id}
+                                    className="rounded-xl border border-blue-light-100 bg-blue-light-50 p-4 dark:border-blue-light-500/20 dark:bg-blue-light-500/10"
+                                >
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <Badge color="info" size="sm">
+                                            Sugestão — revise
+                                        </Badge>
+                                        <Badge color={escalada ? 'warning' : 'light'} size="sm">
+                                            {sugestao.status_label}
+                                        </Badge>
+                                    </div>
+
+                                    {explicacao === '' ? (
+                                        <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                                            A IA não retornou texto de explicação. Consulte o documento oficial da
+                                            decisão para os detalhes.
+                                        </p>
+                                    ) : (
+                                        <p className="mt-3 text-sm whitespace-pre-line text-gray-800 dark:text-white/90">
+                                            {explicacao}
+                                        </p>
+                                    )}
+
+                                    {fonte && (
+                                        <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
+                                            Fonte: {fonte}
+                                        </p>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+
+                    <div className="mt-4 flex items-start gap-2 text-theme-xs text-gray-500 dark:text-gray-400">
+                        <span className="mt-0.5 shrink-0 text-gray-400" aria-hidden="true">
+                            <InfoIcon className="size-4 fill-current" />
+                        </span>
+                        <p>
+                            Esta explicação é um apoio ao entendimento gerado por inteligência artificial e pode
+                            conter imprecisões. O documento oficial da decisão é o que vale.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+        </section>
+    );
+}
+
+export default function Protocolo({ solicitacao, timeline, publicLink, temDecisao, explicacaoIa }: ProtocoloProps) {
     const titulo = solicitacao.protocol_number ?? 'Solicitação de viabilidade';
 
     return (
@@ -266,6 +388,17 @@ export default function Protocolo({ solicitacao, timeline, publicLink }: Protoco
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Explicação da decisão em linguagem cidadã (HU-119): só aparece
+                    quando há decisão registrada; carregada sob demanda (deferida)
+                    quando a seção entra em tela. Sempre "sugestão — revise" e fiel à
+                    decisão; indisponível (toggle off/sem provedor) ⇒ não renderiza
+                    (degradação honesta, sem fachada). */}
+                {temDecisao && (
+                    <WhenVisible data="explicacaoIa" buffer={200} fallback={<ExplicacaoSkeleton />}>
+                        <ExplicacaoCidadaCard explicacoes={explicacaoIa ?? []} />
+                    </WhenVisible>
+                )}
 
                 <Card>
                     <CardHeader title="Dados do processo" />

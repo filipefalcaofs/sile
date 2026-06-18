@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Portal;
 
+use App\Enums\AiSuggestionType;
 use App\Http\Controllers\Controller;
+use App\Models\AiSuggestion;
 use App\Models\Cnae;
 use App\Models\ViabilityRequest;
+use App\Services\Ai\ExplicacaoCidadaoService;
 use App\Services\Solicitacao\TimelineSolicitacao;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
@@ -27,6 +30,7 @@ class ConsultaProtocoloController extends Controller
     public function __construct(
         private TimelineSolicitacao $timeline,
         private AuditService $audit,
+        private ExplicacaoCidadaoService $explicacoes,
     ) {}
 
     public function show(Request $request, ViabilityRequest $solicitacao): Response
@@ -50,6 +54,21 @@ class ConsultaProtocoloController extends Controller
             'solicitacao' => $this->payload($solicitacao),
             'timeline' => $this->timeline->build($solicitacao, publico: false),
             'publicLink' => $this->publicLink($solicitacao),
+            // Há decisão registrada? Booleano honesto (não-deferido) que governa a
+            // exibição do card de explicação: sem decisão, o card NÃO aparece (não
+            // há o que explicar). Com decisão, o front carrega a prop deferida.
+            'temDecisao' => $solicitacao->decision()->exists(),
+            // Explicação da decisão em linguagem cidadã (HU-119) — versão leiga da
+            // explicabilidade da HU-099. Prop DEFERIDA (carregada sob demanda pelo
+            // card quando há decisão). Ao resolver, dispara a explicação de forma
+            // gated/idempotente e SÓ quando há ViabilityDecision (sem decisão ⇒
+            // no-op; dedup por entrada evita reprocessar) e então LÊ o ledger.
+            // Sempre SUGESTÃO revisável, fiel à decisão registrada (RN-001/004).
+            'explicacaoIa' => Inertia::optional(function () use ($request, $solicitacao): array {
+                $this->explicacoes->processar($solicitacao, $request->user()?->id);
+
+                return $this->explicacaoIa($solicitacao);
+            }),
         ]);
     }
 
@@ -116,5 +135,32 @@ class ConsultaProtocoloController extends Controller
                 ])
                 ->all(),
         ];
+    }
+
+    /**
+     * Explicação da decisão em linguagem cidadã sugerida pela IA (HU-119) para o
+     * card de explicação — APENAS LEITURA do ledger ai_suggestions, escopado a
+     * esta solicitação e ao tipo explicacao, mais recentes primeiro. Não decide
+     * nada: é a versão leiga e revisável da explicabilidade, fiel à decisão.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function explicacaoIa(ViabilityRequest $solicitacao): array
+    {
+        return AiSuggestion::query()
+            ->where('viability_request_id', $solicitacao->id)
+            ->where('type', AiSuggestionType::Explicacao)
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (AiSuggestion $sugestao): array => [
+                'id' => $sugestao->id,
+                'type' => $sugestao->type->value,
+                'type_label' => $sugestao->type->label(),
+                'status' => $sugestao->status->value,
+                'status_label' => $sugestao->status->label(),
+                'output' => $sugestao->output,
+                'created_at' => $sugestao->created_at?->toIso8601String(),
+            ])
+            ->all();
     }
 }
