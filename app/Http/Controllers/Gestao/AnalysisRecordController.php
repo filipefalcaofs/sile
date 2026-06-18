@@ -8,6 +8,7 @@ use App\Http\Resources\AnalysisRecordResource;
 use App\Models\AiSuggestion;
 use App\Models\StandardText;
 use App\Models\ViabilityRequest;
+use App\Services\Ai\SugestaoParecerService;
 use App\Services\Analise\AnalysisRecordDiff;
 use App\Services\Analise\AnalysisRecordImutavelException;
 use App\Services\Analise\AnalysisRecordService;
@@ -136,6 +137,45 @@ class AnalysisRecordController extends Controller
         return response()->json([
             'ficha' => (new AnalysisRecordResource($record))->resolve(),
             'status' => 'Nova revisão criada.',
+        ]);
+    }
+
+    /**
+     * Solicita à IA uma SUGESTÃO de minuta de parecer (HU-118) — Failure Mode #1:
+     * apoio, NUNCA decisão. Delega ao SugestaoParecerService, que degrada
+     * honestamente sem o toggle features.ia_parecer, sem provedor de texto ou sem
+     * a pré-análise do motor (engine_snapshot). A minuta nasce no ledger
+     * ai_suggestions como sugestão revisável e aparece nos alertas de IA da ficha;
+     * este endpoint NUNCA grava o parecer nem decide o processo. Recusa numa
+     * revisão finalizada (RN-003), onde a redação é imutável.
+     */
+    public function sugerirParecer(Request $request, ViabilityRequest $viabilityRequest, SugestaoParecerService $parecer): JsonResponse
+    {
+        $record = $this->records->current($viabilityRequest);
+
+        if ($record->isFinalizada()) {
+            abort(422, 'A revisão está finalizada (RN-003): crie uma nova revisão para trabalhar uma minuta.');
+        }
+
+        $despachou = $parecer->processar($viabilityRequest, $request->user()?->id);
+
+        $this->audit->log(
+            logName: 'analise',
+            event: 'ficha-sugerir-parecer',
+            description: "Solicitação de minuta de parecer por IA do processo #{$viabilityRequest->id}",
+            properties: [
+                'viability_request_id' => $viabilityRequest->id,
+                'revision' => $record->revision,
+                'despachou' => $despachou,
+            ],
+            subject: $record,
+        );
+
+        return response()->json([
+            'despachou' => $despachou,
+            'status' => $despachou
+                ? 'Minuta solicitada à IA. A sugestão aparecerá nos alertas de IA para revisão.'
+                : 'Sugestão de minuta indisponível (função desativada ou processo sem pré-análise do motor). Redija o parecer manualmente.',
         ]);
     }
 

@@ -125,6 +125,8 @@ interface SugestaoIaOutput {
     inconsistencias?: InconsistenciaIa[];
     resumo?: string | null;
     pontos_chave?: string[] | null;
+    minuta?: string | null;
+    fundamentacao?: string | null;
     fonte?: string | null;
     [chave: string]: unknown;
 }
@@ -155,6 +157,11 @@ const STATUS_OPCOES: { value: StatusFicha; label: string }[] = [
     { value: 'indeferida', label: 'Indeferida' },
     { value: 'analise', label: 'Em análise' },
 ];
+
+/** A minuta (HU-118) roda em fila (assíncrona): após solicitar, sondamos a prop
+ *  deferida sugestoesIa por uma janela limitada até a sugestão ser processada. */
+const MINUTA_POLL_INTERVAL_MS = 3000;
+const MINUTA_POLL_MAX = 8;
 
 function statusLabel(status: string | null | undefined): string {
     return STATUS_OPCOES.find((opcao) => opcao.value === status)?.label ?? (status ?? '—');
@@ -351,6 +358,18 @@ export default function FichaAnaliseShow({
     const [malhaFinaProcessing, setMalhaFinaProcessing] = useState(false);
     const precedentes = useHttp<Record<string, never>, PrecedentesResponse>({});
     const diff = useHttp<{ de: number; para: number }, DiffResponse>({ de: 0, para: 0 });
+
+    // Sugestão de minuta de parecer por IA (HU-118) — apoio, nunca decisão. O job
+    // roda em fila; aqui sondamos a sugestão até ela aparecer (UX assíncrona).
+    const minuta = useHttp<Record<string, never>, { despachou?: boolean; status?: string }>({});
+    const [minutaStatus, setMinutaStatus] = useState<'idle' | 'solicitando' | 'aguardando' | 'pronta' | 'indisponivel'>('idle');
+    const [minutaMensagem, setMinutaMensagem] = useState<string | null>(null);
+    const minutaPollRef = useRef<number | null>(null);
+    const minutaBaselineRef = useRef(0);
+    const parecerSugeridos = useMemo(
+        () => (sugestoesIa ?? []).filter((sugestao) => sugestao.type === 'parecer').length,
+        [sugestoesIa],
+    );
 
     const [precedentesData, setPrecedentesData] = useState<PrecedentesResponse | null>(null);
     const [precedentesErro, setPrecedentesErro] = useState<string | null>(null);
@@ -560,6 +579,81 @@ export default function FichaAnaliseShow({
         });
     }
 
+    function pararPollMinuta() {
+        if (minutaPollRef.current !== null) {
+            window.clearInterval(minutaPollRef.current);
+            minutaPollRef.current = null;
+        }
+    }
+
+    function iniciarPollMinuta() {
+        pararPollMinuta();
+        let tentativas = 0;
+
+        minutaPollRef.current = window.setInterval(() => {
+            tentativas += 1;
+
+            if (tentativas > MINUTA_POLL_MAX) {
+                pararPollMinuta();
+
+                return;
+            }
+
+            router.reload({ only: ['sugestoesIa'] });
+        }, MINUTA_POLL_INTERVAL_MS);
+    }
+
+    function sugerirMinuta() {
+        setMinutaMensagem(null);
+        setMinutaStatus('solicitando');
+        minutaBaselineRef.current = parecerSugeridos;
+
+        minuta.post(`${fichaUrl}/sugerir-parecer`, {
+            onSuccess: (resposta) => {
+                setMinutaMensagem(resposta?.status ?? null);
+
+                if (resposta?.despachou) {
+                    setMinutaStatus('aguardando');
+                    iniciarPollMinuta();
+                } else {
+                    setMinutaStatus('indisponivel');
+                }
+            },
+            onHttpException: () => {
+                setMinutaStatus('indisponivel');
+                setMinutaMensagem('Não foi possível solicitar a minuta agora. Tente novamente.');
+
+                return false;
+            },
+        });
+    }
+
+    /**
+     * Copia a minuta sugerida para o editor do parecer como RASCUNHO editável
+     * (client-side). Nada é decidido nem finalizado: o analista revisa, edita e
+     * valida; o autosave persiste apenas o rascunho (RN-008). A IA nunca grava
+     * decisão (RN-001) e a revisão finalizada permanece imutável (RN-003).
+     */
+    function aplicarMinutaAoParecer(minutaTexto: string) {
+        setParecer((atual) => (atual.trim() === '' ? minutaTexto : `${atual}\n\n${minutaTexto}`));
+
+        window.requestAnimationFrame(() => {
+            document.getElementById('parecer-editor')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    }
+
+    // A minuta chega de forma assíncrona (fila): quando a contagem de sugestões de
+    // parecer cresce além do baseline, encerramos a sondagem e sinalizamos pronta.
+    useEffect(() => {
+        if (minutaStatus === 'aguardando' && parecerSugeridos > minutaBaselineRef.current) {
+            setMinutaStatus('pronta');
+            pararPollMinuta();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [parecerSugeridos, minutaStatus]);
+
+    useEffect(() => () => pararPollMinuta(), []);
+
     const condicionantesSugeridas = useMemo(() => {
         const conjunto = new Set<string>();
 
@@ -656,6 +750,11 @@ export default function FichaAnaliseShow({
                         <WhenVisible data="sugestoesIa" buffer={200} fallback={<SugestoesIaSkeleton />}>
                             <div className="space-y-6">
                                 <ResumoProcessoCard sugestoes={sugestoesIa ?? []} />
+                                <MinutaParecerCard
+                                    sugestoes={sugestoesIa ?? []}
+                                    editavel={editavel}
+                                    onAplicar={aplicarMinutaAoParecer}
+                                />
                                 <AlertasIaCard sugestoes={sugestoesIa ?? []} />
                             </div>
                         </WhenVisible>
@@ -975,23 +1074,59 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Parecer técnico"
-                                description="Fundamentação da análise. Use a biblioteca de textos-padrão para acelerar (HU-085)."
+                                description="Fundamentação da análise. Use a biblioteca de textos-padrão para acelerar (HU-085) ou peça uma minuta de apoio à IA (HU-118)."
                                 actions={
                                     editavel ? (
-                                        <Button size="xs" variant="ghost" onClick={() => setPickerParaParecer(true)}>
-                                            Inserir texto-padrão
-                                        </Button>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <Button
+                                                size="xs"
+                                                variant="outline"
+                                                onClick={sugerirMinuta}
+                                                loading={minuta.processing || minutaStatus === 'aguardando'}
+                                            >
+                                                Sugerir minuta (IA)
+                                            </Button>
+                                            <Button size="xs" variant="ghost" onClick={() => setPickerParaParecer(true)}>
+                                                Inserir texto-padrão
+                                            </Button>
+                                        </div>
                                     ) : undefined
                                 }
                             />
                             <CardContent>
                                 <Textarea
+                                    id="parecer-editor"
                                     rows={6}
                                     disabled={!editavel}
                                     placeholder="Redija o parecer técnico…"
                                     value={parecer}
                                     onChange={setParecer}
                                 />
+
+                                {editavel && minutaStatus !== 'idle' && (
+                                    <p
+                                        className={`mt-2 text-theme-xs ${
+                                            minutaStatus === 'indisponivel'
+                                                ? 'text-warning-600 dark:text-warning-500'
+                                                : 'text-gray-500 dark:text-gray-400'
+                                        }`}
+                                        role="status"
+                                        aria-live="polite"
+                                    >
+                                        {minutaStatus === 'solicitando' && 'Solicitando minuta à IA…'}
+                                        {minutaStatus === 'aguardando' &&
+                                            'Minuta solicitada — aguardando o processamento da IA. Ela aparecerá em “Minuta de parecer (IA)” no topo, como sugestão a revisar.'}
+                                        {minutaStatus === 'pronta' &&
+                                            'Minuta sugerida disponível em “Minuta de parecer (IA)” no topo — revise e use “Aplicar ao parecer”.'}
+                                        {minutaStatus === 'indisponivel' &&
+                                            (minutaMensagem ?? 'Sugestão de minuta indisponível no momento.')}
+                                    </p>
+                                )}
+
+                                <p className="mt-2 text-theme-xs text-gray-400 dark:text-gray-500">
+                                    A minuta da IA é apenas sugestão (HU-118): você a revisa, edita e valida. A IA não decide o
+                                    desfecho nem finaliza a ficha (RN-001/RN-003).
+                                </p>
                             </CardContent>
                         </Card>
                     </div>
@@ -1347,6 +1482,129 @@ function ResumoProcessoCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
 
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
                     Apoio à leitura, sempre revisável — não substitui a análise nem antecipa a decisão (RN-001/RN-004).
+                </p>
+            </CardContent>
+        </Card>
+    );
+}
+
+/** Nível de confiança da IA → rótulo em pt-BR (texto, nunca só cor — eMAG). */
+function confiancaLabel(confianca: string): string {
+    if (confianca === 'alta') {
+        return 'Alta';
+    }
+
+    if (confianca === 'media') {
+        return 'Média';
+    }
+
+    if (confianca === 'baixa') {
+        return 'Baixa';
+    }
+
+    return confianca;
+}
+
+/**
+ * Card "Minuta de parecer" (HU-118 — Failure Mode #1): exibe os rascunhos de
+ * parecer sugeridos pela IA (minuta + fundamentação do motor + confiança +
+ * fonte), sempre marcados como "sugestão — revise". A ação "Aplicar ao parecer"
+ * copia o texto para o editor do parecer (client-side, editável) — NUNCA grava
+ * decisão nem finaliza (RN-001/RN-003). Só aparece quando há minuta sugerida,
+ * para não poluir a ficha; lê do mesmo ledger ai_suggestions (prop deferida).
+ */
+function MinutaParecerCard({
+    sugestoes,
+    editavel,
+    onAplicar,
+}: {
+    sugestoes: SugestaoIa[];
+    editavel: boolean;
+    onAplicar: (minuta: string) => void;
+}) {
+    const minutas = sugestoes.filter((sugestao) => sugestao.type === 'parecer');
+
+    if (minutas.length === 0) {
+        return null;
+    }
+
+    return (
+        <Card>
+            <CardHeader
+                title="Minuta de parecer (IA — sugestão, revise)"
+                description="Rascunho de parecer proposto pela IA com base na pré-análise do motor. É apoio, não decisão: revise, edite e valide."
+            />
+            <CardContent>
+                <ul className="space-y-4" aria-label="Minutas de parecer sugeridas pela IA">
+                    {minutas.map((sugestao) => {
+                        const minutaTexto = typeof sugestao.output.minuta === 'string' ? sugestao.output.minuta : '';
+                        const fundamentacao =
+                            typeof sugestao.output.fundamentacao === 'string' ? sugestao.output.fundamentacao : null;
+                        const fonte = typeof sugestao.output.fonte === 'string' ? sugestao.output.fonte : null;
+
+                        return (
+                            <li
+                                key={sugestao.id}
+                                className="rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10"
+                            >
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <Badge color="info" size="sm">
+                                        Sugestão — revise
+                                    </Badge>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {sugestao.confianca && (
+                                            <Badge color="light" size="sm">
+                                                Confiança: {confiancaLabel(sugestao.confianca)}
+                                            </Badge>
+                                        )}
+                                        <Badge color={sugestao.status === 'escalada_humano' ? 'error' : 'light'} size="sm">
+                                            {sugestao.status_label}
+                                        </Badge>
+                                    </div>
+                                </div>
+
+                                {minutaTexto === '' ? (
+                                    <p className="mt-3 text-theme-sm text-gray-600 dark:text-gray-300">
+                                        A IA não retornou texto de minuta nesta geração.
+                                    </p>
+                                ) : (
+                                    <p className="mt-3 text-theme-sm whitespace-pre-line text-gray-800 dark:text-white/90">
+                                        {minutaTexto}
+                                    </p>
+                                )}
+
+                                {fundamentacao && (
+                                    <div className="mt-3">
+                                        <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                                            Fundamentação (do motor)
+                                        </p>
+                                        <p className="mt-1 text-theme-sm whitespace-pre-line text-gray-700 dark:text-gray-300">
+                                            {fundamentacao}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {fonte && (
+                                    <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
+                                        Fonte: {fonte}
+                                    </p>
+                                )}
+
+                                {editavel && minutaTexto !== '' && (
+                                    <div className="mt-4">
+                                        <Button size="sm" variant="outline" onClick={() => onAplicar(minutaTexto)}>
+                                            Aplicar ao parecer
+                                        </Button>
+                                    </div>
+                                )}
+                            </li>
+                        );
+                    })}
+                </ul>
+
+                <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
+                    “Aplicar ao parecer” copia o texto para o editor do parecer, onde você revisa e ajusta — nada é gravado
+                    nem decidido automaticamente (RN-001).
                 </p>
             </CardContent>
         </Card>
