@@ -7,11 +7,14 @@ use App\Enums\AiSuggestionStatus;
 use App\Enums\AiSuggestionType;
 use App\Enums\AnalysisRecordStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
 use App\Models\AnalysisRecord;
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Ai\ResumoProcessoService;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
@@ -140,5 +143,73 @@ class ResumoProcessoTest extends TestCase
         $this->assertFalse($despachou);
         ResumoProcessoAgent::assertNeverPrompted();
         $this->assertSame(0, AiSuggestion::query()->count());
+    }
+
+    public function test_ficha_dispara_resumo_ao_carregar_sugestoes_de_ia(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        config(['sile.features.ia_resumo' => true]);
+        $this->provedorTextoAtivo();
+        $processo = $this->processoComFicha();
+
+        ResumoProcessoAgent::fake([[
+            'resumo' => 'Processo de comércio varejista no Centro; síntese da pré-análise do motor para apoio à análise.',
+            'pontos_chave' => ['Atividade principal com tendência permitida (sugestão do motor)'],
+            'fonte' => 'pré-análise do motor (engine_snapshot) e ficha de análise',
+        ]]);
+
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $url = "/gestao/processos/{$processo->id}/ficha";
+        $versao = (new HandleInertiaRequests)->version(request());
+
+        // Partial reload da prop deferida sugestoesIa: ao carregar o card de IA, o
+        // controller dispara o resumo (gated/dedup) e a prop já o entrega.
+        $resposta = $this->actingAs($analista, 'gestao')
+            ->get($url, [
+                'X-Inertia' => 'true',
+                'X-Inertia-Version' => $versao,
+                'X-Inertia-Partial-Component' => 'gestao/ficha-analise/show',
+                'X-Inertia-Partial-Data' => 'sugestoesIa',
+            ])
+            ->assertOk();
+
+        ResumoProcessoAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Centro'));
+
+        $sugestao = AiSuggestion::query()
+            ->where('type', AiSuggestionType::ResumoProcesso)
+            ->sole();
+        $this->assertSame($processo->id, $sugestao->viability_request_id);
+
+        $resposta->assertJsonPath('props.sugestoesIa.0.type', 'resumo_processo');
+        $resposta->assertJsonPath('props.sugestoesIa.0.status', 'sugerida');
+    }
+
+    public function test_ficha_nao_dispara_resumo_com_toggle_desligado(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        config(['sile.features.ia_resumo' => false]);
+        $this->provedorTextoAtivo();
+        $processo = $this->processoComFicha();
+
+        ResumoProcessoAgent::fake([[
+            'resumo' => 'não deveria rodar',
+            'fonte' => 'motor',
+        ]]);
+
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $url = "/gestao/processos/{$processo->id}/ficha";
+        $versao = (new HandleInertiaRequests)->version(request());
+
+        $this->actingAs($analista, 'gestao')
+            ->get($url, [
+                'X-Inertia' => 'true',
+                'X-Inertia-Version' => $versao,
+                'X-Inertia-Partial-Component' => 'gestao/ficha-analise/show',
+                'X-Inertia-Partial-Data' => 'sugestoesIa',
+            ])
+            ->assertOk();
+
+        ResumoProcessoAgent::assertNeverPrompted();
+        $this->assertSame(0, AiSuggestion::query()->where('type', AiSuggestionType::ResumoProcesso)->count());
     }
 }
