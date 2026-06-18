@@ -171,7 +171,7 @@ class PrecedentIndexer
             // floats que o serviço controla, sem entrada do usuário no literal.
             DB::update(
                 'UPDATE ai_precedent_embeddings SET embedding = ?::vector WHERE id = ?',
-                [$this->toVectorLiteral($vector), $embedding->id],
+                [VectorLiteral::format($vector), $embedding->id],
             );
 
             return;
@@ -180,19 +180,6 @@ class PrecedentIndexer
         DB::table('ai_precedent_embeddings')
             ->where('id', $embedding->id)
             ->update(['embedding' => json_encode($vector)]);
-    }
-
-    /**
-     * Literal pgvector `[v1,v2,...]` a partir do vetor de floats.
-     *
-     * @param  array<float>  $vector
-     */
-    private function toVectorLiteral(array $vector): string
-    {
-        return '['.implode(',', array_map(
-            fn (float $value): string => rtrim(rtrim(sprintf('%.8f', $value), '0'), '.'),
-            $vector,
-        )).']';
     }
 
     private function dimensions(): int
