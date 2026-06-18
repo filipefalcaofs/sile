@@ -1,0 +1,87 @@
+# Stack da aplicação SILE — deploy via build do repositório GitHub.
+#
+# Pré-requisito: stack sile-infra no ar (cria a rede sile_net e os
+# serviços pgsql/redis acessíveis por hostname dentro da rede).
+#
+# Portainer → Stacks → Add stack → Repository
+#   Repository URL:  https://github.com/filipefalcaofs/sile.git
+#   Compose path:    docker-compose.portainer-full.yml
+#   Branch:          main
+#
+# Para atualizar: clique em "Pull and redeploy" no Portainer.
+
+name: sile-app
+
+x-app-env: &app-env
+  APP_NAME: ${APP_NAME:-SILE}
+  APP_ENV: production
+  APP_KEY: ${APP_KEY:?defina APP_KEY}
+  APP_DEBUG: 'false'
+  APP_URL: ${APP_URL:?defina APP_URL}
+  APP_LOCALE: pt_BR
+  APP_FALLBACK_LOCALE: pt_BR
+  LOG_CHANNEL: stderr
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  DB_CONNECTION: pgsql
+  DB_HOST: pgsql
+  DB_PORT: '5432'
+  DB_DATABASE: ${DB_DATABASE:-sile}
+  DB_USERNAME: ${DB_USERNAME:-sile}
+  DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+  SESSION_DRIVER: redis
+  SESSION_LIFETIME: '120'
+  SESSION_ENCRYPT: 'false'
+  CACHE_STORE: redis
+  QUEUE_CONNECTION: redis
+  REDIS_CLIENT: predis
+  REDIS_HOST: redis
+  REDIS_PASSWORD: 'null'
+  REDIS_PORT: '6379'
+  MAIL_MAILER: ${MAIL_MAILER:-log}
+  MAIL_HOST: ${MAIL_HOST:-}
+  MAIL_PORT: ${MAIL_PORT:-}
+  MAIL_USERNAME: ${MAIL_USERNAME:-}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@sile.sedur.ba.gov.br}
+  MAIL_FROM_NAME: ${APP_NAME:-SILE}
+  RESEND_KEY: ${RESEND_KEY:-}
+
+services:
+  app:
+    build: .
+    image: sile-app:latest
+    container_name: sile-app
+    restart: unless-stopped
+    ports:
+      - '${APP_PORT:-8082}:8000'
+    environment:
+      <<: *app-env
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
+    networks:
+      sile_net: {}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8000/up || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+
+  queue:
+    build: .
+    image: sile-app:latest
+    pull_policy: never
+    container_name: sile-queue
+    restart: unless-stopped
+    command: ['php', 'artisan', 'queue:work', '--sleep=3', '--tries=3', '--max-time=3600']
+    environment:
+      <<: *app-env
+      RUN_MIGRATIONS: 'false'
+    networks:
+      sile_net: {}
+    depends_on:
+      app:
+        condition: service_healthy
+
+networks:
+  sile_net:
+    external: true
