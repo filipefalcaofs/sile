@@ -44,7 +44,7 @@ RUN chmod +x /entrypoint.sh \
     && rm -f /etc/nginx/sites-enabled/default \
     && ln -s /etc/nginx/sites-available/sile /etc/nginx/sites-enabled/sile
 
-COPY composer*.json ./
+COPY composer*.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
 COPY . .
