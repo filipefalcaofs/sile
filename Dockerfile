@@ -1,18 +1,17 @@
 # Assets são pré-buildados localmente e commitados em public/build.
 # O servidor só precisa rodar composer install + configurar PHP-FPM + Nginx.
-FROM php:8.3-fpm-alpine
+FROM php:8.3-fpm-bookworm
 
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
     supervisor \
-    postgresql-client \
+    libpq-dev \
     libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     libzip-dev \
-    icu-dev \
-    icu-libs \
-    oniguruma-dev \
+    libicu-dev \
+    libonig-dev \
     libxml2-dev \
     curl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -30,17 +29,20 @@ RUN apk add --no-cache \
         opcache \
     && pecl install redis \
     && docker-php-ext-enable redis \
-    && rm -rf /tmp/pear
+    && rm -rf /var/lib/apt/lists/* /tmp/pear
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
 COPY docker/app/php.ini /usr/local/etc/php/conf.d/99-app.ini
-COPY docker/app/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/app/nginx.conf /etc/nginx/sites-available/sile
 COPY docker/app/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/app/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && mkdir -p /var/log/supervisor
+RUN chmod +x /entrypoint.sh \
+    && mkdir -p /var/log/supervisor /run/php \
+    && rm -f /etc/nginx/sites-enabled/default \
+    && ln -s /etc/nginx/sites-available/sile /etc/nginx/sites-enabled/sile
 
 COPY composer*.json ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
