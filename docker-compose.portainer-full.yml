@@ -43,6 +43,7 @@ x-app-env: &app-env
   MAIL_FROM_NAME: ${APP_NAME:-SILE}
   RESEND_KEY: ${RESEND_KEY:-}
   VIEW_COMPILED_PATH: /var/www/html/storage/framework/views
+  ASSET_URL: ${APP_URL}
 
 services:
   migrate:
