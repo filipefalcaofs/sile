@@ -6,7 +6,7 @@
 
 name: sile-app
 
-x-sile-image: &sile-image filipefalcaofs97/sile:latest
+x-sile-image: &sile-image ghcr.io/filipefalcaofs/sile:latest
 
 x-app-env: &app-env
   APP_NAME: ${APP_NAME:-SILE}
