@@ -1,22 +1,12 @@
-# Stack da aplicação SILE — deploy via imagem do Docker Hub.
+# Stack da aplicação SILE — deploy via imagem do GitHub Container Registry.
 #
-# A imagem é gerada automaticamente pelo GitHub Actions (/.github/workflows/docker-publish.yml)
-# a cada push na branch main: filipefalcaofs97/sile:latest
-#
-# Pré-requisito: stack sile-infra no ar (cria a rede sile_net e os
-# serviços pgsql/redis acessíveis por hostname dentro da rede).
-#
-# Portainer → Stacks → Add stack → Repository
-#   Repository URL:  https://github.com/filipefalcaofs/sile.git
-#   Compose path:    docker-compose.portainer-full.yml
-#   Branch:          main
-#
-# Para atualizar: faça push na main e clique em "Pull and redeploy"
-# marcando "Re-pull image and redeploy" no Portainer.
+# Imagem publicada no Docker Hub (build: ./scripts/portainer-build-push.sh).
+# Alternativa GHCR (GitHub Actions): ghcr.io/filipefalcaofs/sile:latest
+#   — requer registry configurado no Portainer ou pacote público.
 
 name: sile-app
 
-x-sile-image: &sile-image ghcr.io/filipefalcaofs/sile:latest
+x-sile-image: &sile-image filipefalcaofs97/sile:latest
 
 x-app-env: &app-env
   APP_NAME: ${APP_NAME:-SILE}
@@ -26,6 +16,7 @@ x-app-env: &app-env
   APP_URL: ${APP_URL:?defina APP_URL}
   APP_LOCALE: pt_BR
   APP_FALLBACK_LOCALE: pt_BR
+  SILE_DEMO_DATA: ${SILE_DEMO_DATA:-false}
   LOG_CHANNEL: stderr
   LOG_LEVEL: ${LOG_LEVEL:-info}
   DB_CONNECTION: pgsql
@@ -57,20 +48,7 @@ services:
     image: *sile-image
     pull_policy: always
     container_name: sile-migrate
-    entrypoint: ['/bin/sh', '-ce']
-    command:
-      - |
-        host="${DB_HOST:-pgsql}"
-        port="${DB_PORT:-5432}"
-        echo "[migrate] aguardando PostgreSQL em ${host}:${port}..."
-        n=0
-        until php -r "exit(@fsockopen('${host}', ${port}) ? 0 : 1);" 2>/dev/null; do
-          n=$((n+1))
-          [ "$n" -ge 60 ] && echo "[migrate] timeout" && exit 1
-          sleep 2
-        done
-        echo "[migrate] executando migrations..."
-        php artisan migrate --force --no-interaction -vvv
+    entrypoint: ["/migrate.sh"]
     environment:
       APP_KEY: ${APP_KEY:?defina APP_KEY}
       APP_ENV: production
@@ -86,6 +64,39 @@ services:
       - sile_net
     restart: 'no'
 
+  seed:
+    image: *sile-image
+    pull_policy: always
+    container_name: sile-seed
+    entrypoint: ['/bin/sh', '-ce']
+    command:
+      - |
+        if [ "${SILE_DEMO_DATA:-false}" != "true" ]; then
+          echo "[seed] SILE_DEMO_DATA nao esta true — pulando seed de demonstracao."
+          exit 0
+        fi
+        echo "[seed] executando seed de demonstracao..."
+        php artisan db:seed --class=DemonstracaoClienteSeeder --force --no-interaction -vvv \
+          || php artisan db:seed --force --no-interaction -vvv
+    environment:
+      APP_KEY: ${APP_KEY:?defina APP_KEY}
+      APP_ENV: production
+      SILE_DEMO_DATA: ${SILE_DEMO_DATA:-false}
+      LOG_CHANNEL: stderr
+      CACHE_STORE: array
+      DB_CONNECTION: pgsql
+      DB_HOST: pgsql
+      DB_PORT: '5432'
+      DB_DATABASE: ${DB_DATABASE:-sile}
+      DB_USERNAME: ${DB_USERNAME:-sile}
+      DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+    networks:
+      - sile_net
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: 'no'
+
   app:
     image: *sile-image
     pull_policy: always
@@ -99,7 +110,7 @@ services:
     networks:
       sile_net: {}
     depends_on:
-      migrate:
+      seed:
         condition: service_completed_successfully
     healthcheck:
       test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8000/up || exit 1']
@@ -122,8 +133,21 @@ services:
     depends_on:
       app:
         condition: service_started
-      migrate:
-        condition: service_completed_successfully
+
+  scheduler:
+    image: *sile-image
+    pull_policy: missing
+    container_name: sile-scheduler
+    restart: unless-stopped
+    command: ['php', 'artisan', 'schedule:work']
+    environment:
+      <<: *app-env
+      RUN_MIGRATIONS: 'false'
+    networks:
+      sile_net: {}
+    depends_on:
+      app:
+        condition: service_started
 
 networks:
   sile_net:

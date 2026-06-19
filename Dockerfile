@@ -27,7 +27,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         zip \
         intl \
         opcache \
-    && pecl install redis \
+    && pecl channel-update pecl.php.net \
+    && pecl install redis-6.2.0 \
     && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/* /tmp/pear
 
@@ -39,7 +40,8 @@ COPY docker/app/php.ini /usr/local/etc/php/conf.d/99-app.ini
 COPY docker/app/nginx.conf /etc/nginx/sites-available/sile
 COPY docker/app/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/app/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh \
+COPY docker/app/migrate.sh /migrate.sh
+RUN chmod +x /entrypoint.sh /migrate.sh \
     && mkdir -p /var/log/supervisor /run/php \
     && rm -f /etc/nginx/sites-enabled/default \
     && ln -s /etc/nginx/sites-available/sile /etc/nginx/sites-enabled/sile
