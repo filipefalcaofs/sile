@@ -1,6 +1,6 @@
 # Assets são pré-buildados localmente e commitados em public/build.
 # O servidor só precisa rodar composer install + configurar PHP-FPM + Nginx.
-FROM php:8.3-fpm-bookworm
+FROM php:8.4-fpm-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
