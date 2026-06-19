@@ -147,7 +147,7 @@ composer.phar
 
 # Laravel
 /node_modules
-/public/build
+# /public/build — commitado para deploy no Portainer (sem npm no servidor)
 /public/hot
 /public/storage
 /public/fonts-manifest.dev.json

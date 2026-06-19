@@ -1,12 +1,5 @@
-# Stage 1: build dos assets (React + Vite + Tailwind)
-FROM node:22-alpine AS assets
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-# Stage 2: aplicação PHP
+# Assets são pré-buildados localmente e commitados em public/build.
+# O servidor só precisa rodar composer install + configurar PHP-FPM + Nginx.
 FROM php:8.3-fpm-alpine
 
 RUN apk add --no-cache \
@@ -53,7 +46,6 @@ COPY composer*.json ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
 COPY . .
-COPY --from=assets /app/public/build ./public/build
 
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
