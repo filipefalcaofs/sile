@@ -24,7 +24,7 @@ fi
 echo "[entrypoint] Otimizando configuracoes..."
 php artisan config:cache
 php artisan route:cache
-php artisan view:cache
+php artisan view:cache || true
 
 echo "[entrypoint] Iniciando servicos..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
