@@ -51,7 +51,9 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 
 COPY . .
 
-RUN mkdir -p storage/framework/{views,cache,sessions} \
+RUN mkdir -p storage/framework/views \
+    && mkdir -p storage/framework/cache \
+    && mkdir -p storage/framework/sessions \
     && mkdir -p storage/app/public \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache \
