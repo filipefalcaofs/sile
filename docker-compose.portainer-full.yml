@@ -42,6 +42,7 @@ x-app-env: &app-env
   MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@sile.sedur.ba.gov.br}
   MAIL_FROM_NAME: ${APP_NAME:-SILE}
   RESEND_KEY: ${RESEND_KEY:-}
+  VIEW_COMPILED_PATH: /var/www/html/storage/framework/views
 
 services:
   migrate:
