@@ -16,7 +16,7 @@
 
 name: sile-app
 
-x-sile-image: &sile-image sile-app:latest
+x-sile-image: &sile-image ghcr.io/filipefalcaofs/sile:latest
 
 x-app-env: &app-env
   APP_NAME: ${APP_NAME:-SILE}
@@ -54,9 +54,8 @@ x-app-env: &app-env
 
 services:
   migrate:
-    build: .
     image: *sile-image
-    pull_policy: never
+    pull_policy: always
     container_name: sile-migrate
     entrypoint: ['/bin/sh', '-ce']
     command:
@@ -88,9 +87,8 @@ services:
     restart: 'no'
 
   app:
-    build: .
     image: *sile-image
-    pull_policy: never
+    pull_policy: always
     container_name: sile-app
     restart: unless-stopped
     ports:
