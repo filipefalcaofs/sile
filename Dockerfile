@@ -51,7 +51,11 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 
 COPY . .
 
-RUN chown -R www-data:www-data storage bootstrap/cache \
+RUN mkdir -p storage/framework/{views,cache,sessions} \
+    && mkdir -p storage/app/public \
+    && mkdir -p storage/logs \
+    && mkdir -p bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 8000
