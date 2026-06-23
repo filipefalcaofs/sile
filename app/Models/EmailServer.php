@@ -52,6 +52,25 @@ class EmailServer extends Model
     }
 
     /**
+     * Scheme do transporte SMTP do Symfony Mailer derivado da criptografia
+     * administrável — ponto ÚNICO do mapeamento (consumido pela ponte de runtime
+     * e pelo teste de conexão). O Symfony aceita SOMENTE "smtp" e "smtps": logo
+     * STARTTLS (tls) usa "smtp" (negociação automática, porta 587) e TLS
+     * implícito (ssl) usa "smtps" (porta 465). Sem criptografia não há scheme
+     * (o Laravel assume "smtp").
+     *
+     * @return Attribute<string|null, never>
+     */
+    protected function scheme(): Attribute
+    {
+        return Attribute::get(fn (): ?string => match ($this->encryption) {
+            'tls' => 'smtp',
+            'ssl' => 'smtps',
+            default => null,
+        });
+    }
+
+    /**
      * Representação mascarada da senha para exibição (nunca o miolo):
      * primeiros 4 + reticências + últimos 4. Senha ausente devolve null.
      *

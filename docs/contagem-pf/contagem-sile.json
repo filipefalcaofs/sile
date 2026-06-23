@@ -1,0 +1,2231 @@
+{
+  "identificacao": {
+    "empresa": "Sudoeste Informática",
+    "aplicacao": "SILE — Sistema de Licenciamento Eletrônico da SEDUR",
+    "projeto": "Contagem IFPUG - Projeto de Desenvolvimento",
+    "dv_numero": "DV-SILE-001",
+    "responsavel": "Equipe de Análise — Sudoeste Informática",
+    "versao": "1.0",
+    "tipo_contagem": "desenvolvimento",
+    "rs_por_pf": 700,
+    "proposito": "Medir o tamanho funcional do SILE — Sistema de Licenciamento Eletrônico da SEDUR (Salvador/BA) como projeto de desenvolvimento completo, seguindo o Manual de Práticas de Contagem IFPUG 4.3.1 (PT-BR). Fronteira: aplicação SILE incluindo portal do cidadão, retaguarda SEDUR (gestão), motor de regras da LOUOS (Lei 9.148/2016), classificação de risco (Decreto 32.636/2020), georreferenciamento, consulta prévia, solicitação formal, fluxo expresso automático, análise técnica humana, pendências e comunicação, auditoria/compliance/LGPD, integrações (REDESIM/Regin, Receita, SEFAZ, GIS, Cadastro Imobiliário, legado), inteligência artificial e relatórios/indicadores. Escopo do projeto contratado (151 HUs catalogadas, EP01–EP15 + autenticação gov.br): funções implementadas e funções especificadas (integrações da Fase 13 e assistentes de IA da Onda 3) são contadas como tamanho funcional do projeto; o estado de implementação é registrado por função nas observações, sem inflar nem omitir."
+  },
+  "termo": {
+    "sistema": "SILE — SISTEMA DE LICENCIAMENTO ELETRÔNICO",
+    "nome_curto": "SILE",
+    "total_pf": 1032,
+    "data": "Salvador-BA, 23 de junho de 2026",
+    "cliente": "Prefeitura Municipal de Salvador",
+    "cliente_linha2": "Secretaria Municipal de Desenvolvimento Urbano e Sustentabilidade — SEDUR",
+    "cliente_contratante": "Prefeitura Municipal de Salvador",
+    "processo_licitatorio": "A definir",
+    "contrato": "A definir",
+    "processo_administrativo": "A definir",
+    "planilha_anexa": "contagem-sile-desenvolvimento.xlsx",
+    "elaborado_por": "Equipe de Análise — Sudoeste Informática",
+    "elaborado_cargo": "Analista de Pontos de Função"
+  },
+  "grupos": [
+    {
+      "id": "F1",
+      "nome": "EP01 — Identidade, Acesso e Auditoria Transversal",
+      "itens": [
+        {
+          "nome": "Dados - Usuários",
+          "tipo": "ALI",
+          "td": 12,
+          "ar": 2,
+          "observacoes": "ALI. DER: nome, e-mail, e-mail verificado, CPF, telefone, senha, papel, status de inativação, avatar. RLR: usuário, vínculo de papel. Ref: HU-001, HU-007, HU-012. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=12; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Perfis e permissões",
+          "tipo": "ALI",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "ALI. DER: nome do perfil, descrição, conjunto de permissões. RLR: perfil, permissão. Ref: HU-013. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Termos LGPD e aceites",
+          "tipo": "ALI",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "ALI. DER: tipo, versão, título, conteúdo, data de publicação, IP, user agent, data do aceite. RLR: termo, aceite. Ref: HU-006. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=8; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Procurações",
+          "tipo": "ALI",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "ALI. DER: outorgante, procurador, início, fim, data de revogação. RLR: procuração. Ref: HU-008, HU-009. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Histórico de acessos",
+          "tipo": "ALI",
+          "td": 6,
+          "ar": 1,
+          "observacoes": "ALI. DER: e-mail tentado, evento, IP, user agent, canal, data/hora. RLR: registro de acesso. Ref: HU-010. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Trilha de auditoria",
+          "tipo": "ALI",
+          "td": 12,
+          "ar": 1,
+          "observacoes": "ALI. DER: domínio, evento, descrição, causer, subject, alterações, propriedades, IP, canal, representado, resultado, versão de regras. RLR: registro de auditoria. Infraestrutura transversal RN-002. Ref: HU-097, HU-100. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Autenticação - cadastrar usuário",
+          "tipo": "EE",
+          "td": 5,
+          "ar": 2,
+          "observacoes": "EE. Cadastro de cidadão/servidor com CPF validado e papel inicial. Ref: HU-001, HU-005. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=5; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Autenticação - autenticar usuário",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Login institucional por contexto (portal/gestão) com lockout. Ref: HU-002. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Autenticação - recuperar senha",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 1,
+          "observacoes": "EE. Solicitação de link de redefinição. Ref: HU-003. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Autenticação - redefinir senha",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 1,
+          "observacoes": "EE. Nova senha via token. Ref: HU-003. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Autenticação - alterar senha",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "EE. Troca de senha pelo usuário autenticado. Ref: HU-004. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Autenticação - confirmar e-mail",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 1,
+          "observacoes": "EE. Verificação de e-mail por link assinado. Ref: HU-005. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Perfil - consultar termo LGPD vigente",
+          "tipo": "CE",
+          "td": 2,
+          "ar": 1,
+          "observacoes": "CE. Exibição do termo de consentimento vigente. Ref: HU-006. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=2; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Perfil - aceitar termo LGPD",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Registro de consentimento versionado. Ref: HU-006. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Perfil - consultar dados do usuário",
+          "tipo": "CE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "CE. Visualização do perfil próprio. Ref: HU-007. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Perfil - alterar dados do usuário",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "EE. Atualização de nome, e-mail e telefone. Ref: HU-007. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Procuração - consultar procurações",
+          "tipo": "CE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "CE. Lista de procuradores vinculados. Ref: HU-008. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Procuração - vincular procurador",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Autorização de procurador por e-mail e vigência. Ref: HU-008. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Procuração - revogar procuração",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 2,
+          "observacoes": "EE. Revogação imediata de vínculo. Ref: HU-009. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Procuração - atuar em nome de terceiro",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 2,
+          "observacoes": "EE. Início/encerramento de representação com trilha. Ref: HU-008. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Acessos - consultar histórico próprio",
+          "tipo": "CE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "CE. Histórico de acessos da própria conta. Ref: HU-010. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Acessos - consultar histórico de terceiros",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "CE. Histórico de acessos de conta na gestão. Ref: HU-010. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F2",
+      "nome": "EP02 — Administração Base",
+      "itens": [
+        {
+          "nome": "Dados - CNAEs",
+          "tipo": "ALI",
+          "td": 12,
+          "ar": 1,
+          "observacoes": "ALI. DER: código, descrição, seção, divisão, grupo, classe e hierarquia, indicador ativo. RLR: CNAE. Carga oficial CNAE-Subclasses 2.3 (IBGE/CONCLA, 1.331). Ref: HU-011. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Parâmetros do sistema",
+          "tipo": "ALI",
+          "td": 9,
+          "ar": 1,
+          "observacoes": "ALI. DER: chave, grupo, tipo, valor, valor padrão, validação, sensível, descrição, exige teste de conexão. RLR: parâmetro. Ref: HU-014. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=9; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "CNAEs - consultar tabela",
+          "tipo": "CE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "CE. Listagem administrativa de CNAEs com busca. Ref: HU-011. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "CNAEs - incluir CNAE",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "EE. Inclusão manual de código com hierarquia. Ref: HU-011. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "CNAEs - alterar CNAE",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "EE. Atualização de descrição/situação. Ref: HU-011. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "CNAEs - excluir CNAE",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 1,
+          "observacoes": "EE. Exclusão de CNAE. Ref: HU-011. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "CNAEs - importar base oficial",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "EE. Carga oficial em lote com relatório auditado. Ref: HU-011. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "CNAEs - consultar CNAEs ativos (portal)",
+          "tipo": "CE",
+          "td": 2,
+          "ar": 1,
+          "observacoes": "CE. Busca server-side de CNAEs para vínculos. Ref: HU-011. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=2; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Usuários - consultar usuários internos",
+          "tipo": "CE",
+          "td": 3,
+          "ar": 2,
+          "observacoes": "CE. Listagem administrativa de usuários e papéis. Ref: HU-012. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=3; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Usuários - alterar papel do usuário",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Atribuição de perfil ao usuário. Ref: HU-012. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Usuários - inativar/reativar usuário",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Bloqueio/desbloqueio de acesso auditado. Ref: HU-012. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Perfis - consultar perfis e permissões",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "CE. Listagem de perfis RBAC e permissões. Ref: HU-013. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Perfis - incluir perfil",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "EE. Criação de perfil com permissões granulares. Ref: HU-013. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Perfis - alterar perfil",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "EE. Atualização de permissões com anti-lockout. Ref: HU-013. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Perfis - excluir perfil",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 2,
+          "observacoes": "EE. Exclusão de perfil protegido. Ref: HU-013. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Parâmetros - consultar parâmetros",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "CE. Visualização de parâmetros por grupo. Ref: HU-014. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Parâmetros - alterar parâmetro ou toggle",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 2,
+          "observacoes": "EE. Alteração de valor/feature toggle com efeito sem deploy; sensíveis criptografados. Ref: HU-014. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Parâmetros - consultar histórico de alteração",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "CE. Histórico auditado de alterações de parâmetro. Ref: HU-014. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F3",
+      "nome": "Autenticação GOV.BR (Login Único)",
+      "itens": [
+        {
+          "nome": "Dados - Vínculo de conta gov.br",
+          "tipo": "ALI",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "ALI. DER: nível de confiabilidade, selos, data de vínculo, última autenticação, usuário local. RLR: vínculo. Ref: HU-151. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados externos - Login Único gov.br",
+          "tipo": "AIE",
+          "td": 6,
+          "ar": 1,
+          "observacoes": "AIE. Provedor OAuth/OIDC do gov.br: claims de identidade (CPF/sub), nome, e-mail, confiabilidade e chaves JWK. Mantido externamente. Ref: HU-151. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=6; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Autenticação - autenticar com gov.br",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 3,
+          "observacoes": "EE. Login Único (Authorization Code + PKCE) com vínculo determinístico por CPF e criação/associação de conta. Ref: HU-151. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=3; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F4",
+      "nome": "EP03 — Cadastro Empresarial",
+      "itens": [
+        {
+          "nome": "Dados - Empresas",
+          "tipo": "ALI",
+          "td": 18,
+          "ar": 3,
+          "observacoes": "ALI. DER: CNPJ, razão social, nome fantasia, natureza jurídica, porte, endereço completo, contato, origem, protocolo/sincronização REDESIM. RLR: empresa, CNAEs da empresa, vínculos usuário-empresa. Ref: HU-021, HU-023, HU-024. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=18; RLR=3; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados externos - Cadastro CNPJ (Receita/BrasilAPI)",
+          "tipo": "AIE",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "AIE. Cadastro de CNPJ consultado para pré-preenchimento (situação cadastral, endereço, CNAEs). Mantido externamente. Ref: HU-021, HU-105. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=15; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Empresas - consultar dados do CNPJ",
+          "tipo": "CE",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "CE. Consulta cadastral externa de CNPJ para pré-preenchimento. Ref: HU-021. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=15; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Empresas - importar dados REDESIM",
+          "tipo": "EE",
+          "td": 16,
+          "ar": 2,
+          "observacoes": "EE. Importação/upsert de cadastro empresarial no formato REDESIM com relatório auditado. Ref: HU-022. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=16; FTR/AR=2; complexidade Alta; pontuação 6 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 6
+        },
+        {
+          "nome": "Empresas - incluir empresa",
+          "tipo": "EE",
+          "td": 16,
+          "ar": 2,
+          "observacoes": "EE. Cadastro manual de empresa com vínculo do requerente. Ref: HU-023. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=16; FTR/AR=2; complexidade Alta; pontuação 6 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 6
+        },
+        {
+          "nome": "Empresas - consultar empresas vinculadas",
+          "tipo": "CE",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "CE. Listagem das empresas do usuário. Ref: HU-027. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=8; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Empresas - consultar detalhe da empresa",
+          "tipo": "CE",
+          "td": 20,
+          "ar": 2,
+          "observacoes": "CE. Detalhe cadastral com CNAEs e vínculos. Ref: HU-024, HU-027. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=20; FTR/AR=2; complexidade Alta; pontuação 6 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 6
+        },
+        {
+          "nome": "Empresas - alterar dados empresariais",
+          "tipo": "EE",
+          "td": 14,
+          "ar": 2,
+          "observacoes": "EE. Atualização de dados complementares (CNPJ imutável). Ref: HU-024. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=14; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Empresas - vincular CNAE principal",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Definição do CNAE principal da empresa. Ref: HU-025. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Empresas - vincular CNAEs secundários",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 2,
+          "observacoes": "EE. Manutenção dos CNAEs secundários. Ref: HU-026. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Empresas - encerrar vínculo empresarial",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "EE. Encerramento de vínculo preservando histórico. Ref: HU-028. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F5",
+      "nome": "EP04 — Georreferenciamento e Território",
+      "itens": [
+        {
+          "nome": "Dados - Camadas geográficas versionadas",
+          "tipo": "ALI",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "ALI. DER: tipo de camada, versão, status, vigência, origem, versão de regras, contagem de feições, atributos territoriais (JSON), geometria SRID 4326. RLR: camada, feição. Ref: HU-036, HU-031..035. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=10; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados externos - Geocodificador (Nominatim/OSM)",
+          "tipo": "AIE",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "AIE. Serviço externo de geocodificação endereço→coordenada. Ref: HU-029. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Território - geocodificar endereço",
+          "tipo": "SE",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "SE. Conversão de endereço em coordenada com confiança e componentes. Ref: HU-029. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=5; FTR/AR=1; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Território - consultar mapa e camadas",
+          "tipo": "CE",
+          "td": 6,
+          "ar": 1,
+          "observacoes": "CE. Consulta de camadas/metadados no mapa interativo. Ref: HU-030, HU-036. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=6; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Território - identificar território por ponto",
+          "tipo": "SE",
+          "td": 15,
+          "ar": 2,
+          "observacoes": "SE. Identificação derivada de bairro, via, zona, lote e restrições por interseção espacial. Ref: HU-031, HU-032, HU-033, HU-034, HU-035. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=15; FTR/AR=2; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Território - validar localização do imóvel",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "SE. Cálculo de sobreposição polígono×lote com alerta parametrizado. Ref: HU-037. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Território - carregar camada geográfica",
+          "tipo": "EE",
+          "td": 7,
+          "ar": 1,
+          "observacoes": "EE. Carga versionada de camada com diff auditado de feições. Ref: HU-036. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=7; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F6",
+      "nome": "EP05 — Motor de Regras da LOUOS",
+      "itens": [
+        {
+          "nome": "Dados - Quadro 7 (enquadramento por área)",
+          "tipo": "ALI",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "ALI. DER: CNAE, grupo de uso, subgrupo, área mínima, área máxima, observação, versão/vigência. RLR: faixa, versão. Ref: HU-015, HU-046. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=8; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Quadro 10 (permissão por zona)",
+          "tipo": "ALI",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "ALI. DER: zona, grupo de uso, subgrupo, permissão, condicionante, base legal, observação, versão/vigência. RLR: permissão, versão. Ref: HU-016, HU-046. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=8; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Quadros 11/11A (condições pela via)",
+          "tipo": "ALI",
+          "td": 7,
+          "ar": 2,
+          "observacoes": "ALI. DER: classe viária, grupo de uso, condições, base legal, observação, versão/vigência (domínio distingue 11 de 11A). RLR: condição, versão. Ref: HU-017, HU-018, HU-046. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=7; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "LOUOS - consultar quadros vigentes",
+          "tipo": "CE",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "CE. Consulta dos quadros vigentes por versão. Ref: HU-015, HU-016, HU-017, HU-018. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=6; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "LOUOS - publicar nova versão de quadro",
+          "tipo": "EE",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "EE. Publicação versionada de quadro com 4 olhos. Ref: HU-015, HU-016, HU-017, HU-018, HU-046. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=8; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "LOUOS - importar carga oficial de quadros",
+          "tipo": "EE",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "EE. Carga inicial dos quadros como dados versionados. Ref: HU-015, HU-016, HU-017, HU-018. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=8; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "LOUOS - enquadrar atividade (motor)",
+          "tipo": "SE",
+          "td": 16,
+          "ar": 4,
+          "observacoes": "SE. Parecer locacional derivado: aplica Quadros 7/10/11/11A, condicionantes, restrições, consolida resultado e fundamentação legal com versões. Ref: HU-038, HU-039, HU-040, HU-041, HU-042, HU-043, HU-044, HU-045. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=16; FTR/AR=4; complexidade Alta; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "LOUOS - simular impacto de rascunho (sandbox)",
+          "tipo": "SE",
+          "td": 5,
+          "ar": 2,
+          "observacoes": "SE. Simulação derivada de rascunho de regra contra amostra real, com divergências vigente×simulado. Ref: HU-143. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=5; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "LOUOS - publicar rascunho do sandbox",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "EE. Publicação 4 olhos do rascunho simulado. Ref: HU-143, HU-046. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F7",
+      "nome": "EP06 — Classificação de Risco",
+      "itens": [
+        {
+          "nome": "Dados - Classificação de risco municipal",
+          "tipo": "ALI",
+          "td": 6,
+          "ar": 1,
+          "observacoes": "ALI. DER: CNAE, nível (baixo_a/baixo_b/alto), condicionantes gerais, observação, versão/vigência. RLR: classificação. Seed Decreto 32.636/2020 (767/328/236). Ref: HU-020, HU-047. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Classificação de risco sanitário",
+          "tipo": "ALI",
+          "td": 8,
+          "ar": 1,
+          "observacoes": "ALI. DER: CNAE, nível sanitário, macroárea, autorizações, responsável técnico, observação, versão/vigência. RLR: classificação. Ref: HU-019, HU-047. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=8; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Condicionantes-pergunta de risco",
+          "tipo": "ALI",
+          "td": 6,
+          "ar": 1,
+          "observacoes": "ALI. DER: CNAE, pergunta, tipo de resposta, regra de reclassificação, parecer, versão. RLR: condicionante. Ref: HU-019, HU-048. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Gatilhos de risco (semi-expresso)",
+          "tipo": "ALI",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "ALI. DER: código, título, motivo, categoria, ativo. RLR: gatilho. Ref: HU-051. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Risco - consultar tabela de risco vigente",
+          "tipo": "CE",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "CE. Consulta da tabela municipal vigente com filtros. Ref: HU-052. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=6; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Risco - publicar nova versão da tabela",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "EE. Publicação versionada 4 olhos da classificação. Ref: HU-053, HU-020. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Risco - consultar condicionantes-pergunta",
+          "tipo": "CE",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "CE. Consulta de condicionantes vigentes. Ref: HU-019. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=6; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Risco - incluir condicionante-pergunta",
+          "tipo": "EE",
+          "td": 5,
+          "ar": 2,
+          "observacoes": "EE. Inclusão de pergunta de reclassificação (mecanismo DI). Ref: HU-019. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=5; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Risco - alterar condicionante-pergunta",
+          "tipo": "EE",
+          "td": 5,
+          "ar": 2,
+          "observacoes": "EE. Atualização de pergunta/regra de reclassificação. Ref: HU-019. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=5; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Risco - excluir condicionante-pergunta",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 2,
+          "observacoes": "EE. Exclusão de condicionante. Ref: HU-019. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Risco - classificar CNAE por risco (motor)",
+          "tipo": "SE",
+          "td": 12,
+          "ar": 4,
+          "observacoes": "SE. Classificação derivada nas dimensões municipal e sanitária, reclassificação por condicionante, gatilhos e encaminhamento (expresso/análise) com fundamentação e versões. Ref: HU-047, HU-048, HU-049, HU-050, HU-051. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=12; FTR/AR=4; complexidade Alta; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Risco - importar Decreto/planilha VISA",
+          "tipo": "EE",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "EE. Carga oficial versionada das dimensões municipal e sanitária. Ref: HU-020. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=8; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F8",
+      "nome": "EP07 — Consulta Prévia de Viabilidade",
+      "itens": [
+        {
+          "nome": "Dados - Histórico de consultas de viabilidade",
+          "tipo": "ALI",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "ALI. DER: tipo de entrada, payload normalizado, resultado consolidado, versões de regras, veredito resumido, IP, data/hora, usuário. RLR: consulta. Ref: HU-060. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=10; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Viabilidade - consultar por endereço",
+          "tipo": "SE",
+          "td": 20,
+          "ar": 4,
+          "observacoes": "SE. Pipeline derivado geocode→território→LOUOS→risco com veredito, fundamentação, avisos e versões. Ref: HU-054, HU-057, HU-058, HU-059. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=20; FTR/AR=4; complexidade Alta; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Viabilidade - consultar por CNAE",
+          "tipo": "SE",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "SE. Risco e enquadramento por área sem localização. Ref: HU-056. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=8; FTR/AR=2; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Viabilidade - consultar por inscrição imobiliária",
+          "tipo": "SE",
+          "td": 10,
+          "ar": 4,
+          "observacoes": "SE. Resolução do ponto pelo cadastro imobiliário e pipeline de viabilidade (degrada quando indisponível). Ref: HU-055. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=10; FTR/AR=4; complexidade Alta; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Viabilidade - registrar histórico pessoal",
+          "tipo": "EE",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "EE. Persistência do snapshot da consulta para usuário autenticado. Ref: HU-060. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=10; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Viabilidade - consultar histórico de consultas",
+          "tipo": "CE",
+          "td": 6,
+          "ar": 1,
+          "observacoes": "CE. Histórico das consultas do usuário com reprodução. Ref: HU-060. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=6; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F9",
+      "nome": "EP08 — Solicitação de Viabilidade",
+      "itens": [
+        {
+          "nome": "Dados - Solicitações de viabilidade",
+          "tipo": "ALI",
+          "td": 30,
+          "ar": 4,
+          "observacoes": "ALI. DER: protocolo, status, origem, tipo de serviço, empresa, requerente, imóvel (polígono, endereço, inscrição, indicadores), área, simulação congelada, contingência, prazos BAP, datas e cancelamento. RLR: solicitação, CNAEs, anexos, transições. Ref: HU-061..070, HU-148. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=30; RLR=4; complexidade Média; pontuação 10 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 10
+        },
+        {
+          "nome": "Dados - Tipos de serviço",
+          "tipo": "ALI",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "ALI. DER: código, nome, dica de fluxo, ativo. RLR: tipo de serviço. Ref: HU-061. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Requisitos documentais por CNAE",
+          "tipo": "ALI",
+          "td": 6,
+          "ar": 1,
+          "observacoes": "ALI. DER: código, nome, descrição, obrigatório, ativo, instruções; vínculo por CNAE. RLR: requisito, vínculo CNAE. Ref: HU-067. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Atendimentos presenciais assistidos",
+          "tipo": "ALI",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "ALI. DER: atendente, cidadão, início, expiração, encerramento. RLR: atendimento. Ref: HU-150. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Solicitação - criar solicitação",
+          "tipo": "EE",
+          "td": 5,
+          "ar": 2,
+          "observacoes": "EE. Abertura de rascunho com origem e tipo de serviço; detecção de duplicidade. Ref: HU-061. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=5; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitação - consultar minhas solicitações",
+          "tipo": "CE",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "CE. Listagem das solicitações do requerente. Ref: HU-061, HU-069. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=6; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitação - abrir rascunho (wizard)",
+          "tipo": "CE",
+          "td": 12,
+          "ar": 3,
+          "observacoes": "CE. Apresentação consolidada do rascunho (imóvel, área, CNAEs, requisitos, simulação). Ref: HU-061. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=12; FTR/AR=3; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitação - informar imóvel e área",
+          "tipo": "EE",
+          "td": 11,
+          "ar": 2,
+          "observacoes": "EE. Registro de polígono, endereço, inscrição, indicadores e área com validação territorial. Ref: HU-062, HU-063. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=11; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitação - informar atividade e CNAEs complementares",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "EE. Atividade principal e até 99 CNAEs complementares. Ref: HU-064, HU-065. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Solicitação - anexar documento",
+          "tipo": "EE",
+          "td": 7,
+          "ar": 2,
+          "observacoes": "EE. Upload de anexo com hash e vínculo ao requisito. Ref: HU-066. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=7; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitação - excluir documento",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Remoção de anexo da solicitação. Ref: HU-066. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Solicitação - baixar documento",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "CE. Download de anexo por streaming. Ref: HU-066. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Solicitação - validar documentação obrigatória",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 3,
+          "observacoes": "SE. Verificação derivada dos requisitos documentais por CNAE antes do protocolo. Ref: HU-067. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=3; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitação - simular viabilidade antes de protocolar",
+          "tipo": "SE",
+          "td": 8,
+          "ar": 4,
+          "observacoes": "SE. Simulação orientativa executando os motores reais (por CNAE). Ref: HU-141. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=8; FTR/AR=4; complexidade Alta; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Solicitação - protocolar solicitação",
+          "tipo": "EE",
+          "td": 6,
+          "ar": 3,
+          "observacoes": "EE. Geração de número único, transição e bloqueio documental. Ref: HU-068. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=6; FTR/AR=3; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitação - cancelar solicitação",
+          "tipo": "EE",
+          "td": 5,
+          "ar": 2,
+          "observacoes": "EE. Cancelamento em estados permitidos com auditoria. Ref: HU-070. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=5; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitação - consultar protocolo (autenticado)",
+          "tipo": "CE",
+          "td": 10,
+          "ar": 3,
+          "observacoes": "CE. Acompanhamento com timeline, prazo estimado e status. Ref: HU-069. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=10; FTR/AR=3; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitação - consultar protocolo (público)",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "CE. Consulta por link assinado, sem login. Ref: HU-069. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Solicitação - registrar em contingência",
+          "tipo": "EE",
+          "td": 15,
+          "ar": 3,
+          "observacoes": "EE. Protocolo manual por operador com origem auditada. Ref: HU-148. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=15; FTR/AR=3; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitação - iniciar atendimento presencial",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "EE. Abertura/encerramento de sessão de atendimento em nome do cidadão. Ref: HU-150. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Solicitação - abrir solicitação em atendimento presencial",
+          "tipo": "EE",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "EE. Criação de solicitação assistida no balcão. Ref: HU-150. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=6; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Tipos de serviço - incluir",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "EE. Cadastro de tipo de serviço parametrizável. Ref: HU-061. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Tipos de serviço - alterar",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "EE. Atualização de tipo de serviço. Ref: HU-061. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Tipos de serviço - consultar",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "CE. Listagem de tipos de serviço. Ref: HU-061. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Requisitos documentais - incluir",
+          "tipo": "EE",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "EE. Cadastro de requisito documental e vínculo por CNAE. Ref: HU-067. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=6; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Requisitos documentais - alterar",
+          "tipo": "EE",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "EE. Atualização de requisito documental e vínculos. Ref: HU-067. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=6; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Requisitos documentais - consultar",
+          "tipo": "CE",
+          "td": 5,
+          "ar": 2,
+          "observacoes": "CE. Listagem de requisitos documentais. Ref: HU-067. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=5; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F10",
+      "nome": "EP09 — Fluxo Expresso",
+      "itens": [
+        {
+          "nome": "Dados - Decisões de viabilidade",
+          "tipo": "ALI",
+          "td": 14,
+          "ar": 1,
+          "observacoes": "ALI. DER: solicitação, fluxo, desfecho, resultado consolidado, número TVL, por CNAE, versões de regras, fundamentação, trace de decisão, motivo, decisor, data. RLR: decisão. Ref: HU-074, HU-076, HU-078, HU-086. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=14; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Expresso - decidir e emitir resultado",
+          "tipo": "SE",
+          "td": 16,
+          "ar": 4,
+          "observacoes": "SE. Decisão automática derivada: elegibilidade + deferir/indeferir/encaminhar executando motores reais, gerando TVL e auditoria síncrona. Ref: HU-073, HU-074, HU-075, HU-076, HU-078. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=16; FTR/AR=4; complexidade Alta; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Expresso - notificar resultado ao cidadão",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "SE. Ciência ao cidadão pelos canais habilitados, sem anexo de TVL. Ref: HU-077. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Expresso - indeferir por prazo BAP",
+          "tipo": "SE",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "SE. Indeferimento procedimental automático por prazo BAP vencido. Ref: HU-134. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=6; FTR/AR=2; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Expresso - consultar resultados",
+          "tipo": "CE",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "CE. Listagem de resultados expressos na retaguarda. Ref: HU-076, HU-078. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=8; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Expresso - consultar detalhe da decisão",
+          "tipo": "CE",
+          "td": 12,
+          "ar": 2,
+          "observacoes": "CE. Detalhe da decisão com por-CNAE, versões e fundamentação. Ref: HU-078. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=12; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F11",
+      "nome": "EP10 — Análise Técnica SEDUR",
+      "itens": [
+        {
+          "nome": "Dados - Setores e analistas",
+          "tipo": "ALI",
+          "td": 3,
+          "ar": 2,
+          "observacoes": "ALI. DER: nome, situação; vínculo analista-setor. RLR: setor, analistas. Ref: HU-138. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=3; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Fichas de análise versionadas",
+          "tipo": "ALI",
+          "td": 15,
+          "ar": 2,
+          "observacoes": "ALI. DER: revisão, status, analista, snapshot do motor, versões, conteúdo por CNAE, condicionantes, estacionamento, parecer, finalização; divergências analista×motor. RLR: ficha, divergências. Ref: HU-135, HU-140. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=15; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Pendências de análise",
+          "tipo": "ALI",
+          "td": 6,
+          "ar": 1,
+          "observacoes": "ALI. DER: descrição, status, prazo, resposta, data da resposta, solicitante. RLR: pendência. Ref: HU-083, HU-084. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Encaminhamentos à malha fina",
+          "tipo": "ALI",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "ALI. DER: motivo, data de encaminhamento, data de baixa. RLR: encaminhamento. Ref: HU-136. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Textos-padrão de parecer",
+          "tipo": "ALI",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "ALI. DER: categoria, conteúdo, situação, versão. RLR: texto-padrão. Ref: HU-085. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Documentos TVL",
+          "tipo": "ALI",
+          "td": 6,
+          "ar": 1,
+          "observacoes": "ALI. DER: decisão vinculada, disco, caminho, código de verificação, emissor, data. RLR: documento. Ref: HU-132. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Análise - encaminhar para análise técnica",
+          "tipo": "EE",
+          "td": 8,
+          "ar": 3,
+          "observacoes": "EE. Encaminhamento à fila com categoria, etapa e prazo SLA. Ref: HU-079. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=8; FTR/AR=3; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Setores - incluir setor",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 1,
+          "observacoes": "EE. Cadastro de setor. Ref: HU-138. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Setores - consultar setores",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "CE. Listagem de setores e contadores. Ref: HU-138. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Setores - alterar setor",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 1,
+          "observacoes": "EE. Atualização de setor. Ref: HU-138. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Setores - inativar setor",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 1,
+          "observacoes": "EE. Inativação de setor. Ref: HU-138. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Setores - vincular analistas",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Manutenção do vínculo analista-setor (N:N). Ref: HU-138. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Análise - distribuir processo ao analista",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "EE. Atribuição de processo da caixa do setor. Ref: HU-080. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Análise - assumir processo da caixa",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 2,
+          "observacoes": "EE. Analista assume processo da caixa do setor. Ref: HU-081. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Análise - consultar fila de trabalho com SLA",
+          "tipo": "CE",
+          "td": 12,
+          "ar": 3,
+          "observacoes": "CE. Fila priorizada por SLA com semáforo. Ref: HU-144. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=12; FTR/AR=3; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Análise - consultar processos (filtros SAPS)",
+          "tipo": "CE",
+          "td": 15,
+          "ar": 4,
+          "observacoes": "CE. Consulta de processos com filtros completos e categorias. Ref: HU-082. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=15; FTR/AR=4; complexidade Alta; pontuação 6 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 6
+        },
+        {
+          "nome": "Análise - consultar detalhe do processo",
+          "tipo": "CE",
+          "td": 20,
+          "ar": 4,
+          "observacoes": "CE. Detalhe com timeline, mini-mapa e decisão. Ref: HU-082. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=20; FTR/AR=4; complexidade Alta; pontuação 6 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 6
+        },
+        {
+          "nome": "Análise - pré-analisar processo pelo motor",
+          "tipo": "EE",
+          "td": 10,
+          "ar": 3,
+          "observacoes": "EE. Geração da ficha rev.1 pré-preenchida pelo motor ao encaminhar. Ref: HU-140. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=10; FTR/AR=3; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Análise - abrir ficha de análise",
+          "tipo": "CE",
+          "td": 15,
+          "ar": 2,
+          "observacoes": "CE. Apresentação da revisão vigente da ficha. Ref: HU-135. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=15; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Análise - autossalvar ficha",
+          "tipo": "EE",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "EE. Salvamento incremental da ficha em edição. Ref: HU-135. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=6; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Análise - finalizar ficha",
+          "tipo": "EE",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "EE. Finalização imutável com registro de divergências. Ref: HU-135, HU-140. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=8; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Análise - criar nova revisão da ficha",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Abertura de nova revisão da ficha. Ref: HU-135. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Análise - comparar revisões da ficha",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "CE. Diff entre revisões da ficha. Ref: HU-135. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Análise - consultar precedentes do imóvel e CNAE",
+          "tipo": "CE",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "CE. Histórico decisório do imóvel e estatística CNAE/zona. Ref: HU-142. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=8; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Textos-padrão - incluir",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "EE. Cadastro de texto-padrão de parecer. Ref: HU-085. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Textos-padrão - consultar",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "CE. Biblioteca de textos-padrão. Ref: HU-085. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Textos-padrão - alterar",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "EE. Atualização de texto-padrão. Ref: HU-085. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Textos-padrão - inativar",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 1,
+          "observacoes": "EE. Inativação de texto-padrão. Ref: HU-085. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Análise - abrir pendência ao requerente",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "EE. Abertura de pendência movendo o processo para em pendência. Ref: HU-083. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Análise - decidir processo (deferir/indeferir/encerrar)",
+          "tipo": "SE",
+          "td": 16,
+          "ar": 3,
+          "observacoes": "SE. Decisão humana derivada com parecer, condicionantes, por-CNAE, TVL e trace. Ref: HU-085, HU-086, HU-087, HU-088, HU-089. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=16; FTR/AR=3; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Análise - encaminhar à malha fina",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Marcação/encaminhamento à malha fina (single/lote). Ref: HU-136. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Análise - emitir TVL no backoffice",
+          "tipo": "SE",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "SE. Emissão de TVL em PDF (saída funcional autônoma; usuário aciona explicitamente), relatório interno. Ref: HU-132. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=10; FTR/AR=2; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Análise - baixar TVL",
+          "tipo": "CE",
+          "td": 2,
+          "ar": 1,
+          "observacoes": "CE. Download do TVL por URL assinada. Ref: HU-132. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=2; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F12",
+      "nome": "EP11 — Pendências e Comunicação",
+      "itens": [
+        {
+          "nome": "Dados - Comunicações (ledger)",
+          "tipo": "ALI",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "ALI. DER: processo, destinatário, canal, tipo, status, título, resumo, erro, metadados, datas de fila/envio/falha. RLR: comunicação. Ref: HU-096. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=10; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Notificações in-app",
+          "tipo": "ALI",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "ALI. DER: tipo, payload, lida/não lida, usuário. RLR: notificação. Ref: HU-090. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados externos - Servidor de e-mail (SMTP)",
+          "tipo": "AIE",
+          "td": 8,
+          "ar": 1,
+          "observacoes": "AIE. Servidor SMTP corporativo para notificações transacionais. Ref: HU-094. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=8; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Provedor de WhatsApp",
+          "tipo": "AIE",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "AIE. Gateway externo de WhatsApp (canal administrável por toggle). Ref: HU-095. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Comunicação - responder pendência",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Resposta do requerente que reabre a análise. Ref: HU-091, HU-092. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Comunicação - consultar central de notificações",
+          "tipo": "CE",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "CE. Central in-app de notificações. Ref: HU-090. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=5; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Comunicação - marcar notificação como lida",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 1,
+          "observacoes": "EE. Atualização de status de leitura. Ref: HU-090. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Comunicação - consultar histórico de comunicações",
+          "tipo": "CE",
+          "td": 8,
+          "ar": 1,
+          "observacoes": "CE. Histórico unificado de comunicações do processo. Ref: HU-096. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=8; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Comunicação - alertar vencimentos de prazos",
+          "tipo": "SE",
+          "td": 5,
+          "ar": 2,
+          "observacoes": "SE. Saída funcional autônoma de alerta antecipado de prazos de análise e pendência. Ref: HU-093. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=5; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Comunicação - escalonar processos por SLA",
+          "tipo": "SE",
+          "td": 5,
+          "ar": 2,
+          "observacoes": "SE. Saída funcional autônoma de escalonamento analista→gestor por SLA. Ref: HU-147. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=5; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Comunicação - expirar pendências vencidas",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 2,
+          "observacoes": "EE. Processo elementar independente acionado por rotina: expira pendência vencida e comunica, sem decidir. Ref: HU-091. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F13",
+      "nome": "EP12 — Auditoria e Compliance",
+      "itens": [
+        {
+          "nome": "Dados - Alertas de abuso e fraude",
+          "tipo": "ALI",
+          "td": 12,
+          "ar": 1,
+          "observacoes": "ALI. DER: regra, severidade, status, fingerprint, evidências, processo, alvo, janela, resolução, justificativa, encaminhamento. RLR: alerta. Ref: HU-149. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Auditoria - consultar trilha de auditoria",
+          "tipo": "CE",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "CE. Consulta unificada da trilha (período, usuário, entidade, ação, resultado). Ref: HU-100. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=10; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Auditoria - consultar histórico de alterações",
+          "tipo": "CE",
+          "td": 8,
+          "ar": 1,
+          "observacoes": "CE. Histórico de alterações com diffs de atributos. Ref: HU-098. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=8; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Auditoria - exportar trilha de auditoria",
+          "tipo": "SE",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "SE. Saída funcional autônoma: exportação da trilha filtrada em CSV/XLSX/PDF. Ref: HU-101. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=10; FTR/AR=2; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Auditoria - explicar decisão (passo a passo)",
+          "tipo": "SE",
+          "td": 15,
+          "ar": 2,
+          "observacoes": "SE. Explicabilidade derivada (projeção pura) das regras aplicadas por decisão. Ref: HU-099. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=15; FTR/AR=2; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Compliance - consultar painel LGPD",
+          "tipo": "CE",
+          "td": 9,
+          "ar": 3,
+          "observacoes": "CE. Painel agregado de consentimentos, retenção e acessos a dados pessoais. Ref: HU-102. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=9; FTR/AR=3; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Compliance - detectar padrões de abuso e fraude",
+          "tipo": "SE",
+          "td": 8,
+          "ar": 3,
+          "observacoes": "SE. Saída funcional autônoma: detectores determinísticos geram alertas e encaminham à malha fina, nunca punição. Ref: HU-149. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=8; FTR/AR=3; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Compliance - consultar alertas de abuso",
+          "tipo": "CE",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "CE. Painel de alertas com indicador de efetividade. Ref: HU-149. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=10; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Compliance - confirmar alerta de abuso",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 1,
+          "observacoes": "EE. Confirmação de alerta com justificativa. Ref: HU-149. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Compliance - descartar alerta de abuso",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 1,
+          "observacoes": "EE. Descarte de alerta com justificativa. Ref: HU-149. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F14",
+      "nome": "EP13 — Integrações",
+      "itens": [
+        {
+          "nome": "Dados - Mensagens e saúde das integrações",
+          "tipo": "ALI",
+          "td": 8,
+          "ar": 1,
+          "observacoes": "ALI. DER: integração, payload, erro, tentativas, próxima retentativa, status operacional, justificativa. RLR: mensagem de integração. Escopo especificado (HU-146, ainda não implementado). Ref: HU-146. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=8; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados externos - Regin/REDESIM (Junta Comercial)",
+          "tipo": "AIE",
+          "td": 12,
+          "ar": 1,
+          "observacoes": "AIE. Integrador estadual (recepção de solicitação, BAP e devolução de parecer). Escopo especificado (Fase 13). Ref: HU-103, HU-104, HU-133. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=12; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - SEFAZ municipal",
+          "tipo": "AIE",
+          "td": 8,
+          "ar": 1,
+          "observacoes": "AIE. API municipal para envio de viabilidade deferida. Escopo especificado (Fase 13). Ref: HU-110. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=8; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Cadastro Imobiliário",
+          "tipo": "AIE",
+          "td": 6,
+          "ar": 1,
+          "observacoes": "AIE. Base oficial de inscrição imobiliária → coordenada/lote. Escopo especificado (Fase 13). Ref: HU-106. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=6; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - GIS GeoServer SEDUR",
+          "tipo": "AIE",
+          "td": 8,
+          "ar": 1,
+          "observacoes": "AIE. Oracle Spatial via GeoServer (WFS/WMS): zona, via, lote e restrições oficiais. Escopo especificado (Fase 13). Ref: HU-107. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=8; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Sistema legado SAPS",
+          "tipo": "AIE",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "AIE. Base do legado (processos, TVLs, cadastros, parametrizações) para migração/convivência. Escopo especificado (Fase 13). Ref: HU-111. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=10; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Protocolo Municipal",
+          "tipo": "AIE",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "AIE. Sistema oficial de protocolo. Escopo especificado (Fase 13). Ref: HU-108. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Portal do Contribuinte",
+          "tipo": "AIE",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "AIE. Cadastro municipal do contribuinte. Escopo especificado (Fase 13). Ref: HU-109. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Integração - receber solicitação via Regin",
+          "tipo": "EE",
+          "td": 12,
+          "ar": 2,
+          "observacoes": "EE. Recepção durável de solicitação do Regin com endpoint protegido. Escopo especificado (Fase 13). Ref: HU-103. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=12; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Integração - vincular protocolo BAP",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "EE. Vínculo do BAP da Junta ao processo SEDUR. Escopo especificado (Fase 13). Ref: HU-133. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Integração - comunicar parecer ao Regin/Junta",
+          "tipo": "SE",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "SE. Saída funcional autônoma de devolução do parecer ao integrador. Escopo especificado (Fase 13). Ref: HU-104. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=6; FTR/AR=2; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Integração - enviar viabilidade deferida à SEFAZ",
+          "tipo": "SE",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "SE. Saída funcional autônoma de envio da viabilidade deferida à SEFAZ. Escopo especificado (Fase 13). Ref: HU-110. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=8; FTR/AR=2; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Integração - consultar imóvel por inscrição",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "CE. Resolução de inscrição imobiliária em coordenadas oficiais. Escopo especificado (Fase 13). Ref: HU-106. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Integração - importar camadas do GIS oficial",
+          "tipo": "EE",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "EE. Importação WFS de zona/via/lote/restrições para as camadas versionadas. Escopo especificado (Fase 13). Ref: HU-107. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=8; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Integração - registrar protocolo municipal",
+          "tipo": "EE",
+          "td": 5,
+          "ar": 2,
+          "observacoes": "EE. Registro do processo no protocolo oficial. Escopo especificado (Fase 13). Ref: HU-108. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=5; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Integração - sincronizar com Portal do Contribuinte",
+          "tipo": "EE",
+          "td": 5,
+          "ar": 2,
+          "observacoes": "EE. Compartilhamento do cadastro municipal. Escopo especificado (Fase 13). Ref: HU-109. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=5; FTR/AR=2; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Integração - migrar dados do legado",
+          "tipo": "EE",
+          "td": 12,
+          "ar": 3,
+          "observacoes": "EE. Migração/convivência de processos, TVLs e cadastros do legado. Escopo especificado (Fase 13). Ref: HU-111. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=12; FTR/AR=3; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Integração - consultar painel de saúde",
+          "tipo": "CE",
+          "td": 6,
+          "ar": 3,
+          "observacoes": "CE. Status por serviço, fila de retentativas e degradação. Escopo especificado (Fase 13). Ref: HU-146. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=6; FTR/AR=3; complexidade Média; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Integração - reprocessar mensagem de integração",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 2,
+          "observacoes": "EE. Processo elementar independente: usuário aciona explicitamente o reprocessamento idempotente de mensagem. Escopo especificado (Fase 13). Ref: HU-146. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F15",
+      "nome": "EP14 — Inteligência Artificial",
+      "itens": [
+        {
+          "nome": "Dados - Configurações de provedor de IA",
+          "tipo": "ALI",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "ALI. DER: nome, provedor, capacidade, URL base, chave (criptografada), modelo, temperatura, tokens, timeout, ativo, padrão. RLR: configuração. Ref: HU-014 (config IA). Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=10; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Sugestões de IA (ledger)",
+          "tipo": "ALI",
+          "td": 12,
+          "ar": 1,
+          "observacoes": "ALI. DER: tipo, solicitação, entrada, hash de idempotência, saída estruturada, provedor, modelo, versão do prompt, tokens, custo, confiança, status. RLR: sugestão. Ref: HU-112..119. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Embeddings de precedentes",
+          "tipo": "ALI",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "ALI. DER: precedente, hash anonimizado, modelo de embedding, vetor. RLR: embedding. Infra de RAG (Onda 3, parcial). Ref: HU-121. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=3; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Conversas de assistente",
+          "tipo": "ALI",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "ALI. DER: identificador da conversa, mensagens, agente, usuário. RLR: conversa. Escopo especificado (Onda 3). Ref: HU-120, HU-121. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados externos - Provedor de IA",
+          "tipo": "AIE",
+          "td": 6,
+          "ar": 1,
+          "observacoes": "AIE. Provedor multi-modelo (texto/visão/embeddings) configurável. Ref: HU-112..121. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=6; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 5
+        },
+        {
+          "nome": "IA - incluir configuração de provedor",
+          "tipo": "EE",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "EE. Cadastro de provedor de IA com credencial criptografada. Ref: HU-014 (config IA). Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=10; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "IA - consultar configurações de provedor",
+          "tipo": "CE",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "CE. Listagem de provedores (credencial mascarada). Ref: HU-014 (config IA). Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=10; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "IA - alterar configuração de provedor",
+          "tipo": "EE",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "EE. Atualização de provedor/modelo/credencial. Ref: HU-014 (config IA). Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=10; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "IA - excluir configuração de provedor",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 1,
+          "observacoes": "EE. Exclusão de configuração de IA. Ref: HU-014 (config IA). Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "IA - ativar/inativar configuração",
+          "tipo": "EE",
+          "td": 2,
+          "ar": 1,
+          "observacoes": "EE. Ativação/inativação e padrão por capacidade. Ref: HU-014 (config IA). Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=2; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "IA - testar conexão do provedor",
+          "tipo": "SE",
+          "td": 3,
+          "ar": 2,
+          "observacoes": "SE. Saída funcional autônoma de teste de conexão com resposta categorizada e latência. Ref: HU-014 (config IA). Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=3; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "IA - realizar OCR documental",
+          "tipo": "SE",
+          "td": 5,
+          "ar": 3,
+          "observacoes": "SE. Extração derivada de texto e detecção de ilegibilidade como sugestão revisável. Ref: HU-112, HU-114. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=5; FTR/AR=3; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "IA - classificar documento anexado",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 3,
+          "observacoes": "SE. Classificação derivada do tipo e compatibilidade com a exigência. Ref: HU-113. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=3; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "IA - identificar inconsistências documentais",
+          "tipo": "SE",
+          "td": 6,
+          "ar": 3,
+          "observacoes": "SE. Apontamento derivado de divergências declaração×documento. Ref: HU-115. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=6; FTR/AR=3; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "IA - consultar alertas de IA na ficha",
+          "tipo": "CE",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "CE. Card read-only de alertas de IA na ficha de análise. Ref: HU-112, HU-113, HU-114, HU-115. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=5; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "IA - gerar resumo da solicitação",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "SE. Síntese derivada da solicitação para revisão no portal. Ref: HU-116. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "IA - gerar resumo do processo",
+          "tipo": "SE",
+          "td": 6,
+          "ar": 3,
+          "observacoes": "SE. Síntese técnica derivada na ficha do analista. Ref: HU-117. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=6; FTR/AR=3; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "IA - sugerir minuta de parecer",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "SE. Minuta não vinculante derivada para o analista (não-decisão). Ref: HU-118. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "IA - explicar resultado ao cidadão",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "SE. Tradução acessível derivada da decisão ao cidadão. Ref: HU-119. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "IA - indexar precedentes para busca",
+          "tipo": "EE",
+          "td": 3,
+          "ar": 2,
+          "observacoes": "EE. Indexação de embeddings de precedentes para RAG. Escopo Onda 3 (parcial). Ref: HU-121. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=3; FTR/AR=2; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "IA - conversar com assistente do cidadão",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "SE. Assistente derivado que orienta o cidadão. Escopo especificado (Onda 3). Ref: HU-120. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "IA - conversar com assistente do analista",
+          "tipo": "SE",
+          "td": 5,
+          "ar": 3,
+          "observacoes": "SE. Assistente derivado de apoio a regras e precedentes. Escopo especificado (Onda 3). Ref: HU-121. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=5; FTR/AR=3; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F16",
+      "nome": "EP15 — Relatórios e Indicadores",
+      "itens": [
+        {
+          "nome": "Dados - Feriados",
+          "tipo": "ALI",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "ALI. DER: data, nome, recorrente, ativo. RLR: feriado. Insumo de dias úteis. Ref: HU-137. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Quedas do fluxo expresso",
+          "tipo": "ALI",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "ALI. DER: solicitação, CNAE, tipo de gatilho, dimensão, motivo. RLR: queda. Ref: HU-145. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Arquivos de exportação",
+          "tipo": "ALI",
+          "td": 7,
+          "ar": 1,
+          "observacoes": "ALI. DER: solicitante, disco, caminho, nome, formato, linhas, filtros aplicados. RLR: exportação. Ref: HU-131. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=7; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Relatórios - consultar dashboard executivo",
+          "tipo": "SE",
+          "td": 12,
+          "ar": 4,
+          "observacoes": "SE. Painel derivado com KPIs reais e séries (sem delta inventado). Ref: HU-122. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=12; FTR/AR=4; complexidade Alta; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Relatórios - solicitações por período",
+          "tipo": "SE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "SE. Indicador derivado de volume por período. Ref: HU-123. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Relatórios - solicitações por zona",
+          "tipo": "SE",
+          "td": 3,
+          "ar": 2,
+          "observacoes": "SE. Indicador derivado por zona (degrada para bairro). Ref: HU-124. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=3; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Relatórios - solicitações por CNAE",
+          "tipo": "SE",
+          "td": 3,
+          "ar": 2,
+          "observacoes": "SE. Ranking derivado de atividades por CNAE. Ref: HU-125. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=3; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Relatórios - solicitações por risco",
+          "tipo": "SE",
+          "td": 3,
+          "ar": 2,
+          "observacoes": "SE. Distribuição derivada por nível de risco. Ref: HU-126. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=3; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Relatórios - taxa de deferimento",
+          "tipo": "SE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "SE. Indicador derivado de deferimento. Ref: HU-127. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Relatórios - taxa de indeferimento",
+          "tipo": "SE",
+          "td": 3,
+          "ar": 1,
+          "observacoes": "SE. Indicador derivado de indeferimento. Ref: HU-128. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=3; FTR/AR=1; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Relatórios - tempo médio por etapa",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "SE. Tempo útil derivado por etapa da timeline (feriados/dias úteis). Ref: HU-129. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Relatórios - tempo de emissão de TVL",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "SE. Relatório SAPS derivado de tempo de emissão de TVL. Ref: HU-129. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Relatórios - produtividade por analista",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 3,
+          "observacoes": "SE. Produtividade derivada por analista (anônima por padrão, nominal sob permissão). Ref: HU-130. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=3; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Relatórios - quedas do expresso por gatilho",
+          "tipo": "SE",
+          "td": 8,
+          "ar": 3,
+          "observacoes": "SE. Relatório derivado de quedas por gatilho com série e ranking. Ref: HU-145. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=8; FTR/AR=3; complexidade Média; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Relatórios - exportar relatório/listagem",
+          "tipo": "SE",
+          "td": 4,
+          "ar": 2,
+          "observacoes": "SE. Saída funcional autônoma: contrato único de exportação CSV/XLSX/PDF síncrono/assíncrono. Ref: HU-131. Justificativa APF: Saída Externa: apresenta informação derivada, relatório, arquivo ou saída funcional autônoma. DER/TD=4; FTR/AR=2; complexidade Baixa; pontuação 4 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Feriados - incluir feriado",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "EE. Cadastro de feriado do calendário. Ref: HU-137. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Feriados - consultar feriados",
+          "tipo": "CE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "CE. Listagem de feriados. Ref: HU-137. Justificativa APF: Consulta Externa: apresenta dados recuperados sem cálculo relevante e sem manutenção de ALI. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Feriados - alterar feriado",
+          "tipo": "EE",
+          "td": 4,
+          "ar": 1,
+          "observacoes": "EE. Atualização de feriado. Ref: HU-137. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=4; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Feriados - inativar feriado",
+          "tipo": "EE",
+          "td": 1,
+          "ar": 1,
+          "observacoes": "EE. Inativação de feriado (sem exclusão física). Ref: HU-137. Justificativa APF: Entrada Externa: mantém ALI ou altera estado/comportamento a partir de entrada do usuário. DER/TD=1; FTR/AR=1; complexidade Baixa; pontuação 3 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.5.2-5.5.7 e Tabelas 3-6.",
+          "pf_local": 3
+        }
+      ]
+    }
+  ],
+  "proposta": {
+    "titulo": "PROPOSTA COMERCIAL",
+    "sistema": "SILE — Sistema de Licenciamento Eletrônico da SEDUR",
+    "subtitulo": "Prefeitura Municipal de Salvador — SEDUR",
+    "data": "23/06/2026",
+    "objeto": "Desenvolvimento, implantação e entrega do SILE — Sistema de Licenciamento Eletrônico da SEDUR, plataforma de viabilidade locacional de atividades econômicas, compreendendo portal do cidadão, retaguarda SEDUR, motor de regras da LOUOS (Lei 9.148/2016), classificação de risco (Decreto 32.636/2020), georreferenciamento, consulta prévia, solicitação formal, fluxo expresso automático, análise técnica humana com SLA, pendências e comunicação multicanal, auditoria/compliance/LGPD, integrações (REDESIM/Regin, Receita, SEFAZ, GIS, Cadastro Imobiliário, legado), inteligência artificial e relatórios/indicadores.",
+    "prazo": "Prazo acordado em contrato, contado a partir da assinatura e ordem de serviço."
+  },
+  "escopo_macro": [
+    {
+      "titulo": "1. Identidade, Acesso e Auditoria Transversal",
+      "referencia": "HU-001 a HU-010, HU-151",
+      "itens": [
+        "Cadastro, autenticação por contexto (portal/gestão), recuperação e alteração de senha",
+        "Confirmação de e-mail e termo LGPD versionado",
+        "Procuração e atuação em nome de terceiro com trilha",
+        "Histórico de acessos e trilha de auditoria transversal (RN-002)",
+        "Autenticação gov.br (Login Único) com vínculo por CPF"
+      ]
+    },
+    {
+      "titulo": "2. Administração Base",
+      "referencia": "HU-011 a HU-014",
+      "itens": [
+        "Tabela oficial de CNAEs (IBGE/CONCLA) com import auditado",
+        "Gestão de usuários, perfis e permissões granulares (RBAC)",
+        "Parâmetros de negócio administráveis com efeito sem deploy, histórico e feature toggles"
+      ]
+    },
+    {
+      "titulo": "3. Cadastro Empresarial",
+      "referencia": "HU-021 a HU-028",
+      "itens": [
+        "Consulta de CNPJ e cadastro de empresas",
+        "Importação no formato REDESIM",
+        "Vínculo de CNAE principal e secundários",
+        "Empresas vinculadas, atualização e encerramento de vínculo"
+      ]
+    },
+    {
+      "titulo": "4. Georreferenciamento e Território",
+      "referencia": "HU-029 a HU-037",
+      "itens": [
+        "Geocodificação e mapa interativo",
+        "Identificação de zona, via, lote, bairro e restrições",
+        "Camadas geográficas versionadas com vigência",
+        "Validação de localização por sobreposição com o lote"
+      ]
+    },
+    {
+      "titulo": "5. Motor de Regras da LOUOS",
+      "referencia": "HU-015 a HU-018, HU-038 a HU-046, HU-143",
+      "itens": [
+        "Quadros 7/10/11/11A como dados versionados",
+        "Motor de enquadramento com fundamentação legal",
+        "Sandbox de simulação de parametrização com publicação 4 olhos"
+      ]
+    },
+    {
+      "titulo": "6. Classificação de Risco",
+      "referencia": "HU-019, HU-020, HU-047 a HU-053",
+      "itens": [
+        "Risco municipal (Decreto 32.636/2020) e sanitário (VISA)",
+        "Condicionante-pergunta reclassificadora (mecanismo DI)",
+        "Gatilhos semi-expresso e encaminhamento parametrizável"
+      ]
+    },
+    {
+      "titulo": "7. Consulta Prévia de Viabilidade",
+      "referencia": "HU-054 a HU-060",
+      "itens": [
+        "Consulta por endereço, inscrição imobiliária e CNAE",
+        "Simulação executando os motores reais",
+        "Histórico de consultas do usuário"
+      ]
+    },
+    {
+      "titulo": "8. Solicitação de Viabilidade",
+      "referencia": "HU-061 a HU-072, HU-139, HU-141, HU-148, HU-150",
+      "itens": [
+        "Wizard de solicitação (imóvel, área, atividades, documentos)",
+        "Validação documental por CNAE e protocolo único",
+        "Consulta de protocolo (autenticada e pública), cancelamento",
+        "Contingência e atendimento presencial assistido"
+      ]
+    },
+    {
+      "titulo": "9. Fluxo Expresso",
+      "referencia": "HU-073 a HU-078, HU-134",
+      "itens": [
+        "Deferimento/indeferimento automático executando os motores",
+        "Notificação de resultado ao cidadão",
+        "Indeferimento por prazo BAP e auditoria integral da decisão"
+      ]
+    },
+    {
+      "titulo": "10. Análise Técnica SEDUR",
+      "referencia": "HU-079 a HU-089, HU-132, HU-135, HU-136, HU-138, HU-140, HU-142, HU-144",
+      "itens": [
+        "Fila por SLA, caixa do setor e distribuição",
+        "Ficha pré-analisada pelo motor, revisões e divergências",
+        "Precedentes, malha fina, decisão com parecer e TVL em PDF"
+      ]
+    },
+    {
+      "titulo": "11. Pendências e Comunicação",
+      "referencia": "HU-090 a HU-096, HU-147",
+      "itens": [
+        "Notificações multicanal (in-app, e-mail, WhatsApp)",
+        "Resposta de pendência que reabre a análise",
+        "Alerta de vencimentos, escalonamento por SLA e histórico de comunicações"
+      ]
+    },
+    {
+      "titulo": "12. Auditoria e Compliance",
+      "referencia": "HU-097 a HU-102, HU-149",
+      "itens": [
+        "Consulta e exportação da trilha de auditoria",
+        "Explicabilidade passo a passo das decisões",
+        "Painel LGPD e detecção de abuso/fraude (sem punição automática)"
+      ]
+    },
+    {
+      "titulo": "13. Integrações",
+      "referencia": "HU-103 a HU-111, HU-133, HU-146",
+      "itens": [
+        "REDESIM/Regin, Junta, Receita, SEFAZ, Cadastro Imobiliário",
+        "GIS oficial (GeoServer SEDUR) e migração do legado",
+        "Painel de saúde das integrações com reprocessamento"
+      ]
+    },
+    {
+      "titulo": "14. Inteligência Artificial",
+      "referencia": "HU-112 a HU-121",
+      "itens": [
+        "Configuração multi-provider com teste de conexão",
+        "OCR, classificação, inconsistências e resumos",
+        "Sugestão de parecer, explicação ao cidadão e assistentes virtuais"
+      ]
+    },
+    {
+      "titulo": "15. Relatórios e Indicadores",
+      "referencia": "HU-122 a HU-131, HU-137, HU-145",
+      "itens": [
+        "Dashboard executivo e indicadores por período/zona/CNAE/risco",
+        "Taxas de deferimento/indeferimento e tempo por etapa",
+        "Produtividade, quedas do expresso e exportação CSV/XLSX/PDF"
+      ]
+    }
+  ],
+  "resumo_pf": {
+    "ee": 295,
+    "se": 214,
+    "ce": 168,
+    "ali": 290,
+    "aie": 65,
+    "total_nao_ajustado": 1032,
+    "vaf": 1.0,
+    "total_ajustado": 1032
+  },
+  "metodologia_contagem": "Contagem detalhada conforme CPM IFPUG 4.3.1 (PT-BR), tipo desenvolvimento, do projeto completo do SILE (151 HUs catalogadas, EP01–EP15 mais a autenticação gov.br). Fronteira: aplicação SILE (portal do cidadão + retaguarda SEDUR + motores LOUOS/risco + integrações como canais). Evidências: HUs em docs/SILE_HUs_Completas_MD, migrations/models, controllers/rotas e telas (resources/js/pages) e os SUMMARY/VERIFICATION das fases em .planning. A contagem mede TAMANHO FUNCIONAL ESPECIFICADO, não estado de implementação. Estado por função registrado nas observações: Fases 1–12, 3.1, 3.2 e Relatórios (EP15) implementadas; IA (EP14) com Ondas 0–2 implementadas e Onda 3 (assistentes HU-120/121) especificada; Integrações (EP13) especificadas (contratos e bloqueios honestos: Regin/SEFAZ/GIS/Cadastro Imobiliário/legado/gov.br pendentes de credenciamento e homologação SEDUR) — contadas como escopo de projeto, sem simular execução. Revisão de processo elementar aplicada para evitar supercontagem: canais alternativos equivalentes (API que repete função do portal, consulta CNPJ Receita = mesma função BrasilAPI), efeitos colaterais técnicos (jobs, locks, eventos, geração de PDF/hash, registro de log) e mecanismos de canal de notificação (e-mail/WhatsApp embutidos no processo que os dispara) foram incorporados às funções principais; rotinas agendadas reconhecidas pelo negócio (alerta de vencimento, escalonamento por SLA, expiração de pendência, indeferimento por prazo BAP, detecção de abuso) foram contadas como saídas funcionais autônomas. CRUD funcional decomposto em incluir/consultar/alterar/excluir quando há ações autônomas do usuário; o termo 'manter' não foi usado para agrupar CRUD. Funções de dados agrupadas por domínio de negócio (não por tabela física); versionamento de regras (rule_versions) tratado como atributo/RLR das funções de dados dos Quadros e classificações, não como ALI técnico separado. Complexidade e PF pelas Tabelas IFPUG (Apêndice A); contagem não ajustada (VAF = 1,00).",
+  "secoes_adicionais": [
+    {
+      "titulo": "Stack Tecnológica",
+      "itens": [
+        "Laravel 13 + Inertia v3 + React 19 + Tailwind 4",
+        "PostgreSQL + PostGIS (consultas espaciais) e pgvector (RAG)",
+        "Redis para cache, sessão e filas; scheduler e jobs com retry",
+        "Spatie Permission/Activitylog; dompdf para PDF (TVL/relatórios)",
+        "SDK laravel/ai multi-provider (texto/visão/embeddings)",
+        "Geocodificação Nominatim/OSM; integrações REDESIM/Regin, Receita, SEFAZ, GIS GeoServer (Fase 13)"
+      ]
+    },
+    {
+      "titulo": "Condições Gerais",
+      "itens": [
+        "Valores comerciais sujeitos a negociação contratual",
+        "Contagem auditável mediante planilha anexa (DER/RLR/FTR por função)",
+        "Escopo limitado à fronteira funcional definida",
+        "Integrações da Fase 13 e assistentes de IA (Onda 3) contadas como escopo especificado; conclusão condicionada a credenciamento/homologação SEDUR",
+        "Infraestrutura operacional (ClamAV, MinIO/S3, observabilidade) tratada como suporte, não contada como AIE adicional"
+      ]
+    }
+  ],
+  "revisao_processo_elementar": {
+    "criterio": "CPM IFPUG 4.3.1: processo elementar deve ser reconhecido pelo usuário, autocontido e deixar o negócio em estado consistente ou entregar resposta funcional completa.",
+    "itens_removidos_ou_incorporados": [
+      {
+        "nome": "Simular enquadramento/risco/restrições (HU-057/058/059)",
+        "motivo": "São visualizações do mesmo resultado da consulta de viabilidade; incorporadas às consultas por endereço/CNAE/inscrição."
+      },
+      {
+        "nome": "Consultar CNPJ na Receita (HU-105)",
+        "motivo": "Mesmo processo/canal da consulta de CNPJ via BrasilAPI (HU-021); contado uma vez em Cadastro Empresarial."
+      },
+      {
+        "nome": "Canais da API REST equivalentes ao portal",
+        "motivo": "Canais alternativos dos mesmos processos elementares quando DER/FTR/lógica não se distinguem; não recontados."
+      },
+      {
+        "nome": "Geração de PDF, assinatura, hash, enfileiramento e registro de log",
+        "motivo": "Efeitos colaterais técnicos incorporados ao processo elementar que os dispara (ex.: emitir TVL, fechar decisão)."
+      },
+      {
+        "nome": "Envio por e-mail/WhatsApp como canal",
+        "motivo": "Mecanismo de canal incorporado ao processo de notificação que o dispara; AIE de e-mail e WhatsApp contados como funções de dados."
+      },
+      {
+        "nome": "Notificar abertura/resposta de pendência",
+        "motivo": "Efeitos do abrir/responder pendência; incorporados a esses processos."
+      },
+      {
+        "nome": "Testar conexão de e-mail/IA/integração",
+        "motivo": "Validação do mesmo processo de manutenção da configuração (HU-014); contado apenas o teste de conexão de IA como saída autônoma onde há ação explícita."
+      },
+      {
+        "nome": "rule_versions (cabeçalho de versão)",
+        "motivo": "Infraestrutura de versionamento tratada como atributo/RLR das funções de dados dos Quadros e classificações, não ALI técnico separado."
+      },
+      {
+        "nome": "Sequências de protocolo/TVL",
+        "motivo": "Tabelas técnico-operacionais sem significado funcional próprio; não contadas como ALI."
+      }
+    ]
+  }
+}

@@ -1,6 +1,10 @@
 <?php
 
 return [
+    // Massa de demonstração para validação SEDUR (Portainer/staging).
+    // Nunca ligar em produção real — só no ambiente de apresentação ao cliente.
+    'demo_data' => env('SILE_DEMO_DATA', false),
+
     'security' => [
         'password' => [
             'min_length' => 8,
@@ -17,6 +21,8 @@ return [
         'cnaes' => ['per_page' => 15],
         'users' => ['per_page' => 15],
         'companies' => ['per_page' => 15],
+        'email_logs' => ['per_page' => 20],
+        'auditoria' => ['per_page' => 20],
     ],
     'features' => [
         'procuracoes' => true,
@@ -46,6 +52,9 @@ return [
         'ia_parecer' => false,
         'ia_explicacao' => false,
         'ia_assistente' => false,
+        // Auditoria Preditiva de Processos Expressos (Módulo 3): nasce DESLIGADA
+        // (governança DPO/LGPD art. 20 — nunca pune, só alerta + malha fina).
+        'ia_auditoria_preditiva' => false,
     ],
     // Chaves pt-BR (geo.*, retencao.*, seguranca.*) espelham os parâmetros
     // HU-014 de mesmo nome — Settings::get lê config("sile.{chave}") no
@@ -273,6 +282,15 @@ return [
         'cache_ttl_segundos' => 300,
         'job' => ['tries' => 3, 'timeout' => 300, 'backoff' => [30, 60, 120], 'fila' => 'default'],
         'tempo' => ['etapas' => []],
+        // Observatório de Saturação Locacional (Módulo 2): espelho de fallback dos
+        // parâmetros HU-014 relatorios.saturacao.*. capacidades é o ARRAY já
+        // decodificado (mapa código CNAE → limite); vazio = sem capacidade
+        // definida (degrada honesto). Os limiares classificam saturando/saturado.
+        'saturacao' => [
+            'capacidades' => [],
+            'alerta_percentual' => 80,
+            'bloqueio_percentual' => 100,
+        ],
     ],
     // Configuração de IA (Fase 14, Onda 0). Os provedores administráveis vivem
     // no banco (model AiConfiguration). Aqui ficam só os controles de SEGURANÇA
@@ -323,6 +341,16 @@ return [
         // custo da chamada (o SDK só entrega tokens). Vazio por padrão ⇒ custo
         // null (NUNCA inventado — anti-fachada). Administrável via Settings.
         'preco_por_modelo' => [],
+    ],
+    // Espelho de fallback dos parâmetros HU-014 ia.* (Auditoria Preditiva —
+    // Módulo 3). O bloco 'ia' (pt) é distinto do bloco 'ai' (SDK, en); o toggle
+    // fica em features.ia_auditoria_preditiva. Valores de negócio (janela/limiar)
+    // administráveis via catálogo; aqui é só o espelho de fallback.
+    'ia' => [
+        'auditoria_preditiva' => [
+            'janela_dias' => 30,
+            'limiar_score' => 70,
+        ],
     ],
     'parameters' => [
         'cache_ttl' => 300,

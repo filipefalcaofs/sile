@@ -51,4 +51,14 @@ class EmailServerTest extends TestCase
         $this->assertFalse($primeiro->fresh()->is_default);
         $this->assertTrue($segundo->fresh()->is_default);
     }
+
+    public function test_o_scheme_smtp_e_derivado_da_criptografia(): void
+    {
+        // O Symfony Mailer só aceita os schemes "smtp" e "smtps": STARTTLS (tls)
+        // usa "smtp" (negociação automática na porta 587), TLS implícito (ssl)
+        // usa "smtps" (porta 465) e sem criptografia não há scheme.
+        $this->assertSame('smtp', EmailServer::factory()->make(['encryption' => 'tls'])->scheme);
+        $this->assertSame('smtps', EmailServer::factory()->make(['encryption' => 'ssl'])->scheme);
+        $this->assertNull(EmailServer::factory()->make(['encryption' => 'none'])->scheme);
+    }
 }

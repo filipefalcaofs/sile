@@ -10,6 +10,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestTransition;
 use App\Models\ViabilityServiceType;
+use App\Support\DemoMode;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -37,9 +38,8 @@ class RelatoriosDevSeeder extends Seeder
 
     public function run(): void
     {
-        // GATE DE AMBIENTE (anti-fachada): massa de indicadores só em local.
-        if (! app()->environment('local')) {
-            $this->command?->warn('RelatoriosDevSeeder: ignorado fora de local (massa de indicadores de dev).');
+        if (app()->environment('testing') || (! app()->environment('local') && ! DemoMode::enabled())) {
+            $this->command?->warn('RelatoriosDevSeeder: ignorado fora de local/demo (massa de indicadores de dev).');
 
             return;
         }

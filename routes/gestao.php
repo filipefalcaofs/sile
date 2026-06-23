@@ -7,6 +7,7 @@ use App\Http\Controllers\Gestao\AiConfigurationController;
 use App\Http\Controllers\Gestao\AnalysisRecordController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
 use App\Http\Controllers\Gestao\AuditoriaController;
+use App\Http\Controllers\Gestao\AuditoriaPreditivaController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\ContingenciaController;
@@ -124,6 +125,18 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('{abuseAlert}/descartar', [AbusoController::class, 'descartar'])->name('descartar');
         });
 
+        // Auditoria Preditiva de Processos Expressos (Módulo 3): painel humano de
+        // revisão das anomalias geradas pela varredura agendada (ia:auditoria-
+        // preditiva). REUSA gerenciar-alertas-abuso (mesma governança antifraude);
+        // confirmar/descartar muda SÓ o status da anomalia — nunca pune o processo
+        // nem mexe na malha fina (ortogonal). Index (/) antes das ações POST com
+        // {predictiveAnomaly}. O 403 é auditado no ponto único (bootstrap/app.php).
+        Route::middleware('permission:gerenciar-alertas-abuso')->prefix('auditoria-preditiva')->name('auditoria-preditiva.')->group(function () {
+            Route::get('/', [AuditoriaPreditivaController::class, 'index'])->name('index');
+            Route::post('{predictiveAnomaly}/confirmar', [AuditoriaPreditivaController::class, 'confirmar'])->name('confirmar');
+            Route::post('{predictiveAnomaly}/descartar', [AuditoriaPreditivaController::class, 'descartar'])->name('descartar');
+        });
+
         // Relatórios e indicadores (HU-122..131/145): cada tela é servida com dado
         // REAL dos serviços route-free (15-03/05/06/07) e exporta pelo contrato
         // único via ?formato= (CSV/XLSX/PDF — HU-131/RN-004/009), delegando ao
@@ -149,6 +162,14 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('tempo', [RelatorioController::class, 'tempo'])->name('tempo');
             Route::get('produtividade', [RelatorioController::class, 'produtividade'])->name('produtividade');
             Route::get('quedas', [RelatorioController::class, 'quedas'])->name('quedas');
+            // Painel geoeconômico por bairro (Geo BI interno — Módulo 1): agregação
+            // por bairro com decisões e taxa de deferimento; degrada honesto da zona
+            // oficial (GIS pendente). Export pelo contrato único (SolicitacoesReportSource).
+            Route::get('geo-bairro', [RelatorioController::class, 'geoBairro'])->name('geo-bairro');
+            // Observatório de Saturação Locacional (Módulo 2): concentração por
+            // bairro×CNAE vs capacidade recomendada (parâmetro HU-014), classificando
+            // saturando/saturado. Degradação honesta sem capacidade/zona oficial.
+            Route::get('saturacao', [RelatorioController::class, 'saturacao'])->name('saturacao');
         });
 
         // Consulta granular separada da manutenção (HU-011 CA-04)

@@ -71,12 +71,12 @@ class ManageParametersTest extends TestCase
     public function test_atualiza_parametro_valido(): void
     {
         $this->actingAs($this->admin(), 'gestao')
-            ->put('/gestao/parametros/ui.access_history.per_page', ['value' => '5'])
+            ->put('/gestao/parametros/security.login.max_attempts', ['value' => '5'])
             ->assertRedirect();
 
         $this->assertSame(
             '5',
-            Parameter::query()->where('key', 'ui.access_history.per_page')->value('value'),
+            Parameter::query()->where('key', 'security.login.max_attempts')->value('value'),
         );
     }
 
@@ -101,8 +101,8 @@ class ManageParametersTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin, 'gestao')->put('/gestao/parametros/ui.access_history.per_page', ['value' => '5']);
-        $this->actingAs($admin, 'gestao')->put('/gestao/parametros/ui.access_history.per_page', ['value' => '10']);
+        $this->actingAs($admin, 'gestao')->put('/gestao/parametros/security.login.max_attempts', ['value' => '5']);
+        $this->actingAs($admin, 'gestao')->put('/gestao/parametros/security.login.max_attempts', ['value' => '10']);
 
         $activities = Activity::query()
             ->where('log_name', 'parametros')
@@ -114,7 +114,7 @@ class ManageParametersTest extends TestCase
 
         $last = $activities->last();
 
-        $this->assertSame('ui.access_history.per_page', $last->properties['key']);
+        $this->assertSame('security.login.max_attempts', $last->properties['key']);
         $this->assertSame('5', $last->properties['valor_anterior']);
         $this->assertSame('10', $last->properties['valor_novo']);
         $this->assertSame($admin->id, $last->causer_id);

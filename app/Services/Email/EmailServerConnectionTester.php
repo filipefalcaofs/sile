@@ -27,11 +27,7 @@ class EmailServerConnectionTester
                 'port' => $server->port,
                 'username' => $server->username,
                 'password' => $server->password,
-                'scheme' => match ($server->encryption) {
-                    'tls' => 'tls',
-                    'ssl' => 'smtps',
-                    default => null,
-                },
+                'scheme' => $server->scheme,
                 'timeout' => $server->timeout,
             ]]);
 

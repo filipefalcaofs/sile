@@ -21,6 +21,7 @@ use App\Services\Analise\PendenciaService;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Solicitacao\DocumentRequirementResolver;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
+use App\Support\DemoMode;
 use App\Support\Settings;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -65,7 +66,7 @@ class AnaliseDevSeeder extends Seeder
     public function run(): void
     {
         // GATE DE AMBIENTE (anti-fachada): exemplos da análise só em dev/teste.
-        if (! app()->environment(['local', 'testing'])) {
+        if (! DemoMode::allowsDemoSeeders()) {
             $this->command?->warn('AnaliseDevSeeder: ignorado fora de dev/teste.');
 
             return;

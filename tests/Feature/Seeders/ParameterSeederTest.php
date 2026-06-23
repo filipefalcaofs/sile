@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(97, Parameter::query()->count());
+        $this->assertSame(88, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -50,14 +50,6 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('https://brasilapi.com.br/api/cnpj/v1', $baseUrl->default_value);
         $this->assertSame(['required', 'url'], $baseUrl->validation_rules);
         $this->assertTrue($baseUrl->requires_connection_test);
-
-        $perPage = Parameter::query()->where('key', 'ui.companies.per_page')->first();
-
-        $this->assertNotNull($perPage);
-        $this->assertSame('ui', $perPage->group);
-        $this->assertSame('integer', $perPage->type);
-        $this->assertSame('15', $perPage->default_value);
-        $this->assertSame(['required', 'integer', 'min:5', 'max:100'], $perPage->validation_rules);
     }
 
     public function test_seeder_registra_parametros_da_fundacao_assincrona(): void
@@ -81,29 +73,11 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('30', $throttle->default_value);
         $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $throttle->validation_rules);
 
-        $retries = Parameter::query()->where('key', 'integrations.cnpj_lookup.retries')->first();
-
-        $this->assertNotNull($retries);
-        $this->assertSame('integracoes', $retries->group);
-        $this->assertSame('integer', $retries->type);
-        $this->assertSame('2', $retries->default_value);
-        $this->assertSame(['required', 'integer', 'min:0', 'max:5'], $retries->validation_rules);
-
-        $timeout = Parameter::query()->where('key', 'integrations.cnpj_lookup.timeout')->first();
-
-        $this->assertNotNull($timeout);
-        $this->assertSame('integracoes', $timeout->group);
-        $this->assertSame('integer', $timeout->type);
-        $this->assertSame('8', $timeout->default_value);
-        $this->assertSame(['required', 'integer', 'min:1', 'max:30'], $timeout->validation_rules);
-
-        $backoff = Parameter::query()->where('key', 'integrations.cnpj_lookup.backoff_ms')->first();
-
-        $this->assertNotNull($backoff);
-        $this->assertSame('integracoes', $backoff->group);
-        $this->assertSame('integer', $backoff->type);
-        $this->assertSame('200', $backoff->default_value);
-        $this->assertSame(['required', 'integer', 'min:0', 'max:5000'], $backoff->validation_rules);
+        // timeout/retries/backoff_ms são constantes técnicas de HTTP — ficam em
+        // config/sile.php e não aparecem no painel de parâmetros do administrador.
+        $this->assertNull(Parameter::query()->where('key', 'integrations.cnpj_lookup.retries')->first());
+        $this->assertNull(Parameter::query()->where('key', 'integrations.cnpj_lookup.timeout')->first());
+        $this->assertNull(Parameter::query()->where('key', 'integrations.cnpj_lookup.backoff_ms')->first());
     }
 
     public function test_seeder_registra_parametros_do_login_govbr(): void
@@ -185,17 +159,27 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($sobreposicao->value);
     }
 
-    public function test_seeder_registra_parametro_da_listagem_de_emails(): void
+    public function test_paginacoes_tecnicas_nao_estao_no_catalogo(): void
     {
         $this->seed(ParameterSeeder::class);
 
-        $perPage = Parameter::query()->where('key', 'ui.email_logs.per_page')->first();
+        // Tamanhos de página de listagem são constantes técnicas de UI —
+        // ficam em config/sile.php e não poluem o painel do administrador.
+        $keysAusentes = [
+            'ui.access_history.per_page',
+            'ui.cnaes.per_page',
+            'ui.users.per_page',
+            'ui.companies.per_page',
+            'ui.email_logs.per_page',
+            'ui.auditoria.per_page',
+        ];
 
-        $this->assertNotNull($perPage);
-        $this->assertSame('ui', $perPage->group);
-        $this->assertSame('integer', $perPage->type);
-        $this->assertSame('20', $perPage->default_value);
-        $this->assertSame(['required', 'integer', 'min:5', 'max:100'], $perPage->validation_rules);
+        foreach ($keysAusentes as $key) {
+            $this->assertNull(
+                Parameter::query()->where('key', $key)->first(),
+                "O parâmetro {$key} não deve estar no catálogo administrável.",
+            );
+        }
     }
 
     public function test_seeder_mantem_flag_sensivel_em_reseed(): void
@@ -213,16 +197,16 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
 
         Parameter::query()
-            ->where('key', 'ui.access_history.per_page')
+            ->where('key', 'security.login.max_attempts')
             ->first()
-            ->update(['value' => '5']);
+            ->update(['value' => '3']);
 
         $this->seed(ParameterSeeder::class);
 
-        $parameter = Parameter::query()->where('key', 'ui.access_history.per_page')->first();
+        $parameter = Parameter::query()->where('key', 'security.login.max_attempts')->first();
 
-        $this->assertSame('5', $parameter->value);
-        $this->assertSame('Itens por página no histórico de acessos', $parameter->description);
+        $this->assertSame('3', $parameter->value);
+        $this->assertSame('Tentativas de login antes do bloqueio temporário', $parameter->description);
     }
 
     public function test_seeder_registra_parametros_de_encaminhamento_de_risco(): void
@@ -331,12 +315,8 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['required', 'json'], $mimes->validation_rules);
         $this->assertSame(['application/pdf', 'image/jpeg', 'image/png'], $mimes->typedValue());
 
-        $disk = Parameter::query()->where('key', 'storage.documentos.disk')->first();
-        $this->assertNotNull($disk);
-        $this->assertSame('solicitacao', $disk->group);
-        $this->assertSame('string', $disk->type);
-        $this->assertSame('local', $disk->default_value);
-        $this->assertSame(['required', 'string', 'max:50'], $disk->validation_rules);
+        // storage.documentos.disk é constante de infraestrutura — fica em config/sile.php.
+        $this->assertNull(Parameter::query()->where('key', 'storage.documentos.disk')->first());
 
         $throttle = Parameter::query()->where('key', 'seguranca.throttle.consulta_protocolo.por_minuto')->first();
         $this->assertNotNull($throttle);
@@ -418,14 +398,8 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['required', 'string', 'max:10'], $prefixoTvl->validation_rules);
         $this->assertNull($prefixoTvl->value);
 
-        $paddingTvl = Parameter::query()->where('key', 'expresso.tvl.padding')->first();
-        $this->assertNotNull($paddingTvl);
-        $this->assertSame('expresso', $paddingTvl->group);
-        $this->assertSame('integer', $paddingTvl->type);
-        $this->assertSame('6', $paddingTvl->default_value);
-        $this->assertSame(['required', 'integer', 'min:4', 'max:10'], $paddingTvl->validation_rules);
-        $this->assertNull($paddingTvl->value);
-        $this->assertSame(6, $paddingTvl->typedValue());
+        // expresso.tvl.padding é constante de formatação — fica em config/sile.php.
+        $this->assertNull(Parameter::query()->where('key', 'expresso.tvl.padding')->first());
     }
 
     public function test_seeder_registra_parametros_da_analise_tecnica(): void
@@ -489,13 +463,12 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['required', 'integer', 'min:1', 'max:50'], $maxItens->validation_rules);
         $this->assertNull($maxItens->value);
 
-        $disk = Parameter::query()->where('key', 'analise.tvl.disk')->first();
-        $this->assertNotNull($disk);
-        $this->assertSame('analise', $disk->group);
-        $this->assertSame('string', $disk->type);
-        $this->assertSame('local', $disk->default_value);
-        $this->assertSame(['required', 'string', 'max:50'], $disk->validation_rules);
-        $this->assertNull($disk->value);
+        // analise.tvl.disk, analise.tvl.assinatura.imagem_path e
+        // analise.tvl.download.ttl_minutos são constantes de infraestrutura/
+        // formatação — ficam em config/sile.php, não no catálogo administrável.
+        $this->assertNull(Parameter::query()->where('key', 'analise.tvl.disk')->first());
+        $this->assertNull(Parameter::query()->where('key', 'analise.tvl.assinatura.imagem_path')->first());
+        $this->assertNull(Parameter::query()->where('key', 'analise.tvl.download.ttl_minutos')->first());
 
         $modo = Parameter::query()->where('key', 'analise.tvl.assinatura.modo')->first();
         $this->assertNotNull($modo);
@@ -504,22 +477,6 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('imagem', $modo->default_value);
         $this->assertSame(['required', 'in:imagem,nenhuma'], $modo->validation_rules);
         $this->assertNull($modo->value);
-
-        $imagemPath = Parameter::query()->where('key', 'analise.tvl.assinatura.imagem_path')->first();
-        $this->assertNotNull($imagemPath);
-        $this->assertSame('analise', $imagemPath->group);
-        $this->assertSame('string', $imagemPath->type);
-        $this->assertSame('', $imagemPath->default_value);
-        $this->assertSame(['nullable', 'string', 'max:255'], $imagemPath->validation_rules);
-        $this->assertNull($imagemPath->value);
-
-        $ttl = Parameter::query()->where('key', 'analise.tvl.download.ttl_minutos')->first();
-        $this->assertNotNull($ttl);
-        $this->assertSame('analise', $ttl->group);
-        $this->assertSame('integer', $ttl->type);
-        $this->assertSame('5', $ttl->default_value);
-        $this->assertSame(['required', 'integer', 'min:1', 'max:1440'], $ttl->validation_rules);
-        $this->assertNull($ttl->value);
     }
 
     public function test_seeder_registra_parametros_de_notificacoes(): void
@@ -648,14 +605,6 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $perPage = Parameter::query()->where('key', 'ui.auditoria.per_page')->first();
-        $this->assertNotNull($perPage);
-        $this->assertSame('ui', $perPage->group);
-        $this->assertSame('integer', $perPage->type);
-        $this->assertSame('20', $perPage->default_value);
-        $this->assertSame(['required', 'integer', 'min:5', 'max:100'], $perPage->validation_rules);
-        $this->assertNull($perPage->value);
-
         // Toggle da detecção de abuso (HU-149): nasce DESLIGADO (nunca pune).
         $toggle = Parameter::query()->where('key', 'features.deteccao_abuso')->first();
         $this->assertNotNull($toggle);
@@ -756,6 +705,65 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(30, $janela->typedValue());
     }
 
+    public function test_seeder_registra_parametros_de_saturacao(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $capacidades = Parameter::query()->where('key', 'relatorios.saturacao.capacidades')->first();
+        $this->assertNotNull($capacidades);
+        $this->assertSame('relatorios', $capacidades->group);
+        $this->assertSame('json', $capacidades->type);
+        $this->assertSame('{}', $capacidades->default_value);
+        $this->assertSame(['required', 'json'], $capacidades->validation_rules);
+        $this->assertSame([], $capacidades->typedValue());
+
+        $alerta = Parameter::query()->where('key', 'relatorios.saturacao.alerta_percentual')->first();
+        $this->assertNotNull($alerta);
+        $this->assertSame('relatorios', $alerta->group);
+        $this->assertSame('integer', $alerta->type);
+        $this->assertSame('80', $alerta->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:100'], $alerta->validation_rules);
+        $this->assertSame(80, $alerta->typedValue());
+
+        $bloqueio = Parameter::query()->where('key', 'relatorios.saturacao.bloqueio_percentual')->first();
+        $this->assertNotNull($bloqueio);
+        $this->assertSame('relatorios', $bloqueio->group);
+        $this->assertSame('integer', $bloqueio->type);
+        $this->assertSame('100', $bloqueio->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:200'], $bloqueio->validation_rules);
+        $this->assertSame(100, $bloqueio->typedValue());
+    }
+
+    public function test_seeder_registra_parametros_da_auditoria_preditiva(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $toggle = Parameter::query()->where('key', 'features.ia_auditoria_preditiva')->first();
+        $this->assertNotNull($toggle);
+        $this->assertSame('ia', $toggle->group);
+        $this->assertSame('boolean', $toggle->type);
+        $this->assertSame('0', $toggle->default_value);
+        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
+        $this->assertFalse($toggle->typedValue());
+        $this->assertNull($toggle->value);
+
+        $janela = Parameter::query()->where('key', 'ia.auditoria_preditiva.janela_dias')->first();
+        $this->assertNotNull($janela);
+        $this->assertSame('ia', $janela->group);
+        $this->assertSame('integer', $janela->type);
+        $this->assertSame('30', $janela->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:365'], $janela->validation_rules);
+        $this->assertSame(30, $janela->typedValue());
+
+        $limiar = Parameter::query()->where('key', 'ia.auditoria_preditiva.limiar_score')->first();
+        $this->assertNotNull($limiar);
+        $this->assertSame('ia', $limiar->group);
+        $this->assertSame('integer', $limiar->type);
+        $this->assertSame('70', $limiar->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:100'], $limiar->validation_rules);
+        $this->assertSame(70, $limiar->typedValue());
+    }
+
     public function test_seeder_registra_toggles_de_ia(): void
     {
         $this->seed(ParameterSeeder::class);
@@ -793,6 +801,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(97, Parameter::query()->count());
+        $this->assertSame(88, Parameter::query()->count());
     }
 }

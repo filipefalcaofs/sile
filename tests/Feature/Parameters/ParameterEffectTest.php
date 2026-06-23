@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Parameters;
 
-use App\Models\AccessLog;
 use App\Models\Procuration;
 use App\Models\User;
+use App\Support\Settings;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -37,18 +37,14 @@ class ParameterEffectTest extends TestCase
     {
         $admin = $this->admin();
 
+        // Altera um parâmetro de negócio do catálogo pela tela de gestão.
         $this->actingAs($admin, 'gestao')
-            ->put(route('gestao.parametros.update', 'ui.access_history.per_page'), ['value' => '5'])
+            ->put(route('gestao.parametros.update', 'security.login.max_attempts'), ['value' => '3'])
             ->assertRedirect();
 
-        AccessLog::factory()->count(6)->for($admin)->create();
-
-        // Ambientes independentes: o mesmo titular usa o portal pelo guard web.
-        $this->actingAs($admin, 'web')
-            ->get(route('portal.acessos.index'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('logs.data', fn ($data) => count($data) === 5));
+        // Efeito imediato, sem novo deploy: o Settings reflete o novo valor na
+        // hora (o cache do parâmetro é invalidado na gravação).
+        $this->assertSame(3, (int) Settings::get('security.login.max_attempts'));
     }
 
     public function test_toggle_desligado_bloqueia_novo_vinculo_com_aviso(): void

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\AiConfiguration;
+use App\Support\DemoMode;
 use Illuminate\Database\Seeder;
 
 /**
@@ -28,9 +29,8 @@ class AiConfigDevSeeder extends Seeder
 
     public function run(): void
     {
-        // GATE DE AMBIENTE (anti-fachada): exemplo de IA só em local.
-        if (! app()->environment('local')) {
-            $this->command?->warn('AiConfigDevSeeder: ignorado fora de local (exemplo de configuração de IA de dev).');
+        if (app()->environment('testing') || (! app()->environment('local') && ! DemoMode::enabled())) {
+            $this->command?->warn('AiConfigDevSeeder: ignorado fora de local/demo (exemplo de configuração de IA de dev).');
 
             return;
         }

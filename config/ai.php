@@ -44,6 +44,13 @@ return [
             'conversations' => 'agent_conversations',
             'messages' => 'agent_conversation_messages',
         ],
+
+        // Os assistentes (HU-120/121) NÃO expõem uma lista de conversas titulada —
+        // a conversa é escopada por cidadão/processo na própria tela. Gerar título
+        // por IA custaria uma chamada extra ao provedor a cada nova conversa, sem
+        // valor para o usuário; o store cai no resumo da 1ª mensagem (Str::limit),
+        // determinístico e sem custo. Ligar só se uma tela de histórico exigir.
+        'generate_title' => env('AI_CONVERSATIONS_GENERATE_TITLE', false),
     ],
 
 ];

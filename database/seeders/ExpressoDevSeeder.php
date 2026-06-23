@@ -13,6 +13,7 @@ use App\Models\ViabilityServiceType;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Solicitacao\DocumentRequirementResolver;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
+use App\Support\DemoMode;
 use App\Support\Settings;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +50,7 @@ class ExpressoDevSeeder extends Seeder
     {
         // GATE DE AMBIENTE: exemplos decididos sobre a zona fictícia só em
         // dev/teste — produção mantém a degradação honesta (em_analise).
-        if (! app()->environment(['local', 'testing'])) {
+        if (! DemoMode::allowsDemoSeeders()) {
             $this->command?->warn('ExpressoDevSeeder: ignorado fora de dev/teste.');
 
             return;

@@ -1,0 +1,72 @@
+# Infraestrutura do SILE no Portainer — PostgreSQL + PostGIS + Redis.
+#
+# Pré-requisito: buildar a imagem PostGIS no servidor (uma vez):
+#   docker build -t sile/pgsql:16-postgis-pgvector -f docker/postgres/Dockerfile docker/postgres
+#
+# Portainer → Stacks → Add stack → Repository
+#   Repository URL:  https://github.com/filipefalcaofs/sile.git
+#   Compose path:    docker-compose.portainer-infra.yml
+#   Branch:          main
+#
+# Cria a rede sile_net compartilhada com docker-compose.portainer-full.yml.
+
+name: sile-infra
+
+services:
+  pgsql:
+    image: sile/pgsql:16-postgis-pgvector
+    container_name: sile-pgsql
+    restart: unless-stopped
+    ports:
+      - '${DB_PORT_HOST:-5434}:5432'
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-sile}
+      POSTGRES_USER: ${DB_USERNAME:-sile}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+    volumes:
+      - pgsql_data:/var/lib/postgresql/data
+    configs:
+      - source: pg_init
+        target: /docker-entrypoint-initdb.d/01-extensions.sql
+    networks:
+      sile_net:
+        aliases:
+          - pgsql
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-q', '-d', '${DB_DATABASE:-sile}', '-U', '${DB_USERNAME:-sile}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    container_name: sile-redis
+    restart: unless-stopped
+    ports:
+      - '${REDIS_PORT_HOST:-6380}:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      sile_net:
+        aliases:
+          - redis
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+configs:
+  pg_init:
+    content: |
+      CREATE EXTENSION IF NOT EXISTS postgis;
+      CREATE EXTENSION IF NOT EXISTS vector;
+
+networks:
+  sile_net:
+    name: sile_net
+    driver: bridge
+
+volumes:
+  pgsql_data:
+  redis_data:

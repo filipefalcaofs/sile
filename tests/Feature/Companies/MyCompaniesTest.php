@@ -5,12 +5,11 @@ namespace Tests\Feature\Companies;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
-use App\Models\Parameter;
 use App\Models\Procuration;
 use App\Models\User;
-use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -133,8 +132,10 @@ class MyCompaniesTest extends TestCase
 
     public function test_paginacao_e_parametrizada(): void
     {
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()->where('key', 'ui.companies.per_page')->first()->update(['value' => '5']);
+        // ui.companies.per_page e constante tecnica de UI em config/sile.php (fora
+        // do catalogo HU-014); o controller a le via Settings::get com fallback.
+        config(['sile.ui.companies.per_page' => 5]);
+        Cache::flush();
 
         $user = $this->portalUser();
         for ($i = 0; $i < 6; $i++) {

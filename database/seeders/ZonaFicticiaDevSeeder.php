@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\GeoLayerType;
 use App\Services\Geo\GeoJsonLayerImporter;
+use App\Support\DemoMode;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -47,7 +48,7 @@ class ZonaFicticiaDevSeeder extends Seeder
         // GATE DE AMBIENTE (anti-fachada): a zona fictícia JAMAIS entra em
         // produção — lá a degradação honesta (em_analise sem zona oficial) é o
         // comportamento correto. Só dev/teste para demonstrar o deferimento.
-        if (! app()->environment(['local', 'testing'])) {
+        if (! DemoMode::allowsDemoSeeders()) {
             $this->command?->warn('ZonaFicticiaDevSeeder: ignorado fora de dev/teste (produção mantém a degradação honesta sem zona oficial).');
 
             return;

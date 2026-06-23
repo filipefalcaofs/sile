@@ -17,6 +17,7 @@ use App\Services\Analise\PendenciaService;
 use App\Services\Solicitacao\DocumentRequirementResolver;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
+use App\Support\DemoMode;
 use App\Support\Settings;
 use Illuminate\Database\Seeder;
 
@@ -53,7 +54,7 @@ class ComunicacaoDevSeeder extends Seeder
     public function run(): void
     {
         // GATE DE AMBIENTE (anti-fachada): exemplos de dev só em dev/teste.
-        if (! app()->environment(['local', 'testing'])) {
+        if (! DemoMode::allowsDemoSeeders()) {
             $this->command?->warn('ComunicacaoDevSeeder: ignorado fora de dev/teste.');
 
             return;

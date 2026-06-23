@@ -37,8 +37,22 @@ class MailConfigBridgeTest extends TestCase
         $this->assertSame(2525, config('mail.mailers.smtp.port'));
         $this->assertSame('sedur', config('mail.mailers.smtp.username'));
         $this->assertSame('segredo-1234ABCD', config('mail.mailers.smtp.password'));
+        $this->assertSame('smtp', config('mail.mailers.smtp.scheme'), 'encryption tls deve virar o scheme "smtp" (STARTTLS), nunca "tls".');
         $this->assertSame('no-reply@sedur.test', config('mail.from.address'));
         $this->assertSame('SEDUR Salvador', config('mail.from.name'));
+    }
+
+    public function test_a_criptografia_ssl_vira_o_scheme_smtps(): void
+    {
+        EmailServer::factory()->default()->create([
+            'active' => true,
+            'encryption' => 'ssl',
+            'port' => 465,
+        ]);
+
+        $this->applyBridge();
+
+        $this->assertSame('smtps', config('mail.mailers.smtp.scheme'));
     }
 
     public function test_sem_servidor_padrao_a_config_do_mailer_nao_e_alterada(): void

@@ -77,34 +77,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:10', 'max:1440'],
                 'description' => 'Validade em minutos do link de recuperação de senha',
             ],
-            'ui.access_history.per_page' => [
-                'group' => 'ui',
-                'type' => 'integer',
-                'default_value' => '15',
-                'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
-                'description' => 'Itens por página no histórico de acessos',
-            ],
-            'ui.cnaes.per_page' => [
-                'group' => 'ui',
-                'type' => 'integer',
-                'default_value' => '15',
-                'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
-                'description' => 'Itens por página na listagem de CNAEs',
-            ],
-            'ui.users.per_page' => [
-                'group' => 'ui',
-                'type' => 'integer',
-                'default_value' => '15',
-                'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
-                'description' => 'Itens por página na listagem de usuários',
-            ],
-            'ui.email_logs.per_page' => [
-                'group' => 'ui',
-                'type' => 'integer',
-                'default_value' => '20',
-                'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
-                'description' => 'Itens por página no log de e-mails',
-            ],
             'ui.dashboard.acessos_janela_dias' => [
                 'group' => 'ui',
                 'type' => 'integer',
@@ -133,13 +105,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'url'],
                 'requires_connection_test' => true,
                 'description' => 'URL base do provedor de consulta de CNPJ (dados abertos da RFB)',
-            ],
-            'ui.companies.per_page' => [
-                'group' => 'ui',
-                'type' => 'integer',
-                'default_value' => '15',
-                'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
-                'description' => 'Itens por página na listagem de empresas',
             ],
             'features.govbr_login' => [
                 'group' => 'features',
@@ -192,27 +157,6 @@ class ParameterSeeder extends Seeder
                 'default_value' => '30',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
                 'description' => 'Limite de consultas de CNPJ por minuto por usuário no portal',
-            ],
-            'integrations.cnpj_lookup.retries' => [
-                'group' => 'integracoes',
-                'type' => 'integer',
-                'default_value' => '2',
-                'validation_rules' => ['required', 'integer', 'min:0', 'max:5'],
-                'description' => 'Número de novas tentativas na consulta de CNPJ quando a integração falha',
-            ],
-            'integrations.cnpj_lookup.timeout' => [
-                'group' => 'integracoes',
-                'type' => 'integer',
-                'default_value' => '8',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:30'],
-                'description' => 'Tempo limite em segundos para a consulta de CNPJ',
-            ],
-            'integrations.cnpj_lookup.backoff_ms' => [
-                'group' => 'integracoes',
-                'type' => 'integer',
-                'default_value' => '200',
-                'validation_rules' => ['required', 'integer', 'min:0', 'max:5000'],
-                'description' => 'Intervalo em milissegundos entre as tentativas de consulta de CNPJ',
             ],
             'features.geocoding' => [
                 'group' => 'features',
@@ -313,13 +257,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:10'],
                 'description' => 'Prefixo do número de protocolo da viabilidade ({prefixo}-AAAA-NNNNNN) — formato oficial a confirmar SEDUR',
             ],
-            'solicitacao.protocolo.padding' => [
-                'group' => 'solicitacao',
-                'type' => 'integer',
-                'default_value' => '6',
-                'validation_rules' => ['required', 'integer', 'min:4', 'max:10'],
-                'description' => 'Quantidade de dígitos da sequência do número de protocolo',
-            ],
             'solicitacao.consulta_publica.assinatura_ttl_dias' => [
                 'group' => 'solicitacao',
                 'type' => 'integer',
@@ -340,16 +277,6 @@ class ParameterSeeder extends Seeder
                 'default_value' => '["application/pdf","image/jpeg","image/png"]',
                 'validation_rules' => ['required', 'json'],
                 'description' => 'Tipos de arquivo aceitos no anexo de documentos da solicitação',
-            ],
-            // O key usa o domínio técnico 'storage' mas pertence ao grupo de
-            // negócio 'solicitacao' (key ≠ group é a norma — security.* fica em
-            // 'seguranca'): é o disk dos documentos da solicitação.
-            'storage.documentos.disk' => [
-                'group' => 'solicitacao',
-                'type' => 'string',
-                'default_value' => 'local',
-                'validation_rules' => ['required', 'string', 'max:50'],
-                'description' => 'Disk de armazenamento dos documentos da solicitação (local, s3...) — nunca disk público',
             ],
             'solicitacao.area_poligono.tolerancia_percentual' => [
                 'group' => 'solicitacao',
@@ -428,13 +355,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:10'],
                 'description' => 'Prefixo do número de produto TVL do deferimento ({prefixo}-AAAA-NNNNNN) — numeração oficial do SAPS a confirmar SEDUR',
             ],
-            'expresso.tvl.padding' => [
-                'group' => 'expresso',
-                'type' => 'integer',
-                'default_value' => '6',
-                'validation_rules' => ['required', 'integer', 'min:4', 'max:10'],
-                'description' => 'Quantidade de dígitos da sequência do número de produto TVL',
-            ],
             'features.analise_tecnica' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -484,13 +404,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:50'],
                 'description' => 'Quantidade máxima de processos precedentes do imóvel exibidos na ficha (HU-142 RN-003)',
             ],
-            'analise.tvl.disk' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'local',
-                'validation_rules' => ['required', 'string', 'max:50'],
-                'description' => 'Disco de storage onde o TVL PDF é gravado — NUNCA público; download por URL assinada (HU-132)',
-            ],
             'analise.tvl.assinatura.modo' => [
                 'group' => 'analise',
                 'type' => 'string',
@@ -498,23 +411,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'in:imagem,nenhuma'],
                 'description' => 'Modo de assinatura do TVL PDF: imagem do diretor (legado) ou nenhuma; assinatura digital gov.br/ICP é gancho → SEDUR (HU-132 RN-005)',
             ],
-            'analise.tvl.assinatura.imagem_path' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => '',
-                'validation_rules' => ['nullable', 'string', 'max:255'],
-                'description' => "Caminho da imagem de assinatura usada no TVL PDF quando o modo é 'imagem'",
-            ],
-            'analise.tvl.download.ttl_minutos' => [
-                'group' => 'analise',
-                'type' => 'integer',
-                'default_value' => '5',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:1440'],
-                'description' => 'Validade (minutos) da URL temporária assinada de download do TVL PDF no backoffice',
-            ],
             // Comunicação multicanal (EP11). Os toggles de canal nascem
             // administráveis: e-mail e in-app ligados; WhatsApp DESLIGADO
             // (provedor real bloqueado até a Fase 13 — degradação honesta).
+            // Constantes técnicas de storage (disk dos documentos e do TVL PDF),
+            // padding de números de protocolo/TVL, timeout/retries/backoff da
+            // consulta de CNPJ e paginações de listagem ficam em config/sile.php
+            // — não são valores de negócio e não precisam ser administráveis.
             'features.notificacao_email' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -594,16 +497,9 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['nullable', 'string', 'max:255'],
                 'description' => 'Token/credencial da API de WhatsApp (armazenado criptografado, nunca reexibido)',
             ],
-            // Auditoria e compliance (EP12). A paginação da trilha fica no grupo
-            // 'ui'; o toggle de detecção de abuso (HU-149) nasce DESLIGADO (nunca
-            // pune — só registra alerta e encaminha à malha fina).
-            'ui.auditoria.per_page' => [
-                'group' => 'ui',
-                'type' => 'integer',
-                'default_value' => '20',
-                'validation_rules' => ['required', 'integer', 'min:5', 'max:100'],
-                'description' => 'Itens por página na consulta da trilha de auditoria (HU-100)',
-            ],
+            // Auditoria e compliance (EP12). O toggle de detecção de abuso
+            // (HU-149) nasce DESLIGADO (nunca pune — só registra alerta e
+            // encaminha à malha fina). Paginação da trilha fica em config/sile.php.
             'features.deteccao_abuso' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -690,6 +586,57 @@ class ParameterSeeder extends Seeder
                 'default_value' => '30',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
                 'description' => 'Janela (dias) da série temporal da taxa de resposta expressa',
+            ],
+            // Observatório de Saturação Locacional (Módulo 2): capacidade
+            // recomendada por CNAE (por bairro) e os limiares que classificam um
+            // par bairro×CNAE como "saturando"/"saturado". A capacidade é DADO de
+            // negócio administrável (mapa código CNAE → limite); vazio = sem
+            // capacidade definida (degrada honesto, sem inventar saturação).
+            'relatorios.saturacao.capacidades' => [
+                'group' => 'relatorios',
+                'type' => 'json',
+                'default_value' => '{}',
+                'validation_rules' => ['required', 'json'],
+                'description' => 'Capacidade recomendada de estabelecimentos por bairro, por CNAE (mapa código → limite). Vazio = sem capacidade definida',
+            ],
+            'relatorios.saturacao.alerta_percentual' => [
+                'group' => 'relatorios',
+                'type' => 'integer',
+                'default_value' => '80',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:100'],
+                'description' => 'Percentual da capacidade a partir do qual um par bairro×CNAE é sinalizado como "saturando"',
+            ],
+            'relatorios.saturacao.bloqueio_percentual' => [
+                'group' => 'relatorios',
+                'type' => 'integer',
+                'default_value' => '100',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:200'],
+                'description' => 'Percentual da capacidade a partir do qual um par bairro×CNAE é considerado "saturado"',
+            ],
+            // Auditoria Preditiva de Processos Expressos (Módulo 3 — IA/Malha
+            // Fina). Toggle nasce DESLIGADO (governança DPO/LGPD art. 20 — nunca
+            // pune, só alerta + malha fina); janela e limiar de score são valores
+            // de negócio administráveis.
+            'features.ia_auditoria_preditiva' => [
+                'group' => 'ia',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a varredura de auditoria preditiva dos processos deferidos no fluxo expresso (Módulo 3); desligada por padrão (aval do DPO), nunca pune — só gera alerta e encaminha à malha fina',
+            ],
+            'ia.auditoria_preditiva.janela_dias' => [
+                'group' => 'ia',
+                'type' => 'integer',
+                'default_value' => '30',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
+                'description' => 'Janela (dias) analisada pela auditoria preditiva sobre os deferimentos do fluxo expresso',
+            ],
+            'ia.auditoria_preditiva.limiar_score' => [
+                'group' => 'ia',
+                'type' => 'integer',
+                'default_value' => '70',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:100'],
+                'description' => 'Score mínimo (0-100) para um processo deferido no expresso virar anomalia preditiva',
             ],
             // Funções de IA (Fase 14 — HU-014 aplicada à IA). Toggle por função
             // (key features.ia_*, grupo de negócio 'ia' — key ≠ group é a norma).

@@ -53,23 +53,10 @@ class MailConfigServiceProvider extends ServiceProvider
             'mail.mailers.smtp.port' => $server->port,
             'mail.mailers.smtp.username' => $server->username,
             'mail.mailers.smtp.password' => $server->password,
-            'mail.mailers.smtp.scheme' => $this->scheme($server->encryption),
+            'mail.mailers.smtp.scheme' => $server->scheme,
             'mail.mailers.smtp.timeout' => $server->timeout,
             'mail.from.address' => $server->from_address,
             'mail.from.name' => $server->from_name,
         ]);
-    }
-
-    /**
-     * Mapeia a criptografia administrável para o scheme do transporte SMTP do
-     * Symfony Mailer: tls (STARTTLS), smtps (TLS implícito/SSL) ou nenhum.
-     */
-    private function scheme(string $encryption): ?string
-    {
-        return match ($encryption) {
-            'tls' => 'tls',
-            'ssl' => 'smtps',
-            default => null,
-        };
     }
 }

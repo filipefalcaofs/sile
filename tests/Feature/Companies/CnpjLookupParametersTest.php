@@ -2,11 +2,10 @@
 
 namespace Tests\Feature\Companies;
 
-use App\Models\Parameter;
 use App\Services\Cnpj\CnpjLookup;
 use App\Services\Cnpj\CnpjLookupException;
-use Database\Seeders\ParameterSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -36,14 +35,16 @@ class CnpjLookupParametersTest extends TestCase
 
     public function test_numero_de_tentativas_segue_o_parametro_retries(): void
     {
-        $this->seed(ParameterSeeder::class);
-
-        // O parametro retries e o numero TOTAL de tentativas passado a
-        // Http::retry($times) (nao "tentativas extras"). retries=1 => 1 unica
-        // tentativa por lookup: uma falha de conexao ja e fatal.
-        Parameter::query()->where('key', 'integrations.cnpj_lookup.retries')->first()->update(['value' => '1']);
-        // backoff zerado: sem espera entre as tentativas durante o teste.
-        Parameter::query()->where('key', 'integrations.cnpj_lookup.backoff_ms')->first()->update(['value' => '0']);
+        // retries/backoff_ms sao constantes tecnicas de HTTP em config/sile.php
+        // (fora do catalogo HU-014); o BrasilApiCnpjLookup as le via Settings::get
+        // com fallback de config. retries e o numero TOTAL de tentativas passado a
+        // Http::retry($times): retries=1 => 1 unica tentativa por lookup (uma falha
+        // de conexao ja e fatal); backoff zerado evita espera no teste.
+        config([
+            'sile.integrations.cnpj_lookup.retries' => 1,
+            'sile.integrations.cnpj_lookup.backoff_ms' => 0,
+        ]);
+        Cache::flush();
 
         // Provar o numero de tentativas por EXAUSTAO DE SEQUENCIA (e nao por
         // Http::assertSentCount, que conta 0 em falha de conexao). Empilha

@@ -146,6 +146,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     icon: <AlertIcon />,
                     visible: auth.permissions.includes('gerenciar-alertas-abuso'),
                 },
+                {
+                    name: 'Auditoria preditiva',
+                    href: '/gestao/auditoria-preditiva',
+                    icon: <ShieldIcon />,
+                    visible: auth.permissions.includes('gerenciar-alertas-abuso'),
+                },
             ],
         },
         {
@@ -172,6 +178,18 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                 {
                     name: 'Quedas do expresso',
                     href: '/gestao/relatorios/quedas',
+                    icon: <AlertIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
+                    name: 'Painel por bairro',
+                    href: '/gestao/relatorios/geo-bairro',
+                    icon: <MapPinIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
+                    name: 'Saturação locacional',
+                    href: '/gestao/relatorios/saturacao',
                     icon: <AlertIcon />,
                     visible: auth.permissions.includes('consultar-relatorios'),
                 },
@@ -205,9 +223,15 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('manter-parametros'),
                 },
                 {
-                    name: 'E-mails',
-                    href: '/gestao/emails',
+                    name: 'Servidores de e-mail',
+                    href: '/gestao/config-email',
                     icon: <MailIcon />,
+                    visible: auth.permissions.includes('manter-config-email'),
+                },
+                {
+                    name: 'Monitoramento de e-mails',
+                    href: '/gestao/emails',
+                    icon: <ListIcon />,
                     visible: auth.permissions.includes('monitorar-emails'),
                 },
                 {

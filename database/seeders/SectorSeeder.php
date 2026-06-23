@@ -6,6 +6,7 @@ use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\Sector;
 use App\Models\User;
+use App\Support\DemoMode;
 use Illuminate\Database\Seeder;
 
 /**
@@ -37,7 +38,7 @@ class SectorSeeder extends Seeder
 
         // Usuários de gestão são dados de DEV: nunca em produção (lá os analistas
         // reais são cadastrados pelo administrador e vinculados pelo gestor).
-        if (! app()->environment(['local', 'testing'])) {
+        if (! DemoMode::allowsDemoSeeders()) {
             return;
         }
 

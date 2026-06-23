@@ -32,11 +32,11 @@ class ParameterHistoryTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin, 'gestao')->put(route('gestao.parametros.update', 'ui.access_history.per_page'), ['value' => '5']);
-        $this->actingAs($admin, 'gestao')->put(route('gestao.parametros.update', 'ui.access_history.per_page'), ['value' => '10']);
+        $this->actingAs($admin, 'gestao')->put(route('gestao.parametros.update', 'security.login.max_attempts'), ['value' => '5']);
+        $this->actingAs($admin, 'gestao')->put(route('gestao.parametros.update', 'security.login.max_attempts'), ['value' => '10']);
 
         $this->actingAs($admin, 'gestao')
-            ->get(route('gestao.parametros.historico', 'ui.access_history.per_page'))
+            ->get(route('gestao.parametros.historico', 'security.login.max_attempts'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/parametros/historico')
@@ -81,7 +81,7 @@ class ParameterHistoryTest extends TestCase
         $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($gestor, 'gestao')
-            ->get('/gestao/parametros/ui.access_history.per_page/historico')
+            ->get('/gestao/parametros/security.login.max_attempts/historico')
             ->assertForbidden();
 
         $this->assertDatabaseHas('activity_log', [

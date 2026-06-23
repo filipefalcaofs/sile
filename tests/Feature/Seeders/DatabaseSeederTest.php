@@ -55,8 +55,10 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(31, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
-        // 97 parâmetros: 90 acumulados + 7 toggles de IA (features.ia_* — Fase 14 Onda 0).
-        $this->assertSame(97, Parameter::query()->count());
+        // 88 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
+        // (Módulo 2: relatorios.saturacao.*) + 3 da Auditoria Preditiva (Módulo 3:
+        // features.ia_auditoria_preditiva + ia.auditoria_preditiva.janela/limiar).
+        $this->assertSame(88, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -316,7 +318,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(97, Parameter::query()->count());
+        $this->assertSame(88, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
@@ -369,15 +371,15 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
 
         Parameter::query()
-            ->where('key', 'ui.access_history.per_page')
+            ->where('key', 'security.login.max_attempts')
             ->first()
-            ->update(['value' => '7']);
+            ->update(['value' => '3']);
 
         $this->seed();
 
         $this->assertSame(
-            '7',
-            Parameter::query()->where('key', 'ui.access_history.per_page')->first()->value
+            '3',
+            Parameter::query()->where('key', 'security.login.max_attempts')->first()->value
         );
     }
 

@@ -28,11 +28,15 @@ const DESTINOS: DestinoComando[] = [
     { label: 'Trilha de auditoria', grupo: 'Auditoria e compliance', href: '/gestao/auditoria', permissao: 'consultar-auditoria' },
     { label: 'Conformidade LGPD', grupo: 'Auditoria e compliance', href: '/gestao/lgpd', permissao: 'monitorar-lgpd' },
     { label: 'Alertas de abuso', grupo: 'Auditoria e compliance', href: '/gestao/abuso', permissao: 'gerenciar-alertas-abuso' },
+    { label: 'Auditoria preditiva', grupo: 'Auditoria e compliance', href: '/gestao/auditoria-preditiva', permissao: 'gerenciar-alertas-abuso' },
     { label: 'Indicadores de viabilidade', grupo: 'Relatórios', href: '/gestao/relatorios/indicadores', permissao: 'consultar-relatorios' },
     { label: 'Tempo de análise', grupo: 'Relatórios', href: '/gestao/relatorios/tempo', permissao: 'consultar-relatorios' },
     { label: 'Produtividade', grupo: 'Relatórios', href: '/gestao/relatorios/produtividade', permissao: 'consultar-relatorios' },
     { label: 'Quedas do expresso', grupo: 'Relatórios', href: '/gestao/relatorios/quedas', permissao: 'consultar-relatorios' },
+    { label: 'Painel por bairro', grupo: 'Relatórios', href: '/gestao/relatorios/geo-bairro', permissao: 'consultar-relatorios' },
+    { label: 'Saturação locacional', grupo: 'Relatórios', href: '/gestao/relatorios/saturacao', permissao: 'consultar-relatorios' },
     { label: 'Feriados', grupo: 'Relatórios', href: '/gestao/feriados', permissao: 'manter-parametros' },
+    { label: 'Servidores de e-mail', grupo: 'Administração', href: '/gestao/config-email', permissao: 'manter-config-email' },
     { label: 'Configuração de IA', grupo: 'Administração', href: '/gestao/config-ia', permissao: 'manter-config-ia' },
 ];
 

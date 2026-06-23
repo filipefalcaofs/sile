@@ -26,6 +26,7 @@ use App\Services\Solicitacao\DocumentRequirementResolver;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
+use App\Support\DemoMode;
 use App\Support\Settings;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Auth;
@@ -87,7 +88,7 @@ class AuditoriaDevSeeder extends Seeder
     {
         // GATE DE AMBIENTE (anti-fachada): exemplos de dev só em dev/teste. Em
         // produção a detecção roda pelo scheduler quando a SEDUR ligar o toggle.
-        if (! app()->environment(['local', 'testing'])) {
+        if (! DemoMode::allowsDemoSeeders()) {
             $this->command?->warn('AuditoriaDevSeeder: ignorado fora de dev/teste.');
 
             return;

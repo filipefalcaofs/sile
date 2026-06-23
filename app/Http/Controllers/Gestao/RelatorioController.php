@@ -12,9 +12,11 @@ use App\Services\Relatorios\Export\Sources\ProdutividadeReportSource;
 use App\Services\Relatorios\Export\Sources\SolicitacoesReportSource;
 use App\Services\Relatorios\Export\Sources\TempoAnaliseReportSource;
 use App\Services\Relatorios\ExpressoQuedaService;
+use App\Services\Relatorios\GeoBairroIndicadorService;
 use App\Services\Relatorios\IndicadoresViabilidadeService;
 use App\Services\Relatorios\ProdutividadeAnalistaService;
 use App\Services\Relatorios\ReportFilters;
+use App\Services\Relatorios\SaturacaoService;
 use App\Services\Relatorios\TempoAnaliseService;
 use App\Support\Audit\AuditService;
 use Inertia\Inertia;
@@ -39,6 +41,8 @@ class RelatorioController extends Controller
         private TempoAnaliseService $tempos,
         private ProdutividadeAnalistaService $produtividade,
         private ExpressoQuedaService $quedas,
+        private GeoBairroIndicadorService $geoBairro,
+        private SaturacaoService $saturacao,
         private AuditService $audit,
     ) {}
 
@@ -134,6 +138,58 @@ class RelatorioController extends Controller
             'taxa' => $this->quedas->taxaRespostaExpressa($filtros),
             'serie' => $this->quedas->serieTemporal($filtros),
             'ranking' => $this->quedas->rankingMotivos($filtros),
+            'filtros' => $filtros->aplicados(),
+        ]);
+    }
+
+    /**
+     * Painel geoeconômico por bairro (Geo BI interno — Módulo 1): distribuição
+     * das solicitações por bairro com decisões e taxa de deferimento, para
+     * planejamento da SEDUR. Degradação honesta enquanto a zona urbanística
+     * oficial (GIS) está pendente — agrupa por bairro, nunca inventa zona. Com
+     * ?formato=, exporta o conjunto de solicitações filtrado pelo contrato único
+     * (SolicitacoesReportSource — RN-005); senão audita a consulta e renderiza a
+     * tela com a agregação real.
+     */
+    public function geoBairro(RelatorioFiltersRequest $request): InertiaResponse|Response
+    {
+        $filtros = $request->toReportFilters();
+
+        if ($formato = $this->formato($request)) {
+            return $this->exportar(app(SolicitacoesReportSource::class), $filtros, $formato, $request);
+        }
+
+        $this->auditarConsulta('consulta-geo-bairro', 'Consulta do painel geoeconômico por bairro', $filtros);
+
+        return Inertia::render('gestao/relatorios/geo-bairro', [
+            'resumo' => $this->geoBairro->resumo($filtros),
+            'porBairro' => $this->geoBairro->porBairro($filtros),
+            'filtros' => $filtros->aplicados(),
+        ]);
+    }
+
+    /**
+     * Observatório de Saturação Locacional (Módulo 2): concentração de
+     * estabelecimentos deferidos por bairro×CNAE vs capacidade recomendada
+     * (parâmetro HU-014), classificando ok/saturando/saturado. Insumo de política
+     * urbana da SEDUR (adensamento/externalidades). Degradação honesta: CNAE sem
+     * capacidade vira "sem_capacidade"; recorte por bairro até a zona oficial
+     * (GIS). Com ?formato=, exporta as solicitações filtradas (contrato único).
+     */
+    public function saturacao(RelatorioFiltersRequest $request): InertiaResponse|Response
+    {
+        $filtros = $request->toReportFilters();
+
+        if ($formato = $this->formato($request)) {
+            return $this->exportar(app(SolicitacoesReportSource::class), $filtros, $formato, $request);
+        }
+
+        $this->auditarConsulta('consulta-saturacao', 'Consulta do observatório de saturação locacional', $filtros);
+
+        return Inertia::render('gestao/relatorios/saturacao', [
+            'resumo' => $this->saturacao->resumo($filtros),
+            'porBairroCnae' => $this->saturacao->porBairroCnae($filtros),
+            'limiares' => $this->saturacao->limiares(),
             'filtros' => $filtros->aplicados(),
         ]);
     }

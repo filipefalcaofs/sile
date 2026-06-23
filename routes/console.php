@@ -94,3 +94,14 @@ Schedule::command('abuso:detectar')
     ->daily()
     ->withoutOverlapping()
     ->onOneServer();
+
+// Auditoria Preditiva de Processos Expressos (Módulo 3): varredura SEMANAL dos
+// deferimentos automáticos do fluxo expresso — pontua sinais determinísticos e
+// gera anomalia + malha fina (NUNCA pune; LGPD art. 20). No-op honesto enquanto
+// features.ia_auditoria_preditiva=0 (default; a SEDUR/DPO liga após validar os
+// limiares). Idempotente por fingerprint e segura em multi-instância
+// (withoutOverlapping/onOneServer).
+Schedule::command('ia:auditoria-preditiva')
+    ->weekly()
+    ->withoutOverlapping()
+    ->onOneServer();
