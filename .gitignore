@@ -90,6 +90,7 @@ target/
 *.nar
 .gradle/
 build/
+!/public/build/
 out/
 hs_err_pid*
 
