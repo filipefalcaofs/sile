@@ -23,6 +23,9 @@ return [
         'companies' => ['per_page' => 15],
         'email_logs' => ['per_page' => 20],
         'auditoria' => ['per_page' => 20],
+        // Quantidade de solicitações recentes no painel do cidadão. Constante
+        // técnica/de UI (precedente [02-02]): NÃO entra no catálogo HU-014.
+        'painel' => ['solicitacoes_recentes' => 5],
     ],
     'features' => [
         'procuracoes' => true,
