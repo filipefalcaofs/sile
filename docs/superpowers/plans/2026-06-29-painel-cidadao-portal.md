@@ -873,7 +873,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes, 
 
     const temAtencao = atencao.pendencias.length > 0 || atencao.rascunhos.length > 0;
 
-    const indicators: Indicator[] = [
+    const possibleIndicators: (Indicator | null)[] = [
         {
             key: 'andamento',
             label: 'Em andamento',
@@ -897,7 +897,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes, 
                   value: numberFormat.format(indicadores.consultas),
                   note: 'consultas de viabilidade',
                   icon: <SearchIcon className="size-6" />,
-                  tone: 'success' as KpiTone,
+                  tone: 'success',
               }
             : null,
         !emRepresentacao
@@ -907,10 +907,12 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes, 
                   value: numberFormat.format(notificacoes.nao_lidas),
                   note: 'avisos do seu processo',
                   icon: <BellIcon className="size-6" />,
-                  tone: 'warning' as KpiTone,
+                  tone: 'warning',
               }
             : null,
-    ].filter((indicator): indicator is Indicator => indicator !== null);
+    ];
+
+    const indicators = possibleIndicators.filter((indicator): indicator is Indicator => indicator !== null);
 
     return (
         <>
@@ -1187,3 +1189,15 @@ Expected: sem alterações pendentes (ou aplica e segue).
 **Placeholders:** nenhum — todo passo tem código/comando completo.
 
 **Consistência de tipos:** `build(User $efetivo, User $logado)` usado igual no controller e service; props `indicadores`/`atencao`/`solicitacoesRecentes`/`emRepresentacao` batem entre service (PHP) e `DashboardProps` (TS); `SolicitacaoResumoResource` shape bate com `SolicitacaoResumo` (TS) e com o `index` (que adiciona `editable`/`cancelable`).
+
+## Refinamentos durante a execução (review)
+
+Ajustes que surgiram nas revisões de cada task e foram incorporados ao código final:
+
+1. **Task 1:** docblock do `SolicitacaoResumoResource` corrigido (não há campo de cor; a cor é derivada no front a partir de `status.value`).
+2. **Task 4:** teste reforçado com um rascunho de terceiro, para isolar o corte de escopo dos rascunhos.
+3. **Task 6 (tipagem):** o array de indicadores foi extraído para uma variável intermediária `possibleIndicators: (Indicator | null)[]` antes do `.filter()` — o tipo contextual `Indicator[]` não se propaga através do `.filter()` para um array literal, então a anotação na variável é necessária para o type guard compilar (o bloco de código acima já reflete a versão corrigida).
+4. **Task 6 (design §4.2):** o KPI "Notificações não lidas" virou atalho para `/portal/notificacoes` (campo `href?` em `Indicator` + wrapper `Link` no map, sem alterar o `KpiCard` compartilhado).
+5. **Task 6 (acessibilidade §8):** `aria-hidden="true"` aplicado aos 16 ícones decorativos da página (todos acompanhados de texto).
+
+Follow-ups registrados (não bloqueantes): `aria-hidden` como padrão no componente base de ícone (débito transversal do projeto); extrair `statusColor`/`formatDate` para um módulo compartilhado; unificar a resolução do usuário efetivo (hoje repetida entre controllers do portal).
