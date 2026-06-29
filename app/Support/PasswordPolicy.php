@@ -2,8 +2,45 @@
 
 namespace App\Support;
 
+use Illuminate\Validation\Rules\Password;
+
 class PasswordPolicy
 {
+    /**
+     * Registra a política de senha usada por Password::default() / Fortify.
+     */
+    public static function configureDefaults(): void
+    {
+        Password::defaults(fn (): Password => static::buildRule());
+    }
+
+    /**
+     * Regra de validação alinhada aos parâmetros administráveis (HU-014).
+     */
+    public static function buildRule(): Password
+    {
+        $rule = Password::min((int) Settings::get('security.password.min_length', 8));
+
+        if (static::requires('security.password.require_mixed_case', true)) {
+            $rule->mixedCase();
+        }
+
+        if (static::requires('security.password.require_numbers', true)) {
+            $rule->numbers();
+        }
+
+        if (static::requires('security.password.require_symbols', false)) {
+            $rule->symbols();
+        }
+
+        return $rule;
+    }
+
+    private static function requires(string $key, bool $default): bool
+    {
+        return filter_var(Settings::get($key, $default), FILTER_VALIDATE_BOOLEAN);
+    }
+
     /**
      * Descrição legível (pt-BR) dos requisitos de senha em vigor,
      * derivada das mesmas Settings usadas por Password::defaults()
@@ -18,15 +55,15 @@ class PasswordPolicy
 
         $requirements = [];
 
-        if (Settings::get('security.password.require_mixed_case', true)) {
+        if (static::requires('security.password.require_mixed_case', true)) {
             $requirements[] = 'letras maiúsculas e minúsculas';
         }
 
-        if (Settings::get('security.password.require_numbers', true)) {
+        if (static::requires('security.password.require_numbers', true)) {
             $requirements[] = 'números';
         }
 
-        if (Settings::get('security.password.require_symbols', false)) {
+        if (static::requires('security.password.require_symbols', false)) {
             $requirements[] = 'símbolos';
         }
 

@@ -20,9 +20,10 @@ interface PasswordFieldProps {
     autoComplete: string;
     error?: string;
     hint?: string;
+    onInput?: () => void;
 }
 
-function PasswordField({ id, name, label, autoComplete, error, hint }: PasswordFieldProps) {
+function PasswordField({ id, name, label, autoComplete, error, hint, onInput }: PasswordFieldProps) {
     const [show, setShow] = useState(false);
 
     return (
@@ -39,6 +40,7 @@ function PasswordField({ id, name, label, autoComplete, error, hint }: PasswordF
                     required
                     error={!!error}
                     hint={error ?? hint}
+                    onInput={onInput}
                 />
                 <button
                     type="button"
@@ -61,7 +63,7 @@ export default function Register({ passwordRules, canLoginWithGovBr }: RegisterP
         >
             <Head title="Criar conta" />
             <Form action="/portal/register" method="post">
-                {({ errors, processing }) => (
+                {({ errors, processing, clearErrors }) => (
                     <div className="space-y-5">
                         <div>
                             <Label htmlFor="name" required>
@@ -132,6 +134,7 @@ export default function Register({ passwordRules, canLoginWithGovBr }: RegisterP
                                 label="Senha"
                                 autoComplete="new-password"
                                 error={errors.password}
+                                onInput={() => clearErrors('password')}
                             />
 
                             <PasswordField
@@ -140,6 +143,7 @@ export default function Register({ passwordRules, canLoginWithGovBr }: RegisterP
                                 label="Confirmar senha"
                                 autoComplete="new-password"
                                 error={errors.password_confirmation}
+                                onInput={() => clearErrors('password_confirmation')}
                             />
                         </div>
 

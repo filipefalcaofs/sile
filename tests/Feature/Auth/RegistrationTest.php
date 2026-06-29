@@ -109,6 +109,24 @@ class RegistrationTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
+    public function test_usuario_se_cadastra_com_senha_com_simbolo(): void
+    {
+        $response = $this->post('/portal/register', [
+            ...$this->validPayload(),
+            'email' => 'filipe@example.com',
+            'cpf' => '066.810.655-70',
+            'password' => 'Rp@131268',
+            'password_confirmation' => 'Rp@131268',
+        ]);
+
+        $response->assertRedirect('/portal/painel');
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', [
+            'email' => 'filipe@example.com',
+            'cpf' => '06681065570',
+        ]);
+    }
+
     public function test_usuario_autenticado_nao_acessa_cadastro(): void
     {
         $user = User::factory()->cidadao()->create();
