@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\DemoMode;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Massa e credenciais para validação pela SEDUR no ambiente de demonstração
@@ -70,6 +71,31 @@ class DemonstracaoClienteSeeder extends Seeder
         ],
     ];
 
+    /**
+     * Seeders de catálogo seguros para rodar em produção (sem factories/Faker).
+     * Dev seeders (Solicitacao/Expresso/Analise/Comunicacao/Auditoria/Relatorios/
+     * AiConfig + DevAdmin + Company + ZonaFicticia) usam factories ou produzem
+     * dados de massa — ficam fora do ambiente de homologação SEDUR.
+     */
+    private const SEEDERS_HOMOLOGACAO = [
+        RolesAndPermissionsSeeder::class,
+        LegalTermSeeder::class,
+        ParameterSeeder::class,
+        CnaeSeeder::class,
+        RiscoMunicipalSeeder::class,
+        RiscoSanitarioSeeder::class,
+        RiskTriggerSeeder::class,
+        LouosQuadro7Seeder::class,
+        LouosQuadro10Seeder::class,
+        LouosQuadro11Seeder::class,
+        ViabilityServiceTypeSeeder::class,
+        DocumentRequirementSeeder::class,
+        SectorSeeder::class,
+        StandardTextSeeder::class,
+        GeoLayerSeeder::class,
+        HolidaySeeder::class,
+    ];
+
     public function run(): void
     {
         if (! DemoMode::enabled()) {
@@ -78,13 +104,15 @@ class DemonstracaoClienteSeeder extends Seeder
             return;
         }
 
-        $this->call(DatabaseSeeder::class);
+        $this->call(self::SEEDERS_HOMOLOGACAO);
         $this->seedPerfisValidacao();
         $this->seedUsuariosCliente();
     }
 
     private function seedPerfisValidacao(): void
     {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
         foreach (self::PERFIS_VALIDACAO as $nome => $permissoes) {
             $role = Role::firstOrCreate(['name' => $nome, 'guard_name' => 'web']);
             $role->givePermissionTo($permissoes);
