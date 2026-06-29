@@ -2,8 +2,10 @@
 
 namespace App\Services\Painel;
 
+use App\Enums\AnalysisPendencyStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Resources\Portal\SolicitacaoResumoResource;
+use App\Models\AnalysisPendency;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\ViabilityQuery;
@@ -41,7 +43,7 @@ class PainelCidadaoService
 
         return [
             'indicadores' => $this->indicadores($efetivo, $logado, $emRepresentacao),
-            'atencao' => ['pendencias' => [], 'rascunhos' => []],
+            'atencao' => $this->atencao($efetivo),
             'solicitacoesRecentes' => $this->solicitacoesRecentes($efetivo),
             'emRepresentacao' => $emRepresentacao,
         ];
@@ -87,5 +89,46 @@ class PainelCidadaoService
                 ->limit($limit)
                 ->get()
         )->resolve();
+    }
+
+    /**
+     * Itens que dependem de ação do efetivo: pendências ABERTAS (HU-090/091) e
+     * rascunhos a protocolar (HU-061/068).
+     *
+     * @return array{pendencias: list<array<string, mixed>>, rascunhos: list<array<string, mixed>>}
+     */
+    private function atencao(User $efetivo): array
+    {
+        $pendencias = AnalysisPendency::query()
+            ->where('status', AnalysisPendencyStatus::Aberta)
+            ->whereHas('viabilityRequest', fn ($query) => $query->where('requester_user_id', $efetivo->id))
+            ->with('viabilityRequest:id,protocol_number')
+            ->latest()
+            ->get()
+            ->map(fn (AnalysisPendency $pendencia): array => [
+                'id' => $pendencia->id,
+                'solicitacao_id' => $pendencia->viability_request_id,
+                'protocol_number' => $pendencia->viabilityRequest?->protocol_number,
+                'descricao' => $pendencia->description,
+                'due_at' => $pendencia->due_at?->toDateTimeString(),
+            ])
+            ->all();
+
+        $rascunhos = ViabilityRequest::query()
+            ->where('requester_user_id', $efetivo->id)
+            ->where('status', ViabilityRequestStatus::Rascunho)
+            ->with(['company:id,legal_name', 'serviceType:id,name'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (ViabilityRequest $rascunho): array => [
+                'id' => $rascunho->id,
+                'service_type' => $rascunho->serviceType?->name,
+                'company_legal_name' => $rascunho->company?->legal_name,
+                'created_at' => $rascunho->created_at?->toDateTimeString(),
+            ])
+            ->all();
+
+        return ['pendencias' => $pendencias, 'rascunhos' => $rascunhos];
     }
 }

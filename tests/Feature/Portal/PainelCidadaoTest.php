@@ -4,6 +4,7 @@ namespace Tests\Feature\Portal;
 
 use App\Enums\CompanyLinkRole;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\AnalysisPendency;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\ViabilityQuery;
@@ -112,5 +113,52 @@ class PainelCidadaoTest extends TestCase
                 ->where('solicitacoesRecentes.0.protocol_number', 'VIA-2026-000000')
                 // Linguagem pública do status (publicLabel), nunca o label técnico.
                 ->where('solicitacoesRecentes.0.status.public_label', 'Recebida — em processamento'));
+    }
+
+    public function test_painel_atencao_traz_pendencias_abertas_e_rascunhos_do_efetivo(): void
+    {
+        $user = $this->portalUser();
+        $other = $this->portalUser();
+        $company = $this->companyLinkedTo($user);
+
+        // Pendência ABERTA do usuário (aparece).
+        $req = ViabilityRequest::factory()->protocoled()->create([
+            'requester_user_id' => $user->id,
+            'company_id' => $company->id,
+            'protocol_number' => 'VIA-2026-000100',
+        ]);
+        AnalysisPendency::factory()->create(['viability_request_id' => $req->id]);
+
+        // Pendência RESPONDIDA do usuário (NÃO aparece).
+        AnalysisPendency::factory()->respondida()->create(['viability_request_id' => $req->id]);
+
+        // Pendência aberta de OUTRO usuário (NÃO aparece — escopo).
+        $otherCompany = $this->companyLinkedTo($other);
+        $otherReq = ViabilityRequest::factory()->protocoled()->create([
+            'requester_user_id' => $other->id,
+            'company_id' => $otherCompany->id,
+        ]);
+        AnalysisPendency::factory()->create(['viability_request_id' => $otherReq->id]);
+
+        // Rascunho do usuário (aparece).
+        ViabilityRequest::factory()->draft()->create([
+            'requester_user_id' => $user->id,
+            'company_id' => $company->id,
+        ]);
+
+        // Rascunho de OUTRO usuário (NÃO aparece — escopo).
+        ViabilityRequest::factory()->draft()->create([
+            'requester_user_id' => $other->id,
+            'company_id' => $otherCompany->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get('/portal/painel')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('atencao.pendencias', 1)
+                ->where('atencao.pendencias.0.solicitacao_id', $req->id)
+                ->where('atencao.pendencias.0.protocol_number', 'VIA-2026-000100')
+                ->has('atencao.rascunhos', 1));
     }
 }
