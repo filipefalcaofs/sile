@@ -3,6 +3,7 @@
 namespace App\Services\Painel;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Http\Resources\Portal\SolicitacaoResumoResource;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\ViabilityQuery;
@@ -41,7 +42,7 @@ class PainelCidadaoService
         return [
             'indicadores' => $this->indicadores($efetivo, $logado, $emRepresentacao),
             'atencao' => ['pendencias' => [], 'rascunhos' => []],
-            'solicitacoesRecentes' => [],
+            'solicitacoesRecentes' => $this->solicitacoesRecentes($efetivo),
             'emRepresentacao' => $emRepresentacao,
         ];
     }
@@ -65,5 +66,26 @@ class PainelCidadaoService
             'empresas' => Company::countForUser($efetivo),
             'consultas' => $emRepresentacao ? null : ViabilityQuery::forUser($logado)->count(),
         ];
+    }
+
+    /**
+     * Últimas N solicitações do efetivo (N = config técnica, fora do catálogo
+     * HU-014), no shape comum do SolicitacaoResumoResource.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function solicitacoesRecentes(User $efetivo): array
+    {
+        $limit = (int) config('sile.ui.painel.solicitacoes_recentes', 5);
+
+        return SolicitacaoResumoResource::collection(
+            ViabilityRequest::query()
+                ->where('requester_user_id', $efetivo->id)
+                ->with(['company', 'serviceType'])
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->limit($limit)
+                ->get()
+        )->resolve();
     }
 }

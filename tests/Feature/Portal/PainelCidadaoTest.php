@@ -86,4 +86,31 @@ class PainelCidadaoTest extends TestCase
                 ->where('indicadores.consultas', 2)
                 ->where('emRepresentacao', false));
     }
+
+    public function test_painel_lista_solicitacoes_recentes_limitadas_e_publicas(): void
+    {
+        $user = $this->portalUser();
+        $company = $this->companyLinkedTo($user);
+
+        // 6 solicitações com datas decrescentes (a mais recente primeiro).
+        foreach (range(0, 5) as $i) {
+            ViabilityRequest::factory()->protocoled()->create([
+                'requester_user_id' => $user->id,
+                'company_id' => $company->id,
+                'protocol_number' => sprintf('VIA-2026-%06d', $i),
+                'created_at' => now()->subDays($i),
+            ]);
+        }
+
+        $this->actingAs($user)
+            ->get('/portal/painel')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                // Limite default (config sile.ui.painel.solicitacoes_recentes = 5).
+                ->has('solicitacoesRecentes', 5)
+                // Mais recente primeiro (i = 0).
+                ->where('solicitacoesRecentes.0.protocol_number', 'VIA-2026-000000')
+                // Linguagem pública do status (publicLabel), nunca o label técnico.
+                ->where('solicitacoesRecentes.0.status.public_label', 'Recebida — em processamento'));
+    }
 }
