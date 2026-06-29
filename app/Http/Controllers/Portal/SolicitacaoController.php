@@ -8,6 +8,7 @@ use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreSolicitacaoRequest;
+use App\Http\Resources\Portal\SolicitacaoResumoResource;
 use App\Models\AiSuggestion;
 use App\Models\Cnae;
 use App\Models\Company;
@@ -92,19 +93,7 @@ class SolicitacaoController extends Controller
             ->paginate($perPage)
             ->withQueryString()
             ->through(fn (ViabilityRequest $solicitacao) => [
-                'id' => $solicitacao->id,
-                'protocol_number' => $solicitacao->protocol_number,
-                'status' => [
-                    'value' => $solicitacao->status->value,
-                    'label' => $solicitacao->status->label(),
-                    'public_label' => $solicitacao->status->publicLabel(),
-                ],
-                'service_type' => $solicitacao->serviceType?->name,
-                'company' => $solicitacao->company ? [
-                    'legal_name' => $solicitacao->company->legal_name,
-                    'formatted_cnpj' => $solicitacao->company->formatted_cnpj,
-                ] : null,
-                'created_at' => $solicitacao->created_at?->toDateTimeString(),
+                ...SolicitacaoResumoResource::make($solicitacao)->resolve(),
                 // Só rascunho pode continuar a edição no wizard (policy update).
                 'editable' => $solicitacao->status === ViabilityRequestStatus::Rascunho,
                 // A ação de cancelar só aparece nos estados canceláveis (HU-070,
