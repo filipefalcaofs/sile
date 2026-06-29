@@ -6,6 +6,7 @@ use App\Enums\CompanyLinkRole;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
 use App\Models\Company;
+use App\Models\Procuration;
 use App\Models\User;
 use App\Models\ViabilityQuery;
 use App\Models\ViabilityRequest;
@@ -160,5 +161,64 @@ class PainelCidadaoTest extends TestCase
                 ->where('atencao.pendencias.0.solicitacao_id', $req->id)
                 ->where('atencao.pendencias.0.protocol_number', 'VIA-2026-000100')
                 ->has('atencao.rascunhos', 1));
+    }
+
+    public function test_painel_vazio_zera_indicadores_e_listas(): void
+    {
+        $user = $this->portalUser();
+
+        $this->actingAs($user)
+            ->get('/portal/painel')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('indicadores.em_andamento', 0)
+                ->where('indicadores.empresas', 0)
+                ->where('indicadores.consultas', 0)
+                ->has('atencao.pendencias', 0)
+                ->has('atencao.rascunhos', 0)
+                ->has('solicitacoesRecentes', 0)
+                ->where('emRepresentacao', false));
+    }
+
+    public function test_painel_em_representacao_mostra_do_representado_sem_vazar(): void
+    {
+        $grantor = $this->portalUser();
+        $attorney = $this->portalUser();
+
+        $proc = Procuration::factory()->create([
+            'grantor_user_id' => $grantor->id,
+            'attorney_user_id' => $attorney->id,
+        ]);
+
+        // Dados do REPRESENTADO (devem aparecer).
+        $grantorCompany = $this->companyLinkedTo($grantor);
+        $grantorReq = ViabilityRequest::factory()->protocoled()->create([
+            'requester_user_id' => $grantor->id,
+            'company_id' => $grantorCompany->id,
+            'protocol_number' => 'VIA-2026-000200',
+        ]);
+
+        // Dados do PROCURADOR (NÃO devem aparecer no painel do representado).
+        $attorneyCompany = $this->companyLinkedTo($attorney);
+        ViabilityRequest::factory()->protocoled()->create([
+            'requester_user_id' => $attorney->id,
+            'company_id' => $attorneyCompany->id,
+            'protocol_number' => 'VIA-2026-000999',
+        ]);
+        ViabilityQuery::factory()->count(3)->create(['user_id' => $attorney->id]);
+
+        $this->actingAs($attorney)
+            ->withSession(['acting_procuration_id' => $proc->id])
+            ->get('/portal/painel')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('emRepresentacao', true)
+                // Solicitações/empresas do representado.
+                ->where('indicadores.em_andamento', 1)
+                ->where('indicadores.empresas', 1)
+                ->has('solicitacoesRecentes', 1)
+                ->where('solicitacoesRecentes.0.id', $grantorReq->id)
+                // Consultas (pessoais do procurador) omitidas em representação.
+                ->where('indicadores.consultas', null));
     }
 }
