@@ -119,7 +119,7 @@ function BrandStage() {
                 <p
                     className={`${monoFont} mb-[30px] flex items-center gap-3 text-[11px] leading-none font-medium tracking-[0.1em] text-[oklch(67%_0.025_250)] uppercase before:h-px before:w-8 before:bg-[oklch(64%_0.155_250)] before:content-['']`}
                 >
-                    Console de licenciamento eletrônico
+                    Gestão de licenciamento eletrônico
                 </p>
                 <h1
                     className={`${displayFont} text-[clamp(34px,3.2vw,54px)] leading-[1.04] font-extrabold tracking-[-0.02em] text-balance uppercase`}
