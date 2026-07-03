@@ -73,9 +73,6 @@ class DemonstracaoClienteSeeder extends Seeder
 
     /**
      * Seeders de catálogo seguros para rodar em produção (sem factories/Faker).
-     * Dev seeders (Solicitacao/Expresso/Analise/Comunicacao/Auditoria/Relatorios/
-     * AiConfig + DevAdmin + Company + ZonaFicticia) usam factories ou produzem
-     * dados de massa — ficam fora do ambiente de homologação SEDUR.
      */
     private const SEEDERS_HOMOLOGACAO = [
         RolesAndPermissionsSeeder::class,
@@ -96,6 +93,26 @@ class DemonstracaoClienteSeeder extends Seeder
         HolidaySeeder::class,
     ];
 
+    /**
+     * Massa de demonstração em DIVERSAS SITUAÇÕES (dados fictícios, lógica REAL):
+     * rascunho, protocolada, cancelada, contingência, fluxo expresso (deferida
+     * com TVL sobre a zona fictícia), análise técnica (em análise, deferida com
+     * malha fina, em pendência), comunicação multicanal, auditoria/explicabilidade
+     * e massa de indicadores para os relatórios. Mesma ordem do DatabaseSeeder.
+     * Todos idempotentes e com gates internos (DemoMode / driver pgsql).
+     */
+    private const SEEDERS_MASSA_DEMO = [
+        DevAdminSeeder::class,
+        CompanySeeder::class,
+        SolicitacaoDevSeeder::class,
+        ZonaFicticiaDevSeeder::class,
+        ExpressoDevSeeder::class,
+        AnaliseDevSeeder::class,
+        ComunicacaoDevSeeder::class,
+        AuditoriaDevSeeder::class,
+        RelatoriosDevSeeder::class,
+    ];
+
     public function run(): void
     {
         if (! DemoMode::enabled()) {
@@ -107,6 +124,8 @@ class DemonstracaoClienteSeeder extends Seeder
         $this->call(self::SEEDERS_HOMOLOGACAO);
         $this->seedPerfisValidacao();
         $this->seedUsuariosCliente();
+        $this->call(self::SEEDERS_MASSA_DEMO);
+        $this->rotacionarSenhasDev();
     }
 
     private function seedPerfisValidacao(): void
@@ -138,6 +157,23 @@ class DemonstracaoClienteSeeder extends Seeder
         $this->command?->info('Gestão (validação): '.self::CLIENTE_GESTAO_EMAIL.' / '.self::DEMO_PASSWORD);
         $this->command?->info('Portal (requerente): '.self::CLIENTE_PORTAL_EMAIL.' / '.self::DEMO_PASSWORD);
         $this->command?->info('Perfil atual da validadora: validacao-fase-completa (ajuste em Gestão > Perfis).');
+    }
+
+    /**
+     * O ambiente de demonstração é público: os usuários fictícios de dev
+     * (@sile.dev, senha fraca "password") ganham a senha demo. Roda a cada
+     * seed — recadastros manuais de senha nesses usuários não são esperados.
+     */
+    private function rotacionarSenhasDev(): void
+    {
+        User::query()
+            ->where('email', 'like', '%@sile.dev')
+            ->get()
+            ->each(function (User $user): void {
+                $user->forceFill(['password' => self::DEMO_PASSWORD])->save();
+            });
+
+        $this->command?->info('Usuários @sile.dev com senha demo: '.self::DEMO_PASSWORD);
     }
 
     private function seedUsuario(string $email, string $name, string $cpf, string $role): User

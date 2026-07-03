@@ -125,15 +125,27 @@ Com `SILE_DEMO_DATA=true`, o seed cria:
 | Campo | Valor |
 |---|---|
 | E-mail | `admin@sile.dev` |
-| Senha | `password` |
+| Senha | `SileDemo2026!` |
 
-### Analista / gestor (demo interna)
+### Analista / gestor / cidadão (demo)
+
+No ambiente demo o seed rotaciona a senha de TODOS os usuários `@sile.dev`
+para a senha demo (o ambiente é público — senha fraca `password` só em dev local).
 
 | Papel | E-mail | Senha |
 |---|---|---|
-| Analista | `analista@sile.dev` | `password` |
-| Gestor | `gestor@sile.dev` | `password` |
-| Cidadão (seed) | `cidadao@sile.dev` | `password` |
+| Analista | `analista@sile.dev` | `SileDemo2026!` |
+| Gestor | `gestor@sile.dev` | `SileDemo2026!` |
+| Cidadão (seed) | `cidadao@sile.dev` | `SileDemo2026!` |
+
+### Massa de demonstração (diversas situações)
+
+Com `SILE_DEMO_DATA=true` o seed também cria a massa navegável (dados
+fictícios, lógica real): solicitações em rascunho, protocolada, cancelada e
+contingência; fluxo expresso com deferimento e TVL sobre a zona fictícia;
+análise técnica (em análise, deferida com malha fina, em pendência);
+comunicação multicanal; trilha de auditoria/explicabilidade/LGPD/abuso; e
+massa de indicadores para o dashboard e os relatórios.
 
 ## 6. Liberar telas por fase
 
