@@ -158,7 +158,7 @@ return [
             'analise_dias' => 10,
             'semaforo' => ['amarelo_percentual' => 80],
         ],
-        'pendencia' => ['prazo_resposta_dias' => 15],
+        'pendencia' => ['prazo_resposta_dias' => 15, 'prazo_resposta_horas_uteis' => 48],
         'precedentes' => [
             'janela_meses' => 12,
             'max_itens' => 10,

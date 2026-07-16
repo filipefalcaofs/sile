@@ -55,10 +55,11 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(31, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
-        // 88 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
+        // 89 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
+        // + 1 (analise.convite.prazo_resposta_horas_uteis, Fase 2a)
         // (Módulo 2: relatorios.saturacao.*) + 3 da Auditoria Preditiva (Módulo 3:
         // features.ia_auditoria_preditiva + ia.auditoria_preditiva.janela/limiar).
-        $this->assertSame(88, Parameter::query()->count());
+        $this->assertSame(89, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -318,7 +319,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(88, Parameter::query()->count());
+        $this->assertSame(89, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
@@ -395,9 +396,9 @@ class DatabaseSeederTest extends TestCase
 
         $this->assertAuthenticated('gestao');
 
-        $this->get('/gestao')->assertRedirect(route('portal.termo-lgpd.show'));
+        $this->get('/gestao')->assertRedirect(route('gestao.termo-lgpd.show'));
 
-        $this->post('/portal/termo-lgpd', ['accepted' => true]);
+        $this->post('/gestao/termo-lgpd', ['accepted' => true]);
 
         $this->get('/gestao')->assertOk();
     }
