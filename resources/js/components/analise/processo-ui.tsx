@@ -27,6 +27,7 @@ export interface ProcessoItem {
     empresa: string | null;
     cnpj: string | null;
     imovel: string;
+    endereco_completo: string;
     inscricao: string | null;
     categorias: ProcessoCategoria[];
     categoria: string | null;

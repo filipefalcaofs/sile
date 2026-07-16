@@ -39,6 +39,10 @@ class ProcessoResource extends JsonResource
             'empresa' => $this->company?->trade_name ?: $this->company?->legal_name,
             'cnpj' => $this->company?->formatted_cnpj,
             'imovel' => $this->enderecoResumo(),
+            // Endereço completo (com complemento e CEP) para o detalhe do
+            // processo (HU-082) — o requisito da SEDUR é sempre mostrar o
+            // endereço completo do imóvel, incluindo o complemento.
+            'endereco_completo' => $this->enderecoCompleto(),
             'inscricao' => $this->property_registration,
             'categorias' => $categorias,
             // Categoria primária para exibição compacta (lista/CSV); a lista
@@ -91,5 +95,29 @@ class ProcessoResource extends JsonResource
             $logradouro !== '' ? $logradouro : null,
             $this->address_neighborhood,
         ]));
+    }
+
+    /**
+     * Endereço completo do imóvel para o detalhe: logradouro, número e
+     * COMPLEMENTO, bairro e CEP. Degrada honesto — só concatena o que existe,
+     * nunca inventa partes ausentes.
+     */
+    private function enderecoCompleto(): string
+    {
+        $logradouro = trim(implode(', ', array_filter([
+            $this->address_street,
+            $this->address_number,
+            $this->address_complement,
+        ])));
+
+        $partes = implode(' - ', array_filter([
+            $logradouro !== '' ? $logradouro : null,
+            $this->address_neighborhood,
+        ]));
+
+        return trim(implode(' · ', array_filter([
+            $partes !== '' ? $partes : null,
+            $this->address_zip !== null && $this->address_zip !== '' ? "CEP {$this->address_zip}" : null,
+        ])));
     }
 }

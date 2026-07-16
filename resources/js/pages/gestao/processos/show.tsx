@@ -233,7 +233,7 @@ export default function Show({ processo, timeline, geo, explicacao }: ShowProps)
                                     <dl className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                         <DescItem label="Empresa">{processo.empresa ?? '—'}</DescItem>
                                         <DescItem label="CNPJ">{processo.cnpj ?? '—'}</DescItem>
-                                        <DescItem label="Imóvel">{processo.imovel || '—'}</DescItem>
+                                        <DescItem label="Imóvel">{processo.endereco_completo || processo.imovel || '—'}</DescItem>
                                         <DescItem label="Inscrição imobiliária">{processo.inscricao ?? '—'}</DescItem>
                                         <DescItem label="Status">{processo.status_label}</DescItem>
                                         <DescItem label="Categoria">
@@ -315,7 +315,7 @@ export default function Show({ processo, timeline, geo, explicacao }: ShowProps)
                             <Card>
                                 <CardHeader
                                     title="Explicabilidade da decisão"
-                                    description="Passo a passo de como a viabilidade foi decidida (RN-005) — projeção do que foi registrado, sem reexecutar o motor."
+                                    description="Passo a passo de como a viabilidade foi decidida — projeção do que foi registrado, sem reexecutar o motor."
                                 />
                                 <CardContent>
                                     <DecisionExplanation explicacao={explicacao} />

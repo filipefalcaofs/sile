@@ -1,12 +1,7 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
-import {
-    CategoriaBadges,
-    formatarDataHora,
-    type ProcessoItem,
-    SemaforoBadge,
-} from '@/components/analise/processo-ui';
+import { CategoriaBadges, type ProcessoItem } from '@/components/analise/processo-ui';
 import PageHeader from '@/components/app/page-header';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
@@ -293,19 +288,6 @@ export default function ConsultaProcessos({
             ),
         },
         {
-            id: 'sla',
-            header: 'Prazo',
-            cellClassName: 'whitespace-nowrap',
-            cell: (item) => (
-                <div className="flex flex-col gap-1">
-                    <span className="text-theme-xs text-gray-500 dark:text-gray-400">
-                        {formatarDataHora(item.analysis_due_at)}
-                    </span>
-                    <SemaforoBadge sla={item.sla} />
-                </div>
-            ),
-        },
-        {
             id: 'actions',
             header: 'Ações',
             align: 'end',
@@ -332,7 +314,7 @@ export default function ConsultaProcessos({
                 <Card>
                     <CardHeader
                         title="Filtros"
-                        description="Localize processos pelos identificadores, empresa, imóvel, responsável e categoria (HU-082)."
+                        description="Localize processos pelos identificadores, empresa, imóvel, responsável e categoria."
                     />
                     <CardContent>
                         <form onSubmit={aplicar} className="space-y-5">
