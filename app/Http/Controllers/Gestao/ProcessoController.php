@@ -192,10 +192,16 @@ class ProcessoController extends Controller
 
     /**
      * Transição manual do status de análise (eixo operacional AnalysisStatus):
-     * o controller FINO delega à AnalysisStatusStateMachine, que valida o
-     * grafo de transições, grava a timeline e audita. Transição fora do grafo
-     * é recusada com flash.error — nunca silenciosa — a menos que o usuário
-     * seja gestor E peça o override (`force`), justificado pelo `motivo`.
+     * o controller restringe a seleção manual ao subconjunto
+     * AnalysisStatus::proximas() (espelhando o dropdown da UI) ANTES de
+     * delegar à AnalysisStatusStateMachine — os estados dirigidos por evento
+     * (convite_respondido/expirado) fazem parte do grafo completo da máquina,
+     * mas não podem ser setados manualmente. A guarda é ignorada quando o
+     * usuário é gestor E pede o override (`force`), que aí passa a valer o
+     * grafo completo validado pela state machine. `motivo` é opcional na Fase
+     * 1 (a obrigatoriedade de parecer no cancelamento chega com o convite, na
+     * Fase 2). Transição recusada é comunicada com flash.error — nunca
+     * silenciosa.
      */
     public function atualizarStatusAnalise(
         AnalysisStatusRequest $request,
@@ -203,7 +209,12 @@ class ProcessoController extends Controller
         AnalysisStatusStateMachine $machine,
     ): RedirectResponse {
         $to = AnalysisStatus::from($request->string('status')->toString());
+        $from = $viabilityRequest->analysis_status;
         $force = $request->boolean('force') && $request->user()->hasRole('gestor');
+
+        if (! $force && ($from === null || ! in_array($to, $from->proximas(), true))) {
+            return back()->with('error', 'Transição de situação da análise não permitida.');
+        }
 
         try {
             $machine->transition(

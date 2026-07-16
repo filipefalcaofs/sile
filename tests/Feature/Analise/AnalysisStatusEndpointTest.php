@@ -49,4 +49,70 @@ class AnalysisStatusEndpointTest extends TestCase
 
         $this->assertSame(AnalysisStatus::Analisar, $request->refresh()->analysis_status);
     }
+
+    /**
+     * Estado dirigido por evento (convite_expirado) é aresta válida no grafo
+     * completo da state machine, mas NÃO integra o subconjunto manual
+     * (EmConvite->proximas() só oferece convite_cancelado) — o analista não
+     * pode setá-lo via POST direto, só o sistema (Fases 2/3).
+     */
+    public function test_estado_dirigido_por_evento_recusado_manualmente(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $analista = User::factory()->analista()->create();
+
+        $request = ViabilityRequest::factory()->create();
+        $request->forceFill(['analysis_status' => AnalysisStatus::EmConvite])->save();
+
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$request->id}/status-analise", ['status' => 'convite_expirado'])
+            ->assertSessionHas('error');
+
+        $this->assertSame(AnalysisStatus::EmConvite, $request->refresh()->analysis_status);
+    }
+
+    /**
+     * O override do gestor (`force`) ignora o subconjunto manual — permite
+     * qualquer transição válida no grafo completo, mesmo fora de proximas().
+     */
+    public function test_gestor_com_force_ignora_subconjunto_manual(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $gestor = User::factory()->create();
+        $gestor->assignRole('gestor');
+
+        $request = ViabilityRequest::factory()->create();
+        $request->forceFill(['analysis_status' => AnalysisStatus::Analisar])->save();
+
+        $this->actingAs($gestor, 'gestao')
+            ->post("/gestao/processos/{$request->id}/status-analise", [
+                'status' => 'vistoriado',
+                'force' => true,
+            ])
+            ->assertRedirect();
+
+        $this->assertSame(AnalysisStatus::Vistoriado, $request->refresh()->analysis_status);
+    }
+
+    /**
+     * `force` só vale para gestor — um analista pedindo force é ignorado e a
+     * transição fora do subconjunto manual continua recusada.
+     */
+    public function test_force_de_nao_gestor_e_ignorado(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $analista = User::factory()->analista()->create();
+
+        $request = ViabilityRequest::factory()->create();
+        $request->forceFill(['analysis_status' => AnalysisStatus::Analisar])->save();
+
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$request->id}/status-analise", [
+                'status' => 'vistoriado',
+                'force' => true,
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertSame(AnalysisStatus::Analisar, $request->refresh()->analysis_status);
+    }
 }
