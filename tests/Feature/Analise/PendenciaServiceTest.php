@@ -14,6 +14,7 @@ use App\Models\ViabilityRequest;
 use App\Notifications\PendenciaSolicitadaNotification;
 use App\Services\Analise\PendenciaInvalidaException;
 use App\Services\Analise\PendenciaService;
+use App\Services\Expresso\BusinessDeadlineCalculator;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -67,17 +68,17 @@ class PendenciaServiceTest extends TestCase
             ->service()
             ->abrir($request, $analista, 'Envie o IPTU atualizado do imóvel.');
 
-        // A pendência nasce ABERTA, com o prazo parametrizado (15 dias) e o
-        // analista como solicitante.
+        // A pendência (convite) nasce ABERTA, com prazo de 48h ÚTEIS (relatório
+        // SEDUR 2026-07-09) e o analista como solicitante.
         $this->assertSame(AnalysisPendencyStatus::Aberta, $pendency->status);
         $this->assertSame('Envie o IPTU atualizado do imóvel.', $pendency->description);
         $this->assertSame($analista->id, $pendency->requested_by_user_id);
         $this->assertNotNull($pendency->due_at);
         $this->assertEqualsWithDelta(
-            now()->addDays(15)->timestamp,
+            app(BusinessDeadlineCalculator::class)->businessDueAt(now(), 48)->timestamp,
             $pendency->due_at->timestamp,
             5,
-            'O prazo da pendência deve seguir analise.pendencia.prazo_resposta_dias (15).',
+            'O prazo do convite deve seguir analise.convite.prazo_resposta_horas_uteis (48h úteis).',
         );
 
         // O processo entra em em_pendencia de verdade (transição real + timeline).

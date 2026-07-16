@@ -9,6 +9,7 @@ use App\Events\PendenciaSolicitada;
 use App\Models\AnalysisPendency;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Expresso\BusinessDeadlineCalculator;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
@@ -42,6 +43,7 @@ class PendenciaService
     public function __construct(
         private ViabilityRequestStateMachine $stateMachine,
         private AuditService $audit,
+        private BusinessDeadlineCalculator $prazos,
     ) {}
 
     /**
@@ -55,9 +57,13 @@ class PendenciaService
         }
 
         $pendency = DB::transaction(function () use ($request, $analista, $descricao): AnalysisPendency {
-            $prazoDias = (int) Settings::get(
-                'analise.pendencia.prazo_resposta_dias',
-                config('sile.analise.pendencia.prazo_resposta_dias', 15),
+            // Prazo do convite em HORAS ÚTEIS (relatório SEDUR 2026-07-09): 48h
+            // úteis, pulando fins de semana e feriados cadastrados. Ao vencer sem
+            // resposta, o convite expira e o processo é INDEFERIDO automaticamente
+            // (ExpirarPendenciasCommand + IndeferirPorPrazoConviteService).
+            $horasUteis = (int) Settings::get(
+                'analise.convite.prazo_resposta_horas_uteis',
+                config('sile.analise.pendencia.prazo_resposta_horas_uteis', 48),
             );
 
             $pendency = AnalysisPendency::create([
@@ -65,7 +71,7 @@ class PendenciaService
                 'requested_by_user_id' => $analista->id,
                 'description' => $descricao,
                 'status' => AnalysisPendencyStatus::Aberta,
-                'due_at' => now()->addDays($prazoDias),
+                'due_at' => $this->prazos->businessDueAt(now(), $horasUteis),
             ]);
 
             $this->stateMachine->transition(
