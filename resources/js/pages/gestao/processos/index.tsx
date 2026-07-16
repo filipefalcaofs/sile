@@ -44,6 +44,7 @@ interface FiltrosTexto {
     bairro: string;
     data_de: string;
     data_ate: string;
+    analysis_status: string;
 }
 
 interface ConsultaProps {
@@ -58,6 +59,7 @@ interface ConsultaProps {
     perPageOptions: number[];
     statusOptions: SelectOption[];
     categoriaOptions: SelectOption[];
+    analysisStatusOptions: SelectOption[];
 }
 
 /** Grupos macro de status (espelham GRUPOS_STATUS do ProcessoQueryService). */
@@ -86,6 +88,7 @@ const CHAVES_FILTRO: (keyof FiltrosTexto)[] = [
     'bairro',
     'data_de',
     'data_ate',
+    'analysis_status',
 ];
 
 function statusColor(status: string): 'success' | 'error' | 'warning' | 'info' | 'light' {
@@ -110,6 +113,7 @@ export default function ConsultaProcessos({
     perPageOptions,
     statusOptions,
     categoriaOptions,
+    analysisStatusOptions,
 }: ConsultaProps) {
     const { auth } = usePage<SharedProps>().props;
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
@@ -278,6 +282,19 @@ export default function ConsultaProcessos({
             ),
         },
         {
+            id: 'analysis_status',
+            header: 'Situação da análise',
+            cellClassName: 'whitespace-nowrap',
+            cell: (item) =>
+                item.analysis_status_label ? (
+                    <Badge color="light" size="sm">
+                        {item.analysis_status_label}
+                    </Badge>
+                ) : (
+                    <span className="text-gray-400 dark:text-gray-500">—</span>
+                ),
+        },
+        {
             id: 'responsavel',
             header: 'Responsável',
             cell: (item) => (
@@ -337,6 +354,16 @@ export default function ConsultaProcessos({
                                         onChange={(valor) => definir('status', valor)}
                                         placeholder="Todos"
                                         options={statusOptions}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="filtro-analysis-status">Situação da análise</Label>
+                                    <Select
+                                        id="filtro-analysis-status"
+                                        value={form.analysis_status}
+                                        onChange={(valor) => definir('analysis_status', valor)}
+                                        placeholder="Todas"
+                                        options={analysisStatusOptions}
                                     />
                                 </div>
                                 <div>
