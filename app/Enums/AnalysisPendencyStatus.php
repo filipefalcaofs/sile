@@ -12,6 +12,7 @@ enum AnalysisPendencyStatus: string
     case Aberta = 'aberta';
     case Respondida = 'respondida';
     case Expirada = 'expirada';
+    case Cancelada = 'cancelada';
 
     public function label(): string
     {
@@ -19,6 +20,7 @@ enum AnalysisPendencyStatus: string
             self::Aberta => 'Aberta',
             self::Respondida => 'Respondida',
             self::Expirada => 'Expirada',
+            self::Cancelada => 'Cancelada',
         };
     }
 }
