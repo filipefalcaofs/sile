@@ -44,6 +44,40 @@ class BusinessDeadlineCalculator
     }
 
     /**
+     * Vencimento a partir de $from somando $businessHours horas ÚTEIS —
+     * fins de semana e feriados ativos contribuem 0 (um dia útil = 24h de
+     * relógio). É o dueAt FORWARD em tempo útil, usado pelo prazo do convite
+     * (48h úteis, relatório SEDUR 2026-07-09). Espelha o desconto de
+     * businessDurationBetween, mas projeta para frente. dueAt() (calendário)
+     * segue intacto para SLA/BAP (anti-regressão). Não muta a origem.
+     */
+    public function businessDueAt(DateTimeInterface $from, int $businessHours): Carbon
+    {
+        $cursor = Carbon::instance($from)->copy();
+        $remaining = max(0, $businessHours) * 60; // minutos úteis a consumir
+
+        while ($remaining > 0) {
+            if ($cursor->isWeekend() || $this->isHoliday($cursor)) {
+                $cursor = $cursor->copy()->startOfDay()->addDay();
+
+                continue;
+            }
+
+            $nextDayStart = $cursor->copy()->startOfDay()->addDay();
+            $minutesToday = (int) $cursor->diffInMinutes($nextDayStart, absolute: true);
+
+            if ($minutesToday >= $remaining) {
+                return $cursor->copy()->addMinutes($remaining);
+            }
+
+            $remaining -= $minutesToday;
+            $cursor = $nextDayStart;
+        }
+
+        return $cursor;
+    }
+
+    /**
      * Verdadeiro quando o vencimento já passou em relação a $now (default: agora).
      */
     public function isOverdue(DateTimeInterface $dueAt, ?DateTimeInterface $now = null): bool
