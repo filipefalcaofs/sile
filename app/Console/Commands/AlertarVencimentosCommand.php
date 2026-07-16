@@ -138,8 +138,8 @@ class AlertarVencimentosCommand extends Command
             $dispatcher->deliver($requerente, new PrazoVencendoNotification(
                 viabilityRequestId: $processo->id,
                 protocolNumber: (string) $processo->protocol_number,
-                assunto: "Pendência próxima do vencimento — {$processo->protocol_number}",
-                detalhe: "A pendência da sua solicitação {$processo->protocol_number} vence em {$pendencia->due_at->format('d/m/Y')}. Responda pelo portal SILE.",
+                assunto: "Convite próximo do vencimento — {$processo->protocol_number}",
+                detalhe: "O convite da sua solicitação {$processo->protocol_number} vence em {$pendencia->due_at->format('d/m/Y')}. Responda pelo portal SILE.",
                 url: route('portal.solicitacoes.show', $processo->id),
             ));
 

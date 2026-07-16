@@ -18,14 +18,14 @@ class PendenciaInvalidaException extends RuntimeException
     public static function naoAbrivel(ViabilityRequest $request): self
     {
         return new self(
-            "Não é possível abrir pendência: a solicitação #{$request->id} não está em análise (estado atual: {$request->status->label()}).",
+            "Não é possível abrir convite: a solicitação #{$request->id} não está em análise (estado atual: {$request->status->label()}).",
         );
     }
 
     public static function naoRespondivel(AnalysisPendency $pendency): self
     {
         return new self(
-            "Não é possível responder a pendência #{$pendency->id}: ela não está aberta ou a solicitação não está em pendência.",
+            "Não é possível responder o convite #{$pendency->id}: ele não está aberto ou a solicitação não está em convite.",
         );
     }
 

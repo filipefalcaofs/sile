@@ -104,7 +104,7 @@ class TimelineSolicitacao
     {
         return match ($status) {
             ViabilityRequestStatus::Rascunho => ['Conclua o preenchimento e protocole a solicitação.'],
-            ViabilityRequestStatus::EmPendencia => ['Há uma pendência aguardando sua ação. Verifique as orientações da análise.'],
+            ViabilityRequestStatus::EmPendencia => ['Há um convite aguardando sua ação. Verifique as orientações da análise.'],
             default => [],
         };
     }

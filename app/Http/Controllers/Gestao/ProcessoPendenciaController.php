@@ -29,6 +29,6 @@ class ProcessoPendenciaController extends Controller
             abort(422, $e->getMessage());
         }
 
-        return back()->with('status', 'Pendência aberta. O processo aguarda a resposta do requerente.');
+        return back()->with('status', 'Convite aberto. O processo aguarda a resposta do requerente.');
     }
 }

@@ -36,7 +36,7 @@ final class TempoAnaliseReportSource implements ReportSource
                 ['key' => 'preenchimento_min', 'label' => 'Preenchimento (min úteis)'],
                 ['key' => 'espera_min', 'label' => 'Espera (min úteis)'],
                 ['key' => 'analise_min', 'label' => 'Análise (min úteis)'],
-                ['key' => 'pendencia_min', 'label' => 'Pendência (min úteis)'],
+                ['key' => 'pendencia_min', 'label' => 'Convite (min úteis)'],
                 ['key' => 'total_min', 'label' => 'Total (min úteis)'],
             ],
             builder: fn (): Builder => $this->builder($filtros),

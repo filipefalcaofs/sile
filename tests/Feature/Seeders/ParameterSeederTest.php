@@ -565,7 +565,7 @@ class ParameterSeederTest extends TestCase
         $this->assertNotNull($assunto);
         $this->assertSame('notificacoes', $assunto->group);
         $this->assertSame('string', $assunto->type);
-        $this->assertSame('Pendência na sua solicitação de viabilidade {protocolo}', $assunto->default_value);
+        $this->assertSame('Convite na sua solicitação de viabilidade {protocolo}', $assunto->default_value);
         $this->assertSame(['required', 'string', 'max:150'], $assunto->validation_rules);
         $this->assertNull($assunto->value);
 

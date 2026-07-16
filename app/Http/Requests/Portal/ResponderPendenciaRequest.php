@@ -33,7 +33,7 @@ class ResponderPendenciaRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'response.required' => 'Informe a resposta para a pendência.',
+            'response.required' => 'Informe a resposta para o convite.',
             'response.max' => 'A resposta deve ter no máximo 5000 caracteres.',
         ];
     }

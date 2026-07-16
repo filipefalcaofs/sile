@@ -21,9 +21,9 @@ enum CommunicationType: string
     public function label(): string
     {
         return match ($this) {
-            self::PendenciaAberta => 'Pendência aberta',
-            self::PendenciaRespondida => 'Pendência respondida',
-            self::PendenciaExpirada => 'Pendência expirada',
+            self::PendenciaAberta => 'Convite aberto',
+            self::PendenciaRespondida => 'Convite respondido',
+            self::PendenciaExpirada => 'Convite expirado',
             self::PrazoVencendo => 'Prazo vencendo',
             self::EscalonamentoSla => 'Escalonamento por SLA',
             self::Resultado => 'Resultado da análise',

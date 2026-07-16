@@ -477,14 +477,14 @@ class ParameterSeeder extends Seeder
             'notificacoes.pendencia.assunto' => [
                 'group' => 'notificacoes',
                 'type' => 'string',
-                'default_value' => 'Pendência na sua solicitação de viabilidade {protocolo}',
+                'default_value' => 'Convite na sua solicitação de viabilidade {protocolo}',
                 'validation_rules' => ['required', 'string', 'max:150'],
                 'description' => 'Assunto do aviso de pendência (placeholders substituíveis)',
             ],
             'notificacoes.pendencia.corpo' => [
                 'group' => 'notificacoes',
                 'type' => 'string',
-                'default_value' => 'Olá! Identificamos uma pendência na sua solicitação de viabilidade {protocolo}. Pendência: {pendencia}. Acesse o portal do SILE para responder dentro do prazo informado.',
+                'default_value' => 'Olá! Identificamos um convite na sua solicitação de viabilidade {protocolo}. Convite: {pendencia}. Acesse o portal do SILE para responder dentro do prazo informado.',
                 'validation_rules' => ['required', 'string', 'max:2000'],
                 'description' => 'Corpo-template do aviso de pendência (placeholders {protocolo}/{pendencia})',
             ],
