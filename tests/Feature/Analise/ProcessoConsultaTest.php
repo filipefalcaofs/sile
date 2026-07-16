@@ -242,4 +242,15 @@ class ProcessoConsultaTest extends TestCase
         $this->assertSame($processo->protocol_number, $page['props']['processo']['protocol_number']);
         $this->assertArrayHasKey('categorias', $page['props']['processo']);
     }
+
+    public function test_resource_expoe_analysis_status_e_label(): void
+    {
+        $request = \App\Models\ViabilityRequest::factory()->create();
+        $request->forceFill(['analysis_status' => \App\Enums\AnalysisStatus::EmAnalise])->save();
+
+        $payload = (new \App\Http\Resources\ProcessoResource($request->fresh()))->resolve();
+
+        $this->assertSame('em_analise', $payload['analysis_status']);
+        $this->assertSame('Em análise', $payload['analysis_status_label']);
+    }
 }

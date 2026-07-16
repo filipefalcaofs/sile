@@ -37,6 +37,8 @@ export interface ProcessoItem {
     sector_id: number | null;
     analysis_stage: string | null;
     analysis_stage_label: string | null;
+    analysis_status: string | null;
+    analysis_status_label: string | null;
     analysis_due_at: string | null;
     sla: ProcessoSla | null;
     protocoled_at: string | null;
