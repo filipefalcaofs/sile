@@ -305,9 +305,10 @@ class ViabilityRequestStateMachineTest extends TestCase
     }
 
     /**
-     * Anti-regressão da análise humana: a decisão é FINAL (HU-089 encerramento)
-     * e a pendência só decide via retorno a em_analise. Nenhuma dessas saídas
-     * entra no mapa — o EP10 só ADICIONA em_analise/em_pendencia.
+     * Anti-regressão da análise humana: a decisão é FINAL (HU-089 encerramento).
+     * A pendência (convite) volta a em_analise na resposta OU é INDEFERIDA na
+     * expiração do prazo (Fase 2a — relatório SEDUR 2026-07-09); porém deferir
+     * a partir de em_pendencia segue inválido (defere só a partir de em_analise).
      */
     public function test_decisao_final_e_ciclo_de_pendencia_travados(): void
     {
@@ -323,9 +324,9 @@ class ViabilityRequestStateMachineTest extends TestCase
             $this->machine()->canTransition(ViabilityRequestStatus::EmPendencia, ViabilityRequestStatus::Deferida),
             'em_pendencia→deferida deve ser inválida (decide só a partir de em_analise).',
         );
-        $this->assertFalse(
+        $this->assertTrue(
             $this->machine()->canTransition(ViabilityRequestStatus::EmPendencia, ViabilityRequestStatus::Indeferida),
-            'em_pendencia→indeferida deve ser inválida (decide só a partir de em_analise).',
+            'em_pendencia→indeferida deve ser VÁLIDA (expiração do convite indefere — Fase 2a).',
         );
         $this->assertFalse(
             $this->machine()->canTransition(ViabilityRequestStatus::EmAnalise, ViabilityRequestStatus::Protocolada),

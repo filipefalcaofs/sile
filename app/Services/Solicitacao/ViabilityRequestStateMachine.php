@@ -30,6 +30,10 @@ class ViabilityRequestStateMachine
      * análise — sem tocar nas entradas das Fases 8/9. A decisão (deferida/
      * indeferida) é FINAL: não há saída (= encerramento HU-089).
      *
+     * Fase 2a (relatório SEDUR 2026-07-09): quando o convite (pendência) expira
+     * sem resposta no prazo de 48h úteis, o processo é INDEFERIDO automaticamente
+     * — por isso em_pendencia passa a permitir também a saída 'indeferida'.
+     *
      * @var array<string, list<string>>
      */
     private const array TRANSITIONS = [
@@ -37,7 +41,7 @@ class ViabilityRequestStateMachine
         'protocolada' => ['cancelada', 'em_analise', 'deferida', 'indeferida', 'aguardando_bap'],
         'aguardando_bap' => ['deferida', 'indeferida', 'em_analise'],
         'em_analise' => ['em_pendencia', 'deferida', 'indeferida'],
-        'em_pendencia' => ['em_analise'],
+        'em_pendencia' => ['em_analise', 'indeferida'],
     ];
 
     public function __construct(private AuditService $audit) {}
