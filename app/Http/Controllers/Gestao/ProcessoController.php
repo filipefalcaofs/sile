@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Gestao;
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Gestao\AnalysisStatusRequest;
 use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ProcessoResource;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\AnalysisStatusStateMachine;
+use App\Services\Analise\InvalidAnalysisStatusTransitionException;
 use App\Services\Analise\ProcessoQueryService;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Relatorios\Export\ReportExporter;
@@ -15,6 +18,7 @@ use App\Services\Relatorios\Export\Sources\ProcessosReportSource;
 use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -174,6 +178,36 @@ class ProcessoController extends Controller
                 'poligono' => $viabilityRequest->property_polygon_geojson,
             ],
         ]);
+    }
+
+    /**
+     * Transição manual do status de análise (eixo operacional AnalysisStatus):
+     * o controller FINO delega à AnalysisStatusStateMachine, que valida o
+     * grafo de transições, grava a timeline e audita. Transição fora do grafo
+     * é recusada com flash.error — nunca silenciosa — a menos que o usuário
+     * seja gestor E peça o override (`force`), justificado pelo `motivo`.
+     */
+    public function atualizarStatusAnalise(
+        AnalysisStatusRequest $request,
+        ViabilityRequest $viabilityRequest,
+        AnalysisStatusStateMachine $machine,
+    ): RedirectResponse {
+        $to = AnalysisStatus::from($request->string('status')->toString());
+        $force = $request->boolean('force') && $request->user()->hasRole('gestor');
+
+        try {
+            $machine->transition(
+                $viabilityRequest,
+                $to,
+                $request->user(),
+                $request->string('motivo')->toString() ?: null,
+                force: $force,
+            );
+        } catch (InvalidAnalysisStatusTransitionException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('status', 'Situação da análise atualizada.');
     }
 
     /**

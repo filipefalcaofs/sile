@@ -453,6 +453,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::middleware('permission:analisar-processos')->group(function () {
                 Route::post('{viabilityRequest}/decidir', ProcessoDecisaoController::class)->name('decidir');
                 Route::post('{viabilityRequest}/pendencias', [ProcessoPendenciaController::class, 'store'])->name('pendencias.store');
+                Route::post('{viabilityRequest}/status-analise', [ProcessoController::class, 'atualizarStatusAnalise'])->name('status-analise');
             });
 
             // Malha fina (encaminhar single+lote) — ortogonal ao status (RN-001):
