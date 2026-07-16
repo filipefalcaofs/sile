@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\HasAuditoria;
 use App\Enums\AnalysisCategory;
 use App\Enums\AnalysisStage;
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use Database\Factories\ViabilityRequestFactory;
@@ -72,6 +73,7 @@ class ViabilityRequest extends Model
             // serviços de distribuição/SLA, nunca pelo cidadão).
             'analysis_category' => AnalysisCategory::class,
             'analysis_stage' => AnalysisStage::class,
+            'analysis_status' => AnalysisStatus::class,
             'in_fine_mesh' => 'boolean',
             'assigned_at' => 'datetime',
             'analysis_stage_started_at' => 'datetime',
@@ -190,6 +192,16 @@ class ViabilityRequest extends Model
     public function transitions(): HasMany
     {
         return $this->hasMany(ViabilityRequestTransition::class)->latest();
+    }
+
+    /**
+     * Timeline interna do eixo operacional da análise (AnalysisStatus).
+     *
+     * @return HasMany<AnalysisStatusTransition, $this>
+     */
+    public function analysisStatusTransitions(): HasMany
+    {
+        return $this->hasMany(AnalysisStatusTransition::class, 'viability_request_id');
     }
 
     /**
