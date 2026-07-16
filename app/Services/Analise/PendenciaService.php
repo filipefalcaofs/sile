@@ -154,4 +154,51 @@ class PendenciaService
         // reabriu. Efeito só de uma resposta efetivada.
         PendenciaRespondida::dispatch($request, $pendency);
     }
+
+    /**
+     * Cancela um convite aberto (relatório SEDUR 2026-07-09): o analista desiste
+     * do convite e registra um PARECER obrigatório com o motivo. Reabre a análise
+     * (em_pendencia→em_analise). Exige o convite aberto e o processo em
+     * em_pendencia; caso contrário lança PendenciaInvalidaException sem gravar nada.
+     */
+    public function cancelar(AnalysisPendency $pendency, User $analista, string $parecer): void
+    {
+        $request = $pendency->viabilityRequest;
+
+        if ($pendency->status !== AnalysisPendencyStatus::Aberta
+            || $request->status !== ViabilityRequestStatus::EmPendencia) {
+            throw PendenciaInvalidaException::naoCancelavel($pendency);
+        }
+
+        DB::transaction(function () use ($pendency, $request, $analista, $parecer): void {
+            $pendency->update([
+                'status' => AnalysisPendencyStatus::Cancelada,
+                'parecer' => $parecer,
+                'cancelled_at' => now(),
+                'cancelled_by_user_id' => $analista->id,
+            ]);
+
+            $this->stateMachine->transition(
+                $request,
+                ViabilityRequestStatus::EmAnalise,
+                actor: $analista,
+                reason: 'Convite cancelado pela análise técnica: '.$parecer,
+                publicLabel: ViabilityRequestStatus::EmAnalise->publicLabel(),
+            );
+
+            $this->audit->log(
+                'analise',
+                'convite-cancelado',
+                "Convite #{$pendency->id} cancelado na solicitação #{$request->id} — análise reaberta.",
+                properties: [
+                    'viability_request_id' => $request->id,
+                    'analysis_pendency_id' => $pendency->id,
+                    'protocol_number' => $request->protocol_number,
+                    'cancelled_by_user_id' => $analista->id,
+                    'parecer' => $parecer,
+                ],
+                subject: $request,
+            );
+        });
+    }
 }

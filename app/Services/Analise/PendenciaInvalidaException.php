@@ -28,4 +28,11 @@ class PendenciaInvalidaException extends RuntimeException
             "Não é possível responder a pendência #{$pendency->id}: ela não está aberta ou a solicitação não está em pendência.",
         );
     }
+
+    public static function naoCancelavel(AnalysisPendency $pendency): self
+    {
+        return new self(
+            "Não é possível cancelar o convite #{$pendency->id}: ele não está aberto ou a solicitação não está em convite.",
+        );
+    }
 }
