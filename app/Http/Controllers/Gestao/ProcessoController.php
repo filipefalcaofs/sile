@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DecisionExplanationResource;
@@ -78,6 +79,7 @@ class ProcessoController extends Controller
             'filtros' => $filtros + ['per_page' => $perPage],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'statusOptions' => $this->statusOptions(),
+            'analysisStatusOptions' => AnalysisStatus::options(),
             'categoriaOptions' => $this->categoriaOptions(),
         ]);
     }
@@ -183,7 +185,7 @@ class ProcessoController extends Controller
     private function filtros(Request $request): array
     {
         $chaves = [
-            'grupo', 'status', 'protocolo', 'bap', 'produto_tvl', 'servico', 'setor',
+            'grupo', 'status', 'analysis_status', 'protocolo', 'bap', 'produto_tvl', 'servico', 'setor',
             'analista', 'categoria', 'inscricao', 'nome', 'cnpj', 'cep', 'logradouro',
             'bairro', 'data_de', 'data_ate',
         ];

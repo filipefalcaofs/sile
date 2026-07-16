@@ -253,4 +253,19 @@ class ProcessoConsultaTest extends TestCase
         $this->assertSame('em_analise', $payload['analysis_status']);
         $this->assertSame('Em análise', $payload['analysis_status_label']);
     }
+
+    public function test_filtra_por_analysis_status(): void
+    {
+        $comStatus = \App\Models\ViabilityRequest::factory()->create();
+        $comStatus->forceFill(['analysis_status' => \App\Enums\AnalysisStatus::EmConvite])->save();
+        $outro = \App\Models\ViabilityRequest::factory()->create();
+        $outro->forceFill(['analysis_status' => \App\Enums\AnalysisStatus::EmAnalise])->save();
+
+        $resultado = app(\App\Services\Analise\ProcessoQueryService::class)
+            ->filtered(['analysis_status' => 'em_convite'])
+            ->pluck('id');
+
+        $this->assertTrue($resultado->contains($comStatus->id));
+        $this->assertFalse($resultado->contains($outro->id));
+    }
 }

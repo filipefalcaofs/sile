@@ -65,6 +65,7 @@ class ProcessoQueryService
             ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision'])
             ->when($this->valor($filtros, 'grupo'), fn (Builder $q, string $grupo) => $this->aplicarGrupo($q, $grupo))
             ->when($this->valor($filtros, 'status'), fn (Builder $q, string $status) => $q->where('status', $status))
+            ->when($this->valor($filtros, 'analysis_status'), fn (Builder $q, string $s) => $q->where('analysis_status', $s))
             ->when($this->valor($filtros, 'protocolo'), fn (Builder $q, string $v) => $q->whereLike('protocol_number', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'bap'), fn (Builder $q, string $v) => $q->whereLike('external_reference', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'produto_tvl'), fn (Builder $q, string $v) => $q->whereHas('decision', fn ($d) => $d->whereLike('tvl_product_number', "%{$v}%", caseSensitive: false)))
