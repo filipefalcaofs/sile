@@ -17,12 +17,12 @@ use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Tests\TestCase;
 
 /**
- * HU-091 RN-005 (pendencias:expirar): a pendência aberta com due_at vencido sem
- * resposta é marcada como Expirada e o analista responsável é notificado — SEM
- * decisão automática. O rito de não-resposta (indeferir por prazo) é pendência
- * SEDUR e NÃO é inventado: hoje a rotina expira + notifica + mantém o estado do
- * processo. Auditada (RN-002) e idempotente: a própria transição Aberta→Expirada
- * impede o reprocesso (a 2ª passada não acha mais Aberta vencida).
+ * pendencias:expirar (Fase 2a — relatório SEDUR 2026-07-09): o convite aberto
+ * com due_at vencido sem resposta é marcado como Expirada, o processo é
+ * INDEFERIDO automaticamente (rito de não-resposta fornecido pela SEDUR: 48h
+ * úteis) e o analista responsável é notificado. Auditada (RN-002) e idempotente:
+ * a própria transição Aberta→Expirada impede o reprocesso (a 2ª passada não acha
+ * mais Aberta vencida — e não re-indefere).
  */
 class ExpirarPendenciasCommandTest extends TestCase
 {
@@ -52,7 +52,7 @@ class ExpirarPendenciasCommandTest extends TestCase
         return $request;
     }
 
-    public function test_pendencia_vencida_vira_expirada_notifica_o_analista_e_audita_sem_decisao_automatica(): void
+    public function test_convite_vencido_vira_expirado_indefere_o_processo_notifica_o_analista_e_audita(): void
     {
         NotificationFacade::fake();
         $analista = User::factory()->analista()->create();
@@ -68,8 +68,10 @@ class ExpirarPendenciasCommandTest extends TestCase
 
         $this->assertSame(AnalysisPendencyStatus::Expirada, $pendencia->refresh()->status);
 
-        // Anti-fachada: o processo NÃO é decidido/transicionado por não-resposta.
-        $this->assertSame(ViabilityRequestStatus::EmPendencia, $processo->refresh()->status);
+        // Fase 2a: o convite sem resposta no prazo INDEFERE o processo automaticamente
+        // (arquivo virtual — indeferida ∉ STATUS_FILA) e gera a decisão.
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $processo->refresh()->status);
+        $this->assertTrue($processo->refresh()->decision()->exists());
 
         $this->assertDatabaseHas('communications', [
             'viability_request_id' => $processo->id,

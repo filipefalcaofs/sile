@@ -3,35 +3,41 @@
 namespace App\Console\Commands;
 
 use App\Enums\AnalysisPendencyStatus;
+use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
 use App\Notifications\PendenciaExpiradaNotification;
+use App\Services\Analise\IndeferirPorPrazoConviteService;
 use App\Services\Comunicacao\NotificationDispatcher;
 use App\Support\Audit\AuditService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
- * HU-091 RN-005: expira as pendências abertas cujo due_at venceu sem resposta —
- * marca AnalysisPendencyStatus::Expirada (transação + auditoria, RN-002) e
- * notifica o ANALISTA responsável pelo NotificationDispatcher (multicanal).
+ * pendencias:expirar (relatório SEDUR 2026-07-09, Fase 2a): expira os convites
+ * (pendências) abertos cujo due_at venceu sem resposta e INDEFERE o processo
+ * automaticamente. Para cada convite vencido: marca AnalysisPendencyStatus::
+ * Expirada (transação + auditoria, RN-002); indefere o processo via
+ * IndeferirPorPrazoConviteService (decisão imutável + transição em_pendencia→
+ * indeferida + ResultadoEmitido) — o processo sai das caixas do setor e do
+ * analista (arquivo virtual, pois indeferida ∉ STATUS_FILA); e notifica o
+ * analista responsável.
  *
- * CRÍTICO (anti-fachada): SEM decisão automática — NÃO indefere nem transiciona o
- * processo. O rito de não-resposta (indeferir por prazo) é pendência SEDUR e não
- * é inventado: hoje a rotina expira + notifica + MANTÉM o estado do processo.
- *
- * IDEMPOTÊNCIA (RN-004): a própria transição Aberta→Expirada impede o reprocesso —
- * a 2ª passada não encontra mais a pendência Aberta vencida (espelha o
- * ExpressoIndeferirSemBap, cujo status muda e não reprocessa). Agendado com
- * withoutOverlapping/onOneServer.
+ * Rito de não-resposta (fornecido pela SEDUR): após 48h úteis sem resposta ao
+ * convite, indefere. IDEMPOTÊNCIA (RN-004): a própria transição Aberta→Expirada
+ * impede o reprocesso — a 2ª passada não encontra mais o convite Aberto vencido.
+ * Agendado com withoutOverlapping/onOneServer.
  */
 class ExpirarPendenciasCommand extends Command
 {
     protected $signature = 'pendencias:expirar';
 
-    protected $description = 'HU-091 RN-005: marca as pendências abertas vencidas sem resposta como expiradas e notifica o analista (sem decisão automática)';
+    protected $description = 'Expira os convites abertos vencidos sem resposta (48h úteis) e indefere o processo automaticamente, notificando o analista';
 
-    public function handle(NotificationDispatcher $dispatcher, AuditService $audit): int
-    {
+    public function handle(
+        NotificationDispatcher $dispatcher,
+        AuditService $audit,
+        IndeferirPorPrazoConviteService $indeferidor,
+    ): int {
         $pendencias = AnalysisPendency::query()
             ->where('status', AnalysisPendencyStatus::Aberta)
             ->whereNotNull('due_at')
@@ -41,7 +47,7 @@ class ExpirarPendenciasCommand extends Command
             ->get();
 
         if ($pendencias->isEmpty()) {
-            $this->info('Nenhuma pendência vencida a expirar.');
+            $this->info('Nenhum convite vencido a expirar.');
 
             return self::SUCCESS;
         }
@@ -49,15 +55,14 @@ class ExpirarPendenciasCommand extends Command
         foreach ($pendencias as $pendencia) {
             $request = $pendencia->viabilityRequest;
 
-            // Expiração + auditoria em UMA transação (RN-002). O estado do processo
-            // permanece intacto — sem decisão automática (rito SEDUR não inventado).
+            // Expira o convite + auditoria em UMA transação (RN-002).
             DB::transaction(function () use ($pendencia, $request, $audit): void {
                 $pendencia->update(['status' => AnalysisPendencyStatus::Expirada]);
 
                 $audit->log(
                     'analise',
                     'pendencia-expirada',
-                    "Pendência #{$pendencia->id} expirada por prazo sem resposta na solicitação #{$request?->id}.",
+                    "Convite #{$pendencia->id} expirado por prazo sem resposta na solicitação #{$request?->id}.",
                     properties: [
                         'viability_request_id' => $request?->id,
                         'analysis_pendency_id' => $pendencia->id,
@@ -69,8 +74,14 @@ class ExpirarPendenciasCommand extends Command
                 );
             });
 
-            // Notifica o analista responsável (atual; senão quem abriu a pendência)
-            // APÓS o commit — aviso honesto, sem qualquer decisão de mérito.
+            // Indefere o processo automaticamente (convite sem resposta no prazo).
+            // O serviço abre a própria transação e dispara ResultadoEmitido após o
+            // commit. Guarda de estado: só indefere quando ainda em em_pendencia.
+            if ($request !== null && $request->status === ViabilityRequestStatus::EmPendencia) {
+                $indeferidor->indeferir($request, $pendencia);
+            }
+
+            // Notifica o analista responsável (atual; senão quem abriu) APÓS os efeitos.
             $analista = $request?->assignedTo ?? $pendencia->requestedBy;
 
             if ($analista !== null) {
@@ -83,7 +94,7 @@ class ExpirarPendenciasCommand extends Command
             }
         }
 
-        $this->info("Expirada(s) {$pendencias->count()} pendência(s) vencida(s) sem resposta.");
+        $this->info("Expirado(s) {$pendencias->count()} convite(s) vencido(s) sem resposta — processo(s) indeferido(s).");
 
         return self::SUCCESS;
     }

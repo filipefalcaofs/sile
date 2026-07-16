@@ -12,11 +12,10 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Aviso ao analista responsável de que uma pendência expirou sem resposta do
- * requerente (HU-091 RN-005). É comunicação de PROCESSO: implementa
- * ProcessNotification para percorrer o NotificationDispatcher (multicanal +
- * ledger). SÓ avisa — a rotina de expiração NÃO decide nem transiciona o processo
- * (o rito de indeferir por não-resposta é pendência SEDUR, não inventado).
+ * Aviso ao analista responsável de que um convite expirou sem resposta do
+ * requerente e o processo foi INDEFERIDO automaticamente (relatório SEDUR
+ * 2026-07-09, Fase 2a). É comunicação de PROCESSO: implementa ProcessNotification
+ * para percorrer o NotificationDispatcher (multicanal + ledger).
  */
 class PendenciaExpiradaNotification extends Notification implements ProcessNotification, ShouldQueue
 {
@@ -81,12 +80,12 @@ class PendenciaExpiradaNotification extends Notification implements ProcessNotif
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("Pendência expirada sem resposta — {$this->protocolNumber}")
+            ->subject("Convite expirado — processo indeferido — {$this->protocolNumber}")
             ->greeting('Olá!')
-            ->line("A pendência da solicitação {$this->protocolNumber} expirou sem resposta do requerente dentro do prazo.")
-            ->line("Pendência: {$this->descricao}")
+            ->line("O convite da solicitação {$this->protocolNumber} expirou sem resposta do requerente dentro do prazo, e o processo foi indeferido automaticamente.")
+            ->line("Convite: {$this->descricao}")
             ->action('Abrir o processo no SILE', $this->url)
-            ->line('Avalie o processo na análise técnica. Este é um aviso automático — não responda a esta mensagem.');
+            ->line('Este é um aviso automático — não responda a esta mensagem.');
     }
 
     /**
@@ -98,8 +97,8 @@ class PendenciaExpiradaNotification extends Notification implements ProcessNotif
             'tipo' => CommunicationType::PendenciaExpirada->value,
             'viability_request_id' => $this->viabilityRequestId,
             'protocolo' => $this->protocolNumber,
-            'titulo' => "Pendência expirada sem resposta — {$this->protocolNumber}",
-            'mensagem' => "A pendência \"{$this->descricao}\" expirou sem resposta do requerente.",
+            'titulo' => "Convite expirado — processo indeferido — {$this->protocolNumber}",
+            'mensagem' => "O convite \"{$this->descricao}\" expirou sem resposta do requerente; o processo foi indeferido automaticamente.",
             'url' => $this->url,
         ];
     }
@@ -108,7 +107,7 @@ class PendenciaExpiradaNotification extends Notification implements ProcessNotif
     {
         return new WhatsAppMessage(
             to: '',
-            body: "Pendência expirada sem resposta na solicitação {$this->protocolNumber}.",
+            body: "Convite expirado sem resposta na solicitação {$this->protocolNumber} — processo indeferido.",
             meta: ['tipo' => CommunicationType::PendenciaExpirada->value, 'protocolo' => $this->protocolNumber],
         );
     }
