@@ -76,7 +76,7 @@ export default function Fila({ modo, processos, contadores, visaoSetor }: FilaPr
         },
         {
             key: 'em_pendencia',
-            label: 'Em pendência',
+            label: 'Em convite',
             value: contadores.em_pendencia,
             icon: <InfoIcon className="size-6" />,
             tone: 'warning',
@@ -272,8 +272,8 @@ export default function Fila({ modo, processos, contadores, visaoSetor }: FilaPr
                                         }
                                         description={
                                             modo === 'meus'
-                                                ? 'Você não tem processos atribuídos em análise ou pendência. Assuma processos pela caixa do setor.'
-                                                : 'Não há processos em análise ou pendência nas caixas dos seus setores.'
+                                                ? 'Você não tem processos atribuídos em análise ou convite. Assuma processos pela caixa do setor.'
+                                                : 'Não há processos em análise ou convite nas caixas dos seus setores.'
                                         }
                                     />
                                 }

@@ -204,8 +204,8 @@ return [
             'gestor_role' => 'gestor',
         ],
         'pendencia' => [
-            'assunto' => 'Pendência na sua solicitação de viabilidade {protocolo}',
-            'corpo' => 'Olá! Identificamos uma pendência na sua solicitação de viabilidade {protocolo}. Pendência: {pendencia}. Acesse o portal do SILE para responder dentro do prazo informado.',
+            'assunto' => 'Convite na sua solicitação de viabilidade {protocolo}',
+            'corpo' => 'Olá! Identificamos um convite na sua solicitação de viabilidade {protocolo}. Convite: {pendencia}. Acesse o portal do SILE para responder dentro do prazo informado.',
         ],
     ],
     'seguranca' => [

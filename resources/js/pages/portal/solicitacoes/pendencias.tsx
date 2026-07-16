@@ -71,7 +71,7 @@ function PendenciaForm({ solicitacaoId, pendencia }: { solicitacaoId: number; pe
     return (
         <Card>
             <CardHeader
-                title="Pendência aberta"
+                title="Convite aberto"
                 description={`Solicitada em ${formatDate(pendencia.created_at)} · prazo de resposta até ${formatDate(pendencia.due_at)}.`}
             />
             <CardContent>
@@ -124,9 +124,9 @@ export default function Pendencias({ solicitacao, pendencias }: PendenciasProps)
 
     return (
         <>
-            <Head title={`Pendências ${titulo}`} />
+            <Head title={`Convites ${titulo}`} />
             <PageHeader
-                title="Responder pendência"
+                title="Responder convite"
                 breadcrumbs={[
                     { label: 'Meu painel', href: '/portal/painel' },
                     { label: 'Minhas solicitações', href: '/portal/solicitacoes' },
@@ -150,7 +150,7 @@ export default function Pendencias({ solicitacao, pendencias }: PendenciasProps)
                                     <CheckCircleIcon className="size-6 fill-current" />
                                 </span>
                                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                    Nenhuma pendência aberta nesta solicitação.
+                                    Nenhum convite aberto nesta solicitação.
                                 </p>
                                 <p className="text-theme-xs text-gray-500 dark:text-gray-400">
                                     Quando a análise técnica solicitar uma complementação, ela aparecerá aqui para você

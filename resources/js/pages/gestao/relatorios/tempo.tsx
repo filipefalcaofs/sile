@@ -62,7 +62,7 @@ const ETAPA_LABELS: Record<string, string> = {
     preenchimento: 'Preenchimento',
     espera: 'Espera (encaminhamento/Junta)',
     analise: 'Análise técnica',
-    pendencia: 'Pendência',
+    pendencia: 'Convite',
 };
 
 const numberFormat = new Intl.NumberFormat('pt-BR');

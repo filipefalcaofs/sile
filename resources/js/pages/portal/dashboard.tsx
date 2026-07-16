@@ -223,7 +223,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes, 
                                             >
                                                 <div className="min-w-0">
                                                     <p className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                                        Pendência — {pendencia.protocol_number ?? 'solicitação'}
+                                                        Convite — {pendencia.protocol_number ?? 'solicitação'}
                                                     </p>
                                                     <p className="truncate text-theme-xs text-gray-500 dark:text-gray-400">
                                                         {pendencia.descricao}

@@ -1210,7 +1210,7 @@ export default function FichaAnaliseShow({
                                     )}
 
                                     <Button onClick={() => setShowPendencia(true)} variant="ghost" size="sm">
-                                        Abrir pendência
+                                        Abrir convite
                                     </Button>
 
                                     {podeMalhaFina && (
@@ -1266,13 +1266,13 @@ export default function FichaAnaliseShow({
 
             {showPendencia && (
                 <Modal isOpen onClose={() => setShowPendencia(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
-                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Abrir pendência</h4>
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Abrir convite</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        O processo vai para “em pendência” e o requerente é notificado para complementar.
+                        O processo vai para “em convite” e o requerente é notificado para complementar.
                     </p>
                     <div className="mt-4">
                         <Label htmlFor="descricao-pendencia" required>
-                            Descrição da pendência
+                            Descrição do convite
                         </Label>
                         <Textarea
                             id="descricao-pendencia"
@@ -1292,7 +1292,7 @@ export default function FichaAnaliseShow({
                             disabled={descricaoPendencia.trim() === ''}
                             loading={pendenciaProcessing}
                         >
-                            Abrir pendência
+                            Abrir convite
                         </Button>
                     </div>
                 </Modal>

@@ -200,8 +200,8 @@ export default function SolicitacoesIndex({
                         <TableAction
                             tone="warning"
                             icon={<AlertIcon className="size-4.5" />}
-                            label="Responder pendência"
-                            title="Responder pendência"
+                            label="Responder convite"
+                            title="Responder convite"
                             href={`/portal/solicitacoes/${solicitacao.id}/pendencias`}
                         />
                     )}
@@ -270,8 +270,8 @@ export default function SolicitacoesIndex({
                 <div className="mb-6">
                     <Alert
                         variant="warning"
-                        title="Você tem pendências aguardando resposta"
-                        message="As solicitações em pendência estão destacadas abaixo. Use a ação Responder pendência na linha para enviar sua resposta e reabrir a análise."
+                        title="Você tem convites aguardando resposta"
+                        message="As solicitações em convite estão destacadas abaixo. Use a ação Responder convite na linha para enviar sua resposta e reabrir a análise."
                     />
                 </div>
             )}

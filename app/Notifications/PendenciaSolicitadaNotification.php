@@ -110,12 +110,12 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
 
         $assunto = $this->withPlaceholders((string) Settings::get(
             'notificacoes.pendencia.assunto',
-            config('sile.notificacoes.pendencia.assunto', "Pendência na sua solicitação de viabilidade {$this->protocolNumber}"),
+            config('sile.notificacoes.pendencia.assunto', "Convite na sua solicitação de viabilidade {$this->protocolNumber}"),
         ));
 
         $corpo = $this->withPlaceholders((string) Settings::get(
             'notificacoes.pendencia.corpo',
-            config('sile.notificacoes.pendencia.corpo', "A análise técnica registrou uma pendência na sua solicitação {$this->protocolNumber}: {$this->descricao}."),
+            config('sile.notificacoes.pendencia.corpo', "A análise técnica registrou um convite na sua solicitação {$this->protocolNumber}: {$this->descricao}."),
         ));
 
         // O corpo parametrizado pode abrir com a saudação; evita duplicar o greeting.
@@ -141,7 +141,7 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
             'type' => CommunicationType::PendenciaAberta->value,
             'title' => CommunicationType::PendenciaAberta->label(),
             'protocol_number' => $this->protocolNumber,
-            'summary' => "A análise técnica registrou uma pendência na solicitação {$this->protocolNumber}: {$this->descricao}",
+            'summary' => "A análise técnica registrou um convite na solicitação {$this->protocolNumber}: {$this->descricao}",
             'viability_request_id' => $this->viabilityRequestId,
             'url' => route('portal.solicitacoes.show', $this->viabilityRequestId),
         ];
@@ -157,7 +157,7 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
 
         return new WhatsAppMessage(
             to: '',
-            body: "SILE: a análise técnica registrou uma pendência na sua solicitação {$this->protocolNumber}. Responda no portal: {$url}",
+            body: "SILE: a análise técnica registrou um convite na sua solicitação {$this->protocolNumber}. Responda no portal: {$url}",
         );
     }
 

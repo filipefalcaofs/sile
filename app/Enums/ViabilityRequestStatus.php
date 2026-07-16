@@ -36,7 +36,7 @@ enum ViabilityRequestStatus: string
             self::EmAnalise => 'Em análise',
             self::Deferida => 'Deferida',
             self::Indeferida => 'Indeferida',
-            self::EmPendencia => 'Em pendência',
+            self::EmPendencia => 'Em convite',
         };
     }
 
@@ -50,7 +50,7 @@ enum ViabilityRequestStatus: string
             self::EmAnalise => 'Em análise técnica',
             self::Deferida => 'Deferida — viabilidade reconhecida',
             self::Indeferida => 'Indeferida',
-            self::EmPendencia => 'Pendência — ação necessária do requerente',
+            self::EmPendencia => 'Convite — ação necessária do requerente',
         };
     }
 }

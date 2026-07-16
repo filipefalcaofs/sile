@@ -363,7 +363,7 @@ export default function Protocolo({ solicitacao, timeline, publicLink, temDecisa
                             {timeline.pendencias.length > 0 && (
                                 <Alert
                                     variant="warning"
-                                    title="Pendências com você"
+                                    title="Convites com você"
                                     message={timeline.pendencias.join(' ')}
                                 />
                             )}

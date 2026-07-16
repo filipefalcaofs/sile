@@ -97,9 +97,9 @@ class RespostaPendenciaNotification extends Notification implements ProcessNotif
         $url = route('gestao.processos.show', $this->viabilityRequestId);
 
         return (new MailMessage)
-            ->subject("Pendência respondida — análise reaberta ({$this->protocolNumber})")
+            ->subject("Convite respondido — análise reaberta ({$this->protocolNumber})")
             ->greeting('Olá!')
-            ->line("O requerente respondeu a pendência da solicitação {$this->protocolNumber} e a análise foi reaberta.")
+            ->line("O requerente respondeu o convite da solicitação {$this->protocolNumber} e a análise foi reaberta.")
             ->action('Abrir o processo', $url)
             ->line('Retome a análise técnica do processo na gestão do SILE.');
     }
@@ -115,7 +115,7 @@ class RespostaPendenciaNotification extends Notification implements ProcessNotif
             'type' => CommunicationType::PendenciaRespondida->value,
             'title' => CommunicationType::PendenciaRespondida->label(),
             'protocol_number' => $this->protocolNumber,
-            'summary' => "O requerente respondeu a pendência da solicitação {$this->protocolNumber} — análise reaberta.",
+            'summary' => "O requerente respondeu o convite da solicitação {$this->protocolNumber} — análise reaberta.",
             'viability_request_id' => $this->viabilityRequestId,
             'url' => route('gestao.processos.show', $this->viabilityRequestId),
         ];
@@ -131,7 +131,7 @@ class RespostaPendenciaNotification extends Notification implements ProcessNotif
 
         return new WhatsAppMessage(
             to: '',
-            body: "SILE: o requerente respondeu a pendência da solicitação {$this->protocolNumber}. Análise reaberta: {$url}",
+            body: "SILE: o requerente respondeu o convite da solicitação {$this->protocolNumber}. Análise reaberta: {$url}",
         );
     }
 }
