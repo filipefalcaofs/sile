@@ -78,7 +78,7 @@ class PendenciaService
                 $request,
                 ViabilityRequestStatus::EmPendencia,
                 actor: $analista,
-                reason: 'Pendência aberta pela análise técnica',
+                reason: 'Convite aberto pela análise técnica',
                 publicLabel: ViabilityRequestStatus::EmPendencia->publicLabel(),
             );
 
@@ -132,7 +132,7 @@ class PendenciaService
                 $request,
                 ViabilityRequestStatus::EmAnalise,
                 actor: auth()->user(),
-                reason: 'Pendência respondida pelo requerente',
+                reason: 'Convite respondido pelo requerente',
                 publicLabel: ViabilityRequestStatus::EmAnalise->publicLabel(),
             );
 
