@@ -3,6 +3,7 @@
 namespace App\Services\Expresso;
 
 use App\Enums\AnalysisStage;
+use App\Enums\AnalysisStatus;
 use App\Enums\DecisionOutcome;
 use App\Enums\Fluxo;
 use App\Enums\ResultadoViabilidade;
@@ -168,6 +169,7 @@ class FluxoExpressoService
                 'analysis_stage' => AnalysisStage::Distribuicao,
                 'analysis_stage_started_at' => $startedAt,
                 'analysis_due_at' => $this->sla->dueAtFor(AnalysisStage::Distribuicao, $startedAt),
+                'analysis_status' => AnalysisStatus::ParaDistribuir,
             ])->save();
 
             $this->audit->log(
