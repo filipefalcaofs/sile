@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { Polygon } from 'geojson';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -35,6 +35,8 @@ interface ShowProps {
     };
     /** Explicabilidade passo a passo (HU-099); null quando não há decisão. */
     explicacao?: DecisionExplanationData | null;
+    /** Próximas transições manuais oferecidas ao analista (Tarefa 10). */
+    analysisStatusProximas: { value: string; label: string }[];
 }
 
 type Aba = 'informacoes' | 'tramitacao' | 'explicabilidade';
@@ -98,7 +100,7 @@ function DescItem({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-export default function Show({ processo, timeline, geo, explicacao }: ShowProps) {
+export default function Show({ processo, timeline, geo, explicacao, analysisStatusProximas }: ShowProps) {
     const { auth } = usePage<SharedProps>().props;
     const podeAnalisar = auth.permissions.includes('analisar-processos');
 
@@ -236,6 +238,33 @@ export default function Show({ processo, timeline, geo, explicacao }: ShowProps)
                                         <DescItem label="Imóvel">{processo.endereco_completo || processo.imovel || '—'}</DescItem>
                                         <DescItem label="Inscrição imobiliária">{processo.inscricao ?? '—'}</DescItem>
                                         <DescItem label="Status">{processo.status_label}</DescItem>
+                                        <DescItem label="Situação da análise">
+                                            {processo.analysis_status_label ?? '—'}
+                                        </DescItem>
+                                        {podeAnalisar && analysisStatusProximas.length > 0 && (
+                                            <DescItem label="Alterar situação da análise">
+                                                <select
+                                                    className="rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                                                    defaultValue=""
+                                                    onChange={(e) => {
+                                                        if (e.target.value) {
+                                                            router.post(
+                                                                `/gestao/processos/${processo.id}/status-analise`,
+                                                                { status: e.target.value },
+                                                                { preserveScroll: true },
+                                                            );
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="">Selecione…</option>
+                                                    {analysisStatusProximas.map((o) => (
+                                                        <option key={o.value} value={o.value}>
+                                                            {o.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </DescItem>
+                                        )}
                                         <DescItem label="Categoria">
                                             <CategoriaBadges categorias={processo.categorias} />
                                         </DescItem>

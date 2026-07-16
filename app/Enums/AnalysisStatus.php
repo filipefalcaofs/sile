@@ -59,4 +59,25 @@ enum AnalysisStatus: string
             self::cases(),
         );
     }
+
+    /**
+     * Próximas transições MANUAIS oferecidas ao analista no dropdown. Espelha o
+     * grafo da AnalysisStatusStateMachine, omitindo os estados dirigidos por
+     * evento (respondido/expirado, setados pelo sistema).
+     *
+     * @return list<self>
+     */
+    public function proximas(): array
+    {
+        return match ($this) {
+            self::ParaDistribuir => [self::Encaminhado],
+            self::Encaminhado => [self::Analisar],
+            self::Analisar => [self::EmAnalise],
+            self::EmAnalise => [self::AnaliseConcluida, self::EmConvite, self::Vistoriar],
+            self::EmConvite => [self::ConviteCancelado],
+            self::Vistoriar => [self::Vistoriado],
+            self::Vistoriado, self::ConviteRespondido, self::ConviteCancelado => [self::EmAnalise],
+            self::AnaliseConcluida, self::ConviteExpirado => [],
+        };
+    }
 }

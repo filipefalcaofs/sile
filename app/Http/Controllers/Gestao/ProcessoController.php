@@ -177,6 +177,16 @@ class ProcessoController extends Controller
             'geo' => [
                 'poligono' => $viabilityRequest->property_polygon_geojson,
             ],
+            // Próximas transições manuais oferecidas ao analista no dropdown
+            // do detalhe (Tarefa 10) — vazio quando o processo ainda não tem
+            // status de análise (fora do fluxo operacional) ou já está num
+            // estado terminal/dirigido por evento.
+            'analysisStatusProximas' => $viabilityRequest->analysis_status
+                ? array_map(
+                    fn (AnalysisStatus $s): array => ['value' => $s->value, 'label' => $s->label()],
+                    $viabilityRequest->analysis_status->proximas(),
+                )
+                : [],
         ]);
     }
 

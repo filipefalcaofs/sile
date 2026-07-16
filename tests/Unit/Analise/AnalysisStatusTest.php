@@ -29,4 +29,13 @@ class AnalysisStatusTest extends TestCase
         $this->assertContains(['value' => 'para_distribuir', 'label' => 'Para distribuir'], $options);
         $this->assertCount(11, $options);
     }
+
+    public function test_proximas_lista_transicoes_manuais(): void
+    {
+        $this->assertSame(
+            ['analise_concluida', 'em_convite', 'vistoriar'],
+            array_map(fn (AnalysisStatus $s) => $s->value, AnalysisStatus::EmAnalise->proximas()),
+        );
+        $this->assertSame([], AnalysisStatus::AnaliseConcluida->proximas());
+    }
 }
