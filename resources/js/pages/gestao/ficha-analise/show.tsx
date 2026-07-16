@@ -384,6 +384,9 @@ export default function FichaAnaliseShow({
     const [showDecidir, setShowDecidir] = useState(false);
     const [showPendencia, setShowPendencia] = useState(false);
     const [descricaoPendencia, setDescricaoPendencia] = useState('');
+    const [showCancelarConvite, setShowCancelarConvite] = useState(false);
+    const [parecerCancelamento, setParecerCancelamento] = useState('');
+    const [cancelarConviteProcessing, setCancelarConviteProcessing] = useState(false);
     const [showMalhaFina, setShowMalhaFina] = useState(false);
     const [motivoMalhaFina, setMotivoMalhaFina] = useState('');
     const [pickerParaParecer, setPickerParaParecer] = useState(false);
@@ -528,6 +531,22 @@ export default function FichaAnaliseShow({
                 onSuccess: () => {
                     setShowPendencia(false);
                     setDescricaoPendencia('');
+                },
+            },
+        );
+    }
+
+    function cancelarConvite() {
+        router.post(
+            `/gestao/processos/${processo.id}/cancelar-convite`,
+            { parecer: parecerCancelamento },
+            {
+                preserveScroll: true,
+                onStart: () => setCancelarConviteProcessing(true),
+                onFinish: () => setCancelarConviteProcessing(false),
+                onSuccess: () => {
+                    setShowCancelarConvite(false);
+                    setParecerCancelamento('');
                 },
             },
         );
@@ -1213,6 +1232,12 @@ export default function FichaAnaliseShow({
                                         Abrir convite
                                     </Button>
 
+                                    {processo.status === 'em_pendencia' && (
+                                        <Button onClick={() => setShowCancelarConvite(true)} variant="ghost" size="sm">
+                                            Cancelar convite
+                                        </Button>
+                                    )}
+
                                     {podeMalhaFina && (
                                         <Button onClick={() => setShowMalhaFina(true)} variant="ghost" size="sm">
                                             Encaminhar à malha fina
@@ -1293,6 +1318,40 @@ export default function FichaAnaliseShow({
                             loading={pendenciaProcessing}
                         >
                             Abrir convite
+                        </Button>
+                    </div>
+                </Modal>
+            )}
+
+            {showCancelarConvite && (
+                <Modal isOpen onClose={() => setShowCancelarConvite(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Cancelar convite</h4>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        O convite é cancelado e a análise reaberta. Registre o parecer com o motivo do cancelamento.
+                    </p>
+                    <div className="mt-4">
+                        <Label htmlFor="parecer-cancelamento" required>
+                            Parecer (motivo do cancelamento)
+                        </Label>
+                        <Textarea
+                            id="parecer-cancelamento"
+                            rows={4}
+                            placeholder="Explique por que o convite está sendo cancelado…"
+                            value={parecerCancelamento}
+                            onChange={setParecerCancelamento}
+                        />
+                    </div>
+                    <div className="mt-6 flex items-center justify-end gap-3">
+                        <Button variant="outline" size="sm" onClick={() => setShowCancelarConvite(false)}>
+                            Voltar
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={cancelarConvite}
+                            disabled={parecerCancelamento.trim() === ''}
+                            loading={cancelarConviteProcessing}
+                        >
+                            Cancelar convite
                         </Button>
                     </div>
                 </Modal>
