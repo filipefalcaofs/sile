@@ -23,6 +23,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'due_at',
     'responded_at',
     'response',
+    'parecer',
+    'cancelled_at',
+    'cancelled_by_user_id',
 ])]
 class AnalysisPendency extends Model
 {
@@ -38,6 +41,7 @@ class AnalysisPendency extends Model
             'status' => AnalysisPendencyStatus::class,
             'due_at' => 'datetime',
             'responded_at' => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
     }
 
@@ -59,5 +63,15 @@ class AnalysisPendency extends Model
     public function requestedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requested_by_user_id');
+    }
+
+    /**
+     * Analista que cancelou o convite (com parecer).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function cancelledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by_user_id');
     }
 }
