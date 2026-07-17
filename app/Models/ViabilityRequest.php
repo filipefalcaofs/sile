@@ -37,7 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'used_area_m2', 'property_registration',
     'address_street', 'address_number', 'address_complement', 'address_neighborhood', 'address_zip', 'address_reference',
     'property_polygon_geojson',
-    'is_virtual_office', 'is_public_area', 'has_independent_access',
+    'is_virtual_office', 'wants_virtual_office_hq', 'is_public_area', 'has_independent_access',
     'simulation_snapshot', 'simulation_rules_versions', 'simulation_resultado', 'simulated_at',
     'applicant_proceeded_despite', 'contingency_reason', 'external_reference',
 ])]
@@ -61,6 +61,7 @@ class ViabilityRequest extends Model
             'simulation_rules_versions' => 'array',
             'used_area_m2' => 'decimal:2',
             'is_virtual_office' => 'boolean',
+            'wants_virtual_office_hq' => 'boolean',
             'is_public_area' => 'boolean',
             'has_independent_access' => 'boolean',
             'applicant_proceeded_despite' => 'boolean',
