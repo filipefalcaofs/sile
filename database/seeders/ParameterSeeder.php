@@ -411,6 +411,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:2000'],
                 'description' => 'Texto da condicionante gravada no produto da sede de escritório virtual',
             ],
+            'analise.escritorio_virtual.mensagem_bloqueio_abrigado' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'A atividade informada não está na lista de atividades permitidas para escritório virtual nesta inscrição.',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Mensagem de bloqueio quando o abrigado informa CNAE fora da Lista EV numa inscrição com sede ativa',
+            ],
             'analise.precedentes.janela_meses' => [
                 'group' => 'analise',
                 'type' => 'integer',

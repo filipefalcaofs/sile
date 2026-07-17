@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Portal;
 
+use App\Models\Cnae;
+use App\Models\VirtualOfficeActivityCnae;
+use App\Models\VirtualOfficeInscriptionLock;
 use App\Support\Settings;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -48,7 +51,10 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
 
     /**
      * A atividade principal nunca aparece entre os complementares (intenções
-     * distintas — espelha a separação principal × secundários do [03-06]).
+     * distintas — espelha a separação principal × secundários do [03-06]). E,
+     * quando a inscrição já tem uma SEDE de escritório virtual ativa, a
+     * solicitação é ABRIGADA: todos os CNAEs precisam estar na Lista EV vigente
+     * (RN-EV-05/CA-04).
      *
      * @return array<int, callable(Validator): void>
      */
@@ -66,6 +72,43 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
 
                 if (in_array($primaryId, $complementares, true)) {
                     $validator->errors()->add('complementares', 'A atividade principal não pode estar entre os CNAEs complementares.');
+                }
+            },
+            function (Validator $validator) {
+                $solicitacao = $this->route('solicitacao');
+
+                $inscricao = $solicitacao?->property_registration;
+
+                // Só é abrigado se a inscrição existe E tem uma sede ativa; sem
+                // sede ativa (ou inscrição vazia) não há restrição de Lista EV.
+                if (blank($inscricao) || ! VirtualOfficeInscriptionLock::ativoPara($inscricao)) {
+                    return;
+                }
+
+                $ids = array_map('intval', array_merge(
+                    [(int) $this->input('principal_cnae_id')],
+                    (array) $this->input('complementares', []),
+                ));
+                $ids = array_values(array_filter($ids));
+
+                if ($ids === []) {
+                    return;
+                }
+
+                $codes = Cnae::query()->whereIn('id', $ids)->pluck('code');
+
+                foreach ($codes as $code) {
+                    if (! VirtualOfficeActivityCnae::permitido($code)) {
+                        $validator->errors()->add(
+                            'principal_cnae_id',
+                            Settings::get(
+                                'analise.escritorio_virtual.mensagem_bloqueio_abrigado',
+                                config('sile.analise.escritorio_virtual.mensagem_bloqueio_abrigado'),
+                            ),
+                        );
+
+                        break;
+                    }
                 }
             },
         ];
