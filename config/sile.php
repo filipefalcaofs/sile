@@ -159,6 +159,10 @@ return [
             'semaforo' => ['amarelo_percentual' => 80],
         ],
         'pendencia' => ['prazo_resposta_dias' => 15, 'prazo_resposta_horas_uteis' => 48],
+        'escritorio_virtual' => [
+            'cnae_gatilho_sede' => '8211-3/00',
+            'condicionante_sede' => 'A viabilidade é DEFERIDA na condição de prestação de serviços de escritório virtual, nos termos da legislação vigente.',
+        ],
         'precedentes' => [
             'janela_meses' => 12,
             'max_itens' => 10,

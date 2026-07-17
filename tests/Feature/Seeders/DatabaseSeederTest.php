@@ -55,11 +55,13 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(31, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
-        // 89 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
+        // 91 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
         // + 1 (analise.convite.prazo_resposta_horas_uteis, Fase 2a)
         // (Módulo 2: relatorios.saturacao.*) + 3 da Auditoria Preditiva (Módulo 3:
-        // features.ia_auditoria_preditiva + ia.auditoria_preditiva.janela/limiar).
-        $this->assertSame(89, Parameter::query()->count());
+        // features.ia_auditoria_preditiva + ia.auditoria_preditiva.janela/limiar)
+        // + 2 do gatilho de sede de escritório virtual (Plano M1, Tarefa 3:
+        // analise.escritorio_virtual.cnae_gatilho_sede/condicionante_sede).
+        $this->assertSame(91, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -319,7 +321,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(89, Parameter::query()->count());
+        $this->assertSame(91, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

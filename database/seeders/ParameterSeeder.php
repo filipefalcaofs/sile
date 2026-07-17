@@ -397,6 +397,20 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:2000'],
                 'description' => 'Prazo (horas úteis) para o requerente responder a um convite antes de expirar (indefere automaticamente)',
             ],
+            'analise.escritorio_virtual.cnae_gatilho_sede' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => '8211-3/00',
+                'validation_rules' => ['required', 'string', 'max:12'],
+                'description' => 'CNAE que dispara a análise de sede de escritório virtual (Serviços combinados de escritório e apoio administrativo)',
+            ],
+            'analise.escritorio_virtual.condicionante_sede' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'A viabilidade é DEFERIDA na condição de prestação de serviços de escritório virtual, nos termos da legislação vigente.',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Texto da condicionante gravada no produto da sede de escritório virtual',
+            ],
             'analise.precedentes.janela_meses' => [
                 'group' => 'analise',
                 'type' => 'integer',
