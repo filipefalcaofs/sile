@@ -16,6 +16,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnalysisSlaService;
 use App\Services\Auditoria\DecisionTraceBuilder;
+use App\Services\EscritorioVirtual\AbrigadoResolver;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
@@ -58,6 +59,7 @@ class FluxoExpressoService
         private AnalysisSlaService $sla,
         private DecisionTraceBuilder $traceBuilder,
         private SedeEscritorioVirtualGatilho $gatilhoSede,
+        private AbrigadoResolver $abrigadoResolver,
     ) {}
 
     /**
@@ -271,13 +273,19 @@ class FluxoExpressoService
             ? DecisionOutcome::Indeferida
             : DecisionOutcome::Deferida;
 
+        // Abrigado de escritório virtual (RN-EV-05): a inscrição tem sede ativa e
+        // os CNAEs estão na Lista EV — o produto referencia o nº TVL da sede.
+        $abrigado = $this->abrigadoResolver->resolve($request);
+
         try {
-            $decision = DB::transaction(function () use ($request, $resolved, $actor, $outcome): ViabilityDecision {
+            $decision = DB::transaction(function () use ($request, $resolved, $actor, $outcome, $abrigado): ViabilityDecision {
                 $decision = ViabilityDecision::create([
                     'viability_request_id' => $request->id,
                     'flow' => 'expresso',
                     'outcome' => $outcome,
                     'consolidated_result' => $resolved->consolidado,
+                    'is_virtual_office_tenant' => $abrigado !== null,
+                    'virtual_office_hq_tvl_number' => $abrigado['hq_tvl_number'] ?? null,
                     'tvl_product_number' => $outcome === DecisionOutcome::Deferida ? $this->tvl->generate() : null,
                     'per_cnae' => $this->perCnae($resolved),
                     'rules_versions' => $resolved->rules_versions,

@@ -29,6 +29,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'outcome',
     'consolidated_result',
     'is_virtual_office_hq',
+    'is_virtual_office_tenant',
+    'virtual_office_hq_tvl_number',
     'tvl_product_number',
     'per_cnae',
     'rules_versions',
@@ -51,6 +53,7 @@ class ViabilityDecision extends Model
         return [
             'outcome' => DecisionOutcome::class,
             'is_virtual_office_hq' => 'boolean',
+            'is_virtual_office_tenant' => 'boolean',
             'per_cnae' => 'array',
             'rules_versions' => 'array',
             'fundamentacao' => 'array',

@@ -12,6 +12,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Auditoria\DecisionTraceBuilder;
+use App\Services\EscritorioVirtual\AbrigadoResolver;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Expresso\TvlNumberGenerator;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
@@ -50,6 +51,7 @@ class AnaliseTecnicaDecisionService
         private AuditService $audit,
         private DecisionTraceBuilder $traceBuilder,
         private SedeEscritorioVirtualGatilho $sedeGatilho,
+        private AbrigadoResolver $abrigadoResolver,
     ) {}
 
     /**
@@ -143,12 +145,18 @@ class AnaliseTecnicaDecisionService
             );
         }
 
+        // Abrigado de escritório virtual (RN-EV-05): a inscrição tem sede ativa e
+        // os CNAEs estão na Lista EV — o produto referencia o nº TVL da sede.
+        $abrigado = $this->abrigadoResolver->resolve($request);
+
         $decision = ViabilityDecision::create([
             'viability_request_id' => $request->id,
             'flow' => 'analise_tecnica',
             'outcome' => $outcome,
             'consolidated_result' => $consolidated,
             'is_virtual_office_hq' => $isSede,
+            'is_virtual_office_tenant' => $abrigado !== null,
+            'virtual_office_hq_tvl_number' => $abrigado['hq_tvl_number'] ?? null,
             'tvl_product_number' => $outcome === DecisionOutcome::Deferida ? $this->tvl->generate() : null,
             'per_cnae' => $perCnae,
             'rules_versions' => $record->engine_rules_versions ?? [],
