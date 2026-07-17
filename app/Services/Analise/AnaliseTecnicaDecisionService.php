@@ -10,10 +10,13 @@ use App\Models\AnalysisRecord;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Auditoria\DecisionTraceBuilder;
+use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Expresso\TvlNumberGenerator;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
+use App\Support\Settings;
 use DomainException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +49,7 @@ class AnaliseTecnicaDecisionService
         private TvlNumberGenerator $tvl,
         private AuditService $audit,
         private DecisionTraceBuilder $traceBuilder,
+        private SedeEscritorioVirtualGatilho $sedeGatilho,
     ) {}
 
     /**
@@ -121,15 +125,34 @@ class AnaliseTecnicaDecisionService
         array $perCnae,
         DecisionOutcome $outcome,
     ): ViabilityDecision {
+        // Sede de escritório virtual (RN-EV-02/03/04): deferida + o analista
+        // confirmou sede na ficha + o processo tem o CNAE gatilho (8211-3/00).
+        // Só aí trava a inscrição e o produto carrega a condicionante EV.
+        $isSede = $outcome === DecisionOutcome::Deferida
+            && $record->is_virtual_office_hq === true
+            && $this->sedeGatilho->temCnaeGatilho($request);
+
+        $consolidated = $this->consolidatedResult($outcome, $record);
+        $fundamentacao = $this->fundamentacao($perCnae);
+
+        if ($isSede) {
+            $consolidated = ResultadoViabilidade::PermitidoComCondicoes->value;
+            $fundamentacao[] = (string) Settings::get(
+                'analise.escritorio_virtual.condicionante_sede',
+                config('sile.analise.escritorio_virtual.condicionante_sede', ''),
+            );
+        }
+
         $decision = ViabilityDecision::create([
             'viability_request_id' => $request->id,
             'flow' => 'analise_tecnica',
             'outcome' => $outcome,
-            'consolidated_result' => $this->consolidatedResult($outcome, $record),
+            'consolidated_result' => $consolidated,
+            'is_virtual_office_hq' => $isSede,
             'tvl_product_number' => $outcome === DecisionOutcome::Deferida ? $this->tvl->generate() : null,
             'per_cnae' => $perCnae,
             'rules_versions' => $record->engine_rules_versions ?? [],
-            'fundamentacao' => $this->fundamentacao($perCnae),
+            'fundamentacao' => $fundamentacao,
             'decision_trace' => $this->decisionTrace($record, $perCnae),
             'reason' => null,
             'decided_by_user_id' => $analista->id,
@@ -142,6 +165,18 @@ class AnaliseTecnicaDecisionService
 
         $this->stateMachine->transition($request, $destino, $analista, publicLabel: $destino->publicLabel());
 
+        if ($isSede) {
+            // Trava a inscrição pela sede + marca a categoria derivada (RN-EV-03).
+            $request->forceFill(['is_virtual_office' => true])->save();
+
+            VirtualOfficeInscriptionLock::create([
+                'property_registration' => $request->property_registration,
+                'sede_viability_request_id' => $request->id,
+                'active' => true,
+                'locked_at' => now(),
+            ]);
+        }
+
         $this->audit->log(
             logName: 'analise',
             event: 'decisao',
@@ -153,6 +188,7 @@ class AnaliseTecnicaDecisionService
                 'outcome' => $outcome->value,
                 'tvl_product_number' => $decision->tvl_product_number,
                 'decided_by' => $analista->id,
+                'sede_escritorio_virtual' => $isSede,
                 'por_cnae' => $this->perCnaeResumo($perCnae),
             ],
             subject: $request,

@@ -12,12 +12,22 @@ use App\Support\Settings;
  */
 class SedeEscritorioVirtualGatilho
 {
+    /**
+     * O gatilho (encaminhar à análise) exige a resposta do requerente "quero ser
+     * sede = Sim" E a presença do CNAE gatilho no processo (RN-EV-01).
+     */
     public function aplica(ViabilityRequest $request): bool
     {
-        if (! $request->wants_virtual_office_hq) {
-            return false;
-        }
+        return $request->wants_virtual_office_hq && $this->temCnaeGatilho($request);
+    }
 
+    /**
+     * O processo contém o CNAE gatilho da sede (default 8211-3/00, parametrizável)?
+     * Usado independentemente da resposta do requerente pela trava de inscrição no
+     * deferimento (RN-EV-03: trava só com CNAE + flag sede confirmada pelo analista).
+     */
+    public function temCnaeGatilho(ViabilityRequest $request): bool
+    {
         $cnaeGatilho = $this->normalizar((string) Settings::get(
             'analise.escritorio_virtual.cnae_gatilho_sede',
             config('sile.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
