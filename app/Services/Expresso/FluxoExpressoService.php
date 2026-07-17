@@ -57,6 +57,7 @@ class FluxoExpressoService
         private AuditService $audit,
         private AnalysisSlaService $sla,
         private DecisionTraceBuilder $traceBuilder,
+        private SedeEscritorioVirtualGatilho $gatilhoSede,
     ) {}
 
     /**
@@ -111,6 +112,12 @@ class FluxoExpressoService
                 $actor,
                 $resolved,
             );
+        }
+
+        // RN-EV-01: CNAE gatilho (default 8211-3/00) + "será sede? = Sim" não
+        // conclui no expresso — vai para análise humana (gatilho parametrizável).
+        if ($this->gatilhoSede->aplica($request)) {
+            return $this->encaminharAnalise($request, 'gatilho: sede de escritório virtual', $actor, $resolved);
         }
 
         return $this->emitir($request, $resolved, $actor);
