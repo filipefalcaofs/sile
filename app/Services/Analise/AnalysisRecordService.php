@@ -83,6 +83,10 @@ class AnalysisRecordService
             $record->parecer = $data['parecer'];
         }
 
+        if (array_key_exists('is_virtual_office_hq', $data)) {
+            $record->is_virtual_office_hq = $data['is_virtual_office_hq'];
+        }
+
         $record->save();
 
         return $record;

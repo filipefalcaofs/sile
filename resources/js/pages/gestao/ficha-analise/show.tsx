@@ -55,6 +55,7 @@ interface Ficha {
     conditions: string[];
     parking: Parking;
     parecer: string | null;
+    is_virtual_office_hq: boolean | null;
     analyst: string | null;
     finalized_at: string | null;
     updated_at: string | null;
@@ -342,6 +343,7 @@ export default function FichaAnaliseShow({
     const [conditions, setConditions] = useState<string[]>(() => ficha.conditions ?? []);
     const [parecer, setParecer] = useState<string>(() => ficha.parecer ?? '');
     const [parking, setParking] = useState<Parking>(() => ficha.parking ?? {});
+    const [sedeEscritorioVirtual, setSedeEscritorioVirtual] = useState<boolean>(() => ficha.is_virtual_office_hq ?? false);
     const [novaCondicao, setNovaCondicao] = useState('');
     const [saveState, setSaveState] = useState<'idle' | 'salvando' | 'salvo' | 'erro'>('idle');
 
@@ -350,7 +352,8 @@ export default function FichaAnaliseShow({
         conditions: string[];
         parking: Parking;
         parecer: string | null;
-    }>({ per_cnae: [], conditions: [], parking: {}, parecer: null });
+        is_virtual_office_hq: boolean;
+    }>({ per_cnae: [], conditions: [], parking: {}, parecer: null, is_virtual_office_hq: false });
 
     const acao = useHttp<Record<string, never>>({});
     const tvl = useHttp<Record<string, never>, { download_url?: string; url?: string }>({});
@@ -405,8 +408,9 @@ export default function FichaAnaliseShow({
             conditions,
             parking,
             parecer: parecer.trim() === '' ? null : parecer,
+            is_virtual_office_hq: sedeEscritorioVirtual,
         }),
-        [perCnae, conditions, parking, parecer],
+        [perCnae, conditions, parking, parecer, sedeEscritorioVirtual],
     );
 
     const salvarRascunho = useCallback(() => {
@@ -445,7 +449,7 @@ export default function FichaAnaliseShow({
 
         return () => window.clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [perCnae, conditions, parecer, parking]);
+    }, [perCnae, conditions, parecer, parking, sedeEscritorioVirtual]);
 
     useEffect(() => {
         precedentes.get(`/gestao/processos/${processo.id}/precedentes`, {
@@ -1113,6 +1117,14 @@ export default function FichaAnaliseShow({
                                 }
                             />
                             <CardContent>
+                                <div className="mb-4">
+                                    <Checkbox
+                                        label="Sede de Escritório Virtual"
+                                        checked={sedeEscritorioVirtual}
+                                        onChange={setSedeEscritorioVirtual}
+                                        disabled={!editavel}
+                                    />
+                                </div>
                                 <Textarea
                                     id="parecer-editor"
                                     rows={6}

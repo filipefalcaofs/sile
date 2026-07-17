@@ -38,6 +38,7 @@ class AnalysisRecordResource extends JsonResource
             'conditions' => array_values((array) ($this->conditions ?? [])),
             'parking' => $this->parking ?? [],
             'parecer' => $this->parecer,
+            'is_virtual_office_hq' => $this->is_virtual_office_hq,
             'analyst' => $this->analyst?->name,
             'finalized_at' => $this->finalized_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

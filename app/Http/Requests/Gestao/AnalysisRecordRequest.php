@@ -44,6 +44,7 @@ class AnalysisRecordRequest extends FormRequest
             'conditions' => ['sometimes', 'array'],
             'parking' => ['sometimes', 'array'],
             'parecer' => ['sometimes', 'nullable', 'string'],
+            'is_virtual_office_hq' => ['sometimes', 'nullable', 'boolean'],
         ];
     }
 

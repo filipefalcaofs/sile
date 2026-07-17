@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'conditions',
     'parking',
     'parecer',
+    'is_virtual_office_hq',
     'finalized_at',
 ])]
 class AnalysisRecord extends Model
@@ -51,6 +52,7 @@ class AnalysisRecord extends Model
             'per_cnae' => 'array',
             'conditions' => 'array',
             'parking' => 'array',
+            'is_virtual_office_hq' => 'boolean',
             'finalized_at' => 'datetime',
         ];
     }
