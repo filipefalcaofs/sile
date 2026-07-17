@@ -46,6 +46,7 @@ class UpdateSolicitacaoImovelRequest extends FormRequest
             'property_registration' => ['nullable', 'string', 'max:255'],
 
             'is_virtual_office' => ['sometimes', 'boolean'],
+            'wants_virtual_office_hq' => ['sometimes', 'boolean'],
             'is_public_area' => ['sometimes', 'boolean'],
             'has_independent_access' => ['sometimes', 'boolean'],
         ];
