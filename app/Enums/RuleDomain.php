@@ -24,6 +24,10 @@ enum RuleDomain: string
     case LouosQuadro11 = 'louos_quadro11';
     case LouosQuadro11a = 'louos_quadro11a';
 
+    // Lista EV (escritório virtual, RN-EV-05/07): CNAEs permitidos para
+    // ABRIGADO, importados por snapshot versionado do endpoint SEDUR.
+    case AtividadesEscritorioVirtual = 'atividades_escritorio_virtual';
+
     public function label(): string
     {
         return match ($this) {
@@ -34,6 +38,7 @@ enum RuleDomain: string
             self::LouosQuadro10 => 'Quadro 10 da LOUOS (permissão por zona)',
             self::LouosQuadro11 => 'Quadro 11 da LOUOS (condições pela via)',
             self::LouosQuadro11a => 'Quadro 11A da LOUOS (condições complementares pela via)',
+            self::AtividadesEscritorioVirtual => 'Atividades permitidas em escritório virtual',
         };
     }
 
@@ -47,7 +52,7 @@ enum RuleDomain: string
         return match ($this) {
             self::RiscoMunicipal, self::RiscoSanitario => true,
             self::LouosQuadro7, self::LouosQuadro10, self::LouosQuadro11, self::LouosQuadro11a => true,
-            self::Condicionante => false,
+            self::Condicionante, self::AtividadesEscritorioVirtual => false,
         };
     }
 }
