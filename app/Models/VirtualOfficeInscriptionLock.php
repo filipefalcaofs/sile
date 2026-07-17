@@ -37,4 +37,19 @@ class VirtualOfficeInscriptionLock extends Model
             ->where('active', true)
             ->exists();
     }
+
+    /**
+     * Resolve o lock ATIVO da inscrição, com a sede e a decisão da sede (TVL)
+     * já carregadas — para os consumidores M2 alcançarem o TVL do abrigado
+     * sem N+1.
+     */
+    public static function sedeAtiva(string $propertyRegistration): ?self
+    {
+        return static::query()
+            ->where('property_registration', $propertyRegistration)
+            ->where('active', true)
+            ->with('sede.decision')
+            ->latest('id')
+            ->first();
+    }
 }
