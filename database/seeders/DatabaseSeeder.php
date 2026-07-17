@@ -21,6 +21,11 @@ class DatabaseSeeder extends Seeder
             CnaeSeeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
+            // Lista EV (escritório virtual, RN-EV-05/07): CNAEs permitidos para
+            // ABRIGADO, snapshot versionado do endpoint SEDUR
+            // AtividadesPermitidasEmEscritorioVirtual.php — dado versionado
+            // separado, torna VirtualOfficeActivityCnae::permitido() navegável.
+            EscritorioVirtualCnaeSeeder::class,
             RiskTriggerSeeder::class,
             LouosQuadro7Seeder::class,
             LouosQuadro10Seeder::class,
