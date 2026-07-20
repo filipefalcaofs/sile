@@ -30,6 +30,20 @@ class RelatorioSedeEscritorioVirtualService
      */
     public function consultar(array $filtros, int $perPage = 15): LengthAwarePaginator
     {
+        return $this->builder($filtros)->paginate($perPage);
+    }
+
+    /**
+     * Builder do MESMO recorte de {@see consultar()} sem paginar — fonte única da
+     * consulta e da exportação (RN-005): o {@see
+     * Export\Sources\RelatorioSedeReportSource} o reusa para streamar o export com
+     * o recorte idêntico ao da tela.
+     *
+     * @param  array<string, mixed>  $filtros
+     * @return Builder<ViabilityRequest>
+     */
+    public function builder(array $filtros): Builder
+    {
         $inscricoes = $this->resolverInscricoes($filtros);
 
         $sedeIds = $this->sedeIds($inscricoes);
@@ -47,8 +61,7 @@ class RelatorioSedeEscritorioVirtualService
                 $sedeIds->isNotEmpty(),
                 fn (Builder $q) => $q->orderByRaw('case when id in ('.$sedeIds->implode(',').') then 0 else 1 end'),
             )
-            ->orderBy('id')
-            ->paginate($perPage);
+            ->orderBy('id');
     }
 
     /**

@@ -34,6 +34,11 @@ class RelatorioFiltersRequest extends FormRequest
             'bairro' => ['nullable', 'string'],
             'cnae' => ['nullable', 'string'],
             'categoria' => ['nullable', 'string'],
+            // Relatório sede × abrigados de escritório virtual (Plano R1): recorte
+            // por nº do produto TVL da sede OU pela inscrição imobiliária. Precisa
+            // entrar no validated() para viajar no bag (RN-005 no assíncrono).
+            'sede' => ['nullable', 'string'],
+            'inscricao' => ['nullable', 'string'],
         ];
     }
 
@@ -50,6 +55,8 @@ class RelatorioFiltersRequest extends FormRequest
             'bairro' => 'bairro',
             'cnae' => 'CNAE',
             'categoria' => 'categoria',
+            'sede' => 'sede',
+            'inscricao' => 'inscrição imobiliária',
         ];
     }
 

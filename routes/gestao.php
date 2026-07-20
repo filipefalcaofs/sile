@@ -171,6 +171,10 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // bairro×CNAE vs capacidade recomendada (parâmetro HU-014), classificando
             // saturando/saturado. Degradação honesta sem capacidade/zona oficial.
             Route::get('saturacao', [RelatorioController::class, 'saturacao'])->name('saturacao');
+            // Relatório sede × abrigados de escritório virtual (Plano R1): sede
+            // (alvo do lock ativo) + abrigados da inscrição travada, recorte por nº
+            // TVL da sede OU inscrição. Export pelo contrato único (?formato=).
+            Route::get('escritorio-virtual', [RelatorioController::class, 'escritorioVirtual'])->name('escritorio-virtual');
         });
 
         // Consulta granular separada da manutenção (HU-011 CA-04)

@@ -4,17 +4,20 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\RelatorioFiltersRequest;
+use App\Models\ViabilityRequest;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\Export\Sources\EscritorioVirtualReportSource;
 use App\Services\Relatorios\Export\Sources\ExpressoQuedaReportSource;
 use App\Services\Relatorios\Export\Sources\ProdutividadeReportSource;
+use App\Services\Relatorios\Export\Sources\RelatorioSedeReportSource;
 use App\Services\Relatorios\Export\Sources\SolicitacoesReportSource;
 use App\Services\Relatorios\Export\Sources\TempoAnaliseReportSource;
 use App\Services\Relatorios\ExpressoQuedaService;
 use App\Services\Relatorios\GeoBairroIndicadorService;
 use App\Services\Relatorios\IndicadoresViabilidadeService;
 use App\Services\Relatorios\ProdutividadeAnalistaService;
+use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Services\Relatorios\ReportFilters;
 use App\Services\Relatorios\SaturacaoService;
 use App\Services\Relatorios\TempoAnaliseService;
@@ -36,6 +39,14 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class RelatorioController extends Controller
 {
+    /**
+     * Itens por página oferecidos na tela sede × abrigados (mesma convenção das
+     * demais listagens server-driven da gestão).
+     *
+     * @var list<int>
+     */
+    private const PER_PAGE_OPTIONS = [10, 15, 25, 50];
+
     public function __construct(
         private IndicadoresViabilidadeService $indicadores,
         private TempoAnaliseService $tempos,
@@ -43,6 +54,7 @@ class RelatorioController extends Controller
         private ExpressoQuedaService $quedas,
         private GeoBairroIndicadorService $geoBairro,
         private SaturacaoService $saturacao,
+        private RelatorioSedeEscritorioVirtualService $relatorioSede,
         private AuditService $audit,
     ) {}
 
@@ -192,6 +204,46 @@ class RelatorioController extends Controller
             'limiares' => $this->saturacao->limiares(),
             'filtros' => $filtros->aplicados(),
         ]);
+    }
+
+    /**
+     * Relatório sede × abrigados de escritório virtual (Plano R1): agrupa, por
+     * inscrição imobiliária travada, a SEDE (alvo do lock ativo) e os ABRIGADOS
+     * (decisões is_virtual_office_tenant). Com ?formato=, exporta o MESMO recorte
+     * pelo contrato único (RelatorioSedeReportSource — RN-005/009); senão audita a
+     * consulta e renderiza a tela com o paginator projetado por `linha()`.
+     */
+    public function escritorioVirtual(RelatorioFiltersRequest $request): InertiaResponse|Response
+    {
+        $filtros = $request->toReportFilters();
+
+        if ($formato = $this->formato($request)) {
+            return $this->exportar(app(RelatorioSedeReportSource::class), $filtros, $formato, $request);
+        }
+
+        $this->auditarConsulta('consulta-escritorio-virtual', 'Consulta do relatório sede × abrigados de escritório virtual', $filtros);
+
+        $recorte = $filtros->only(['sede', 'inscricao']);
+
+        return Inertia::render('gestao/relatorios/escritorio-virtual', [
+            'relatorio' => $this->relatorioSede
+                ->consultar($recorte, $this->perPage($request))
+                ->withQueryString()
+                ->through(fn (ViabilityRequest $r): array => $this->relatorioSede->linha($r)),
+            'filtros' => $recorte,
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+        ]);
+    }
+
+    /**
+     * Itens por página validados contra o whitelist ({@see PER_PAGE_OPTIONS}); um
+     * valor fora dele degrada para o default 15 (sem inventar recorte).
+     */
+    private function perPage(RelatorioFiltersRequest $request): int
+    {
+        $perPage = (int) $request->input('per_page');
+
+        return in_array($perPage, self::PER_PAGE_OPTIONS, true) ? $perPage : 15;
     }
 
     /**
