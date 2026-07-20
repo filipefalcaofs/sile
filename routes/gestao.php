@@ -15,6 +15,7 @@ use App\Http\Controllers\Gestao\DashboardController;
 use App\Http\Controllers\Gestao\DocumentRequirementController;
 use App\Http\Controllers\Gestao\EmailLogController;
 use App\Http\Controllers\Gestao\EmailServerController;
+use App\Http\Controllers\Gestao\EscritorioVirtualDesvinculacaoController;
 use App\Http\Controllers\Gestao\ExportacaoController;
 use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\HolidayController;
@@ -472,6 +473,9 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
                 Route::get('tvl/{tvlDocument}/download', [TvlDocumentController::class, 'download'])
                     ->middleware('signed')
                     ->name('tvl.download');
+                // Desvinculação manual da inscrição da sede de escritório virtual
+                // (RN-EV-06) — gatilho de retaguarda até o REDESIM/cassação automatizarem.
+                Route::post('{viabilityRequest}/desvincular-inscricao', EscritorioVirtualDesvinculacaoController::class)->name('desvincular-inscricao');
             });
         });
 
