@@ -143,10 +143,27 @@ interface SugestaoIa {
     created_at: string | null;
 }
 
+interface AbrigadoLinha {
+    tvl: string | null;
+    razao_social: string | null;
+    /** Validade do produto não modelada (desfecho spec-2) — sempre null → "—". */
+    validade: string | null;
+}
+
+interface EscritorioVirtual {
+    /** Gatilho de sede disparou (RN-EV-01: CNAE 8211-3/00 + requerente "quero ser sede"). */
+    gatilho: boolean;
+    /** O analista marcou a sede nesta ficha. */
+    is_sede: boolean;
+    inscricao: string | null;
+    abrigados: AbrigadoLinha[];
+}
+
 interface FichaAnaliseShowProps {
     ficha: Ficha;
     processo: Processo;
     localizacao?: Localizacao;
+    escritorioVirtual: EscritorioVirtual;
     textosPadrao: TextoPadrao[];
     autosaveDebounceMs: number;
     /** Sugestões de IA (HU-115) — prop deferida, carregada sob demanda pelo card. */
@@ -329,6 +346,7 @@ export default function FichaAnaliseShow({
     ficha,
     processo,
     localizacao,
+    escritorioVirtual,
     textosPadrao,
     autosaveDebounceMs,
     sugestoesIa,
@@ -764,6 +782,18 @@ export default function FichaAnaliseShow({
                     </div>
                 )}
 
+                {escritorioVirtual.gatilho && (
+                    <div className="flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/15">
+                        <AlertIcon className="size-5 shrink-0 fill-current text-brand-500" />
+                        <p className="text-theme-sm text-gray-600 dark:text-gray-300">
+                            <strong>Gatilho — Sede de Escritório Virtual:</strong> o processo contém o CNAE gatilho
+                            (8211-3/00) e o requerente pediu para ser sede (RN-EV-01). Confirme o desfecho de sede
+                            abaixo — ao deferir como sede, a inscrição imobiliária é travada para escritório virtual
+                            (RN-EV-03).
+                        </p>
+                    </div>
+                )}
+
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="space-y-6 lg:col-span-2">
                         {/* Sugestões de IA (HU-117 resumo + HU-115 alertas) —
@@ -981,9 +1011,15 @@ export default function FichaAnaliseShow({
                                 )}
 
                                 {editavel && (
+                                    <div className="mt-4">
+                                        <CondicionanteAutocomplete onSelect={adicionarCondicao} disabled={!editavel} />
+                                    </div>
+                                )}
+
+                                {editavel && (
                                     <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
                                         <div className="flex-1">
-                                            <Label htmlFor="nova-condicao">Adicionar condicionante</Label>
+                                            <Label htmlFor="nova-condicao">Adicionar condicionante (texto livre)</Label>
                                             <Input
                                                 id="nova-condicao"
                                                 type="text"
@@ -1204,6 +1240,13 @@ export default function FichaAnaliseShow({
                                 </p>
                             </CardContent>
                         </Card>
+
+                        {escritorioVirtual.is_sede && (
+                            <AbrigadosPanel
+                                inscricao={escritorioVirtual.inscricao}
+                                abrigados={escritorioVirtual.abrigados}
+                            />
+                        )}
 
                         <PrecedentesPanel
                             carregando={precedentes.processing}
@@ -1810,6 +1853,177 @@ function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
                     Sinais para revisão humana — não decidem nem penalizam (RN-004). As validações de lote (GIS) e
                     Receita seguem pendentes SEDUR (HU-037/105) e não são supridas por estes alertas.
+                </p>
+            </CardContent>
+        </Card>
+    );
+}
+
+/**
+ * Autocomplete de condicionantes do cadastro VERSIONADO VIGENTE (T02 — CA-F-02).
+ * Busca em /gestao/condicionantes/autocomplete os itens da versão vigente e, ao
+ * selecionar, adiciona a condicionante à ficha. É auxílio: o analista pode
+ * digitar texto livre (campo abaixo) — o autocomplete nunca bloqueia a digitação.
+ */
+function CondicionanteAutocomplete({
+    onSelect,
+    disabled,
+}: {
+    onSelect: (label: string) => void;
+    disabled?: boolean;
+}) {
+    const [termo, setTermo] = useState('');
+    const [itens, setItens] = useState<{ id: number; label: string; cnae_code: string | null }[]>([]);
+    const [aberto, setAberto] = useState(false);
+    const [carregando, setCarregando] = useState(false);
+
+    useEffect(() => {
+        const t = termo.trim();
+
+        if (t.length < 2) {
+            setItens([]);
+            setAberto(false);
+
+            return;
+        }
+
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => {
+            setCarregando(true);
+
+            fetch(`/gestao/condicionantes/autocomplete?q=${encodeURIComponent(t)}`, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+                signal: controller.signal,
+            })
+                .then((resposta) => (resposta.ok ? resposta.json() : { data: [] }))
+                .then((json: { data?: { id: number; label: string; cnae_code: string | null }[] }) => {
+                    setItens(Array.isArray(json.data) ? json.data : []);
+                    setAberto(true);
+                })
+                .catch(() => {
+                    // Silencioso: o autocomplete é auxílio, não bloqueia o texto livre.
+                })
+                .finally(() => setCarregando(false));
+        }, 250);
+
+        return () => {
+            controller.abort();
+            window.clearTimeout(timer);
+        };
+    }, [termo]);
+
+    function selecionar(label: string) {
+        onSelect(label);
+        setTermo('');
+        setItens([]);
+        setAberto(false);
+    }
+
+    return (
+        <div className="relative">
+            <Label htmlFor="condicionante-autocomplete">Buscar no cadastro vigente</Label>
+            <Input
+                id="condicionante-autocomplete"
+                type="text"
+                value={termo}
+                disabled={disabled}
+                placeholder="Digite para buscar condicionantes do cadastro versionado…"
+                onChange={(event) => setTermo(event.target.value)}
+                onKeyDown={(event) => {
+                    if (event.key === 'Enter' && termo.trim() !== '') {
+                        event.preventDefault();
+                        selecionar(termo.trim());
+                    }
+                }}
+            />
+            {aberto && itens.length > 0 && (
+                <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-theme-lg dark:border-gray-700 dark:bg-gray-900">
+                    {itens.map((item) => (
+                        <li key={item.id}>
+                            <button
+                                type="button"
+                                onClick={() => selecionar(item.label)}
+                                className="flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left text-theme-sm text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-white/5"
+                            >
+                                <span>{item.label}</span>
+                                {item.cnae_code && (
+                                    <span className="text-theme-xs text-gray-400 dark:text-gray-500">
+                                        CNAE {item.cnae_code}
+                                    </span>
+                                )}
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            )}
+            {carregando && <p className="mt-1 text-theme-xs text-gray-400 dark:text-gray-500">Buscando…</p>}
+        </div>
+    );
+}
+
+/**
+ * Painel de abrigados da inscrição (T02 — CA-F-03), exibido quando a ficha marca
+ * a sede. Cada linha traz o nº TVL, a razão social e a VALIDADE. A validade do
+ * produto NÃO é modelada (desfecho spec-2) e chega null → renderizada como "—"
+ * (degradação honesta, jamais inventada). Vazio quando não há abrigado.
+ */
+function AbrigadosPanel({
+    inscricao,
+    abrigados,
+}: {
+    inscricao: string | null;
+    abrigados: AbrigadoLinha[];
+}) {
+    return (
+        <Card>
+            <CardHeader
+                title="Abrigados da inscrição"
+                description={
+                    inscricao
+                        ? `Solicitações abrigadas na inscrição ${inscricao} (RN-EV-05).`
+                        : 'Solicitações abrigadas nesta inscrição (RN-EV-05).'
+                }
+            />
+            <CardContent>
+                {abrigados.length === 0 ? (
+                    <EmptyState
+                        title="Nenhum abrigado"
+                        description="Ainda não há inscrições abrigadas nesta sede de escritório virtual."
+                    />
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-theme-sm">
+                            <thead>
+                                <tr className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                                    <th className="pb-2 pr-3">Nº TVL</th>
+                                    <th className="pb-2 pr-3">Razão social</th>
+                                    <th className="pb-2">Validade</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                {abrigados.map((abrigado, indice) => (
+                                    <tr key={`${abrigado.tvl ?? 'sem-tvl'}-${indice}`}>
+                                        <td className="py-2 pr-3 text-gray-700 dark:text-gray-300">
+                                            {abrigado.tvl ?? '—'}
+                                        </td>
+                                        <td className="py-2 pr-3 text-gray-700 dark:text-gray-300">
+                                            {abrigado.razao_social ?? '—'}
+                                        </td>
+                                        {/* Validade não modelada (desfecho spec-2) — sempre "—". */}
+                                        <td className="py-2 text-gray-500 dark:text-gray-400">
+                                            {abrigado.validade ?? '—'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
+                    Campos SEFAZ/externos (validade do produto, integrações) pendentes da SEDUR — exibidos como
+                    "—" enquanto não modelados.
                 </p>
             </CardContent>
         </Card>

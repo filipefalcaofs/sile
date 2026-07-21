@@ -5,6 +5,7 @@ use App\Http\Controllers\Gestao\AbusoController;
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\AiConfigurationController;
 use App\Http\Controllers\Gestao\AnalysisRecordController;
+use App\Http\Controllers\Gestao\CondicionanteAutocompleteController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
 use App\Http\Controllers\Gestao\AuditoriaController;
 use App\Http\Controllers\Gestao\AuditoriaPreditivaController;
@@ -458,6 +459,14 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('ficha/diff', [AnalysisRecordController::class, 'diff'])->name('ficha.diff');
             Route::get('precedentes', [PrecedenteController::class, 'show'])->name('precedentes');
         });
+
+        // Autocomplete de condicionantes do cadastro VERSIONADO VIGENTE (T02 EV) —
+        // consumido pela ficha de análise; itens da RuleVersion sanitária vigente
+        // (RN-005). Não é por-processo, então fica fora do grupo processos/{...};
+        // gated pela mesma permissão analisar-processos (403 auditado no ponto único).
+        Route::middleware('permission:analisar-processos')
+            ->get('condicionantes/autocomplete', CondicionanteAutocompleteController::class)
+            ->name('condicionantes.autocomplete');
 
         // Ações do analista sobre o processo (Wave 7 — HU-083/086/087/088/089/
         // 132/136): os endpoints HTTP FINOS que expõem os serviços já testados das

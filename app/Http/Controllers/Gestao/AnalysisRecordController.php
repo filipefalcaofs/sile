@@ -6,13 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\AnalysisRecordRequest;
 use App\Http\Resources\AnalysisRecordResource;
 use App\Models\AiSuggestion;
+use App\Models\AnalysisRecord;
 use App\Models\StandardText;
 use App\Models\ViabilityRequest;
+use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Ai\ResumoProcessoService;
 use App\Services\Ai\SugestaoParecerService;
 use App\Services\Analise\AnalysisRecordDiff;
 use App\Services\Analise\AnalysisRecordImutavelException;
 use App\Services\Analise\AnalysisRecordService;
+use App\Services\Expresso\SedeEscritorioVirtualGatilho;
+use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Support\Audit\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,6 +38,8 @@ class AnalysisRecordController extends Controller
         private AnalysisRecordService $records,
         private AuditService $audit,
         private ResumoProcessoService $resumos,
+        private SedeEscritorioVirtualGatilho $sedeGatilho,
+        private RelatorioSedeEscritorioVirtualService $relatorioSede,
     ) {}
 
     /**
@@ -66,6 +72,9 @@ class AnalysisRecordController extends Controller
                 'status_label' => $viabilityRequest->status->label(),
             ],
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest),
+            // Escritório virtual (T02): flag do gatilho (RN-EV-01), a inscrição e o
+            // painel de abrigados quando a solicitação é a SEDE ativa da inscrição.
+            'escritorioVirtual' => $this->escritorioVirtual($viabilityRequest, $record),
             'textosPadrao' => $this->textosPadraoAtivos(),
             'autosaveDebounceMs' => (int) config('sile.analise.autosave.debounce_ms', 1500),
             // Sugestões de IA (HU-115 alertas + HU-117 resumo do processo) — prop
@@ -247,6 +256,55 @@ class AnalysisRecordController extends Controller
         return [
             'poligono' => $request->property_polygon_geojson,
             'endereco' => $endereco,
+        ];
+    }
+
+    /**
+     * Bloco de escritório virtual da ficha (T02). Expõe:
+     *  - `gatilho`: o gatilho de SEDE disparou (RN-EV-01 — CNAE 8211-3/00 +
+     *    requerente "quero ser sede = Sim"), para o banner de destaque;
+     *  - `is_sede`: o analista marcou a sede nesta ficha (flag da revisão);
+     *  - `inscricao`: a inscrição imobiliária do processo;
+     *  - `abrigados`: painel dos ABRIGADOS da inscrição quando a solicitação é a
+     *    SEDE ATIVA (lock ativo — RN-EV-03/05), reusando o recorte único do
+     *    relatório R1 (RelatorioSedeEscritorioVirtualService). Cada linha traz o
+     *    nº TVL e a razão social; a VALIDADE do produto não é modelada (desfecho
+     *    spec-2) e degrada para null → "—" na tela, jamais inventada. Vazio quando
+     *    não há abrigado (CA-F-03).
+     *
+     * @return array{gatilho: bool, is_sede: bool, inscricao: string|null, abrigados: list<array{tvl: string|null, razao_social: string|null, validade: null}>}
+     */
+    private function escritorioVirtual(ViabilityRequest $request, AnalysisRecord $record): array
+    {
+        $inscricao = $request->property_registration;
+
+        $ehSedeAtiva = $inscricao !== null && $inscricao !== ''
+            && VirtualOfficeInscriptionLock::query()
+                ->where('active', true)
+                ->where('sede_viability_request_id', $request->id)
+                ->exists();
+
+        $abrigados = [];
+
+        if ($ehSedeAtiva) {
+            $abrigados = collect($this->relatorioSede->consultar(['inscricao' => $inscricao], 100)->items())
+                ->map(fn (ViabilityRequest $r): array => $this->relatorioSede->linha($r))
+                ->filter(fn (array $linha): bool => $linha['tipo'] === 'abrigado')
+                ->map(fn (array $linha): array => [
+                    'tvl' => $linha['tvl'],
+                    'razao_social' => $linha['razao_social'],
+                    // Validade do produto não modelada (desfecho spec-2) → "—".
+                    'validade' => null,
+                ])
+                ->values()
+                ->all();
+        }
+
+        return [
+            'gatilho' => $this->sedeGatilho->aplica($request),
+            'is_sede' => (bool) $record->is_virtual_office_hq,
+            'inscricao' => $inscricao,
+            'abrigados' => $abrigados,
         ];
     }
 
