@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(92, Parameter::query()->count());
+        $this->assertSame(95, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -479,6 +479,34 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($modo->value);
     }
 
+    public function test_seeder_registra_parametros_do_envio_para_analise(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        // Tela T06: toggle da tela + mensagens de domínio parametrizáveis.
+        $toggle = Parameter::query()->where('key', 'features.enviar_tvl_analise')->first();
+        $this->assertNotNull($toggle);
+        $this->assertSame('features', $toggle->group);
+        $this->assertSame('boolean', $toggle->type);
+        $this->assertSame('1', $toggle->default_value);
+        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
+        $this->assertNull($toggle->value);
+
+        $naoEncontrado = Parameter::query()->where('key', 'analise.enviar_analise.mensagem_nao_encontrado')->first();
+        $this->assertNotNull($naoEncontrado);
+        $this->assertSame('analise', $naoEncontrado->group);
+        $this->assertSame('string', $naoEncontrado->type);
+        $this->assertSame(['required', 'string', 'max:2000'], $naoEncontrado->validation_rules);
+        $this->assertNull($naoEncontrado->value);
+
+        $confirmacao = Parameter::query()->where('key', 'analise.enviar_analise.mensagem_confirmacao')->first();
+        $this->assertNotNull($confirmacao);
+        $this->assertSame('analise', $confirmacao->group);
+        $this->assertSame('string', $confirmacao->type);
+        $this->assertSame(['required', 'string', 'max:2000'], $confirmacao->validation_rules);
+        $this->assertNull($confirmacao->value);
+    }
+
     public function test_seeder_registra_parametros_de_notificacoes(): void
     {
         $this->seed(ParameterSeeder::class);
@@ -801,6 +829,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(92, Parameter::query()->count());
+        $this->assertSame(95, Parameter::query()->count());
     }
 }

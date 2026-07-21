@@ -439,6 +439,31 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'in:imagem,nenhuma'],
                 'description' => 'Modo de assinatura do TVL PDF: imagem do diretor (legado) ou nenhuma; assinatura digital gov.br/ICP é gancho → SEDUR',
             ],
+            // Tela T06 (relatório de teste SEDUR): envio MANUAL de um processo à
+            // análise técnica. O toggle liga/desliga a tela (HU-014) e as
+            // mensagens de domínio são parametrizáveis (não-encontrado e
+            // confirmação) — texto oficial substituível sem deploy.
+            'features.enviar_tvl_analise' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a tela de envio manual de processos de TVL para a análise técnica; desligada, degrada de forma comunicada',
+            ],
+            'analise.enviar_analise.mensagem_nao_encontrado' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'Nenhum processo encontrado para o protocolo informado. Confira o número e tente novamente.',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Mensagem exibida quando o protocolo pesquisado na tela de envio à análise não é encontrado',
+            ],
+            'analise.enviar_analise.mensagem_confirmacao' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'Confirma o envio deste processo para a análise técnica? A ação é registrada na auditoria.',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Texto de confirmação antes de enviar um processo para a análise técnica (tela T06)',
+            ],
             // Comunicação multicanal (EP11). Os toggles de canal nascem
             // administráveis: e-mail e in-app ligados; WhatsApp DESLIGADO
             // (provedor real bloqueado até a Fase 13 — degradação honesta).

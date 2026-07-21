@@ -240,6 +240,31 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
     }
 
+    public function test_papeis_recebem_permissao_de_enviar_tvl_analise(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertSame(
+            'enviar-tvl-analise',
+            Permission::findByName('enviar-tvl-analise', 'web')->name,
+        );
+
+        // Envio manual do processo à análise (tela T06): permissão DEDICADA
+        // concedida a quem já opera a análise técnica — analista, gestor e
+        // administrador.
+        foreach (['analista', 'gestor', 'administrador'] as $role) {
+            $this->assertTrue(
+                Role::findByName($role, 'web')->hasPermissionTo('enviar-tvl-analise'),
+                "O papel {$role} deve poder enviar processos para análise.",
+            );
+        }
+
+        // Cidadão não recebe nenhuma permissão de backoffice da análise.
+        $this->assertFalse(
+            Role::findByName('cidadao', 'web')->hasPermissionTo('enviar-tvl-analise'),
+        );
+    }
+
     public function test_papeis_recebem_permissoes_de_auditoria_e_compliance(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
@@ -342,7 +367,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(31, Permission::query()->count());
+        $this->assertSame(32, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void

@@ -45,25 +45,28 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
 
         $this->assertSame(4, Role::query()->count());
-        // 31 permissões (HU-013): as 19 base + as 5 da análise técnica
+        // 32 permissões (HU-013): as 19 base + as 5 da análise técnica
         // (analisar-processos, distribuir-processos, emitir-tvl,
         // encaminhar-malha-fina, manter-setores) + as 3 de auditoria e
         // compliance (consultar-auditoria, monitorar-lgpd, gerenciar-alertas-abuso)
         // + as 2 de relatórios (consultar-relatorios, relatorios.produtividade.nominal)
         // + a de configuração de e-mail (manter-config-email) + a de
-        // configuração de IA (manter-config-ia — Fase 14 Onda 0).
-        $this->assertSame(31, Permission::query()->count());
+        // configuração de IA (manter-config-ia — Fase 14 Onda 0) + a de envio
+        // manual à análise (enviar-tvl-analise — tela T06 EV).
+        $this->assertSame(32, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
-        // 92 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
+        // 95 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
         // + 1 (analise.convite.prazo_resposta_horas_uteis, Fase 2a)
         // (Módulo 2: relatorios.saturacao.*) + 3 da Auditoria Preditiva (Módulo 3:
         // features.ia_auditoria_preditiva + ia.auditoria_preditiva.janela/limiar)
         // + 2 do gatilho de sede de escritório virtual (Plano M1, Tarefa 3:
         // analise.escritorio_virtual.cnae_gatilho_sede/condicionante_sede)
         // + 1 do bloqueio de CNAE do abrigado (Plano M2, Tarefa 4:
-        // analise.escritorio_virtual.mensagem_bloqueio_abrigado).
-        $this->assertSame(92, Parameter::query()->count());
+        // analise.escritorio_virtual.mensagem_bloqueio_abrigado)
+        // + 3 do envio manual à análise (tela T06: features.enviar_tvl_analise +
+        // analise.enviar_analise.mensagem_nao_encontrado/mensagem_confirmacao).
+        $this->assertSame(95, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -323,7 +326,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(92, Parameter::query()->count());
+        $this->assertSame(95, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

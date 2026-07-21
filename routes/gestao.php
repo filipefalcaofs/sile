@@ -15,6 +15,7 @@ use App\Http\Controllers\Gestao\DashboardController;
 use App\Http\Controllers\Gestao\DocumentRequirementController;
 use App\Http\Controllers\Gestao\EmailLogController;
 use App\Http\Controllers\Gestao\EmailServerController;
+use App\Http\Controllers\Gestao\EnviarParaAnaliseController;
 use App\Http\Controllers\Gestao\EscritorioVirtualDesvinculacaoController;
 use App\Http\Controllers\Gestao\ExportacaoController;
 use App\Http\Controllers\Gestao\GeocodeController;
@@ -379,6 +380,19 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:consultar-solicitacoes')->prefix('resultados-expresso')->name('resultados-expresso.')->group(function () {
             Route::get('/', [ResultadoExpressoController::class, 'index'])->name('index');
             Route::get('{viabilityRequest}', [ResultadoExpressoController::class, 'show'])->name('show');
+        });
+
+        // Enviar processo de TVL para análise (tela T06 — relatório de teste
+        // SEDUR): gatilho MANUAL da retaguarda que leva um processo à fila da
+        // análise técnica. Permissão DEDICADA (enviar-tvl-analise, 403 auditado no
+        // ponto único); QUALQUER status é aceito (OPEN-F-2), vale para sede E
+        // abrigado (OPEN-F-3) e o envio é idempotente (CA-E-03). Registrado ANTES
+        // do grupo consultar-solicitacoes para que o caminho estático
+        // `processos/enviar-para-analise` vença o wildcard `processos/{viabilityRequest}`.
+        Route::middleware('permission:enviar-tvl-analise')->prefix('processos/enviar-para-analise')->name('processos.enviar-para-analise.')->group(function () {
+            Route::get('/', [EnviarParaAnaliseController::class, 'index'])->name('index');
+            Route::post('pesquisar', [EnviarParaAnaliseController::class, 'pesquisar'])->name('pesquisar');
+            Route::post('enviar', [EnviarParaAnaliseController::class, 'enviar'])->name('enviar');
         });
 
         // Consulta de processos (HU-082) e fila do analista (HU-144) na

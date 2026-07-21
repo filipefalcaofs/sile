@@ -40,6 +40,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'distribuir-processos',
             'emitir-tvl',
             'encaminhar-malha-fina',
+            'enviar-tvl-analise',
             'manter-setores',
             'consultar-auditoria',
             'monitorar-lgpd',
@@ -69,6 +70,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'analisar-processos',
                 'encaminhar-malha-fina',
                 'emitir-tvl',
+                'enviar-tvl-analise',
             ]);
         Role::firstOrCreate(['name' => 'gestor', 'guard_name' => 'web'])
             ->givePermissionTo([
@@ -86,6 +88,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'distribuir-processos',
                 'encaminhar-malha-fina',
                 'emitir-tvl',
+                'enviar-tvl-analise',
                 'manter-setores',
                 'consultar-auditoria',
                 'gerenciar-alertas-abuso',
@@ -116,6 +119,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'distribuir-processos',
                 'emitir-tvl',
                 'encaminhar-malha-fina',
+                'enviar-tvl-analise',
                 'manter-setores',
                 'consultar-auditoria',
                 'monitorar-lgpd',
