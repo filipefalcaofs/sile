@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Gestao;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\RelatorioFiltersRequest;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityServiceType;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\Export\Sources\EscritorioVirtualReportSource;
 use App\Services\Relatorios\Export\Sources\ExpressoQuedaReportSource;
 use App\Services\Relatorios\Export\Sources\ProdutividadeReportSource;
 use App\Services\Relatorios\Export\Sources\RelatorioSedeReportSource;
+use App\Services\Relatorios\Export\Sources\RelatorioTempoEmissaoTvlReportSource;
 use App\Services\Relatorios\Export\Sources\SolicitacoesReportSource;
 use App\Services\Relatorios\Export\Sources\TempoAnaliseReportSource;
 use App\Services\Relatorios\ExpressoQuedaService;
@@ -18,6 +20,7 @@ use App\Services\Relatorios\GeoBairroIndicadorService;
 use App\Services\Relatorios\IndicadoresViabilidadeService;
 use App\Services\Relatorios\ProdutividadeAnalistaService;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
+use App\Services\Relatorios\RelatorioTempoEmissaoTvlService;
 use App\Services\Relatorios\ReportFilters;
 use App\Services\Relatorios\SaturacaoService;
 use App\Services\Relatorios\TempoAnaliseService;
@@ -55,6 +58,7 @@ class RelatorioController extends Controller
         private GeoBairroIndicadorService $geoBairro,
         private SaturacaoService $saturacao,
         private RelatorioSedeEscritorioVirtualService $relatorioSede,
+        private RelatorioTempoEmissaoTvlService $tempoEmissaoTvl,
         private AuditService $audit,
     ) {}
 
@@ -233,6 +237,53 @@ class RelatorioController extends Controller
             'filtros' => $recorte,
             'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);
+    }
+
+    /**
+     * Relatório SAPS "Tempo de Emissão de TVL" (Tela R2), em página dedicada e
+     * separada do KPI de tempo médio (`tempo`): tabela dos processos DECIDIDOS no
+     * recorte com o tempo Emissão−Abertura em minutos úteis. Com ?formato=, exporta
+     * o MESMO recorte pelo contrato único (RelatorioTempoEmissaoTvlReportSource —
+     * RN-005/CA-R2-03); senão audita a consulta e renderiza a tela com o paginator
+     * projetado por `linha()`. O dropdown de serviços vem do catálogo administrável
+     * de tipos de serviço (CA-R2-04 — "Atividades em residência" quando parametrizado).
+     */
+    public function tempoEmissaoTvl(RelatorioFiltersRequest $request): InertiaResponse|Response
+    {
+        $filtros = $request->toReportFilters();
+
+        if ($formato = $this->formato($request)) {
+            return $this->exportar(app(RelatorioTempoEmissaoTvlReportSource::class), $filtros, $formato, $request);
+        }
+
+        $this->auditarConsulta('consulta-tempo-emissao-tvl', 'Consulta do relatório de tempo de emissão de TVL', $filtros);
+
+        return Inertia::render('gestao/relatorios/tempo-emissao-tvl', [
+            'relatorio' => $this->tempoEmissaoTvl
+                ->consultar($filtros, $this->perPage($request))
+                ->withQueryString()
+                ->through(fn (ViabilityRequest $r): array => $this->tempoEmissaoTvl->linha($r)),
+            'servicos' => $this->servicoOptions(),
+            'filtros' => $filtros->aplicados(),
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+        ]);
+    }
+
+    /**
+     * Opções do dropdown de serviço da Tela R2: catálogo ADMINISTRÁVEL de tipos de
+     * serviço ativos (value=id, label=nome). "Atividades em residência" aparece
+     * quando parametrizado nesse catálogo (CA-R2-04) — a tela não inventa opções.
+     *
+     * @return list<array{value: int, label: string}>
+     */
+    private function servicoOptions(): array
+    {
+        return ViabilityServiceType::query()
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (ViabilityServiceType $t): array => ['value' => $t->id, 'label' => $t->name])
+            ->all();
     }
 
     /**

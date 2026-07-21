@@ -39,6 +39,13 @@ class RelatorioFiltersRequest extends FormRequest
             // entrar no validated() para viajar no bag (RN-005 no assíncrono).
             'sede' => ['nullable', 'string'],
             'inscricao' => ['nullable', 'string'],
+            // Tela R2 — Tempo de Emissão de TVL (SAPS): serviço (service_type_id),
+            // resultado (deferida/indeferida) e tipo (viabilidade/revisao). A
+            // Revisão via REDESIM não é homologada — o valor é aceito só para a
+            // degradação honesta (o serviço nunca simula dados de revisão).
+            'servico' => ['nullable', 'integer'],
+            'resultado' => ['nullable', 'string', 'in:deferida,indeferida'],
+            'tipo' => ['nullable', 'string', 'in:viabilidade,revisao'],
         ];
     }
 
@@ -57,6 +64,9 @@ class RelatorioFiltersRequest extends FormRequest
             'categoria' => 'categoria',
             'sede' => 'sede',
             'inscricao' => 'inscrição imobiliária',
+            'servico' => 'serviço',
+            'resultado' => 'resultado',
+            'tipo' => 'tipo',
         ];
     }
 

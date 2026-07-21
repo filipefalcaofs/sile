@@ -175,6 +175,10 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // (alvo do lock ativo) + abrigados da inscrição travada, recorte por nº
             // TVL da sede OU inscrição. Export pelo contrato único (?formato=).
             Route::get('escritorio-virtual', [RelatorioController::class, 'escritorioVirtual'])->name('escritorio-virtual');
+            // Relatório SAPS "Tempo de Emissão de TVL" (Tela R2): página dedicada
+            // (separada do KPI `tempo`) — tabela dos processos decididos no recorte
+            // com o tempo Emissão−Abertura. Export pelo contrato único (?formato=).
+            Route::get('tempo-emissao-tvl', [RelatorioController::class, 'tempoEmissaoTvl'])->name('tempo-emissao-tvl');
         });
 
         // Consulta granular separada da manutenção (HU-011 CA-04)
