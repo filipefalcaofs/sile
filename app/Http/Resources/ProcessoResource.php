@@ -59,6 +59,46 @@ class ProcessoResource extends JsonResource
             'analysis_due_at' => $this->analysis_due_at?->toIso8601String(),
             'sla' => $this->slaResumo(),
             'protocoled_at' => $this->protocoled_at?->toIso8601String(),
+            // Bloco de escritório virtual (T03) — só presente quando o produto é
+            // sede ou abrigado; null para o processo comum (a UI não renderiza o
+            // card). Fonte única: a decisão imutável (RN-EV-02/05).
+            'escritorio_virtual' => $this->escritorioVirtual(),
+        ];
+    }
+
+    /**
+     * Card "Escritório virtual" do produto (T03). Deriva o tipo do produto da
+     * decisão (sede quando is_virtual_office_hq; abrigado quando
+     * is_virtual_office_tenant) e expõe o TVL da SEDE — para o abrigado é o
+     * `virtual_office_hq_tvl_number` (End. Virtual — TVL Nº, RN-EV-05 CA-P-01);
+     * para a sede é o próprio `tvl_product_number`. A VALIDADE da sede não é
+     * modelada (desfecho spec-2) e degrada para null ("—" na tela) — jamais
+     * inventada. Null quando o processo não é EV.
+     *
+     * @return array{tipo: string, tvl_sede: string|null, inscricao: string|null, validade_sede: null, status_produto: string|null}|null
+     */
+    private function escritorioVirtual(): ?array
+    {
+        $decision = $this->decision;
+
+        if ($decision === null) {
+            return null;
+        }
+
+        $ehSede = $decision->is_virtual_office_hq === true;
+        $ehAbrigado = $decision->is_virtual_office_tenant === true;
+
+        if (! $ehSede && ! $ehAbrigado) {
+            return null;
+        }
+
+        return [
+            'tipo' => $ehSede ? 'sede' : 'abrigado',
+            'tvl_sede' => $ehSede ? $decision->tvl_product_number : $decision->virtual_office_hq_tvl_number,
+            'inscricao' => $this->property_registration,
+            // Validade do produto da sede não modelada (desfecho spec-2).
+            'validade_sede' => null,
+            'status_produto' => $decision->outcome?->label(),
         ];
     }
 

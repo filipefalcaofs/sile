@@ -13,6 +13,20 @@ export interface ProcessoCategoria {
 }
 
 /**
+ * Bloco de escritório virtual do produto (T03) — presente só quando o produto é
+ * sede ou abrigado. `tvl_sede` é o "End. Virtual — TVL Nº" (para o abrigado, o
+ * TVL da sede; RN-EV-05). `validade_sede` não é modelada (desfecho spec-2) e
+ * chega como null → renderizada como "—".
+ */
+export interface ProcessoEscritorioVirtual {
+    tipo: 'sede' | 'abrigado';
+    tvl_sede: string | null;
+    inscricao: string | null;
+    validade_sede: string | null;
+    status_produto: string | null;
+}
+
+/**
  * Shape do ProcessoResource (10-14), consumido pela fila, consulta e detalhe.
  * Os três identificadores do processo (RN-007) são protocol_number, bap e
  * tvl_product_number.
@@ -42,6 +56,7 @@ export interface ProcessoItem {
     analysis_due_at: string | null;
     sla: ProcessoSla | null;
     protocoled_at: string | null;
+    escritorio_virtual: ProcessoEscritorioVirtual | null;
 }
 
 /** Cor do badge por estado do semáforo: verde=no prazo, amarelo=alerta, vermelho=vencido. */

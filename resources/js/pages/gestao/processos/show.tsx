@@ -353,8 +353,41 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
                         )}
                     </div>
 
-                    {/* Coluna lateral: mini-mapa permanente */}
+                    {/* Coluna lateral: escritório virtual + mini-mapa permanente */}
                     <div className="space-y-5">
+                        {processo.escritorio_virtual && (
+                            <Card>
+                                <CardHeader
+                                    title="Escritório virtual"
+                                    description="Vínculo do produto ao regime de escritório virtual (RN-EV)."
+                                />
+                                <CardContent>
+                                    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        <DescItem label="Tipo">
+                                            <Badge color={processo.escritorio_virtual.tipo === 'sede' ? 'info' : 'primary'} size="sm">
+                                                {processo.escritorio_virtual.tipo === 'sede' ? 'Sede' : 'Abrigado'}
+                                            </Badge>
+                                        </DescItem>
+                                        <DescItem
+                                            label={processo.escritorio_virtual.tipo === 'abrigado' ? 'End. Virtual — TVL da sede' : 'TVL da sede'}
+                                        >
+                                            {processo.escritorio_virtual.tvl_sede ?? '—'}
+                                        </DescItem>
+                                        <DescItem label="Inscrição imobiliária">
+                                            {processo.escritorio_virtual.inscricao ?? '—'}
+                                        </DescItem>
+                                        <DescItem label="Validade da sede">
+                                            {/* Não modelada (desfecho spec-2) — degradação honesta. */}
+                                            {processo.escritorio_virtual.validade_sede ?? '—'}
+                                        </DescItem>
+                                        <DescItem label="Status do produto">
+                                            {processo.escritorio_virtual.status_produto ?? '—'}
+                                        </DescItem>
+                                    </dl>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         <Card>
                             <CardHeader title="Localização do imóvel" />
                             <CardContent>
