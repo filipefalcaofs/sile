@@ -34,6 +34,25 @@ class CadastroImobiliarioFichaServiceTest extends TestCase
         $this->assertNull($payload['campos']['quadra']);
     }
 
+    public function test_inscricao_apenas_espacos_nao_chama_lookup(): void
+    {
+        $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
+        {
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                throw new \RuntimeException('lookup não deveria ser chamado');
+            }
+        });
+
+        $request = ViabilityRequest::factory()->create(['property_registration' => '   ']);
+        $payload = app(CadastroImobiliarioFichaService::class)->para($request);
+
+        $this->assertSame('sem_inscricao', $payload['status']);
+        $this->assertStringContainsString('não informada', (string) $payload['mensagem']);
+        $this->assertNull($payload['inscricao']);
+        $this->assertSame(PropertyCadastroCampos::vazios()->toArray(), $payload['campos']);
+    }
+
     public function test_lookup_indisponivel_degrada_com_aviso(): void
     {
         $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
@@ -67,6 +86,11 @@ class CadastroImobiliarioFichaServiceTest extends TestCase
         $payload = app(CadastroImobiliarioFichaService::class)->para($request);
 
         $this->assertSame('nao_encontrado', $payload['status']);
+        $this->assertStringContainsString('não encontrada', (string) $payload['mensagem']);
+        $this->assertSame('000', $payload['inscricao']);
+        $this->assertSame(PropertyCadastroCampos::vazios()->toArray(), $payload['campos']);
+        $this->assertNull($payload['consultado_em']);
+        $this->assertNull($payload['source']);
     }
 
     public function test_lookup_disponivel_mapeia_campos_do_cadastro(): void
@@ -117,6 +141,33 @@ class CadastroImobiliarioFichaServiceTest extends TestCase
         $this->assertSame('disponivel', $payload['status']);
         $this->assertSame('0181', $payload['campos']['quadra']);
         $this->assertSame('fake-cadastro', $payload['source']);
+        $this->assertNotNull($payload['consultado_em']);
+    }
+
+    public function test_lookup_disponivel_sem_cadastro_usa_campos_vazios(): void
+    {
+        $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
+        {
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                return new PropertyRegistryResult(
+                    latitude: -12.97,
+                    longitude: -38.50,
+                    inscricao: $inscricao,
+                    source: 'coordenada-apenas',
+                    raw: [],
+                );
+            }
+        });
+
+        $request = ViabilityRequest::factory()->create(['property_registration' => '379387-7']);
+        $payload = app(CadastroImobiliarioFichaService::class)->para($request);
+
+        $this->assertSame('disponivel', $payload['status']);
+        $this->assertNull($payload['mensagem']);
+        $this->assertSame('379387-7', $payload['inscricao']);
+        $this->assertSame(PropertyCadastroCampos::vazios()->toArray(), $payload['campos']);
+        $this->assertSame('coordenada-apenas', $payload['source']);
         $this->assertNotNull($payload['consultado_em']);
     }
 }
