@@ -1,7 +1,7 @@
 # Ficha de análise — layout legado + Cadastro Imobiliário (IPTU) — design
 
 **Data:** 2026-07-22  
-**Status:** Aprovado em brainstorming — aguardando revisão do arquivo antes do plano  
+**Status:** Implementado (plano 2026-07-22-ficha-analise-layout-cadastro-iptu)  
 **Origem:** Prints SAPS/Salvador Simplifica (Fichas de Análise) + Certidão de Dados Cadastrais IPTU 2023 (SEFAZ)  
 **Relacionado:** HU-135 (ficha), HU-106 (Cadastro Imobiliário), HU-062 (imóvel), `PropertyRegistryLookup` (contrato Fase 7 / binding real Fase 13), design análise técnica `2026-06-14-analise-tecnica-design.md`
 
