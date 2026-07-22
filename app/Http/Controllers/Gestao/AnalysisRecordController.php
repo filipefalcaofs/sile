@@ -15,6 +15,7 @@ use App\Services\Ai\SugestaoParecerService;
 use App\Services\Analise\AnalysisRecordDiff;
 use App\Services\Analise\AnalysisRecordImutavelException;
 use App\Services\Analise\AnalysisRecordService;
+use App\Services\Analise\CadastroImobiliarioFichaService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Support\Audit\AuditService;
@@ -40,6 +41,7 @@ class AnalysisRecordController extends Controller
         private ResumoProcessoService $resumos,
         private SedeEscritorioVirtualGatilho $sedeGatilho,
         private RelatorioSedeEscritorioVirtualService $relatorioSede,
+        private CadastroImobiliarioFichaService $cadastroImobiliario,
     ) {}
 
     /**
@@ -63,6 +65,20 @@ class AnalysisRecordController extends Controller
             subject: $record,
         );
 
+        $cadastro = $this->cadastroImobiliario->para($viabilityRequest);
+
+        $this->audit->log(
+            logName: 'analise',
+            event: 'ficha-cadastro-consulta',
+            description: "Consulta ao Cadastro Imobiliário na ficha do processo #{$viabilityRequest->id}",
+            properties: [
+                'viability_request_id' => $viabilityRequest->id,
+                'inscricao' => $cadastro['inscricao'],
+                'status' => $cadastro['status'],
+            ],
+            subject: $viabilityRequest,
+        );
+
         return Inertia::render('gestao/ficha-analise/show', [
             'ficha' => (new AnalysisRecordResource($record))->resolve(),
             'processo' => [
@@ -72,6 +88,8 @@ class AnalysisRecordController extends Controller
                 'status_label' => $viabilityRequest->status->label(),
             ],
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest),
+            'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
+            'cadastroImobiliario' => $cadastro,
             // Escritório virtual (T02): flag do gatilho (RN-EV-01), a inscrição e o
             // painel de abrigados quando a solicitação é a SEDE ativa da inscrição.
             'escritorioVirtual' => $this->escritorioVirtual($viabilityRequest, $record),
@@ -171,7 +189,7 @@ class AnalysisRecordController extends Controller
         $record = $this->records->current($viabilityRequest);
 
         if ($record->isFinalizada()) {
-            abort(422, 'A revisão está finalizada (RN-003): crie uma nova revisão para trabalhar uma minuta.');
+            abort(422, 'A revisão está finalizada: crie uma nova revisão para trabalhar uma minuta.');
         }
 
         $despachou = $parecer->processar($viabilityRequest, $request->user()?->id);
@@ -241,14 +259,31 @@ class AnalysisRecordController extends Controller
      * sem dado, nunca coordenada inventada. A zona/via oficiais seguem pendentes
      * SEDUR (Quadro 10) e são comunicadas como tal na própria tela.
      *
-     * @return array{poligono: array<string, mixed>|null, endereco: string|null}
+     * @return array{
+     *   poligono: array<string, mixed>|null,
+     *   endereco: string|null,
+     *   cod_log: null,
+     *   logradouro: string|null,
+     *   numero_metrico: string|null,
+     *   bairro: string|null,
+     *   cep: string|null,
+     *   ponto_referencia: string|null,
+     *   zona: null,
+     *   via: null
+     * }
      */
     private function localizacaoDoImovel(ViabilityRequest $request): array
     {
+        $logradouro = trim((string) ($request->address_street ?? ''));
+        $numeroMetrico = trim((string) ($request->address_number ?? ''));
+        $bairro = trim((string) ($request->address_neighborhood ?? ''));
+        $cep = trim((string) ($request->address_zip ?? ''));
+        $pontoReferencia = trim((string) ($request->address_reference ?? ''));
+
         $partes = array_filter([
-            trim((string) ($request->address_street ?? '')),
-            trim((string) ($request->address_number ?? '')),
-            trim((string) ($request->address_neighborhood ?? '')),
+            $logradouro,
+            $numeroMetrico,
+            $bairro,
         ], fn (string $parte): bool => $parte !== '');
 
         $endereco = $partes === [] ? null : implode(', ', $partes);
@@ -256,6 +291,45 @@ class AnalysisRecordController extends Controller
         return [
             'poligono' => $request->property_polygon_geojson,
             'endereco' => $endereco,
+            'cod_log' => null,
+            'logradouro' => $logradouro !== '' ? $logradouro : null,
+            'numero_metrico' => $numeroMetrico !== '' ? $numeroMetrico : null,
+            'bairro' => $bairro !== '' ? $bairro : null,
+            'cep' => $cep !== '' ? $cep : null,
+            'ponto_referencia' => $pontoReferencia !== '' ? $pontoReferencia : null,
+            'zona' => null,
+            'via' => null,
+        ];
+    }
+
+    /**
+     * Dados cadastrais do TVL exibidos na ficha — leitura do processo e da empresa.
+     *
+     * @return array{
+     *   razao_social: string|null,
+     *   sede_escritorio_virtual: bool,
+     *   porte: string|null,
+     *   tipo_imovel: null,
+     *   categoria_empresa: string|null,
+     *   torre_bloco_ala: null,
+     *   complemento: string|null
+     * }
+     */
+    private function dadosTvl(ViabilityRequest $request, AnalysisRecord $record): array
+    {
+        $request->loadMissing('company');
+        $company = $request->company;
+
+        $complemento = trim((string) ($request->address_complement ?? ''));
+
+        return [
+            'razao_social' => $company?->legal_name,
+            'sede_escritorio_virtual' => (bool) $record->is_virtual_office_hq,
+            'porte' => $company?->size,
+            'tipo_imovel' => null,
+            'categoria_empresa' => $company?->legal_nature,
+            'torre_bloco_ala' => null,
+            'complemento' => $complemento !== '' ? $complemento : null,
         ];
     }
 

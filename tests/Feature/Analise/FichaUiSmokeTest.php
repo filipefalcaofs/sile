@@ -86,7 +86,10 @@ class FichaUiSmokeTest extends TestCase
                 ->where('processo.protocol_number', 'VIA-'.now()->year.'-000123')
                 ->has('localizacao')
                 ->where('localizacao.endereco', 'Rua das Flores, 100, Centro')
-                ->where('localizacao.poligono.type', 'Polygon'));
+                ->where('localizacao.logradouro', 'Rua das Flores')
+                ->where('localizacao.poligono.type', 'Polygon')
+                ->has('cadastroImobiliario')
+                ->has('dadosTvl'));
     }
 
     public function test_ficha_sem_poligono_entrega_localizacao_nula_sem_inventar(): void
