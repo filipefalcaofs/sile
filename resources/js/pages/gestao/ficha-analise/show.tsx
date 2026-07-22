@@ -927,7 +927,7 @@ export default function FichaAnaliseShow({
                     <div className="flex items-start gap-3 rounded-xl border border-success-200 bg-success-50 p-4 dark:border-success-500/30 dark:bg-success-500/15">
                         <CheckCircleIcon className="size-5 shrink-0 fill-current text-success-500" />
                         <p className="text-theme-sm text-gray-600 dark:text-gray-300">
-                            Esta revisão está <strong>finalizada</strong> e é imutável. Para reeditar, crie uma
+                            Esta revisão está <strong>finalizada</strong> e é imutável (RN-003). Para reeditar, crie uma
                             nova revisão. {ficha.analyst && <>Responsável: {ficha.analyst}. </>}
                             {ficha.finalized_at && <>Finalizada em {formatarDataHora(ficha.finalized_at)}.</>}
                         </p>
@@ -1069,7 +1069,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Enquadramento por atividade (CNAE)"
-                                description="Sugestão do motor ao lado da decisão do analista. A divergência é destacada e exige justificativa."
+                                description="Sugestão do motor (HU-140) ao lado da decisão do analista. A divergência é destacada e exige justificativa."
                             />
                             <CardContent>
                                 {perCnae.length === 0 ? (
@@ -1138,7 +1138,7 @@ export default function FichaAnaliseShow({
                                                             <AlertIcon className="size-4 shrink-0 fill-current text-warning-500" />
                                                             <p className="text-theme-xs text-gray-600 dark:text-gray-300">
                                                                 Divergência da sugestão do motor — registre a
-                                                                justificativa.
+                                                                justificativa (HU-140/HU-145).
                                                             </p>
                                                         </div>
                                                     )}
@@ -1208,7 +1208,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Condicionantes"
-                                description="Marque as sugeridas pelo motor, acrescente em texto livre ou insira da biblioteca de textos-padrão."
+                                description="Marque as sugeridas pelo motor, acrescente em texto livre ou insira da biblioteca de textos-padrão (HU-085 RN-009)."
                             />
                             <CardContent>
                                 {condicionantesSugeridas.length > 0 && (
@@ -1386,7 +1386,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Parecer técnico"
-                                description="Fundamentação da análise. Use a biblioteca de textos-padrão para acelerar ou peça uma minuta de apoio à IA."
+                                description="Fundamentação da análise. Use a biblioteca de textos-padrão para acelerar (HU-085) ou peça uma minuta de apoio à IA (HU-118)."
                                 actions={
                                     editavel ? (
                                         <div className="flex flex-wrap items-center gap-2">
@@ -1444,8 +1444,8 @@ export default function FichaAnaliseShow({
                                 )}
 
                                 <p className="mt-2 text-theme-xs text-gray-400 dark:text-gray-500">
-                                    A minuta da IA é apenas sugestão: você a revisa, edita e valida. A IA não decide o
-                                    desfecho nem finaliza a ficha.
+                                    A minuta da IA é apenas sugestão (HU-118): você a revisa, edita e valida. A IA não decide o
+                                    desfecho nem finaliza a ficha (RN-001/RN-003).
                                 </p>
                             </CardContent>
                         </Card>
@@ -1540,7 +1540,7 @@ export default function FichaAnaliseShow({
                 isOpen={showFinalizar}
                 variant="info"
                 title="Finalizar ficha?"
-                description="A revisão ficará imutável e as divergências do motor serão registradas. Para reeditar depois, será necessário criar uma nova revisão."
+                description="A revisão ficará imutável (RN-003) e as divergências do motor serão registradas. Para reeditar depois, será necessário criar uma nova revisão."
                 confirmLabel="Finalizar"
                 processing={acao.processing}
                 onConfirm={finalizarFicha}
@@ -1663,7 +1663,7 @@ export default function FichaAnaliseShow({
                 <Modal isOpen onClose={() => setShowDiff(false)} className="m-4 max-h-[90vh] max-w-[640px] overflow-y-auto p-6 lg:p-8">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Comparar revisões</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Mostra apenas o que mudou entre as revisões.
+                        Mostra apenas o que mudou entre as revisões (RN-007).
                     </p>
                     <div className="mt-4 flex flex-wrap items-end gap-3">
                         <div className="w-28">
@@ -1808,7 +1808,7 @@ function ResumoProcessoCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
                 )}
 
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
-                    Apoio à leitura, sempre revisável — não substitui a análise nem antecipa a decisão.
+                    Apoio à leitura, sempre revisável — não substitui a análise nem antecipa a decisão (RN-001/RN-004).
                 </p>
             </CardContent>
         </Card>
@@ -1931,7 +1931,7 @@ function MinutaParecerCard({
 
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
                     “Aplicar ao parecer” copia o texto para o editor do parecer, onde você revisa e ajusta — nada é gravado
-                    nem decidido automaticamente.
+                    nem decidido automaticamente (RN-001).
                 </p>
             </CardContent>
         </Card>
@@ -2064,8 +2064,8 @@ function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
                 )}
 
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
-                    Sinais para revisão humana — não decidem nem penalizam. As validações de lote (GIS) e
-                    Receita seguem pendentes SEDUR e não são supridas por estes alertas.
+                    Sinais para revisão humana — não decidem nem penalizam (RN-004). As validações de lote (GIS) e
+                    Receita seguem pendentes SEDUR (HU-037/105) e não são supridas por estes alertas.
                 </p>
             </CardContent>
         </Card>
@@ -2255,7 +2255,7 @@ function PrecedentesPanel({
 }) {
     return (
         <Card>
-            <CardHeader title="Precedentes" description="Histórico do imóvel e estatística do CNAE na zona." />
+            <CardHeader title="Precedentes" description="Histórico do imóvel e estatística do CNAE na zona (HU-142)." />
             <CardContent>
                 {carregando && (
                     <div className="space-y-2">
