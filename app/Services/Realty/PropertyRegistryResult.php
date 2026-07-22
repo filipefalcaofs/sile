@@ -24,6 +24,7 @@ final readonly class PropertyRegistryResult
         public string $inscricao,
         public ?string $source = null,
         public array $raw = [],
+        public ?PropertyCadastroCampos $cadastro = null,
     ) {}
 
     /**
@@ -39,6 +40,7 @@ final readonly class PropertyRegistryResult
             'inscricao' => $this->inscricao,
             'source' => $this->source,
             'raw' => $this->raw,
+            'cadastro' => $this->cadastro?->toArray(),
         ];
     }
 }

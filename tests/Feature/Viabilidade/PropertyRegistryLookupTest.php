@@ -61,6 +61,7 @@ class PropertyRegistryLookupTest extends TestCase
             'inscricao' => '999',
             'source' => 'fake',
             'raw' => ['lote' => 'X'],
+            'cadastro' => null,
         ], $result->toArray());
     }
 
