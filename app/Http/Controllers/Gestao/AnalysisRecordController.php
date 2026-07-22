@@ -189,7 +189,7 @@ class AnalysisRecordController extends Controller
         $record = $this->records->current($viabilityRequest);
 
         if ($record->isFinalizada()) {
-            abort(422, 'A revisão está finalizada: crie uma nova revisão para trabalhar uma minuta.');
+            abort(422, 'A revisão está finalizada (RN-003): crie uma nova revisão para trabalhar uma minuta.');
         }
 
         $despachou = $parecer->processar($viabilityRequest, $request->user()?->id);
