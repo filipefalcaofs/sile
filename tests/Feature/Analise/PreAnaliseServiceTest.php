@@ -301,4 +301,26 @@ class PreAnaliseServiceTest extends TestCase
 
         $this->assertNotNull($activity);
     }
+
+    public function test_per_cnae_inclui_codigo_louos_e_codigo_tll_como_pendencia_explicita(): void
+    {
+        // Spec 2026-07-24: contrato explícito, nunca um valor inventado — o
+        // código LOUOS/TLL estruturado depende de tabela oficial que a SEDUR
+        // ainda não entregou (docs/ANALISE-HUs-REUNIAO-SEDUR.md:241).
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
+        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $request = $this->emAnaliseComCnaes(['8888881']);
+
+        $record = $this->service()->preAnalisar($request);
+
+        $this->assertNotNull($record);
+        $this->assertNotEmpty($record->per_cnae);
+        $this->assertArrayHasKey('codigo_louos', $record->per_cnae[0]);
+        $this->assertArrayHasKey('codigo_tll', $record->per_cnae[0]);
+        $this->assertNull($record->per_cnae[0]['codigo_louos']);
+        $this->assertNull($record->per_cnae[0]['codigo_tll']);
+    }
 }

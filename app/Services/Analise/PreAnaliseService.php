@@ -201,6 +201,12 @@ class PreAnaliseService
             'status_sugerido' => $this->statusSugerido((string) $item['tendencia']),
             'fluxo' => $item['fluxo'],
             'fundamentacao' => $item['consulta']->fundamentacao(),
+            // Paridade com o legado (spec 2026-07-24): código LOUOS/TLL
+            // estruturado não é entregue pela SEDUR ainda (bloqueio externo
+            // real, docs/ANALISE-HUs-REUNIAO-SEDUR.md:241) — contrato explícito
+            // null, nunca um valor de exemplo do print.
+            'codigo_louos' => null,
+            'codigo_tll' => null,
         ], $resolved->por_cnae);
     }
 
