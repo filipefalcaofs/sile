@@ -1091,6 +1091,57 @@ export default function FichaAnaliseShow({
                     </CardContent>
                 </Card>
 
+                <Card>
+                    <CardHeader
+                        title="Confirmações do imóvel"
+                        description="Paridade com a ficha do legado (SAPS) — confirmações de nível de processo."
+                    />
+                    <CardContent>
+                        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <DescItem label="Atividade está estabelecida em área pública?">
+                                {localizacao?.is_public_area === null || localizacao?.is_public_area === undefined
+                                    ? '—'
+                                    : localizacao.is_public_area
+                                      ? 'Sim'
+                                      : 'Não'}
+                            </DescItem>
+                            <div>
+                                <Label className="mb-1.5">Endereço correto?</Label>
+                                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Endereço correto?">
+                                    {[
+                                        { valor: true, label: 'Sim' },
+                                        { valor: false, label: 'Não' },
+                                    ].map((opcao) => {
+                                        const ativo = addressConfirmed === opcao.valor;
+
+                                        return (
+                                            <button
+                                                key={opcao.label}
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={ativo}
+                                                disabled={!editavel}
+                                                onClick={() => setAddressConfirmed(opcao.valor)}
+                                                className={`rounded-lg px-3 py-1.5 text-theme-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                                    ativo
+                                                        ? 'bg-brand-500 text-white'
+                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
+                                                }`}
+                                            >
+                                                {opcao.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </dl>
+                        <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
+                            Área pública é informada pelo requerente na solicitação; "Endereço correto?" é uma confirmação do
+                            analista.
+                        </p>
+                    </CardContent>
+                </Card>
+
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="space-y-6 lg:col-span-2">
                         {/* Sugestões de IA (HU-117 resumo + HU-115 alertas) —
@@ -1210,7 +1261,31 @@ export default function FichaAnaliseShow({
                                                         </ul>
                                                     )}
 
-                                                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                                    <div className="mt-3 rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+                                                        <p className="text-theme-xs font-medium text-gray-500 dark:text-gray-400">
+                                                            Pergunta: A atividade será desenvolvida no local?
+                                                        </p>
+                                                        <p className="mt-0.5 text-theme-xs text-gray-400 dark:text-gray-500">
+                                                            Resposta: Pendente — requerente ainda não respondeu esta pergunta no
+                                                            formulário de solicitação.
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                                        <DescItem label="Código LOUOS">
+                                                            {item.codigo_louos ?? (
+                                                                <span className="text-gray-400 dark:text-gray-500">
+                                                                    Pendente — tabela oficial SEDUR não entregue
+                                                                </span>
+                                                            )}
+                                                        </DescItem>
+                                                        <DescItem label="Código TLL">
+                                                            {item.codigo_tll ?? (
+                                                                <span className="text-gray-400 dark:text-gray-500">
+                                                                    Pendente — tabela oficial SEDUR não entregue
+                                                                </span>
+                                                            )}
+                                                        </DescItem>
                                                         <DescItem label="Valor TLL">
                                                             {item.valor_tll != null && item.valor_tll !== '' ? (
                                                                 <span>{String(item.valor_tll)}</span>
