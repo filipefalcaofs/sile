@@ -14,7 +14,7 @@ O ajuste de 22/07 alinhou o topo da ficha (Localização | Polígono + Dados do 
 1. Rótulos dos botões de ação divergem ("Salvar rascunho"/"Finalizar ficha" vs. "Salvar Ficha"/"Finalizar Ficha").
 2. Não existe a seção **"Motivo de Análise"** (lista de texto) presente no rodapé da ficha legado.
 3. Não existe uma tabela de **Tramitação** (Data/Setor/Usuário/Status) nem o botão "Imprimir Extrato da Tramitação" dentro da própria ficha — hoje só há uma timeline simplificada em `gestao/processos/show.tsx`.
-4. No bloco "Enquadramento por atividade (CNAE)" faltam 4 elementos do legado: pergunta/resposta "desenvolvida no local?", código LOUOS, código TLL, confirmação "Endereço correto?" e leitura de "atividade em área pública?".
+4. No bloco "Enquadramento por atividade (CNAE)" faltam 2 elementos do legado: pergunta/resposta "desenvolvida no local?" e códigos LOUOS/TLL. Faltam também, num bloco à parte (nível de processo, antes de "Atividades do Processo"): confirmação "Endereço correto?" e leitura de "atividade em área pública?".
 
 Consulta ao especialista de negócio (`analista-negocio`) confirmou, por item, se cada gap é dado real disponível, campo novo de baixo risco, ou bloqueio externo — evitando inventar dado (regra `entrega-funcional`).
 
@@ -38,20 +38,23 @@ Renomear (sem alterar o comportamento/rotas):
 - "Salvar rascunho" → **"Salvar Ficha"**
 - "Finalizar ficha" → **"Finalizar Ficha"**
 
-### 3.2 Enquadramento por atividade (CNAE) — card existente, 4 acréscimos por item
+### 3.2 Novo bloco "Confirmações do imóvel" — entre Dados do TVL e Enquadramento por CNAE
+
+**Correção de posicionamento** (releitura cuidadosa dos prints): "Atividade em área pública?" e "Endereço correto?" NÃO são por-CNAE nem ficam no card Polígono — no legado formam um bloco único, de nível de processo, posicionado **depois da faixa "Dados do TVL" e antes de "Atividades do Processo"**. Também corrige a citação incorreta ao campo "Confirma polígono diferente do requerente?", que **não existe hoje** no SILE (verificado em `show.tsx` — nenhuma referência).
+
+Novo `Card` "Confirmações do imóvel", entre o card "Dados do TVL" (3.1) e o card "Enquadramento por atividade (CNAE)":
+
+1. **"Atividade está estabelecida em área pública?"** — `DescItem` somente leitura, valor = `is_public_area` do processo (Sim/Não/"—" se nunca respondido), nota "informado pelo requerente na solicitação".
+2. **"Endereço correto?"** — radio Sim/Não, **editável pelo analista**, mesmo padrão de persistência (autosave). Sem seleção default (`null` = não respondido).
+
+### 3.3 Enquadramento por atividade (CNAE) — card existente, 2 acréscimos por item
 
 Dentro de cada `<li>` de CNAE (após o bloco atual de Grupo de uso/gatilhos/fundamentação), adicionar:
 
 1. **Pergunta/Resposta** (texto fixo, sem input): "Pergunta: A atividade será desenvolvida no local?" / "Resposta: Pendente — requerente ainda não respondeu esta pergunta no formulário de solicitação." Sempre neste estado até o wizard capturar (fora de escopo desta spec).
 2. **Código LOUOS** e **Código TLL**, ao lado do "Valor TLL" já existente, com o mesmo padrão visual de pendência: "Pendente — tabela oficial SEDUR não entregue" (idêntico ao tratamento atual do `valor_tll` nulo).
-3. **Atividade em área pública?**: `DescItem` somente leitura, valor = `is_public_area` do processo (Sim/Não/"—" se nunca respondido), com nota "informado pelo requerente".
 
-Esses 3 acréscimos são exibidos uma vez por item de CNAE (replicando o padrão do print), não exigem nenhuma migration nova de dados de negócio — apenas os dois campos de contrato explícito abaixo (seção 4.1) para deixar a pendência auditável e preparada para quando os dados chegarem.
-
-### 3.3 Seção "Confirmação do analista" (perto do Polígono/Localização)
-
-Adicionar, ao lado do "Confirma polígono diferente do requerente?" já existente:
-- **"Endereço correto?"** — radio Sim/Não, editável, mesmo padrão de persistência (autosave).
+Esses 2 acréscimos são exibidos uma vez por item de CNAE (replicando o padrão do print), não exigem nenhuma migration nova de dados de negócio — apenas os dois campos de contrato explícito da seção 4.2 para deixar a pendência auditável e preparada para quando os dados chegarem.
 
 ### 3.4 Nova seção "Motivo de Análise"
 
@@ -70,7 +73,7 @@ Nova `Card` com tabela:
 
 - Fonte: `AnalysisStatusTransition` do processo (`viabilityRequest->analysisStatusTransitions`, ordenado por `id`), com `to_status->label()`, `actor->name` (— quando null, ex.: transição automática `para_distribuir`), e o setor **atual** do processo (`viabilityRequest->sector->name`) — ressalva: o modelo não versiona o setor por transição; se o processo mudar de setor, as linhas antigas mostrarão o setor atual, não o histórico. Documentado como limitação conhecida, não como bug.
 - Cada linha expansível (chevron) revela o campo `reason` da transição, quando presente.
-- Botão **"Imprimir Extrato da Tramitação"** (ícone impressora): aciona `window.print()` restrito a essa seção via CSS de impressão (`@media print`), gerando um extrato real da tabela renderizada — sem novo endpoint, sem PDF novo.
+- Botão **"Imprimir Extrato da Tramitação"**: abre uma janela de impressão do navegador (`window.open` + `print()`) com o extrato montado a partir dos mesmos dados já renderizados na tabela — sem novo endpoint, sem PDF novo, sem chamada ao servidor.
 - Posição: após "Motivo de Análise", como última seção antes das ações de rodapé já existentes (Encaminhar à malha fina / Salvar / Finalizar).
 
 ## 4. Dados e contrato
@@ -130,7 +133,8 @@ Nenhum desses estados bloqueia abrir, salvar ou finalizar a ficha.
 - Renomeação dos botões.
 - Seção Motivo de Análise (campo novo, editável, autosave).
 - Seção Tramitação (tabela + impressão) com dado real já existente.
-- 4 acréscimos no card de Enquadramento por CNAE (pergunta pendente, código LOUOS/TLL pendente, área pública leitura, endereço correto editável).
+- Novo bloco "Confirmações do imóvel" (área pública leitura + endereço correto editável), entre Dados do TVL e Enquadramento por CNAE.
+- 2 acréscimos no card de Enquadramento por CNAE (pergunta pendente, código LOUOS/TLL pendente).
 - Migration em `analysis_records`, ajuste em `PreAnaliseService`, `AnalysisRecordResource`, `AnalysisRecordRequest`, `AnalysisRecordController`.
 
 ### Fora deste ciclo (registrar como pendência em `STATE.md`/`ROADMAP.md`)
@@ -151,7 +155,7 @@ Nenhum desses estados bloqueia abrir, salvar ou finalizar a ficha.
 
 **CA-05** DADO qualquer CNAE da ficha QUANDO exibido ENTÃO aparecem "Pergunta: A atividade será desenvolvida no local?" com resposta "Pendente...", e "Código LOUOS"/"Código TLL" com "Pendente — tabela oficial SEDUR não entregue" — nunca um valor inventado.
 
-**CA-06** DADO um processo com `is_public_area = true` QUANDO abrir a ficha ENTÃO o CNAE exibe "Atividade em área pública?: Sim".
+**CA-06** DADO um processo com `is_public_area = true` QUANDO abrir a ficha ENTÃO o bloco "Confirmações do imóvel" exibe "Atividade está estabelecida em área pública?: Sim".
 
 **CA-07** DADO uma ficha em edição QUANDO o analista marcar "Endereço correto? = Não" e a ficha autosave ENTÃO o valor persiste como `false` e é lido corretamente ao reabrir.
 
