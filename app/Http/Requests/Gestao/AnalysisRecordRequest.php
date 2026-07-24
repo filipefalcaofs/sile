@@ -45,6 +45,9 @@ class AnalysisRecordRequest extends FormRequest
             'parking' => ['sometimes', 'array'],
             'parecer' => ['sometimes', 'nullable', 'string'],
             'is_virtual_office_hq' => ['sometimes', 'nullable', 'boolean'],
+            'analysis_reasons' => ['sometimes', 'array'],
+            'analysis_reasons.*' => ['string'],
+            'address_confirmed' => ['sometimes', 'nullable', 'boolean'],
         ];
     }
 

@@ -87,6 +87,14 @@ class AnalysisRecordService
             $record->is_virtual_office_hq = $data['is_virtual_office_hq'];
         }
 
+        if (array_key_exists('analysis_reasons', $data) && is_array($data['analysis_reasons'])) {
+            $record->analysis_reasons = array_values($data['analysis_reasons']);
+        }
+
+        if (array_key_exists('address_confirmed', $data)) {
+            $record->address_confirmed = $data['address_confirmed'];
+        }
+
         $record->save();
 
         return $record;

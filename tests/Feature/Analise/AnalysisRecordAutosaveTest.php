@@ -148,4 +148,35 @@ class AnalysisRecordAutosaveTest extends TestCase
         // RN-003: a revisão finalizada não é alterada.
         $this->assertSame('Parecer final imutável.', $ficha->fresh()->parecer);
     }
+
+    public function test_autosave_persiste_motivos_de_analise_e_endereco_correto(): void
+    {
+        $ficha = $this->fichaRascunho();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->patchJson("/gestao/processos/{$ficha->viability_request_id}/ficha", [
+                'analysis_reasons' => ['Área zoneamento Semi expresso', 'Áreas - parcelamento'],
+                'address_confirmed' => false,
+            ])
+            ->assertOk();
+
+        $ficha->refresh();
+
+        $this->assertSame(['Área zoneamento Semi expresso', 'Áreas - parcelamento'], $ficha->analysis_reasons);
+        $this->assertFalse($ficha->address_confirmed);
+    }
+
+    public function test_show_expoe_analysis_reasons_vazio_e_address_confirmed_nulo_por_padrao(): void
+    {
+        $ficha = $this->fichaRascunho();
+
+        $response = $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$ficha->viability_request_id}/ficha")
+            ->assertOk();
+
+        $page = $response->viewData('page');
+
+        $this->assertSame([], $page['props']['ficha']['analysis_reasons']);
+        $this->assertNull($page['props']['ficha']['address_confirmed']);
+    }
 }
