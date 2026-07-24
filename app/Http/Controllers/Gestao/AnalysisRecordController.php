@@ -90,6 +90,7 @@ class AnalysisRecordController extends Controller
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest),
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
             'cadastroImobiliario' => $cadastro,
+            'tramitacao' => $this->tramitacao($viabilityRequest),
             // Escritório virtual (T02): flag do gatilho (RN-EV-01), a inscrição e o
             // painel de abrigados quando a solicitação é a SEDE ativa da inscrição.
             'escritorioVirtual' => $this->escritorioVirtual($viabilityRequest, $record),
@@ -269,7 +270,8 @@ class AnalysisRecordController extends Controller
      *   cep: string|null,
      *   ponto_referencia: string|null,
      *   zona: null,
-     *   via: null
+     *   via: null,
+     *   is_public_area: bool|null
      * }
      */
     private function localizacaoDoImovel(ViabilityRequest $request): array
@@ -299,7 +301,35 @@ class AnalysisRecordController extends Controller
             'ponto_referencia' => $pontoReferencia !== '' ? $pontoReferencia : null,
             'zona' => null,
             'via' => null,
+            'is_public_area' => $request->is_public_area,
         ];
+    }
+
+    /**
+     * Tramitação da ficha (paridade com o legado, spec 2026-07-24): uma linha
+     * por transição do eixo operacional (AnalysisStatusStateMachine), com o
+     * setor ATUAL do processo — o modelo não versiona setor por transição, uma
+     * mudança de setor no meio do fluxo não é retroativa nas linhas antigas
+     * (limitação documentada na spec, não bug).
+     *
+     * @return list<array{data: string, setor: string|null, usuario: string|null, status: string, reason: string|null}>
+     */
+    private function tramitacao(ViabilityRequest $request): array
+    {
+        $request->loadMissing('sector');
+
+        return $request->analysisStatusTransitions()
+            ->with('actor')
+            ->orderBy('id')
+            ->get()
+            ->map(fn ($transicao): array => [
+                'data' => $transicao->created_at->toIso8601String(),
+                'setor' => $request->sector?->name,
+                'usuario' => $transicao->actor?->name,
+                'status' => $transicao->to_status->label(),
+                'reason' => $transicao->reason,
+            ])
+            ->all();
     }
 
     /**
