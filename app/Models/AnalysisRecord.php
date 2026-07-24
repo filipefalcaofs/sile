@@ -32,6 +32,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'parking',
     'parecer',
     'is_virtual_office_hq',
+    'analysis_reasons',
+    'address_confirmed',
     'finalized_at',
 ])]
 class AnalysisRecord extends Model
@@ -53,6 +55,8 @@ class AnalysisRecord extends Model
             'conditions' => 'array',
             'parking' => 'array',
             'is_virtual_office_hq' => 'boolean',
+            'analysis_reasons' => 'array',
+            'address_confirmed' => 'boolean',
             'finalized_at' => 'datetime',
         ];
     }
