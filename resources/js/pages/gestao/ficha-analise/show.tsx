@@ -8,7 +8,7 @@ import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
-import { AlertIcon, ArrowRightIcon, CheckCircleIcon, MapPinIcon, TrashIcon } from '@/components/icons';
+import { AlertIcon, ArrowRightIcon, CheckCircleIcon, ChevronDownIcon, MapPinIcon, TrashIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -267,6 +267,55 @@ function formatarDataHora(iso: string | null): string {
 }
 
 /**
+ * Extrato de tramitação real (não é PDF novo nem endpoint novo — spec
+ * 2026-07-24 D7): monta uma janela de impressão do navegador a partir dos
+ * mesmos dados já renderizados na tabela.
+ */
+function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoItem[]) {
+    const janela = window.open('', '_blank', 'width=800,height=600');
+
+    if (!janela) {
+        return;
+    }
+
+    const linhas = itens
+        .map(
+            (item) => `
+        <tr>
+            <td>${formatarDataHora(item.data)}</td>
+            <td>${item.setor ?? '—'}</td>
+            <td>${item.usuario ?? '—'}</td>
+            <td>${item.status}</td>
+        </tr>`,
+        )
+        .join('');
+
+    janela.document.write(`
+        <html>
+            <head>
+                <title>Extrato de tramitação — ${protocolo ?? ''}</title>
+                <style>
+                    body { font-family: sans-serif; padding: 24px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 13px; }
+                    th { background: #f3f4f6; }
+                </style>
+            </head>
+            <body>
+                <h3>Extrato de tramitação — ${protocolo ?? ''}</h3>
+                <table>
+                    <thead><tr><th>Data</th><th>Setor</th><th>Usuário</th><th>Status</th></tr></thead>
+                    <tbody>${linhas}</tbody>
+                </table>
+            </body>
+        </html>
+    `);
+    janela.document.close();
+    janela.focus();
+    janela.print();
+}
+
+/**
  * Centroide aproximado do anel externo do polígono (GeoJSON [lng, lat]) para
  * centralizar o mini-mapa. Devolve null quando não há polígono confiável —
  * nunca uma coordenada inventada (anti-fachada).
@@ -514,6 +563,42 @@ function StatusEscolhido({
                 );
             })}
         </div>
+    );
+}
+
+/** Linha expansível da tabela de Tramitação — revela o `reason`, quando houver. */
+function TramitacaoLinha({ item }: { item: TramitacaoItem }) {
+    const [aberto, setAberto] = useState(false);
+
+    return (
+        <>
+            <tr className="border-b border-gray-100 last:border-0 dark:border-gray-800">
+                <td className="py-2 pr-4 text-gray-500 dark:text-gray-400">{formatarDataHora(item.data)}</td>
+                <td className="py-2 pr-4">{item.setor ?? '—'}</td>
+                <td className="py-2 pr-4">{item.usuario ?? '—'}</td>
+                <td className="py-2 pr-4 font-medium text-gray-800 dark:text-white/90">{item.status}</td>
+                <td className="py-2 text-right">
+                    {item.reason && (
+                        <button
+                            type="button"
+                            onClick={() => setAberto((atual) => !atual)}
+                            aria-label={aberto ? 'Ocultar motivo' : 'Ver motivo'}
+                            aria-expanded={aberto}
+                            className="text-gray-400 transition hover:text-gray-600 dark:hover:text-gray-200"
+                        >
+                            <ChevronDownIcon className={`size-4 transition-transform ${aberto ? 'rotate-180' : ''}`} />
+                        </button>
+                    )}
+                </td>
+            </tr>
+            {aberto && item.reason && (
+                <tr>
+                    <td colSpan={5} className="pb-3 text-theme-xs text-gray-500 dark:text-gray-400">
+                        {item.reason}
+                    </td>
+                </tr>
+            )}
+        </>
     );
 }
 
@@ -1632,6 +1717,50 @@ export default function FichaAnaliseShow({
                                         >
                                             Adicionar
                                         </Button>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Tramitação (paridade com o legado, spec 2026-07-24) */}
+                        <Card>
+                            <CardHeader
+                                title="Tramitação"
+                                description="Histórico do eixo operacional da análise."
+                                actions={
+                                    <Button
+                                        size="xs"
+                                        variant="outline"
+                                        onClick={() => imprimirExtratoTramitacao(processo.protocol_number, tramitacao)}
+                                    >
+                                        Imprimir Extrato da Tramitação
+                                    </Button>
+                                }
+                            />
+                            <CardContent>
+                                {tramitacao.length === 0 ? (
+                                    <EmptyState
+                                        title="Sem tramitação registrada"
+                                        description="O histórico do eixo operacional aparece aqui conforme o processo tramita."
+                                    />
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-theme-sm">
+                                            <thead>
+                                                <tr className="border-b border-gray-200 text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:border-gray-800 dark:text-gray-500">
+                                                    <th className="py-2 pr-4">Data</th>
+                                                    <th className="py-2 pr-4">Setor</th>
+                                                    <th className="py-2 pr-4">Usuário</th>
+                                                    <th className="py-2 pr-4">Status</th>
+                                                    <th className="py-2" />
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {tramitacao.map((item, indice) => (
+                                                    <TramitacaoLinha key={`${item.data}-${indice}`} item={item} />
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 )}
                             </CardContent>

@@ -204,4 +204,43 @@ class FichaUiSmokeTest extends TestCase
             $response->viewData('page')['props']['ficha']['analysis_reasons'],
         );
     }
+
+    public function test_ficha_expoe_tramitacao_ordenada_cronologicamente(): void
+    {
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocol_number' => 'VIA-'.now()->year.'-000203',
+            'protocoled_at' => now(),
+        ]);
+
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+        ]);
+
+        $processo->analysisStatusTransitions()->create([
+            'from_status' => null,
+            'to_status' => 'para_distribuir',
+            'reason' => null,
+            'actor_user_id' => null,
+        ]);
+        $processo->analysisStatusTransitions()->create([
+            'from_status' => 'para_distribuir',
+            'to_status' => 'encaminhado',
+            'reason' => 'Encaminhado ao setor competente.',
+            'actor_user_id' => null,
+        ]);
+
+        $response = $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk();
+
+        $tramitacao = $response->viewData('page')['props']['tramitacao'];
+
+        $this->assertCount(2, $tramitacao);
+        $this->assertSame('Para distribuir', $tramitacao[0]['status']);
+        $this->assertSame('Encaminhado para', $tramitacao[1]['status']);
+        $this->assertSame('Encaminhado ao setor competente.', $tramitacao[1]['reason']);
+    }
 }
