@@ -130,6 +130,8 @@ class AnalysisRecordFinalizeTest extends TestCase
             'viability_request_id' => $request->id,
             'revision' => 1,
             'parecer' => 'Parecer técnico finalizado.',
+            'analysis_reasons' => ['Motivo original'],
+            'address_confirmed' => true,
             'per_cnae' => [
                 ['cnae' => '4712100', 'status_sugerido' => 'deferida', 'status_escolhido' => 'deferida'],
             ],
@@ -145,6 +147,8 @@ class AnalysisRecordFinalizeTest extends TestCase
         $this->assertNull($atual->finalized_at);
         // Copia a base da finalizada para o ajuste.
         $this->assertSame('Parecer técnico finalizado.', $atual->parecer);
+        $this->assertSame(['Motivo original'], $atual->analysis_reasons);
+        $this->assertTrue($atual->address_confirmed);
         $this->assertSame('4712100', $atual->per_cnae[0]['cnae']);
         // A revisão finalizada permanece intacta (append-only).
         $this->assertSame(AnalysisRecordStatus::Finalizada, $finalizada->fresh()->status);

@@ -42,6 +42,8 @@ class AnalysisRecordRevisionDiffTest extends TestCase
             'revision' => 1,
             'parecer' => 'Parecer da revisão 1.',
             'conditions' => ['Manter recuo frontal'],
+            'analysis_reasons' => ['Motivo A'],
+            'address_confirmed' => false,
             'per_cnae' => [
                 ['cnae' => '4712100', 'status_sugerido' => 'deferida', 'status_escolhido' => 'deferida'],
             ],
@@ -52,6 +54,8 @@ class AnalysisRecordRevisionDiffTest extends TestCase
             'revision' => 2,
             'parecer' => 'Parecer revisado.',
             'conditions' => ['Manter recuo frontal'],
+            'analysis_reasons' => ['Motivo A', 'Motivo B'],
+            'address_confirmed' => true,
             'per_cnae' => [
                 ['cnae' => '4712100', 'status_sugerido' => 'deferida', 'status_escolhido' => 'indeferida'],
             ],
@@ -71,6 +75,10 @@ class AnalysisRecordRevisionDiffTest extends TestCase
 
         // As condicionantes NÃO mudaram → não aparecem no diff.
         $this->assertArrayNotHasKey('conditions', $diff);
+        $this->assertArrayHasKey('analysis_reasons', $diff);
+        $this->assertArrayHasKey('address_confirmed', $diff);
+        $this->assertSame(false, $diff['address_confirmed']['de']);
+        $this->assertSame(true, $diff['address_confirmed']['para']);
     }
 
     public function test_endpoint_diff_serve_o_painel_gated_e_auditado(): void

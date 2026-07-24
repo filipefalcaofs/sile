@@ -14,7 +14,7 @@ use App\Models\AnalysisRecord;
 class AnalysisRecordDiff
 {
     /** Campos de topo comparados entre as revisões. */
-    private const CAMPOS_TOPO = ['parecer', 'conditions', 'parking'];
+    private const CAMPOS_TOPO = ['parecer', 'conditions', 'parking', 'analysis_reasons', 'address_confirmed'];
 
     /** Campos comparados por CNAE (espelham a ficha SAPS). */
     private const CAMPOS_PER_CNAE = ['status_sugerido', 'status_escolhido', 'condicionantes', 'justificativa'];

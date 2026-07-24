@@ -266,7 +266,7 @@ function formatarDataHora(iso: string | null): string {
     });
 }
 
-function escapeHtml(valor: string): string {
+export function escapeHtml(valor: string): string {
     return valor
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -284,6 +284,8 @@ function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoIt
     const janela = window.open('', '_blank', 'width=800,height=600');
 
     if (!janela) {
+        window.alert('Não foi possível abrir a janela de impressão. Verifique se o navegador bloqueou o popup e tente novamente.');
+
         return;
     }
 

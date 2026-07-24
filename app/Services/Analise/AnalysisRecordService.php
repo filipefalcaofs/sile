@@ -170,7 +170,9 @@ class AnalysisRecordService
                 'engine_rules_versions' => $ultima->engine_rules_versions,
                 'per_cnae' => $ultima->per_cnae,
                 'conditions' => $ultima->conditions,
+                'analysis_reasons' => $ultima->analysis_reasons,
                 'parking' => $ultima->parking,
+                'address_confirmed' => $ultima->address_confirmed,
                 'parecer' => $ultima->parecer,
                 'finalized_at' => null,
             ]);
