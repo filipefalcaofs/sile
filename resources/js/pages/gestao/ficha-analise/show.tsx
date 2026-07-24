@@ -266,6 +266,15 @@ function formatarDataHora(iso: string | null): string {
     });
 }
 
+function escapeHtml(valor: string): string {
+    return valor
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 /**
  * Extrato de tramitação real (não é PDF novo nem endpoint novo — spec
  * 2026-07-24 D7): monta uma janela de impressão do navegador a partir dos
@@ -282,10 +291,10 @@ function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoIt
         .map(
             (item) => `
         <tr>
-            <td>${formatarDataHora(item.data)}</td>
-            <td>${item.setor ?? '—'}</td>
-            <td>${item.usuario ?? '—'}</td>
-            <td>${item.status}</td>
+            <td>${escapeHtml(formatarDataHora(item.data))}</td>
+            <td>${escapeHtml(item.setor ?? '—')}</td>
+            <td>${escapeHtml(item.usuario ?? '—')}</td>
+            <td>${escapeHtml(item.status)}</td>
         </tr>`,
         )
         .join('');
@@ -293,7 +302,7 @@ function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoIt
     janela.document.write(`
         <html>
             <head>
-                <title>Extrato de tramitação — ${protocolo ?? ''}</title>
+                <title>Extrato de tramitação — ${escapeHtml(protocolo ?? '')}</title>
                 <style>
                     body { font-family: sans-serif; padding: 24px; }
                     table { width: 100%; border-collapse: collapse; }
@@ -302,7 +311,7 @@ function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoIt
                 </style>
             </head>
             <body>
-                <h3>Extrato de tramitação — ${protocolo ?? ''}</h3>
+                <h3>Extrato de tramitação — ${escapeHtml(protocolo ?? '')}</h3>
                 <table>
                     <thead><tr><th>Data</th><th>Setor</th><th>Usuário</th><th>Status</th></tr></thead>
                     <tbody>${linhas}</tbody>
