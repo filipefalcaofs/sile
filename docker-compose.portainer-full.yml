@@ -1,8 +1,12 @@
 # Stack da aplicação SILE — deploy via imagem do GitHub Container Registry.
 #
-# Imagem publicada no Docker Hub (build: ./scripts/portainer-build-push.sh).
-# Alternativa GHCR (GitHub Actions): ghcr.io/filipefalcaofs/sile:latest
-#   — requer registry configurado no Portainer ou pacote público.
+# Fonte da verdade: ghcr.io/filipefalcaofs/sile:latest
+#   - CI: .github/workflows/docker-publish.yml (push em main / feat/**)
+#   - Local: ./scripts/portainer-build-push.sh (publica no GHCR, AMD64)
+#
+# Portainer (GitOps): stack Repository apontando para este compose na branch
+# main, com Auto update + Force pull image. pull_policy: always em todos os
+# serviços que usam a imagem da aplicação.
 
 name: sile-app
 
@@ -123,7 +127,7 @@ services:
 
   queue:
     image: *sile-image
-    pull_policy: missing
+    pull_policy: always
     container_name: sile-queue
     restart: unless-stopped
     command: ['php', 'artisan', 'queue:work', '--sleep=3', '--tries=3', '--max-time=3600']
@@ -138,7 +142,7 @@ services:
 
   scheduler:
     image: *sile-image
-    pull_policy: missing
+    pull_policy: always
     container_name: sile-scheduler
     restart: unless-stopped
     command: ['php', 'artisan', 'schedule:work']

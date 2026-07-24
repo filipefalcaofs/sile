@@ -15,18 +15,18 @@ Ordem: **infra primeiro**, depois **app**.
 
 ## 0. Publicar a imagem Docker (obrigatório antes do primeiro deploy)
 
-O Portainer precisa puxar a imagem da aplicação. Na máquina de desenvolvimento:
+Fonte da verdade: **`ghcr.io/filipefalcaofs/sile:latest`** (GitHub Container Registry).
+
+- **CI (preferido):** push em `main` ou `feat/**` dispara `.github/workflows/docker-publish.yml`.
+- **Local:**
 
 ```bash
-docker login
+echo "$GITHUB_TOKEN" | docker login ghcr.io -u USERNAME --password-stdin
 ./scripts/portainer-build-push.sh
 ```
 
-Isso publica `filipefalcaofs97/sile:latest` no Docker Hub (AMD64).
-
-Alternativa: tornar o pacote `ghcr.io/filipefalcaofs/sile` público no GitHub
-ou cadastrar credenciais GHCR em Portainer → Registries, e ajustar `x-sile-image`
-no compose.
+O pacote GHCR deve estar **público**, ou o Portainer precisa ter o registry
+`ghcr.io` cadastrado (Registries) com um PAT `read:packages`.
 
 ## 1. Build da imagem PostGIS (uma vez no servidor)
 
@@ -59,14 +59,17 @@ REDIS_PORT_HOST=6380
 
 ## 3. Stack sile-app
 
-Portainer → **Stacks** → **Add stack** → **Repository**:
+Portainer → **Stacks** → **Add stack** → **Repository** (não Web editor):
 
 | Campo | Valor |
 |---|---|
 | Name | `sile-app` |
 | Repository URL | `https://github.com/filipefalcaofs/sile.git` |
 | Compose path | `docker-compose.portainer-full.yml` |
-| Branch | `main` |
+| Branch / Reference | `refs/heads/main` |
+| Automatic updates | **On** — intervalo sugerido `5m` |
+| Force pull image | **On** (sempre puxa `ghcr.io/.../sile:latest`) |
+| Force update | Off (só redeploy se o Git/compose ou a imagem mudarem) |
 
 Variáveis de ambiente **obrigatórias**:
 
@@ -94,10 +97,20 @@ php artisan key:generate --show
 
 ## 4. Atualizar após deploy de código
 
-1. Push na branch `main` (dispara build da imagem no GitHub Actions → `ghcr.io/filipefalcaofs/sile:latest`)
-2. Portainer → stack `sile-app` → **Pull and redeploy** com **Re-pull image**
+Com a stack em modo **Repository + Auto update + Force pull image**:
+
+1. Push na branch `main` (ou merge da feature) → GitHub Actions publica `ghcr.io/filipefalcaofs/sile:latest`
+2. Em até ~5 minutos o Portainer reclona o compose do GitHub e **re-puxa** a imagem `:latest`
+
+Atualização manual (se o auto update estiver desligado):
+
+Portainer → stack `sile-app` → **Pull and redeploy** com **Re-pull image**.
 
 O container `seed` roda a cada redeploy quando `SILE_DEMO_DATA=true` (idempotente).
+
+> Se a stack foi criada como **Web editor** (arquivo colado), o Portainer **não**
+> acompanha o GitHub. Recrie como Repository (seção 3) preservando as mesmas
+> variáveis de ambiente, ou converta em Editor → Git repository.
 
 ## 5. Credenciais para a cliente
 
