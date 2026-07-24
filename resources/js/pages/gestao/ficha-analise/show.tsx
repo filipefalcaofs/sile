@@ -1568,6 +1568,74 @@ export default function FichaAnaliseShow({
                                 </p>
                             </CardContent>
                         </Card>
+
+                        {/* Motivo de Análise (paridade com o legado, spec 2026-07-24) */}
+                        <Card>
+                            <CardHeader
+                                title="Motivo de Análise"
+                                description="Anotações do analista sobre o que exigiu análise humana neste processo."
+                            />
+                            <CardContent>
+                                {analysisReasons.length > 0 ? (
+                                    <ul className="space-y-2">
+                                        {analysisReasons.map((motivo, indice) => (
+                                            <li
+                                                key={`${motivo}-${indice}`}
+                                                className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-800"
+                                            >
+                                                <span className="text-theme-sm text-gray-700 dark:text-gray-300">{motivo}</span>
+                                                {editavel && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removerMotivoAnalise(indice)}
+                                                        aria-label={`Remover motivo ${indice + 1}`}
+                                                        className="shrink-0 text-error-500 transition hover:text-error-600"
+                                                    >
+                                                        <TrashIcon className="size-4.5" />
+                                                    </button>
+                                                )}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                        Nenhum motivo registrado.
+                                    </p>
+                                )}
+
+                                {editavel && (
+                                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+                                        <div className="flex-1">
+                                            <Label htmlFor="novo-motivo-analise">Adicionar motivo</Label>
+                                            <Input
+                                                id="novo-motivo-analise"
+                                                type="text"
+                                                value={novoMotivoAnalise}
+                                                placeholder="Descreva o motivo…"
+                                                onChange={(event) => setNovoMotivoAnalise(event.target.value)}
+                                                onKeyDown={(event) => {
+                                                    if (event.key === 'Enter') {
+                                                        event.preventDefault();
+                                                        adicionarMotivoAnalise(novoMotivoAnalise);
+                                                        setNovoMotivoAnalise('');
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => {
+                                                adicionarMotivoAnalise(novoMotivoAnalise);
+                                                setNovoMotivoAnalise('');
+                                            }}
+                                        >
+                                            Adicionar
+                                        </Button>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
                     </div>
 
                     {/* Coluna lateral: abrigados, precedentes, ações (mapa/localização

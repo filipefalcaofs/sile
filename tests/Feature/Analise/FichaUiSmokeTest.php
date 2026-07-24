@@ -179,4 +179,29 @@ class FichaUiSmokeTest extends TestCase
 
         $this->assertSame([], $response->viewData('page')['props']['tramitacao']);
     }
+
+    public function test_ficha_expoe_analysis_reasons_preenchidos_para_a_secao_motivo_de_analise(): void
+    {
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocol_number' => 'VIA-'.now()->year.'-000202',
+            'protocoled_at' => now(),
+        ]);
+
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+            'analysis_reasons' => ['Área zoneamento Semi expresso', 'Tipo Espaço - Casa'],
+        ]);
+
+        $response = $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk();
+
+        $this->assertSame(
+            ['Área zoneamento Semi expresso', 'Tipo Espaço - Casa'],
+            $response->viewData('page')['props']['ficha']['analysis_reasons'],
+        );
+    }
 }
