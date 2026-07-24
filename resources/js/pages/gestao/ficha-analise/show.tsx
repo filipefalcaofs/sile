@@ -1593,10 +1593,10 @@ export default function FichaAnaliseShow({
                                     {editavel ? (
                                         <>
                                             <Button onClick={salvarRascunho} variant="outline" size="sm">
-                                                Salvar rascunho
+                                                Salvar Ficha
                                             </Button>
                                             <Button onClick={() => setShowFinalizar(true)} size="sm">
-                                                Finalizar ficha
+                                                Finalizar Ficha
                                             </Button>
                                         </>
                                     ) : (
