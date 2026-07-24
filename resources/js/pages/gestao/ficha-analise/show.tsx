@@ -31,6 +31,8 @@ interface PerCnae {
     fluxo?: string | null;
     grupo_uso?: string | null;
     valor_tll?: number | string | null;
+    codigo_louos?: string | null;
+    codigo_tll?: string | null;
     gatilhos?: string[] | null;
     fundamentacao?: string[] | null;
     condicionantes?: string[] | null;
@@ -56,6 +58,8 @@ interface Ficha {
     parking: Parking;
     parecer: string | null;
     is_virtual_office_hq: boolean | null;
+    analysis_reasons: string[];
+    address_confirmed: boolean | null;
     analyst: string | null;
     finalized_at: string | null;
     updated_at: string | null;
@@ -86,6 +90,7 @@ interface Localizacao {
     ponto_referencia: string | null;
     zona: string | null;
     via: string | null;
+    is_public_area: boolean | null;
 }
 
 interface DadosTvl {
@@ -116,6 +121,14 @@ interface PrecedenteImovel {
     decided_at: string | null;
     service_type: string | null;
     analyst: string | null;
+}
+
+interface TramitacaoItem {
+    data: string;
+    setor: string | null;
+    usuario: string | null;
+    status: string;
+    reason: string | null;
 }
 
 interface CnaeZona {
@@ -194,6 +207,7 @@ interface FichaAnaliseShowProps {
     localizacao?: Localizacao;
     dadosTvl: DadosTvl;
     cadastroImobiliario: CadastroImobiliario;
+    tramitacao: TramitacaoItem[];
     escritorioVirtual: EscritorioVirtual;
     textosPadrao: TextoPadrao[];
     autosaveDebounceMs: number;
@@ -509,6 +523,7 @@ export default function FichaAnaliseShow({
     localizacao,
     dadosTvl,
     cadastroImobiliario,
+    tramitacao,
     escritorioVirtual,
     textosPadrao,
     autosaveDebounceMs,
@@ -526,6 +541,9 @@ export default function FichaAnaliseShow({
     const [parking, setParking] = useState<Parking>(() => ficha.parking ?? {});
     const [sedeEscritorioVirtual, setSedeEscritorioVirtual] = useState<boolean>(() => ficha.is_virtual_office_hq ?? false);
     const [novaCondicao, setNovaCondicao] = useState('');
+    const [analysisReasons, setAnalysisReasons] = useState<string[]>(() => ficha.analysis_reasons ?? []);
+    const [addressConfirmed, setAddressConfirmed] = useState<boolean | null>(() => ficha.address_confirmed ?? null);
+    const [novoMotivoAnalise, setNovoMotivoAnalise] = useState('');
     const [saveState, setSaveState] = useState<'idle' | 'salvando' | 'salvo' | 'erro'>('idle');
 
     const autosave = useHttp<{
@@ -534,7 +552,17 @@ export default function FichaAnaliseShow({
         parking: Parking;
         parecer: string | null;
         is_virtual_office_hq: boolean;
-    }>({ per_cnae: [], conditions: [], parking: {}, parecer: null, is_virtual_office_hq: false });
+        analysis_reasons: string[];
+        address_confirmed: boolean | null;
+    }>({
+        per_cnae: [],
+        conditions: [],
+        parking: {},
+        parecer: null,
+        is_virtual_office_hq: false,
+        analysis_reasons: [],
+        address_confirmed: null,
+    });
 
     const acao = useHttp<Record<string, never>>({});
     const tvl = useHttp<Record<string, never>, { download_url?: string; url?: string }>({});
@@ -590,8 +618,10 @@ export default function FichaAnaliseShow({
             parking,
             parecer: parecer.trim() === '' ? null : parecer,
             is_virtual_office_hq: sedeEscritorioVirtual,
+            analysis_reasons: analysisReasons,
+            address_confirmed: addressConfirmed,
         }),
-        [perCnae, conditions, parking, parecer, sedeEscritorioVirtual],
+        [perCnae, conditions, parking, parecer, sedeEscritorioVirtual, analysisReasons, addressConfirmed],
     );
 
     const salvarRascunho = useCallback(() => {
@@ -630,7 +660,7 @@ export default function FichaAnaliseShow({
 
         return () => window.clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [perCnae, conditions, parecer, parking, sedeEscritorioVirtual]);
+    }, [perCnae, conditions, parecer, parking, sedeEscritorioVirtual, analysisReasons, addressConfirmed]);
 
     useEffect(() => {
         precedentes.get(`/gestao/processos/${processo.id}/precedentes`, {
@@ -661,6 +691,20 @@ export default function FichaAnaliseShow({
 
     function removerCondicao(indice: number) {
         setConditions((atual) => atual.filter((_, i) => i !== indice));
+    }
+
+    function adicionarMotivoAnalise(texto: string) {
+        const limpo = texto.trim();
+
+        if (limpo === '') {
+            return;
+        }
+
+        setAnalysisReasons((atual) => [...atual, limpo]);
+    }
+
+    function removerMotivoAnalise(indice: number) {
+        setAnalysisReasons((atual) => atual.filter((_, i) => i !== indice));
     }
 
     function inserirTextoPadrao(conteudo: string) {
