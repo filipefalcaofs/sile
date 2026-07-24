@@ -1,7 +1,7 @@
 # Ficha de análise — paridade completa com o legado (SAPS) — design
 
 **Data:** 2026-07-24
-**Status:** Aprovado — aguardando plano de implementação
+**Status:** Implementado
 **Origem:** Prints SAPS/Salvador Simplifica v5.0 (Ficha de Análise) enviados pelo usuário
 **Relacionado:** HU-135 (ficha), HU-019/HU-042/HU-048 (condicionante-pergunta), HU-062 (imóvel/área pública), HU-015/HU-038 (Quadro 7 LOUOS/TLL), HU-080/081 (distribuição/caixa do setor), design anterior `2026-07-22-ficha-analise-layout-cadastro-iptu-design.md`
 
