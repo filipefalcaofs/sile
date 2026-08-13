@@ -34,8 +34,6 @@ use App\Http\Controllers\Gestao\ProcessoDecisaoController;
 use App\Http\Controllers\Gestao\ProcessoPendenciaController;
 use App\Http\Controllers\Gestao\RelatorioController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
-use App\Http\Controllers\Gestao\RiscoCondicionanteController;
-use App\Http\Controllers\Gestao\RiscoController;
 use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\SectorController;
 use App\Http\Controllers\Gestao\StandardTextController;
@@ -183,15 +181,22 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('tempo-emissao-tvl', [RelatorioController::class, 'tempoEmissaoTvl'])->name('tempo-emissao-tvl');
         });
 
-        // Consulta granular separada da manutenção (HU-011 CA-04)
+        // Ficha única do CNAE: dados + classificação de risco municipal +
+        // perguntas de condicionante sanitária, tudo na mesma tela. Consulta
+        // granular separada da manutenção (HU-011 CA-04).
         Route::middleware('permission:consultar-cnaes')->group(function () {
             Route::get('cnaes', [CnaeController::class, 'index'])->name('cnaes.index');
+            Route::get('cnaes/{cnae}/editar', [CnaeController::class, 'edit'])->name('cnaes.edit');
         });
 
         Route::middleware('permission:manter-cnaes')->group(function () {
+            Route::get('cnaes/criar', [CnaeController::class, 'create'])->name('cnaes.create');
             Route::post('cnaes', [CnaeController::class, 'store'])->name('cnaes.store');
             Route::put('cnaes/{cnae}', [CnaeController::class, 'update'])->name('cnaes.update');
             Route::delete('cnaes/{cnae}', [CnaeController::class, 'destroy'])->name('cnaes.destroy');
+            Route::post('cnaes/{cnae}/condicionantes', [CnaeController::class, 'storeCondicionante'])->name('cnaes.condicionantes.store');
+            Route::put('cnaes/{cnae}/condicionantes/{condicionante}', [CnaeController::class, 'updateCondicionante'])->name('cnaes.condicionantes.update');
+            Route::delete('cnaes/{cnae}/condicionantes/{condicionante}', [CnaeController::class, 'destroyCondicionante'])->name('cnaes.condicionantes.destroy');
         });
 
         Route::middleware('permission:manter-usuarios')->group(function () {
@@ -226,23 +231,6 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('geocodificar', GeocodeController::class)->middleware('throttle:geocoding')->name('geocodificar');
             Route::post('identificar', [TerritoryController::class, 'identify'])->name('identificar');
             Route::post('validar-localizacao', [TerritoryController::class, 'validateLocation'])->name('validar-localizacao');
-        });
-
-        // Classificação de risco (HU-019/HU-020/HU-052/HU-053): a consulta da
-        // tabela vigente (analista/gestor/admin) é separada da manutenção
-        // versionada e do CRUD de condicionantes (admin). Gate cross-guard via
-        // permission: (PADRÃO 04-03). Atualizar publica NOVA versão (4-olhos),
-        // nunca edição destrutiva da vigente.
-        Route::middleware('permission:consultar-risco')->prefix('risco')->name('risco.')->group(function () {
-            Route::get('/', [RiscoController::class, 'index'])->name('index');
-            Route::get('condicionantes', [RiscoCondicionanteController::class, 'index'])->name('condicionantes.index');
-        });
-
-        Route::middleware('permission:manter-risco')->prefix('risco')->name('risco.')->group(function () {
-            Route::put('publicar', [RiscoController::class, 'publish'])->name('publicar');
-            Route::post('condicionantes', [RiscoCondicionanteController::class, 'store'])->name('condicionantes.store');
-            Route::put('condicionantes/{condicionante}', [RiscoCondicionanteController::class, 'update'])->name('condicionantes.update');
-            Route::delete('condicionantes/{condicionante}', [RiscoCondicionanteController::class, 'destroy'])->name('condicionantes.destroy');
         });
 
         // Quadros da LOUOS (HU-015..018/HU-046): a consulta da versão vigente dos
