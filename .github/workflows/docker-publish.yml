@@ -29,6 +29,12 @@ jobs:
       - name: Configura Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Lê versão e revisão
+        id: meta
+        run: |
+          echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+          echo "revision=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
       - name: Build e push para GHCR
         uses: docker/build-push-action@v6
         with:
@@ -36,5 +42,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/filipefalcaofs/sile:latest
+          build-args: |
+            APP_VERSION=${{ steps.meta.outputs.version }}
+            APP_REVISION=${{ steps.meta.outputs.revision }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

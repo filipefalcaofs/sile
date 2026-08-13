@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Support\Settings;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -209,5 +210,20 @@ class GestaoLoginTest extends TestCase
         $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($cidadao)->get('/gestao/login')->assertOk();
+    }
+
+    public function test_login_interno_compartilha_versao_e_revisao_da_aplicacao(): void
+    {
+        config([
+            'app.version' => '9.9.9',
+            'app.revision' => 'abc1234',
+        ]);
+
+        $this->get('/gestao/login')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('auth/gestao-login')
+                ->where('appVersion', '9.9.9')
+                ->where('appRevision', 'abc1234'));
     }
 }

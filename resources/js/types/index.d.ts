@@ -14,4 +14,6 @@ export interface SharedProps extends PageProps {
         status?: string;
         error?: string | null;
     };
+    appVersion: string;
+    appRevision: string;
 }

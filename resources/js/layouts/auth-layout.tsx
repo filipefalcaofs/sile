@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { AppVersion } from '@/components/app/app-version';
 import Logo, { LogoMark } from '@/components/app/logo';
 import { CheckCircleIcon } from '@/components/icons';
 import { ThemeProvider } from '@/contexts/theme-context';
@@ -133,6 +134,9 @@ export default function AuthLayout({ title, subtitle, icon, children }: AuthLayo
                                 </div>
                                 {children}
                             </div>
+                            <p className="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
+                                <AppVersion />
+                            </p>
                         </div>
                     </div>
                     <BrandPanel />

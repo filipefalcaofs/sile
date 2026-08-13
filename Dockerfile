@@ -60,6 +60,11 @@ RUN mkdir -p storage/framework/views \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
+ARG APP_VERSION=
+ARG APP_REVISION=
+ENV APP_VERSION=${APP_VERSION}
+ENV APP_REVISION=${APP_REVISION}
+
 EXPOSE 8000
 
 ENTRYPOINT ["/entrypoint.sh"]

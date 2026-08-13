@@ -56,6 +56,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Versão da aplicação
+    |--------------------------------------------------------------------------
+    |
+    | Número semver (arquivo VERSION) e revisão do build (SHA curto). No
+    | Docker, ambos são injetados como ENV no build da imagem para o login
+    | mostrar exatamente o que está no ar.
+    |
+    */
+
+    'version' => env('APP_VERSION') ?: (is_file(base_path('VERSION'))
+        ? trim((string) file_get_contents(base_path('VERSION')))
+        : '0.0.0'),
+
+    'revision' => env('APP_REVISION') ?: 'dev',
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

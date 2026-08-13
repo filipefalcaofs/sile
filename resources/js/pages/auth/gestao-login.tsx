@@ -1,6 +1,7 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { KeyboardEvent } from 'react';
+import { AppVersion } from '@/components/app/app-version';
 import { LogoMark } from '@/components/app/logo';
 import { ArrowRightIcon, EyeCloseIcon, EyeIcon } from '@/components/icons';
 import type { SharedProps } from '@/types';
@@ -338,7 +339,7 @@ export default function GestaoLogin({ status }: { status?: string }) {
                     className={`${monoFont} mx-auto flex w-full max-w-[400px] flex-wrap justify-between gap-3 pt-6 text-[10px] leading-[1.7] font-medium tracking-[0.07em] text-[oklch(50%_0.02_250)] uppercase`}
                 >
                     <span>SEDUR · SIMPLIFICA</span>
-                    <span>salvador.ba.gov.br</span>
+                    <AppVersion className="normal-case tracking-[0.04em]" />
                 </div>
             </section>
         </main>
