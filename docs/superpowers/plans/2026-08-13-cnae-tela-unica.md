@@ -1602,6 +1602,15 @@ function CondicionanteModal({
         texto_parecer: condicionante?.texto_parecer ?? '',
     });
 
+    // O payload enviado ao servidor (via transform, abaixo) aninha
+    // resposta_gatilho/reclassifica_para/fundamento dentro de
+    // regra_reclassificacao — o Laravel devolve erro de validação nessa
+    // chave aninhada (`regra_reclassificacao.reclassifica_para`), que não
+    // existe no tipo local do useForm (campos soltos). Sem esse cast, o
+    // acesso a essa chave não compila: FormDataErrors<T> só conhece as
+    // chaves do T local, nunca as do payload pós-transform.
+    const serverErrors = errors as Record<string, string | undefined>;
+
     function submit(event: FormEvent) {
         event.preventDefault();
 
@@ -1679,9 +1688,9 @@ function CondicionanteModal({
                             placeholder="Análise técnica (sem reclassificação automática)"
                             options={niveisReclassificacao}
                         />
-                        {errors['regra_reclassificacao.reclassifica_para'] && (
+                        {serverErrors['regra_reclassificacao.reclassifica_para'] && (
                             <p className="mt-1.5 text-theme-xs text-error-500">
-                                {errors['regra_reclassificacao.reclassifica_para']}
+                                {serverErrors['regra_reclassificacao.reclassifica_para']}
                             </p>
                         )}
                     </div>
