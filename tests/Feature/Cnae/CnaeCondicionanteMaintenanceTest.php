@@ -114,6 +114,23 @@ class CnaeCondicionanteMaintenanceTest extends TestCase
         $this->assertNotNull($cnaeB);
     }
 
+    public function test_exclusao_de_pergunta_de_outro_cnae_e_bloqueada(): void
+    {
+        $versao = RuleVersion::factory()->create(['domain' => RuleDomain::RiscoSanitario]);
+        $cnaeA = Cnae::factory()->create(['code' => '0111301']);
+        Cnae::factory()->create(['code' => '9999999']);
+        $condicionante = RiskCondicionante::factory()->create([
+            'rule_version_id' => $versao->id,
+            'cnae_code' => '9999999',
+        ]);
+
+        $this->actingAs($this->admin(), 'gestao')
+            ->delete("/gestao/cnaes/{$cnaeA->id}/condicionantes/{$condicionante->id}")
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('risk_condicionantes', ['id' => $condicionante->id]);
+    }
+
     public function test_analista_nao_mantem_condicionantes(): void
     {
         RuleVersion::factory()->create(['domain' => RuleDomain::RiscoSanitario]);
