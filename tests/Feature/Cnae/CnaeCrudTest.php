@@ -271,4 +271,10 @@ class CnaeCrudTest extends TestCase
             'risco_municipal' => 'alto',
         ]);
     }
+
+    public function test_permissoes_de_risco_nao_existem_mais(): void
+    {
+        $this->assertDatabaseMissing('permissions', ['name' => 'consultar-risco']);
+        $this->assertDatabaseMissing('permissions', ['name' => 'manter-risco']);
+    }
 }

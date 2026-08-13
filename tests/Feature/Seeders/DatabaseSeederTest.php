@@ -45,7 +45,8 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
 
         $this->assertSame(4, Role::query()->count());
-        // 32 permissões (HU-013): as 19 base + as 5 da análise técnica
+        // 30 permissões (HU-013): as 17 base (sem consultar-risco/manter-risco,
+        // consolidadas em consultar-cnaes/manter-cnaes) + as 5 da análise técnica
         // (analisar-processos, distribuir-processos, emitir-tvl,
         // encaminhar-malha-fina, manter-setores) + as 3 de auditoria e
         // compliance (consultar-auditoria, monitorar-lgpd, gerenciar-alertas-abuso)
@@ -53,7 +54,7 @@ class DatabaseSeederTest extends TestCase
         // + a de configuração de e-mail (manter-config-email) + a de
         // configuração de IA (manter-config-ia — Fase 14 Onda 0) + a de envio
         // manual à análise (enviar-tvl-analise — tela T06 EV).
-        $this->assertSame(32, Permission::query()->count());
+        $this->assertSame(30, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
         // 95 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
