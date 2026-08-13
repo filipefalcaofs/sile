@@ -94,6 +94,7 @@ class CnaeCrudTest extends TestCase
     public function test_analista_consulta_mas_nao_mantem(): void
     {
         $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $cnae = Cnae::factory()->create();
 
         $this->actingAs($analista, 'gestao')
             ->get('/gestao/cnaes')
@@ -101,6 +102,10 @@ class CnaeCrudTest extends TestCase
 
         $this->actingAs($analista, 'gestao')
             ->post('/gestao/cnaes', $this->validPayload())
+            ->assertForbidden();
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/cnaes/{$cnae->id}/editar")
             ->assertForbidden();
 
         $this->assertDatabaseHas('activity_log', [

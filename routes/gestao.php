@@ -183,15 +183,17 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
 
         // Ficha única do CNAE: dados + classificação de risco municipal +
         // perguntas de condicionante sanitária, tudo na mesma tela. Consulta
-        // granular separada da manutenção (HU-011 CA-04).
+        // granular (consultar-cnaes) só vê a listagem; abrir a ficha de edição
+        // (mesmo em modo leitura) e qualquer escrita exigem manter-cnaes — o
+        // frontend não tem modo somente-leitura para a ficha (HU-011 CA-04).
         Route::middleware('permission:consultar-cnaes')->group(function () {
             Route::get('cnaes', [CnaeController::class, 'index'])->name('cnaes.index');
-            Route::get('cnaes/{cnae}/editar', [CnaeController::class, 'edit'])->name('cnaes.edit');
         });
 
         Route::middleware('permission:manter-cnaes')->group(function () {
             Route::get('cnaes/criar', [CnaeController::class, 'create'])->name('cnaes.create');
             Route::post('cnaes', [CnaeController::class, 'store'])->name('cnaes.store');
+            Route::get('cnaes/{cnae}/editar', [CnaeController::class, 'edit'])->name('cnaes.edit');
             Route::put('cnaes/{cnae}', [CnaeController::class, 'update'])->name('cnaes.update');
             Route::put('cnaes/{cnae}/situacao', [CnaeController::class, 'updateSituacao'])->name('cnaes.situacao.update');
             Route::delete('cnaes/{cnae}', [CnaeController::class, 'destroy'])->name('cnaes.destroy');
