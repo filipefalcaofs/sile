@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * Cadastro de uma condicionante-pergunta de risco (HU-019 RN-004). A
- * autorização é o middleware permission:manter-risco da rota. A condicionante
+ * autorização é o middleware permission:manter-cnaes da rota. A condicionante
  * opera como pergunta booleana com regra de reclassificação opcional: quando a
  * resposta == resposta_gatilho, reclassifica o risco para reclassifica_para
  * (baixo/medio/alto) — null mantém indeterminado (motor encaminha à análise).
