@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * vem do CnaeImportService (sem model events); o CRUD manual é auditado
  * automaticamente via HasAuditoria (CA-02).
  */
-#[Fillable(['code', 'description', 'section_code', 'section_description', 'division_code', 'division_description', 'group_code', 'group_description', 'class_code', 'class_description', 'active'])]
+#[Fillable(['code', 'description', 'section_code', 'section_description', 'division_code', 'division_description', 'group_code', 'group_description', 'class_code', 'class_description', 'active', 'exige_rt', 'exige_rt_se_alto', 'exige_fator_multiplicador', 'exige_detalhamento_multiplicador'])]
 class Cnae extends Model
 {
     use HasAuditoria;
@@ -31,6 +31,10 @@ class Cnae extends Model
     {
         return [
             'active' => 'boolean',
+            'exige_rt' => 'boolean',
+            'exige_rt_se_alto' => 'boolean',
+            'exige_fator_multiplicador' => 'boolean',
+            'exige_detalhamento_multiplicador' => 'boolean',
         ];
     }
 
