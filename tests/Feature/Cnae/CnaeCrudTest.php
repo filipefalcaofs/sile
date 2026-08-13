@@ -5,6 +5,7 @@ namespace Tests\Feature\Cnae;
 use App\Models\Activity;
 use App\Models\Cnae;
 use App\Models\Company;
+use App\Models\RuleVersion;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -242,5 +243,32 @@ class CnaeCrudTest extends TestCase
             ->first();
 
         $this->assertNull($activity, 'Não deveria haver activity de exclusão para CNAE vinculado');
+    }
+
+    public function test_criar_cnae_grava_classificacao_de_risco_municipal_direto(): void
+    {
+        RuleVersion::factory()->create();
+
+        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($admin, 'gestao')
+            ->post('/gestao/cnaes', [
+                ...$this->validPayload(),
+                'risco_municipal' => 'alto',
+                'exige_rt' => true,
+                'exige_rt_se_alto' => false,
+                'exige_fator_multiplicador' => false,
+                'exige_detalhamento_multiplicador' => false,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $cnae = Cnae::where('code', '9900800')->firstOrFail();
+
+        $this->assertTrue($cnae->exige_rt);
+        $this->assertDatabaseHas('risk_classifications', [
+            'cnae_code' => '9900800',
+            'risco_municipal' => 'alto',
+        ]);
     }
 }
