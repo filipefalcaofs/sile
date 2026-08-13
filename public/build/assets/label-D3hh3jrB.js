@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-ChkcPB5r.js";var t=e();function n({htmlFor:e,children:n,className:r=``,required:i=!1}){return(0,t.jsxs)(`label`,{htmlFor:e,className:`mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400 ${r}`.trim(),children:[n,i&&(0,t.jsx)(`span`,{className:`ml-0.5 text-error-500`,"aria-hidden":`true`,children:`*`})]})}export{n as t};

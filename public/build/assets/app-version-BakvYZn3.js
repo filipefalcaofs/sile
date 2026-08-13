@@ -1,0 +1,1 @@
+import{s as e}from"./app-BELN6tJO.js";import{t}from"./jsx-runtime-DbeMax45.js";var n=t();function r(e,t){return t&&t!==`dev`?`v${e} · ${t}`:`v${e}`}function i({className:t}){let{appVersion:i,appRevision:a}=e().props;return(0,n.jsx)(`span`,{className:t,title:`Versão desta instância`,children:r(i,a)})}export{i as t};
