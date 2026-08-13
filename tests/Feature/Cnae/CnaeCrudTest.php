@@ -5,26 +5,31 @@ namespace Tests\Feature\Cnae;
 use App\Models\Activity;
 use App\Models\Cnae;
 use App\Models\Company;
+use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CnaeCrudTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(RolesAndPermissionsSeeder::class);
+
+        // Grau de risco municipal é salvo direto na versão vigente — sem uma
+        // versão do domínio, store()/update() bloqueiam com flash.error.
+        RuleVersion::factory()->create();
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
     private function validPayload(): array
     {
@@ -39,6 +44,11 @@ class CnaeCrudTest extends TestCase
             'group_description' => 'Organismos internacionais e outras instituições extraterritoriais',
             'class_code' => '99.00-8',
             'class_description' => 'Organismos internacionais e outras instituições extraterritoriais',
+            'risco_municipal' => 'baixo_a',
+            'exige_rt' => false,
+            'exige_rt_se_alto' => false,
+            'exige_fator_multiplicador' => false,
+            'exige_detalhamento_multiplicador' => false,
         ];
     }
 
@@ -115,6 +125,18 @@ class CnaeCrudTest extends TestCase
         ]);
     }
 
+    public function test_pagina_de_criacao_carrega_niveis_municipais(): void
+    {
+        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/cnaes/criar')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/cnaes/criar')
+                ->has('niveisMunicipais', 3));
+    }
+
     public function test_cria_cnae_manual_normalizando_codigo(): void
     {
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
@@ -126,6 +148,28 @@ class CnaeCrudTest extends TestCase
         $this->assertDatabaseHas('cnaes', [
             'code' => '9900800',
             'description' => 'Organismos internacionais e outras instituições extraterritoriais',
+        ]);
+    }
+
+    public function test_criar_cnae_grava_classificacao_de_risco_municipal_direto(): void
+    {
+        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($admin, 'gestao')
+            ->post('/gestao/cnaes', [
+                ...$this->validPayload(),
+                'risco_municipal' => 'alto',
+                'exige_rt' => true,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $cnae = Cnae::where('code', '9900800')->firstOrFail();
+
+        $this->assertTrue($cnae->exige_rt);
+        $this->assertDatabaseHas('risk_classifications', [
+            'cnae_code' => '9900800',
+            'risco_municipal' => 'alto',
         ]);
     }
 
@@ -146,6 +190,35 @@ class CnaeCrudTest extends TestCase
         $this->assertSame(1, Cnae::count());
     }
 
+    public function test_pagina_de_edicao_carrega_classificacao_e_perguntas_vigentes(): void
+    {
+        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+        $cnae = Cnae::factory()->create(['code' => '0111301']);
+
+        $municipal = RuleVersion::vigente(\App\Enums\RuleDomain::RiscoMunicipal)->firstOrFail();
+        RiskClassification::factory()->create([
+            'rule_version_id' => $municipal->id,
+            'cnae_code' => '0111301',
+            'risco_municipal' => 'alto',
+        ]);
+
+        $sanitaria = RuleVersion::factory()->create(['domain' => \App\Enums\RuleDomain::RiscoSanitario]);
+        \App\Models\RiskCondicionante::factory()->create([
+            'rule_version_id' => $sanitaria->id,
+            'cnae_code' => '0111301',
+            'pergunta' => 'O produto é artesanal?',
+        ]);
+
+        $this->actingAs($admin, 'gestao')
+            ->get("/gestao/cnaes/{$cnae->id}/editar")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/cnaes/editar')
+                ->where('cnae.risco_municipal', 'alto')
+                ->has('condicionantes', 1)
+                ->where('condicionantes.0.pergunta', 'O produto é artesanal?'));
+    }
+
     public function test_edicao_atualiza_dados_mas_nunca_o_codigo(): void
     {
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
@@ -156,6 +229,11 @@ class CnaeCrudTest extends TestCase
                 'code' => '9999999',
                 'description' => 'Denominação ajustada',
                 'active' => true,
+                'risco_municipal' => 'baixo_a',
+                'exige_rt' => false,
+                'exige_rt_se_alto' => false,
+                'exige_fator_multiplicador' => false,
+                'exige_detalhamento_multiplicador' => false,
             ])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
@@ -164,6 +242,31 @@ class CnaeCrudTest extends TestCase
 
         $this->assertSame('0111301', $cnae->code);
         $this->assertSame('Denominação ajustada', $cnae->description);
+    }
+
+    public function test_edicao_atualiza_grau_de_risco_sem_pedir_quatro_olhos(): void
+    {
+        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+        $cnae = Cnae::factory()->create(['code' => '0111301']);
+
+        $this->actingAs($admin, 'gestao')
+            ->put("/gestao/cnaes/{$cnae->id}", [
+                'description' => $cnae->description,
+                'active' => true,
+                'risco_municipal' => 'alto',
+                'exige_rt' => true,
+                'exige_rt_se_alto' => false,
+                'exige_fator_multiplicador' => false,
+                'exige_detalhamento_multiplicador' => false,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('risk_classifications', [
+            'cnae_code' => '0111301',
+            'risco_municipal' => 'alto',
+        ]);
+        $this->assertTrue($cnae->refresh()->exige_rt);
     }
 
     public function test_desativacao_logica_preserva_o_registro(): void
@@ -175,6 +278,11 @@ class CnaeCrudTest extends TestCase
             ->put("/gestao/cnaes/{$cnae->id}", [
                 'description' => $cnae->description,
                 'active' => false,
+                'risco_municipal' => 'baixo_a',
+                'exige_rt' => false,
+                'exige_rt_se_alto' => false,
+                'exige_fator_multiplicador' => false,
+                'exige_detalhamento_multiplicador' => false,
             ])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
@@ -192,6 +300,11 @@ class CnaeCrudTest extends TestCase
             ->put("/gestao/cnaes/{$cnae->id}", [
                 'description' => 'Denominação auditável',
                 'active' => true,
+                'risco_municipal' => 'baixo_a',
+                'exige_rt' => false,
+                'exige_rt_se_alto' => false,
+                'exige_fator_multiplicador' => false,
+                'exige_detalhamento_multiplicador' => false,
             ])
             ->assertRedirect();
 
@@ -245,36 +358,17 @@ class CnaeCrudTest extends TestCase
         $this->assertNull($activity, 'Não deveria haver activity de exclusão para CNAE vinculado');
     }
 
-    public function test_criar_cnae_grava_classificacao_de_risco_municipal_direto(): void
-    {
-        RuleVersion::factory()->create();
-
-        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
-
-        $this->actingAs($admin, 'gestao')
-            ->post('/gestao/cnaes', [
-                ...$this->validPayload(),
-                'risco_municipal' => 'alto',
-                'exige_rt' => true,
-                'exige_rt_se_alto' => false,
-                'exige_fator_multiplicador' => false,
-                'exige_detalhamento_multiplicador' => false,
-            ])
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
-
-        $cnae = Cnae::where('code', '9900800')->firstOrFail();
-
-        $this->assertTrue($cnae->exige_rt);
-        $this->assertDatabaseHas('risk_classifications', [
-            'cnae_code' => '9900800',
-            'risco_municipal' => 'alto',
-        ]);
-    }
-
     public function test_permissoes_de_risco_nao_existem_mais(): void
     {
         $this->assertDatabaseMissing('permissions', ['name' => 'consultar-risco']);
         $this->assertDatabaseMissing('permissions', ['name' => 'manter-risco']);
+    }
+
+    public function test_rotas_de_risco_standalone_nao_existem_mais(): void
+    {
+        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($admin, 'gestao')->get('/gestao/risco')->assertNotFound();
+        $this->actingAs($admin, 'gestao')->get('/gestao/risco/condicionantes')->assertNotFound();
     }
 }

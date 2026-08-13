@@ -94,18 +94,6 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('manter-tipos-servico'),
                 },
                 {
-                    name: 'Classificação de risco',
-                    href: '/gestao/risco',
-                    icon: <ShieldIcon />,
-                    visible: auth.permissions.includes('consultar-risco'),
-                },
-                {
-                    name: 'Condicionantes',
-                    href: '/gestao/risco/condicionantes',
-                    icon: <ListIcon />,
-                    visible: auth.permissions.includes('manter-risco'),
-                },
-                {
                     name: 'Quadros LOUOS',
                     href: '/gestao/louos',
                     icon: <FileIcon />,
