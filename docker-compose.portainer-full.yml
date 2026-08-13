@@ -1,16 +1,25 @@
-# Stack da aplicação SILE — deploy via imagem do GitHub Container Registry.
+# Stack da aplicação SILE — Portainer clona a branch main e faz o build no host.
 #
-# Fonte da verdade: ghcr.io/filipefalcaofs/sile:latest
-#   - CI: .github/workflows/docker-publish.yml (push em main / feat/**)
-#   - Local: ./scripts/portainer-build-push.sh (publica no GHCR, AMD64)
+# Fluxo:
+#   git push em main (GitLab Softwell) → auto-update (~5 min) → docker compose build + up
 #
-# Portainer (GitOps): stack Repository apontando para este compose na branch
-# main, com Auto update + Force pull image. pull_policy: always em todos os
-# serviços que usam a imagem da aplicação.
+# A imagem NÃO vem do GHCR. Tag local: sile:git
+# pull_policy: build obriga rebuild quando o Git muda (compose up sozinho reusa cache).
+#
+# Frontend: public/build precisa estar no git (já é o combinado do Dockerfile).
+# Alteração só em React/TSX: npm run build e commit de public/build antes do push.
 
 name: sile-app
 
-x-sile-image: &sile-image ghcr.io/filipefalcaofs/sile:latest
+x-sile-build: &sile-build
+  image: sile:git
+  pull_policy: build
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      APP_VERSION: ${APP_VERSION:-}
+      APP_REVISION: ${APP_REVISION:-}
 
 x-app-env: &app-env
   APP_NAME: ${APP_NAME:-SILE}
@@ -51,8 +60,7 @@ x-app-env: &app-env
 
 services:
   migrate:
-    image: *sile-image
-    pull_policy: always
+    <<: *sile-build
     container_name: sile-migrate
     entrypoint: ["/migrate.sh"]
     environment:
@@ -71,8 +79,7 @@ services:
     restart: 'no'
 
   seed:
-    image: *sile-image
-    pull_policy: always
+    <<: *sile-build
     container_name: sile-seed
     entrypoint: ['/bin/sh', '-ce']
     command:
@@ -104,8 +111,7 @@ services:
     restart: 'no'
 
   app:
-    image: *sile-image
-    pull_policy: always
+    <<: *sile-build
     container_name: sile-app
     restart: unless-stopped
     ports:
@@ -126,8 +132,7 @@ services:
       start_period: 120s
 
   queue:
-    image: *sile-image
-    pull_policy: always
+    <<: *sile-build
     container_name: sile-queue
     restart: unless-stopped
     command: ['php', 'artisan', 'queue:work', '--sleep=3', '--tries=3', '--max-time=3600']
@@ -141,8 +146,7 @@ services:
         condition: service_started
 
   scheduler:
-    image: *sile-image
-    pull_policy: always
+    <<: *sile-build
     container_name: sile-scheduler
     restart: unless-stopped
     command: ['php', 'artisan', 'schedule:work']
