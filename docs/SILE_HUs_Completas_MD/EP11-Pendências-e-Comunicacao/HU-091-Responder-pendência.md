@@ -60,6 +60,8 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: A resposta ao convite/pendência ocorre pelo **portal Simplifica** (a interação analista ↔ requerente é pelo portal — reunião 2026-06-11); no fluxo Regin, o acompanhamento do convite também é visível no site da Junta.
+- RN-005: Resposta dentro do prazo reabre a análise (HU-092); prazo expirado segue tratamento parametrizado (HU-014), com contagem conforme regras de prazo e feriados (HU-137).
 
 ## Critérios de Aceite — BDD
 

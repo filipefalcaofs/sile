@@ -1,0 +1,18 @@
+{
+    "nome": "Endereço real geocodifica mas sem zona oficial o veredito fica pendente",
+    "descricao": "CASO CHAVE anti-fachada (regressão de domínio da consulta): consulta por endereço de Salvador com CNAE 4712-1/00 (minimercado) e área 120 m². O geocoder resolve o ponto (tem_geocode true) e o território identifica o bairro, mas a zona urbanística da LOUOS está bloqueada pendente SEDUR (Fase 4) — o Quadro 10 degrada e o consolidado é pendente, NUNCA permitido/não permitido. O risco (Baixo Risco B) e o Quadro 7 (nR1) rodam reais. Trava a degradação honesta: se algum dia o orquestrador declarar permissão sem a zona real, este caso falha.",
+    "input": {
+        "tipo": "endereco",
+        "cnae": "4712-1/00",
+        "area": 120,
+        "endereco": "Praça Municipal, Centro, Salvador"
+    },
+    "esperado": {
+        "veredito": "pendente",
+        "veredito_motivo_contem": "zoneamento",
+        "risco_municipal_status": "classificado",
+        "quadro7_status": "identificado",
+        "tem_geocode": true,
+        "avisos_contem": "zona"
+    }
+}

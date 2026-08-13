@@ -1,4 +1,5 @@
 import { Form, Head, Link, router } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
@@ -109,7 +110,7 @@ function GrantProcurationCard() {
                     Vincular procurador
                 </h3>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    O procurador precisa ter conta no SILE. Informe o e-mail cadastrado e, se
+                    O procurador precisa ter conta no Simplifica. Informe o e-mail cadastrado e, se
                     desejar, uma data de validade para a procuração.
                 </p>
             </div>
@@ -346,7 +347,7 @@ export default function ProcuracoesIndex({ granted, received, procuracoesEnabled
     }
 
     return (
-        <PortalLayout>
+        <>
             <Head title="Minhas procurações" />
             <PageBreadcrumb pageTitle="Minhas procurações" />
 
@@ -411,6 +412,8 @@ export default function ProcuracoesIndex({ granted, received, procuracoesEnabled
                 variant="danger"
                 processing={revoking}
             />
-        </PortalLayout>
+        </>
     );
 }
+
+ProcuracoesIndex.layout = (page: ReactNode) => <PortalLayout>{page}</PortalLayout>;

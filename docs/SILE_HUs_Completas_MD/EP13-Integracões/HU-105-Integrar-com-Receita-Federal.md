@@ -63,6 +63,7 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-004: Integrações devem registrar payload, status, protocolo externo quando houver e erros de comunicação.
 - RN-005: Falha de integração não deve gerar decisão inconsistente; deve permitir retentativa ou análise técnica.
 - RN-006: O sistema deve tratar indisponibilidade do serviço externo.
+- RN-007: Os dados retornados (razão social, situação cadastral, CNAEs, endereço) devem ser **cruzados automaticamente** com os informados na solicitação; divergência relevante gera alerta estruturado no processo (insumo da ficha de análise e da HU-115), sem bloqueio cego.
 
 ## Critérios de Aceite — BDD
 

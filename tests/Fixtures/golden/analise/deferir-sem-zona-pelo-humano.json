@@ -1,0 +1,20 @@
+{
+    "nome": "deferir-sem-zona-pelo-humano",
+    "descricao": "Caso que exige o humano: sem zona oficial (engine_available=false, motor degradado), o analista DEFERE com a fundamentação própria da ficha — exatamente o que o expresso recusa.",
+    "engine_available": false,
+    "per_cnae": [
+        {
+            "cnae": "4712100",
+            "cnae_formatado": "4712-1/00",
+            "is_primary": true,
+            "status_sugerido": "analise",
+            "status_escolhido": "deferida",
+            "fundamentacao": ["Decisão técnica do analista: uso compatível com a vizinhança (LOUOS, Lei nº 9.148/2016, art. 1º)."]
+        }
+    ],
+    "esperado": {
+        "outcome": "deferida",
+        "tem_tvl": true,
+        "fundamentacao_contem": "Decisão técnica do analista: uso compatível com a vizinhança (LOUOS, Lei nº 9.148/2016, art. 1º)."
+    }
+}

@@ -1,15 +1,17 @@
-# HU-104 — Integrar com Junta Comercial
+# HU-104 — Integrar com Junta Comercial (Regin)
+
+> **Status: Refinada (2026-06-11)** — o integrador estadual é o Regin. Resolução CGSIM nº 61/2020: município define dados coletados e responde viabilidade no prazo, com motivos em caso negativa.
 
 ## Épica
 **EP13 — Integrações**
 
 ## Objetivo
-Trocar informações com integrador/junta.
+Devolver parecer de viabilidade (deferido/indeferido) ao Regin/Junta e garantir conformidade com regras de deferimento por atividade.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** integrar com Junta Comercial,  
-**para** dar continuidade ao registro empresarial.
+**quero** integrar com Junta Comercial/Regin,  
+**para** dar continuidade ao registro empresarial nacional.
 
 ## Contexto de Negócio
 O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
@@ -27,12 +29,11 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - Regras, integrações ou bases oficiais configuradas quando aplicável.
 
 ## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Integrar com Junta Comercial**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+1. O sistema identifica processo concluído (expresso HU-076 ou análise HU-086/HU-087).
+2. O sistema monta payload com parecer, status por CNAE, condicionantes e fundamentação conforme contrato Regin.
+3. O sistema envia resposta ao integrador e aguarda confirmação de recebimento.
+4. O sistema atualiza status de integração e registra comprovante em auditoria.
+5. Quando deferido, dispara em paralelo envio à SEFAZ (HU-110) — independente da entrega de PDF ao cidadão.
 
 ## Fluxos Alternativos
 ### FA-01 — Dados incompletos
@@ -62,7 +63,8 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
 - RN-004: Integrações devem registrar payload, status, protocolo externo quando houver e erros de comunicação.
 - RN-005: Falha de integração não deve gerar decisão inconsistente; deve permitir retentativa ou análise técnica.
-- RN-006: O sistema deve tratar indisponibilidade do serviço externo.
+- RN-006: Deferimento só pode ser comunicado ao Regin quando **todas** as atividades (CNAEs) estiverem deferidas; uma indeferida implica indeferimento do processo.
+- RN-007: O parecer deve incluir orientações, requisitos condicionantes e motivos de indeferimento quando negativa, conforme art. 7º da Resolução CGSIM nº 61/2020.
 
 ## Critérios de Aceite — BDD
 
@@ -134,4 +136,4 @@ O sistema deve manter registro completo da execução desta HU, incluindo:
 Alta
 
 ## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+Depende do contrato técnico Regin↔SAPS (bloqueio EP13). Cidadão acompanha resultado pelo site da Junta; convites/pendências direcionam ao portal Simplifica (HU-083/HU-091).

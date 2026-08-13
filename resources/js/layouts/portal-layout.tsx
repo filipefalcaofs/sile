@@ -2,7 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import AppShell from '@/components/app/app-shell';
 import type { SidebarGroup } from '@/components/app/app-sidebar';
-import { AlertIcon, FileIcon, GridIcon, GroupIcon } from '@/components/icons';
+import { AlertIcon, FileIcon, GridIcon, GroupIcon, ListIcon, SearchIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import { ThemeProvider } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
@@ -18,7 +18,11 @@ const groups: SidebarGroup[] = [
     },
     {
         label: 'Serviços',
-        items: [{ name: 'Procurações', href: '/portal/procuracoes', icon: <FileIcon /> }],
+        items: [
+            { name: 'Minhas empresas', href: '/portal/empresas', icon: <ListIcon /> },
+            { name: 'Consultas de viabilidade', href: '/portal/viabilidade/historico', icon: <SearchIcon /> },
+            { name: 'Procurações', href: '/portal/procuracoes', icon: <FileIcon /> },
+        ],
     },
     {
         label: 'Minha conta',

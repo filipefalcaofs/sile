@@ -9,7 +9,22 @@ alwaysApply: true
 O ADMIN NUNCA DEPENDE DE DESENVOLVEDOR PARA MUDAR O QUE PODE SER PARÂMETRO
 ```
 
-Ao implementar qualquer funcionalidade, perguntar: **"o que aqui o admin pode querer mudar?"** — e transformar em parâmetro administrável.
+Parametrização máxima é a parametrização **do que faz sentido parametrizar** — não de tudo. Ao implementar qualquer funcionalidade, perguntar: **"o que aqui o admin pode querer mudar?"** — e transformar em parâmetro administrável.
+
+## O que faz sentido parametrizar (e o que não)
+
+**Parametrizar:**
+- Valores que mudam por decisão de negócio: prazos, taxas, limiares, textos, termos
+- O que varia por ambiente, cliente ou contexto: URLs e credenciais de integração
+- Funcionalidades que o gestor pode querer ligar/desligar
+- Regras que mudam por lei, decreto ou planilha oficial
+
+**NÃO parametrizar:**
+- Constantes técnicas e detalhes internos de implementação (timeouts de retry interno, nomes de filas, tamanhos de página de consulta interna)
+- O que nunca mudou e não há razão de negócio para mudar
+- Decisões de arquitetura (parametrizar isso é esconder decisão, não dar autonomia)
+
+Parametrizar tudo gera painel inutilizável e complexidade sem valor — é tão ruim quanto hardcoded. O critério é sempre: **existe alguém de negócio que pode querer mudar isso sem deploy?**
 
 ## Parâmetros (valores de negócio)
 

@@ -1,10 +1,13 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
+import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
 import Switch from '@/components/form/switch';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
+import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 interface ParameterItem {
@@ -33,49 +36,8 @@ function groupLabel(group: string): string {
     return GROUP_LABELS[group] ?? group.charAt(0).toUpperCase() + group.slice(1);
 }
 
-const actionButtonStyles =
-    'inline-flex items-center justify-center rounded-lg px-3 py-2 text-theme-xs font-medium ring-1 ring-inset transition disabled:cursor-not-allowed disabled:opacity-60';
-
-const brandActionStyles = `${actionButtonStyles} text-brand-500 ring-brand-200 hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10`;
-
 const textareaStyles =
     'w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800';
-
-function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
-    return (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
-            <nav aria-label="Trilha de navegação">
-                <ol className="flex flex-wrap items-center gap-1.5">
-                    <li>
-                        <Link
-                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
-                            href="/gestao"
-                        >
-                            Painel
-                            <svg
-                                className="stroke-current"
-                                width="17"
-                                height="16"
-                                viewBox="0 0 17 16"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
-                                    strokeWidth="1.2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
-                        </Link>
-                    </li>
-                    <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
-                </ol>
-            </nav>
-        </div>
-    );
-}
 
 function FieldError({ message }: { message?: string }) {
     if (!message) {
@@ -203,9 +165,9 @@ function ParameterSection({ item }: { item: ParameterItem }) {
                         Padrão: {item.default_value ?? '—'}
                     </p>
                 </div>
-                <Link href={`/gestao/parametros/${item.key}/historico`} className={brandActionStyles}>
+                <TableAction tone="brand" href={`/gestao/parametros/${item.key}/historico`}>
                     Histórico
-                </Link>
+                </TableAction>
             </div>
 
             <Form action={`/gestao/parametros/${item.key}`} method="put" className="mt-5">
@@ -231,37 +193,77 @@ function ParameterSection({ item }: { item: ParameterItem }) {
 }
 
 export default function ParametersIndex({ groups }: ParametersIndexProps) {
+    const groupKeys = Object.keys(groups);
+    const [activeGroup, setActiveGroup] = useState(groupKeys[0] ?? '');
+    const activeItems = groups[activeGroup] ?? [];
+
     return (
-        <GestaoLayout>
+        <>
             <Head title="Parâmetros do sistema" />
-            <PageBreadcrumb pageTitle="Parâmetros do sistema" />
+            <PageHeader title="Parâmetros do sistema" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
             <div className="flex flex-col gap-4 md:gap-6">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                     Alterações valem imediatamente, sem novo deploy, e ficam registradas no histórico auditado
                 </p>
 
-                {Object.entries(groups).map(([group, items]) => (
-                    <section
-                        key={group}
-                        className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
-                    >
-                        <div className="px-6 py-5">
-                            <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
-                                {groupLabel(group)}
-                            </h3>
+                <div className="border-b border-gray-200 dark:border-gray-800">
+                    <nav role="tablist" aria-label="Grupos de parâmetros" className="-mb-px flex flex-wrap gap-1">
+                        {groupKeys.map((group) => {
+                            const selected = group === activeGroup;
+
+                            return (
+                                <button
+                                    key={group}
+                                    type="button"
+                                    role="tab"
+                                    id={`tab-${group}`}
+                                    aria-selected={selected}
+                                    aria-controls={`panel-${group}`}
+                                    onClick={() => setActiveGroup(group)}
+                                    className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                                        selected
+                                            ? 'border-brand-500 text-brand-600 dark:border-brand-400 dark:text-brand-400'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    {groupLabel(group)}
+                                    <span
+                                        className={`rounded-full px-2 py-0.5 text-theme-xs font-medium ${
+                                            selected
+                                                ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400'
+                                                : 'bg-gray-100 text-gray-500 dark:bg-white/[0.06] dark:text-gray-400'
+                                        }`}
+                                    >
+                                        {groups[group].length}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </nav>
+                </div>
+
+                <section
+                    key={activeGroup}
+                    role="tabpanel"
+                    id={`panel-${activeGroup}`}
+                    aria-labelledby={`tab-${activeGroup}`}
+                    className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+                >
+                    {activeItems.map((item, index) => (
+                        <div
+                            key={item.key}
+                            className={`p-4 sm:p-6 ${
+                                index > 0 ? 'border-t border-gray-100 dark:border-gray-800' : ''
+                            }`}
+                        >
+                            <ParameterSection item={item} />
                         </div>
-                        {items.map((item) => (
-                            <div
-                                key={item.key}
-                                className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6"
-                            >
-                                <ParameterSection item={item} />
-                            </div>
-                        ))}
-                    </section>
-                ))}
+                    ))}
+                </section>
             </div>
-        </GestaoLayout>
+        </>
     );
 }
+
+ParametersIndex.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;

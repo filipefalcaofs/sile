@@ -1,0 +1,45 @@
+---
+description: Agents especialistas do SILE e sua integração ao fluxo de desenvolvimento autônomo
+alwaysApply: true
+---
+
+# Agents Especialistas do SILE — Desenvolvimento Autônomo
+
+O projeto tem 6 subagents especialistas em `.cursor/agents/`. Eles existem para **substituir os pontos onde o fluxo pararia para perguntar ao humano**, maximizando a autonomia sem abrir mão das regras do projeto (TDD, auditoria, parametrização, zero fachada).
+
+### Eixo de desenvolvimento (o quê → como → pronto)
+
+| Agent | Responde | Acione quando |
+|---|---|---|
+| `analista-negocio` | O QUÊ — requisitos, RN, CA, fluxos, enquadramento legal (HUs, LOUOS, Decreto 32.636/2020, CNAE) | Qualquer dúvida de negócio; antes de planejar/implementar uma HU |
+| `arquiteto-tecnico` | O COMO — modelagem, padrão, abordagem dentro da stack e das decisões já tomadas | Qualquer dúvida técnica/de arquitetura; antes de planejar implementação |
+| `guardiao-entrega` | ESTÁ PRONTO? — verificação anti-fachada + auditoria + parametrização + TDD com evidência fresca | Antes de marcar qualquer HU/plano/fase como concluído; na verificação de fase |
+
+### Especialistas transversais (dimensões de alto risco sem dono no eixo)
+
+| Agent | Responde | Acione quando |
+|---|---|---|
+| `especialista-seguranca` | ESTÁ SEGURO E EM CONFORMIDADE (LGPD)? — threat modeling, controle de acesso, endpoints públicos, segredos, dados pessoais | Endpoint público (Regin/consulta), gov.br, credenciais, migração de dados do legado, dado pessoal em log/relatório/precedente |
+| `curador-dados-regras` | O DADO-REGRA ESTÁ ÍNTEGRO? — fidelidade à fonte oficial, versionamento/vigência, golden cases | Carga/atualização de CNAE, Decreto, Quadros LOUOS ou camadas GIS; troca de seed por planilha oficial; antes de publicar regra |
+| `especialista-acessibilidade` | É ACESSÍVEL E COMPREENSÍVEL? — eMAG/WCAG 2.1 AA e UX do cidadão leigo | Criar/alterar páginas, formulários, mapas e tabelas — com prioridade ao portal público |
+
+## Integração com o fluxo GSD
+
+- **Discuss/brainstorming de fase**: em vez de parar para perguntar ao humano, consulte `analista-negocio` para o "o quê" e `arquiteto-tecnico` para o "como". Só leve ao humano o que sobrar como pendência externa (ver abaixo).
+- **Planejamento (plan-phase)**: `arquiteto-tecnico` define os trade-offs técnicos do plano; `analista-negocio` confirma o mapeamento CA → feature test. Acione os especialistas transversais conforme o conteúdo da fase: `especialista-seguranca` quando houver endpoint público, autenticação, credencial ou dado pessoal; `curador-dados-regras` quando houver carga/versionamento de dado oficial; `especialista-acessibilidade` quando houver tela do cidadão.
+- **Execução**: siga TDD; o `arquiteto-tecnico` resolve decisões de implementação que surgirem no caminho; os especialistas transversais apontam risco/ajuste no domínio deles (não implementam a correção).
+- **Verificação/conclusão**: `guardiao-entrega` dá o veredito com evidência fresca antes de qualquer afirmação de "pronto" e **incorpora os pareceres** de segurança (LGPD/superfície), curadoria (integridade do dado-regra) e acessibilidade (critério transversal 6 do ROADMAP). Veredito REPROVADO bloqueia a conclusão.
+
+Esses agents complementam — não substituem — os agents do GSD e as skills do Superpowers. A disciplina (brainstorming, TDD, debugging sistemático, verificação) continua valendo.
+
+## Política de autonomia e escalonamento
+
+Regra de ouro (decorre de `entrega-funcional`): **decida tudo que for derivável das fontes de verdade; escale apenas o que depende de terceiros — e registre o bloqueio, nunca o simule.**
+
+- **Autonomia plena** sobre o que está nas HUs, lei/decreto, CNAE, dados oficiais, e nas decisões já registradas no `STATE.md`.
+- **Escalar ao humano / registrar como bloqueio** apenas: pendências da SEDUR (Quadro 11↔11B, escopo DAM HU-071/072, contrato REDESIM, base GIS, quadros/planilhas LOUOS não entregues), credenciais/homologação (SEFAZ HU-110, gov.br HU-151), migração do legado (HU-111), decisões do DPO (política de retenção/eliminação/anonimização LGPD, base legal de tratamento, limiares de detecção de fraude da HU-149, papel auditor) e troca/adição de dependência ou mudança de stack/arquitetura de grande impacto.
+- Dependência externa indisponível ⇒ feature **explicitamente bloqueada** em `STATE.md`/`ROADMAP.md`, com a abstração (interface/parâmetro) proposta para destravar o restante. Nunca adaptador falso, nunca resultado simulado.
+
+## Fontes de verdade (precedência)
+
+`STATE.md` (decisões reais acumuladas) e o código existente vencem documentos aspiracionais. `docs/ARQUITETURA.md` é referência, não estado atual — onde divergir do implementado, o código e o `STATE.md` prevalecem.

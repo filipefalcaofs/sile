@@ -30,31 +30,31 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 - [ ] **HU-016**: Manter Quadro 10
 - [ ] **HU-017**: Manter Quadro 11
 - [ ] **HU-018**: Manter Quadro 11A
-- [ ] **HU-019**: Manter condicionantes
-- [ ] **HU-020**: Manter classificação de risco
+- [x] **HU-019**: Manter condicionantes
+- [x] **HU-020**: Manter classificação de risco
 
 ### EP03 — Cadastro Empresarial
 
-- [ ] **HU-021**: Consultar dados do CNPJ
-- [ ] **HU-022**: Importar dados da REDESIM
-- [ ] **HU-023**: Cadastrar empresa
-- [ ] **HU-024**: Atualizar dados empresariais
+- [x] **HU-021**: Consultar dados do CNPJ
+- [x] **HU-022**: Importar dados da REDESIM
+- [x] **HU-023**: Cadastrar empresa
+- [x] **HU-024**: Atualizar dados empresariais
 - [ ] **HU-025**: Vincular CNAE principal
 - [ ] **HU-026**: Vincular CNAEs secundários
-- [ ] **HU-027**: Consultar empresas vinculadas
-- [ ] **HU-028**: Encerrar vínculo empresarial
+- [x] **HU-027**: Consultar empresas vinculadas
+- [x] **HU-028**: Encerrar vínculo empresarial
 
 ### EP04 — Georreferenciamento e Território
 
-- [ ] **HU-029**: Geocodificar endereço
-- [ ] **HU-030**: Localizar imóvel no mapa
-- [ ] **HU-031**: Identificar zona urbanística
-- [ ] **HU-032**: Identificar classificação da via
-- [ ] **HU-033**: Identificar lote
-- [ ] **HU-034**: Identificar bairro
-- [ ] **HU-035**: Identificar restrições territoriais
-- [ ] **HU-036**: Consultar camadas geográficas
-- [ ] **HU-037**: Validar localização do imóvel
+- [x] **HU-029**: Geocodificar endereço
+- [x] **HU-030**: Localizar imóvel no mapa
+- [~] **HU-031**: Identificar zona urbanística — BLOQUEADA (pendente SEDUR: zona LOUOS sem fonte vetorial pública)
+- [x] **HU-032**: Identificar classificação da via (geometria; atributo LOUOS pendente confirmação SEDUR)
+- [~] **HU-033**: Identificar lote — BLOQUEADA (pendente SEDUR: Cadastro Multifinalitário/SEFAZ)
+- [x] **HU-034**: Identificar bairro
+- [x] **HU-035**: Identificar restrições territoriais
+- [x] **HU-036**: Consultar camadas geográficas
+- [x] **HU-037**: Validar localização do imóvel (infra de sobreposição pronta; RN-005/lote pendente SEDUR)
 
 ### EP05 — Motor de Regras da LOUOS
 
@@ -70,80 +70,80 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 
 ### EP06 — Classificação de Risco
 
-- [ ] **HU-047**: Classificar CNAE por risco
-- [ ] **HU-048**: Aplicar regra de baixo risco
-- [ ] **HU-049**: Aplicar regra de médio risco
-- [ ] **HU-050**: Aplicar regra de alto risco
-- [ ] **HU-051**: Aplicar exceções de risco
-- [ ] **HU-052**: Consultar tabela de risco
-- [ ] **HU-053**: Atualizar classificação de risco
+- [x] **HU-047**: Classificar CNAE por risco
+- [x] **HU-048**: Aplicar regra de baixo risco
+- [x] **HU-049**: Aplicar regra de médio risco (mapeado para baixo_b — decreto não tem "médio")
+- [x] **HU-050**: Aplicar regra de alto risco
+- [x] **HU-051**: Aplicar exceções de risco (ZEIS; demais gatilhos parametrizáveis)
+- [x] **HU-052**: Consultar tabela de risco
+- [x] **HU-053**: Atualizar classificação de risco
 
 ### EP07 — Consulta Prévia de Viabilidade
 
-- [ ] **HU-054**: Consultar viabilidade por endereço
-- [ ] **HU-055**: Consultar viabilidade por inscrição imobiliária
-- [ ] **HU-056**: Consultar viabilidade por CNAE
-- [ ] **HU-057**: Simular enquadramento da atividade
-- [ ] **HU-058**: Simular classificação de risco
-- [ ] **HU-059**: Simular restrições urbanísticas
-- [ ] **HU-060**: Consultar histórico de consultas
+- [x] **HU-054**: Consultar viabilidade por endereço
+- [~] **HU-055**: Consultar viabilidade por inscrição imobiliária — BLOQUEADA (lote/Cadastro pendente SEDUR; contrato pronto)
+- [x] **HU-056**: Consultar viabilidade por CNAE
+- [x] **HU-057**: Simular enquadramento da atividade
+- [x] **HU-058**: Simular classificação de risco
+- [x] **HU-059**: Simular restrições urbanísticas
+- [x] **HU-060**: Consultar histórico de consultas
 
 ### EP08 — Solicitação de Viabilidade
 
-- [ ] **HU-061**: Criar solicitação de viabilidade
-- [ ] **HU-062**: Informar imóvel
-- [ ] **HU-063**: Informar área utilizada
-- [ ] **HU-064**: Informar atividade econômica
-- [ ] **HU-065**: Informar CNAEs complementares
-- [ ] **HU-066**: Anexar documentos
-- [ ] **HU-067**: Validar documentos obrigatórios
-- [ ] **HU-068**: Protocolar solicitação
-- [ ] **HU-069**: Consultar protocolo
-- [ ] **HU-070**: Cancelar solicitação
-- [ ] **HU-071**: Gerar DAM da solicitação ⚠️ *pendente de confirmação de escopo com a SEDUR*
-- [ ] **HU-072**: Confirmar pagamento do DAM ⚠️ *pendente de confirmação de escopo com a SEDUR*
+- [x] **HU-061**: Criar solicitação de viabilidade
+- [x] **HU-062**: Informar imóvel
+- [x] **HU-063**: Informar área utilizada
+- [x] **HU-064**: Informar atividade econômica
+- [x] **HU-065**: Informar CNAEs complementares
+- [x] **HU-066**: Anexar documentos
+- [x] **HU-067**: Validar documentos obrigatórios
+- [x] **HU-068**: Protocolar solicitação
+- [x] **HU-069**: Consultar protocolo
+- [x] **HU-070**: Cancelar solicitação
+- [~] **HU-071**: Gerar/exibir DAM da solicitação — BLOQUEADA → Fase 13 (DAM é da SEFAZ; SILE consulta/exibe; sem contrato especulativo)
+- [~] **HU-072**: Confirmar pagamento do DAM — BLOQUEADA → Fase 13 (sincronização SEFAZ)
 
 ### EP09 — Fluxo Expresso
 
-- [ ] **HU-073**: Identificar elegibilidade para fluxo expresso
-- [ ] **HU-074**: Deferir automaticamente
-- [ ] **HU-075**: Indeferir automaticamente
-- [ ] **HU-076**: Emitir resultado expresso
-- [ ] **HU-077**: Notificar resultado ao cidadão
-- [ ] **HU-078**: Registrar auditoria da decisão automática
+- [x] **HU-073**: Identificar elegibilidade para fluxo expresso
+- [x] **HU-074**: Deferir automaticamente
+- [x] **HU-075**: Indeferir automaticamente
+- [x] **HU-076**: Emitir resultado expresso (decisão + número TVL interno; transmissão Regin/SEFAZ → Fase 13; PDF → Fase 10)
+- [x] **HU-077**: Notificar resultado ao cidadão (e-mail sem anexo; canais plenos → EP11)
+- [x] **HU-078**: Registrar auditoria da decisão automática
 
 ### EP10 — Análise Técnica SEDUR
 
-- [ ] **HU-079**: Encaminhar para análise técnica
-- [ ] **HU-080**: Distribuir processo
-- [ ] **HU-081**: Assumir análise
-- [ ] **HU-082**: Consultar processo
-- [ ] **HU-083**: Solicitar pendência
-- [ ] **HU-084**: Receber complementação
-- [ ] **HU-085**: Emitir parecer
-- [ ] **HU-086**: Deferir solicitação
-- [ ] **HU-087**: Indeferir solicitação
-- [ ] **HU-088**: Aplicar condicionantes
-- [ ] **HU-089**: Encerrar processo
+- [x] **HU-079**: Encaminhar para análise técnica
+- [x] **HU-080**: Distribuir processo
+- [x] **HU-081**: Assumir análise
+- [x] **HU-082**: Consultar processo
+- [~] **HU-083**: Solicitar pendência — ciclo interno (portal+e-mail) entregue; convite Simplifica/Regin + multicanal → EP11
+- [~] **HU-084**: Receber complementação — resposta pelo portal entregue; multicanal → EP11
+- [x] **HU-085**: Emitir parecer
+- [x] **HU-086**: Deferir solicitação
+- [x] **HU-087**: Indeferir solicitação
+- [x] **HU-088**: Aplicar condicionantes
+- [x] **HU-089**: Encerrar processo
 
 ### EP11 — Pendências e Comunicação
 
-- [ ] **HU-090**: Notificar pendência
-- [ ] **HU-091**: Responder pendência
-- [ ] **HU-092**: Reabrir análise
-- [ ] **HU-093**: Notificar vencimentos
-- [ ] **HU-094**: Enviar e-mail
-- [ ] **HU-095**: Enviar WhatsApp
-- [ ] **HU-096**: Consultar histórico de comunicações
+- [x] **HU-090**: Notificar pendência
+- [x] **HU-091**: Responder pendência (pelo portal SILE; convite Simplifica/Regin → Fase 13)
+- [x] **HU-092**: Reabrir análise
+- [x] **HU-093**: Notificar vencimentos
+- [x] **HU-094**: Enviar e-mail
+- [~] **HU-095**: Enviar WhatsApp — canal/toggle/contrato prontos (bloqueado honesto); provedor real → Fase 13
+- [x] **HU-096**: Consultar histórico de comunicações
 
 ### EP12 — Auditoria e Compliance
 
-- [ ] **HU-097**: Registrar log das decisões
-- [ ] **HU-098**: Consultar histórico de alterações
-- [ ] **HU-099**: Consultar regras aplicadas
-- [ ] **HU-100**: Consultar trilha de auditoria
-- [ ] **HU-101**: Exportar auditoria
-- [ ] **HU-102**: Monitorar conformidade LGPD
+- [x] **HU-097**: Registrar log das decisões
+- [x] **HU-098**: Consultar histórico de alterações
+- [x] **HU-099**: Consultar regras aplicadas
+- [x] **HU-100**: Consultar trilha de auditoria
+- [x] **HU-101**: Exportar auditoria
+- [x] **HU-102**: Monitorar conformidade LGPD
 
 ### EP13 — Integrações
 
@@ -229,94 +229,94 @@ Mapeamento requisito → fase do roadmap (`.planning/ROADMAP.md`). Cada HU perte
 | HU-012 | Fase 2 | Complete |
 | HU-013 | Fase 2 | Complete |
 | HU-014 | Fase 2 | Complete |
-| HU-015 | Fase 5 | Pending |
-| HU-016 | Fase 5 | Pending |
-| HU-017 | Fase 5 | Pending |
-| HU-018 | Fase 5 | Pending |
-| HU-019 | Fase 6 | Pending |
-| HU-020 | Fase 6 | Pending |
-| HU-021 | Fase 3 | Pending |
-| HU-022 | Fase 3 | Pending |
-| HU-023 | Fase 3 | Pending |
-| HU-024 | Fase 3 | Pending |
-| HU-025 | Fase 3 | Pending |
-| HU-026 | Fase 3 | Pending |
-| HU-027 | Fase 3 | Pending |
-| HU-028 | Fase 3 | Pending |
-| HU-029 | Fase 4 | Pending |
-| HU-030 | Fase 4 | Pending |
-| HU-031 | Fase 4 | Pending |
-| HU-032 | Fase 4 | Pending |
-| HU-033 | Fase 4 | Pending |
-| HU-034 | Fase 4 | Pending |
-| HU-035 | Fase 4 | Pending |
-| HU-036 | Fase 4 | Pending |
-| HU-037 | Fase 4 | Pending |
-| HU-038 | Fase 5 | Pending |
-| HU-039 | Fase 5 | Pending |
-| HU-040 | Fase 5 | Pending |
-| HU-041 | Fase 5 | Pending |
-| HU-042 | Fase 5 | Pending |
-| HU-043 | Fase 5 | Pending |
-| HU-044 | Fase 5 | Pending |
-| HU-045 | Fase 5 | Pending |
-| HU-046 | Fase 5 | Pending |
-| HU-047 | Fase 6 | Pending |
-| HU-048 | Fase 6 | Pending |
-| HU-049 | Fase 6 | Pending |
-| HU-050 | Fase 6 | Pending |
-| HU-051 | Fase 6 | Pending |
-| HU-052 | Fase 6 | Pending |
-| HU-053 | Fase 6 | Pending |
-| HU-054 | Fase 7 | Pending |
-| HU-055 | Fase 7 | Pending |
-| HU-056 | Fase 7 | Pending |
-| HU-057 | Fase 7 | Pending |
-| HU-058 | Fase 7 | Pending |
-| HU-059 | Fase 7 | Pending |
-| HU-060 | Fase 7 | Pending |
-| HU-061 | Fase 8 | Pending |
-| HU-062 | Fase 8 | Pending |
-| HU-063 | Fase 8 | Pending |
-| HU-064 | Fase 8 | Pending |
-| HU-065 | Fase 8 | Pending |
-| HU-066 | Fase 8 | Pending |
-| HU-067 | Fase 8 | Pending |
-| HU-068 | Fase 8 | Pending |
-| HU-069 | Fase 8 | Pending |
-| HU-070 | Fase 8 | Pending |
-| HU-071 | Fase 8 | Pending ⚠️ escopo a confirmar (SEDUR) |
-| HU-072 | Fase 8 | Pending ⚠️ escopo a confirmar (SEDUR) |
-| HU-073 | Fase 9 | Pending |
-| HU-074 | Fase 9 | Pending |
-| HU-075 | Fase 9 | Pending |
-| HU-076 | Fase 9 | Pending |
-| HU-077 | Fase 9 | Pending |
-| HU-078 | Fase 9 | Pending |
-| HU-079 | Fase 10 | Pending |
-| HU-080 | Fase 10 | Pending |
-| HU-081 | Fase 10 | Pending |
-| HU-082 | Fase 10 | Pending |
-| HU-083 | Fase 10 | Pending |
-| HU-084 | Fase 10 | Pending |
-| HU-085 | Fase 10 | Pending |
-| HU-086 | Fase 10 | Pending |
-| HU-087 | Fase 10 | Pending |
-| HU-088 | Fase 10 | Pending |
-| HU-089 | Fase 10 | Pending |
-| HU-090 | Fase 11 | Pending |
-| HU-091 | Fase 11 | Pending |
-| HU-092 | Fase 11 | Pending |
-| HU-093 | Fase 11 | Pending |
-| HU-094 | Fase 11 | Pending |
-| HU-095 | Fase 11 | Pending |
-| HU-096 | Fase 11 | Pending |
-| HU-097 | Fase 12 | Pending |
-| HU-098 | Fase 12 | Pending |
-| HU-099 | Fase 12 | Pending |
-| HU-100 | Fase 12 | Pending |
-| HU-101 | Fase 12 | Pending |
-| HU-102 | Fase 12 | Pending |
+| HU-015 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-016 | Fase 5 | Complete (Q10 modelado; zona real pendente SEDUR) |
+| HU-017 | Fase 5 | Complete (Q11 modelado; atributo viário/11B pendente SEDUR) |
+| HU-018 | Fase 5 | Complete (Q11A modelado; atributo viário/11B pendente SEDUR) |
+| HU-019 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-020 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-021 | Fase 3 | Done |
+| HU-022 | Fase 3 | Complete (03-03) |
+| HU-023 | Fase 3 | Complete (03-04) |
+| HU-024 | Fase 3 | Complete (03-05) |
+| HU-025 | Fase 3 | Complete (03-06) |
+| HU-026 | Fase 3 | Complete (03-06) |
+| HU-027 | Fase 3 | Complete (03-04) |
+| HU-028 | Fase 3 | Complete (03-05) |
+| HU-029 | Fase 4 | Complete (04-03) |
+| HU-030 | Fase 4 | Complete (04-06/04-07) |
+| HU-031 | Fase 4 | Blocked — pendente SEDUR (zona LOUOS sem fonte pública) |
+| HU-032 | Fase 4 | Complete (04-04/04-05) — atributo LOUOS pendente SEDUR |
+| HU-033 | Fase 4 | Blocked — pendente SEDUR (lote/SEFAZ) |
+| HU-034 | Fase 4 | Complete (04-04/04-05) |
+| HU-035 | Fase 4 | Complete (04-04/04-05) |
+| HU-036 | Fase 4 | Complete (04-04/04-06/04-07) |
+| HU-037 | Fase 4 | Complete (04-06/04-07) — RN-005/lote pendente SEDUR |
+| HU-038 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-039 | Fase 5 | Complete (degrada pendente; zona real pendente SEDUR) |
+| HU-040 | Fase 5 | Complete (degrada sem atributo viário — pendente SEDUR) |
+| HU-041 | Fase 5 | Complete (degrada sem atributo viário — pendente SEDUR) |
+| HU-042 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-043 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-044 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-045 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-046 | Fase 5 | Complete (EP05 2026-06-14) |
+| HU-047 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-048 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-049 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-050 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-051 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-052 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-053 | Fase 6 | Complete (EP06 2026-06-14) |
+| HU-054 | Fase 7 | Complete (EP07 2026-06-14) |
+| HU-055 | Fase 7 | Blocked — pendente SEDUR (lote/Cadastro; contrato pronto) |
+| HU-056 | Fase 7 | Complete (EP07 2026-06-14) |
+| HU-057 | Fase 7 | Complete (EP07 2026-06-14) |
+| HU-058 | Fase 7 | Complete (EP07 2026-06-14) |
+| HU-059 | Fase 7 | Complete (EP07 2026-06-14) |
+| HU-060 | Fase 7 | Complete (EP07 2026-06-14) |
+| HU-061 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-062 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-063 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-064 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-065 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-066 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-067 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-068 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-069 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-070 | Fase 8 | Complete (EP08 2026-06-14) |
+| HU-071 | Fase 8 | Blocked → Fase 13 (DAM/SEFAZ; sem contrato especulativo) |
+| HU-072 | Fase 8 | Blocked → Fase 13 (sincronização pagamento SEFAZ) |
+| HU-073 | Fase 9 | Complete (EP09 2026-06-14) |
+| HU-074 | Fase 9 | Complete (EP09 2026-06-14) |
+| HU-075 | Fase 9 | Complete (EP09 2026-06-14) |
+| HU-076 | Fase 9 | Complete (decisão+TVL; transmissão Regin/SEFAZ → Fase 13) |
+| HU-077 | Fase 9 | Complete (e-mail; canais plenos → EP11) |
+| HU-078 | Fase 9 | Complete (EP09 2026-06-14) |
+| HU-079 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-080 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-081 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-082 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-083 | Fase 10 | Complete (ciclo interno; convite Regin/multicanal → EP11) |
+| HU-084 | Fase 10 | Complete (resposta portal; multicanal → EP11) |
+| HU-085 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-086 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-087 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-088 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-089 | Fase 10 | Complete (EP10 2026-06-15) |
+| HU-090 | Fase 11 | Complete (EP11 2026-06-15) |
+| HU-091 | Fase 11 | Complete (EP11 2026-06-15) |
+| HU-092 | Fase 11 | Complete (EP11 2026-06-15) |
+| HU-093 | Fase 11 | Complete (EP11 2026-06-15) |
+| HU-094 | Fase 11 | Complete (EP11 2026-06-15) |
+| HU-095 | Fase 11 | Blocked → Fase 13 (canal/toggle/contrato prontos; provedor real) |
+| HU-096 | Fase 11 | Complete (EP11 2026-06-15) |
+| HU-097 | Fase 12 | Complete (EP12 2026-06-15) |
+| HU-098 | Fase 12 | Complete (EP12 2026-06-15) |
+| HU-099 | Fase 12 | Complete (EP12 2026-06-15) |
+| HU-100 | Fase 12 | Complete (EP12 2026-06-15) |
+| HU-101 | Fase 12 | Complete (EP12 2026-06-15) |
+| HU-102 | Fase 12 | Complete (EP12 2026-06-15) |
 | HU-103 | Fase 13 | Pending |
 | HU-104 | Fase 13 | Pending |
 | HU-105 | Fase 13 | Pending |

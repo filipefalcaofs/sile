@@ -3,8 +3,8 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Notifications\ResetPasswordQueued;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -39,7 +39,7 @@ class PasswordResetTest extends TestCase
 
         $this->post('/portal/forgot-password', ['email' => $user->email]);
 
-        Notification::assertSentTo($user, ResetPassword::class);
+        Notification::assertSentTo($user, ResetPasswordQueued::class);
     }
 
     public function test_pagina_de_redefinicao_renderiza_com_token(): void
@@ -52,7 +52,7 @@ class PasswordResetTest extends TestCase
 
         $token = null;
 
-        Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use (&$token) {
+        Notification::assertSentTo($user, ResetPasswordQueued::class, function (ResetPasswordQueued $notification) use (&$token) {
             $token = $notification->token;
 
             return true;
@@ -147,6 +147,20 @@ class PasswordResetTest extends TestCase
         $response->assertSessionHasErrors('password');
 
         $this->assertTrue(Hash::check('password', $user->fresh()->password));
+    }
+
+    public function test_link_de_redefinicao_e_congelado_no_disparo_nao_no_worker(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->cidadao()->create();
+
+        $this->post('/portal/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, ResetPasswordQueued::class, function (ResetPasswordQueued $notification) {
+            return $notification->resetUrl !== null
+                && str_contains($notification->resetUrl, '/portal/reset-password/');
+        });
     }
 
     public function test_autenticado_nao_acessa_recuperacao(): void

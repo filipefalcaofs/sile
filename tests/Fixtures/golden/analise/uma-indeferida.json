@@ -1,0 +1,27 @@
+{
+    "nome": "uma-indeferida",
+    "descricao": "Basta uma CNAE indeferida na ficha (RN-004) → INDEFERE o processo inteiro, sem TVL.",
+    "engine_available": true,
+    "per_cnae": [
+        {
+            "cnae": "4712100",
+            "cnae_formatado": "4712-1/00",
+            "is_primary": true,
+            "status_sugerido": "deferida",
+            "status_escolhido": "deferida",
+            "fundamentacao": ["Quadro 10 da LOUOS: atividade permitida na zona."]
+        },
+        {
+            "cnae": "4731800",
+            "cnae_formatado": "4731-8/00",
+            "is_primary": false,
+            "status_sugerido": "indeferida",
+            "status_escolhido": "indeferida",
+            "fundamentacao": ["Quadro 10 da LOUOS: atividade não admitida na zona."]
+        }
+    ],
+    "esperado": {
+        "outcome": "indeferida",
+        "tem_tvl": false
+    }
+}

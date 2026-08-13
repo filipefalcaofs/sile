@@ -27,12 +27,12 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - Regras, integrações ou bases oficiais configuradas quando aplicável.
 
 ## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Deferir solicitação**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+1. Analista finaliza ficha de análise (HU-135) com todas as atividades deferidas.
+2. O sistema valida permissões e consistência da decisão.
+3. O sistema registra deferimento, fundamentação e número de produto (TVL).
+4. O sistema comunica parecer ao Regin (HU-104) e envia dados à SEFAZ (HU-110).
+5. O sistema **não** entrega PDF/TVL ao requerente; analista pode emitir relatório PDF no backoffice (HU-132).
+6. O sistema registra operação em trilha de auditoria.
 
 ## Fluxos Alternativos
 ### FA-01 — Dados incompletos
@@ -59,7 +59,8 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 ## Regras de Negócio
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: Deferimento exige **todas** as atividades (CNAEs) deferidas na ficha de análise.
+- RN-005: Após deferimento, integrações Regin (HU-104) e SEFAZ (HU-110) são disparadas automaticamente, independentemente da emissão de PDF no backoffice.
 
 ## Critérios de Aceite — BDD
 

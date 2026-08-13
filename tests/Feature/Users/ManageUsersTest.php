@@ -7,6 +7,7 @@ use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ManageUsersTest extends TestCase
@@ -25,27 +26,73 @@ class ManageUsersTest extends TestCase
         return User::factory()->administrador()->withAcceptedLgpdTerm()->create();
     }
 
-    public function test_administrador_lista_usuarios_com_papeis_e_situacao(): void
+    public function test_aba_padrao_lista_equipe_sedur_com_papeis_e_situacao(): void
     {
         $admin = $this->admin();
 
-        User::factory()->analista()->create();
-        User::factory()->cidadao()->inactive()->create();
+        User::factory()->analista()->inactive()->create();
+        User::factory()->cidadao()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/usuarios')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/usuarios/index')
-                ->has('users.data', 3)
+                ->where('filters.tab', 'gestao')
+                ->has('users.data', 2)
                 ->has('users.data.0', fn (Assert $item) => $item
                     ->hasAll(['id', 'name', 'email', 'roles', 'inactivated_at', 'cpf_masked'])
                     ->missing('cpf')
                     ->etc())
-                ->where('users.data.0.cpf_masked', fn ($masked) => preg_match('/^\*{3}\.\*{3}\.\*{3}-\d{2}$/', (string) $masked) === 1));
+                ->where('users.data.0.cpf_masked', fn ($masked) => preg_match('/^\*{3}\.\*{3}\.\*{3}-\d{2}$/', (string) $masked) === 1)
+                ->where('counts.gestao', 2)
+                ->where('counts.portal', 1));
     }
 
-    public function test_busca_filtra_por_nome_ou_email(): void
+    public function test_aba_portal_lista_apenas_usuarios_sem_acesso_a_gestao(): void
+    {
+        $admin = $this->admin();
+
+        User::factory()->analista()->create();
+        $cidada = User::factory()->cidadao()->create(['name' => 'Maria Souza']);
+        $semPapel = User::factory()->create(['name' => 'Sem Papel']);
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/usuarios?tab=portal')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.tab', 'portal')
+                ->has('users.data', 2)
+                ->where('users.data', fn ($data) => collect($data)->pluck('name')->sort()->values()->all() === collect([$cidada->name, $semPapel->name])->sort()->values()->all()));
+    }
+
+    public function test_perfil_customizado_com_acesso_a_gestao_conta_como_equipe(): void
+    {
+        $admin = $this->admin();
+
+        $fiscal = Role::create(['name' => 'fiscal']);
+        $fiscal->givePermissionTo('acessar-gestao');
+
+        $user = User::factory()->create(['name' => 'Fiscal Custom']);
+        $user->assignRole('fiscal');
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/usuarios')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.tab', 'gestao')
+                ->where('users.data', fn ($data) => collect($data)->pluck('name')->contains('Fiscal Custom')));
+    }
+
+    public function test_aba_invalida_cai_na_equipe_sedur(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/usuarios?tab=banana')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('filters.tab', 'gestao'));
+    }
+
+    public function test_busca_filtra_por_nome_ou_email_dentro_da_aba(): void
     {
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create([
             'name' => 'Admin SEDUR',
@@ -55,12 +102,18 @@ class ManageUsersTest extends TestCase
         User::factory()->cidadao()->create(['name' => 'Maria Souza', 'email' => 'maria@x.dev']);
         User::factory()->cidadao()->create(['name' => 'João Lima', 'email' => 'joao@x.dev']);
 
-        $this->actingAs($admin)
-            ->get('/gestao/usuarios?search=maria')
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/usuarios?tab=portal&search=maria')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('users.data', 1)
                 ->where('users.data.0.name', 'Maria Souza'));
+
+        // A mesma busca na aba da equipe não encontra a cidadã.
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/usuarios?search=maria')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('users.data', 0));
     }
 
     public function test_inativa_usuario_com_auditoria(): void
@@ -68,7 +121,7 @@ class ManageUsersTest extends TestCase
         $admin = $this->admin();
         $user = User::factory()->cidadao()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/usuarios/{$user->id}/inativacao")
             ->assertRedirect();
 
@@ -88,7 +141,7 @@ class ManageUsersTest extends TestCase
         $admin = $this->admin();
         $user = User::factory()->cidadao()->inactive()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/usuarios/{$user->id}/inativacao")
             ->assertRedirect();
 
@@ -107,7 +160,7 @@ class ManageUsersTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/usuarios/{$admin->id}/inativacao")
             ->assertSessionHasErrors([
                 'user' => 'Você não pode inativar a própria conta.',
@@ -121,7 +174,7 @@ class ManageUsersTest extends TestCase
         $admin = $this->admin();
         $user = User::factory()->analista()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/usuarios/{$user->id}/papel", ['role' => 'gestor'])
             ->assertRedirect();
 
@@ -144,7 +197,7 @@ class ManageUsersTest extends TestCase
         $admin = $this->admin();
         $user = User::factory()->analista()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/usuarios/{$user->id}/papel", ['role' => 'papel-fantasma'])
             ->assertSessionHasErrors('role');
 
@@ -155,7 +208,7 @@ class ManageUsersTest extends TestCase
     {
         $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($gestor)
+        $this->actingAs($gestor, 'gestao')
             ->get('/gestao/usuarios')
             ->assertForbidden();
 
@@ -171,22 +224,22 @@ class ManageUsersTest extends TestCase
         $admin = $this->admin();
         $user = User::factory()->cidadao()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/usuarios/{$user->id}/inativacao")
             ->assertRedirect();
 
-        $this->post(route('logout'));
-        $this->assertGuest();
+        $this->post(route('gestao.logout'));
+        $this->assertGuest('gestao');
 
         $response = $this->post('/portal/login', [
-            'email' => $user->email,
+            'cpf' => $user->cpf,
             'password' => 'password',
         ]);
 
-        $this->assertGuest();
-        $response->assertSessionHasErrors('email');
+        $this->assertGuest('web');
+        $response->assertSessionHasErrors('cpf');
 
-        $errors = session('errors')->get('email');
+        $errors = session('errors')->get('cpf');
         $this->assertStringContainsString('inativa', implode(' ', $errors));
     }
 }

@@ -41,7 +41,7 @@ class ManageParametersTest extends TestCase
 
     public function test_administrador_ve_parametros_agrupados(): void
     {
-        $this->actingAs($this->admin())
+        $this->actingAs($this->admin(), 'gestao')
             ->get('/gestao/parametros')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -60,23 +60,23 @@ class ManageParametersTest extends TestCase
                     'has_admin_value',
                     'updated_at',
                 ]))
-                ->where('groups.seguranca.0.key', 'security.login.max_attempts')
-                ->where('groups.seguranca.0.type', 'integer')
-                ->where('groups.seguranca.0.description', 'Tentativas de login antes do bloqueio temporário')
+                ->where('groups.seguranca.0.key', 'security.govbr.minimum_level')
+                ->where('groups.seguranca.0.type', 'string')
+                ->where('groups.seguranca.0.description', 'Nível mínimo de confiabilidade da conta GOV.BR aceito no login (bronze, prata ou ouro)')
                 ->where('groups.seguranca.0.value', null)
-                ->where('groups.seguranca.0.default_value', '5')
+                ->where('groups.seguranca.0.default_value', 'bronze')
                 ->where('groups.seguranca.0.sensitive', false));
     }
 
     public function test_atualiza_parametro_valido(): void
     {
-        $this->actingAs($this->admin())
-            ->put('/gestao/parametros/ui.access_history.per_page', ['value' => '5'])
+        $this->actingAs($this->admin(), 'gestao')
+            ->put('/gestao/parametros/security.login.max_attempts', ['value' => '5'])
             ->assertRedirect();
 
         $this->assertSame(
             '5',
-            Parameter::query()->where('key', 'ui.access_history.per_page')->value('value'),
+            Parameter::query()->where('key', 'security.login.max_attempts')->value('value'),
         );
     }
 
@@ -84,13 +84,13 @@ class ManageParametersTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put('/gestao/parametros/security.login.max_attempts', ['value' => '0'])
             ->assertSessionHasErrors('value');
 
         $this->assertNull(Parameter::query()->where('key', 'security.login.max_attempts')->value('value'));
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put('/gestao/parametros/security.login.max_attempts', ['value' => 'abc'])
             ->assertSessionHasErrors('value');
 
@@ -101,8 +101,8 @@ class ManageParametersTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)->put('/gestao/parametros/ui.access_history.per_page', ['value' => '5']);
-        $this->actingAs($admin)->put('/gestao/parametros/ui.access_history.per_page', ['value' => '10']);
+        $this->actingAs($admin, 'gestao')->put('/gestao/parametros/security.login.max_attempts', ['value' => '5']);
+        $this->actingAs($admin, 'gestao')->put('/gestao/parametros/security.login.max_attempts', ['value' => '10']);
 
         $activities = Activity::query()
             ->where('log_name', 'parametros')
@@ -114,7 +114,7 @@ class ManageParametersTest extends TestCase
 
         $last = $activities->last();
 
-        $this->assertSame('ui.access_history.per_page', $last->properties['key']);
+        $this->assertSame('security.login.max_attempts', $last->properties['key']);
         $this->assertSame('5', $last->properties['valor_anterior']);
         $this->assertSame('10', $last->properties['valor_novo']);
         $this->assertSame($admin->id, $last->causer_id);
@@ -124,7 +124,7 @@ class ManageParametersTest extends TestCase
     {
         $this->sensitiveParameter();
 
-        $this->actingAs($this->admin())
+        $this->actingAs($this->admin(), 'gestao')
             ->get('/gestao/parametros')
             ->assertOk()
             ->assertDontSee('segredo-sefaz-001')
@@ -139,7 +139,7 @@ class ManageParametersTest extends TestCase
     {
         $this->sensitiveParameter();
 
-        $this->actingAs($this->admin())
+        $this->actingAs($this->admin(), 'gestao')
             ->put('/gestao/parametros/integracao.sefaz.token', ['value' => 'novo-token-002'])
             ->assertRedirect();
 
@@ -156,7 +156,7 @@ class ManageParametersTest extends TestCase
     {
         $this->sensitiveParameter();
 
-        $this->actingAs($this->admin())
+        $this->actingAs($this->admin(), 'gestao')
             ->put('/gestao/parametros/integracao.sefaz.token', ['value' => ''])
             ->assertRedirect();
 
@@ -174,7 +174,7 @@ class ManageParametersTest extends TestCase
     {
         $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($gestor)
+        $this->actingAs($gestor, 'gestao')
             ->get('/gestao/parametros')
             ->assertForbidden();
 

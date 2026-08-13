@@ -1,0 +1,9 @@
+quadro,classe_via,grupo_uso,condicoes,base_legal
+11,via_local,nR2,"{""recuo_frontal_m"":5,""vagas_carga_descarga"":1}",Quadro 11 da Lei nº 9.148/2016
+11,via_local,nR3,"{""recuo_frontal_m"":5,""vagas_carga_descarga"":2,""exige_estudo_trafego"":true}",Quadro 11 da Lei nº 9.148/2016
+11,via_coletora,nR2,"{""recuo_frontal_m"":4,""vagas_carga_descarga"":1}",Quadro 11 da Lei nº 9.148/2016
+11,via_arterial,nR3,"{""recuo_frontal_m"":4,""vagas_carga_descarga"":2}",Quadro 11 da Lei nº 9.148/2016
+11a,via_local,nR1,"{""recuo_frontal_m"":3}",Quadro 11A da Lei nº 9.148/2016
+11a,via_coletora,nR2,"{""recuo_frontal_m"":4,""vagas_carga_descarga"":1}",Quadro 11A da Lei nº 9.148/2016
+11a,via_arterial,nR2,"{""recuo_frontal_m"":4,""faixa_acumulacao"":true}",Quadro 11A da Lei nº 9.148/2016
+11a,via_de_transito_rapido,nR3,"{""recuo_frontal_m"":6,""exige_estudo_trafego"":true}",Quadro 11A da Lei nº 9.148/2016

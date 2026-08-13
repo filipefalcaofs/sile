@@ -6,10 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\UpdateParameterRequest;
 use App\Models\Activity;
 use App\Models\Parameter;
+use App\Services\Relatorios\Export\ReportExporter;
+use App\Services\Relatorios\Export\Sources\ParametrosReportSource;
+use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class ParameterController extends Controller
 {
@@ -17,8 +22,20 @@ class ParameterController extends Controller
      * Catálogo agrupado por domínio (HU-014 CA-01). Valor de sensível nunca
      * sai do servidor (RN-009) — a tela recebe null e exibe placeholder.
      */
-    public function index(): Response
+    public function index(Request $request): Response|HttpResponse
     {
+        // HU-131/RN-009: com ?formato=, exporta o catálogo pelo contrato único —
+        // sem rota nova. O catálogo não tem filtros de listagem; RN-009 garante
+        // que o valor sensível nunca sai em claro (mascarado no ReportSource).
+        if (in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
+            return app(ReportExporter::class)->export(
+                app(ParametrosReportSource::class),
+                ReportFilters::fromArray([]),
+                $request->string('formato')->lower()->toString(),
+                $request->user(),
+            );
+        }
+
         $groups = Parameter::query()
             ->orderBy('group')
             ->orderBy('key')

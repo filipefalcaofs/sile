@@ -4,7 +4,7 @@
 **EP08 — Solicitação de Viabilidade**
 
 ## Objetivo
-Abrir solicitação formal.
+Abrir solicitação formal de viabilidade, identificando origem (Regin ou portal direto) e tipo de serviço.
 
 ## História de Usuário
 **Como** cidadão,  
@@ -60,6 +60,10 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: A solicitação deve registrar **origem** (Regin/integrador ou portal Simplifica direto) e **tipo de serviço** — o SAPS opera com grupo de serviço/serviço (ex.: viabilidade de 1º estabelecimento, alteração de endereço/atividade, "Revisão TVL — Inclusão de Atividade"); renovação de TVL entra direto pelo portal, **sem** Regin (reunião 2026-06-11).
+- RN-005: Tipos de serviço devem ser parametrizáveis (cadastro administrável), pois determinam fluxo, documentos exigidos e relatórios.
+- RN-006: Solicitações via Regin nascem no estado "aguardando BAP" (HU-133); solicitações diretas pelo portal são protocoladas imediatamente (HU-068).
+- RN-007: O sistema deve detectar **duplicidade/reincidência** na criação: mesmo CNPJ e/ou inscrição imobiliária com processo recente ou ativo gera alerta ao requerente e fica sinalizado ao analista, com link para o processo anterior e oferta de reaproveitamento da análise quando aplicável (HU-142).
 
 ## Critérios de Aceite — BDD
 

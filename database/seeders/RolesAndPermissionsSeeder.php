@@ -25,6 +25,30 @@ class RolesAndPermissionsSeeder extends Seeder
             'manter-perfis',
             'manter-parametros',
             'consultar-cnaes',
+            'monitorar-emails',
+            'consultar-territorio',
+            'consultar-risco',
+            'manter-risco',
+            'consultar-louos',
+            'manter-louos',
+            'registrar-contingencia',
+            'atendimento-presencial',
+            'consultar-solicitacoes',
+            'manter-tipos-servico',
+            'manter-requisitos-documentais',
+            'analisar-processos',
+            'distribuir-processos',
+            'emitir-tvl',
+            'encaminhar-malha-fina',
+            'enviar-tvl-analise',
+            'manter-setores',
+            'consultar-auditoria',
+            'monitorar-lgpd',
+            'gerenciar-alertas-abuso',
+            'manter-config-email',
+            'manter-config-ia',
+            'consultar-relatorios',
+            'relatorios.produtividade.nominal',
         ];
 
         foreach ($permissions as $permission) {
@@ -36,9 +60,41 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::firstOrCreate(['name' => 'cidadao', 'guard_name' => 'web'])
             ->givePermissionTo(['gerenciar-procuracoes-proprias']);
         Role::firstOrCreate(['name' => 'analista', 'guard_name' => 'web'])
-            ->givePermissionTo(['acessar-gestao', 'consultar-cnaes']);
+            ->givePermissionTo([
+                'acessar-gestao',
+                'consultar-cnaes',
+                'consultar-territorio',
+                'consultar-risco',
+                'consultar-louos',
+                'consultar-solicitacoes',
+                'analisar-processos',
+                'encaminhar-malha-fina',
+                'emitir-tvl',
+                'enviar-tvl-analise',
+            ]);
         Role::firstOrCreate(['name' => 'gestor', 'guard_name' => 'web'])
-            ->givePermissionTo(['acessar-gestao', 'consultar-cnaes']);
+            ->givePermissionTo([
+                'acessar-gestao',
+                'consultar-cnaes',
+                'consultar-territorio',
+                'consultar-risco',
+                'consultar-louos',
+                'registrar-contingencia',
+                'atendimento-presencial',
+                'consultar-solicitacoes',
+                'manter-tipos-servico',
+                'manter-requisitos-documentais',
+                'analisar-processos',
+                'distribuir-processos',
+                'encaminhar-malha-fina',
+                'emitir-tvl',
+                'enviar-tvl-analise',
+                'manter-setores',
+                'consultar-auditoria',
+                'gerenciar-alertas-abuso',
+                'consultar-relatorios',
+                'relatorios.produtividade.nominal',
+            ]);
         Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web'])
             ->givePermissionTo([
                 'acessar-gestao',
@@ -48,6 +104,30 @@ class RolesAndPermissionsSeeder extends Seeder
                 'manter-perfis',
                 'manter-parametros',
                 'consultar-cnaes',
+                'monitorar-emails',
+                'consultar-territorio',
+                'consultar-risco',
+                'manter-risco',
+                'consultar-louos',
+                'manter-louos',
+                'registrar-contingencia',
+                'atendimento-presencial',
+                'consultar-solicitacoes',
+                'manter-tipos-servico',
+                'manter-requisitos-documentais',
+                'analisar-processos',
+                'distribuir-processos',
+                'emitir-tvl',
+                'encaminhar-malha-fina',
+                'enviar-tvl-analise',
+                'manter-setores',
+                'consultar-auditoria',
+                'monitorar-lgpd',
+                'gerenciar-alertas-abuso',
+                'manter-config-email',
+                'manter-config-ia',
+                'consultar-relatorios',
+                'relatorios.produtividade.nominal',
             ]);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();

@@ -1,0 +1,28 @@
+{
+    "cnpj": "00000000000191",
+    "razao_social": "BANCO DO BRASIL SA",
+    "nome_fantasia": "DIRECAO GERAL",
+    "natureza_juridica": "Sociedade de Economia Mista",
+    "codigo_natureza_juridica": 2038,
+    "porte": "DEMAIS",
+    "codigo_porte": 5,
+    "cnae_fiscal": 6422100,
+    "cnae_fiscal_descricao": "Bancos múltiplos, com carteira comercial",
+    "cnaes_secundarios": [
+        {
+            "codigo": 6499999,
+            "descricao": "Outras atividades de serviços financeiros não especificadas anteriormente"
+        }
+    ],
+    "logradouro": "SAUN QUADRA 5 BLOCO B TORRE I, II, III",
+    "numero": "SN",
+    "complemento": "",
+    "bairro": "ASA NORTE",
+    "municipio": "BRASILIA",
+    "uf": "DF",
+    "cep": "70040912",
+    "ddd_telefone_1": "6134939002",
+    "email": null,
+    "descricao_situacao_cadastral": "ATIVA",
+    "data_inicio_atividade": "1966-08-01"
+}

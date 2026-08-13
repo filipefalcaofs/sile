@@ -4,12 +4,12 @@
 **EP10 — Análise Técnica SEDUR**
 
 ## Objetivo
-Distribuir processos entre analistas.
+Distribuir processos entre analistas via caixas de setor, mantendo visibilidade da equipe.
 
 ## História de Usuário
 **Como** gestor,  
 **quero** distribuir processo,  
-**para** organizar a fila de trabalho.
+**para** organizar a fila de trabalho do setor.
 
 ## Contexto de Negócio
 O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
@@ -60,6 +60,10 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: O processo cai na **caixa do setor** (HU-138) e é atribuído a um analista **sem sair da caixa do setor** — modelo do SAPS que cobre férias e ausências: qualquer analista do setor mantém visibilidade e pode assumir.
+- RN-005: A caixa de entrada (chegada automática) é distinta da malha fina (provocação humana — HU-136).
+- RN-006: Histórico de atribuições (quem, quando, de qual setor) registrado em auditoria.
+- RN-007: O gestor pode distribuir **em lote**: selecionar N processos da caixa e atribuir a um analista em uma única ação, com auditoria por processo.
 
 ## Critérios de Aceite — BDD
 

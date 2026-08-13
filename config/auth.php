@@ -42,6 +42,14 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Sessão independente da retaguarda: estar logado no portal do
+        // cidadão não significa nada na gestão, e vice-versa. Mesma tabela
+        // de usuários; o que separa os ambientes é a sessão por guard.
+        'gestao' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
     ],
 
     /*

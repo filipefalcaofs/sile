@@ -65,6 +65,8 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-006: Alto risco deve ser encaminhado para análise técnica quando a legislação assim exigir.
 - RN-007: Um mesmo CNAE pode possuir múltiplas linhas de classificação (subatividades/descrições e macroáreas distintas) — a chave de classificação não é o CNAE isolado.
 - RN-008: A resposta do requerente à pergunta da condicionante pode reclassificar o risco (ex.: baixo risco que se torna alto risco quando o produto não é artesanal).
+- RN-009: Risco **municipal unificado** (Decreto 32.636/2020) e risco **sanitário** (planilha VISA) são dimensões separadas no modelo — 52 dos 260 CNAEs da planilha VISA divergem do decreto; para o TVL prevalece o municipal (confirmar com a SEDUR).
+- RN-010: O cadastro de regras por CNAE deve comportar as flags observadas na planilha unificada e no SAPS: autorizado para escritório virtual, autorizado para MEI, fator multiplicador, exige RT (condicional) e gatilhos de análise — todas parametrizáveis (tela "Cadastro CNAE" do legado).
 
 ## Critérios de Aceite — BDD
 

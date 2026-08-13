@@ -9,11 +9,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Efeito imediato da inativação (HU-012): sessão aberta de usuário
- * inativado é derrubada na request seguinte, com mensagem clara.
- * Guest e usuário ativo: no-op.
+ * inativado é derrubada na request seguinte, com mensagem clara — nos
+ * dois guards de sessão (portal e gestão). Guest e usuário ativo: no-op.
  */
 class EnsureUserIsActive
 {
+    private const GUARDS = ['web', 'gestao'];
+
     /**
      * Handle an incoming request.
      *
@@ -21,15 +23,29 @@ class EnsureUserIsActive
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $contextGuard = $request->is('gestao', 'gestao/*') ? 'gestao' : 'web';
+        $contextDropped = false;
 
-        if ($user !== null && $user->isInactive()) {
-            Auth::guard('web')->logout();
+        foreach (self::GUARDS as $guard) {
+            $user = Auth::guard($guard)->user();
 
-            $request->session()->invalidate();
+            if ($user !== null && $user->isInactive()) {
+                // Derruba apenas o guard com a conta inativa: os guards podem
+                // carregar contas diferentes na mesma sessão de navegador.
+                Auth::guard($guard)->logout();
+
+                if ($guard === $contextGuard) {
+                    $contextDropped = true;
+                }
+            }
+        }
+
+        if ($contextDropped) {
             $request->session()->regenerateToken();
 
-            return redirect()->route('login')->withErrors([
+            $loginRoute = $contextGuard === 'gestao' ? 'gestao.login' : 'login';
+
+            return redirect()->route($loginRoute)->withErrors([
                 'email' => __('Sua conta está inativa. Procure o administrador do sistema.'),
             ]);
         }

@@ -32,11 +32,11 @@ class ParameterHistoryTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)->put(route('gestao.parametros.update', 'ui.access_history.per_page'), ['value' => '5']);
-        $this->actingAs($admin)->put(route('gestao.parametros.update', 'ui.access_history.per_page'), ['value' => '10']);
+        $this->actingAs($admin, 'gestao')->put(route('gestao.parametros.update', 'security.login.max_attempts'), ['value' => '5']);
+        $this->actingAs($admin, 'gestao')->put(route('gestao.parametros.update', 'security.login.max_attempts'), ['value' => '10']);
 
-        $this->actingAs($admin)
-            ->get(route('gestao.parametros.historico', 'ui.access_history.per_page'))
+        $this->actingAs($admin, 'gestao')
+            ->get(route('gestao.parametros.historico', 'security.login.max_attempts'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/parametros/historico')
@@ -58,11 +58,11 @@ class ParameterHistoryTest extends TestCase
             'validation_rules' => ['required', 'string'],
         ]);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put(route('gestao.parametros.update', 'integracao.sefaz.token'), ['value' => 'token-secreto-003'])
             ->assertRedirect();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get(route('gestao.parametros.historico', 'integracao.sefaz.token'))
             ->assertOk()
             ->assertDontSee('token-secreto-003')
@@ -80,8 +80,8 @@ class ParameterHistoryTest extends TestCase
     {
         $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($gestor)
-            ->get('/gestao/parametros/ui.access_history.per_page/historico')
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao/parametros/security.login.max_attempts/historico')
             ->assertForbidden();
 
         $this->assertDatabaseHas('activity_log', [

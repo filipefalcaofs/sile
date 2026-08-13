@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import Badge from '@/components/ui/badge';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
@@ -142,7 +143,7 @@ function AccessLogTable({ logs }: { logs: AcessosProps['logs'] }) {
 
 export default function Acessos({ logs }: AcessosProps) {
     return (
-        <PortalLayout>
+        <>
             <Head title="Meus acessos" />
             <PageBreadcrumb pageTitle="Meus acessos" />
 
@@ -161,6 +162,8 @@ export default function Acessos({ logs }: AcessosProps) {
                     </div>
                 </div>
             </div>
-        </PortalLayout>
+        </>
     );
 }
+
+Acessos.layout = (page: ReactNode) => <PortalLayout>{page}</PortalLayout>;

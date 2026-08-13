@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * Subclasse CNAE (HU-011). O banco guarda o código em dígitos ('0111301');
@@ -43,5 +44,15 @@ class Cnae extends Model
         return Attribute::make(
             get: fn () => preg_replace('/^(\d{4})(\d)(\d{2})$/', '$1-$2/$3', $this->code),
         );
+    }
+
+    /**
+     * Empresas que vinculam este CNAE (principal ou secundário).
+     *
+     * @return BelongsToMany<Company, $this>
+     */
+    public function companies(): BelongsToMany
+    {
+        return $this->belongsToMany(Company::class, 'company_cnae')->withPivot('is_primary')->withTimestamps();
     }
 }

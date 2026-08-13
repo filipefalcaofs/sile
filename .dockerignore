@@ -1,0 +1,14 @@
+node_modules
+vendor
+.git
+.env
+.env.*
+!.env.example
+storage/app/*
+storage/logs/*
+bootstrap/cache/*
+.cursor
+*.md
+tests
+.github
+docker/postgres

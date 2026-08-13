@@ -60,6 +60,8 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: Entre as condicionantes urbanísticas, o motor deve verificar **vagas de estacionamento exigidas** (LOUOS/análise CNLU): comparar vagas, carga e descarga, pátio e embarque/desembarque declarados pelo requerente com o exigido, produzindo veredito de conformidade ("Imóvel Conforme/Não Conforme") — regra observada na ficha de análise do SAPS; exigência parametrizada como dado versionado.
+- RN-005: Resultado não conforme não decide sozinho: alimenta a ficha de análise (HU-135) com possibilidade de recálculo e registro de vagas em vistoria.
 
 ## Critérios de Aceite — BDD
 

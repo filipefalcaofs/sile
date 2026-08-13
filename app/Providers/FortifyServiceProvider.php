@@ -8,6 +8,8 @@ use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Models\AccessLog;
 use App\Models\User;
+use App\Services\GovBr\GovBr;
+use App\Support\PasswordPolicy;
 use App\Support\Settings;
 use Illuminate\Cache\RateLimiter as CacheRateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -16,7 +18,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
@@ -32,19 +33,24 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Login único, dois ambientes (HU-002 CA-01): o destino pós-login é
-        // decidido por perfil — quem pode acessar a gestão vai para ela.
+        // Ambientes com sessões independentes (decisão 2026-06-12): o login
+        // do portal leva sempre ao portal — a gestão exige o login interno
+        // (/gestao/login, guard gestao). URL pretendida da gestão é
+        // descartada para ninguém aterrissar no login interno sem querer.
         $this->app->instance(LoginResponse::class, new class implements LoginResponse
         {
             public function toResponse($request)
             {
-                $user = $request->user();
+                $intendedPath = (string) parse_url(
+                    (string) $request->session()->get('url.intended', ''),
+                    PHP_URL_PATH,
+                );
 
-                $target = $user->can('acessar-gestao')
-                    ? route('gestao.dashboard')
-                    : route('portal.dashboard');
+                if ($intendedPath === '/gestao' || str_starts_with($intendedPath, '/gestao/')) {
+                    $request->session()->forget('url.intended');
+                }
 
-                return redirect()->intended($target);
+                return redirect()->intended(route('portal.dashboard'));
             }
         });
 
@@ -60,6 +66,17 @@ class FortifyServiceProvider extends ServiceProvider
                         $this->throttleKey($request),
                         (int) Settings::get('security.login.max_attempts'),
                     );
+                }
+
+                /**
+                 * CPF normalizado para dígitos: alternar máscara não pode
+                 * criar chaves de throttle diferentes para a mesma conta.
+                 */
+                protected function throttleKey(Request $request): string
+                {
+                    $username = preg_replace('/\D/', '', (string) $request->input(Fortify::username()));
+
+                    return Str::transliterate($username.'|'.$request->ip());
                 }
             };
         });
@@ -78,11 +95,13 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
+            'canLoginWithGovBr' => GovBr::loginAvailable(),
             'status' => $request->session()->get('status'),
         ]));
 
         Fortify::registerView(fn () => Inertia::render('auth/register', [
-            'passwordRules' => Password::defaults()->toPasswordRulesString(),
+            'passwordRules' => PasswordPolicy::description(),
+            'canLoginWithGovBr' => GovBr::loginAvailable(),
         ]));
 
         Fortify::verifyEmailView(fn (Request $request) => Inertia::render('auth/verify-email', [
@@ -98,11 +117,20 @@ class FortifyServiceProvider extends ServiceProvider
             'token' => $request->route('token'),
         ]));
 
-        // HU-012: conta inativada não autentica. Retorno null preserva o fluxo
-        // padrão (evento Failed -> access_log 'falha') sem revelar o estado da
-        // conta; a mensagem de inatividade só aparece com credenciais corretas.
+        // Rota GET registrada pelo Fortify independentemente de feature:
+        // sem a view, ações futuras protegidas por password.confirm dariam
+        // erro 500 em vez de pedir a senha.
+        Fortify::confirmPasswordView(fn () => Inertia::render('auth/confirm-password'));
+
+        // Login do cidadão por CPF (normalizado para dígitos — o form envia
+        // com máscara). HU-012: conta inativada não autentica; retorno null
+        // preserva o fluxo padrão (evento Failed -> access_log 'falha') sem
+        // revelar o estado da conta — a mensagem de inatividade só aparece
+        // com credenciais corretas.
         Fortify::authenticateUsing(function (Request $request) {
-            $user = User::query()->where('email', $request->email)->first();
+            $cpf = preg_replace('/\D/', '', (string) $request->input('cpf'));
+
+            $user = User::query()->where('cpf', $cpf)->first();
 
             if (! $user || ! Hash::check($request->password, $user->password)) {
                 return null;
@@ -119,7 +147,7 @@ class FortifyServiceProvider extends ServiceProvider
                 ]);
 
                 throw ValidationException::withMessages([
-                    'email' => __('Sua conta está inativa. Procure o administrador do sistema.'),
+                    'cpf' => __('Sua conta está inativa. Procure o administrador do sistema.'),
                 ]);
             }
 
@@ -127,7 +155,8 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower((string) $request->input(Fortify::username())).'|'.$request->ip());
+            $username = preg_replace('/\D/', '', (string) $request->input(Fortify::username()));
+            $throttleKey = Str::transliterate($username.'|'.$request->ip());
 
             return Limit::perMinute((int) Settings::get('security.login.max_attempts'))->by($throttleKey);
         });
@@ -142,6 +171,49 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by(
                 ($credentialId ?: $request->session()->getId()).'|'.$request->ip()
             );
+        });
+
+        // Throttle da consulta pública de CNPJ (HU-021) — limite administrável
+        // sem deploy; estabelece o padrão de throttle parametrizado para HU-069/EP07.
+        RateLimiter::for('cnpj-lookup', function (Request $request) {
+            return Limit::perMinute(
+                (int) Settings::get('seguranca.throttle.cnpj_lookup.por_minuto', 30),
+            )->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Throttle da geocodificação (HU-029) — Nominatim recomenda ~1 req/s;
+        // o limite por minuto é administrável sem deploy (espelha cnpj-lookup).
+        RateLimiter::for('geocoding', function (Request $request) {
+            return Limit::perMinute(
+                (int) Settings::get('seguranca.throttle.geocoding.por_minuto', 60),
+            )->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Throttle da consulta pública de viabilidade (EP07) — limite
+        // administrável sem deploy; reusa o padrão de throttle parametrizado
+        // estabelecido na Fase 3.1 (cnpj-lookup/geocoding).
+        RateLimiter::for('consulta-viabilidade', function (Request $request) {
+            return Limit::perMinute(
+                (int) Settings::get('seguranca.throttle.consulta_viabilidade.por_minuto', 20),
+            )->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Throttle da consulta PÚBLICA de protocolo por link assinado (HU-069) —
+        // limite administrável sem deploy; espelha consulta-viabilidade (EP07).
+        RateLimiter::for('consulta-protocolo', function (Request $request) {
+            return Limit::perMinute(
+                (int) Settings::get('seguranca.throttle.consulta_protocolo.por_minuto', 30),
+            )->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Throttle do teste de conexão de IA (Fase 14, Onda 0) — ação interna de
+        // admin (manter-config-ia); o limite por minuto é um teto técnico/de
+        // segurança lido via Settings (fallback config/sile.php), espelhando o
+        // padrão de throttle parametrizado da Fase 3.1.
+        RateLimiter::for('ai-connection-test', function (Request $request) {
+            return Limit::perMinute(
+                (int) Settings::get('seguranca.throttle.ai_test.por_minuto', 10),
+            )->by($request->user()?->id ?: $request->ip());
         });
     }
 }

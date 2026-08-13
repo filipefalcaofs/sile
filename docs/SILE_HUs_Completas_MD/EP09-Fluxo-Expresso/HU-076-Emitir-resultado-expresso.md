@@ -4,12 +4,12 @@
 **EP09 — Fluxo Expresso**
 
 ## Objetivo
-Emitir conclusão automática, materializada no Termo de Viabilidade de Localização (TVL) quando deferida.
+Concluir automaticamente o processo de viabilidade (deferido ou indeferido), comunicar o resultado ao integrador Regin/Junta, enviar dados à SEFAZ quando deferido e registrar o produto (número do TVL) para emissão de relatório PDF no backoffice pelo analista.
 
 ## História de Usuário
 **Como** sistema,  
 **quero** emitir resultado expresso,  
-**para** finalizar processo sem intervenção humana.
+**para** finalizar processo sem intervenção humana e integrar Regin, SEFAZ e retaguarda SEDUR.
 
 ## Contexto de Negócio
 O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
@@ -27,12 +27,14 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - Regras, integrações ou bases oficiais configuradas quando aplicável.
 
 ## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Emitir resultado expresso**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+1. O sistema identifica processo elegível concluído pelo fluxo expresso (HU-074 ou HU-075).
+2. O sistema consolida fundamentação legal, regras aplicadas, condicionantes e resultado por CNAE.
+3. O sistema atribui número de produto (TVL) ao processo deferido, para rastreio interno e emissão de relatório.
+4. O sistema comunica o parecer (deferido ou indeferido) ao integrador Regin/Junta Comercial via HU-104.
+5. Quando deferido, o sistema dispara envio dos dados da viabilidade à SEFAZ municipal via API (HU-110).
+6. O sistema **não** disponibiliza PDF/TVL ao requerente — o cidadão acompanha o resultado pelo Regin/Junta ou portal Simplifica.
+7. O sistema disponibiliza na retaguarda os dados consolidados para emissão opcional de PDF/TVL pelo analista (HU-132), quando necessário.
+8. O sistema registra decisão, integrações e metadados em trilha de auditoria.
 
 ## Fluxos Alternativos
 ### FA-01 — Dados incompletos
@@ -63,9 +65,10 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-004: Decisão automática somente deve ocorrer quando todas as regras necessárias forem encontradas e não houver conflito.
 - RN-005: O sistema deve registrar a fundamentação legal, dados de entrada, regras aplicadas e resultado final.
 - RN-006: Casos ambíguos, sem dado confiável ou com conflito normativo devem ir para análise técnica.
-- RN-007: O resultado deferido deve gerar o Termo de Viabilidade de Localização (TVL), documento oficial que informa as atividades permitidas no local, com fundamentação na LOUOS (Lei nº 9.148/2016) e no PDDU (Lei nº 9.069/2016).
-- RN-008: O resultado (deferido ou indeferido) deve ser comunicado à Junta Comercial (integrador) e, quando deferido, os dados da viabilidade devem ser enviados à SEFAZ municipal via API (ver HU-104 e HU-110).
-- RN-009: O TVL emitido deve conter código de verificação e QR code apontando para página pública de autenticidade, permitindo a qualquer interessado validar o documento.
+- RN-007: O resultado deferido deve gerar número de produto (TVL) e dados consolidados do Termo de Viabilidade de Localização, com fundamentação na LOUOS (Lei nº 9.148/2016) e no PDDU (Lei nº 9.069/2016). A emissão do PDF/TVL é função da retaguarda (HU-132) — **não** é entregue automaticamente ao requerente.
+- RN-008: O resultado (deferido ou indeferido) deve ser comunicado ao integrador Regin/Junta Comercial (HU-104). Quando deferido, os dados da viabilidade devem ser enviados à SEFAZ municipal via API (HU-110).
+- RN-009: Deferimento exige que **todas** as atividades (CNAEs) estejam deferidas; uma indeferida indefere o processo (regra confirmada no SAPS legado).
+- RN-010: O PDF/TVL gerado no backoffice pode conter código de verificação e QR code para autenticidade interna ou consulta pública — é relatório administrativo, não canal oficial de entrega ao cidadão (canal oficial: Regin + API SEFAZ).
 
 ## Critérios de Aceite — BDD
 
@@ -137,8 +140,8 @@ O sistema deve manter registro completo da execução desta HU, incluindo:
 Alta
 
 ## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+Refinada com base na reunião SEDUR (2026-06-11): o documento de viabilidade **não é mais liberado ao requerente** — os dados seguem via API à SEFAZ e o parecer via Regin. O PDF/TVL permanece como **relatório emitível pelo analista no backoffice** (HU-132), útil para arquivo, malha fina e atendimento presencial.
 
-No fluxo atual do Portal Simplifica, o TVL só é liberado após pagamento do DAM (taxa TLL). Está pendente de confirmação com a SEDUR se a geração do DAM e a conciliação de pagamento entram no escopo do SILE (ver HU-071 e HU-072) ou permanecem em sistema externo.
+O DAM de viabilidade via Regin é emitido/pago pela SEFAZ — fora do escopo de geração no SILE (ver HU-071 revisada). Pendente confirmar formato final do PDF com Anderson (assinatura: hoje é imagem do diretor, não ICP-Brasil).
 
-Implementação de referência no projeto SIGVISA (`sls-sms`): emissão de documento em PDF com QR code de verificação pública (`AlvaraService` + rota `/verificar-alvara/{codigo}`) e assinatura digital ICP-Brasil via certificado PFX ou via API gov.br (`AssinaturaDigitalService`, `GovBrAssinaturaClient`) — avaliar adoção de assinatura digital no TVL com a SEDUR.
+Implementação de referência no SIGVISA (`sls-sms`): geração de PDF com QR code (`AlvaraService` + rota `/verificar-alvara/{codigo}`) — avaliar reutilização para HU-132.

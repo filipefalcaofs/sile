@@ -60,8 +60,8 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-
-## Critérios de Aceite — BDD
+- RN-004: Além da validação contra o logradouro (comportamento do legado), o polígono informado deve ser comparado ao **lote oficial** da base GIS: percentual de sobreposição abaixo do limiar parametrizado gera alerta de localização suspeita, registrado no processo para o analista.
+- RN-005: Divergência entre zona/via derivadas do polígono e as derivadas da inscrição imobiliária deve ser apontada antes de prosseguir.
 
 ### CA-01 — Execução com sucesso
 **Dado** que o usuário possui permissão e informou os dados obrigatórios,  

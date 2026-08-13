@@ -63,6 +63,7 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-004: O enquadramento deve considerar CNAE informado e área ocupada declarada.
 - RN-005: A regra aplicada deve referenciar a versão vigente do Quadro 7 da LOUOS.
 - RN-006: Quando não houver regra aplicável, o processo deve ser encaminhado para análise técnica.
+- RN-007: Modelo operacional do SAPS: por código LOUOS → classificação, código TLL, flag de classificação de risco e **até 3 enquadramentos por faixa de área** ("Até m²") + opção "Qualquer Área" — espelhar na parametrização (ex.: LOUOS 07.12.13 escritório → TLL 1.01, nR1-12 até 1.250 m²).
 
 ## Critérios de Aceite — BDD
 

@@ -30,6 +30,15 @@ class RolesAndPermissionsSeederTest extends TestCase
             'manter-perfis',
             'manter-parametros',
             'consultar-cnaes',
+            'consultar-risco',
+            'manter-risco',
+            'consultar-louos',
+            'manter-louos',
+            'registrar-contingencia',
+            'atendimento-presencial',
+            'consultar-solicitacoes',
+            'manter-tipos-servico',
+            'manter-requisitos-documentais',
         ];
 
         foreach ($permissions as $permission) {
@@ -65,6 +74,115 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->assertFalse($cidadao->hasPermissionTo('consultar-cnaes'));
     }
 
+    public function test_papeis_recebem_permissao_consultar_territorio(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertSame(
+            'consultar-territorio',
+            Permission::findByName('consultar-territorio', 'web')->name,
+        );
+
+        foreach (['administrador', 'analista', 'gestor'] as $role) {
+            $this->assertTrue(
+                Role::findByName($role, 'web')->hasPermissionTo('consultar-territorio'),
+            );
+        }
+
+        $this->assertFalse(
+            Role::findByName('cidadao', 'web')->hasPermissionTo('consultar-territorio'),
+        );
+    }
+
+    public function test_papeis_recebem_permissoes_de_risco(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        foreach (['consultar-risco', 'manter-risco'] as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Consulta da tabela de risco: analista, gestor e administrador (espelha CNAEs).
+        foreach (['administrador', 'analista', 'gestor'] as $role) {
+            $this->assertTrue(
+                Role::findByName($role, 'web')->hasPermissionTo('consultar-risco'),
+            );
+        }
+
+        // Manutenção (publicação versionada e condicionantes): só o administrador.
+        $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('manter-risco'));
+        $this->assertFalse(Role::findByName('analista', 'web')->hasPermissionTo('manter-risco'));
+        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('manter-risco'));
+        $this->assertFalse(Role::findByName('cidadao', 'web')->hasPermissionTo('consultar-risco'));
+    }
+
+    public function test_papeis_recebem_permissoes_de_louos(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        foreach (['consultar-louos', 'manter-louos'] as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Consulta dos Quadros vigentes: analista, gestor e administrador (espelha CNAEs/risco).
+        foreach (['administrador', 'analista', 'gestor'] as $role) {
+            $this->assertTrue(
+                Role::findByName($role, 'web')->hasPermissionTo('consultar-louos'),
+            );
+        }
+
+        // Manutenção (publicação versionada dos Quadros): só o administrador.
+        $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('manter-louos'));
+        $this->assertFalse(Role::findByName('analista', 'web')->hasPermissionTo('manter-louos'));
+        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('manter-louos'));
+        $this->assertFalse(Role::findByName('cidadao', 'web')->hasPermissionTo('consultar-louos'));
+    }
+
+    public function test_papeis_recebem_permissoes_de_solicitacao(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $solicitacao = [
+            'registrar-contingencia',
+            'atendimento-presencial',
+            'consultar-solicitacoes',
+            'manter-tipos-servico',
+            'manter-requisitos-documentais',
+        ];
+
+        foreach ($solicitacao as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Administrador parametriza tudo; gestor opera e parametriza os cadastros da fase.
+        foreach (['administrador', 'gestor'] as $role) {
+            foreach ($solicitacao as $permission) {
+                $this->assertTrue(
+                    Role::findByName($role, 'web')->hasPermissionTo($permission),
+                );
+            }
+        }
+
+        // Analista só consulta os processos no backoffice (não registra contingência).
+        $analista = Role::findByName('analista', 'web');
+        $this->assertTrue($analista->hasPermissionTo('consultar-solicitacoes'));
+        $this->assertFalse($analista->hasPermissionTo('registrar-contingencia'));
+
+        // Cidadão opera as próprias solicitações por policy, sem permissão nomeada.
+        $this->assertFalse(
+            Role::findByName('cidadao', 'web')->hasPermissionTo('consultar-solicitacoes'),
+        );
+    }
+
     public function test_estados_da_factory_atribuem_papel(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
@@ -75,13 +193,181 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->assertTrue(User::factory()->administrador()->create()->hasRole('administrador'));
     }
 
+    public function test_papeis_recebem_permissoes_da_analise_tecnica(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $novas = [
+            'analisar-processos',
+            'distribuir-processos',
+            'emitir-tvl',
+            'encaminhar-malha-fina',
+            'manter-setores',
+        ];
+
+        foreach ($novas as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Analista analisa, provoca malha fina e emite o TVL interno; não
+        // distribui processos nem administra setores (atribuições do gestor).
+        $analista = Role::findByName('analista', 'web');
+        foreach (['analisar-processos', 'encaminhar-malha-fina', 'emitir-tvl'] as $permission) {
+            $this->assertTrue($analista->hasPermissionTo($permission));
+        }
+        $this->assertFalse($analista->hasPermissionTo('distribuir-processos'));
+        $this->assertFalse($analista->hasPermissionTo('manter-setores'));
+
+        // Gestor distribui, administra setores e também analisa/emite TVL.
+        $gestor = Role::findByName('gestor', 'web');
+        foreach ($novas as $permission) {
+            $this->assertTrue($gestor->hasPermissionTo($permission));
+        }
+
+        // Administrador recebe as cinco (administra tudo).
+        $administrador = Role::findByName('administrador', 'web');
+        foreach ($novas as $permission) {
+            $this->assertTrue($administrador->hasPermissionTo($permission));
+        }
+
+        // Cidadão não recebe nenhuma permissão de backoffice da análise.
+        $cidadao = Role::findByName('cidadao', 'web');
+        foreach ($novas as $permission) {
+            $this->assertFalse($cidadao->hasPermissionTo($permission));
+        }
+    }
+
+    public function test_papeis_recebem_permissao_de_enviar_tvl_analise(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertSame(
+            'enviar-tvl-analise',
+            Permission::findByName('enviar-tvl-analise', 'web')->name,
+        );
+
+        // Envio manual do processo à análise (tela T06): permissão DEDICADA
+        // concedida a quem já opera a análise técnica — analista, gestor e
+        // administrador.
+        foreach (['analista', 'gestor', 'administrador'] as $role) {
+            $this->assertTrue(
+                Role::findByName($role, 'web')->hasPermissionTo('enviar-tvl-analise'),
+                "O papel {$role} deve poder enviar processos para análise.",
+            );
+        }
+
+        // Cidadão não recebe nenhuma permissão de backoffice da análise.
+        $this->assertFalse(
+            Role::findByName('cidadao', 'web')->hasPermissionTo('enviar-tvl-analise'),
+        );
+    }
+
+    public function test_papeis_recebem_permissoes_de_auditoria_e_compliance(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $novas = ['consultar-auditoria', 'monitorar-lgpd', 'gerenciar-alertas-abuso'];
+
+        foreach ($novas as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Consultar a trilha (HU-097..101) e gerenciar alertas de abuso (HU-149):
+        // gestor e administrador.
+        foreach (['gestor', 'administrador'] as $role) {
+            $this->assertTrue(Role::findByName($role, 'web')->hasPermissionTo('consultar-auditoria'));
+            $this->assertTrue(Role::findByName($role, 'web')->hasPermissionTo('gerenciar-alertas-abuso'));
+        }
+
+        // Painel LGPD (HU-102; DPO/admin): só o administrador.
+        $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('monitorar-lgpd'));
+        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('monitorar-lgpd'));
+
+        // Analista NÃO recebe nenhuma das três (default gestor/admin; sem papel
+        // auditor dedicado — decisão CONTEXT).
+        $analista = Role::findByName('analista', 'web');
+        foreach ($novas as $permission) {
+            $this->assertFalse($analista->hasPermissionTo($permission));
+        }
+
+        // Cidadão tampouco recebe qualquer permissão de auditoria/compliance.
+        $cidadao = Role::findByName('cidadao', 'web');
+        foreach ($novas as $permission) {
+            $this->assertFalse($cidadao->hasPermissionTo($permission));
+        }
+    }
+
+    public function test_papeis_recebem_permissoes_de_relatorios(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $novas = ['consultar-relatorios', 'relatorios.produtividade.nominal'];
+
+        foreach ($novas as $permission) {
+            $this->assertSame(
+                $permission,
+                Permission::findByName($permission, 'web')->name,
+            );
+        }
+
+        // Consultar relatórios e ver a produtividade nominal (HU-130): gestor e
+        // administrador. A exportação NÃO tem permissão própria — herda a leitura
+        // da tela (RN-007).
+        foreach (['gestor', 'administrador'] as $role) {
+            foreach ($novas as $permission) {
+                $this->assertTrue(Role::findByName($role, 'web')->hasPermissionTo($permission));
+            }
+        }
+
+        // Analista não consulta os relatórios gerenciais nem vê produtividade
+        // nominal (default conservador RH/LGPD — vê só o próprio recorte).
+        $analista = Role::findByName('analista', 'web');
+        foreach ($novas as $permission) {
+            $this->assertFalse($analista->hasPermissionTo($permission));
+        }
+
+        // Cidadão tampouco recebe qualquer permissão de relatórios.
+        $cidadao = Role::findByName('cidadao', 'web');
+        foreach ($novas as $permission) {
+            $this->assertFalse($cidadao->hasPermissionTo($permission));
+        }
+    }
+
+    public function test_papel_administrador_recebe_permissao_de_config_ia(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertSame(
+            'manter-config-ia',
+            Permission::findByName('manter-config-ia', 'web')->name,
+        );
+
+        // Configuração de provedores de IA (Fase 14 — HU-014 aplicada à IA):
+        // só o administrador parametriza (credenciais criptografadas, egress
+        // externo). Espelha manter-config-email.
+        $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('manter-config-ia'));
+
+        foreach (['analista', 'gestor', 'cidadao'] as $role) {
+            $this->assertFalse(
+                Role::findByName($role, 'web')->hasPermissionTo('manter-config-ia'),
+                "O papel {$role} não pode manter a configuração de IA.",
+            );
+        }
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(8, Permission::query()->count());
+        $this->assertSame(32, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void

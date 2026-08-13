@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-wxSMGtru.js";var t=e();function n({className:e=``}){return(0,t.jsx)(`div`,{className:`animate-pulse rounded-md bg-gray-100 dark:bg-gray-800 ${e}`,"aria-hidden":`true`})}export{n as t};

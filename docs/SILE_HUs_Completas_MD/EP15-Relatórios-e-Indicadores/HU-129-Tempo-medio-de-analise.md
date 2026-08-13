@@ -60,6 +60,9 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: O tempo deve ser medido **por etapa** da timeline do processo (abertura → preenchimento → espera BAP → resposta/decisão), permitindo identificar onde o prazo é consumido — o legado mede só pelo histórico, e a diretora reporta 19 dias enquanto a medição interna deu 42h.
+- RN-005: A contagem deve aplicar as regras de prazo parametrizadas (dias úteis vs corridos, feriados via HU-137, fins de semana) — causa raiz da distorção de prazos no legado (+48h por fim de semana, +24h por feriado, contados indevidamente).
+- RN-006: Relatórios equivalentes aos administrativos do SAPS devem existir: **Tempo de Emissão de TVL** e **Sedes de Escritório Virtual**, com recortes por período, setor, analista e categoria (expresso/semi-expresso/malha fina).
 
 ## Critérios de Aceite — BDD
 

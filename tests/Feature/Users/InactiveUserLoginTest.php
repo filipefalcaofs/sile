@@ -23,13 +23,13 @@ class InactiveUserLoginTest extends TestCase
         $user = User::factory()->cidadao()->inactive()->create();
 
         $response = $this->post('/portal/login', [
-            'email' => $user->email,
+            'cpf' => $user->cpf,
             'password' => 'password',
         ]);
 
         $this->assertGuest();
         $response->assertSessionHasErrors([
-            'email' => 'Sua conta está inativa. Procure o administrador do sistema.',
+            'cpf' => 'Sua conta está inativa. Procure o administrador do sistema.',
         ]);
 
         $this->assertDatabaseHas('access_logs', [
@@ -43,14 +43,14 @@ class InactiveUserLoginTest extends TestCase
         $user = User::factory()->cidadao()->inactive()->create();
 
         $response = $this->post('/portal/login', [
-            'email' => $user->email,
+            'cpf' => $user->cpf,
             'password' => 'senha-errada',
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHasErrors(['email' => __('auth.failed')]);
+        $response->assertSessionHasErrors(['cpf' => __('auth.failed')]);
 
-        $errors = session('errors')->get('email');
+        $errors = session('errors')->get('cpf');
         $this->assertStringNotContainsString('inativa', implode(' ', $errors));
 
         $this->assertDatabaseHas('access_logs', [
@@ -64,7 +64,7 @@ class InactiveUserLoginTest extends TestCase
         $user = User::factory()->cidadao()->create();
 
         $this->post('/portal/login', [
-            'email' => $user->email,
+            'cpf' => $user->cpf,
             'password' => 'password',
         ]);
 
@@ -78,7 +78,7 @@ class InactiveUserLoginTest extends TestCase
         $user->forceFill(['inactivated_at' => null])->save();
 
         $this->post('/portal/login', [
-            'email' => $user->email,
+            'cpf' => $user->cpf,
             'password' => 'password',
         ]);
 
@@ -109,5 +109,22 @@ class InactiveUserLoginTest extends TestCase
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($user)->get('/portal/painel')->assertOk();
+    }
+
+    public function test_sessao_de_servidor_inativado_na_gestao_e_derrubada_para_o_login_interno(): void
+    {
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($analista, 'gestao');
+
+        $analista->forceFill(['inactivated_at' => now()])->save();
+
+        $response = $this->get('/gestao');
+
+        $response->assertRedirect(route('gestao.login'));
+        $response->assertSessionHasErrors([
+            'email' => 'Sua conta está inativa. Procure o administrador do sistema.',
+        ]);
+        $this->assertGuest('gestao');
     }
 }
