@@ -6,7 +6,7 @@ use App\Enums\RiscoMunicipal;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Services\Risco\RiscoMunicipalImportService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -20,7 +20,7 @@ use Tests\TestCase;
  */
 class RiscoMunicipalImportServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): RiscoMunicipalImportService
     {
@@ -45,6 +45,18 @@ class RiscoMunicipalImportServiceTest extends TestCase
         // nunca é inventado.
         $this->expectException(InvalidArgumentException::class);
         RiscoMunicipal::fromDecreto('MÉDIO');
+    }
+
+    public function test_enum_exibe_nomenclatura_sedur_baixo_medio_alto(): void
+    {
+        $this->assertSame('Baixo', RiscoMunicipal::BaixoA->label());
+        $this->assertSame('Médio', RiscoMunicipal::BaixoB->label());
+        $this->assertSame('Alto', RiscoMunicipal::Alto->label());
+
+        foreach (RiscoMunicipal::cases() as $nivel) {
+            $this->assertStringNotContainsString('Risco A', $nivel->label());
+            $this->assertStringNotContainsString('Risco B', $nivel->label());
+        }
     }
 
     public function test_import_carrega_todas_as_classificacoes_do_decreto(): void

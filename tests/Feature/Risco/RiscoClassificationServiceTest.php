@@ -18,7 +18,7 @@ use App\Services\Risco\RiscoInput;
 use App\Support\Audit\AuditService;
 use Carbon\Carbon;
 use Database\Seeders\RiskTriggerSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -32,7 +32,7 @@ use Tests\TestCase;
  */
 class RiscoClassificationServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): RiscoClassificationService
     {
@@ -77,6 +77,7 @@ class RiscoClassificationServiceTest extends TestCase
 
         $this->assertSame('classificado', $result->municipal['status']);
         $this->assertSame('baixo_a', $result->municipal['nivel']);
+        $this->assertSame('Baixo', $result->municipal['nivel_label']);
 
         $this->assertSame('classificado', $result->sanitario['status']);
         $this->assertSame('alto', $result->sanitario['nivel_final']);
@@ -114,6 +115,7 @@ class RiscoClassificationServiceTest extends TestCase
 
         $result = $this->service()->classify(RiscoInput::paraCnae('2222333'));
 
+        $this->assertSame('Médio', $result->municipal['nivel_label']);
         $this->assertSame('expresso', $result->encaminhamento['fluxo']);
     }
 

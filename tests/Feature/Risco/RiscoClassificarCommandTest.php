@@ -5,7 +5,7 @@ namespace Tests\Feature\Risco;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Database\Seeders\RiskTriggerSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -18,7 +18,7 @@ use Tests\TestCase;
  */
 class RiscoClassificarCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -34,7 +34,9 @@ class RiscoClassificarCommandTest extends TestCase
     public function test_classifica_cnae_baixo_a_real_e_indica_expresso(): void
     {
         $this->artisan('risco:classificar', ['cnae' => '0111301'])
-            ->expectsOutputToContain('Baixo Risco A')
+            ->expectsOutputToContain('Nível: Baixo')
+            ->doesntExpectOutputToContain('Risco A')
+            ->doesntExpectOutputToContain('Risco B')
             ->expectsOutputToContain('Decreto')
             ->expectsOutputToContain('expresso')
             ->assertSuccessful();

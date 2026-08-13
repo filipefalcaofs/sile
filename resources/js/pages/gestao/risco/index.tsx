@@ -62,15 +62,24 @@ interface RiscoIndexProps {
     perPageOptions: number[];
 }
 
-// Níveis do Decreto nº 32.636/2020 — não existe "médio" no risco municipal.
+// Níveis internos do Decreto nº 32.636/2020 (baixo_a/baixo_b/alto) exibidos
+// com a nomenclatura oficial da SEDUR: Baixo / Médio / Alto.
 const NIVEIS_MUNICIPAIS = [
-    { value: 'baixo_a', label: 'Baixo Risco A' },
-    { value: 'baixo_b', label: 'Baixo Risco B' },
-    { value: 'alto', label: 'Alto Risco' },
+    { value: 'baixo_a', label: 'Baixo' },
+    { value: 'baixo_b', label: 'Médio' },
+    { value: 'alto', label: 'Alto' },
 ];
 
-function municipalColor(nivel: string): 'success' | 'error' {
-    return nivel === 'alto' ? 'error' : 'success';
+function municipalColor(nivel: string): 'success' | 'warning' | 'error' {
+    if (nivel === 'alto') {
+        return 'error';
+    }
+
+    if (nivel === 'baixo_b') {
+        return 'warning';
+    }
+
+    return 'success';
 }
 
 function nivelLabel(nivel: string): string {
@@ -414,7 +423,7 @@ export default function RiscoIndex({
                             href="/gestao/risco/condicionantes"
                             className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
                         >
-                            Gerenciar condicionantes
+                            Ver condicionantes
                             <ArrowRightIcon className="size-4" />
                         </Link>
                     </DimensaoCard>
@@ -422,21 +431,21 @@ export default function RiscoIndex({
 
                 <div className="grid gap-4 sm:grid-cols-3 md:gap-6">
                     <KpiCard
-                        label="Baixo Risco A"
+                        label="Baixo"
                         value={resumoNiveis.baixo_a}
                         tone="success"
                         icon={<ShieldIcon className="size-6" />}
                         note="Risco municipal vigente"
                     />
                     <KpiCard
-                        label="Baixo Risco B"
+                        label="Médio"
                         value={resumoNiveis.baixo_b}
-                        tone="success"
+                        tone="warning"
                         icon={<ShieldIcon className="size-6" />}
                         note="Risco municipal vigente"
                     />
                     <KpiCard
-                        label="Alto Risco"
+                        label="Alto"
                         value={resumoNiveis.alto}
                         tone="error"
                         icon={<ShieldIcon className="size-6" />}

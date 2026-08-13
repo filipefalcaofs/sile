@@ -6,11 +6,14 @@ use InvalidArgumentException;
 
 /**
  * Nível de risco municipal de uma atividade econômica conforme o Decreto
- * nº 32.636/2020 (HU-020/HU-047). O Decreto tem EXATAMENTE três níveis —
- * NÃO existe "médio" (é diretriz operacional, não classificação do Decreto;
- * regra firme do analista-negocio). fromDecreto() é a única porta de entrada
- * a partir do rótulo oficial e rejeita qualquer nível desconhecido, para nunca
- * inventar classificação (entrega funcional sem fachada).
+ * nº 32.636/2020 (HU-020/HU-047). O Decreto tem EXATAMENTE três níveis
+ * internos — baixo_a / baixo_b / alto — e fromDecreto() é a única porta de
+ * entrada a partir do rótulo oficial ('BAIXO A' / 'BAIXO B' / 'ALTO'),
+ * rejeitando qualquer nível desconhecido para nunca inventar classificação.
+ *
+ * A SEDUR EXIBE esses níveis como Baixo / Médio / Alto (nomenclatura
+ * operacional da secretaria, ver label()). O rótulo de exibição é
+ * desacoplado da chave interna e do parse do Decreto de propósito.
  */
 enum RiscoMunicipal: string
 {
@@ -21,9 +24,9 @@ enum RiscoMunicipal: string
     public function label(): string
     {
         return match ($this) {
-            self::BaixoA => 'Baixo Risco A',
-            self::BaixoB => 'Baixo Risco B',
-            self::Alto => 'Alto Risco',
+            self::BaixoA => 'Baixo',
+            self::BaixoB => 'Médio',
+            self::Alto => 'Alto',
         };
     }
 

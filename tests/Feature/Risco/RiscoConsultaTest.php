@@ -10,7 +10,7 @@ use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -23,7 +23,7 @@ use Tests\TestCase;
  */
 class RiscoConsultaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -122,13 +122,27 @@ class RiscoConsultaTest extends TestCase
                 ->has('classificacoes.data', 1)
                 ->where('classificacoes.data.0.cnae_code', '2011800'));
 
-        // Filtro por nível.
+        // Filtro por nível — rótulo operacional SEDUR (A→Baixo, B→Médio, Alto).
         $this->actingAs($analista, 'gestao')
             ->get('/gestao/risco?nivel=alto')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('classificacoes.data', 1)
-                ->where('classificacoes.data.0.risco_municipal', 'alto'));
+                ->where('classificacoes.data.0.risco_municipal', 'alto')
+                ->where('classificacoes.data.0.risco_municipal_label', 'Alto'));
+
+        $this->actingAs($analista, 'gestao')
+            ->get('/gestao/risco?nivel=baixo_a')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('classificacoes.data.0.risco_municipal_label', 'Baixo'));
+
+        $this->actingAs($analista, 'gestao')
+            ->get('/gestao/risco?nivel=baixo_b')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('classificacoes.data', 1)
+                ->where('classificacoes.data.0.risco_municipal_label', 'Médio'));
     }
 
     public function test_consulta_e_auditada(): void

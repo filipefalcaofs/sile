@@ -10,7 +10,7 @@ use App\Services\Geo\SpatialRepository;
 use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
@@ -28,7 +28,7 @@ use Tests\TestCase;
  */
 class ConsultaViabilidadeCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -45,11 +45,11 @@ class ConsultaViabilidadeCommandTest extends TestCase
 
     public function test_comando_por_cnae_imprime_parecer_real(): void
     {
-        // 4712-1/00 (minimercado): Baixo Risco B no Decreto (→ expresso) e
-        // enquadrado por área no Quadro 7. Sem endereço/inscrição não há zona,
-        // então o veredito é pendente — o motor jamais inventa permissão.
+        // 4712-1/00 (minimercado): baixo_b no Decreto, exibido como Médio
+        // (→ expresso) e enquadrado por área no Quadro 7. Sem endereço/inscrição
+        // não há zona, então o veredito é pendente — o motor jamais inventa permissão.
         $this->artisan('viabilidade:consultar', ['cnae' => '4712-1/00', '--area' => '120'])
-            ->expectsOutputToContain('Baixo Risco B')
+            ->expectsOutputToContain('Risco municipal (Decreto 32.636/2020): Médio')
             ->expectsOutputToContain('Fluxo expresso')
             ->expectsOutputToContain('Pendente de análise técnica')
             ->expectsOutputToContain('Versões de regras')

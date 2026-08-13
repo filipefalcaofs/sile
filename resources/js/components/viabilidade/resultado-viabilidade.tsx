@@ -159,11 +159,15 @@ const RISCO_SANITARIO_LABELS: Record<string, string> = {
     alto: 'Alto Risco',
 };
 
-/** Humaniza um value de enum (ex.: `baixo_a` → `Baixo a`) como fallback honesto. */
-function humanizar(valor: string): string {
-    const texto = valor.replace(/_/g, ' ').trim();
+const RISCO_MUNICIPAL_LABELS: Record<string, string> = {
+    baixo_a: 'Baixo',
+    baixo_b: 'Médio',
+    alto: 'Alto',
+};
 
-    return texto.charAt(0).toUpperCase() + texto.slice(1);
+/** Humaniza um value de enum (ex.: `baixo_a` → `Baixo`) como fallback honesto. */
+function humanizar(valor: string): string {
+    return RISCO_MUNICIPAL_LABELS[valor] ?? valor.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 }
 
 /** Cor do badge por nível de risco — diferenciação visual, nunca classificação inventada. */
@@ -174,7 +178,7 @@ function corPorNivel(nivel: string | null): 'success' | 'warning' | 'error' | 'l
     if (nivel === 'alto') {
         return 'error';
     }
-    if (nivel === 'medio') {
+    if (nivel === 'medio' || nivel === 'baixo_b') {
         return 'warning';
     }
 
