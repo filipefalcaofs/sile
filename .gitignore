@@ -189,3 +189,4 @@ _ide_helper_models.php
 Thumbs.db
 .playwright-cli/
 output/
+.worktrees/
