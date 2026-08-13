@@ -20,6 +20,7 @@ use App\Services\Relatorios\ReportFilters;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -183,12 +184,14 @@ class CnaeController extends Controller
         $riscoMunicipal = $validated['risco_municipal'];
         unset($validated['risco_municipal']);
 
-        $cnae = Cnae::create($validated);
+        DB::transaction(function () use ($validated, $municipal, $riscoMunicipal) {
+            $cnae = Cnae::create($validated);
 
-        RiskClassification::updateOrCreate(
-            ['rule_version_id' => $municipal->id, 'cnae_code' => $cnae->code],
-            ['risco_municipal' => $riscoMunicipal],
-        );
+            RiskClassification::updateOrCreate(
+                ['rule_version_id' => $municipal->id, 'cnae_code' => $cnae->code],
+                ['risco_municipal' => $riscoMunicipal],
+            );
+        });
 
         return redirect()->route('gestao.cnaes.index')->with('status', 'CNAE cadastrado com sucesso.');
     }
@@ -208,12 +211,14 @@ class CnaeController extends Controller
         $riscoMunicipal = $validated['risco_municipal'];
         unset($validated['risco_municipal']);
 
-        $cnae->update($validated);
+        DB::transaction(function () use ($validated, $municipal, $riscoMunicipal, $cnae) {
+            $cnae->update($validated);
 
-        RiskClassification::updateOrCreate(
-            ['rule_version_id' => $municipal->id, 'cnae_code' => $cnae->code],
-            ['risco_municipal' => $riscoMunicipal],
-        );
+            RiskClassification::updateOrCreate(
+                ['rule_version_id' => $municipal->id, 'cnae_code' => $cnae->code],
+                ['risco_municipal' => $riscoMunicipal],
+            );
+        });
 
         return back()->with('status', 'CNAE atualizado com sucesso.');
     }
