@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Gestao;
 
+use App\Enums\RiscoMunicipal;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCnaeRequest extends FormRequest
 {
@@ -40,6 +42,11 @@ class StoreCnaeRequest extends FormRequest
             'group_description' => ['required', 'string', 'max:255'],
             'class_code' => ['required', 'string', 'max:7'],
             'class_description' => ['required', 'string', 'max:255'],
+            'risco_municipal' => ['required', Rule::enum(RiscoMunicipal::class)],
+            'exige_rt' => ['required', 'boolean'],
+            'exige_rt_se_alto' => ['required', 'boolean'],
+            'exige_fator_multiplicador' => ['required', 'boolean'],
+            'exige_detalhamento_multiplicador' => ['required', 'boolean'],
         ];
     }
 
@@ -59,6 +66,11 @@ class StoreCnaeRequest extends FormRequest
             'group_description' => 'descrição do grupo',
             'class_code' => 'código da classe',
             'class_description' => 'descrição da classe',
+            'risco_municipal' => 'grau de risco',
+            'exige_rt' => 'exige responsável técnico',
+            'exige_rt_se_alto' => 'exige RT apenas se alto risco',
+            'exige_fator_multiplicador' => 'possui fator multiplicador',
+            'exige_detalhamento_multiplicador' => 'exige detalhamento do multiplicador',
         ];
     }
 
