@@ -148,11 +148,7 @@ export default function CnaesIndex({ cnaes, filters, perPageOptions }: CnaesInde
         if (type === 'delete') {
             router.delete(`/gestao/cnaes/${cnae.id}`, options);
         } else {
-            router.put(
-                `/gestao/cnaes/${cnae.id}`,
-                { description: cnae.description, active: cnae.active ? '0' : '1' },
-                options,
-            );
+            router.put(`/gestao/cnaes/${cnae.id}/situacao`, { active: cnae.active ? '0' : '1' }, options);
         }
     }
 

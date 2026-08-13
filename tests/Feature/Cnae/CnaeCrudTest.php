@@ -291,6 +291,19 @@ class CnaeCrudTest extends TestCase
         $this->assertFalse($cnae->refresh()->active);
     }
 
+    public function test_toggle_de_situacao_funciona_com_payload_minimo(): void
+    {
+        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+        $cnae = Cnae::factory()->create(['active' => true]);
+
+        $this->actingAs($admin, 'gestao')
+            ->put("/gestao/cnaes/{$cnae->id}/situacao", ['active' => false])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertFalse($cnae->refresh()->active);
+    }
+
     public function test_mudancas_sao_auditadas_com_attribute_changes(): void
     {
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();

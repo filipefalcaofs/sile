@@ -224,6 +224,22 @@ class CnaeController extends Controller
     }
 
     /**
+     * Toggle de situação (ativar/desativar) a partir da listagem — payload
+     * mínimo (só `active`), sem os demais campos exigidos por update(). A
+     * lista não carrega risco_municipal/flags, então reusar update() aqui
+     * exigiria um payload completo (ou afrouxar a validação e arriscar
+     * nulificar/sobrescrever esses campos); dedicado, mantém update() estrito.
+     */
+    public function updateSituacao(Request $request, Cnae $cnae): RedirectResponse
+    {
+        $validated = $request->validate(['active' => ['required', 'boolean']]);
+
+        $cnae->update($validated);
+
+        return back()->with('status', 'Situação do CNAE atualizada.');
+    }
+
+    /**
      * Exclusão física bloqueada quando o CNAE está vinculado a empresas
      * (Fase 3): verificação amigável na aplicação + restrictOnDelete como
      * defesa no banco (company_cnae.cnae_id).

@@ -193,6 +193,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('cnaes/criar', [CnaeController::class, 'create'])->name('cnaes.create');
             Route::post('cnaes', [CnaeController::class, 'store'])->name('cnaes.store');
             Route::put('cnaes/{cnae}', [CnaeController::class, 'update'])->name('cnaes.update');
+            Route::put('cnaes/{cnae}/situacao', [CnaeController::class, 'updateSituacao'])->name('cnaes.situacao.update');
             Route::delete('cnaes/{cnae}', [CnaeController::class, 'destroy'])->name('cnaes.destroy');
             Route::post('cnaes/{cnae}/condicionantes', [CnaeController::class, 'storeCondicionante'])->name('cnaes.condicionantes.store');
             Route::put('cnaes/{cnae}/condicionantes/{condicionante}', [CnaeController::class, 'updateCondicionante'])->name('cnaes.condicionantes.update');
