@@ -28,9 +28,9 @@ export default function CnaesCriar({ niveisMunicipais }: CnaesCriarProps) {
 
     return (
         <>
-            <Head title="Cadastrar CNAE" />
+            <Head title="Novo CNAE" />
             <PageHeader
-                title="Cadastrar CNAE"
+                title="Novo CNAE"
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
                     { label: 'CNAEs', href: '/gestao/cnaes' },

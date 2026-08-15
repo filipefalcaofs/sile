@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Cnae;
 
+use App\Enums\RuleDomain;
 use App\Models\Activity;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\RiskClassification;
+use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -89,6 +91,26 @@ class CnaeCrudTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->has('cnaes.data', 1)
                 ->where('cnaes.data.0.code', '0111301'));
+    }
+
+    public function test_listagem_libera_crud_ao_administrador_e_nao_ao_analista(): void
+    {
+        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/cnaes')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/cnaes/index')
+                ->where('auth.permissions', fn ($permissions) => collect($permissions)->contains('manter-cnaes')));
+
+        $this->actingAs($analista, 'gestao')
+            ->get('/gestao/cnaes')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/cnaes/index')
+                ->where('auth.permissions', fn ($permissions) => ! collect($permissions)->contains('manter-cnaes')));
     }
 
     public function test_analista_consulta_mas_nao_mantem(): void
@@ -200,15 +222,15 @@ class CnaeCrudTest extends TestCase
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
         $cnae = Cnae::factory()->create(['code' => '0111301']);
 
-        $municipal = RuleVersion::vigente(\App\Enums\RuleDomain::RiscoMunicipal)->firstOrFail();
+        $municipal = RuleVersion::vigente(RuleDomain::RiscoMunicipal)->firstOrFail();
         RiskClassification::factory()->create([
             'rule_version_id' => $municipal->id,
             'cnae_code' => '0111301',
             'risco_municipal' => 'alto',
         ]);
 
-        $sanitaria = RuleVersion::factory()->create(['domain' => \App\Enums\RuleDomain::RiscoSanitario]);
-        \App\Models\RiskCondicionante::factory()->create([
+        $sanitaria = RuleVersion::factory()->create(['domain' => RuleDomain::RiscoSanitario]);
+        RiskCondicionante::factory()->create([
             'rule_version_id' => $sanitaria->id,
             'cnae_code' => '0111301',
             'pergunta' => 'O produto é artesanal?',

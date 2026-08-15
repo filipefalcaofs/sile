@@ -187,7 +187,7 @@ export default function CnaesIndex({ cnaes, filters, perPageOptions }: CnaesInde
                     actions={
                         canMaintain ? (
                             <Button size="sm" onClick={() => router.visit('/gestao/cnaes/criar')}>
-                                Cadastrar CNAE
+                                Novo
                             </Button>
                         ) : undefined
                     }
@@ -262,7 +262,7 @@ export default function CnaesIndex({ cnaes, filters, perPageOptions }: CnaesInde
                                     action={
                                         !filtering && canMaintain ? (
                                             <Button size="sm" onClick={() => router.visit('/gestao/cnaes/criar')}>
-                                                Cadastrar CNAE
+                                                Novo
                                             </Button>
                                         ) : undefined
                                     }
