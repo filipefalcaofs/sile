@@ -9,14 +9,14 @@ use App\Models\ViabilityRequest;
 use App\Support\DemoMode;
 use Database\Seeders\DemonstracaoClienteSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class DemonstracaoClienteSeederTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_ignora_quando_demo_data_desligado(): void
     {
@@ -45,6 +45,33 @@ class DemonstracaoClienteSeederTest extends TestCase
         ]);
         $this->assertTrue(Role::where('name', 'validacao-fase-completa')->exists());
         $this->assertTrue(DemoMode::enabled());
+    }
+
+    public function test_perfis_de_validacao_liberam_crud_de_cnaes(): void
+    {
+        config(['sile.demo_data' => true]);
+
+        $this->seed(DemonstracaoClienteSeeder::class);
+
+        $validadora = User::query()
+            ->where('email', DemonstracaoClienteSeeder::CLIENTE_GESTAO_EMAIL)
+            ->firstOrFail();
+
+        $this->assertTrue($validadora->hasRole('validacao-fase-completa'));
+        $this->assertTrue($validadora->hasPermissionTo('manter-cnaes'));
+
+        foreach ([
+            'validacao-fase-02',
+            'validacao-fase-04',
+            'validacao-fase-07',
+            'validacao-fase-10',
+            'validacao-fase-completa',
+        ] as $perfil) {
+            $this->assertTrue(
+                Role::findByName($perfil)->hasPermissionTo('manter-cnaes'),
+                "Esperava manter-cnaes no perfil {$perfil}."
+            );
+        }
     }
 
     public function test_cria_massa_de_demonstracao_em_diversas_situacoes(): void

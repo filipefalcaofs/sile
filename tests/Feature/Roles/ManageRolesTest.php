@@ -5,14 +5,14 @@ namespace Tests\Feature\Roles;
 use App\Models\Activity;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ManageRolesTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -41,7 +41,30 @@ class ManageRolesTest extends TestCase
                 ->where('roles.0.name', 'administrador')
                 ->where('roles.0.structural', true)
                 ->where('roles.0.users_count', 1)
-                ->has('permissions', 30));
+                ->has('permissions', 30)
+                ->has('permissionCatalog', 30)
+                ->where(
+                    'permissionCatalog',
+                    fn ($catalog) => collect($catalog)->contains(
+                        fn ($item) => $item['name'] === 'consultar-cnaes'
+                            && $item['label'] === 'Consultar CNAEs'
+                            && $item['description'] !== ''
+                    )
+                )
+                ->where(
+                    'permissionCatalog',
+                    fn ($catalog) => collect($catalog)->contains(
+                        fn ($item) => $item['name'] === 'manter-cnaes'
+                            && $item['label'] === 'Cadastrar e editar CNAEs'
+                            && $item['description'] !== ''
+                    )
+                )
+                ->where(
+                    'permissionCatalog',
+                    fn ($catalog) => collect($catalog)->every(
+                        fn ($item) => $item['group'] !== 'Outras' && $item['label'] !== $item['name']
+                    )
+                ));
     }
 
     public function test_cria_perfil_com_permissoes_granulares(): void

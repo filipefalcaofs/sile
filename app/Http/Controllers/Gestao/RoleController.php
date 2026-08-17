@@ -9,6 +9,7 @@ use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\PerfisReportSource;
 use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
+use App\Support\PermissionCatalog;
 use App\Support\Roles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,9 +52,12 @@ class RoleController extends Controller
                 'structural' => in_array($role->name, Roles::STRUCTURAL, true),
             ]);
 
+        $permissionNames = Permission::query()->orderBy('name')->pluck('name');
+
         return Inertia::render('gestao/perfis/index', [
             'roles' => $roles,
-            'permissions' => Permission::orderBy('name')->pluck('name'),
+            'permissions' => $permissionNames,
+            'permissionCatalog' => PermissionCatalog::forNames($permissionNames),
         ]);
     }
 

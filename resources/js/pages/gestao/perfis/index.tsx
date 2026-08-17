@@ -24,32 +24,33 @@ interface RoleItem {
     structural: boolean;
 }
 
+interface PermissionOption {
+    name: string;
+    label: string;
+    description: string;
+    group: string;
+}
+
 interface RolesIndexProps {
     roles: RoleItem[];
     permissions: string[];
+    permissionCatalog: PermissionOption[];
 }
 
-const GROUP_LABELS: Record<string, string> = {
-    manter: 'Manter',
-    consultar: 'Consultar',
-    acessar: 'Acessar',
-    gerenciar: 'Gerenciar',
-};
+function groupPermissionCatalog(catalog: PermissionOption[]): { label: string; items: PermissionOption[] }[] {
+    const groups = new Map<string, PermissionOption[]>();
 
-function groupPermissions(permissions: string[]): { label: string; items: string[] }[] {
-    const groups = new Map<string, string[]>();
-
-    for (const permission of permissions) {
-        const prefix = permission.split('-')[0];
-        const items = groups.get(prefix) ?? [];
+    for (const permission of catalog) {
+        const items = groups.get(permission.group) ?? [];
         items.push(permission);
-        groups.set(prefix, items);
+        groups.set(permission.group, items);
     }
 
-    return Array.from(groups.entries()).map(([prefix, items]) => ({
-        label: GROUP_LABELS[prefix] ?? prefix.charAt(0).toUpperCase() + prefix.slice(1),
-        items,
-    }));
+    return Array.from(groups.entries()).map(([label, items]) => ({ label, items }));
+}
+
+function permissionLabel(catalog: PermissionOption[], name: string): string {
+    return catalog.find((item) => item.name === name)?.label ?? name;
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -60,7 +61,7 @@ function FieldError({ message }: { message?: string }) {
     return <p className="mt-1.5 text-theme-xs text-error-500">{message}</p>;
 }
 
-function PermissionChips({ permissions }: { permissions: string[] }) {
+function PermissionChips({ permissions, catalog }: { permissions: string[]; catalog: PermissionOption[] }) {
     if (permissions.length === 0) {
         return <span className="text-theme-xs text-gray-400 dark:text-gray-500">Sem permissões</span>;
     }
@@ -69,7 +70,7 @@ function PermissionChips({ permissions }: { permissions: string[] }) {
         <div className="flex flex-wrap gap-1.5">
             {permissions.map((permission) => (
                 <Badge key={permission} size="sm">
-                    {permission}
+                    {permissionLabel(catalog, permission)}
                 </Badge>
             ))}
         </div>
@@ -77,17 +78,17 @@ function PermissionChips({ permissions }: { permissions: string[] }) {
 }
 
 function PermissionsGrid({
-    permissions,
+    catalog,
     idPrefix,
     defaultChecked = [],
     lockedPermission,
 }: {
-    permissions: string[];
+    catalog: PermissionOption[];
     idPrefix: string;
     defaultChecked?: string[];
     lockedPermission?: string;
 }) {
-    const groups = groupPermissions(permissions);
+    const groups = groupPermissionCatalog(catalog);
 
     return (
         <div className="grid gap-5 sm:grid-cols-2">
@@ -96,27 +97,27 @@ function PermissionsGrid({
                     <legend className="text-theme-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
                         {group.label}
                     </legend>
-                    <div className="mt-3 flex flex-col gap-2">
+                    <div className="mt-3 flex flex-col gap-3">
                         {group.items.map((permission) => {
-                            const locked = permission === lockedPermission;
+                            const locked = permission.name === lockedPermission;
 
                             return (
-                                <div key={permission}>
+                                <div key={permission.name}>
                                     <label
-                                        htmlFor={`${idPrefix}-${permission}`}
-                                        className={`flex items-center gap-3 text-theme-sm ${
+                                        htmlFor={`${idPrefix}-${permission.name}`}
+                                        className={`flex items-start gap-3 text-theme-sm ${
                                             locked
                                                 ? 'cursor-not-allowed text-gray-400 dark:text-gray-500'
                                                 : 'cursor-pointer text-gray-700 dark:text-gray-300'
                                         }`}
                                     >
-                                        <span className="relative flex h-5 w-5 shrink-0 items-center justify-center">
+                                        <span className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
                                             <input
-                                                id={`${idPrefix}-${permission}`}
+                                                id={`${idPrefix}-${permission.name}`}
                                                 type="checkbox"
                                                 name="permissions[]"
-                                                value={permission}
-                                                defaultChecked={locked || defaultChecked.includes(permission)}
+                                                value={permission.name}
+                                                defaultChecked={locked || defaultChecked.includes(permission.name)}
                                                 disabled={locked}
                                                 className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 checked:border-transparent checked:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700"
                                             />
@@ -137,12 +138,16 @@ function PermissionsGrid({
                                                 />
                                             </svg>
                                         </span>
-                                        <span>{permission}</span>
+                                        <span>
+                                            <span className="block font-medium">{permission.label}</span>
+                                            <span className="mt-0.5 block text-theme-xs font-normal text-gray-500 dark:text-gray-400">
+                                                {permission.description}
+                                            </span>
+                                        </span>
                                     </label>
                                     {locked && (
                                         <>
-                                            {/* Checkbox desabilitada não envia valor — o hidden garante o envio. A regra real está no backend. */}
-                                            <input type="hidden" name="permissions[]" value={permission} />
+                                            <input type="hidden" name="permissions[]" value={permission.name} />
                                             <p className="ml-8 mt-1 text-theme-xs text-gray-400 dark:text-gray-500">
                                                 Permissão obrigatória do administrador.
                                             </p>
@@ -161,11 +166,11 @@ function PermissionsGrid({
 function CreateRoleModal({
     isOpen,
     onClose,
-    permissions,
+    catalog,
 }: {
     isOpen: boolean;
     onClose: () => void;
-    permissions: string[];
+    catalog: PermissionOption[];
 }) {
     return (
         <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-h-[90vh] max-w-[700px] overflow-y-auto p-6 lg:p-8">
@@ -191,7 +196,7 @@ function CreateRoleModal({
                             </div>
                         </div>
 
-                        <PermissionsGrid permissions={permissions} idPrefix="create" />
+                        <PermissionsGrid catalog={catalog} idPrefix="create" />
                         <FieldError message={errors.permissions} />
 
                         <div className="flex items-center justify-end gap-3">
@@ -211,11 +216,11 @@ function CreateRoleModal({
 
 function EditRoleModal({
     role,
-    permissions,
+    catalog,
     onClose,
 }: {
     role: RoleItem;
-    permissions: string[];
+    catalog: PermissionOption[];
     onClose: () => void;
 }) {
     return (
@@ -250,7 +255,7 @@ function EditRoleModal({
                         </div>
 
                         <PermissionsGrid
-                            permissions={permissions}
+                            catalog={catalog}
                             idPrefix={`edit-${role.id}`}
                             defaultChecked={role.permissions}
                             lockedPermission={role.name === 'administrador' ? 'acessar-gestao' : undefined}
@@ -272,7 +277,7 @@ function EditRoleModal({
     );
 }
 
-export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
+export default function RolesIndex({ roles, permissionCatalog }: RolesIndexProps) {
     const [showCreate, setShowCreate] = useState(false);
     const [editingRole, setEditingRole] = useState<RoleItem | null>(null);
     const [deletingRole, setDeletingRole] = useState<RoleItem | null>(null);
@@ -317,7 +322,7 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
         {
             id: 'permissions',
             header: 'Permissões',
-            cell: (role) => <PermissionChips permissions={role.permissions} />,
+            cell: (role) => <PermissionChips permissions={role.permissions} catalog={permissionCatalog} />,
         },
         {
             id: 'users_count',
@@ -389,10 +394,10 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                 </CardContent>
             </Card>
 
-            <CreateRoleModal isOpen={showCreate} onClose={() => setShowCreate(false)} permissions={permissions} />
+            <CreateRoleModal isOpen={showCreate} onClose={() => setShowCreate(false)} catalog={permissionCatalog} />
 
             {editingRole && (
-                <EditRoleModal role={editingRole} permissions={permissions} onClose={() => setEditingRole(null)} />
+                <EditRoleModal role={editingRole} catalog={permissionCatalog} onClose={() => setEditingRole(null)} />
             )}
 
             {deletingRole && (

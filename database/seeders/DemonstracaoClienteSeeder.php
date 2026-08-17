@@ -30,21 +30,25 @@ class DemonstracaoClienteSeeder extends Seeder
         'validacao-fase-02' => [
             'acessar-gestao',
             'consultar-cnaes',
+            'manter-cnaes',
         ],
         'validacao-fase-04' => [
             'acessar-gestao',
             'consultar-cnaes',
+            'manter-cnaes',
             'consultar-territorio',
         ],
         'validacao-fase-07' => [
             'acessar-gestao',
             'consultar-cnaes',
+            'manter-cnaes',
             'consultar-territorio',
             'consultar-louos',
         ],
         'validacao-fase-10' => [
             'acessar-gestao',
             'consultar-cnaes',
+            'manter-cnaes',
             'consultar-territorio',
             'consultar-louos',
             'consultar-solicitacoes',
@@ -55,6 +59,7 @@ class DemonstracaoClienteSeeder extends Seeder
         'validacao-fase-completa' => [
             'acessar-gestao',
             'consultar-cnaes',
+            'manter-cnaes',
             'consultar-territorio',
             'consultar-louos',
             'consultar-solicitacoes',
