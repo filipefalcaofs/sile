@@ -30,6 +30,14 @@ interface CnaeEditData {
     code: string;
     formatted_code: string;
     description: string;
+    section_code: string;
+    section_description: string;
+    division_code: string;
+    division_description: string;
+    group_code: string;
+    group_description: string;
+    class_code: string;
+    class_description: string;
     active: boolean;
     exige_rt: boolean;
     exige_rt_se_alto: boolean;
@@ -336,44 +344,187 @@ export default function CnaesEditar({
                     {({ errors, processing }) => (
                         <div className="space-y-6">
                             <Card>
-                                <CardHeader title="Dados do CNAE" description="Atualize os dados do CNAE." />
+                                <CardHeader
+                                    title="Dados do CNAE"
+                                    description="Atualize o código, a denominação e a hierarquia oficial (IBGE/CONCLA)."
+                                />
                                 <CardContent>
-                                    <div className="grid gap-5 sm:grid-cols-2">
-                                        <div>
-                                            <Label htmlFor="edit-code">Código CNAE</Label>
-                                            <Input id="edit-code" type="text" value={cnae.formatted_code} disabled />
+                                    <div className="flex flex-col gap-5">
+                                        <div className="grid gap-5 sm:grid-cols-2">
+                                            <div>
+                                                <Label htmlFor="edit-code" required>
+                                                    Código (DDDD-D/SS)
+                                                </Label>
+                                                <Input
+                                                    id="edit-code"
+                                                    type="text"
+                                                    name="code"
+                                                    defaultValue={cnae.formatted_code}
+                                                    required
+                                                    placeholder="0000-0/00"
+                                                    error={!!errors.code}
+                                                    hint={errors.code}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="edit-active" required>
+                                                    Situação
+                                                </Label>
+                                                <Select
+                                                    id="edit-active"
+                                                    name="active"
+                                                    value={active}
+                                                    onChange={setActive}
+                                                    options={[
+                                                        { value: '1', label: 'Ativo' },
+                                                        { value: '0', label: 'Inativo' },
+                                                    ]}
+                                                />
+                                                {errors.active && (
+                                                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.active}</p>
+                                                )}
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <Label htmlFor="edit-description" required>
+                                                    Denominação
+                                                </Label>
+                                                <Input
+                                                    id="edit-description"
+                                                    type="text"
+                                                    name="description"
+                                                    defaultValue={cnae.description}
+                                                    required
+                                                    error={!!errors.description}
+                                                    hint={errors.description}
+                                                />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <Label htmlFor="edit-active" required>
-                                                Situação
-                                            </Label>
-                                            <Select
-                                                id="edit-active"
-                                                name="active"
-                                                value={active}
-                                                onChange={setActive}
-                                                options={[
-                                                    { value: '1', label: 'Ativo' },
-                                                    { value: '0', label: 'Inativo' },
-                                                ]}
-                                            />
-                                            {errors.active && (
-                                                <p className="mt-1.5 text-theme-xs text-error-500">{errors.active}</p>
-                                            )}
-                                        </div>
-                                        <div className="sm:col-span-2">
-                                            <Label htmlFor="edit-description" required>
-                                                Denominação
-                                            </Label>
-                                            <Input
-                                                id="edit-description"
-                                                type="text"
-                                                name="description"
-                                                defaultValue={cnae.description}
-                                                required
-                                                error={!!errors.description}
-                                                hint={errors.description}
-                                            />
+
+                                        <div className="grid gap-5 sm:grid-cols-2">
+                                            <div>
+                                                <Label htmlFor="edit-section-code" required>
+                                                    Seção (código e descrição)
+                                                </Label>
+                                                <div className="flex gap-2">
+                                                    <div className="w-16 shrink-0">
+                                                        <Input
+                                                            id="edit-section-code"
+                                                            type="text"
+                                                            name="section_code"
+                                                            defaultValue={cnae.section_code}
+                                                            required
+                                                            maxLength={1}
+                                                            placeholder="A"
+                                                            error={!!errors.section_code}
+                                                            hint={errors.section_code}
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <Input
+                                                            type="text"
+                                                            name="section_description"
+                                                            defaultValue={cnae.section_description}
+                                                            required
+                                                            aria-label="Descrição da seção"
+                                                            error={!!errors.section_description}
+                                                            hint={errors.section_description}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="edit-division-code" required>
+                                                    Divisão (código e descrição)
+                                                </Label>
+                                                <div className="flex gap-2">
+                                                    <div className="w-16 shrink-0">
+                                                        <Input
+                                                            id="edit-division-code"
+                                                            type="text"
+                                                            name="division_code"
+                                                            defaultValue={cnae.division_code}
+                                                            required
+                                                            maxLength={2}
+                                                            placeholder="01"
+                                                            error={!!errors.division_code}
+                                                            hint={errors.division_code}
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <Input
+                                                            type="text"
+                                                            name="division_description"
+                                                            defaultValue={cnae.division_description}
+                                                            required
+                                                            aria-label="Descrição da divisão"
+                                                            error={!!errors.division_description}
+                                                            hint={errors.division_description}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="edit-group-code" required>
+                                                    Grupo (código e descrição)
+                                                </Label>
+                                                <div className="flex gap-2">
+                                                    <div className="w-20 shrink-0">
+                                                        <Input
+                                                            id="edit-group-code"
+                                                            type="text"
+                                                            name="group_code"
+                                                            defaultValue={cnae.group_code}
+                                                            required
+                                                            maxLength={5}
+                                                            placeholder="01.1"
+                                                            error={!!errors.group_code}
+                                                            hint={errors.group_code}
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <Input
+                                                            type="text"
+                                                            name="group_description"
+                                                            defaultValue={cnae.group_description}
+                                                            required
+                                                            aria-label="Descrição do grupo"
+                                                            error={!!errors.group_description}
+                                                            hint={errors.group_description}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="edit-class-code" required>
+                                                    Classe (código e descrição)
+                                                </Label>
+                                                <div className="flex gap-2">
+                                                    <div className="w-24 shrink-0">
+                                                        <Input
+                                                            id="edit-class-code"
+                                                            type="text"
+                                                            name="class_code"
+                                                            defaultValue={cnae.class_code}
+                                                            required
+                                                            maxLength={7}
+                                                            placeholder="01.11-3"
+                                                            error={!!errors.class_code}
+                                                            hint={errors.class_code}
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <Input
+                                                            type="text"
+                                                            name="class_description"
+                                                            defaultValue={cnae.class_description}
+                                                            required
+                                                            aria-label="Descrição da classe"
+                                                            error={!!errors.class_description}
+                                                            hint={errors.class_description}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </CardContent>

@@ -11,9 +11,12 @@ use App\Http\Requests\Gestao\StoreRiscoCondicionanteRequest;
 use App\Http\Requests\Gestao\UpdateCnaeRequest;
 use App\Http\Requests\Gestao\UpdateRiscoCondicionanteRequest;
 use App\Models\Cnae;
+use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
+use App\Models\SanitaryRiskClassification;
+use App\Models\VirtualOfficeActivityCnae;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\CnaesReportSource;
 use App\Services\Relatorios\ReportFilters;
@@ -149,6 +152,14 @@ class CnaeController extends Controller
                 'code' => $cnae->code,
                 'formatted_code' => $cnae->formatted_code,
                 'description' => $cnae->description,
+                'section_code' => $cnae->section_code,
+                'section_description' => $cnae->section_description,
+                'division_code' => $cnae->division_code,
+                'division_description' => $cnae->division_description,
+                'group_code' => $cnae->group_code,
+                'group_description' => $cnae->group_description,
+                'class_code' => $cnae->class_code,
+                'class_description' => $cnae->class_description,
                 'active' => $cnae->active,
                 'exige_rt' => $cnae->exige_rt,
                 'exige_rt_se_alto' => $cnae->exige_rt_se_alto,
@@ -212,6 +223,13 @@ class CnaeController extends Controller
         unset($validated['risco_municipal']);
 
         DB::transaction(function () use ($validated, $municipal, $riscoMunicipal, $cnae) {
+            $codigoAnterior = $cnae->code;
+            $codigoNovo = $validated['code'];
+
+            if ($codigoAnterior !== $codigoNovo) {
+                $this->relocateCnaeCode($codigoAnterior, $codigoNovo);
+            }
+
             $cnae->update($validated);
 
             RiskClassification::updateOrCreate(
@@ -300,6 +318,24 @@ class CnaeController extends Controller
         $condicionante->delete();
 
         return back()->with('status', 'Pergunta removida.');
+    }
+
+    /**
+     * FK lógica: tabelas de regras apontam para Cnae.code (dígitos), não para
+     * o id. Ao alterar o código no CRUD, as linhas vigentes e históricas
+     * acompanham o registro — sem disparar auditoria em massa.
+     */
+    private function relocateCnaeCode(string $from, string $to): void
+    {
+        foreach ([
+            RiskClassification::class,
+            SanitaryRiskClassification::class,
+            RiskCondicionante::class,
+            LouosQuadro7Faixa::class,
+            VirtualOfficeActivityCnae::class,
+        ] as $model) {
+            $model::query()->where('cnae_code', $from)->update(['cnae_code' => $to]);
+        }
     }
 
     private function versaoMunicipalVigente(): ?RuleVersion
