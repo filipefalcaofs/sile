@@ -26,6 +26,7 @@ Os Quadros são dado-regra versionado (HU-046, RN-002): toda decisão do motor r
 | Escopo | **4 Quadros** (7, 10, 11, 11A) com formulário específico por Quadro | Apenas Quadro 7 |
 | Implementação | **A — rascunho materializado**: ao abrir, copia as linhas da vigente para o rascunho (mesma mecânica de `LouosMaintenanceService::copyRows`); CRUD = Eloquent nas linhas tipadas do rascunho | B — rascunho como delta (merge complexo, reescrita do service) |
 | Importação em lote | **Upload de CSV na tela do rascunho**, reusando os `LouosQuadro*ImportService` existentes (upsert por chave natural + relatório de rejeições) | .xlsx (camada extra de conversão — fica como evolução futura); apenas Artisan (sem autonomia do admin) |
+| Quatro olhos na importação | **Mantido, com revisão por resumo**: o revisor (≠ autor) valida a OPERAÇÃO — resumo de totais (importadas/alteradas/excluídas/rejeitadas), nome do arquivo e Quadro — não linha por linha. Protege contra arquivo errado/truncado/conversão quebrada, que o CSV oficial não elimina | Dispensar quatro olhos na importação (carga errada entra em produção sem segundo olhar — o Quadro 7 alimenta o fluxo expresso) |
 
 ## 4. Arquitetura
 
@@ -65,6 +66,7 @@ O upload é validado (CSV, tamanho máximo razoável, cabeçalho exigido pelo se
 
 - Sem rascunho: tela atual de consulta + botão **"Editar Quadro"** (permission `manter-louos`) que abre modal pedindo o identificador da nova versão (ex.: `quadro7-rev3`) e cria/retoma o rascunho.
 - Com rascunho ativo: banner "Rascunho `X` em edição — autor: Y. A versão vigente não é alterada até a publicação."; a tabela passa a listar as **linhas do rascunho**; ações por linha: **editar** (modal pré-preenchido) e **excluir** (confirmação); botão **"Nova linha"**; ações do rascunho: **Importar CSV** (upload + relatório de lidos/importados/atualizados/rejeitados com motivo linha a linha), **Baixar modelo CSV**, **Publicar** (bloqueado para o autor — quatro olhos comunicado na tela e enforced no backend) e **Descartar** (confirmação).
+- A tela de **publicação** mostra o **resumo das mudanças do rascunho vs. vigente** (linhas novas / alteradas / excluídas, e — quando houve importação — o relatório do arquivo: nome, lidos, rejeitados): o revisor valida a operação em segundos, não linha por linha. Isso exige um diff rascunho × vigente no backend (por chave natural), que também alimenta a auditoria da publicação.
 - Formulário de linha reusa os metadados `ALTERACAO_FIELDS` já existentes na página (campos por Quadro), extraindo o modal de linha para componente próprio se a página crescer demais.
 - A publicação pelo modal antigo (`PublishQuadroVersionModal`) **permanece** — fluxo de alterações em lote continua válido.
 
@@ -86,6 +88,7 @@ O upload é validado (CSV, tamanho máximo razoável, cabeçalho exigido pelo se
 6. Permissão: `consultar-louos` não acessa rotas de rascunho; `manter-louos` acessa.
 7. Auditoria registrada em inserir/alterar/excluir/descartar/publicar/importar.
 8. Importação CSV no rascunho: upsert por chave natural, relatório com rejeitados, vigente intacta; cabeçalho errado é rejeitado com mensagem; download do modelo CSV por Quadro.
+9. Diff rascunho × vigente (novas/alteradas/excluídas por chave natural) exibido na publicação e gravado na auditoria — inclusive após importação.
 
 ## 6. Não-objetivos
 
