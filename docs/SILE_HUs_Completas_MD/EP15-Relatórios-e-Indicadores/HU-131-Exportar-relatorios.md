@@ -1,15 +1,17 @@
-# HU-131 — Exportar relatórios
+# HU-131 — Exportar relatórios e listagens
+
+> **Escopo ampliado (2026-06-12)**: além dos relatórios do EP15, esta HU define o **padrão transversal de exportação** de toda tela com datatable na retaguarda de gestão.
 
 ## Épica
 **EP15 — Relatórios e Indicadores**
 
 ## Objetivo
-Exportar indicadores em formatos comuns.
+Exportar relatórios e qualquer listagem (datatable) da gestão em múltiplos formatos, respeitando filtros aplicados e permissões.
 
 ## História de Usuário
-**Como** gestor,  
-**quero** exportar relatórios,  
-**para** apoiar prestação de contas.
+**Como** gestor/analista,  
+**quero** exportar relatórios e listagens em diversos formatos,  
+**para** apoiar prestação de contas, análises externas e rotinas administrativas.
 
 ## Contexto de Negócio
 O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
@@ -60,6 +62,13 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: **Padrão transversal**: toda tela com datatable na retaguarda de gestão (processos, CNAEs, usuários, perfis, parâmetros, condicionantes, enquadramentos, setores, feriados, auditoria, alertas, relatórios etc.) deve oferecer ação de exportação nos formatos **CSV, XLSX e PDF**.
+- RN-005: A exportação reflete exatamente o **conjunto filtrado vigente** (busca, filtros, ordenação aplicados) — todas as linhas do resultado, não apenas a página exibida.
+- RN-006: Exportações acima de limiar parametrizável (HU-014) são processadas de forma **assíncrona** (job em fila) com notificação/download quando prontas — a tela nunca trava nem estoura timeout.
+- RN-007: A exportação respeita as permissões do usuário (exporta somente o que pode ver) e minimiza dados pessoais conforme LGPD; colunas sensíveis exigem permissão específica.
+- RN-008: Toda exportação é **auditada**: usuário, data/hora, tela de origem, filtros aplicados, formato e volume de linhas (relevante para LGPD em órgão público).
+- RN-009: O componente de exportação é único e reutilizável (frontend e backend) — novas listagens o herdam sem reimplementação; implementação de referência: `maatwebsite/excel` (CSV/XLSX) e `dompdf` (PDF), já validados no SIGVISA.
+- RN-010: O PDF exportado deve exibir, ao final do documento, o **total de registros** ("Total de registros: N"), junto com data/hora de geração e filtros aplicados; CSV e XLSX não recebem linha de total no corpo dos dados (preservar integridade tabular para importação) — o total vai em metadados/aba própria no XLSX quando aplicável.
 
 ## Critérios de Aceite — BDD
 
@@ -82,6 +91,21 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 **Dado** que o usuário não possui permissão,  
 **Quando** tentar acessar ou executar a funcionalidade,  
 **Então** o sistema deve impedir a ação e registrar o evento.
+
+### CA-05 — Exportação do conjunto filtrado
+**Dado** uma listagem da gestão com busca, filtros e ordenação aplicados,  
+**Quando** o usuário exportar em CSV, XLSX ou PDF,  
+**Então** o arquivo deve conter todas as linhas do resultado filtrado, na ordenação vigente, e a exportação deve ser auditada.
+
+### CA-06 — Grande volume assíncrono
+**Dado** um resultado acima do limiar parametrizado,  
+**Quando** o usuário exportar,  
+**Então** o processamento deve ocorrer em background e o arquivo ser disponibilizado ao concluir, sem travar a tela.
+
+### CA-07 — Total de registros no PDF
+**Dado** uma listagem com N registros no conjunto filtrado,  
+**Quando** o usuário exportar em PDF,  
+**Então** o final do documento deve exibir "Total de registros: N", coerente com as linhas exportadas, além de data/hora de geração e filtros aplicados.
 
 ## Campos/Dados Envolvidos
 - Identificador da solicitação/processo.
@@ -131,4 +155,4 @@ O sistema deve manter registro completo da execução desta HU, incluindo:
 Alta
 
 ## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+O padrão transversal (RN-004 a RN-009) vale para todas as fases: telas novas nascem com exportação (critério de pronto no ROADMAP); listagens já entregues nas Fases 1–2 (CNAEs, usuários, perfis, parâmetros, acessos) recebem retrofit quando o componente compartilhado for construído. A HU-101 (exportar auditoria) segue como caso específico e adota o mesmo componente.

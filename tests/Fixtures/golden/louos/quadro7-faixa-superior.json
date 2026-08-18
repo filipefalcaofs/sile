@@ -1,0 +1,15 @@
+{
+    "nome": "Quadro 7 enquadra o minimercado 4712-1/00 em nR2 acima de 350 m2 (sem zona, pendente)",
+    "descricao": "Mesmo CNAE 4712-1/00 com area de 400 m2 cai na faixa superior (350.01 m2 em diante) = grupo nR2, subgrupo nR2-01. Trava a transicao de faixa do Quadro 7 real como regressao (a parte entregavel/REAL do motor). Sem zona, segue pendente (degradacao honesta).",
+    "input": {
+        "area": 400,
+        "cnae": "4712-1/00"
+    },
+    "esperado": {
+        "quadro7_status": "identificado",
+        "quadro7_grupo": "nR2",
+        "quadro7_subgrupo": "nR2-01",
+        "quadro10_status": "indisponivel",
+        "resultado": "pendente"
+    }
+}

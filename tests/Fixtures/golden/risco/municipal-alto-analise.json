@@ -1,0 +1,17 @@
+{
+    "nome": "Alto Risco municipal vai para análise técnica",
+    "descricao": "CNAE 1011-2/01 (Frigorífico - abate de bovinos) é Alto Risco no Decreto 32.636/2020. Alto na dimensão decisiva municipal + mapa default => fluxo analise.",
+    "input": {
+        "cnae_code": "1011201",
+        "respostas_condicionantes": {},
+        "gatilhos_contexto": [],
+        "data": null
+    },
+    "esperado": {
+        "municipal_status": "classificado",
+        "municipal_nivel": "alto",
+        "fluxo": "analise",
+        "dimensao_decisiva": "municipal",
+        "gatilhos_acionados": []
+    }
+}

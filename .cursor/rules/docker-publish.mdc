@@ -1,79 +1,60 @@
 ---
-description: Fluxo de build, publicação e deploy de imagens Docker via Portainer
+description: Fluxo de deploy SILE via Portainer GitOps (build no host a partir da main)
 alwaysApply: true
 ---
 
-# Docker — Build, Publicação e Deploy
+# Docker — Deploy SILE via Portainer
 
-Conta Docker Hub: `filipefalcaofs97`
-Máquina de desenvolvimento: Apple Silicon (ARM64)
-Servidores de produção: Linux AMD64
+Servidor de produção: Linux AMD64 (Portainer faz o `docker compose build` no host).
+Máquina de desenvolvimento: Apple Silicon — **não** precisa buildar imagem local para publicar.
 
-## Fluxo obrigatório de publicação
+## Fluxo obrigatório
 
 ```
-Build AMD64 com buildx → Push direto para Docker Hub → Commit compose no main → Portainer puxa do main
+Commit na main (GitLab Softwell) → Portainer clona a main → build da Dockerfile → sobe o stack
 ```
 
-### 1. Build e push (comando único)
+O compose de produção (`docker-compose.portainer-full.yml`) usa `build:` + `pull_policy: build` e a tag local `sile:git`. Não usar `ghcr.io/...:latest` nem `pull_policy: always` nesse arquivo — isso faria o Portainer puxar imagem de registry em vez de rebuildar.
 
-SEMPRE usar `docker buildx` com `--platform linux/amd64` porque a máquina local é ARM (Apple Silicon) e os servidores são AMD64. Build normal com `docker build` ou `docker compose up --build` gera imagem ARM que NÃO funciona no servidor.
+### 1. Subir código para a main
 
 ```bash
-docker buildx build --platform linux/amd64 -t filipefalcaofs97/<nome-imagem>:latest --push .
+git push softwell HEAD:main
 ```
 
-Esse comando builda para AMD64 e faz push direto para o Docker Hub em um passo só. Não precisa de `docker tag` nem `docker push` separados.
+Remote: `https://gitlab.softwell.com.br/techpulse/sile.git`. Fast-forward; nunca `--force` em `main`.
 
-Aguardar o output confirmar `pushing manifest` e `DONE`.
+Frontend: `public/build` entra no git (o Dockerfile não roda `npm run build`). Mudança em React/TSX exige `npm run build` e commit de `public/build` antes do push.
 
-### 2. Garantir que o compose de produção aponta para a imagem correta
+### 2. Portainer (já configurado)
 
-No `docker-compose.portainer-full.yml`, o campo `image:` DEVE ser exatamente:
-
-```yaml
-image: filipefalcaofs97/<nome-imagem>:latest
-```
-
-### 3. Commit e push para main
-
-```bash
-git add -A
-git commit -m "chore: atualiza imagem Docker para deploy"
-git push origin main
-```
-
-O Portainer lê o compose do branch `main` e puxa a imagem do Docker Hub.
-
-## Configuração do Portainer
-
-- **Stacks > Add Stack > Repository**
-- **Repository URL:** URL do repositório GitHub do projeto
+- **Stacks > sile-app > Repository:** GitLab Softwell
+- **Branch:** `refs/heads/main`
 - **Compose path:** `docker-compose.portainer-full.yml`
-- **Branch:** `main`
-- **Automatic updates:** habilitar se disponível (GitOps)
+- **Auto update:** intervalo 5 min
+- **Re-pull image:** desligado (o build é local; pull de registry sobrescreveria `sile:git`)
 
-## Estrutura esperada em cada projeto
+O primeiro deploy após um commit na main pode levar vários minutos (composer install no host).
+
+## Fallback opcional (GHCR)
+
+Só se o build no host estiver indisponível: `./scripts/portainer-build-push.sh` publica `ghcr.io/filipefalcaofs/sile:latest`. Não é o fluxo padrão.
+
+## Estrutura
 
 | Arquivo | Função |
 |---|---|
-| `Dockerfile` | Build da imagem |
-| `docker-compose.yml` | Desenvolvimento local (com `build:`) |
-| `docker-compose.portainer-full.yml` | Produção/Portainer (com `image:` do Docker Hub) |
-| `docker/` | Configs de runtime (nginx, php.ini, supervisord, entrypoint) |
-| `.dockerignore` | Excluir arquivos desnecessários do build |
+| `VERSION` | Versão semver (injetada no build se definida no stack env) |
+| `Dockerfile` | Build no host Portainer (`composer install`; assets já em `public/build`) |
+| `docker-compose.yml` | Desenvolvimento local |
+| `docker-compose.portainer-full.yml` | Produção: `build:` + `pull_policy: build` |
+| `docker/` | nginx, php.ini, supervisord, entrypoint |
+| `.dockerignore` | Exclui testes, `.github`, `.env` do contexto de build |
 
 ## Erros comuns
 
 | Erro | Causa | Solução |
 |---|---|---|
-| `no matching manifest for linux/amd64` | Imagem buildada em ARM sem `--platform` | Usar `docker buildx build --platform linux/amd64` |
-| Imagem não encontrada no Portainer | `image:` no compose diferente do que foi pushed | Conferir nome exato no compose |
-
-## Checklist antes de publicar
-
-- Build com `buildx --platform linux/amd64` passou sem erros
-- Push confirmado (digest no output)
-- `docker-compose.portainer-full.yml` aponta para `filipefalcaofs97/<nome>:latest`
-- Commit e push feitos no branch `main`
-- Variáveis sensíveis NÃO estão hardcoded na imagem
+| Stack não atualiza após push | Token GitLab do Portainer expirado | Renovar PAT/deploy token em Stacks > sile-app > Git |
+| UI antiga após push só de TSX | `public/build` não foi commitado | `npm run build` e commit de `public/build` |
+| Imagem GHCR no lugar de `sile:git` | `pull_policy: always` ou Force pull image | Voltar para `pull_policy: build` e desligar re-pull |

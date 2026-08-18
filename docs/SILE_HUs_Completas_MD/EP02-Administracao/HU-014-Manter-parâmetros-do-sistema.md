@@ -68,6 +68,9 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-009: Parâmetros sensíveis (credenciais, senhas, tokens de integração) devem ser armazenados criptografados e nunca exibidos em texto claro após gravados.
 - RN-010: Telas de parametrização de integrações devem oferecer ação de teste de conexão para o administrador validar a configuração sem acionar o fluxo real.
 - RN-011: A desativação de uma funcionalidade deve degradar o comportamento de forma controlada e comunicada (ex.: integração desativada gera pendência operacional, não erro silencioso).
+- RN-012: Calendário de **feriados** municipais/nacionais deve ser administrável (HU-137) e impactar contagem de prazos operacionais.
+- RN-013: Regras de **contagem de prazo** (dias úteis vs corridos; inclusão/exclusão de fins de semana e feriados) devem ser parametrizáveis — problema identificado no SAPS legado (prazos inflados).
+- RN-014: Parâmetros de **indeferimento automático** (ex.: prazo sem BAP vinculado, padrão 48h) devem ser administráveis, conforme tela "Parâmetros para indeferimento automático" do SAPS.
 
 ## Critérios de Aceite — BDD
 

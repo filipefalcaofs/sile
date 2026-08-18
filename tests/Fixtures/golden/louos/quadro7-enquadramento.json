@@ -1,0 +1,15 @@
+{
+    "nome": "Quadro 7 enquadra o minimercado 4712-1/00 em nR1 ate 350 m2 (sem zona, pendente)",
+    "descricao": "CNAE 4712-1/00 (minimercado) com area de 350 m2 enquadra no grupo nR1, subgrupo nR1-01, pelo Quadro 7 real (faixa ancora do modelo TVL/SAPS: ate 350 m2 = nR1). Caso-ancora do enquadramento por area. Sem zona no input, o Quadro 10 degrada para indisponivel e o consolidado fica pendente (degradacao honesta — zona urbanistica pendente SEDUR). Prova que o motor enquadra a area de verdade, mas nao declara permissao sem o dado de zona.",
+    "input": {
+        "area": 350,
+        "cnae": "4712-1/00"
+    },
+    "esperado": {
+        "quadro7_status": "identificado",
+        "quadro7_grupo": "nR1",
+        "quadro7_subgrupo": "nR1-01",
+        "quadro10_status": "indisponivel",
+        "resultado": "pendente"
+    }
+}

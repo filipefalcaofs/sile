@@ -60,7 +60,7 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Cada condicionante deve registrar: texto da condicionante, pergunta dirigida ao requerente, pergunta complementar (direcionadora) opcional e efeito da resposta (ex.: reclassificação de risco), conforme estrutura da planilha oficial da SEDUR.
+- RN-004: Cada condicionante deve registrar: **Pergunta** (reutilizável, select), **Regra** (numérica/paramétrica), **Crítica** (select), textos para composição do parecer/documento e efeito da resposta (ex.: reclassificação de risco), conforme cadastro do SAPS legado.
 - RN-005: Alterações em condicionantes devem ser versionadas — decisões já tomadas mantêm referência à versão vigente na época.
 
 ## Critérios de Aceite — BDD

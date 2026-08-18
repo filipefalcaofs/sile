@@ -90,6 +90,7 @@ target/
 *.nar
 .gradle/
 build/
+!/public/build/
 out/
 hs_err_pid*
 
@@ -147,7 +148,7 @@ composer.phar
 
 # Laravel
 /node_modules
-/public/build
+# /public/build — commitado para deploy no Portainer (sem npm no servidor)
 /public/hot
 /public/storage
 /public/fonts-manifest.dev.json
@@ -187,3 +188,5 @@ _ide_helper_models.php
 .DS_Store
 Thumbs.db
 .playwright-cli/
+output/
+.worktrees/

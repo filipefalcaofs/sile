@@ -1,0 +1,164 @@
+# Stack da aplicação SILE — Portainer clona a branch main e faz o build no host.
+#
+# Fluxo:
+#   git push em main (GitLab Softwell) → auto-update (~5 min) → docker compose build + up
+#
+# A imagem NÃO vem do GHCR. Tag local: sile:git
+# pull_policy: build obriga rebuild quando o Git muda (compose up sozinho reusa cache).
+#
+# Frontend: public/build precisa estar no git (já é o combinado do Dockerfile).
+# Alteração só em React/TSX: npm run build e commit de public/build antes do push.
+
+name: sile-app
+
+x-sile-build: &sile-build
+  image: sile:git
+  pull_policy: build
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      APP_VERSION: ${APP_VERSION:-}
+      APP_REVISION: ${APP_REVISION:-}
+
+x-app-env: &app-env
+  APP_NAME: ${APP_NAME:-SILE}
+  APP_ENV: production
+  APP_KEY: ${APP_KEY:?defina APP_KEY}
+  APP_DEBUG: 'false'
+  APP_URL: ${APP_URL:?defina APP_URL}
+  APP_LOCALE: pt_BR
+  APP_FALLBACK_LOCALE: pt_BR
+  SILE_DEMO_DATA: ${SILE_DEMO_DATA:-false}
+  LOG_CHANNEL: stderr
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  DB_CONNECTION: pgsql
+  DB_HOST: pgsql
+  DB_PORT: '5432'
+  DB_DATABASE: ${DB_DATABASE:-sile}
+  DB_USERNAME: ${DB_USERNAME:-sile}
+  DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+  SESSION_DRIVER: redis
+  SESSION_LIFETIME: '120'
+  SESSION_ENCRYPT: 'false'
+  CACHE_STORE: redis
+  QUEUE_CONNECTION: redis
+  REDIS_CLIENT: predis
+  REDIS_HOST: redis
+  REDIS_PASSWORD: 'null'
+  REDIS_PORT: '6379'
+  MAIL_MAILER: ${MAIL_MAILER:-log}
+  MAIL_HOST: ${MAIL_HOST:-}
+  MAIL_PORT: ${MAIL_PORT:-}
+  MAIL_USERNAME: ${MAIL_USERNAME:-}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@sile.sedur.ba.gov.br}
+  MAIL_FROM_NAME: ${APP_NAME:-SILE}
+  RESEND_KEY: ${RESEND_KEY:-}
+  VIEW_COMPILED_PATH: /var/www/html/storage/framework/views
+  ASSET_URL: ${APP_URL}
+
+services:
+  migrate:
+    <<: *sile-build
+    container_name: sile-migrate
+    entrypoint: ["/migrate.sh"]
+    environment:
+      APP_KEY: ${APP_KEY:?defina APP_KEY}
+      APP_ENV: production
+      LOG_CHANNEL: stderr
+      CACHE_STORE: array
+      DB_CONNECTION: pgsql
+      DB_HOST: pgsql
+      DB_PORT: '5432'
+      DB_DATABASE: ${DB_DATABASE:-sile}
+      DB_USERNAME: ${DB_USERNAME:-sile}
+      DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+    networks:
+      - sile_net
+    restart: 'no'
+
+  seed:
+    <<: *sile-build
+    container_name: sile-seed
+    entrypoint: ['/bin/sh', '-ce']
+    command:
+      - |
+        if [ "${SILE_DEMO_DATA:-false}" != "true" ]; then
+          echo "[seed] SILE_DEMO_DATA nao esta true — pulando seed de demonstracao."
+          exit 0
+        fi
+        echo "[seed] executando seed de demonstracao..."
+        php artisan db:seed --class=DemonstracaoClienteSeeder --force --no-interaction -vvv \
+          || php artisan db:seed --force --no-interaction -vvv
+    environment:
+      APP_KEY: ${APP_KEY:?defina APP_KEY}
+      APP_ENV: production
+      SILE_DEMO_DATA: ${SILE_DEMO_DATA:-false}
+      LOG_CHANNEL: stderr
+      CACHE_STORE: array
+      DB_CONNECTION: pgsql
+      DB_HOST: pgsql
+      DB_PORT: '5432'
+      DB_DATABASE: ${DB_DATABASE:-sile}
+      DB_USERNAME: ${DB_USERNAME:-sile}
+      DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+    networks:
+      - sile_net
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: 'no'
+
+  app:
+    <<: *sile-build
+    container_name: sile-app
+    restart: unless-stopped
+    ports:
+      - '${APP_PORT:-8082}:8000'
+    environment:
+      <<: *app-env
+      RUN_MIGRATIONS: 'false'
+    networks:
+      sile_net: {}
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8000/up || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+
+  queue:
+    <<: *sile-build
+    container_name: sile-queue
+    restart: unless-stopped
+    command: ['php', 'artisan', 'queue:work', '--sleep=3', '--tries=3', '--max-time=3600']
+    environment:
+      <<: *app-env
+      RUN_MIGRATIONS: 'false'
+    networks:
+      sile_net: {}
+    depends_on:
+      app:
+        condition: service_started
+
+  scheduler:
+    <<: *sile-build
+    container_name: sile-scheduler
+    restart: unless-stopped
+    command: ['php', 'artisan', 'schedule:work']
+    environment:
+      <<: *app-env
+      RUN_MIGRATIONS: 'false'
+    networks:
+      sile_net: {}
+    depends_on:
+      app:
+        condition: service_started
+
+networks:
+  sile_net:
+    external: true

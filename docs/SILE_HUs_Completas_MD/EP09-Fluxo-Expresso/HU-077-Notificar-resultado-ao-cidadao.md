@@ -4,12 +4,12 @@
 **EP09 — Fluxo Expresso**
 
 ## Objetivo
-Comunicar decisão automática.
+Garantir ciência do resultado ao requerente pelos canais oficiais (Regin/Junta e notificações parametrizadas), **sem** entrega de PDF/TVL pelo Simplifica.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** notificar cidadão,  
-**para** garantir ciência do resultado.
+**quero** notificar o resultado da decisão automática,  
+**para** que o requerente acompanhe pelo Regin ou portal conforme parametrização.
 
 ## Contexto de Negócio
 O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
@@ -59,7 +59,8 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 ## Regras de Negócio
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: A notificação primária de viabilidade via Regin ocorre pelo integrador (HU-104); o SILE pode complementar com e-mail/WhatsApp parametrizados (EP11) sem anexar PDF/TVL.
+- RN-005: Status e mensagem devem ser parametrizáveis (HU-014).
 
 ## Critérios de Aceite — BDD
 

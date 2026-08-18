@@ -1,15 +1,22 @@
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Form, Head, router } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import Input from '@/components/form/input';
+import PageHeader from '@/components/app/page-header';
 import Label from '@/components/form/label';
+import { PowerIcon } from '@/components/icons';
 import Select from '@/components/form/select';
+import Avatar from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import ConfirmDialog from '@/components/ui/confirm-dialog';
+import DataTable from '@/components/ui/data-table/data-table';
+import TableToolbar from '@/components/ui/data-table/table-toolbar';
+import type { ColumnDef } from '@/components/ui/data-table/types';
 import EmptyState from '@/components/ui/empty-state';
 import { Modal } from '@/components/ui/modal';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
-import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
+import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 interface UserItem {
@@ -21,6 +28,8 @@ interface UserItem {
     cpf_masked: string;
 }
 
+type UsersTab = 'gestao' | 'portal';
+
 interface UsersIndexProps {
     users: {
         data: UserItem[];
@@ -31,54 +40,61 @@ interface UsersIndexProps {
     };
     filters: {
         search: string;
+        tab: UsersTab;
+    };
+    counts: {
+        gestao: number;
+        portal: number;
     };
     roles: string[];
 }
 
-const actionButtonStyles =
-    'inline-flex items-center justify-center rounded-lg px-3 py-2 text-theme-xs font-medium ring-1 ring-inset transition disabled:cursor-not-allowed disabled:opacity-60';
+function UsersTabs({
+    active,
+    counts,
+    onChange,
+}: {
+    active: UsersTab;
+    counts: { gestao: number; portal: number };
+    onChange: (tab: UsersTab) => void;
+}) {
+    const tabs: { id: UsersTab; label: string; count: number }[] = [
+        { id: 'gestao', label: 'Equipe SEDUR', count: counts.gestao },
+        { id: 'portal', label: 'Usuários do portal', count: counts.portal },
+    ];
 
-const brandActionStyles = `${actionButtonStyles} text-brand-500 ring-brand-200 hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10`;
-
-const neutralActionStyles = `${actionButtonStyles} text-gray-600 ring-gray-300 hover:bg-gray-50 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03]`;
-
-const warningActionStyles = `${actionButtonStyles} text-warning-600 ring-warning-300 hover:bg-warning-50 dark:text-orange-400 dark:ring-warning-500/30 dark:hover:bg-warning-500/10`;
-
-const successActionStyles = `${actionButtonStyles} text-success-600 ring-success-300 hover:bg-success-50 dark:text-success-400 dark:ring-success-500/30 dark:hover:bg-success-500/10`;
-
-const headerCellStyles = 'px-5 py-3 text-start text-theme-xs font-medium text-gray-500 dark:text-gray-400';
-
-function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
     return (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
-            <nav aria-label="Trilha de navegação">
-                <ol className="flex flex-wrap items-center gap-1.5">
-                    <li>
-                        <Link
-                            className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
-                            href="/gestao"
+        <div className="border-b border-gray-200 dark:border-gray-800" role="tablist" aria-label="Tipo de usuário">
+            <nav className="-mb-px flex gap-6">
+                {tabs.map((tab) => {
+                    const isActive = tab.id === active;
+
+                    return (
+                        <button
+                            key={tab.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActive}
+                            onClick={() => onChange(tab.id)}
+                            className={`inline-flex items-center gap-2 border-b-2 pt-1 pb-3 text-sm font-medium transition-colors ${
+                                isActive
+                                    ? 'border-brand-500 text-brand-600 dark:border-brand-400 dark:text-brand-400'
+                                    : 'cursor-pointer border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                            }`}
                         >
-                            Painel
-                            <svg
-                                className="stroke-current"
-                                width="17"
-                                height="16"
-                                viewBox="0 0 17 16"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
+                            {tab.label}
+                            <span
+                                className={`rounded-full px-2 py-0.5 text-theme-xs font-semibold ${
+                                    isActive
+                                        ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400'
+                                        : 'bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400'
+                                }`}
                             >
-                                <path
-                                    d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
-                                    strokeWidth="1.2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
-                        </Link>
-                    </li>
-                    <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
-                </ol>
+                                {tab.count}
+                            </span>
+                        </button>
+                    );
+                })}
             </nav>
         </div>
     );
@@ -150,12 +166,14 @@ function RoleModal({ user, roles, onClose }: { user: UserItem; roles: string[]; 
     );
 }
 
-export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
+export default function UsersIndex({ users, filters, counts, roles }: UsersIndexProps) {
     const [search, setSearch] = useState(filters.search ?? '');
     const isFirstRender = useRef(true);
     const [roleUser, setRoleUser] = useState<UserItem | null>(null);
     const [activationUser, setActivationUser] = useState<UserItem | null>(null);
     const [activationProcessing, setActivationProcessing] = useState(false);
+
+    const tab = filters.tab ?? 'gestao';
 
     useEffect(() => {
         if (isFirstRender.current) {
@@ -163,12 +181,84 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
             return;
         }
         const timeout = setTimeout(() => {
-            router.get('/gestao/usuarios', { search }, { preserveState: true, replace: true });
+            router.get('/gestao/usuarios', { tab, search }, { preserveState: true, replace: true });
         }, 350);
         return () => clearTimeout(timeout);
+        // tab fora das deps de propósito: a troca de aba navega na hora pelo
+        // onChange — o efeito cobre apenas o debounce da busca.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search]);
 
+    function changeTab(nextTab: UsersTab) {
+        if (nextTab === tab) {
+            return;
+        }
+
+        router.get('/gestao/usuarios', { tab: nextTab, search }, { preserveState: true, replace: true });
+    }
+
     const searching = search.trim() !== '';
+
+    const columns: ColumnDef<UserItem>[] = [
+        {
+            id: 'name',
+            header: 'Nome',
+            cellClassName: 'font-medium text-gray-800 dark:text-white/90',
+            cell: (user) => (
+                <div className="flex items-center gap-3">
+                    <Avatar name={user.name} size="sm" />
+                    <span>{user.name}</span>
+                </div>
+            ),
+        },
+        {
+            id: 'email',
+            header: 'E-mail',
+            cell: (user) => user.email,
+        },
+        {
+            id: 'cpf',
+            header: 'CPF',
+            cellClassName: 'whitespace-nowrap',
+            cell: (user) => user.cpf_masked,
+        },
+        {
+            id: 'roles',
+            header: 'Papel',
+            cell: (user) => <RoleBadges roles={user.roles} />,
+        },
+        {
+            id: 'situation',
+            header: 'Situação',
+            cell: (user) => <SituationBadge inactivatedAt={user.inactivated_at} />,
+        },
+        {
+            id: 'actions',
+            header: 'Ações',
+            align: 'end',
+            cellClassName: 'whitespace-nowrap',
+            cell: (user) => {
+                const active = user.inactivated_at === null;
+
+                return (
+                    <div className="flex justify-end gap-2">
+                        <TableAction tone="neutral" href={`/gestao/acessos/${user.id}`}>
+                            Acessos
+                        </TableAction>
+                        <TableAction tone="brand" onClick={() => setRoleUser(user)}>
+                            Alterar papel
+                        </TableAction>
+                        <TableAction
+                            tone={active ? 'warning' : 'success'}
+                            icon={<PowerIcon className="size-4.5" />}
+                            label={active ? 'Inativar' : 'Reativar'}
+                            onClick={() => setActivationUser(user)}
+                        />
+                    </div>
+                );
+            },
+        },
+    ];
 
     function toggleActivation() {
         if (!activationUser) {
@@ -200,137 +290,64 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
         : null;
 
     return (
-        <GestaoLayout>
+        <>
             <Head title="Usuários" />
-            <PageBreadcrumb pageTitle="Usuários" />
+            <PageHeader title="Usuários" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
-            <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-                <div className="px-6 py-5">
-                    <h3 className="text-base font-medium text-gray-800 dark:text-white/90">Contas cadastradas</h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Contas do sistema: situação, papel e histórico de acessos
-                    </p>
-                </div>
-                <div className="border-t border-gray-100 p-4 dark:border-gray-800 sm:p-6">
-                    <div className="space-y-6">
-                        <div>
-                            <label htmlFor="search" className="sr-only">
-                                Buscar usuários
-                            </label>
-                            <div className="w-full sm:max-w-sm">
-                                <Input
-                                    id="search"
-                                    type="search"
-                                    value={search}
-                                    onChange={(event) => setSearch(event.target.value)}
-                                    placeholder="Buscar por nome ou e-mail..."
+            <Card>
+                <CardHeader
+                    title="Contas cadastradas"
+                    description={
+                        tab === 'gestao'
+                            ? 'Servidores e perfis internos com acesso ao console SEDUR'
+                            : 'Cidadãos, contadores e procuradores que usam o portal'
+                    }
+                />
+                <CardContent>
+                    <div className="space-y-5">
+                        <UsersTabs active={tab} counts={counts} onChange={changeTab} />
+
+                        <TableToolbar
+                            search={{
+                                value: search,
+                                onChange: setSearch,
+                                placeholder: 'Buscar por nome ou e-mail...',
+                                label: 'Buscar usuários',
+                            }}
+                        />
+
+                        <DataTable
+                            columns={columns}
+                            rows={users.data}
+                            rowKey={(user) => user.id}
+                            density="compact"
+                            emptyState={
+                                <EmptyState
+                                    title={
+                                        searching
+                                            ? 'Nenhum resultado para a busca'
+                                            : tab === 'gestao'
+                                              ? 'Nenhum usuário na equipe SEDUR'
+                                              : 'Nenhum usuário do portal'
+                                    }
+                                    description={
+                                        searching
+                                            ? 'Ajuste o termo de busca e tente novamente.'
+                                            : tab === 'gestao'
+                                              ? 'Contas com acesso ao console aparecem aqui.'
+                                              : 'Contas criadas pelo portal do cidadão aparecem aqui.'
+                                    }
                                 />
-                            </div>
-                        </div>
-
-                        {users.data.length === 0 ? (
-                            <EmptyState
-                                title={searching ? 'Nenhum resultado para a busca' : 'Nenhum usuário cadastrado'}
-                                description={
-                                    searching
-                                        ? 'Ajuste o termo de busca e tente novamente.'
-                                        : 'As contas criadas no sistema aparecem aqui.'
-                                }
-                            />
-                        ) : (
-                            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/[0.05]">
-                                <div className="max-w-full overflow-x-auto">
-                                    <Table>
-                                        <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-                                            <TableRow>
-                                                <TableCell isHeader className={headerCellStyles}>
-                                                    Nome
-                                                </TableCell>
-                                                <TableCell isHeader className={headerCellStyles}>
-                                                    E-mail
-                                                </TableCell>
-                                                <TableCell isHeader className={headerCellStyles}>
-                                                    CPF
-                                                </TableCell>
-                                                <TableCell isHeader className={headerCellStyles}>
-                                                    Papel
-                                                </TableCell>
-                                                <TableCell isHeader className={headerCellStyles}>
-                                                    Situação
-                                                </TableCell>
-                                                <TableCell isHeader className={`${headerCellStyles} text-end`}>
-                                                    Ações
-                                                </TableCell>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                                            {users.data.map((user) => {
-                                                const active = user.inactivated_at === null;
-
-                                                return (
-                                                    <TableRow
-                                                        key={user.id}
-                                                        className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
-                                                    >
-                                                        <TableCell className="px-5 py-4 text-start text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                                            {user.name}
-                                                        </TableCell>
-                                                        <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                                            {user.email}
-                                                        </TableCell>
-                                                        <TableCell className="px-5 py-4 text-start text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                                            {user.cpf_masked}
-                                                        </TableCell>
-                                                        <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                                            <RoleBadges roles={user.roles} />
-                                                        </TableCell>
-                                                        <TableCell className="px-5 py-4 text-start text-theme-sm text-gray-500 dark:text-gray-400">
-                                                            <SituationBadge inactivatedAt={user.inactivated_at} />
-                                                        </TableCell>
-                                                        <TableCell className="px-5 py-4 text-end text-theme-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                                            <div className="flex flex-wrap justify-end gap-2">
-                                                                <Link
-                                                                    href={`/gestao/acessos/${user.id}`}
-                                                                    className={neutralActionStyles}
-                                                                >
-                                                                    Acessos
-                                                                </Link>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setRoleUser(user)}
-                                                                    className={brandActionStyles}
-                                                                >
-                                                                    Alterar papel
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setActivationUser(user)}
-                                                                    className={
-                                                                        active
-                                                                            ? warningActionStyles
-                                                                            : successActionStyles
-                                                                    }
-                                                                >
-                                                                    {active ? 'Inativar' : 'Reativar'}
-                                                                </button>
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            })}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            </div>
-                        )}
+                            }
+                        />
 
                         <Pagination
                             links={users.links}
                             meta={{ from: users.from, to: users.to, total: users.total }}
                         />
                     </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
 
             {roleUser && <RoleModal user={roleUser} roles={roles} onClose={() => setRoleUser(null)} />}
 
@@ -346,6 +363,8 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
                     processing={activationProcessing}
                 />
             )}
-        </GestaoLayout>
+        </>
     );
 }
+
+UsersIndex.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;

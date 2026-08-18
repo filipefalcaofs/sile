@@ -38,7 +38,7 @@ Conforme informado pela SEDUR, após a conclusão do processo de viabilidade a r
 1. A API da SEFAZ fica indisponível ou retorna erro.
 2. O sistema registra a falha com o detalhe do erro.
 3. O sistema realiza retentativas automáticas com intervalo progressivo.
-4. Persistindo a falha, o caso é sinalizado para tratamento manual sem bloquear o resultado já comunicado ao requerente.
+4. Persistindo a falha, o caso é sinalizado para tratamento manual sem bloquear a decisão já comunicada ao integrador Regin.
 
 ### FA-02 — Resposta de rejeição da SEFAZ
 1. A API responde com rejeição de dados (validação).
@@ -50,7 +50,7 @@ Conforme informado pela SEDUR, após a conclusão do processo de viabilidade a r
 2. O reenvio é bloqueado ou tratado de forma idempotente.
 
 ## Regras de Negócio
-- RN-001: Somente processos com resultado deferido devem ser enviados à SEFAZ.
+- RN-001: Somente processos com resultado **deferido** (fluxo expresso HU-076 ou análise técnica HU-086) devem ser enviados à SEFAZ. Indeferimentos seguem apenas para o integrador Regin (HU-104).
 - RN-002: Toda tentativa de envio (sucesso ou falha) deve ser registrada em auditoria com data, hora, payload e resposta.
 - RN-003: O envio deve ser idempotente — reenvios não podem duplicar registros na SEFAZ.
 - RN-004: Falha na integração não pode reverter nem bloquear a decisão de viabilidade já tomada; deve gerar pendência operacional de reenvio.

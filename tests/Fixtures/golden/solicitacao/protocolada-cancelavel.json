@@ -1,0 +1,13 @@
+{
+    "nome": "protocolada-cancelavel",
+    "descricao": "Solicitação protocolada (antes de qualquer decisão) → o requerente cancela pelo CancelarSolicitacaoService real; transiciona para cancelada com motivo e a transição fica registrada na timeline. Prova o direito de cancelar enquanto não decidido.",
+    "cenario": "instruido",
+    "cnae": "4712100",
+    "is_public_area": false,
+    "anexar_fachada": true,
+    "acao": "protocolar_e_cancelar",
+    "esperado": {
+        "status": "cancelada",
+        "tem_motivo_cancelamento": true
+    }
+}

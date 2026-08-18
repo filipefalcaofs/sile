@@ -5,14 +5,20 @@ namespace App\Http\Controllers\Gestao;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\StoreRoleRequest;
 use App\Http\Requests\Gestao\UpdateRoleRequest;
+use App\Services\Relatorios\Export\ReportExporter;
+use App\Services\Relatorios\Export\Sources\PerfisReportSource;
+use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
+use App\Support\PermissionCatalog;
 use App\Support\Roles;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class RoleController extends Controller
 {
@@ -20,8 +26,19 @@ class RoleController extends Controller
      * Perfis com permissões e vínculos (HU-013 CA-01). O flag structural
      * comunica à tela quais papéis o código referencia e protege.
      */
-    public function index(): Response
+    public function index(Request $request): Response|HttpResponse
     {
+        // HU-131/RN-009: com ?formato=, exporta os perfis pelo contrato único —
+        // sem rota nova. A listagem não tem filtros (catálogo de perfis).
+        if (in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
+            return app(ReportExporter::class)->export(
+                app(PerfisReportSource::class),
+                ReportFilters::fromArray([]),
+                $request->string('formato')->lower()->toString(),
+                $request->user(),
+            );
+        }
+
         $roles = Role::query()
             ->withCount('users')
             ->with('permissions:id,name')
@@ -35,9 +52,12 @@ class RoleController extends Controller
                 'structural' => in_array($role->name, Roles::STRUCTURAL, true),
             ]);
 
+        $permissionNames = Permission::query()->orderBy('name')->pluck('name');
+
         return Inertia::render('gestao/perfis/index', [
             'roles' => $roles,
-            'permissions' => Permission::orderBy('name')->pluck('name'),
+            'permissions' => $permissionNames,
+            'permissionCatalog' => PermissionCatalog::forNames($permissionNames),
         ]);
     }
 

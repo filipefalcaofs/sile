@@ -1,0 +1,17 @@
+{
+    "nome": "indeferida-zona-proibido",
+    "descricao": "CNAE de risco baixo (expresso) PROIBIDO na zona pelo Quadro 10 → INDEFERE o processo, sem número TVL, e dispara o ResultadoEmitido.",
+    "cnae": "8888883",
+    "grupo": "nR3",
+    "subgrupo": "nR3-01",
+    "risco": "baixo_a",
+    "zona": "ZR-1",
+    "permissao": "proibido",
+    "esperado": {
+        "status": "indeferida",
+        "outcome": "indeferida",
+        "consolidado": "nao_permitido",
+        "tem_tvl": false,
+        "evento_emitido": true
+    }
+}

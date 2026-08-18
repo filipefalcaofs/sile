@@ -1,15 +1,17 @@
-# HU-103 — Integrar com REDESIM
+# HU-103 — Integrar com REDESIM/Regin
+
+> **Status: Refinada (2026-06-11)** — Integrador estadual da Bahia é o **Regin** (JUCEB/Prosolution), conforme Resolução CGSIM nº 61/2020. O formulário municipal é hospedado pelo Simplifica (`/integracao/sedur/TVL/ps001_Regin.aspx`). Especificação técnica do webservice **não é pública** — dependência externa bloqueante até contrato SEDUR/JUCEB (ver `docs/ANALISE-HUs-REUNIAO-SEDUR.md` seção 7.8).
 
 ## Épica
 **EP13 — Integrações**
 
 ## Objetivo
-Receber e devolver dados da viabilidade.
+Receber solicitações de viabilidade do Regin, hospedar o formulário complementar da SEDUR, vincular protocolo BAP ao processo e devolver parecer ao integrador.
 
 ## História de Usuário
 **Como** sistema,  
-**quero** integrar com REDESIM,  
-**para** manter fluxo nacional/municipal conectado.
+**quero** integrar com REDESIM/Regin,  
+**para** manter o fluxo nacional/municipal conectado de ponta a ponta.
 
 ## Contexto de Negócio
 O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
@@ -27,12 +29,13 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - Regras, integrações ou bases oficiais configuradas quando aplicável.
 
 ## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Integrar com REDESIM**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema executa as validações e regras relacionadas à funcionalidade.
-4. Quando aplicável, o sistema consulta bases internas, motor de regras, GIS, REDESIM ou demais integrações.
-5. O sistema apresenta o resultado ao usuário ou atualiza o processo automaticamente.
-6. O sistema registra a operação em trilha de auditoria.
+1. O Regin redireciona o requerente ao formulário da SEDUR no Simplifica (token de sessão), equivalente ao `ps001_Regin.aspx`.
+2. O requerente preenche dados complementares (imóvel, polígono, CNAEs, condicionantes, anexos) — ver EP08.
+3. O sistema gera o **número de processo SEDUR** e mantém o processo aguardando **protocolo BAP** (gerado na Junta após termo de responsabilidade).
+4. O Regin/Junta envia o BAP ao Simplifica; o sistema vincula BAP ↔ processo (HU-133).
+5. Após vinculação, o motor executa fluxo expresso ou encaminha à análise técnica.
+6. Ao concluir, o sistema devolve parecer (deferido/indeferido) ao Regin conforme contrato (HU-104).
+7. Toda troca de mensagens registra payload, protocolo externo, status e erros em auditoria.
 
 ## Fluxos Alternativos
 ### FA-01 — Dados incompletos
@@ -60,9 +63,13 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
-- RN-004: Integrações devem registrar payload, status, protocolo externo quando houver e erros de comunicação.
+- RN-004: Integrações devem registrar payload, status, protocolo externo (BAP, id Regin) e erros de comunicação.
 - RN-005: Falha de integração não deve gerar decisão inconsistente; deve permitir retentativa ou análise técnica.
-- RN-006: O sistema deve tratar indisponibilidade do serviço externo.
+- RN-006: O sistema deve tratar indisponibilidade do serviço externo com fila de retentativa e pendência operacional visível.
+- RN-007: Processo sem BAP vinculado dentro do prazo parametrizado (padrão 48h) deve ser indeferido automaticamente por "sem atuação" (HU-134).
+- RN-008: Renovação de TVL e fluxos diretos pelo portal Simplifica **não** passam pelo Regin — rotas distintas (ver HU-061).
+- RN-009: **Recepção durável**: mensagens recebidas do Regin entram em fila durável com confirmação (ack) somente após persistência; falha de processamento envia para dead-letter com replay manual/automático — indisponibilidade momentânea do SILE não pode perder solicitação (causa raiz do "mensagem que não chega" do legado).
+- RN-010: **Proteção do endpoint público**: a página/endpoint do formulário (equivalente ao `ps001_Regin`) deve validar token de sessão emitido no fluxo Regin, aplicar rate limiting e proteção anti-bot — é superfície exposta na internet.
 
 ## Critérios de Aceite — BDD
 
@@ -134,4 +141,4 @@ O sistema deve manter registro completo da execução desta HU, incluindo:
 Alta
 
 ## Observações
-Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
+Passo a passo oficial arquivado em `docs/dados-oficiais/Passo-a-passo-REDESIM-SEDUR-CRCBA-13072021.pdf`. **Bloqueio**: contrato técnico Regin↔SAPS em produção — solicitar à SEDUR/JUCEB antes de implementar adaptador.

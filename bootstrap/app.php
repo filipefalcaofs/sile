@@ -3,15 +3,18 @@
 use App\Http\Middleware\EnsureLgpdTermAccepted;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RedirectGestaoIfAuthenticated;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\Audit\AuditService;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -31,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'lgpd.accepted' => EnsureLgpdTermAccepted::class,
+            'gestao.guest' => RedirectGestaoIfAuthenticated::class,
         ]);
 
         // Logins separados por contexto: retaguarda usa /gestao/login,
@@ -41,16 +45,20 @@ return Application::configure(basePath: dirname(__DIR__))
                 : route('login'),
         );
 
-        // Autenticado em rota guest vai para o próprio painel, por perfil.
-        $middleware->redirectUsersTo(
-            fn (Request $request) => $request->user()?->can('acessar-gestao')
-                ? route('gestao.dashboard')
-                : route('portal.dashboard'),
-        );
+        // Autenticado no portal em rota guest volta ao painel do cidadão.
+        // (As rotas guest da gestão usam o middleware gestao.guest próprio.)
+        $middleware->redirectUsersTo(fn () => route('portal.dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Endpoints JSON do portal (ex.: consulta de CNPJ — HU-021) precisam de
+        // respostas JSON para erros (401/422/404), não redirect. api/* mantém o
+        // comportamento existente; o portal só renderiza JSON quando o cliente
+        // explicitamente o pede (Accept: application/json / XHR).
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*')
+                || ($request->is('portal/empresas/consultar-cnpj') && $request->expectsJson())
+                || ($request->is('portal/viabilidade/*') && $request->expectsJson())
+                || ($request->is('gestao/territorio/*') && $request->expectsJson()),
         );
 
         // CA-04 transversal: todo 403 de autorização é auditado num ponto único.
@@ -77,5 +85,29 @@ return Application::configure(basePath: dirname(__DIR__))
             ]);
 
             return null;
+        });
+
+        // Link assinado de verificação de e-mail inválido/expirado: em vez do
+        // 403 cru, volta ao aviso de verificação, onde o reenvio está a um
+        // clique. Outras rotas assinadas mantêm o 403 padrão.
+        $exceptions->render(function (InvalidSignatureException $e, Request $request) {
+            if ($request->routeIs('verification.verify') && $request->user() !== null) {
+                return redirect()
+                    ->route('verification.notice')
+                    ->with('error', __('Link de confirmação inválido ou expirado. Reenvie o e-mail e tente novamente.'));
+            }
+
+            return null;
+        });
+
+        // Sessão/CSRF expirado (419) em navegação web volta à página anterior
+        // com aviso amigável (padrão recomendado pelo Inertia) em vez da
+        // página de erro crua. JSON (api/*) mantém o status original.
+        $exceptions->respond(function (SymfonyResponse $response, Throwable $e, Request $request) {
+            if ($response->getStatusCode() === 419 && ! $request->expectsJson()) {
+                return back()->with('error', __('Sua sessão expirou. Tente novamente.'));
+            }
+
+            return $response;
         });
     })->create();

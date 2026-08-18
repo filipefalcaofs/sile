@@ -28,10 +28,8 @@ layer(base);
     --breakpoint-xl: 1280px;
     --breakpoint-2xl: 1536px;
 
-    --text-title-2xl: 72px;
-    --text-title-2xl--line-height: 90px;
-    --text-title-xl: 60px;
-    --text-title-xl--line-height: 72px;
+    /* Escala de títulos enxugada: 2xl (72px) e xl (60px) do TailAdmin
+       foram removidos por não terem uso em sistema administrativo. */
     --text-title-lg: 48px;
     --text-title-lg--line-height: 60px;
     --text-title-md: 36px;
@@ -50,18 +48,23 @@ layer(base);
     --color-white: #ffffff;
     --color-black: #101828;
 
-    --color-brand-25: #f2f7ff;
-    --color-brand-50: #ecf3ff;
-    --color-brand-100: #dde9ff;
-    --color-brand-200: #c2d6ff;
-    --color-brand-300: #9cb9ff;
-    --color-brand-400: #7592ff;
-    --color-brand-500: #465fff;
-    --color-brand-600: #3641f5;
-    --color-brand-700: #2a31d8;
-    --color-brand-800: #252dae;
-    --color-brand-900: #262e89;
-    --color-brand-950: #161950;
+    /*
+     * Escala brand alinhada ao azul institucional gov.br
+     * (blue-warm-vivid do Design System gov.br). brand-500 = #1351b4,
+     * o azul oficial usado em ações primárias e no Login Único.
+     */
+    --color-brand-25: #f5f9ff;
+    --color-brand-50: #edf5ff;
+    --color-brand-100: #d4e5ff;
+    --color-brand-200: #adcdff;
+    --color-brand-300: #81aefc;
+    --color-brand-400: #5992ed;
+    --color-brand-500: #1351b4;
+    --color-brand-600: #0c326f;
+    --color-brand-700: #092456;
+    --color-brand-800: #071d41;
+    --color-brand-900: #051433;
+    --color-brand-950: #030d22;
 
     --color-blue-light-25: #f5fbff;
     --color-blue-light-50: #f0f9ff;
@@ -142,10 +145,6 @@ layer(base);
     --color-warning-900: #7a2e0e;
     --color-warning-950: #4e1d09;
 
-    --color-theme-pink-500: #ee46bc;
-
-    --color-theme-purple-500: #7a5af8;
-
     --shadow-theme-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.1),
         0px 2px 4px -2px rgba(16, 24, 40, 0.06);
     --shadow-theme-lg: 0px 12px 16px -4px rgba(16, 24, 40, 0.08),
@@ -155,28 +154,28 @@ layer(base);
     --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
     --shadow-theme-xl: 0px 20px 24px -4px rgba(16, 24, 40, 0.08),
         0px 8px 8px -4px rgba(16, 24, 40, 0.03);
-    --shadow-datepicker: -5px 0 0 #262d3c, 5px 0 0 #262d3c;
-    --shadow-focus-ring: 0px 0px 0px 4px rgba(70, 95, 255, 0.12);
-    --shadow-slider-navigation: 0px 1px 2px 0px rgba(16, 24, 40, 0.1),
-        0px 1px 3px 0px rgba(16, 24, 40, 0.1);
-    --shadow-tooltip: 0px 4px 6px -2px rgba(16, 24, 40, 0.05),
-        -8px 0px 20px 8px rgba(16, 24, 40, 0.05);
+    --shadow-focus-ring: 0px 0px 0px 4px rgba(19, 81, 180, 0.12);
 
-    --drop-shadow-4xl: 0 35px 35px rgba(0, 0, 0, 0.25),
-        0 45px 65px rgba(0, 0, 0, 0.15);
-
+    /* Tokens herdados do TailAdmin sem uso no projeto foram removidos:
+       theme-pink/purple, shadow-datepicker/slider/tooltip, drop-shadow-4xl
+       e z-index-999999. Reintroduzir apenas quando houver consumidor. */
     --z-index-1: 1;
     --z-index-9: 9;
     --z-index-99: 99;
     --z-index-999: 999;
     --z-index-9999: 9999;
     --z-index-99999: 99999;
-    --z-index-999999: 999999;
 }
 
 /*
   A cor de borda padrão mudou para currentColor no Tailwind CSS v4;
   estilos de compatibilidade do TailAdmin para manter o visual v3.
+
+  ATENÇÃO: este seletor global faz com que `border` sem classe de cor
+  renderize gray-200 (e não currentColor, o padrão do v4). É intencional
+  — todo o design system assume esse comportamento. Quem precisar do
+  padrão v4 em um elemento específico deve declarar a cor explicitamente
+  (ex.: `border-current`).
 */
 @layer base {
     *,
@@ -249,4 +248,73 @@ layer(base);
 }
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
     background-color: #344054;
+}
+
+/* Acessibilidade — alto contraste (eMAG), acionado pela AccessibilityBar
+   via classe na raiz do documento.
+
+   Implementado como tema real: remapeia os tokens de cor do @theme
+   (que as utilities do Tailwind v4 leem via var()) para fundo escuro
+   com texto claro e destaque amarelo, no padrão do modo de contraste
+   do gov.br. Evita o filter: invert() na raiz, que criava um novo
+   containing block (quebrando todo position: fixed — modais, dropdowns,
+   a própria barra) e distorcia sombras, mídias e cores semânticas. */
+html.acc-contrast {
+    /* Neutros: escala de cinza invertida, sem preto/branco puros. */
+    --color-white: #0f0f0f;
+    --color-black: #f5f5f5;
+    --color-gray-25: #0a0a0a;
+    --color-gray-50: #121212;
+    --color-gray-100: #1c1c1c;
+    --color-gray-200: #2e2e2e;
+    --color-gray-300: #444444;
+    --color-gray-400: #9a9a9a;
+    --color-gray-500: #b4b4b4;
+    --color-gray-600: #cccccc;
+    --color-gray-700: #e0e0e0;
+    --color-gray-800: #ececec;
+    --color-gray-900: #f5f5f5;
+    --color-gray-950: #fafafa;
+    --color-gray-dark: #ececec;
+
+    /* Brand vira amarelo de alto contraste (links/ações no padrão
+       gov.br contraste). text-white resolve para escuro, então botões
+       primários ficam amarelo + texto escuro — contraste ~13:1. */
+    --color-brand-25: #1a1600;
+    --color-brand-50: #261f00;
+    --color-brand-100: #403500;
+    --color-brand-200: #665500;
+    --color-brand-300: #997f00;
+    --color-brand-400: #ccaa00;
+    --color-brand-500: #ffcc00;
+    --color-brand-600: #ffd633;
+    --color-brand-700: #ffe066;
+    --color-brand-800: #ffeb99;
+    --color-brand-900: #fff5cc;
+    --color-brand-950: #fffae5;
+
+    /* Semânticos clareados para fundo escuro. */
+    --color-success-50: #06281a;
+    --color-success-500: #2fe28a;
+    --color-success-600: #5ce9a4;
+    --color-error-50: #2e0b07;
+    --color-error-500: #ff6b5e;
+    --color-error-600: #ff8a80;
+    --color-warning-50: #2b1d02;
+    --color-warning-500: #ffb020;
+    --color-warning-600: #ffc14d;
+    --color-blue-light-50: #06222e;
+    --color-blue-light-500: #4cc5f5;
+    --color-blue-light-600: #79d4f8;
+
+    /* Sombras não fazem sentido sobre fundo escuro. */
+    --shadow-theme-xs: none;
+    --shadow-theme-sm: none;
+    --shadow-theme-md: none;
+    --shadow-theme-lg: none;
+    --shadow-theme-xl: none;
+    --shadow-focus-ring: 0px 0px 0px 4px rgba(255, 204, 0, 0.3);
+
+    background: var(--color-gray-50);
+    color-scheme: dark;
 }

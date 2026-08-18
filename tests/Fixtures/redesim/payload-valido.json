@@ -1,0 +1,25 @@
+[
+  {
+    "protocolo": "BAP2612345678",
+    "data_solicitacao": "2026-06-10T14:30:00-03:00",
+    "evento": { "codigo": "101", "descricao": "Inscrição de primeiro estabelecimento" },
+    "empresa": {
+      "cnpj": "00000000000191",
+      "razao_social": "BANCO DO BRASIL SA",
+      "nome_fantasia": "DIRECAO GERAL",
+      "natureza_juridica": { "codigo": "2038", "descricao": "Sociedade de Economia Mista" },
+      "porte": { "codigo": "05", "descricao": "DEMAIS" }
+    },
+    "endereco": {
+      "cep": "40020000",
+      "logradouro": "Rua Chile",
+      "numero": "10",
+      "complemento": "",
+      "bairro": "Centro",
+      "municipio": "Salvador",
+      "uf": "BA"
+    },
+    "atividades": { "principal": "6422100", "secundarias": ["6499999"] },
+    "contato": { "email": "banco@example.com", "telefone": "7133330000" }
+  }
+]

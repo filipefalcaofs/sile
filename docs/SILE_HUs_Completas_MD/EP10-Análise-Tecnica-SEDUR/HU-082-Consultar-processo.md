@@ -60,6 +60,14 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: A consulta deve oferecer, no mínimo, os filtros do SAPS legado: grupo de status, status do processo, status de tramitação, número do produto (TVL), número do processo, **BAP**, grupo de serviço, serviço, setor, zona, intervalo de datas, inscrição imobiliária, nome, CPF, CNPJ, CEP, código do logradouro, logradouro, bairro e nº de porta — **mais filtro por analista responsável** (melhoria pedida na reunião: "filtros insuficientes").
+- RN-005: Filtro por **categoria de processo**: Expresso, Semi-Expresso, Malha Fina, Sede de Escritório.
+- RN-006: O detalhe do processo deve organizar o conteúdo nas visões do legado: tramitação, informações do processo, polígono (mapa), anexos, **histórico/timeline com tempo por etapa** (abertura → preenchimento → espera BAP → resposta), DAM (HU-071) e vistoria quando aplicável.
+- RN-007: O processo exibe seus três identificadores: número do processo SEDUR, protocolo BAP e número do produto (TVL).
+- RN-008: A consulta deve responder com desempenho adequado (reclamação central do legado: "sistema muito lento") — paginação server-side e índices nos campos filtrados.
+- RN-009: A retaguarda deve oferecer **busca global** (atalho de teclado, ex.: Cmd/Ctrl+K): digitar número de processo, BAP, produto, CNPJ ou nome leva diretamente ao processo — sem passar pela tela de filtros.
+- RN-010: O histórico do processo deve ser apresentado como **timeline visual** (etapas com duração, responsável e tipo de evento), além da tabela de tramitação; o detalhe deve exibir **mini-mapa permanente** com o polígono e a zona/via sobrepostas (sem precisar abrir a aba de polígono).
+- RN-011: A listagem de processos oferece **exportação em CSV, XLSX e PDF** do conjunto filtrado, conforme o padrão transversal de exportação da gestão (HU-131 RN-004 a RN-009).
 
 ## Critérios de Aceite — BDD
 

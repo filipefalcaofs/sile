@@ -1,33 +1,40 @@
 import type { ReactNode } from 'react';
 import AppHeader from '@/components/app/app-header';
 import AppSidebar from '@/components/app/app-sidebar';
-import type { SidebarGroup } from '@/components/app/app-sidebar';
+import type { SidebarGroup, SidebarVariant } from '@/components/app/app-sidebar';
 import Backdrop from '@/components/app/backdrop';
 import { SidebarProvider, useSidebar } from '@/contexts/sidebar-context';
 
 interface AppShellProps {
     groups: SidebarGroup[];
     homeHref: string;
+    logoutHref?: string;
     subtitle?: string;
+    variant?: SidebarVariant;
+    collapsibleGroups?: boolean;
     children: ReactNode;
 }
 
-function ShellContent({ groups, homeHref, subtitle, children }: AppShellProps) {
+function ShellContent({ groups, homeHref, logoutHref, subtitle, variant, collapsibleGroups, children }: AppShellProps) {
     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
     return (
-        <div className="min-h-screen xl:flex">
-            <div>
-                <AppSidebar groups={groups} homeHref={homeHref} subtitle={subtitle} />
-                <Backdrop />
-            </div>
+        <div className="min-h-screen">
+            <AppSidebar
+                groups={groups}
+                homeHref={homeHref}
+                subtitle={subtitle}
+                variant={variant}
+                collapsibleGroups={collapsibleGroups}
+            />
+            <Backdrop />
             <div
-                className={`flex-1 transition-all duration-300 ease-in-out ${
+                className={`transition-all duration-300 ease-in-out ${
                     isExpanded || isHovered ? 'lg:ml-[290px]' : 'lg:ml-[90px]'
                 } ${isMobileOpen ? 'ml-0' : ''}`}
             >
-                <AppHeader homeHref={homeHref} />
-                <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">{children}</div>
+                <AppHeader homeHref={homeHref} logoutHref={logoutHref ?? '/portal/logout'} />
+                <div id="conteudo" className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">{children}</div>
             </div>
         </div>
     );
@@ -45,3 +52,4 @@ export default function AppShell(props: AppShellProps) {
         </SidebarProvider>
     );
 }
+

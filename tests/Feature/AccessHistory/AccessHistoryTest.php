@@ -108,7 +108,7 @@ class AccessHistoryTest extends TestCase
             'email' => $target->email,
         ]);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get("/gestao/acessos/{$target->id}")
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -122,7 +122,7 @@ class AccessHistoryTest extends TestCase
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
         $target = User::factory()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get("/gestao/acessos/{$target->id}")
             ->assertOk();
 
@@ -139,7 +139,7 @@ class AccessHistoryTest extends TestCase
         $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
         $target = User::factory()->create();
 
-        $this->actingAs($analista)
+        $this->actingAs($analista, 'gestao')
             ->get("/gestao/acessos/{$target->id}")
             ->assertForbidden();
 
@@ -154,7 +154,7 @@ class AccessHistoryTest extends TestCase
     {
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/acessos/999999')
             ->assertNotFound();
     }

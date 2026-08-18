@@ -5,14 +5,14 @@ namespace Tests\Feature\Roles;
 use App\Models\Activity;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ManageRolesTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -30,7 +30,7 @@ class ManageRolesTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->get('/gestao/perfis')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -41,14 +41,37 @@ class ManageRolesTest extends TestCase
                 ->where('roles.0.name', 'administrador')
                 ->where('roles.0.structural', true)
                 ->where('roles.0.users_count', 1)
-                ->has('permissions', 8));
+                ->has('permissions', 30)
+                ->has('permissionCatalog', 30)
+                ->where(
+                    'permissionCatalog',
+                    fn ($catalog) => collect($catalog)->contains(
+                        fn ($item) => $item['name'] === 'consultar-cnaes'
+                            && $item['label'] === 'Consultar CNAEs'
+                            && $item['description'] !== ''
+                    )
+                )
+                ->where(
+                    'permissionCatalog',
+                    fn ($catalog) => collect($catalog)->contains(
+                        fn ($item) => $item['name'] === 'manter-cnaes'
+                            && $item['label'] === 'Cadastrar e editar CNAEs'
+                            && $item['description'] !== ''
+                    )
+                )
+                ->where(
+                    'permissionCatalog',
+                    fn ($catalog) => collect($catalog)->every(
+                        fn ($item) => $item['group'] !== 'Outras' && $item['label'] !== $item['name']
+                    )
+                ));
     }
 
     public function test_cria_perfil_com_permissoes_granulares(): void
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->post('/gestao/perfis', [
                 'name' => 'fiscal',
                 'permissions' => ['acessar-gestao', 'consultar-cnaes'],
@@ -67,7 +90,7 @@ class ManageRolesTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)->post('/gestao/perfis', [
+        $this->actingAs($admin, 'gestao')->post('/gestao/perfis', [
             'name' => 'fiscal',
             'permissions' => ['acessar-gestao', 'consultar-cnaes'],
         ]);
@@ -75,11 +98,11 @@ class ManageRolesTest extends TestCase
         $user = User::factory()->withAcceptedLgpdTerm()->create();
         $user->assignRole('fiscal');
 
-        $this->actingAs($user)
+        $this->actingAs($user, 'gestao')
             ->get('/gestao/cnaes')
             ->assertOk();
 
-        $this->actingAs($user)
+        $this->actingAs($user, 'gestao')
             ->post('/gestao/cnaes', [
                 'code' => '0111-3/01',
                 'description' => 'Cultivo de arroz',
@@ -100,7 +123,7 @@ class ManageRolesTest extends TestCase
         $admin = $this->admin();
         $analista = Role::findByName('analista', 'web');
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/perfis/{$analista->id}", [
                 'name' => 'analista',
                 'permissions' => ['acessar-gestao', 'consultar-cnaes', 'consultar-acessos-de-qualquer-conta'],
@@ -119,7 +142,7 @@ class ManageRolesTest extends TestCase
         $administrador = Role::findByName('administrador', 'web');
         $before = $administrador->permissions->pluck('name')->all();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/perfis/{$administrador->id}", [
                 'name' => 'administrador',
                 'permissions' => ['manter-cnaes'],
@@ -140,7 +163,7 @@ class ManageRolesTest extends TestCase
         $admin = $this->admin();
         $cidadao = Role::findByName('cidadao', 'web');
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->put("/gestao/perfis/{$cidadao->id}", [
                 'name' => 'municipe',
             ])
@@ -154,7 +177,7 @@ class ManageRolesTest extends TestCase
         $admin = $this->admin();
         $administrador = Role::findByName('administrador', 'web');
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->delete("/gestao/perfis/{$administrador->id}")
             ->assertSessionHasErrors('role');
 
@@ -167,7 +190,7 @@ class ManageRolesTest extends TestCase
         $temporario = Role::create(['name' => 'temporario', 'guard_name' => 'web']);
         User::factory()->create()->assignRole('temporario');
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->delete("/gestao/perfis/{$temporario->id}")
             ->assertSessionHasErrors('role');
 
@@ -182,7 +205,7 @@ class ManageRolesTest extends TestCase
         $admin = $this->admin();
         $descartavel = Role::create(['name' => 'descartavel', 'guard_name' => 'web']);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->delete("/gestao/perfis/{$descartavel->id}")
             ->assertRedirect();
 
@@ -193,7 +216,7 @@ class ManageRolesTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'gestao')
             ->post('/gestao/perfis', [
                 'name' => 'cidadao',
                 'permissions' => [],
@@ -205,19 +228,19 @@ class ManageRolesTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)->post('/gestao/perfis', [
+        $this->actingAs($admin, 'gestao')->post('/gestao/perfis', [
             'name' => 'fiscal',
             'permissions' => ['acessar-gestao'],
         ]);
 
         $fiscal = Role::findByName('fiscal', 'web');
 
-        $this->actingAs($admin)->put("/gestao/perfis/{$fiscal->id}", [
+        $this->actingAs($admin, 'gestao')->put("/gestao/perfis/{$fiscal->id}", [
             'name' => 'fiscal',
             'permissions' => ['acessar-gestao', 'consultar-cnaes'],
         ]);
 
-        $this->actingAs($admin)->delete("/gestao/perfis/{$fiscal->id}");
+        $this->actingAs($admin, 'gestao')->delete("/gestao/perfis/{$fiscal->id}");
 
         $events = Activity::where('log_name', 'perfis')->pluck('event');
 
@@ -241,7 +264,7 @@ class ManageRolesTest extends TestCase
     {
         $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($analista)
+        $this->actingAs($analista, 'gestao')
             ->get('/gestao/perfis')
             ->assertForbidden();
 

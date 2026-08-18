@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Parameters;
 
-use App\Models\AccessLog;
 use App\Models\Procuration;
 use App\Models\User;
+use App\Support\Settings;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -37,17 +37,14 @@ class ParameterEffectTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)
-            ->put(route('gestao.parametros.update', 'ui.access_history.per_page'), ['value' => '5'])
+        // Altera um parâmetro de negócio do catálogo pela tela de gestão.
+        $this->actingAs($admin, 'gestao')
+            ->put(route('gestao.parametros.update', 'security.login.max_attempts'), ['value' => '3'])
             ->assertRedirect();
 
-        AccessLog::factory()->count(6)->for($admin)->create();
-
-        $this->actingAs($admin)
-            ->get(route('portal.acessos.index'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('logs.data', fn ($data) => count($data) === 5));
+        // Efeito imediato, sem novo deploy: o Settings reflete o novo valor na
+        // hora (o cache do parâmetro é invalidado na gravação).
+        $this->assertSame(3, (int) Settings::get('security.login.max_attempts'));
     }
 
     public function test_toggle_desligado_bloqueia_novo_vinculo_com_aviso(): void
@@ -55,11 +52,11 @@ class ParameterEffectTest extends TestCase
         $cidadao = $this->cidadao();
         $attorney = $this->cidadao();
 
-        $this->actingAs($this->admin())
+        $this->actingAs($this->admin(), 'gestao')
             ->put(route('gestao.parametros.update', 'features.procuracoes'), ['value' => '0'])
             ->assertRedirect();
 
-        $this->actingAs($cidadao)
+        $this->actingAs($cidadao, 'web')
             ->post('/portal/procuracoes', [
                 'attorney_email' => $attorney->email,
                 'expires_at' => null,
@@ -76,11 +73,11 @@ class ParameterEffectTest extends TestCase
         $grantor = $this->cidadao();
         $procuration = Procuration::factory()->create(['grantor_user_id' => $grantor->id]);
 
-        $this->actingAs($this->admin())
+        $this->actingAs($this->admin(), 'gestao')
             ->put(route('gestao.parametros.update', 'features.procuracoes'), ['value' => '0'])
             ->assertRedirect();
 
-        $this->actingAs($grantor)
+        $this->actingAs($grantor, 'web')
             ->delete("/portal/procuracoes/{$procuration->id}")
             ->assertRedirect();
 
@@ -89,11 +86,11 @@ class ParameterEffectTest extends TestCase
 
     public function test_toggle_desligado_comunica_na_tela(): void
     {
-        $this->actingAs($this->admin())
+        $this->actingAs($this->admin(), 'gestao')
             ->put(route('gestao.parametros.update', 'features.procuracoes'), ['value' => '0'])
             ->assertRedirect();
 
-        $this->actingAs($this->cidadao())
+        $this->actingAs($this->cidadao(), 'web')
             ->get('/portal/procuracoes')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page

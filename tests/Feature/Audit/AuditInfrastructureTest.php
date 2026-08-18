@@ -57,7 +57,7 @@ class AuditInfrastructureTest extends TestCase
 
     public function test_activity_persiste_result_e_rules_version_explicitos(): void
     {
-        \App\Models\Activity::create([
+        Activity::create([
             'description' => 'Execução de regra',
             'result' => 'falha',
             'rules_version' => 'louos-v1',

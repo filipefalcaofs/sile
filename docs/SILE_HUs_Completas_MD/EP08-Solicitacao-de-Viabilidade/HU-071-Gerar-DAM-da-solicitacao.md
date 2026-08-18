@@ -1,20 +1,20 @@
-# HU-071 — Gerar DAM da solicitação
+# HU-071 — Visualizar DAM da solicitação
 
-> **Status: Proposta** — escopo pendente de confirmação com a SEDUR (a geração do DAM pode permanecer no Simplifica/SEFAZ). Especificação técnica baseada na implementação de referência do projeto SIGVISA (sls-sms), que possui módulo DAM completo e operacional com a SEFAZ Salvador (`sls-sms/docs/DAM-SEFAZ-IMPLEMENTACAO.md`).
+> **Status: Escopo revisado (2026-06-11)** — para viabilidade via Regin, o DAM de TLL é **emitido e pago pela SEFAZ**, não pelo Simplifica. O SAPS legado possui aba "Visualizar DAM" no processo. O SILE deve **consultar/exibir** o DAM quando disponível na SEFAZ, não gerar guia de arrecadação para viabilidade via integrador.
 
 ## Épica
 **EP08 — Solicitação de Viabilidade**
 
 ## Objetivo
-Gerar o Documento de Arrecadação Municipal (DAM) referente à Taxa de Licença de Localização (TLL) da solicitação de viabilidade, com número sequencial, código de barras padrão FEBRABAN e PDF para pagamento na rede bancária.
+Consultar e exibir o Documento de Arrecadação Municipal (DAM) da Taxa de Licença de Localização (TLL) vinculado ao processo, quando emitido pela SEFAZ.
 
 ## História de Usuário
-**Como** cidadão/requerente,  
-**quero** gerar o DAM da minha solicitação,  
-**para** efetuar o pagamento e dar andamento à emissão do TVL.
+**Como** analista ou gestor SEDUR,  
+**quero** visualizar o DAM da solicitação,  
+**para** acompanhar pagamento e situação tributária sem sair do processo.
 
 ## Contexto de Negócio
-No fluxo atual do Portal Simplifica, o TVL só é liberado após o pagamento do DAM, cobrado com base na atividade de maior valor correlacionado à TLL mais taxa de serviço, conforme o Código Tributário e de Rendas do Município (Lei nº 7.186/2006, alterada pela Lei nº 9.417/2018). A Prefeitura de Salvador já possui padrão consolidado de DAM (código de barras FEBRABAN, PDF de guia de arrecadação, baixa via API SEFAZ), implementado no SIGVISA para o licenciamento sanitário.
+Conforme reunião SEDUR (2026-06-11), o DAM de viabilidade no fluxo Regin é tratado pela SEFAZ. O Simplifica/SAPS apenas exibe o DAM na aba do processo. Renovações e fluxos diretos pelo portal Simplifica podem ter regras distintas — confirmar com a SEDUR. A implementação de referência do SIGVISA (`sls-sms/docs/DAM-SEFAZ-IMPLEMENTACAO.md`) cobre consulta de pagamento via API SEFAZ, reutilizável aqui.
 
 ## Atores Envolvidos
 - Cidadão / empresário / contador / procurador.
@@ -28,13 +28,10 @@ No fluxo atual do Portal Simplifica, o TVL só é liberado após o pagamento do 
 - Parametrização bancária do DAM configurada (identificação da rede, código de receita, produto/segmento, dias de vencimento).
 
 ## Fluxo Principal
-1. Usuário ou sistema inicia a funcionalidade **Gerar DAM da solicitação**.
-2. O sistema valida permissões, dados obrigatórios e contexto do processo.
-3. O sistema calcula o valor com base na atividade de maior valor correlacionado à TLL, acrescido da taxa de serviço, considerando fator multiplicador quando o CNAE exigir (ex.: por cômodo, por consultório).
-4. O sistema gera o DAM com número sequencial por exercício (formato `DAM-AAAA-NNNNNN`), data de vencimento (data de geração + N dias parametrizáveis) e código de barras FEBRABAN de 44 dígitos (produto arrecadação, segmento prefeitura, DV módulo 10).
-5. O sistema gera o PDF da guia (padrão municipal: bloco titular, vencimento, valor, detalhamento, código de barras ITF com representação numérica em 4 blocos, canhoto).
-6. O sistema disponibiliza o DAM ao requerente e envia e-mail com número, valor, vencimento e instruções.
-7. O sistema registra a operação em trilha de auditoria.
+1. Analista ou gestor acessa o detalhe do processo na retaguarda (aba equivalente a "Visualizar DAM" do SAPS).
+2. O sistema consulta a API SEFAZ (HU-110 / serviço compartilhado) pelos identificadores do processo/estabelecimento.
+3. O sistema exibe número, valor, vencimento, status (pendente/pago/cancelado) e link ou PDF quando disponível na SEFAZ.
+4. O sistema registra a consulta em trilha de auditoria.
 
 ## Fluxos Alternativos
 ### FA-01 — Dados incompletos
@@ -133,7 +130,7 @@ O sistema deve manter registro completo da execução desta HU, incluindo:
 - Módulo de auditoria e notificações (EP11).
 
 ## Prioridade
-A definir (depende da confirmação de escopo com a SEDUR)
+Média
 
 ## Observações
-Implementação de referência completa no projeto SIGVISA (`sls-sms`): `docs/DAM-SEFAZ-IMPLEMENTACAO.md` (API SEFAZ, modelo de dados, código de barras com layout validado por engenharia reversa de 146.711 DAMs reais — ver também `docs/CORRECAO-CODIGO-BARRAS-DAM.md`), `app/Services/DamService.php`, `app/Helpers/DamBarcodeHelper.php`, `app/Http/Controllers/Visa/DamController.php`. Diferença de domínio: no SIGVISA a taxa é a TVS (por CNAE); no SILE é a TLL (atividade de maior valor + taxa de serviço) — confirmar fórmula exata com a SEDUR. Confirmar também se a geração ocorre no SILE ou permanece no Simplifica/SEFAZ.
+Escopo reduzido em 2026-06-11: **não gerar** DAM de viabilidade Regin no SILE. Geração completa de DAM (código FEBRABAN, PDF) permanece como referência técnica do SIGVISA caso a SEDUR exija geração apenas para fluxos diretos pelo portal (renovação etc.).

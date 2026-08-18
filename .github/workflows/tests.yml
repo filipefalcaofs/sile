@@ -1,0 +1,78 @@
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    # Imagem PostGIS: a extensão postgis já é criada automaticamente no
+    # POSTGRES_DB (sile_testing) pelo init da imagem. O preflight
+    # geo:preparar-banco-de-testes é só para o ambiente LOCAL (onde o
+    # container de dev só cria o banco `sile`).
+    services:
+      postgres:
+        image: postgis/postgis:16-3.5
+        env:
+          POSTGRES_DB: sile_testing
+          POSTGRES_USER: sile
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sile"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # O serviço do CI expõe a porta 5432 (o dev usa 5433). O env do job vence
+      # o .env (Dotenv do Laravel é imutável: não sobrescreve variável já
+      # presente no ambiente).
+      DB_TEST_HOST: 127.0.0.1
+      DB_TEST_PORT: 5432
+      DB_TEST_DATABASE: sile_testing
+      DB_TEST_USERNAME: sile
+      DB_TEST_PASSWORD: secret
+      # Enforcement W3b: com isto, qualquer skip do grupo postgis vira FALHA —
+      # o SQL espacial NÃO pode deixar de rodar no CI.
+      POSTGIS_TESTS_REQUIRED: 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configura PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # Alinhado ao runtime real do projeto (AGENTS.md: 8.5; dev: 8.5.4).
+          php-version: '8.5'
+          extensions: pdo_pgsql, pgsql, mbstring
+          coverage: none
+
+      - name: Instala dependências PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Configura Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Prepara o ambiente (.env + chave)
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/framework/testing bootstrap/cache
+
+      - name: Instala e builda o front
+        run: |
+          npm ci
+          npm run build
+
+      # Suíte SQLite (:memory:, padrão do phpunit.xml) — sem o grupo postgis.
+      - name: Testes (suíte SQLite)
+        run: php artisan test --compact --exclude-group postgis
+
+      # Grupo espacial contra o service container PostGIS. POSTGIS_TESTS_REQUIRED
+      # garante FALHA (não skip) se o banco/extensão não estiver acessível.
+      - name: Testes espaciais (grupo postgis)
+        run: php artisan test --compact --group postgis

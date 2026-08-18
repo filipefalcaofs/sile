@@ -27,6 +27,10 @@ class CnaeFactory extends Factory
             'class_code' => '01.11-3',
             'class_description' => 'Classe de teste',
             'active' => true,
+            'exige_rt' => false,
+            'exige_rt_se_alto' => false,
+            'exige_fator_multiplicador' => false,
+            'exige_detalhamento_multiplicador' => false,
         ];
     }
 

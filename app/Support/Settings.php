@@ -34,7 +34,7 @@ class Settings
                         : ($parameter->typedValue() ?? $fallback);
                 },
             );
-        } catch (QueryException) {
+        } catch (QueryException|\Exception) {
             return $fallback;
         }
     }

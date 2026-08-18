@@ -1,0 +1,16 @@
+{
+    "nome": "em-analise-sem-zona",
+    "descricao": "ANTI-FACHADA: CNAE expresso, mas SEM a zona oficial (Quadro 10 indisponível) → veredito pendente → em_analise SEM decisão e SEM ResultadoEmitido. O motor liga sozinho quando a base oficial entrar.",
+    "cnae": "8888881",
+    "grupo": "nR1",
+    "subgrupo": "nR1-01",
+    "risco": "baixo_a",
+    "zona": null,
+    "permissao": null,
+    "esperado": {
+        "status": "em_analise",
+        "outcome": null,
+        "tem_tvl": false,
+        "evento_emitido": false
+    }
+}

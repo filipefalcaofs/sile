@@ -60,6 +60,8 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
 - RN-003: O usuário somente poderá executar a ação se possuir permissão compatível com seu perfil.
+- RN-004: Camadas geográficas devem ser mantidas como **dados versionados com vigência** (carga de nova versão não apaga a anterior); consultas operacionais usam a versão vigente e consultas de auditoria/reprodução usam a versão da época da decisão (ver HU-107 RN-009).
+- RN-005: A carga/atualização de camada registra origem, responsável, data e resumo do diff (features adicionadas/alteradas/removidas) em auditoria.
 
 ## Critérios de Aceite — BDD
 

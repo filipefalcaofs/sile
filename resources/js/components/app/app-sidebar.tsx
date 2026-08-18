@@ -1,8 +1,18 @@
 import { Link, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import Logo, { LogoMark } from '@/components/app/logo';
-import { HorizontalDotsIcon } from '@/components/icons';
+import { ChevronDownIcon, HorizontalDotsIcon } from '@/components/icons';
 import { useSidebar } from '@/contexts/sidebar-context';
+import { resolveActiveHref } from '@/components/app/sidebar-active';
+import {
+    readClosedGroups,
+    resolveActiveGroup,
+    toggleClosed,
+    withGroupOpen,
+    writeClosedGroups,
+} from '@/components/app/sidebar-collapse';
+import type { SharedProps } from '@/types';
 
 export interface SidebarItem {
     name: string;
@@ -16,42 +26,108 @@ export interface SidebarGroup {
     items: SidebarItem[];
 }
 
+export type SidebarVariant = 'light' | 'console';
+
 interface AppSidebarProps {
     groups: SidebarGroup[];
     homeHref: string;
     subtitle?: string;
+    variant?: SidebarVariant;
+    collapsibleGroups?: boolean;
 }
 
 /**
- * Sidebar do TailAdmin adaptada: recebe grupos de navegação com
- * headings (subdivisões, como MENU/OTHERS no template) por props — já
- * filtrados por permissão pelo layout — e marca o item ativo
- * comparando com a URL atual do Inertia. O item do painel (homeHref)
- * só fica ativo em correspondência exata, para não acender junto com
- * as rotas filhas. Grupos sem itens visíveis não renderizam.
+ * Sidebar do TailAdmin adaptada: recebe grupos de navegação com headings
+ * por props — já filtrados por permissão pelo layout — e marca o item
+ * ativo comparando com a URL atual do Inertia.
+ *
+ * Variantes: `light` (portal do cidadão) e `console` (gestão SEDUR). Com
+ * `collapsibleGroups`, cada categoria vira um acordeão com estado lembrado
+ * em localStorage; a categoria da página atual abre sozinha ao navegar. No
+ * modo só-ícone (barra recolhida sem hover) o acordeão não atua e todos os
+ * ícones aparecem, como antes.
  */
-export default function AppSidebar({ groups, homeHref, subtitle }: AppSidebarProps) {
+export default function AppSidebar({
+    groups,
+    homeHref,
+    subtitle,
+    variant = 'light',
+    collapsibleGroups = false,
+}: AppSidebarProps) {
     const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
-    const { url } = usePage();
+    const { url } = usePage<SharedProps>();
 
     const currentPath = url.split('?')[0] ?? '';
 
-    const isActive = (href: string) => {
-        if (href === homeHref) {
-            return currentPath === href;
-        }
-
-        return currentPath === href || currentPath.startsWith(`${href}/`);
-    };
+    const isConsole = variant === 'console';
 
     const visibleGroups = groups
         .map((group) => ({ ...group, items: group.items.filter((item) => item.visible !== false) }))
         .filter((group) => group.items.length > 0);
+
+    const activeHref = resolveActiveHref(
+        currentPath,
+        visibleGroups.flatMap((group) => group.items.map((item) => item.href)),
+        homeHref,
+    );
+    const isActive = (href: string) => href === activeHref;
+
+    const activeGroup = resolveActiveGroup(visibleGroups, activeHref);
+    const [closedGroups, setClosedGroups] = useState<string[]>(() =>
+        collapsibleGroups ? readClosedGroups() : [],
+    );
+
+    useEffect(() => {
+        if (!collapsibleGroups || !activeGroup) {
+            return;
+        }
+
+        setClosedGroups((prev) => {
+            if (!prev.includes(activeGroup)) {
+                return prev;
+            }
+
+            const next = withGroupOpen(prev, activeGroup);
+            writeClosedGroups(next);
+            return next;
+        });
+    }, [collapsibleGroups, activeGroup]);
+
+    const handleToggleGroup = (label: string) => {
+        setClosedGroups((prev) => {
+            const next = toggleClosed(prev, label);
+            writeClosedGroups(next);
+            return next;
+        });
+    };
+
     const showText = isExpanded || isHovered || isMobileOpen;
+
+    const surfaceStyles = isConsole
+        ? 'bg-gray-950 border-white/[0.06]'
+        : 'bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 border-gray-200';
+
+    const headingStyles = isConsole ? 'text-white/30' : 'text-gray-400';
+
+    const itemStyles = (active: boolean) => {
+        if (isConsole) {
+            return active ? 'bg-brand-500/15 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white';
+        }
+
+        return active ? 'menu-item-active' : 'menu-item-inactive';
+    };
+
+    const iconStyles = (active: boolean) => {
+        if (isConsole) {
+            return active ? 'text-brand-400' : 'text-gray-500 group-hover:text-gray-300';
+        }
+
+        return active ? 'menu-item-icon-active' : 'menu-item-icon-inactive';
+    };
 
     return (
         <aside
-            className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200
+            className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 h-screen transition-all duration-300 ease-in-out z-50 border-r ${surfaceStyles}
         ${isExpanded || isMobileOpen ? 'w-[290px]' : isHovered ? 'w-[290px]' : 'w-[90px]'}
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0`}
@@ -61,9 +137,21 @@ export default function AppSidebar({ groups, homeHref, subtitle }: AppSidebarPro
             <div className={`py-8 flex ${!isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'}`}>
                 <Link href={homeHref}>
                     {showText ? (
-                        <Logo subtitle={subtitle} />
+                        <Logo
+                            subtitle={subtitle}
+                            markClassName="size-9"
+                            textClassName={
+                                isConsole
+                                    ? 'text-2xl font-semibold tracking-tight text-white'
+                                    : 'text-2xl font-semibold tracking-tight text-gray-900 dark:text-white'
+                            }
+                            subtitleClassName={
+                                isConsole ? 'text-theme-xs text-white/40' : 'text-theme-xs text-gray-500 dark:text-gray-400'
+                            }
+                            markColorClassName={isConsole ? 'text-brand-400' : 'text-brand-500'}
+                        />
                     ) : (
-                        <span className="text-brand-500">
+                        <span className={isConsole ? 'text-brand-400' : 'text-brand-500'}>
                             <LogoMark className="size-9" />
                         </span>
                     )}
@@ -72,40 +160,54 @@ export default function AppSidebar({ groups, homeHref, subtitle }: AppSidebarPro
             <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
                 <nav className="mb-6">
                     <div className="flex flex-col gap-6">
-                        {visibleGroups.map((group) => (
-                            <div key={group.label}>
-                                <h2
-                                    className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                                        !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'
-                                    }`}
-                                >
-                                    {showText ? group.label : <HorizontalDotsIcon className="size-6" />}
-                                </h2>
-                                <ul className="flex flex-col gap-4">
-                                    {group.items.map((item) => (
-                                        <li key={item.href}>
-                                            <Link
-                                                href={item.href}
-                                                className={`menu-item group ${
-                                                    isActive(item.href) ? 'menu-item-active' : 'menu-item-inactive'
-                                                }`}
-                                            >
-                                                <span
-                                                    className={`menu-item-icon-size ${
-                                                        isActive(item.href)
-                                                            ? 'menu-item-icon-active'
-                                                            : 'menu-item-icon-inactive'
-                                                    }`}
+                        {visibleGroups.map((group, index) => {
+                            const collapsible = collapsibleGroups && showText;
+                            const open = collapsible ? !closedGroups.includes(group.label) : true;
+                            const listId = `sidebar-group-${index}`;
+
+                            return (
+                                <div key={group.label}>
+                                    {collapsible ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleToggleGroup(group.label)}
+                                            aria-expanded={open}
+                                            aria-controls={listId}
+                                            className={`mb-4 flex w-full items-center justify-between text-xs uppercase leading-[20px] transition-colors ${headingStyles}`}
+                                        >
+                                            <span>{group.label}</span>
+                                            <ChevronDownIcon
+                                                aria-hidden
+                                                className={`size-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                                            />
+                                        </button>
+                                    ) : (
+                                        <h2
+                                            className={`mb-4 text-xs uppercase flex leading-[20px] ${headingStyles} ${
+                                                !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'
+                                            }`}
+                                        >
+                                            {showText ? group.label : <HorizontalDotsIcon className="size-6" />}
+                                        </h2>
+                                    )}
+                                    <ul id={listId} hidden={!open} className="flex flex-col gap-4">
+                                        {group.items.map((item) => (
+                                            <li key={item.href}>
+                                                <Link
+                                                    href={item.href}
+                                                    className={`menu-item group ${itemStyles(isActive(item.href))}`}
                                                 >
-                                                    {item.icon}
-                                                </span>
-                                                {showText && <span className="menu-item-text">{item.name}</span>}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
+                                                    <span className={`menu-item-icon-size ${iconStyles(isActive(item.href))}`}>
+                                                        {item.icon}
+                                                    </span>
+                                                    {showText && <span className="menu-item-text">{item.name}</span>}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            );
+                        })}
                     </div>
                 </nav>
             </div>
