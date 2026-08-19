@@ -210,7 +210,7 @@ return [
         ],
         'pendencia' => [
             'assunto' => 'Convite na sua solicitação de viabilidade {protocolo}',
-            'corpo' => 'Olá! Identificamos um convite na sua solicitação de viabilidade {protocolo}. Convite: {pendencia}. Acesse o portal do SILE para responder dentro do prazo informado.',
+            'corpo' => 'Olá! Identificamos um convite na sua solicitação de viabilidade {protocolo}. Convite: {pendencia}. Acesse o portal do Viabiliza para responder dentro do prazo informado.',
         ],
     ],
     'seguranca' => [
@@ -243,7 +243,7 @@ return [
         ],
         'geocoding' => [
             'base_url' => 'https://nominatim.openstreetmap.org',
-            'user_agent' => 'SILE-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',
+            'user_agent' => 'Viabiliza-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',
             'timeout' => 8,
             'retries' => 2,
             'backoff_ms' => 1000,

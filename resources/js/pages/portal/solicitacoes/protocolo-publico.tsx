@@ -211,7 +211,7 @@ export default function ProtocoloPublico({ solicitacao, timeline }: ProtocoloPub
 
                 <footer id="rodape" className="border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
                     <p className="mx-auto w-full max-w-3xl px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400 sm:px-6">
-                        © {new Date().getFullYear()} Simplifica Salvador — Sistema de Licenciamento Eletrônico · SEDUR
+                        © {new Date().getFullYear()} Viabiliza Salvador — A viabilidade certa, no lugar certo · SEDUR
                     </p>
                 </footer>
             </div>

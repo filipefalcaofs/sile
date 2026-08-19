@@ -14,12 +14,12 @@ Permitir que analistas e gestores emitam o Termo de Viabilidade de Localização
 **para** documentar formalmente a decisão deferida sem depender da entrega ao cidadão.
 
 ## Contexto de Negócio
-Conforme reunião SEDUR (2026-06-11), o canal oficial ao requerente é o Regin/Junta (parecer) e a SEFAZ (dados via API). O PDF/TVL no SAPS legado servia ao cidadão; no SILE passa a ser relatório interno opcional, gerado sob demanda após deferimento (expresso ou humano).
+Conforme reunião SEDUR (2026-06-11), o canal oficial ao requerente é o Regin/Junta (parecer) e a SEFAZ (dados via API). O PDF/TVL no SAPS legado servia ao cidadão; no Viabiliza passa a ser relatório interno opcional, gerado sob demanda após deferimento (expresso ou humano).
 
 ## Atores Envolvidos
 - Analista SEDUR.
 - Gestor SEDUR.
-- Sistema Simplifica (SILE).
+- Sistema Viabiliza.
 
 ## Pré-condições
 - Processo com resultado **deferido** (HU-076 ou HU-086).

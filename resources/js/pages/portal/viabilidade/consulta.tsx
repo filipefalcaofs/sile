@@ -120,7 +120,7 @@ function PublicShell({ children }: { children: ReactNode }) {
                 </main>
                 <footer id="rodape" className="border-t border-gray-200 dark:border-gray-800">
                     <p className="mx-auto w-full max-w-(--breakpoint-xl) px-4 py-6 text-sm text-gray-500 dark:text-gray-400 sm:px-6">
-                        © {new Date().getFullYear()} Simplifica Salvador — Sistema de Licenciamento Eletrônico · SEDUR ·
+                        © {new Date().getFullYear()} Viabiliza Salvador — A viabilidade certa, no lugar certo · SEDUR ·
                         Prefeitura de Salvador
                     </p>
                 </footer>

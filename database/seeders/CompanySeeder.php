@@ -37,7 +37,7 @@ class CompanySeeder extends Seeder
         $cidadao = User::firstOrCreate(
             ['email' => 'cidadao@sile.dev'],
             [
-                'name' => 'Cidadão SILE',
+                'name' => 'Cidadão Viabiliza',
                 'cpf' => '52998224725',
                 'phone' => null,
                 'password' => 'password',

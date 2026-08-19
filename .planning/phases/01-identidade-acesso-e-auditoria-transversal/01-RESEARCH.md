@@ -8,9 +8,9 @@
 
 A pesquisa respondeu as oito questões críticas do CONTEXT.md com verificação direta: dry-run do Composer contra o Laravel 13.15 instalado (prova definitiva de compatibilidade), documentação oficial 13.x, código-fonte do starter kit React oficial do Laravel e changelogs/upgrade guides dos pacotes Spatie.
 
-**Decisão central — autenticação:** usar **Laravel Fortify ^1.37** (headless). É exatamente o que o starter kit React oficial do Laravel 13 usa (`laravel/react-starter-kit` requer `laravel/fortify ^1.37.2`), com views Inertia registradas via `Fortify::loginView()` etc. Fortify entrega de graça: registro, login com rate limiting, logout, reset de senha, confirmação de e-mail, alteração de senha — tudo disparando os eventos nativos de auth (`Login`, `Logout`, `Failed`, `Lockout`, `Registered`, `Verified`, `PasswordReset`) que alimentam a auditoria e o histórico de acessos. Implementação própria seria reinventar código testado pela comunidade sem ganho: os pontos de customização do SILE (política de senha parametrizada, rate limit parametrizado, redirect por perfil, auditoria) são todos extensíveis no Fortify.
+**Decisão central — autenticação:** usar **Laravel Fortify ^1.37** (headless). É exatamente o que o starter kit React oficial do Laravel 13 usa (`laravel/react-starter-kit` requer `laravel/fortify ^1.37.2`), com views Inertia registradas via `Fortify::loginView()` etc. Fortify entrega de graça: registro, login com rate limiting, logout, reset de senha, confirmação de e-mail, alteração de senha — tudo disparando os eventos nativos de auth (`Login`, `Logout`, `Failed`, `Lockout`, `Registered`, `Verified`, `PasswordReset`) que alimentam a auditoria e o histórico de acessos. Implementação própria seria reinventar código testado pela comunidade sem ganho: os pontos de customização do Viabiliza (política de senha parametrizada, rate limit parametrizado, redirect por perfil, auditoria) são todos extensíveis no Fortify.
 
-**Decisão central — auditoria (RN-002):** **spatie/laravel-activitylog ^5.0** (v5 saiu em 2026-03-25; requer PHP 8.4+ e Laravel 12+ — compatível) com extensão SILE: migration publicada ganha colunas próprias (`ip_address`, `user_agent`, `channel`, `acting_for_user_id`, `result`, `rules_version`), model `Activity` próprio e **`LogActivityAction` customizada** (novidade da v5: action classes substituíveis via config) que enriquece TODO registro — de evento de model ou chamada manual — com origem, canal e "em nome de" num ponto único. Histórico de acessos (HU-010) fica em tabela dedicada `access_logs` alimentada por listeners dos eventos de auth (decisão fundamentada na seção de padrões).
+**Decisão central — auditoria (RN-002):** **spatie/laravel-activitylog ^5.0** (v5 saiu em 2026-03-25; requer PHP 8.4+ e Laravel 12+ — compatível) com extensão Viabiliza: migration publicada ganha colunas próprias (`ip_address`, `user_agent`, `channel`, `acting_for_user_id`, `result`, `rules_version`), model `Activity` próprio e **`LogActivityAction` customizada** (novidade da v5: action classes substituíveis via config) que enriquece TODO registro — de evento de model ou chamada manual — com origem, canal e "em nome de" num ponto único. Histórico de acessos (HU-010) fica em tabela dedicada `access_logs` alimentada por listeners dos eventos de auth (decisão fundamentada na seção de padrões).
 
 **Recomendação primária:** instalar `laravel/fortify ^1.37`, `spatie/laravel-permission ^8.0`, `spatie/laravel-activitylog ^5.0` e `laravel-lang/common ^6.8` (dev); seguir os padrões do starter kit oficial para Fortify+Inertia; construir a infraestrutura de auditoria como primeira task (as demais HUs dependem dela).
 
@@ -59,7 +59,7 @@ php artisan migrate
 
 Observações:
 - `fortify:install` publica as actions em `app/Actions/Fortify` e registra o `FortifyServiceProvider` em `bootstrap/providers.php`. A migration de 2FA publicada é inofensiva com a feature desligada (Fortify 1.37 também puxa `laravel/passkeys` como dependência — feature fica desabilitada).
-- Editar a migration publicada do activitylog ANTES de rodar (projeto novo, sem produção) para acrescentar as colunas SILE.
+- Editar a migration publicada do activitylog ANTES de rodar (projeto novo, sem produção) para acrescentar as colunas Viabiliza.
 - `.env`: trocar `APP_LOCALE=pt_BR`, `APP_FAKER_LOCALE=pt_BR` (hoje está `en`/`en_US`).
 
 ## Architecture Patterns
@@ -91,13 +91,13 @@ app/
 │   ├── Audit/RecordActivityAction.php     # estende LogActivityAction (v5) — enriquecimento central
 │   ├── Audit/AuditService.php             # log explícito em serviços (ação, resultado, versão de regras)
 │   └── Settings.php                       # leitura de parâmetros (config-backed na Fase 1)
-├── Concerns/HasAuditoria.php   # trait: LogsActivity + LogOptions padrão SILE
+├── Concerns/HasAuditoria.php   # trait: LogsActivity + LogOptions padrão Viabiliza
 config/sile.php                 # parâmetros de negócio com defaults (política de senha, throttle, etc.)
 routes/
 ├── web.php                     # público + require dos demais (padrão starter kit)
 ├── auth.php                    # rotas extras de auth se necessário (Fortify registra as suas)
-├── portal.php                  # SILE Cidadão (auth + verified + lgpd)
-└── gestao.php                  # SILE Gestão (auth + verified + lgpd + permission:acessar-gestao)
+├── portal.php                  # Viabiliza Cidadão (auth + verified + lgpd)
+└── gestao.php                  # Viabiliza Gestão (auth + verified + lgpd + permission:acessar-gestao)
 resources/js/
 ├── pages/
 │   ├── auth/                   # login, register, forgot-password, reset-password, verify-email (nomes = Inertia::render)
@@ -113,7 +113,7 @@ resources/js/
 **Fonte:** `laravel/react-starter-kit` (main, 2026) — código real:
 
 ```php
-// app/Providers/FortifyServiceProvider.php (padrão do starter kit, adaptado ao SILE)
+// app/Providers/FortifyServiceProvider.php (padrão do starter kit, adaptado ao Viabiliza)
 Fortify::createUsersUsing(CreateNewUser::class);
 Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
@@ -135,7 +135,7 @@ Fortify::verifyEmailView(fn (Request $request) => Inertia::render('auth/verify-e
     'status' => $request->session()->get('status'),
 ]));
 
-// Rate limit de login PARAMETRIZADO (RN do SILE: nada hardcoded)
+// Rate limit de login PARAMETRIZADO (RN do Viabiliza: nada hardcoded)
 RateLimiter::for('login', function (Request $request) {
     $key = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
     return Limit::perMinute(config('sile.security.login.max_attempts'))->by($key);
@@ -478,7 +478,7 @@ public function test_users_are_rate_limited(): void
 }
 ```
 
-Extensão SILE para CA-02 (auditoria) e HU-010 no mesmo teste de login:
+Extensão Viabiliza para CA-02 (auditoria) e HU-010 no mesmo teste de login:
 
 ```php
 public function test_login_gera_registro_no_historico_de_acessos(): void
@@ -697,7 +697,7 @@ Com `composer run dev` (já configurado no esqueleto — serve+queue+logs+vite):
 **Confidence breakdown:**
 - Stack/versões: **ALTA** — dry-run do Composer no projeto real + docs oficiais.
 - Padrão Fortify+Inertia: **ALTA** — código-fonte do starter kit oficial do Laravel 13.
-- Auditoria (activitylog v5): **ALTA** — docs v5 + blog oficial Spatie + upgrade guide; design das colunas SILE é autoral (decisão, não fato).
+- Auditoria (activitylog v5): **ALTA** — docs v5 + blog oficial Spatie + upgrade guide; design das colunas Viabiliza é autoral (decisão, não fato).
 - Pitfalls: **ALTA/MÉDIA** — maioria verificada em docs/skills; itens de teste (Vite, cache de permissão) são conhecimento estabelecido do ecossistema.
 - Nomes de rota do Fortify instalado: **BAIXA** — confirmar com `route:list` na primeira task.
 

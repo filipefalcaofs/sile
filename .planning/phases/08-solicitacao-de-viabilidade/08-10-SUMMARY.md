@@ -34,7 +34,7 @@ affects: [08-11-consulta-protocolo, 08-12-cancelar, 08-13-ui-wizard, 08-14-conti
 tech-stack:
   added: []
   patterns:
-    - "PRIMEIRO evento de domínio do SILE: SolicitacaoProtocolada implements ShouldDispatchAfterCommit, despachado APÓS o commit da transação (só protocolos efetivados geram efeitos)"
+    - "PRIMEIRO evento de domínio do Viabiliza: SolicitacaoProtocolada implements ShouldDispatchAfterCommit, despachado APÓS o commit da transação (só protocolos efetivados geram efeitos)"
     - "Auditoria do protocolo INDEPENDE do evento: a transição síncrona rascunho→protocolada (StateMachine, na transação) garante RN-002 mesmo se um listener falhar; o evento só pendura efeitos desacoplados"
     - "Pré-condições (status/dados mínimos/documentos) ANTES da transação — bloqueio NÃO consome número de protocolo (anti-fachada)"
     - "Listener síncrono registrado por Event::listen no AppServiceProvider::boot (convenção do projeto, não auto-discovery); fases futuras só ADICIONAM listeners ao mesmo evento"

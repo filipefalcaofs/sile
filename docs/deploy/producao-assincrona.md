@@ -1,6 +1,6 @@
 # Operação assíncrona em produção — scheduler, filas e retenção
 
-Guia operacional do SILE para rodar em produção o **scheduler** (tarefas
+Guia operacional do Viabiliza para rodar em produção o **scheduler** (tarefas
 agendadas), o **worker de fila** (jobs assíncronos) e a **retenção** de dados,
 introduzidos na Fase 3.1. Em desenvolvimento, o `composer dev` já sobe tudo
 junto; produção troca isso por um cron + um worker persistente.

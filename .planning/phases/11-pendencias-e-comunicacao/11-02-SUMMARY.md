@@ -100,7 +100,7 @@ completed: 2026-06-15
 `notificacoes.pendencia.corpo` (default):
 
 ```
-Olá! Identificamos uma pendência na sua solicitação de viabilidade {protocolo}. Pendência: {pendencia}. Acesse o portal do SILE para responder dentro do prazo informado.
+Olá! Identificamos uma pendência na sua solicitação de viabilidade {protocolo}. Pendência: {pendencia}. Acesse o portal do Viabiliza para responder dentro do prazo informado.
 ```
 
 ## Fallback config/sile.php

@@ -1,6 +1,6 @@
 # HU-071 — Visualizar DAM da solicitação
 
-> **Status: Escopo revisado (2026-06-11)** — para viabilidade via Regin, o DAM de TLL é **emitido e pago pela SEFAZ**, não pelo Simplifica. O SAPS legado possui aba "Visualizar DAM" no processo. O SILE deve **consultar/exibir** o DAM quando disponível na SEFAZ, não gerar guia de arrecadação para viabilidade via integrador.
+> **Status: Escopo revisado (2026-06-11)** — para viabilidade via Regin, o DAM de TLL é **emitido e pago pela SEFAZ**, não pelo Simplifica. O SAPS legado possui aba "Visualizar DAM" no processo. O Viabiliza deve **consultar/exibir** o DAM quando disponível na SEFAZ, não gerar guia de arrecadação para viabilidade via integrador.
 
 ## Épica
 **EP08 — Solicitação de Viabilidade**
@@ -19,7 +19,7 @@ Conforme reunião SEDUR (2026-06-11), o DAM de viabilidade no fluxo Regin é tra
 ## Atores Envolvidos
 - Cidadão / empresário / contador / procurador.
 - Operador/gestor SEDUR (geração presencial, quando aplicável).
-- Sistema SILE e serviços integrados (SEFAZ municipal).
+- Sistema Viabiliza e serviços integrados (SEFAZ municipal).
 
 ## Pré-condições
 - Solicitação de viabilidade protocolada.
@@ -133,4 +133,4 @@ O sistema deve manter registro completo da execução desta HU, incluindo:
 Média
 
 ## Observações
-Escopo reduzido em 2026-06-11: **não gerar** DAM de viabilidade Regin no SILE. Geração completa de DAM (código FEBRABAN, PDF) permanece como referência técnica do SIGVISA caso a SEDUR exija geração apenas para fluxos diretos pelo portal (renovação etc.).
+Escopo reduzido em 2026-06-11: **não gerar** DAM de viabilidade Regin no Viabiliza. Geração completa de DAM (código FEBRABAN, PDF) permanece como referência técnica do SIGVISA caso a SEDUR exija geração apenas para fluxos diretos pelo portal (renovação etc.).

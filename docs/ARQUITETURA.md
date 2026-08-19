@@ -1,7 +1,7 @@
-# SILE — Sistema Integrado de Licenciamento Empresarial
+# Viabiliza — Sistema de Licenciamento Eletrônico
 ## Especificação Técnica da Arquitetura e Stack Completa (Padrão Ouro — Últimas Versões 2026)
 
-Este documento consolida a arquitetura de software, o ecossistema de tecnologias e os padrões de engenharia recomendados para o desenvolvimento do SILE. O design foi projetado para focar em **segurança jurídica, auditabilidade extrema, precisão normativa e escalabilidade**, utilizando o que há de mais moderno no mercado.
+Este documento consolida a arquitetura de software, o ecossistema de tecnologias e os padrões de engenharia recomendados para o desenvolvimento do Viabiliza. O design foi projetado para focar em **segurança jurídica, auditabilidade extrema, precisão normativa e escalabilidade**, utilizando o que há de mais moderno no mercado.
 
 > **Nota de versões (atualizada na implantação do projeto, junho/2026):** o bootstrap do repositório foi feito com as versões estáveis mais recentes, que superam as citadas no texto original: **Laravel 13.15 (PHP 8.5)**, **Inertia.js v3.3** (substitui a v2 — deferred/lazy props continuam disponíveis e ampliados), **React 19.2**, **TypeScript 6** e **Tailwind CSS v4**.
 
@@ -32,15 +32,15 @@ Este documento consolida a arquitetura de software, o ecossistema de tecnologias
 
 ## 2. Visão Geral da Arquitetura (Monólito Modular)
 
-Para mitigar a complexidade de rede, latência e o custo de infraestrutura gerados por microsserviços, o SILE adota uma abordagem de **Monólito Modular**. O sistema reside em um único repositório, mas possui divisão estrita de limites de domínio.
+Para mitigar a complexidade de rede, latência e o custo de infraestrutura gerados por microsserviços, o Viabiliza adota uma abordagem de **Monólito Modular**. O sistema reside em um único repositório, mas possui divisão estrita de limites de domínio.
 
 ### Estrutura de Pastas de Domínio (`app/Modules/`)
 
 ```
 app/Modules/
 ├── RuleEngine/       # Motor de Regras LOUOS (Isolado, tipado com DTOs e Agnóstico de HTTP)
-├── CitizenPortal/    # SILE Cidadão (Controllers, Rotas do Inertia e validações do portal externo)
-├── Management/       # SILE Gestão (Retaguarda SEDUR, análises, auditoria e parametrizações)
+├── CitizenPortal/    # Viabiliza Cidadão (Controllers, Rotas do Inertia e validações do portal externo)
+├── Management/       # Viabiliza Gestão (Retaguarda SEDUR, análises, auditoria e parametrizações)
 ├── Geoprocessing/    # Camada GIS (Encapsulamento de queries PostGIS e polígonos)
 ├── AIIntegration/    # Camada de IA (Gateways para LLM/Vision e análise de anexos via Jobs)
 └── Audit/            # Trilha de Auditoria Imutável (Registros de fé pública)
@@ -95,6 +95,6 @@ Toda a comunicação que transita entre o front-end React, as APIs externas e o 
 
 ## 5. Requisitos de Segurança e Fé Pública
 
-1.  **Auditoria Imutável (`owen-it/laravel-auditing`):** Qualquer alteração de parâmetros da LOUOS na retaguarda do *SILE Gestão* ou pareceres emitidos por analistas disparam logs automáticos contendo autor, dados alterados (antigo vs. novo), IP e timestamp.
+1.  **Auditoria Imutável (`owen-it/laravel-auditing`):** Qualquer alteração de parâmetros da LOUOS na retaguarda do *Viabiliza Gestão* ou pareceres emitidos por analistas disparam logs automáticos contendo autor, dados alterados (antigo vs. novo), IP e timestamp.
 2.  **Versionamento da Legislação:** As regras do motor são atreladas a uma tabela de vigência (`louos_versions`). Processos iniciados sob a vigência de uma lei antiga serão validados eternamente pelas regras daquela versão, mesmo se a lei mudar posteriormente.
 3.  **Decisões Explicáveis (Explainable Logic):** O resultado do motor de regras armazena o snapshot em JSON de todo o caminho lógico percorrido no momento do deferimento ou indeferimento, servindo de lastro jurídico e alimentando o componente React que explica amigavelmente as pendências para o cidadão.

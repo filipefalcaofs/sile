@@ -78,7 +78,7 @@ class StoreProcurationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'attorney_email.exists' => 'Não encontramos uma conta com este e-mail. Oriente o procurador a se cadastrar no SILE primeiro.',
+            'attorney_email.exists' => 'Não encontramos uma conta com este e-mail. Oriente o procurador a se cadastrar no Viabiliza primeiro.',
         ];
     }
 

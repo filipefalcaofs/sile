@@ -14,7 +14,7 @@ Requerentes são notificados de pendências e vencimentos pelos canais configura
 
 **Real agora:** e-mail (HU-094, já existe) + in-app (canal `database` nativo) + escalonamento/vencimento no scheduler (HU-093/147, reusam `analysis_due_at`/`AnalysisSlaService`) + histórico (HU-096).
 
-**Bloqueado honesto (toggle/contrato, nunca finge):** WhatsApp (HU-095) — canal customizado atrás de `WhatsAppGateway`/`UnavailableWhatsAppGateway` + toggle `features.notificacao_whatsapp` OFF; provedor real quando houver credencial (pode destravar isolado, é API comercial). Convite/resposta via Simplifica/Regin (HU-091 RN-004) → Fase 13 (resposta pelo portal SILE já funciona).
+**Bloqueado honesto (toggle/contrato, nunca finge):** WhatsApp (HU-095) — canal customizado atrás de `WhatsAppGateway`/`UnavailableWhatsAppGateway` + toggle `features.notificacao_whatsapp` OFF; provedor real quando houver credencial (pode destravar isolado, é API comercial). Convite/resposta via Simplifica/Regin (HU-091 RN-004) → Fase 13 (resposta pelo portal Viabiliza já funciona).
 
 ## Arquitetura
 
@@ -67,7 +67,7 @@ Paralelizável: Wave 2 ‖ início da 4 (central só depende do canal database).
 ## Bloqueios e pendências SEDUR (registrar, não travar)
 - **WhatsApp (HU-095):** provedor + credenciais + templates → toggle off + contrato Unavailable agora; adaptador real quando houver credencial (API comercial, pode destravar isolado / Fase 13).
 - **Destinatário do escalonamento (HU-147):** "gestor do setor" não existe no schema (roteamento ao setor pendente SEDUR) → default role `gestor` parametrizável.
-- **Convite/resposta Simplifica/Regin (HU-091 RN-004):** → Fase 13 (portal SILE já funciona).
+- **Convite/resposta Simplifica/Regin (HU-091 RN-004):** → Fase 13 (portal Viabiliza já funciona).
 - **Prazos/antecedência + SLA por etapa:** defaults parametrizáveis; valores oficiais → SEDUR.
 - **Rito de não-resposta (indeferir por prazo?):** sem HU/rito → NÃO inventar; hoje expira+notifica+mantém estado. Confirmar SEDUR.
 - **Templates oficiais** (texto/identidade/base legal) → SEDUR (pt-BR default agora).

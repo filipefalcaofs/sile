@@ -101,7 +101,7 @@ class RespostaPendenciaNotification extends Notification implements ProcessNotif
             ->greeting('Olá!')
             ->line("O requerente respondeu o convite da solicitação {$this->protocolNumber} e a análise foi reaberta.")
             ->action('Abrir o processo', $url)
-            ->line('Retome a análise técnica do processo na gestão do SILE.');
+            ->line('Retome a análise técnica do processo na gestão do Viabiliza.');
     }
 
     /**
@@ -131,7 +131,7 @@ class RespostaPendenciaNotification extends Notification implements ProcessNotif
 
         return new WhatsAppMessage(
             to: '',
-            body: "SILE: o requerente respondeu o convite da solicitação {$this->protocolNumber}. Análise reaberta: {$url}",
+            body: "Viabiliza: o requerente respondeu o convite da solicitação {$this->protocolNumber}. Análise reaberta: {$url}",
         );
     }
 }

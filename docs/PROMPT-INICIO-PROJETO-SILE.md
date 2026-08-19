@@ -1,14 +1,14 @@
-# Prompt — Iniciar o projeto SILE pelas HUs
+# Prompt — Iniciar o projeto Viabiliza pelas HUs
 
 Copie e cole o bloco abaixo em uma nova sessão do agente para iniciar o projeto.
 
 ---
 
-Inicie o projeto SILE usando o GSD como framework de gestão.
+Inicie o projeto Viabiliza usando o GSD como framework de gestão.
 
 ## Contexto
 
-- O SILE é o Sistema de Licenciamento Eletrônico da SEDUR: gestão da viabilidade locacional de atividades econômicas, com automação, motor de regras da LOUOS, classificação de risco, georreferenciamento, fluxo expresso, análise técnica, integrações (REDESIM, Receita Federal, GIS), auditoria e indicadores.
+- O Viabiliza é o Sistema de Licenciamento Eletrônico da SEDUR: gestão da viabilidade locacional de atividades econômicas, com automação, motor de regras da LOUOS, classificação de risco, georreferenciamento, fluxo expresso, análise técnica, integrações (REDESIM, Receita Federal, GIS), auditoria e indicadores.
 - O repositório já contém o esqueleto da aplicação: Laravel 13 + Inertia v3 + React 19 + Tailwind 4 + PHPUnit. Não há código de domínio ainda (apenas `User` e `Welcome.tsx`).
 - A fonte de verdade dos requisitos são as 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/`, organizadas em 15 épicas (EP01 a EP15). O índice completo está em `docs/SILE_HUs_Completas_MD/README-CATALOGO-HUs-SILE.md`.
 - Cada HU contém: objetivo, fluxos principal e alternativos, regras de negócio (RN), critérios de aceite em BDD (CA), campos, permissões, exceções, auditoria, dependências e prioridade.

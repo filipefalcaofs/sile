@@ -14,7 +14,7 @@ Analistas da SEDUR recebem as solicitações que o fluxo expresso (Fase 9) NÃO 
 
 **BLOQUEADO honesto → Fase 13:** apenas a TRANSMISSÃO Regin/SEFAZ na conclusão (HU-104/110) — reusa os contratos Unavailable + o `ResultadoEmitido` da Fase 9 (auditam pendência, nunca "enviado"). A decisão/parecer/TVL são 100% reais e auditados.
 
-**PARCIAL (cruza EP11):** HU-083/084 — ciclo de pendência interno (estado em_pendencia + portal SILE + e-mail simples) entra AGORA; convite via Simplifica/Regin e comunicação multicanal (WhatsApp/in-app/templates) → EP11/Fase 13.
+**PARCIAL (cruza EP11):** HU-083/084 — ciclo de pendência interno (estado em_pendencia + portal Viabiliza + e-mail simples) entra AGORA; convite via Simplifica/Regin e comunicação multicanal (WhatsApp/in-app/templates) → EP11/Fase 13.
 
 **Dependência nova (pré-aprovada PROJECT.md):** `barryvdh/laravel-dompdf` para o TVL PDF (HU-132) — adicionada na wave do TVL, isolada. PROJECT.md já lista dompdf como lib aplicável do SIGVISA.
 

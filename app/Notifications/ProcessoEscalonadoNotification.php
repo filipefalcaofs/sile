@@ -89,7 +89,7 @@ class ProcessoEscalonadoNotification extends Notification implements ProcessNoti
             ->subject($this->assunto)
             ->greeting('Olá!')
             ->line($this->detalhe)
-            ->action('Abrir o processo no SILE', $this->url)
+            ->action('Abrir o processo no Viabiliza', $this->url)
             ->line('Este é um aviso automático — não responda a esta mensagem.');
     }
 

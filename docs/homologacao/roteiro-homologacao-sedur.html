@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Viabiliza Salvador — Roteiro de Homologação SEDUR</title>
+<style>
+  @page {
+    size: A4;
+    margin: 22mm 18mm 22mm 18mm;
+    @bottom-center {
+      content: "Viabiliza Salvador — Sistema de Licenciamento Eletrônico — Roteiro de Homologação";
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt;
+      color: #6b7280;
+    }
+    @bottom-right {
+      content: counter(page);
+      font-family: 'Inter', sans-serif;
+      font-size: 9pt;
+      color: #6b7280;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #111827;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0;
+  }
+
+  .cover {
+    page-break-after: always;
+    padding: 60mm 0 0 0;
+  }
+
+  .cover .badge {
+    display: inline-block;
+    background: #1e40af;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .cover h1 {
+    font-size: 32pt;
+    margin: 0 0 8px 0;
+    color: #111827;
+    line-height: 1.1;
+    font-weight: 700;
+  }
+
+  .cover .subtitle {
+    font-size: 14pt;
+    color: #4b5563;
+    margin-bottom: 50px;
+    font-weight: 400;
+  }
+
+  .cover .meta {
+    margin-top: 60mm;
+    border-top: 2px solid #1e40af;
+    padding-top: 20px;
+    color: #374151;
+    font-size: 10pt;
+  }
+
+  .cover .meta strong { color: #111827; }
+
+  h1, h2, h3, h4 {
+    color: #111827;
+    font-weight: 700;
+  }
+
+  h1 {
+    font-size: 22pt;
+    border-bottom: 3px solid #1e40af;
+    padding-bottom: 8px;
+    margin-top: 30px;
+    margin-bottom: 18px;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 16pt;
+    color: #1e40af;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 13pt;
+    margin-top: 22px;
+    margin-bottom: 10px;
+    page-break-after: avoid;
+  }
+
+  h4 {
+    font-size: 11.5pt;
+    margin-top: 16px;
+    margin-bottom: 6px;
+    color: #374151;
+    page-break-after: avoid;
+  }
+
+  p { margin: 8px 0; text-align: justify; }
+
+  ul, ol { margin: 8px 0 12px 22px; padding: 0; }
+  li { margin: 4px 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+
+  th {
+    background: #1e40af;
+    color: #fff;
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 9.5pt;
+  }
+
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td { background: #f9fafb; }
+
+  code, .mono {
+    font-family: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+    background: #f3f4f6;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 9.5pt;
+    color: #1e293b;
+  }
+
+  pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 9pt;
+    overflow-x: auto;
+    page-break-inside: avoid;
+    font-family: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+  }
+
+  .callout {
+    background: #eff6ff;
+    border-left: 4px solid #1e40af;
+    padding: 12px 14px;
+    margin: 14px 0;
+    border-radius: 4px;
+    page-break-inside: avoid;
+  }
+
+  .callout.warn {
+    background: #fef3c7;
+    border-left-color: #d97706;
+  }
+
+  .callout.danger {
+    background: #fee2e2;
+    border-left-color: #dc2626;
+  }
+
+  .callout strong { color: #1e293b; }
+
+  .checklist td:first-child {
+    width: 32px;
+    text-align: center;
+  }
+
+  .checkbox {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid #1e40af;
+    border-radius: 3px;
+    vertical-align: middle;
+  }
+
+  .step-number {
+    display: inline-block;
+    background: #1e40af;
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 22px;
+    font-weight: 600;
+    font-size: 10pt;
+    margin-right: 8px;
+  }
+
+  .step {
+    margin: 14px 0;
+    padding: 12px 14px;
+    background: #f9fafb;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+
+  .step h4 { margin-top: 0; }
+
+  .credentials-card {
+    background: #f0f9ff;
+    border: 2px solid #0284c7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 10px 0;
+    page-break-inside: avoid;
+  }
+
+  .credentials-card h4 {
+    margin-top: 0;
+    color: #0c4a6e;
+  }
+
+  .credentials-card table {
+    margin: 6px 0 0 0;
+  }
+
+  .credentials-card th { background: #0284c7; }
+
+  .toc { margin: 20px 0; }
+  .toc ol { list-style: none; margin-left: 0; padding-left: 0; }
+  .toc li {
+    padding: 8px 0;
+    border-bottom: 1px dotted #d1d5db;
+    font-weight: 500;
+  }
+
+  .page-break { page-break-before: always; }
+
+  .small { font-size: 9pt; color: #6b7280; }
+
+  blockquote {
+    border-left: 3px solid #d1d5db;
+    margin: 12px 0;
+    padding: 4px 12px;
+    color: #4b5563;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <span class="badge">Documento de homologação</span>
+  <h1>Roteiro de Homologação</h1>
+  <div class="subtitle">Viabiliza Salvador — A viabilidade certa, no lugar certo<br>Sistema de Licenciamento Eletrônico · Validação técnica e funcional pela SEDUR</div>
+
+  <div class="meta">
+    <p><strong>Cliente:</strong> Secretaria Municipal de Desenvolvimento Urbano (SEDUR) — Salvador / BA</p>
+    <p><strong>Fornecedor:</strong> Sudoeste Informática</p>
+    <p><strong>Responsável técnico:</strong> Filipe Falcão — fillipe.falcao@sudoesteinformatica.com.br</p>
+    <p><strong>Versão do documento:</strong> 1.0 — junho de 2026</p>
+    <p><strong>Ambiente:</strong> Homologação</p>
+    <p><strong>Rodada atual:</strong> Rodada 1 — Consulta Prévia de Viabilidade</p>
+  </div>
+</div>
+
+<h1>1. Sumário</h1>
+
+<div class="toc">
+  <ol>
+    <li>O que é o Viabiliza</li>
+    <li>Estratégia de homologação por rodadas</li>
+    <li>Acesso ao ambiente</li>
+    <li>Rodada 1 — Consulta Prévia de Viabilidade</li>
+    <li>Checklist de homologação</li>
+    <li>Pendências externas</li>
+    <li>Como reportar feedback</li>
+    <li>Próximas rodadas</li>
+  </ol>
+</div>
+
+<h1>2. O que é o Viabiliza</h1>
+
+<p>O <strong>Viabiliza Salvador — Sistema de Licenciamento Eletrônico</strong> é a plataforma da SEDUR para gestão da viabilidade locacional de atividades econômicas em Salvador. Automatiza o licenciamento aplicando, de forma auditável, as regras da <strong>LOUOS (Lei nº 9.148/2016)</strong> e a <strong>classificação de risco do Decreto nº 32.636/2020</strong>, com:</p>
+
+<ul>
+  <li><strong>Motor de regras da LOUOS</strong> — Quadros 7, 10, 11 e 11A modelados como dados versionados, mantidos por interface, sem necessidade de novo deploy a cada atualização;</li>
+  <li><strong>Classificação de risco por CNAE</strong> — com condicionantes-pergunta que reclassificam quando aplicável;</li>
+  <li><strong>Georreferenciamento</strong> — geocodificação de endereços, identificação de zona, via, lote, bairro e restrições territoriais;</li>
+  <li><strong>Fluxo expresso</strong> — deferimento ou indeferimento automático quando a legislação permite, com geração de Termo de Viabilidade Locacional (TVL);</li>
+  <li><strong>Análise técnica humana</strong> — fila com SLA, ficha pré-analisada pelo motor, precedentes, malha fina e pendências;</li>
+  <li><strong>Trilha de auditoria transversal</strong> — toda ação relevante registra usuário, data e hora, origem, ação, resultado e versão das regras aplicadas;</li>
+  <li><strong>Parametrização administrável</strong> — prazos, textos, limiares, integrações e funcionalidades acopláveis são geridos por interface, sem deploy, com histórico auditado.</li>
+</ul>
+
+<div class="callout">
+  <strong>Valor central:</strong> responder à viabilidade locacional de uma atividade econômica de forma automática, correta e auditável — aplicando as regras da LOUOS e a classificação de risco, sem análise humana quando a legislação permite, e com fundamentação legal registrada em toda decisão.
+</div>
+
+<h2>2.1. Estado atual da entrega</h2>
+
+<p>As funcionalidades centrais do licenciamento estão <strong>implementadas e verificadas</strong>: identidade e acesso, cadastros estruturantes, georreferenciamento, motores de regras (LOUOS e risco), consulta prévia, solicitação formal, fluxo expresso, análise técnica, pendências, auditoria e relatórios. A camada de inteligência artificial (assistentes, OCR, sugestão de parecer) avança em fases incrementais.</p>
+
+<p>As integrações com REDESIM, SEFAZ Municipal, gov.br e as bases oficiais de zoneamento (GIS) seguem como pendências externas — descritas na seção 7 deste documento. Funcionalidades dependentes ficam explicitamente bloqueadas na interface, com mensagem clara ao usuário, sem nunca simular resposta.</p>
+
+<div class="page-break"></div>
+
+<h1>3. Estratégia de homologação por rodadas</h1>
+
+<p>A homologação será conduzida em <strong>rodadas incrementais</strong>, cada uma cobrindo um conjunto de telas e funcionalidades. A cada rodada concluída, a SEDUR ganha acesso ampliado às telas seguintes.</p>
+
+<h3>3.1. Visão geral das rodadas</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rodada</th>
+      <th>Escopo</th>
+      <th>Foco da validação</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1</strong> (atual)</td>
+      <td>CNAE, território, LOUOS, risco, consulta prévia</td>
+      <td>Motor de regras e cadastros estruturantes</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Cadastro empresarial, solicitação formal, fluxo expresso, análise técnica, comunicação</td>
+      <td>Jornada completa do requerente e do analista</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Auditoria, LGPD, indicadores, relatórios, parametrização administrativa</td>
+      <td>Governança, transparência e indicadores</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>3.2. Critério para avançar de rodada</h3>
+
+<p>A rodada é considerada <strong>aprovada</strong> quando a SEDUR confirma que:</p>
+
+<ul>
+  <li>O veredito do sistema faz sentido para os casos conhecidos;</li>
+  <li>A fundamentação legal é compreensível para o cidadão e para o analista;</li>
+  <li>Os cadastros estruturantes batem com a expectativa institucional;</li>
+  <li>Pendências identificadas estão registradas — seja para correção pela Sudoeste Informática, seja como pendência externa documentada.</li>
+</ul>
+
+<div class="callout warn">
+  <strong>Importante:</strong> esta é a Rodada 1. Funcionalidades fora do escopo (solicitação formal, análise técnica, integrações externas, IA) ainda não devem ser validadas — algumas estarão visíveis no menu apenas em rodadas posteriores. Itens não cobertos por esta rodada devem ser anotados para o backlog das próximas.
+</div>
+
+<div class="page-break"></div>
+
+<h1>4. Acesso ao ambiente</h1>
+
+<h3>4.1. URLs de acesso</h3>
+
+<table>
+  <thead>
+    <tr><th>Acesso</th><th>URL</th><th>Para quem</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Portal do Cidadão</td>
+      <td><code>http://144.22.212.3:8082/portal/login</code></td>
+      <td>Visão do requerente / cidadão</td>
+    </tr>
+    <tr>
+      <td>Retaguarda da SEDUR</td>
+      <td><code>http://144.22.212.3:8082/gestao/login</code></td>
+      <td>Visão do analista, gestor e administrador</td>
+    </tr>
+    <tr>
+      <td>Consulta prévia pública</td>
+      <td><code>http://144.22.212.3:8082/portal/viabilidade</code></td>
+      <td>Qualquer pessoa, sem login</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>4.2. Credenciais de homologação</h3>
+
+<div class="credentials-card">
+  <h4>Validação SEDUR — uso principal nesta rodada</h4>
+  <table>
+    <tr><th style="width:30%">E-mail</th><td><code>validacao@sedur.salvador.ba.gov.br</code></td></tr>
+    <tr><th>Senha inicial</th><td><code>SileDemo2026!</code></td></tr>
+    <tr><th>Onde entrar</th><td><code>http://144.22.212.3:8082/gestao/login</code></td></tr>
+    <tr><th>Para que serve</th><td>Acessar a retaguarda e validar os cadastros estruturantes (CNAE, território, LOUOS, risco) e o fluxo de consulta prévia.</td></tr>
+  </table>
+</div>
+
+<div class="credentials-card">
+  <h4>Requerente demo — para simular a experiência do cidadão</h4>
+  <table>
+    <tr><th style="width:30%">CPF</th><td><code>453.178.287-91</code></td></tr>
+    <tr><th>Senha inicial</th><td><code>SileDemo2026!</code></td></tr>
+    <tr><th>Onde entrar</th><td><code>http://144.22.212.3:8082/portal/login</code></td></tr>
+    <tr><th>Para que serve</th><td>Repetir a consulta prévia logado e verificar o histórico do cidadão.</td></tr>
+  </table>
+  <p class="small" style="margin-top:8px;">O portal do cidadão autentica por <strong>CPF</strong> (não por e-mail) — o requerente cadastra-se com CPF e usa o próprio CPF para entrar.</p>
+</div>
+
+<div class="callout warn">
+  <strong>Boa prática:</strong> alterar a senha no primeiro acesso (<em>Configurações &gt; Perfil &gt; Alterar senha</em>). As credenciais acima são compartilhadas apenas para a equipe de homologação da SEDUR.
+</div>
+
+<h3>4.3. Pré-requisitos do navegador</h3>
+
+<ul>
+  <li><strong>Recomendado:</strong> Google Chrome ou Microsoft Edge atualizado.</li>
+  <li><strong>Mínimo:</strong> navegadores modernos com JavaScript habilitado.</li>
+  <li><strong>Mobile:</strong> o portal do cidadão é responsivo (mobile-first); a retaguarda é otimizada para desktop.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h1>5. Rodada 1 — Consulta Prévia de Viabilidade</h1>
+
+<p>A consulta prévia é a <strong>primeira entrega que executa o fluxo de decisão de ponta a ponta</strong>. Ela combina, em poucos segundos, os dados de território, as regras da LOUOS e a classificação de risco para responder se uma atividade econômica é viável em determinado endereço — sem necessidade de abrir processo formal.</p>
+
+<h2>5.1. O que será homologado nesta rodada</h2>
+
+<table>
+  <thead>
+    <tr><th>Tela / Funcionalidade</th><th>O que verificar</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Portal &gt; Consulta de viabilidade</td>
+      <td>Fluxo do cidadão completo: endereço + CNAE → veredito</td>
+    </tr>
+    <tr>
+      <td>Gestão &gt; CNAEs</td>
+      <td>Carga oficial CNAE-Subclasses 2.3 (IBGE/CONCLA)</td>
+    </tr>
+    <tr>
+      <td>Gestão &gt; Consulta territorial</td>
+      <td>Geocodificação + bairro, via, zona e restrições territoriais</td>
+    </tr>
+    <tr>
+      <td>Gestão &gt; Classificação de risco</td>
+      <td>Risco por CNAE conforme Decreto nº 32.636/2020</td>
+    </tr>
+    <tr>
+      <td>Gestão &gt; Quadros LOUOS</td>
+      <td>Quadros 7, 10, 11 e 11A modelados como dados versionados</td>
+    </tr>
+    <tr>
+      <td>Portal &gt; Histórico de consultas</td>
+      <td>Rastreabilidade do que foi consultado pelo cidadão</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5.2. Roteiro passo a passo (45 a 60 minutos)</h2>
+
+<div class="step">
+  <h4><span class="step-number">1</span> Consulta pública — sem login (10 min)</h4>
+  <p>Abrir <code>http://144.22.212.3:8082/portal/viabilidade</code> em uma aba anônima.</p>
+  <ol>
+    <li>Informar um endereço em Salvador (exemplo: <em>Avenida Tancredo Neves, 999, Caminho das Árvores</em>).</li>
+    <li>Selecionar um CNAE (exemplo: <code>4712-1/00 — Comércio varejista de mercadorias em geral, com predominância de produtos alimentícios — minimercados, mercearias e armazéns</code>).</li>
+    <li>Aguardar o veredito (deve aparecer em poucos segundos).</li>
+    <li>Conferir se a tela exibe:
+      <ul>
+        <li>Resultado (permitido, pendente ou não permitido);</li>
+        <li>Bairro identificado pela geocodificação;</li>
+        <li>Risco do CNAE consultado;</li>
+        <li>Fundamentação citando a LOUOS e o Decreto de risco.</li>
+      </ul>
+    </li>
+  </ol>
+  <div class="callout warn">
+    Em endereços fora da área coberta pela base oficial de zoneamento, o sistema retorna <em>pendente</em> com explicação ("zona urbanística não disponível"). Esse comportamento é correto e depende da entrega da base de zoneamento pela SEDUR (Quadro 10).
+  </div>
+</div>
+
+<div class="step">
+  <h4><span class="step-number">2</span> Login como validadora SEDUR (5 min)</h4>
+  <p>Abrir <code>http://144.22.212.3:8082/gestao/login</code> e entrar com <code>validacao@sedur.salvador.ba.gov.br</code> e a senha <code>SileDemo2026!</code>.</p>
+  <ol>
+    <li>Aceitar o termo LGPD no primeiro acesso (versão atual exibida).</li>
+    <li>Verificar o painel inicial (indicadores e atalhos).</li>
+    <li>Conferir o menu lateral — devem aparecer: <strong>CNAEs</strong>, <strong>Consulta territorial</strong>, <strong>Classificação de risco</strong> e <strong>Quadros LOUOS</strong>.</li>
+  </ol>
+</div>
+
+<div class="step">
+  <h4><span class="step-number">3</span> Validar tabela de CNAEs (5 min)</h4>
+  <p>Acessar <strong>Gestão &gt; CNAEs</strong>.</p>
+  <ol>
+    <li>Confirmar a contagem total: a tabela traz todos os CNAEs da CNAE-Subclasses 2.3 oficial (IBGE/CONCLA).</li>
+    <li>Buscar por código (exemplo: <code>4712</code>) e por nome (exemplo: <em>restaurante</em>). Os resultados devem aparecer imediatamente.</li>
+    <li>Abrir o detalhe de um CNAE e conferir código (no formato <code>XXXX-X/XX</code>), descrição oficial e seção / divisão / grupo.</li>
+    <li>Testar a exportação (CSV, XLSX, PDF). O arquivo deve abrir com os dados visíveis.</li>
+  </ol>
+</div>
+
+<div class="step">
+  <h4><span class="step-number">4</span> Validar consulta territorial (10 min)</h4>
+  <p>Acessar <strong>Gestão &gt; Consulta territorial</strong>.</p>
+  <ol>
+    <li>Informar um endereço conhecido (exemplo: <em>Praça da Sé, Centro</em>).</li>
+    <li>Verificar os dados retornados:
+      <ul>
+        <li>Coordenadas (latitude / longitude);</li>
+        <li>Bairro;</li>
+        <li>Via mais próxima;</li>
+        <li>Restrições territoriais aplicáveis, quando houver;</li>
+        <li>Zona urbanística (pode aparecer como <em>pendente</em> — depende da base oficial).</li>
+      </ul>
+    </li>
+    <li>Repetir com endereço fora de Salvador — o sistema deve recusar com mensagem clara.</li>
+  </ol>
+</div>
+
+<div class="step">
+  <h4><span class="step-number">5</span> Validar classificação de risco (5 min)</h4>
+  <p>Acessar <strong>Gestão &gt; Classificação de risco</strong>.</p>
+  <ol>
+    <li>Buscar um CNAE de risco baixo (exemplo: <code>4712-1/00</code>) e conferir o nível atribuído.</li>
+    <li>Buscar um CNAE de risco alto (exemplo: <code>5611-2/01 — Restaurantes e similares</code>) e conferir o nível atribuído.</li>
+    <li>Abrir um CNAE com <strong>condicionante-pergunta</strong> e confirmar que a pergunta aparece (exemplo: armazenamento de GLP acima de determinada quantidade).</li>
+    <li>Confirmar a referência ao Decreto nº 32.636/2020 na fundamentação.</li>
+  </ol>
+</div>
+
+<div class="step">
+  <h4><span class="step-number">6</span> Validar Quadros da LOUOS (10 min)</h4>
+  <p>Acessar <strong>Gestão &gt; Quadros LOUOS</strong>.</p>
+  <ol>
+    <li><strong>Quadro 7 (área):</strong> conferir faixas de área por grupo de uso (nR1, nR2 etc.).</li>
+    <li><strong>Quadro 10 (permissão por zona):</strong> visualizar a matriz zona × grupo de uso. Itens marcados como <em>pendente carga oficial</em> indicam ausência da base de zoneamento da SEDUR.</li>
+    <li><strong>Quadros 11 e 11A (vias):</strong> conferir hierarquia viária e usos permitidos.</li>
+    <li>Confirmar que cada quadro exibe a <strong>versão vigente</strong> e a data de publicação.</li>
+  </ol>
+</div>
+
+<div class="step">
+  <h4><span class="step-number">7</span> Histórico do cidadão (5 min)</h4>
+  <p>Fazer logout da gestão. Entrar como cidadão em <code>http://144.22.212.3:8082/portal/login</code> com o CPF <code>453.178.287-91</code> e a senha <code>SileDemo2026!</code>.</p>
+  <ol>
+    <li>Repetir a consulta do passo 1, agora logado.</li>
+    <li>Acessar <strong>Consultas de viabilidade &gt; Histórico</strong>.</li>
+    <li>Conferir que a consulta aparece com data, hora, endereço, CNAE e veredito.</li>
+    <li>Reabrir uma consulta antiga — a fundamentação deve estar preservada.</li>
+  </ol>
+</div>
+
+<div class="step">
+  <h4><span class="step-number">8</span> Encerramento (5 min)</h4>
+  <p>Voltar à retaguarda. Todas as ações realizadas durante a homologação geraram registro na trilha de auditoria. A consulta completa dessa trilha será apresentada na Rodada 3.</p>
+  <p class="small">Anotar pendências, dúvidas e ajustes identificados durante o teste no checklist da seção 6.</p>
+</div>
+
+<div class="page-break"></div>
+
+<h1>6. Checklist de homologação</h1>
+
+<p>Marque cada item com a coluna correspondente:</p>
+
+<ul>
+  <li><strong>OK</strong> — funcionalidade aprovada.</li>
+  <li><strong>Ajuste</strong> — funciona, mas precisa de melhoria (descrever na coluna <em>Observação</em>).</li>
+  <li><strong>Pendência</strong> — depende de entrega externa (citar qual na coluna <em>Observação</em>).</li>
+</ul>
+
+<h3>6.1. Consulta prévia (cidadão)</h3>
+
+<table class="checklist">
+  <thead>
+    <tr><th style="width:5%">#</th><th style="width:55%">Item</th><th style="width:20%">Resultado</th><th>Observação</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1.1</td><td>Página de consulta carrega sem login</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>1.2</td><td>Endereço de Salvador é geocodificado corretamente</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>1.3</td><td>CNAE pode ser selecionado por código ou descrição</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>1.4</td><td>Veredito é retornado em tempo aceitável</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>1.5</td><td>Fundamentação cita a LOUOS e o Decreto explicitamente</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>1.6</td><td>Sistema retorna "pendente" quando a base de zoneamento não cobre o endereço</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>1.7</td><td>Histórico do cidadão lista as consultas anteriores</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+  </tbody>
+</table>
+
+<h3>6.2. Cadastros estruturantes (retaguarda)</h3>
+
+<table class="checklist">
+  <thead>
+    <tr><th style="width:5%">#</th><th style="width:55%">Item</th><th style="width:20%">Resultado</th><th>Observação</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>2.1</td><td>CNAEs: carga oficial da CNAE-Subclasses 2.3 (IBGE/CONCLA)</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>2.2</td><td>CNAEs: busca por código e por descrição</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>2.3</td><td>CNAEs: exportação em CSV, XLSX e PDF funcional</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>2.4</td><td>Território: geocodificação retorna latitude e longitude</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>2.5</td><td>Território: bairro identificado corretamente</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>2.6</td><td>Território: endereço fora de Salvador é recusado com mensagem clara</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>2.7</td><td>Risco: nível por CNAE conforme Decreto nº 32.636/2020</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>2.8</td><td>Risco: condicionantes-pergunta aparecem quando aplicáveis</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>2.9</td><td>LOUOS: Quadro 7 com faixas de área por grupo de uso</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>2.10</td><td>LOUOS: Quadro 10 com matriz zona × uso</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>2.11</td><td>LOUOS: Quadros 11 e 11A com hierarquia viária</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>2.12</td><td>LOUOS: versão vigente e data de publicação visíveis</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+  </tbody>
+</table>
+
+<h3>6.3. Qualidade de uso</h3>
+
+<table class="checklist">
+  <thead>
+    <tr><th style="width:5%">#</th><th style="width:55%">Item</th><th style="width:20%">Resultado</th><th>Observação</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>3.1</td><td>Portal do cidadão funciona em smartphone (responsivo)</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>3.2</td><td>Termo LGPD aparece e é aceitável no primeiro acesso</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>3.3</td><td>Linguagem é compreensível para o cidadão leigo</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>3.4</td><td>Mensagens de erro são claras e orientam ação</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+    <tr><td>3.5</td><td>Tempo de resposta aceitável em todas as telas</td><td><span class="checkbox"></span> OK &nbsp; <span class="checkbox"></span> Ajuste &nbsp; <span class="checkbox"></span> Pendência</td><td></td></tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h1>7. Pendências externas</h1>
+
+<p>Os itens abaixo <strong>dependem de entregas de terceiros</strong> (SEDUR, órgãos federais ou prestadores externos). No Viabiliza eles aparecem como pendência ou degradação controlada, com mensagem clara ao usuário — nunca como decisão simulada.</p>
+
+<table>
+  <thead>
+    <tr><th style="width:30%">Pendência</th><th style="width:25%">Origem</th><th>Impacto no Viabiliza</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Base oficial de zoneamento</strong> (Quadro 10)</td>
+      <td>SEDUR — SIGIS / CA 2000</td>
+      <td>A consulta retorna "pendente" para o veredito locacional. Os demais cálculos (risco, restrições, área) seguem funcionando normalmente.</td>
+    </tr>
+    <tr>
+      <td><strong>Atributo viário oficial</strong> (Quadro 11)</td>
+      <td>SEDUR — base GIS oficial</td>
+      <td>Hierarquia viária parcial. Vias principais funcionam; vias locais podem retornar "pendente".</td>
+    </tr>
+    <tr>
+      <td><strong>Inscrição imobiliária</strong></td>
+      <td>SEFAZ Municipal</td>
+      <td>Consulta por inscrição bloqueada até contrato. Consulta por endereço funciona normalmente.</td>
+    </tr>
+    <tr>
+      <td><strong>Integrador REDESIM</strong></td>
+      <td>Receita Federal / SEFAZ</td>
+      <td>Cadastro empresarial (Rodada 2) usa BrasilAPI pública ou cadastro manual. A sincronização automática com o REDESIM entra após a entrega da credencial.</td>
+    </tr>
+    <tr>
+      <td><strong>gov.br Login Único</strong></td>
+      <td>Governo Federal</td>
+      <td>O login local funciona. O login gov.br convive (toggle administrável) e entra após o credenciamento da SEDUR.</td>
+    </tr>
+    <tr>
+      <td><strong>Lista oficial de feriados municipais</strong></td>
+      <td>SEDUR / PMS</td>
+      <td>Feriados nacionais fixos já carregados. Os municipais ficam administráveis pela tela de feriados.</td>
+    </tr>
+    <tr>
+      <td><strong>Política de retenção e anonimização LGPD</strong></td>
+      <td>Encarregado de Dados (DPO) da SEDUR</td>
+      <td>O mecanismo está pronto e os prazos são parametrizáveis. A definição dos prazos é decisão institucional do DPO.</td>
+    </tr>
+    <tr>
+      <td><strong>Documento de Arrecadação Municipal (DAM)</strong></td>
+      <td>SEFAZ Municipal</td>
+      <td>Emissão e baixa de DAM atrelados à viabilidade entram após a definição do contrato com a SEFAZ.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Princípio de transparência:</strong> nenhuma funcionalidade do Viabiliza simula resposta. Onde existe dependência externa indisponível, o sistema comunica explicitamente — ao cidadão, ao analista e nesta documentação. É essa transparência que distingue o que funciona de fato do que apenas parece funcionar.
+</div>
+
+<div class="page-break"></div>
+
+<h1>8. Como reportar feedback</h1>
+
+<h3>8.1. Classificação do item no checklist</h3>
+
+<ul>
+  <li><strong>OK</strong> — funcionalidade aprovada, sem comentários necessários.</li>
+  <li><strong>Ajuste</strong> — funciona, mas precisa de melhoria de uso, texto ou desempenho. Descrever na coluna de observação o que ajustar.</li>
+  <li><strong>Pendência</strong> — depende de entrega externa. Citar qual entrega (exemplo: "aguardando base oficial de zoneamento").</li>
+</ul>
+
+<h3>8.2. Reporte de erros que impedem o uso</h3>
+
+<p>Reportar imediatamente pelo canal de homologação com:</p>
+
+<ol>
+  <li><strong>Tela ou endereço</strong> onde ocorreu;</li>
+  <li><strong>Passos para reproduzir</strong> (qual endereço, qual CNAE, qual botão);</li>
+  <li><strong>Resultado esperado</strong>;</li>
+  <li><strong>Resultado obtido</strong>;</li>
+  <li><strong>Captura de tela</strong>, quando possível;</li>
+  <li><strong>Navegador e versão</strong>.</li>
+</ol>
+
+<h3>8.3. Dúvidas funcionais</h3>
+
+<p>Anotar a dúvida com referência à tela e ao caso de uso (exemplo: "Como o sistema decide quando exibir uma restrição territorial?") e encaminhar para a reunião de fechamento de rodada.</p>
+
+<h3>8.4. Canais de contato</h3>
+
+<table>
+  <thead>
+    <tr><th style="width:40%">Tipo</th><th>Canal</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Erros que impedem o uso</td><td>WhatsApp do projeto — resposta no mesmo dia útil</td></tr>
+    <tr><td>Ajustes e dúvidas funcionais</td><td>Planilha de homologação — revisão semanal</td></tr>
+    <tr><td>Pendências externas</td><td>Reunião de checkpoint quinzenal</td></tr>
+    <tr><td>Contato direto com o fornecedor</td><td><code>fillipe.falcao@sudoesteinformatica.com.br</code></td></tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h1>9. Próximas rodadas</h1>
+
+<h3>9.1. Rodada 2 — Solicitação formal e análise técnica</h3>
+
+<p><strong>Quando:</strong> após a aprovação da Rodada 1.</p>
+
+<p><strong>Escopo:</strong></p>
+
+<ul>
+  <li>Cadastro de empresa pelo cidadão (via BrasilAPI ou cadastro manual);</li>
+  <li>Solicitação formal de viabilidade — anexos, protocolo e timeline;</li>
+  <li>Fluxo expresso — deferimento ou indeferimento automático, com geração do Termo de Viabilidade Locacional (TVL);</li>
+  <li>Fila de análise técnica — distribuição, assunção, ficha pré-analisada pelo motor, precedentes;</li>
+  <li>Decisão humana, pendências, malha fina e comunicação ao cidadão.</li>
+</ul>
+
+<h3>9.2. Rodada 3 — Governança, auditoria e indicadores</h3>
+
+<p><strong>Quando:</strong> após a aprovação da Rodada 2.</p>
+
+<p><strong>Escopo:</strong></p>
+
+<ul>
+  <li>Trilha de auditoria completa e explicabilidade da decisão;</li>
+  <li>Painel LGPD e detecção de abuso e fraude;</li>
+  <li>Dashboard executivo, indicadores de viabilidade, tempo, produtividade e quedas do expresso;</li>
+  <li>Relatórios exportáveis com retenção parametrizada;</li>
+  <li>Configurações administráveis: parâmetros, perfis, integrações e funcionalidades acopláveis.</li>
+</ul>
+
+<h3>9.3. Fora do escopo de homologação</h3>
+
+<p>As funcionalidades abaixo serão validadas <strong>após</strong> a entrega das dependências externas:</p>
+
+<ul>
+  <li><strong>Integrações REDESIM, SEFAZ Municipal e gov.br</strong> — validadas contra ambiente de homologação real do órgão;</li>
+  <li><strong>Migração do legado SAPS</strong> — quando os dados forem disponibilizados pela SEDUR;</li>
+  <li><strong>Funcionalidades de inteligência artificial</strong> (assistentes, resumos, sugestão de parecer) — entregues por ondas incrementais, com calibração contra base de dados da SEDUR.</li>
+</ul>
+
+<div class="callout">
+  <strong>Compromisso da Sudoeste Informática:</strong> entregar o Viabiliza pronto para receber esses serviços. As funcionalidades dependentes ficam explicitamente bloqueadas, com mensagens claras na interface, até que a dependência externa esteja disponível.
+</div>
+
+<div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #1e40af; text-align: center; color: #6b7280; font-size: 9pt;">
+  <p><strong>Sudoeste Informática</strong> · fillipe.falcao@sudoesteinformatica.com.br</p>
+  <p>Viabiliza Salvador — Sistema de Licenciamento Eletrônico · Documento de homologação · Junho de 2026</p>
+</div>
+
+</body>
+</html>

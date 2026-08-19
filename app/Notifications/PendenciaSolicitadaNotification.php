@@ -126,7 +126,7 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
             ->greeting('Olá!')
             ->line($corpo)
             ->action('Responder no portal', $url)
-            ->line('Acesse o portal SILE, em "Minhas solicitações", para enviar a complementação.')
+            ->line('Acesse o portal Viabiliza, em "Minhas solicitações", para enviar a complementação.')
             ->line('Este é um aviso automático — não responda a esta mensagem.');
     }
 
@@ -157,7 +157,7 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
 
         return new WhatsAppMessage(
             to: '',
-            body: "SILE: a análise técnica registrou um convite na sua solicitação {$this->protocolNumber}. Responda no portal: {$url}",
+            body: "Viabiliza: a análise técnica registrou um convite na sua solicitação {$this->protocolNumber}. Responda no portal: {$url}",
         );
     }
 

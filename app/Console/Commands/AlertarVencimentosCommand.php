@@ -139,7 +139,7 @@ class AlertarVencimentosCommand extends Command
                 viabilityRequestId: $processo->id,
                 protocolNumber: (string) $processo->protocol_number,
                 assunto: "Convite próximo do vencimento — {$processo->protocol_number}",
-                detalhe: "O convite da sua solicitação {$processo->protocol_number} vence em {$pendencia->due_at->format('d/m/Y')}. Responda pelo portal SILE.",
+                detalhe: "O convite da sua solicitação {$processo->protocol_number} vence em {$pendencia->due_at->format('d/m/Y')}. Responda pelo portal Viabiliza.",
                 url: route('portal.solicitacoes.show', $processo->id),
             ));
 

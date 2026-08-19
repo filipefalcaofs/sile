@@ -20,7 +20,7 @@ Fontes: transcrição da reunião Lisa (SEDUR) × Filipe (Sudoeste); Carta de Se
 
 ## 2. Itens confirmados após a reunião
 
-- **Integração SEFAZ via API** (confirmado pela Lisa em 2026-06-09): hoje o deferimento da viabilidade chega à SEFAZ via API. Criada a HU-110 — Integrar com SEFAZ municipal. A base da API (autenticação JWT SenhaWeb, URLs, padrões de resiliência) já é conhecida pela implementação de referência do SIGVISA (seção 4B); pendente apenas o endpoint específico de envio do deferimento de viabilidade e credenciais para o SILE.
+- **Integração SEFAZ via API** (confirmado pela Lisa em 2026-06-09): hoje o deferimento da viabilidade chega à SEFAZ via API. Criada a HU-110 — Integrar com SEFAZ municipal. A base da API (autenticação JWT SenhaWeb, URLs, padrões de resiliência) já é conhecida pela implementação de referência do SIGVISA (seção 4B); pendente apenas o endpoint específico de envio do deferimento de viabilidade e credenciais para o Viabiliza.
 - **Planilha Unificada CNAE recebida** (30.04.26): arquivada em `docs/dados-oficiais/` (xlsx + csv). Análise na seção 4A abaixo.
 
 ## 3. Lacunas identificadas (tratadas nesta revisão)
@@ -76,9 +76,9 @@ Arquivos: `docs/dados-oficiais/Planilha-Unificada-CNAE-30.04.26.xlsx` e `planilh
 
 ## 4B. SIGVISA (sls-sms) como implementação de referência
 
-O projeto `sls-sms` (SIGVISA — licenciamento sanitário de Salvador, mesma prefeitura) possui módulos prontos e operacionais que aceleram o SILE:
+O projeto `sls-sms` (SIGVISA — licenciamento sanitário de Salvador, mesma prefeitura) possui módulos prontos e operacionais que aceleram o Viabiliza:
 
-| Módulo SIGVISA | O que oferece | Onde aproveita no SILE |
+| Módulo SIGVISA | O que oferece | Onde aproveita no Viabiliza |
 |---|---|---|
 | DAM completo (`docs/DAM-SEFAZ-IMPLEMENTACAO.md`) | Cálculo, número sequencial, código de barras FEBRABAN validado contra 146.711 DAMs reais, PDF, e-mail, parametrização bancária | HU-071 |
 | Baixa automática SEFAZ (`dam:baixar-pagos`, hourly) | Consulta de pagamentos em lotes de 100 via `POST /DAM/ConsultarDamsSEMOP`, baixa manual de contingência, emissão automática do documento quando tudo pago | HU-072 |
@@ -96,9 +96,9 @@ O projeto `sls-sms` (SIGVISA — licenciamento sanitário de Salvador, mesma pre
 | Permissões (spatie/laravel-permission) | Perfis e permissões granulares por funcionalidade | HU-013, EP01 |
 | `SecurityHeaders` middleware, rotas segregadas `portal.php`/`visa.php`, Enums de status | Padrões de segurança e organização Portal do Cidadão × Retaguarda | EP01, arquitetura |
 
-Ressalva de domínio: no SIGVISA a taxa é a TVS (por CNAE, com cobrança retroativa por exercício); no SILE é a TLL (atividade de maior valor + taxa de serviço). A mecânica (DAM, código de barras, baixa) é reaproveitável; a fórmula de cálculo não.
+Ressalva de domínio: no SIGVISA a taxa é a TVS (por CNAE, com cobrança retroativa por exercício); no Viabiliza é a TLL (atividade de maior valor + taxa de serviço). A mecânica (DAM, código de barras, baixa) é reaproveitável; a fórmula de cálculo não.
 
-Ressalva de stack: o frontend do SIGVISA é Vue 3 + PrimeVue + Inertia v2 (com Tiptap, Leaflet, driver.js) e os testes são Pest + Playwright (~1.800 casos); o SILE é React 19 + Inertia v3 + PHPUnit. Padrões de tela e fluxos servem de referência; código de frontend não é portável diretamente. As libs de backend são todas aplicáveis: dompdf, picqer/barcode, simple-qrcode, maatwebsite/excel, smalot/pdfparser, spatie/permission, spatie/activitylog.
+Ressalva de stack: o frontend do SIGVISA é Vue 3 + PrimeVue + Inertia v2 (com Tiptap, Leaflet, driver.js) e os testes são Pest + Playwright (~1.800 casos); o Viabiliza é React 19 + Inertia v3 + PHPUnit. Padrões de tela e fluxos servem de referência; código de frontend não é portável diretamente. As libs de backend são todas aplicáveis: dompdf, picqer/barcode, simple-qrcode, maatwebsite/excel, smalot/pdfparser, spatie/permission, spatie/activitylog.
 
 Documentos úteis no repositório SIGVISA: `docs/ESCOPO-TECNICO-SIGVISA.html` (modelo de escopo técnico), `docs/Novo Modelo_ Documento de História de Usuário.docx` (template de HU), `docs/LEVANTAMENTO-DADOS-MIGRACAO.html` e planilhas `MIGRACAO-*.xlsx` (metodologia de levantamento para migração), `docs/GUIA-OKD.docx` (deploy OKD/OpenShift).
 
@@ -117,12 +117,12 @@ A pesquisa resolveu a divergência de volumetria. Arquivos baixados em `docs/dad
 
 **3. Cruzamentos realizados:**
 - Decreto × IBGE 2.3: cobertura 1:1 (0 códigos fora, 0 faltantes).
-- Planilha VISA (260 CNAEs distintos) × decreto: todos os 260 estão no decreto; 52 divergem de classificação (esperado — a planilha VISA é risco **sanitário**, o decreto é risco **municipal unificado**; são dimensões diferentes que o SILE precisa manter separadas).
+- Planilha VISA (260 CNAEs distintos) × decreto: todos os 260 estão no decreto; 52 divergem de classificação (esperado — a planilha VISA é risco **sanitário**, o decreto é risco **municipal unificado**; são dimensões diferentes que o Viabiliza precisa manter separadas).
 - Os números "990" e "178" citados na reunião não batem com a redação atual do decreto (767 A / 328 B / 236 Alto) — provavelmente referem-se a uma redação anterior dos anexos. Confirmar qual versão o sistema atual usa.
 
 **4. Contexto normativo nacional** — Lei 13.874/2019 (Liberdade Econômica), Resoluções CGSIM nº 51/2019 (alterada pela 68/2022 — baixo risco A nacional) e nº 66 (sanitário). O decreto municipal segue essa taxonomia (risco I/A, II/B, III/alto).
 
-**Implicação para o SILE:** o seed oficial de CNAEs vem do IBGE/CONCLA (HU-011) e a classificação de risco municipal vem do anexo do Decreto 32.636/2020 na redação vigente (HU-020), com as condicionantes como perguntas dirigidas ao requerente (HU-019, HU-048). A planilha VISA é dimensão sanitária complementar, não substituta.
+**Implicação para o Viabiliza:** o seed oficial de CNAEs vem do IBGE/CONCLA (HU-011) e a classificação de risco municipal vem do anexo do Decreto 32.636/2020 na redação vigente (HU-020), com as condicionantes como perguntas dirigidas ao requerente (HU-019, HU-048). A planilha VISA é dimensão sanitária complementar, não substituta.
 
 ## 5. Pauta de perguntas — visita de quinta-feira
 
@@ -134,23 +134,23 @@ A pesquisa resolveu a divergência de volumetria. Arquivos baixados em `docs/dad
 3. ~~Quais são as condicionantes gerais de baixo risco?~~ **Respondido pela pesquisa**: estão no anexo do Decreto 32.636/2020 (redação 38.673/2024) — área ≤ 1.250 m², imóvel não residencial, escritório da empresa. Confirmar apenas se o sistema atual usa essa redação vigente.
 4. Os números citados na reunião (990 e 178 de baixo risco) não batem com a redação atual do decreto (767 Baixo A / 328 Baixo B / 236 Alto). Qual versão dos anexos o sistema atual usa? Há lista interna diferente da publicada?
 5. Para médio risco (Baixo B) com liberação expressa: a regra de decisão é exatamente a condicionante do anexo do decreto, ou existe parametrização adicional interna?
-6. ~~A planilha recebida é um recorte da VISA?~~ **Confirmado pelo usuário**: a Planilha Unificada CNAE 30.04.26 veio da Vigilância Sanitária (dimensão sanitária). 52 dos 260 CNAEs dela divergem do risco municipal unificado do decreto — o SILE deve tratar risco sanitário e risco municipal como dimensões separadas? Qual prevalece para o TVL?
+6. ~~A planilha recebida é um recorte da VISA?~~ **Confirmado pelo usuário**: a Planilha Unificada CNAE 30.04.26 veio da Vigilância Sanitária (dimensão sanitária). 52 dos 260 CNAEs dela divergem do risco municipal unificado do decreto — o Viabiliza deve tratar risco sanitário e risco municipal como dimensões separadas? Qual prevalece para o TVL?
 7. Na planilha, as colunas "Exige PBA?" e "Documentação específica por CNAE" estão vazias — serão preenchidas? O que significa PBA nesse contexto?
-8. O "Fator Multiplicador" (por cômodo, consultório, box) é usado no cálculo de qual taxa? Entra no escopo do SILE?
+8. O "Fator Multiplicador" (por cômodo, consultório, box) é usado no cálculo de qual taxa? Entra no escopo do Viabiliza?
 
 ### Fluxo, TVL e pagamento
-9. ~~O SILE emite o TVL formal (documento com validade)?~~ **Respondido em 2026-06-11, refinado em 2026-06-12**: o documento **não é entregue ao requerente** — dados do deferimento via API SEFAZ + parecer Regin. O **PDF/TVL permanece no backoffice** para emissão sob demanda pelo analista (HU-132). Formato/assinatura a definir com Anderson.
-10. ~~Geração de DAM fica dentro do SILE?~~ **Parcialmente respondido em 2026-06-11**: o DAM de viabilidade é emitido/pago pela SEFAZ (o Simplifica só trata DAM de construção). O SAPS possui aba "Visualizar DAM" no processo. Confirmar o que o SILE precisa exibir/integrar (HU-071/HU-072).
+9. ~~O Viabiliza emite o TVL formal (documento com validade)?~~ **Respondido em 2026-06-11, refinado em 2026-06-12**: o documento **não é entregue ao requerente** — dados do deferimento via API SEFAZ + parecer Regin. O **PDF/TVL permanece no backoffice** para emissão sob demanda pelo analista (HU-132). Formato/assinatura a definir com Anderson.
+10. ~~Geração de DAM fica dentro do Viabiliza?~~ **Parcialmente respondido em 2026-06-11**: o DAM de viabilidade é emitido/pago pela SEFAZ (o Simplifica só trata DAM de construção). O SAPS possui aba "Visualizar DAM" no processo. Confirmar o que o Viabiliza precisa exibir/integrar (HU-071/HU-072).
 
 ### Integrações
-11. API da SEFAZ: a autenticação (JWT/SenhaWeb) e as consultas já são conhecidas via SIGVISA. Qual é o endpoint/payload específico para ENVIAR o deferimento da viabilidade? Podem providenciar credenciais SenhaWeb para o SILE e acesso à homologação?
+11. API da SEFAZ: a autenticação (JWT/SenhaWeb) e as consultas já são conhecidas via SIGVISA. Qual é o endpoint/payload específico para ENVIAR o deferimento da viabilidade? Podem providenciar credenciais SenhaWeb para o Viabiliza e acesso à homologação?
 12. ~~Qual o protocolo de comunicação com o integrador federal/Junta?~~ **Parcialmente respondido por pesquisa (2026-06-11)**: o integrador estadual da Bahia é o **Regin** (produto da Prosolution, operado pela JUCEB); a SEDUR está integrada desde 13/07/2021. O modelo é o da Resolução CGSIM nº 61/2020 (art. 6º-7º): o Regin coleta os dados (inclusive o formulário específico do município), disponibiliza ao município e recebe a resposta da viabilidade; no pós-registro, a JUCEB envia XML do ato à prefeitura. Existe um "Manual de Integração REDESIM" nacional com webservices numerados (WS01, WS02, WS15, WS29...), porém sem fonte oficial aberta; a Prosolution só entrega a especificação na implantação. **Pendente**: solicitar à SEDUR/JUCEB o contrato técnico da integração Regin↔SAPS em uso (payloads, endpoints, autenticação) — a especificação já existe e está operando hoje. Ver seção 7.8.
 13. ~~Qual a base GIS usada para zona/via/lote?~~ **Parcialmente respondido em 2026-06-11**: o GIS é o SIGIS (campo "Zona e Via SIGIS" na ficha de análise). A base cartográfica em uso é a antiga ("S69") e a SEDUR exige migrar para a base atual ("CA 2000") — classificado como "problema gravíssimo". Pendente: acesso, camadas e formato.
 
 ### Legado e transição
 14. ~~Qual o sistema atual?~~ **Parcialmente respondido em 2026-06-11**: o sistema de análise em uso é o **SAPS — Sistema de Análise de Processos SIMPLIFICA** (acesso restrito à rede interna), considerado lento e "uma dor de cabeça". Pendente: confirmar se será desligado, dados a migrar (processos históricos, TVLs) e papel do proxy.
-15. ~~Como o SILE se posiciona em relação ao SLI e ao Simplifica?~~ **Respondido em 2026-06-11**: o SILE substitui apenas a **viabilidade** ("a gente precisa de algo pra viabilidade que a gente realmente não tem nada"). Construção já está sendo coberta por outro sistema novo (com Anderson). O portal Simplifica cidadão permanece como canal de acompanhamento (e de entrada para renovação, que não passa pelo Regin).
-16. ~~Conseguem dar acesso ao ambiente?~~ **Respondido em 2026-06-11**: sim — a demonstração foi feita ao vivo e ficou acordado acesso para acompanhamento. Em contrapartida, será disponibilizado ambiente de desenvolvimento do SILE para a SEDUR acompanhar as versões.
+15. ~~Como o Viabiliza se posiciona em relação ao SLI e ao Simplifica?~~ **Respondido em 2026-06-11**: o Viabiliza substitui apenas a **viabilidade** ("a gente precisa de algo pra viabilidade que a gente realmente não tem nada"). Construção já está sendo coberta por outro sistema novo (com Anderson). O portal Simplifica cidadão permanece como canal de acompanhamento (e de entrada para renovação, que não passa pelo Regin).
+16. ~~Conseguem dar acesso ao ambiente?~~ **Respondido em 2026-06-11**: sim — a demonstração foi feita ao vivo e ficou acordado acesso para acompanhamento. Em contrapartida, será disponibilizado ambiente de desenvolvimento do Viabiliza para a SEDUR acompanhar as versões.
 
 ## 6. Impacto no início do desenvolvimento
 
@@ -194,16 +194,16 @@ O processo carrega **três identificadores**: número do processo (SEDUR), proto
 - Configurações → **Cadastrar**: Perfil, Usuário Saps, Setor, **Condicionantes**, Complemento, **Enquadramentos**, **Feriado**.
 - Configurações → Usuário Simplifica; **Relatórios Administrativos**: Tempo de Emissão de TVL, Sede de Escritório Virtual.
 
-**Parametrização do motor (telas-chave para o SILE)**:
+**Parametrização do motor (telas-chave para o Viabiliza)**:
 - **Cadastro CNAE** (`13-cadastro-cnae.jpg`): lista pesquisável de CNAEs com edição individual (regras por CNAE).
 - **Enquadramento TVL** (`14-enquadramento-tvl-louos-faixas-area.jpg`): por código LOUOS → Classificação, código TLL, flag "Classificação de risco" e **até 3 enquadramentos por faixa de área** ("Até m²") + "Qualquer Área". Exemplos reais: LOUOS 07.01.05 (comércio de gêneros alimentícios) → TLL 2.02, nR1-01 até 350,00 m², nR2-01 acima; LOUOS 07.12.13 (escritório) → TLL 1.01, nR1-12 até 1.250,00 m², nR2-12 acima. **É o Quadro 7 da LOUOS operacionalizado como dados** — modelo de referência direto para o EP06.
 - **Cadastro de Condicionantes** (`15-cadastro-condicionante-pergunta-regra.jpg`): por CNAE, com **Pergunta** (reutilizável, select + adicionar), **Regra** (numérica, ex.: 7) e **Crítica** (select). Levantar a semântica de "Regra" e "Crítica".
 
-### 7.3 Problemas relatados (motivações do SILE)
+### 7.3 Problemas relatados (motivações do Viabiliza)
 
 | Problema | Detalhe |
 |---|---|
-| Prazo inflado | Diretora reporta média de 19 dias; medição interna deu 42h (já foi 4h). Causa suspeita: contagem corrida incluindo fins de semana (+48h cada) e feriados cadastrados (+24h cada). SILE deve contar prazos em regime correto e parametrizável |
+| Prazo inflado | Diretora reporta média de 19 dias; medição interna deu 42h (já foi 4h). Causa suspeita: contagem corrida incluindo fins de semana (+48h cada) e feriados cadastrados (+24h cada). Viabiliza deve contar prazos em regime correto e parametrizável |
 | Expresso subutilizado | Só ~405 CNAEs têm resposta expressa hoje; atividades de baixo risco caem em análise humana indevidamente. Automatizar o enquadramento é a aposta central para reduzir prazo |
 | Volume de vistorias | Alto — problema interno relacionado |
 | Performance/UX | Sistema "muito lento", usabilidade ruim, filtros insuficientes (ex.: querem buscar por analista) |
@@ -239,10 +239,10 @@ O processo carrega **três identificadores**: número do processo (SEDUR), proto
 5. O que contemplam os **"Parâmetros para indeferimento automático"**?
 6. Papel do cadastro **"Edifício Comercial"** no fluxo (relação com o complemento pré-preenchido).
 7. Tabela TLL (códigos 1.01, 2.02 etc.) e origem dos valores (ex.: R$ 1.111,78).
-8. Podem exportar as parametrizações atuais (CNAEs, enquadramentos, condicionantes, feriados) para servir de seed real do SILE?
+8. Podem exportar as parametrizações atuais (CNAEs, enquadramentos, condicionantes, feriados) para servir de seed real do Viabiliza?
 9. O que é exatamente a base "CA 2000" e quem fornece acesso (SIGIS)?
-10. A aba **Vistoria** do processo e a seção "Vagas vistoria" da ficha: vistoria de viabilidade entra no escopo do SILE (agendamento, registro, resultado) ou permanece em sistema/fluxo externo? (Reunião citou volume alto de vistorias como problema.)
-11. Lista oficial de **tipos de serviço** (grupo de serviço/serviço): 1º estabelecimento, alteração de endereço/atividade, "Revisão TVL — Inclusão de Atividade", renovação, TVL MEI, AOP — quais o SILE deve cobrir e quais permanecem fora?
+10. A aba **Vistoria** do processo e a seção "Vagas vistoria" da ficha: vistoria de viabilidade entra no escopo do Viabiliza (agendamento, registro, resultado) ou permanece em sistema/fluxo externo? (Reunião citou volume alto de vistorias como problema.)
+11. Lista oficial de **tipos de serviço** (grupo de serviço/serviço): 1º estabelecimento, alteração de endereço/atividade, "Revisão TVL — Inclusão de Atividade", renovação, TVL MEI, AOP — quais o Viabiliza deve cobrir e quais permanecem fora?
 12. Existe **recurso administrativo** formal contra indeferimento de viabilidade (prazo, instância, rito)? Se sim, como é tratado hoje — reabertura no SAPS, processo físico, novo pedido? (Nenhuma HU cobre; não inventar fluxo jurídico sem confirmar.)
 13. Interesse em **painel público de transparência** (estatísticas de volume e tempo médio sem login)? Tecnicamente simples; decisão é política — só implementar com aval da SEDUR.
 14. Casos reais de **fraude/abuso** já observados (declarações falsas para obter expresso, cadeias de escritório virtual)? Quais padrões a equipe conhece — insumo para calibrar a HU-149.
@@ -286,11 +286,11 @@ O processo carrega **três identificadores**: número do processo (SEDUR), proto
 A integração que a Lisa demonstrou (formulário da SEDUR dentro do fluxo da junta) está documentada publicamente em nível funcional e normativo; a especificação técnica do webservice não é pública.
 
 **Arquitetura e base normativa:**
-- **Resolução CGSIM nº 61/2020** ([DOU](https://www.in.gov.br/en/web/dou/-/resolucao-cgsim-n-61-de-12-agosto-de-2020-271970565), [PDF gov.br](https://www.gov.br/empresas-e-negocios/pt-br/drei/cgsim/arquivos/Resoluo61de2020.pdf)) — define os modelos de integração da REDESIM. Papéis: **Integrador Nacional** (Receita Federal) ↔ **Integrador Estadual** (responsabilidade da Junta Comercial) ↔ municípios. Art. 6º: o Integrador Estadual coleta os dados da pesquisa prévia, "disponibiliza os dados das solicitações para os municípios e recebe as respectivas respostas relativas à viabilidade de localização". Art. 7º: cabe ao município **definir os dados a serem coletados** e **dar resposta no prazo definido, incluindo orientações, requisitos condicionantes e os respectivos motivos, caso negativa** — exatamente o contrato funcional do SILE com o Regin.
+- **Resolução CGSIM nº 61/2020** ([DOU](https://www.in.gov.br/en/web/dou/-/resolucao-cgsim-n-61-de-12-agosto-de-2020-271970565), [PDF gov.br](https://www.gov.br/empresas-e-negocios/pt-br/drei/cgsim/arquivos/Resoluo61de2020.pdf)) — define os modelos de integração da REDESIM. Papéis: **Integrador Nacional** (Receita Federal) ↔ **Integrador Estadual** (responsabilidade da Junta Comercial) ↔ municípios. Art. 6º: o Integrador Estadual coleta os dados da pesquisa prévia, "disponibiliza os dados das solicitações para os municípios e recebe as respectivas respostas relativas à viabilidade de localização". Art. 7º: cabe ao município **definir os dados a serem coletados** e **dar resposta no prazo definido, incluindo orientações, requisitos condicionantes e os respectivos motivos, caso negativa** — exatamente o contrato funcional do Viabiliza com o Regin.
 - O **Regin** é o Integrador Estadual da Bahia, operado pela JUCEB — produto da **Prosolution** ([pscs.com.br/regin_instituicao](https://www.pscs.com.br/regin_instituicao)). O "Módulo Instituição" entrega às entidades conveniadas os dados de viabilidade e alterações; a página é explícita: "os detalhes técnicos para a integração do REGIN da Junta Comercial com cada Instituição serão obtidos no processo de implantação" — ou seja, especificação não pública.
 - A SEDUR integrou-se à REDESIM em **13/07/2021** ([notícia da Prefeitura](https://comunicacao.salvador.ba.gov.br/abertura-de-empresas-em-salvador-ficara-mais-agil-a-partir-desta-terca-13/)): o Regin envia os dados simultaneamente à JUCEB (nome/objeto/CNAE) e à SEDUR (viabilidade de localização).
 
-**Observação ao vivo (2026-06-11, navegador do Filipe)**: o formulário do Regin roda em `regin.juceb.ba.gov.br/regin.externo/ViabilidadePedidoAlteracaoV4.aspx?tipoViabilidade=101&idMunicipio=38490...` com etapas **Integrantes e Nome Empresarial → Endereço → Atividade → Definições Grau de Risco → Informações Complementares** (esta última com perguntas da prefeitura: classificação ME/EPP/NORMAL, contato do solicitante, processo na JUCEB) e termos finais (Balcão Único; Dispensa de Viabilidade Locacional — orientação é "Não Aceito"; Termo de Responsabilidade). O **formulário específico da SEDUR é hospedado pelo próprio Simplifica** em `simplifica.salvador.ba.gov.br/integracao/sedur/TVL/ps001_Regin.aspx` — ou seja, o município hospeda a página e o Regin direciona para ela (o "token" citado na reunião). Implicação para o SILE: ele deverá servir o equivalente dessa página/etapa da integração. Capturas em `docs/legado-saps/17-*.jpg` e `18-*.jpg`.
+**Observação ao vivo (2026-06-11, navegador do Filipe)**: o formulário do Regin roda em `regin.juceb.ba.gov.br/regin.externo/ViabilidadePedidoAlteracaoV4.aspx?tipoViabilidade=101&idMunicipio=38490...` com etapas **Integrantes e Nome Empresarial → Endereço → Atividade → Definições Grau de Risco → Informações Complementares** (esta última com perguntas da prefeitura: classificação ME/EPP/NORMAL, contato do solicitante, processo na JUCEB) e termos finais (Balcão Único; Dispensa de Viabilidade Locacional — orientação é "Não Aceito"; Termo de Responsabilidade). O **formulário específico da SEDUR é hospedado pelo próprio Simplifica** em `simplifica.salvador.ba.gov.br/integracao/sedur/TVL/ps001_Regin.aspx` — ou seja, o município hospeda a página e o Regin direciona para ela (o "token" citado na reunião). Implicação para o Viabiliza: ele deverá servir o equivalente dessa página/etapa da integração. Capturas em `docs/legado-saps/17-*.jpg` e `18-*.jpg`.
 
 **Fluxo documentado (passo a passo oficial SEDUR/CRC-BA, salvo em `docs/dados-oficiais/Passo-a-passo-REDESIM-SEDUR-CRCBA-13072021.pdf`):**
 - Viabilidade: site da junta → seleciona município/instituição → viabilidade de 1º estabelecimento ou alteração → busca por inscrição imobiliária + "buscar complemento" (ex.: Sala 101) → sócios → 3 opções de nome → objeto social → CNAEs → **"Preencher Formulário"** abre o formulário específico da prefeitura (polígono com "Validar polígono", perguntas por CNAE, foto da fachada, declarações obrigatórias) → exibe o nº do processo SEDUR → volta à tela da junta → termo de responsabilidade → **protocolo** (o "BAP" citado na reunião).
@@ -300,11 +300,11 @@ A integração que a Lisa demonstrou (formulário da SEDUR dentro do fluxo da ju
 
 **Documentação técnica (webservices):**
 - Existe o "Manual de Integração REDESIM" nacional (protocolo entre integradores, e.g. versão 2.2.28 com serviços WS01/WS02/WS15/WS29), mas não localizei fonte oficial aberta — apenas cópias de terceiros. O portal de monitoramento ([redesim.gestao.receita.fazenda.gov.br](https://www.redesim.gestao.receita.fazenda.gov.br/monitoramento-web/private/index.jsf)) exige certificado digital de órgão partícipe.
-- **Caminho prático para o SILE**: a integração Regin↔SAPS já opera em produção — a especificação existe dentro da SEDUR/JUCEB. Pedir: documentação do webservice/endpoint que o SAPS expõe ou consome, exemplos de payload (solicitação de viabilidade recebida e resposta enviada), mecanismo de autenticação e ambiente de homologação do Regin. Sem isso, EP13 (integração com o integrador) fica bloqueado — registrar como dependência externa, nunca simular.
+- **Caminho prático para o Viabiliza**: a integração Regin↔SAPS já opera em produção — a especificação existe dentro da SEDUR/JUCEB. Pedir: documentação do webservice/endpoint que o SAPS expõe ou consome, exemplos de payload (solicitação de viabilidade recebida e resposta enviada), mecanismo de autenticação e ambiente de homologação do Regin. Sem isso, EP13 (integração com o integrador) fica bloqueado — registrar como dependência externa, nunca simular.
 
 ### 7.9 Melhorias além do legado — aceitas em 2026-06-12
 
-Propostas do time de desenvolvimento aceitas pelo Filipe para o SILE superar o SAPS (não vieram de demanda direta da SEDUR; validar nas demos):
+Propostas do time de desenvolvimento aceitas pelo Filipe para o Viabiliza superar o SAPS (não vieram de demanda direta da SEDUR; validar nas demos):
 
 **Novas HUs (140–147):**
 

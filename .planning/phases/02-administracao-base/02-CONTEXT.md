@@ -58,7 +58,7 @@ Fora do escopo desta fase: mantenedores de quadros da LOUOS, condicionantes e cl
 ### Claude's Discretion
 - Importação do xlsx oficial: converter para CSV versionado + seeder/command de import (com normalização e relatório de divergência), ou leitura direta de xlsx via pacote (maatwebsite/excel é aplicável por decisão do projeto) — decidir na pesquisa considerando reprodutibilidade do seed e a divergência 1.331 × 1.332.
 - Modelagem da tabela `cnaes`: colunas de hierarquia (seção/divisão/grupo/classe) desnormalizadas vs apenas subclasse; PK surrogate vs código.
-- Modelagem do registry de parâmetros (tabela única `settings` com type/value/default/rules/sensitive/group vs tabelas por domínio) — observar exemplos do SIGVISA (configs por domínio) e a necessidade do SILE de registry genérico + grupos.
+- Modelagem do registry de parâmetros (tabela única `settings` com type/value/default/rules/sensitive/group vs tabelas por domínio) — observar exemplos do SIGVISA (configs por domínio) e a necessidade do Viabiliza de registry genérico + grupos.
 - Estratégia de cache do Settings (TTL parametrizado, invalidação por chave na gravação).
 - Componentes de UI das telas administrativas (tabela, busca, formulários) seguindo os padrões Inertia/React/Tailwind da Fase 1.
 </decisions>

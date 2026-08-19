@@ -1,6 +1,6 @@
-# Calibração de Estimativa — Medições do Repositório SILE
+# Calibração de Estimativa — Medições do Repositório Viabiliza
 
-> Documento gerado para **calibrar a estimativa de esforço de outro projeto** comparando com o SILE.
+> Documento gerado para **calibrar a estimativa de esforço de outro projeto** comparando com o Viabiliza.
 > **Tudo aqui foi medido no repositório real** (git, contagem de arquivos versionados, `.planning/STATE.md`).
 > Marcações: **[medido]** = extraído direto do repo · **[estimado]** = derivado de evidência · **[não medido]** = git não registra.
 
@@ -37,7 +37,7 @@ multi-tenant (×1,25) + CPF cifrado/blind index (×1,15) + (se IA limitada/compa
 
 ## 1. Identidade do projeto
 
-**Domínio [medido]:** SILE — Sistema de Licenciamento Eletrônico da SEDUR (Salvador/BA). Viabilidade locacional de atividade econômica de forma automática e auditável: motor de regras da LOUOS (Lei 9.148/2016), classificação de risco por CNAE (Decreto 32.636/2020), georreferenciamento (PostGIS/Leaflet/Nominatim), fluxo expresso (deferimento/indeferimento automático), análise técnica humana, comunicação multicanal, IA de apoio e relatórios.
+**Domínio [medido]:** Viabiliza — Sistema de Licenciamento Eletrônico da SEDUR (Salvador/BA). Viabilidade locacional de atividade econômica de forma automática e auditável: motor de regras da LOUOS (Lei 9.148/2016), classificação de risco por CNAE (Decreto 32.636/2020), georreferenciamento (PostGIS/Leaflet/Nominatim), fluxo expresso (deferimento/indeferimento automático), análise técnica humana, comunicação multicanal, IA de apoio e relatórios.
 
 **Stack [medido]:** Laravel 13 + Inertia v3 + React 19 + Tailwind 4, PHP 8.3+, PostgreSQL/PostGIS, Redis. Monólito modular por domínio (Services/Concerns/StateMachines, eventos de domínio + listeners auto-descobertos). Pacotes-chave: `spatie/permission` (RBAC), `spatie/activitylog` (auditoria), `firebase/php-jwt` + `socialite` (gov.br), `dompdf`/`openspout` (PDF/XLSX), `laravel/ai`.
 

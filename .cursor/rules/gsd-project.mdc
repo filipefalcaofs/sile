@@ -1,14 +1,14 @@
 ---
-description: Contexto do projeto SILE e fluxo de trabalho GSD
+description: Contexto do projeto Viabiliza e fluxo de trabalho GSD
 alwaysApply: true
 ---
 
 <!-- gsd-project-start source:PROJECT.md -->
 ## Project
 
-**SILE — Sistema de Licenciamento Eletrônico**
+**Viabiliza — Sistema de Licenciamento Eletrônico**
 
-O SILE é o Sistema de Licenciamento Eletrônico da SEDUR (Salvador/BA): gestão da viabilidade locacional de atividades econômicas, com automação do licenciamento via motor de regras da LOUOS (Lei nº 9.148/2016), classificação de risco por CNAE (Decreto nº 32.636/2020), georreferenciamento, fluxo expresso (deferimento/indeferimento automático), análise técnica humana, integrações (REDESIM, Receita Federal, GIS, SEFAZ municipal), auditoria completa e indicadores. Atende cidadãos/requerentes (via integrador federal e portal), analistas e gestores da SEDUR.
+O Viabiliza é o Sistema de Licenciamento Eletrônico da SEDUR (Salvador/BA): gestão da viabilidade locacional de atividades econômicas, com automação do licenciamento via motor de regras da LOUOS (Lei nº 9.148/2016), classificação de risco por CNAE (Decreto nº 32.636/2020), georreferenciamento, fluxo expresso (deferimento/indeferimento automático), análise técnica humana, integrações (REDESIM, Receita Federal, GIS, SEFAZ municipal), auditoria completa e indicadores. Atende cidadãos/requerentes (via integrador federal e portal), analistas e gestores da SEDUR.
 
 **Core Value:** Responder a viabilidade locacional de uma atividade econômica de forma automática, correta e auditável — aplicando de verdade as regras da LOUOS e a classificação de risco, sem análise humana quando a lei permite (fluxo expresso) e com fundamentação legal registrada em toda decisão.
 

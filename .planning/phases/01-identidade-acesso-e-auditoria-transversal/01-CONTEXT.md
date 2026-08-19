@@ -7,7 +7,7 @@
 <domain>
 ## Phase Boundary
 
-Usuários (cidadão, contador, procurador, analista SEDUR, gestor SEDUR, administrador) acessam o SILE com segurança: cadastro com confirmação de e-mail, autenticação, recuperação e alteração de senha, aceite de termo LGPD, gestão do próprio perfil, vínculo e revogação de procurador, e consulta do histórico de acessos. Toda ação relevante registra trilha de auditoria por um mecanismo transversal reutilizável (RN-002) que servirá todas as 15 fases.
+Usuários (cidadão, contador, procurador, analista SEDUR, gestor SEDUR, administrador) acessam o Viabiliza com segurança: cadastro com confirmação de e-mail, autenticação, recuperação e alteração de senha, aceite de termo LGPD, gestão do próprio perfil, vínculo e revogação de procurador, e consulta do histórico de acessos. Toda ação relevante registra trilha de auditoria por um mecanismo transversal reutilizável (RN-002) que servirá todas as 15 fases.
 
 Fora do escopo desta fase: CRUD administrativo de usuários/perfis/parâmetros (HU-012, HU-013, HU-014 — Fase 2), cadastro empresarial (Fase 3), consulta/exportação da auditoria via UI administrativa (HU-100/HU-101 — Fase 12; aqui nasce apenas o registro e a consulta do próprio histórico de acessos).
 </domain>
@@ -16,12 +16,12 @@ Fora do escopo desta fase: CRUD administrativo de usuários/perfis/parâmetros (
 ## Implementation Decisions
 
 ### HU-001 — Cadastrar usuário
-- Cidadão, contador, procurador ou servidor cria conta de acesso ao SILE.
+- Cidadão, contador, procurador ou servidor cria conta de acesso ao Viabiliza.
 - Validar dados obrigatórios antes de avançar (RN-001); informar campos pendentes e permitir nova tentativa (FA-01).
 - CAs: execução com sucesso, auditoria obrigatória, bloqueio por inconsistência, segurança de acesso.
 
 ### HU-002 — Autenticar usuário
-- Login seguro para os dois ambientes: SILE Cidadão (portal) e SILE Gestão (retaguarda SEDUR).
+- Login seguro para os dois ambientes: Viabiliza Cidadão (portal) e Viabiliza Gestão (retaguarda SEDUR).
 - Acesso a funcionalidades conforme perfil (RN-003); tentativa sem permissão é bloqueada e registrada (FA-04, CA-04).
 
 ### HU-003 — Recuperar senha
@@ -82,7 +82,7 @@ Fora do escopo desta fase: CRUD administrativo de usuários/perfis/parâmetros (
 
 ### Requisitos da fase (fonte de verdade)
 - `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-001-Cadastrar-usuario.md` — cadastro
-- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-002-Autenticar-usuario.md` — autenticação (SILE Cidadão × SILE Gestão)
+- `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-002-Autenticar-usuario.md` — autenticação (Viabiliza Cidadão × Viabiliza Gestão)
 - `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-003-Recuperar-senha.md` — recuperação de senha
 - `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-004-Alterar-senha.md` — alteração de senha
 - `docs/SILE_HUs_Completas_MD/EP01-Identidade-Acesso-e-Seguranca/HU-005-Confirmar-e-mail.md` — confirmação de e-mail

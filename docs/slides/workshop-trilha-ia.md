@@ -77,7 +77,7 @@ footer: "Workshop — Startando projetos com IA · Sudoeste"
 
 ## Startando projetos com IA — Cursor, Claude Code e método
 
-Caso real do início ao fim: **SILE** — sistema de licenciamento da SEDUR, Prefeitura de Salvador
+Caso real do início ao fim: **Viabiliza** — sistema de licenciamento da SEDUR, Prefeitura de Salvador
 
 ---
 
@@ -317,7 +317,7 @@ As perguntas que destravam:
 - "Esse sistema conversa com quem?"
 - "O que no sistema atual te dá dor de cabeça?"
 
-**No SILE, 30 minutos renderam:** fluxo expresso × análise humana, os quadros da LOUOS, a regra de baixo risco, 1.332 CNAEs e o desabafo sobre o legado instável.
+**No Viabiliza, 30 minutos renderam:** fluxo expresso × análise humana, os quadros da LOUOS, a regra de baixo risco, 1.332 CNAEs e o desabafo sobre o legado instável.
 
 ---
 
@@ -361,7 +361,7 @@ Transcrição, planilha, PDF, print — tudo no Git: o diário da obra onde nada
 
 **Uma HU por arquivo Markdown**, numerada na **ordem de desenvolvimento**.
 
-No SILE: 127 HUs em 15 épicos. Após a revisão: **131**.
+No Viabiliza: 127 HUs em 15 épicos. Após a revisão: **131**.
 
 ---
 
@@ -680,7 +680,7 @@ regra vaga → RN com lei citada · lacuna → HU nova · tabela oficial → **s
 
 ---
 
-# O que essa revisão achou no SILE
+# O que essa revisão achou no Viabiliza
 
 - O número da lei **no portal oficial da prefeitura estava errado** (9.146 → 9.148/2016)
 - O "Quadro 11" que todo mundo cita **não existe na lei** — existem 11A e 11B
@@ -707,7 +707,7 @@ Roda o prompt. As skills acendem. O projeto anda no padrão.
 
 # Passo 8 — O cliente continua no circuito
 
-- **A pauta nasce da análise** — no SILE, 16 perguntas organizadas por tema. Você chega parecendo que estudou por semanas. *Estudou em horas*
+- **A pauta nasce da análise** — no Viabiliza, 16 perguntas organizadas por tema. Você chega parecendo que estudou por semanas. *Estudou em horas*
 - **Visita técnica** — ver o sistema atual operando, processo de ponta a ponta
 - **Acessos cedo** — documentação das APIs, credenciais de homologação. Sem isso a integração **bloqueia** (e aqui não se simula)
 - **UAT** *(User Acceptance Testing)* — o usuário-chave valida cada fase contra os CAs

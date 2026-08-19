@@ -27,14 +27,14 @@ class EmailServerTestMail extends Mailable
     {
         return new Envelope(
             from: new Address($this->fromAddress, $this->fromName),
-            subject: 'Teste de configuração de e-mail — SILE',
+            subject: 'Teste de configuração de e-mail — Viabiliza',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            htmlString: '<p>Teste de configuração de e-mail do SILE. Se você recebeu esta mensagem, o servidor de e-mail está operacional.</p>',
+            htmlString: '<p>Teste de configuração de e-mail do Viabiliza. Se você recebeu esta mensagem, o servidor de e-mail está operacional.</p>',
         );
     }
 }

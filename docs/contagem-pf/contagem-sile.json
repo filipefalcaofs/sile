@@ -1,17 +1,17 @@
 {
   "identificacao": {
     "empresa": "Sudoeste Informática",
-    "aplicacao": "SILE — Sistema de Licenciamento Eletrônico da SEDUR",
+    "aplicacao": "Viabiliza — Sistema de Licenciamento Eletrônico da SEDUR",
     "projeto": "Contagem IFPUG - Projeto de Desenvolvimento",
     "dv_numero": "DV-SILE-001",
     "responsavel": "Equipe de Análise — Sudoeste Informática",
     "versao": "1.0",
     "tipo_contagem": "desenvolvimento",
     "rs_por_pf": 700,
-    "proposito": "Medir o tamanho funcional do SILE — Sistema de Licenciamento Eletrônico da SEDUR (Salvador/BA) como projeto de desenvolvimento completo, seguindo o Manual de Práticas de Contagem IFPUG 4.3.1 (PT-BR). Fronteira: aplicação SILE incluindo portal do cidadão, retaguarda SEDUR (gestão), motor de regras da LOUOS (Lei 9.148/2016), classificação de risco (Decreto 32.636/2020), georreferenciamento, consulta prévia, solicitação formal, fluxo expresso automático, análise técnica humana, pendências e comunicação, auditoria/compliance/LGPD, integrações (REDESIM/Regin, Receita, SEFAZ, GIS, Cadastro Imobiliário, legado), inteligência artificial e relatórios/indicadores. Escopo do projeto contratado (151 HUs catalogadas, EP01–EP15 + autenticação gov.br): funções implementadas e funções especificadas (integrações da Fase 13 e assistentes de IA da Onda 3) são contadas como tamanho funcional do projeto; o estado de implementação é registrado por função nas observações, sem inflar nem omitir."
+    "proposito": "Medir o tamanho funcional do Viabiliza — Sistema de Licenciamento Eletrônico da SEDUR (Salvador/BA) como projeto de desenvolvimento completo, seguindo o Manual de Práticas de Contagem IFPUG 4.3.1 (PT-BR). Fronteira: aplicação Viabiliza incluindo portal do cidadão, retaguarda SEDUR (gestão), motor de regras da LOUOS (Lei 9.148/2016), classificação de risco (Decreto 32.636/2020), georreferenciamento, consulta prévia, solicitação formal, fluxo expresso automático, análise técnica humana, pendências e comunicação, auditoria/compliance/LGPD, integrações (REDESIM/Regin, Receita, SEFAZ, GIS, Cadastro Imobiliário, legado), inteligência artificial e relatórios/indicadores. Escopo do projeto contratado (151 HUs catalogadas, EP01–EP15 + autenticação gov.br): funções implementadas e funções especificadas (integrações da Fase 13 e assistentes de IA da Onda 3) são contadas como tamanho funcional do projeto; o estado de implementação é registrado por função nas observações, sem inflar nem omitir."
   },
   "termo": {
-    "sistema": "SILE — SISTEMA DE LICENCIAMENTO ELETRÔNICO",
+    "sistema": "Viabiliza — SISTEMA DE LICENCIAMENTO ELETRÔNICO",
     "nome_curto": "SILE",
     "total_pf": 1032,
     "data": "Salvador-BA, 23 de junho de 2026",
@@ -35,7 +35,7 @@
           "tipo": "ALI",
           "td": 12,
           "ar": 2,
-          "observacoes": "ALI. DER: nome, e-mail, e-mail verificado, CPF, telefone, senha, papel, status de inativação, avatar. RLR: usuário, vínculo de papel. Ref: HU-001, HU-007, HU-012. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=12; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: nome, e-mail, e-mail verificado, CPF, telefone, senha, papel, status de inativação, avatar. RLR: usuário, vínculo de papel. Ref: HU-001, HU-007, HU-012. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=12; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -43,7 +43,7 @@
           "tipo": "ALI",
           "td": 6,
           "ar": 2,
-          "observacoes": "ALI. DER: nome do perfil, descrição, conjunto de permissões. RLR: perfil, permissão. Ref: HU-013. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: nome do perfil, descrição, conjunto de permissões. RLR: perfil, permissão. Ref: HU-013. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=6; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -51,7 +51,7 @@
           "tipo": "ALI",
           "td": 8,
           "ar": 2,
-          "observacoes": "ALI. DER: tipo, versão, título, conteúdo, data de publicação, IP, user agent, data do aceite. RLR: termo, aceite. Ref: HU-006. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=8; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: tipo, versão, título, conteúdo, data de publicação, IP, user agent, data do aceite. RLR: termo, aceite. Ref: HU-006. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=8; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -59,7 +59,7 @@
           "tipo": "ALI",
           "td": 5,
           "ar": 1,
-          "observacoes": "ALI. DER: outorgante, procurador, início, fim, data de revogação. RLR: procuração. Ref: HU-008, HU-009. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: outorgante, procurador, início, fim, data de revogação. RLR: procuração. Ref: HU-008, HU-009. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -67,7 +67,7 @@
           "tipo": "ALI",
           "td": 6,
           "ar": 1,
-          "observacoes": "ALI. DER: e-mail tentado, evento, IP, user agent, canal, data/hora. RLR: registro de acesso. Ref: HU-010. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: e-mail tentado, evento, IP, user agent, canal, data/hora. RLR: registro de acesso. Ref: HU-010. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -75,7 +75,7 @@
           "tipo": "ALI",
           "td": 12,
           "ar": 1,
-          "observacoes": "ALI. DER: domínio, evento, descrição, causer, subject, alterações, propriedades, IP, canal, representado, resultado, versão de regras. RLR: registro de auditoria. Infraestrutura transversal RN-002. Ref: HU-097, HU-100. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: domínio, evento, descrição, causer, subject, alterações, propriedades, IP, canal, representado, resultado, versão de regras. RLR: registro de auditoria. Infraestrutura transversal RN-002. Ref: HU-097, HU-100. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -217,7 +217,7 @@
           "tipo": "ALI",
           "td": 12,
           "ar": 1,
-          "observacoes": "ALI. DER: código, descrição, seção, divisão, grupo, classe e hierarquia, indicador ativo. RLR: CNAE. Carga oficial CNAE-Subclasses 2.3 (IBGE/CONCLA, 1.331). Ref: HU-011. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: código, descrição, seção, divisão, grupo, classe e hierarquia, indicador ativo. RLR: CNAE. Carga oficial CNAE-Subclasses 2.3 (IBGE/CONCLA, 1.331). Ref: HU-011. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -225,7 +225,7 @@
           "tipo": "ALI",
           "td": 9,
           "ar": 1,
-          "observacoes": "ALI. DER: chave, grupo, tipo, valor, valor padrão, validação, sensível, descrição, exige teste de conexão. RLR: parâmetro. Ref: HU-014. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=9; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: chave, grupo, tipo, valor, valor padrão, validação, sensível, descrição, exige teste de conexão. RLR: parâmetro. Ref: HU-014. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=9; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -367,7 +367,7 @@
           "tipo": "ALI",
           "td": 5,
           "ar": 1,
-          "observacoes": "ALI. DER: nível de confiabilidade, selos, data de vínculo, última autenticação, usuário local. RLR: vínculo. Ref: HU-151. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: nível de confiabilidade, selos, data de vínculo, última autenticação, usuário local. RLR: vínculo. Ref: HU-151. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -375,7 +375,7 @@
           "tipo": "AIE",
           "td": 6,
           "ar": 1,
-          "observacoes": "AIE. Provedor OAuth/OIDC do gov.br: claims de identidade (CPF/sub), nome, e-mail, confiabilidade e chaves JWK. Mantido externamente. Ref: HU-151. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=6; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Provedor OAuth/OIDC do gov.br: claims de identidade (CPF/sub), nome, e-mail, confiabilidade e chaves JWK. Mantido externamente. Ref: HU-151. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=6; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -397,7 +397,7 @@
           "tipo": "ALI",
           "td": 18,
           "ar": 3,
-          "observacoes": "ALI. DER: CNPJ, razão social, nome fantasia, natureza jurídica, porte, endereço completo, contato, origem, protocolo/sincronização REDESIM. RLR: empresa, CNAEs da empresa, vínculos usuário-empresa. Ref: HU-021, HU-023, HU-024. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=18; RLR=3; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: CNPJ, razão social, nome fantasia, natureza jurídica, porte, endereço completo, contato, origem, protocolo/sincronização REDESIM. RLR: empresa, CNAEs da empresa, vínculos usuário-empresa. Ref: HU-021, HU-023, HU-024. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=18; RLR=3; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -405,7 +405,7 @@
           "tipo": "AIE",
           "td": 15,
           "ar": 1,
-          "observacoes": "AIE. Cadastro de CNPJ consultado para pré-preenchimento (situação cadastral, endereço, CNAEs). Mantido externamente. Ref: HU-021, HU-105. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=15; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Cadastro de CNPJ consultado para pré-preenchimento (situação cadastral, endereço, CNAEs). Mantido externamente. Ref: HU-021, HU-105. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=15; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -491,7 +491,7 @@
           "tipo": "ALI",
           "td": 10,
           "ar": 2,
-          "observacoes": "ALI. DER: tipo de camada, versão, status, vigência, origem, versão de regras, contagem de feições, atributos territoriais (JSON), geometria SRID 4326. RLR: camada, feição. Ref: HU-036, HU-031..035. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=10; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: tipo de camada, versão, status, vigência, origem, versão de regras, contagem de feições, atributos territoriais (JSON), geometria SRID 4326. RLR: camada, feição. Ref: HU-036, HU-031..035. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=10; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -499,7 +499,7 @@
           "tipo": "AIE",
           "td": 5,
           "ar": 1,
-          "observacoes": "AIE. Serviço externo de geocodificação endereço→coordenada. Ref: HU-029. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Serviço externo de geocodificação endereço→coordenada. Ref: HU-029. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -553,7 +553,7 @@
           "tipo": "ALI",
           "td": 8,
           "ar": 2,
-          "observacoes": "ALI. DER: CNAE, grupo de uso, subgrupo, área mínima, área máxima, observação, versão/vigência. RLR: faixa, versão. Ref: HU-015, HU-046. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=8; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: CNAE, grupo de uso, subgrupo, área mínima, área máxima, observação, versão/vigência. RLR: faixa, versão. Ref: HU-015, HU-046. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=8; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -561,7 +561,7 @@
           "tipo": "ALI",
           "td": 8,
           "ar": 2,
-          "observacoes": "ALI. DER: zona, grupo de uso, subgrupo, permissão, condicionante, base legal, observação, versão/vigência. RLR: permissão, versão. Ref: HU-016, HU-046. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=8; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: zona, grupo de uso, subgrupo, permissão, condicionante, base legal, observação, versão/vigência. RLR: permissão, versão. Ref: HU-016, HU-046. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=8; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -569,7 +569,7 @@
           "tipo": "ALI",
           "td": 7,
           "ar": 2,
-          "observacoes": "ALI. DER: classe viária, grupo de uso, condições, base legal, observação, versão/vigência (domínio distingue 11 de 11A). RLR: condição, versão. Ref: HU-017, HU-018, HU-046. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=7; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: classe viária, grupo de uso, condições, base legal, observação, versão/vigência (domínio distingue 11 de 11A). RLR: condição, versão. Ref: HU-017, HU-018, HU-046. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=7; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -631,7 +631,7 @@
           "tipo": "ALI",
           "td": 6,
           "ar": 1,
-          "observacoes": "ALI. DER: CNAE, nível (baixo_a/baixo_b/alto), condicionantes gerais, observação, versão/vigência. RLR: classificação. Seed Decreto 32.636/2020 (767/328/236). Ref: HU-020, HU-047. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: CNAE, nível (baixo_a/baixo_b/alto), condicionantes gerais, observação, versão/vigência. RLR: classificação. Seed Decreto 32.636/2020 (767/328/236). Ref: HU-020, HU-047. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -639,7 +639,7 @@
           "tipo": "ALI",
           "td": 8,
           "ar": 1,
-          "observacoes": "ALI. DER: CNAE, nível sanitário, macroárea, autorizações, responsável técnico, observação, versão/vigência. RLR: classificação. Ref: HU-019, HU-047. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=8; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: CNAE, nível sanitário, macroárea, autorizações, responsável técnico, observação, versão/vigência. RLR: classificação. Ref: HU-019, HU-047. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=8; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -647,7 +647,7 @@
           "tipo": "ALI",
           "td": 6,
           "ar": 1,
-          "observacoes": "ALI. DER: CNAE, pergunta, tipo de resposta, regra de reclassificação, parecer, versão. RLR: condicionante. Ref: HU-019, HU-048. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: CNAE, pergunta, tipo de resposta, regra de reclassificação, parecer, versão. RLR: condicionante. Ref: HU-019, HU-048. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -655,7 +655,7 @@
           "tipo": "ALI",
           "td": 5,
           "ar": 1,
-          "observacoes": "ALI. DER: código, título, motivo, categoria, ativo. RLR: gatilho. Ref: HU-051. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: código, título, motivo, categoria, ativo. RLR: gatilho. Ref: HU-051. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -733,7 +733,7 @@
           "tipo": "ALI",
           "td": 10,
           "ar": 1,
-          "observacoes": "ALI. DER: tipo de entrada, payload normalizado, resultado consolidado, versões de regras, veredito resumido, IP, data/hora, usuário. RLR: consulta. Ref: HU-060. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=10; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: tipo de entrada, payload normalizado, resultado consolidado, versões de regras, veredito resumido, IP, data/hora, usuário. RLR: consulta. Ref: HU-060. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=10; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -787,7 +787,7 @@
           "tipo": "ALI",
           "td": 30,
           "ar": 4,
-          "observacoes": "ALI. DER: protocolo, status, origem, tipo de serviço, empresa, requerente, imóvel (polígono, endereço, inscrição, indicadores), área, simulação congelada, contingência, prazos BAP, datas e cancelamento. RLR: solicitação, CNAEs, anexos, transições. Ref: HU-061..070, HU-148. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=30; RLR=4; complexidade Média; pontuação 10 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: protocolo, status, origem, tipo de serviço, empresa, requerente, imóvel (polígono, endereço, inscrição, indicadores), área, simulação congelada, contingência, prazos BAP, datas e cancelamento. RLR: solicitação, CNAEs, anexos, transições. Ref: HU-061..070, HU-148. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=30; RLR=4; complexidade Média; pontuação 10 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 10
         },
         {
@@ -795,7 +795,7 @@
           "tipo": "ALI",
           "td": 4,
           "ar": 1,
-          "observacoes": "ALI. DER: código, nome, dica de fluxo, ativo. RLR: tipo de serviço. Ref: HU-061. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: código, nome, dica de fluxo, ativo. RLR: tipo de serviço. Ref: HU-061. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -803,7 +803,7 @@
           "tipo": "ALI",
           "td": 6,
           "ar": 1,
-          "observacoes": "ALI. DER: código, nome, descrição, obrigatório, ativo, instruções; vínculo por CNAE. RLR: requisito, vínculo CNAE. Ref: HU-067. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: código, nome, descrição, obrigatório, ativo, instruções; vínculo por CNAE. RLR: requisito, vínculo CNAE. Ref: HU-067. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -811,7 +811,7 @@
           "tipo": "ALI",
           "td": 4,
           "ar": 1,
-          "observacoes": "ALI. DER: atendente, cidadão, início, expiração, encerramento. RLR: atendimento. Ref: HU-150. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: atendente, cidadão, início, expiração, encerramento. RLR: atendimento. Ref: HU-150. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1009,7 +1009,7 @@
           "tipo": "ALI",
           "td": 14,
           "ar": 1,
-          "observacoes": "ALI. DER: solicitação, fluxo, desfecho, resultado consolidado, número TVL, por CNAE, versões de regras, fundamentação, trace de decisão, motivo, decisor, data. RLR: decisão. Ref: HU-074, HU-076, HU-078, HU-086. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=14; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: solicitação, fluxo, desfecho, resultado consolidado, número TVL, por CNAE, versões de regras, fundamentação, trace de decisão, motivo, decisor, data. RLR: decisão. Ref: HU-074, HU-076, HU-078, HU-086. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=14; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1063,7 +1063,7 @@
           "tipo": "ALI",
           "td": 3,
           "ar": 2,
-          "observacoes": "ALI. DER: nome, situação; vínculo analista-setor. RLR: setor, analistas. Ref: HU-138. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=3; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: nome, situação; vínculo analista-setor. RLR: setor, analistas. Ref: HU-138. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=3; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1071,7 +1071,7 @@
           "tipo": "ALI",
           "td": 15,
           "ar": 2,
-          "observacoes": "ALI. DER: revisão, status, analista, snapshot do motor, versões, conteúdo por CNAE, condicionantes, estacionamento, parecer, finalização; divergências analista×motor. RLR: ficha, divergências. Ref: HU-135, HU-140. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=15; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: revisão, status, analista, snapshot do motor, versões, conteúdo por CNAE, condicionantes, estacionamento, parecer, finalização; divergências analista×motor. RLR: ficha, divergências. Ref: HU-135, HU-140. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=15; RLR=2; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1079,7 +1079,7 @@
           "tipo": "ALI",
           "td": 6,
           "ar": 1,
-          "observacoes": "ALI. DER: descrição, status, prazo, resposta, data da resposta, solicitante. RLR: pendência. Ref: HU-083, HU-084. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: descrição, status, prazo, resposta, data da resposta, solicitante. RLR: pendência. Ref: HU-083, HU-084. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1087,7 +1087,7 @@
           "tipo": "ALI",
           "td": 4,
           "ar": 1,
-          "observacoes": "ALI. DER: motivo, data de encaminhamento, data de baixa. RLR: encaminhamento. Ref: HU-136. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: motivo, data de encaminhamento, data de baixa. RLR: encaminhamento. Ref: HU-136. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1095,7 +1095,7 @@
           "tipo": "ALI",
           "td": 4,
           "ar": 1,
-          "observacoes": "ALI. DER: categoria, conteúdo, situação, versão. RLR: texto-padrão. Ref: HU-085. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: categoria, conteúdo, situação, versão. RLR: texto-padrão. Ref: HU-085. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1103,7 +1103,7 @@
           "tipo": "ALI",
           "td": 6,
           "ar": 1,
-          "observacoes": "ALI. DER: decisão vinculada, disco, caminho, código de verificação, emissor, data. RLR: documento. Ref: HU-132. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: decisão vinculada, disco, caminho, código de verificação, emissor, data. RLR: documento. Ref: HU-132. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=6; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1333,7 +1333,7 @@
           "tipo": "ALI",
           "td": 10,
           "ar": 1,
-          "observacoes": "ALI. DER: processo, destinatário, canal, tipo, status, título, resumo, erro, metadados, datas de fila/envio/falha. RLR: comunicação. Ref: HU-096. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=10; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: processo, destinatário, canal, tipo, status, título, resumo, erro, metadados, datas de fila/envio/falha. RLR: comunicação. Ref: HU-096. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=10; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1341,7 +1341,7 @@
           "tipo": "ALI",
           "td": 4,
           "ar": 1,
-          "observacoes": "ALI. DER: tipo, payload, lida/não lida, usuário. RLR: notificação. Ref: HU-090. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: tipo, payload, lida/não lida, usuário. RLR: notificação. Ref: HU-090. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1349,7 +1349,7 @@
           "tipo": "AIE",
           "td": 8,
           "ar": 1,
-          "observacoes": "AIE. Servidor SMTP corporativo para notificações transacionais. Ref: HU-094. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=8; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Servidor SMTP corporativo para notificações transacionais. Ref: HU-094. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=8; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -1357,7 +1357,7 @@
           "tipo": "AIE",
           "td": 5,
           "ar": 1,
-          "observacoes": "AIE. Gateway externo de WhatsApp (canal administrável por toggle). Ref: HU-095. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Gateway externo de WhatsApp (canal administrável por toggle). Ref: HU-095. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -1427,7 +1427,7 @@
           "tipo": "ALI",
           "td": 12,
           "ar": 1,
-          "observacoes": "ALI. DER: regra, severidade, status, fingerprint, evidências, processo, alvo, janela, resolução, justificativa, encaminhamento. RLR: alerta. Ref: HU-149. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: regra, severidade, status, fingerprint, evidências, processo, alvo, janela, resolução, justificativa, encaminhamento. RLR: alerta. Ref: HU-149. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1513,7 +1513,7 @@
           "tipo": "ALI",
           "td": 8,
           "ar": 1,
-          "observacoes": "ALI. DER: integração, payload, erro, tentativas, próxima retentativa, status operacional, justificativa. RLR: mensagem de integração. Escopo especificado (HU-146, ainda não implementado). Ref: HU-146. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=8; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: integração, payload, erro, tentativas, próxima retentativa, status operacional, justificativa. RLR: mensagem de integração. Escopo especificado (HU-146, ainda não implementado). Ref: HU-146. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=8; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1521,7 +1521,7 @@
           "tipo": "AIE",
           "td": 12,
           "ar": 1,
-          "observacoes": "AIE. Integrador estadual (recepção de solicitação, BAP e devolução de parecer). Escopo especificado (Fase 13). Ref: HU-103, HU-104, HU-133. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=12; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Integrador estadual (recepção de solicitação, BAP e devolução de parecer). Escopo especificado (Fase 13). Ref: HU-103, HU-104, HU-133. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=12; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -1529,7 +1529,7 @@
           "tipo": "AIE",
           "td": 8,
           "ar": 1,
-          "observacoes": "AIE. API municipal para envio de viabilidade deferida. Escopo especificado (Fase 13). Ref: HU-110. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=8; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. API municipal para envio de viabilidade deferida. Escopo especificado (Fase 13). Ref: HU-110. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=8; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -1537,7 +1537,7 @@
           "tipo": "AIE",
           "td": 6,
           "ar": 1,
-          "observacoes": "AIE. Base oficial de inscrição imobiliária → coordenada/lote. Escopo especificado (Fase 13). Ref: HU-106. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=6; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Base oficial de inscrição imobiliária → coordenada/lote. Escopo especificado (Fase 13). Ref: HU-106. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=6; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -1545,7 +1545,7 @@
           "tipo": "AIE",
           "td": 8,
           "ar": 1,
-          "observacoes": "AIE. Oracle Spatial via GeoServer (WFS/WMS): zona, via, lote e restrições oficiais. Escopo especificado (Fase 13). Ref: HU-107. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=8; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Oracle Spatial via GeoServer (WFS/WMS): zona, via, lote e restrições oficiais. Escopo especificado (Fase 13). Ref: HU-107. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=8; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -1553,7 +1553,7 @@
           "tipo": "AIE",
           "td": 10,
           "ar": 1,
-          "observacoes": "AIE. Base do legado (processos, TVLs, cadastros, parametrizações) para migração/convivência. Escopo especificado (Fase 13). Ref: HU-111. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=10; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Base do legado (processos, TVLs, cadastros, parametrizações) para migração/convivência. Escopo especificado (Fase 13). Ref: HU-111. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=10; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -1561,7 +1561,7 @@
           "tipo": "AIE",
           "td": 5,
           "ar": 1,
-          "observacoes": "AIE. Sistema oficial de protocolo. Escopo especificado (Fase 13). Ref: HU-108. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Sistema oficial de protocolo. Escopo especificado (Fase 13). Ref: HU-108. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -1569,7 +1569,7 @@
           "tipo": "AIE",
           "td": 5,
           "ar": 1,
-          "observacoes": "AIE. Cadastro municipal do contribuinte. Escopo especificado (Fase 13). Ref: HU-109. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Cadastro municipal do contribuinte. Escopo especificado (Fase 13). Ref: HU-109. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=5; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -1671,7 +1671,7 @@
           "tipo": "ALI",
           "td": 10,
           "ar": 1,
-          "observacoes": "ALI. DER: nome, provedor, capacidade, URL base, chave (criptografada), modelo, temperatura, tokens, timeout, ativo, padrão. RLR: configuração. Ref: HU-014 (config IA). Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=10; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: nome, provedor, capacidade, URL base, chave (criptografada), modelo, temperatura, tokens, timeout, ativo, padrão. RLR: configuração. Ref: HU-014 (config IA). Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=10; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1679,7 +1679,7 @@
           "tipo": "ALI",
           "td": 12,
           "ar": 1,
-          "observacoes": "ALI. DER: tipo, solicitação, entrada, hash de idempotência, saída estruturada, provedor, modelo, versão do prompt, tokens, custo, confiança, status. RLR: sugestão. Ref: HU-112..119. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: tipo, solicitação, entrada, hash de idempotência, saída estruturada, provedor, modelo, versão do prompt, tokens, custo, confiança, status. RLR: sugestão. Ref: HU-112..119. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=12; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1687,7 +1687,7 @@
           "tipo": "ALI",
           "td": 3,
           "ar": 1,
-          "observacoes": "ALI. DER: precedente, hash anonimizado, modelo de embedding, vetor. RLR: embedding. Infra de RAG (Onda 3, parcial). Ref: HU-121. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=3; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: precedente, hash anonimizado, modelo de embedding, vetor. RLR: embedding. Infra de RAG (Onda 3, parcial). Ref: HU-121. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=3; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1695,7 +1695,7 @@
           "tipo": "ALI",
           "td": 4,
           "ar": 1,
-          "observacoes": "ALI. DER: identificador da conversa, mensagens, agente, usuário. RLR: conversa. Escopo especificado (Onda 3). Ref: HU-120, HU-121. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: identificador da conversa, mensagens, agente, usuário. RLR: conversa. Escopo especificado (Onda 3). Ref: HU-120, HU-121. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1703,7 +1703,7 @@
           "tipo": "AIE",
           "td": 6,
           "ar": 1,
-          "observacoes": "AIE. Provedor multi-modelo (texto/visão/embeddings) configurável. Ref: HU-112..121. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo SILE e mantido fora da fronteira da aplicação. DER/TD=6; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "AIE. Provedor multi-modelo (texto/visão/embeddings) configurável. Ref: HU-112..121. Justificativa APF: Arquivo de Interface Externa: grupo lógico referenciado pelo Viabiliza e mantido fora da fronteira da aplicação. DER/TD=6; RLR=1; complexidade Baixa; pontuação 5 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 5
         },
         {
@@ -1853,7 +1853,7 @@
           "tipo": "ALI",
           "td": 4,
           "ar": 1,
-          "observacoes": "ALI. DER: data, nome, recorrente, ativo. RLR: feriado. Insumo de dias úteis. Ref: HU-137. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: data, nome, recorrente, ativo. RLR: feriado. Insumo de dias úteis. Ref: HU-137. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=4; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1861,7 +1861,7 @@
           "tipo": "ALI",
           "td": 5,
           "ar": 1,
-          "observacoes": "ALI. DER: solicitação, CNAE, tipo de gatilho, dimensão, motivo. RLR: queda. Ref: HU-145. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: solicitação, CNAE, tipo de gatilho, dimensão, motivo. RLR: queda. Ref: HU-145. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=5; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -1869,7 +1869,7 @@
           "tipo": "ALI",
           "td": 7,
           "ar": 1,
-          "observacoes": "ALI. DER: solicitante, disco, caminho, nome, formato, linhas, filtros aplicados. RLR: exportação. Ref: HU-131. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do SILE. DER/TD=7; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
+          "observacoes": "ALI. DER: solicitante, disco, caminho, nome, formato, linhas, filtros aplicados. RLR: exportação. Ref: HU-131. Justificativa APF: Arquivo Lógico Interno: grupo lógico de dados reconhecido pelo usuário e mantido dentro da fronteira do Viabiliza. DER/TD=7; RLR=1; complexidade Baixa; pontuação 7 PF. Referência normativa: CPM IFPUG 4.3.1 Parte 1 §§5.4.3-5.4.7 e Tabelas 1-2.",
           "pf_local": 7
         },
         {
@@ -2005,10 +2005,10 @@
   ],
   "proposta": {
     "titulo": "PROPOSTA COMERCIAL",
-    "sistema": "SILE — Sistema de Licenciamento Eletrônico da SEDUR",
+    "sistema": "Viabiliza — Sistema de Licenciamento Eletrônico da SEDUR",
     "subtitulo": "Prefeitura Municipal de Salvador — SEDUR",
     "data": "23/06/2026",
-    "objeto": "Desenvolvimento, implantação e entrega do SILE — Sistema de Licenciamento Eletrônico da SEDUR, plataforma de viabilidade locacional de atividades econômicas, compreendendo portal do cidadão, retaguarda SEDUR, motor de regras da LOUOS (Lei 9.148/2016), classificação de risco (Decreto 32.636/2020), georreferenciamento, consulta prévia, solicitação formal, fluxo expresso automático, análise técnica humana com SLA, pendências e comunicação multicanal, auditoria/compliance/LGPD, integrações (REDESIM/Regin, Receita, SEFAZ, GIS, Cadastro Imobiliário, legado), inteligência artificial e relatórios/indicadores.",
+    "objeto": "Desenvolvimento, implantação e entrega do Viabiliza — Sistema de Licenciamento Eletrônico da SEDUR, plataforma de viabilidade locacional de atividades econômicas, compreendendo portal do cidadão, retaguarda SEDUR, motor de regras da LOUOS (Lei 9.148/2016), classificação de risco (Decreto 32.636/2020), georreferenciamento, consulta prévia, solicitação formal, fluxo expresso automático, análise técnica humana com SLA, pendências e comunicação multicanal, auditoria/compliance/LGPD, integrações (REDESIM/Regin, Receita, SEFAZ, GIS, Cadastro Imobiliário, legado), inteligência artificial e relatórios/indicadores.",
     "prazo": "Prazo acordado em contrato, contado a partir da assinatura e ordem de serviço."
   },
   "escopo_macro": [
@@ -2163,7 +2163,7 @@
     "vaf": 1.0,
     "total_ajustado": 1032
   },
-  "metodologia_contagem": "Contagem detalhada conforme CPM IFPUG 4.3.1 (PT-BR), tipo desenvolvimento, do projeto completo do SILE (151 HUs catalogadas, EP01–EP15 mais a autenticação gov.br). Fronteira: aplicação SILE (portal do cidadão + retaguarda SEDUR + motores LOUOS/risco + integrações como canais). Evidências: HUs em docs/SILE_HUs_Completas_MD, migrations/models, controllers/rotas e telas (resources/js/pages) e os SUMMARY/VERIFICATION das fases em .planning. A contagem mede TAMANHO FUNCIONAL ESPECIFICADO, não estado de implementação. Estado por função registrado nas observações: Fases 1–12, 3.1, 3.2 e Relatórios (EP15) implementadas; IA (EP14) com Ondas 0–2 implementadas e Onda 3 (assistentes HU-120/121) especificada; Integrações (EP13) especificadas (contratos e bloqueios honestos: Regin/SEFAZ/GIS/Cadastro Imobiliário/legado/gov.br pendentes de credenciamento e homologação SEDUR) — contadas como escopo de projeto, sem simular execução. Revisão de processo elementar aplicada para evitar supercontagem: canais alternativos equivalentes (API que repete função do portal, consulta CNPJ Receita = mesma função BrasilAPI), efeitos colaterais técnicos (jobs, locks, eventos, geração de PDF/hash, registro de log) e mecanismos de canal de notificação (e-mail/WhatsApp embutidos no processo que os dispara) foram incorporados às funções principais; rotinas agendadas reconhecidas pelo negócio (alerta de vencimento, escalonamento por SLA, expiração de pendência, indeferimento por prazo BAP, detecção de abuso) foram contadas como saídas funcionais autônomas. CRUD funcional decomposto em incluir/consultar/alterar/excluir quando há ações autônomas do usuário; o termo 'manter' não foi usado para agrupar CRUD. Funções de dados agrupadas por domínio de negócio (não por tabela física); versionamento de regras (rule_versions) tratado como atributo/RLR das funções de dados dos Quadros e classificações, não como ALI técnico separado. Complexidade e PF pelas Tabelas IFPUG (Apêndice A); contagem não ajustada (VAF = 1,00).",
+  "metodologia_contagem": "Contagem detalhada conforme CPM IFPUG 4.3.1 (PT-BR), tipo desenvolvimento, do projeto completo do Viabiliza (151 HUs catalogadas, EP01–EP15 mais a autenticação gov.br). Fronteira: aplicação Viabiliza (portal do cidadão + retaguarda SEDUR + motores LOUOS/risco + integrações como canais). Evidências: HUs em docs/SILE_HUs_Completas_MD, migrations/models, controllers/rotas e telas (resources/js/pages) e os SUMMARY/VERIFICATION das fases em .planning. A contagem mede TAMANHO FUNCIONAL ESPECIFICADO, não estado de implementação. Estado por função registrado nas observações: Fases 1–12, 3.1, 3.2 e Relatórios (EP15) implementadas; IA (EP14) com Ondas 0–2 implementadas e Onda 3 (assistentes HU-120/121) especificada; Integrações (EP13) especificadas (contratos e bloqueios honestos: Regin/SEFAZ/GIS/Cadastro Imobiliário/legado/gov.br pendentes de credenciamento e homologação SEDUR) — contadas como escopo de projeto, sem simular execução. Revisão de processo elementar aplicada para evitar supercontagem: canais alternativos equivalentes (API que repete função do portal, consulta CNPJ Receita = mesma função BrasilAPI), efeitos colaterais técnicos (jobs, locks, eventos, geração de PDF/hash, registro de log) e mecanismos de canal de notificação (e-mail/WhatsApp embutidos no processo que os dispara) foram incorporados às funções principais; rotinas agendadas reconhecidas pelo negócio (alerta de vencimento, escalonamento por SLA, expiração de pendência, indeferimento por prazo BAP, detecção de abuso) foram contadas como saídas funcionais autônomas. CRUD funcional decomposto em incluir/consultar/alterar/excluir quando há ações autônomas do usuário; o termo 'manter' não foi usado para agrupar CRUD. Funções de dados agrupadas por domínio de negócio (não por tabela física); versionamento de regras (rule_versions) tratado como atributo/RLR das funções de dados dos Quadros e classificações, não como ALI técnico separado. Complexidade e PF pelas Tabelas IFPUG (Apêndice A); contagem não ajustada (VAF = 1,00).",
   "secoes_adicionais": [
     {
       "titulo": "Stack Tecnológica",

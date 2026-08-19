@@ -42,8 +42,8 @@ class SectorSeeder extends Seeder
             return;
         }
 
-        $analista = $this->seedGestaoUser('analista@sile.dev', 'Analista SILE', '39053344705', 'analista');
-        $gestor = $this->seedGestaoUser('gestor@sile.dev', 'Gestor SILE', '48795515006', 'gestor');
+        $analista = $this->seedGestaoUser('analista@sile.dev', 'Analista Viabiliza', '39053344705', 'analista');
+        $gestor = $this->seedGestaoUser('gestor@sile.dev', 'Gestor Viabiliza', '48795515006', 'gestor');
 
         // Vincula ambos ao setor (HU-138 RN-005): o gestor distribui e o analista
         // assume os processos da caixa.

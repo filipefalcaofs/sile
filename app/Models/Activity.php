@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\Models\Activity as SpatieActivity;
 
 /**
- * Activity estendida com as colunas SILE da RN-002: origem (ip_address,
+ * Activity estendida com as colunas Viabiliza da RN-002: origem (ip_address,
  * user_agent, channel), resultado (result), versão de regras (rules_version)
  * e atuação "em nome de" (acting_for_user_id).
  *

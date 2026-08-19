@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 
 /**
- * Registry de parâmetros administráveis do SILE (HU-014).
+ * Registry de parâmetros administráveis do Viabiliza (HU-014).
  *
  * `value` é armazenado como string crua e tipado na leitura por typedValue().
  * Quando `sensitive`, o valor é criptografado no banco (RN-009) — por isso

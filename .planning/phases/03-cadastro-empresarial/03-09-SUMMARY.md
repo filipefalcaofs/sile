@@ -64,9 +64,9 @@ Ambiente de desenvolvimento semeado com cidadão de teste e empresas de exemplo 
 
 ## Smoke E2E (Task 2 — validação automatizada por browser, Playwright)
 Fluxos exercitados no navegador real contra o servidor dev (`composer run dev`):
-1. **Login do cidadão** (CPF 529.982.247-25) → "Meu painel" (Cidadão SILE).
+1. **Login do cidadão** (CPF 529.982.247-25) → "Meu painel" (Cidadão Viabiliza).
 2. **Minhas empresas**: lista com Banco do Brasil (badge **REDESIM**) e Magazine Luiza (badge **Cadastro manual**), CNAE principal e vínculo **Ativo/Responsável** (screenshot `output/playwright/01-minhas-empresas.png`).
-3. **Detalhe da empresa**: CNPJ em campo **desabilitado** com "O CNPJ não pode ser alterado.", seções CNAE principal/secundários, Vínculos (Cidadão SILE — Você — Responsável — Ativo) e "Encerrar meu vínculo" (`02-detalhe-empresa.png`).
+3. **Detalhe da empresa**: CNPJ em campo **desabilitado** com "O CNPJ não pode ser alterado.", seções CNAE principal/secundários, Vínculos (Cidadão Viabiliza — Você — Responsável — Ativo) e "Encerrar meu vínculo" (`02-detalhe-empresa.png`).
 4. **Cadastrar empresa + lookup VIVO (HU-021)**: CNPJ do Itaú (60.701.190/0001-04) → "Buscar CNPJ" → formulário preenchido com dados REAIS da BrasilAPI (ITAU UNIBANCO S.A., natureza jurídica, porte, endereço SAO PAULO/SP, CEP, telefone) (`03-cadastrar-empresa.png`, `04-lookup-vivo-cnpj.png`).
 - Integração viva confirmada também via serviço: `app(CnpjLookup::class)->lookup('00000000000191')` retornou "BANCO DO BRASIL SA".
 

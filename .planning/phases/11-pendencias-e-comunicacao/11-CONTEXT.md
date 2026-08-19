@@ -9,7 +9,7 @@
 
 Generaliza e ATIVA o que a Fase 10 deixou pronto/dormente: o ciclo notificar→responder→reabrir (em_analise↔em_pendencia) já existe — a Fase 11 ADICIONA multicanal (in-app via canal database + WhatsApp), central de pendências/notificações (UI), templates, histórico unificado (HU-096), e ATIVA a expiração de prazo de pendência (HU-093) e o escalonamento por SLA analista→gestor (HU-147, reusa analysis_due_at/AnalysisSlaService + scheduler da Fase 3.1). E-mail (HU-094) e in-app são REAIS; WhatsApp (HU-095) entra atrás de toggle off + contrato indisponível (degrada honesto). NÃO reconstrói estado.
 
-Fora do escopo / bloqueado: convite/resposta via Simplifica/Regin (HU-091 RN-004) → Fase 13 (resposta pelo portal SILE já funciona desde a Fase 10); provedor real de WhatsApp → quando houver credencial (API comercial, pode destravar isolado/Fase 13); destinatário "gestor do setor" → default role gestor (roteamento ao setor é pendência SEDUR); rito de não-resposta (indeferir por prazo) → NÃO inventar (SEDUR).
+Fora do escopo / bloqueado: convite/resposta via Simplifica/Regin (HU-091 RN-004) → Fase 13 (resposta pelo portal Viabiliza já funciona desde a Fase 10); provedor real de WhatsApp → quando houver credencial (API comercial, pode destravar isolado/Fase 13); destinatário "gestor do setor" → default role gestor (roteamento ao setor é pendência SEDUR); rito de não-resposta (indeferir por prazo) → NÃO inventar (SEDUR).
 </domain>
 
 <decisions>

@@ -85,7 +85,7 @@ completed: 2026-06-10
 ## Realizações
 
 - Migration `activity_log` estendida com as 6 colunas SILE da RN-002; `App\Models\Activity` própria com `actingFor()`; `RecordActivityAction` (action class v5) enriquece TODA activity — de model event ou chamada manual — num ponto único
-- `HasAuditoria` (trait padrão SILE) loga apenas atributos fillable efetivamente alterados e nunca `password`/`remember_token`; `User` ganhou `HasAuditoria` + `CausesActivity`
+- `HasAuditoria` (trait padrão Viabiliza) loga apenas atributos fillable efetivamente alterados e nunca `password`/`remember_token`; `User` ganhou `HasAuditoria` + `CausesActivity`
 - `AuditService` com registro explícito (ação, resultado, versão de regras) e `logBlocked`; qualquer 403 de autorização (Gate/Policy ou middleware do spatie/permission) gera registro `result=bloqueado` sem nenhum código por controller, mantendo o status 403 padrão (provado por teste)
 - Tabela dedicada `access_logs` (imutável, indexada para a consulta da HU-010) alimentada por listeners de `Login`, `Logout`, `Failed` e `Lockout`; `Registered`, `Verified` e `PasswordReset` geram activities com causer explícito — base do CA-02 das HU-001/003/005 e da HU-010
 - Suíte completa verde: 21 testes / 44 asserções (15 novos no namespace Audit), sem `Event::fake()` — efeitos assertados no banco via requests reais

@@ -56,10 +56,10 @@ function BrandPanel() {
                             <span className="flex size-16 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/15">
                                 <LogoMark className="size-10" />
                             </span>
-                            <span className="block text-4xl font-semibold tracking-tight text-white">SIMPLIFICA</span>
+                            <span className="block text-4xl font-semibold tracking-tight text-white">VIABILIZA</span>
                         </span>
                         <p className="mt-4 text-lg font-medium text-white/90">
-                            Sistema de Licenciamento Eletrônico
+                            A viabilidade certa, no lugar certo.
                         </p>
                         <p className="mt-2 text-sm/6 text-white/60">
                             Viabilidade locacional e licenciamento de atividades econômicas no
@@ -96,7 +96,7 @@ function BrandPanel() {
 /**
  * Layout de autenticação: coluna do formulário (card com título e
  * subtítulo por página, ícone opcional) e painel institucional brand
- * à direita em telas lg+, com bullets sobre o Simplifica.
+ * à direita em telas lg+, com bullets sobre o Viabiliza.
  */
 export default function AuthLayout({ title, subtitle, icon, children }: AuthLayoutProps) {
     return (
@@ -107,7 +107,7 @@ export default function AuthLayout({ title, subtitle, icon, children }: AuthLayo
                         <div className="mx-auto w-full max-w-lg pt-6 sm:pt-8">
                             <Link
                                 href="/"
-                                aria-label="Ir para a página inicial do Simplifica"
+                                aria-label="Ir para a página inicial do Viabiliza"
                                 className="inline-flex items-center"
                             >
                                 <Logo

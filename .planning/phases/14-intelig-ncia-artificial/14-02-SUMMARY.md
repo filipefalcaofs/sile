@@ -22,7 +22,7 @@ Funções documentais de IA como **sugestão revisável** (nunca decisão — AI
 - **Integração read-only na ficha (Fase 10):** prop `sugestoesIa` via `Inertia::optional` em `AnalysisRecordController@show` + card "Alertas de IA (sugestão — revise)" (`WhenVisible`+skeleton) em `gestao/ficha-analise/show.tsx`. NÃO toca `AnalysisRecord` (RN-003).
 
 ## Validação anti-fachada (gate de homologação — REAL)
-Com o provedor real cadastrado (SimplificaIA / openai / gpt-5.4-mini), uma chamada de geração **REAL** via a ponte runtime retornou "Integração de IA do SILE funcionando." (tokens 37/14). A integração tela→`AiConfiguration`→ponte→SDK `laravel/ai`→OpenAI funciona de verdade. As 3 funções da Onda 1 usam o mesmo caminho (Agent→prompt); o real call validado foi de texto (visão usa o mesmo caminho).
+Com o provedor real cadastrado (SimplificaIA / openai / gpt-5.4-mini), uma chamada de geração **REAL** via a ponte runtime retornou "Integração de IA do Viabiliza funcionando." (tokens 37/14). A integração tela→`AiConfiguration`→ponte→SDK `laravel/ai`→OpenAI funciona de verdade. As 3 funções da Onda 1 usam o mesmo caminho (Agent→prompt); o real call validado foi de texto (visão usa o mesmo caminho).
 
 ## Verificação fresca (guardião APROVADO)
 - `--group ia` 13/13 (64 asserções); filtro Inconsistencias/RunAiAgentJob/Leitura/Classificacao 17/17.

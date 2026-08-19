@@ -20,6 +20,6 @@ class EmailServerTestMailTest extends TestCase
         $this->assertInstanceOf(Address::class, $envelope->from);
         $this->assertSame('no-reply@sedur.test', $envelope->from->address);
         $this->assertSame('SEDUR Salvador', $envelope->from->name);
-        $this->assertSame('Teste de configuração de e-mail — SILE', $envelope->subject);
+        $this->assertSame('Teste de configuração de e-mail — Viabiliza', $envelope->subject);
     }
 }

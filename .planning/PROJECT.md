@@ -1,8 +1,10 @@
-# SILE — Sistema de Licenciamento Eletrônico
+# Viabiliza — Sistema de Licenciamento Eletrônico
+
+**Slogan:** A viabilidade certa, no lugar certo.
 
 ## What This Is
 
-O SILE é o Sistema de Licenciamento Eletrônico da SEDUR (Salvador/BA): gestão da viabilidade locacional de atividades econômicas, com automação do licenciamento via motor de regras da LOUOS (Lei nº 9.148/2016), classificação de risco por CNAE (Decreto nº 32.636/2020), georreferenciamento, fluxo expresso (deferimento/indeferimento automático), análise técnica humana, integrações (REDESIM, Receita Federal, GIS, SEFAZ municipal), auditoria completa e indicadores. Atende cidadãos/requerentes (via integrador federal e portal), analistas e gestores da SEDUR.
+O Viabiliza é o Sistema de Licenciamento Eletrônico da SEDUR (Salvador/BA): gestão da viabilidade locacional de atividades econômicas, com automação do licenciamento via motor de regras da LOUOS (Lei nº 9.148/2016), classificação de risco por CNAE (Decreto nº 32.636/2020), georreferenciamento, fluxo expresso (deferimento/indeferimento automático), análise técnica humana, integrações (REDESIM, Receita Federal, GIS, SEFAZ municipal), auditoria completa e indicadores. Atende cidadãos/requerentes (via integrador federal e portal), analistas e gestores da SEDUR.
 
 ## Core Value
 
@@ -37,7 +39,7 @@ A fonte de verdade dos requisitos são as 131 Histórias de Usuário em `docs/SI
 ### Out of Scope
 
 - Features de fachada (botões sem ação, resultados simulados, adaptadores falsos) — proibidas pelo contrato de execução; dependência externa indisponível = feature bloqueada e registrada, nunca simulada
-- Cálculo de taxa TVS (modelo SIGVISA) — o SILE usa TLL (atividade de maior valor + taxa de serviço); a mecânica de DAM é reaproveitável, a fórmula não
+- Cálculo de taxa TVS (modelo SIGVISA) — o Viabiliza usa TLL (atividade de maior valor + taxa de serviço); a mecânica de DAM é reaproveitável, a fórmula não
 - Portabilidade direta do frontend do SIGVISA — stack diferente (Vue/PrimeVue vs React/Inertia v3); apenas padrões de tela servem de referência
 
 ## Context

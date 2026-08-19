@@ -1,6 +1,6 @@
 # Deploy Portainer — ambiente de validação SEDUR
 
-Guia para subir o SILE no Portainer e entregar à cliente para validação fase a fase.
+Guia para subir o Viabiliza no Portainer e entregar à cliente para validação fase a fase.
 
 ## Arquitetura
 
@@ -84,7 +84,7 @@ APP_PORT=8082
 Opcionais:
 
 ```env
-APP_NAME=SILE
+APP_NAME=Viabiliza
 MAIL_MAILER=log
 LOG_LEVEL=info
 ```

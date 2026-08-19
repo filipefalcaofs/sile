@@ -7,7 +7,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Ponto único de leitura dos parâmetros de negócio do SILE.
+ * Ponto único de leitura dos parâmetros de negócio do Viabiliza.
  *
  * Backend da HU-014: banco (tabela parameters) com cache por chave e
  * invalidação na gravação do Parameter — efeito sem deploy (CA-05). Ordem

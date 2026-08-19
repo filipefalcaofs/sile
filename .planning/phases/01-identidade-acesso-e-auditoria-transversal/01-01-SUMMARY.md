@@ -170,7 +170,7 @@ Nenhuma — sem serviços externos neste plano.
 
 ## Prontidão para o Próximo Plano
 
-- Plano 01-02 (auditoria transversal RN-002) destravado: activitylog 5.0.0 publicado com config e migration prontas para extensão (colunas SILE: ip_address, user_agent, channel, acting_for_user_id, result, rules_version)
+- Plano 01-02 (auditoria transversal RN-002) destravado: activitylog 5.0.0 publicado com config e migration prontas para extensão (colunas Viabiliza: ip_address, user_agent, channel, acting_for_user_id, result, rules_version)
 - A migration publicada do activity_log NÃO foi executada nem editada — exatamente o estado que o 01-02 espera
 - `Settings`/`config/sile.php` disponíveis para parametrizar rate limit de login (plano 01-06) e demais valores
 - Atenção para o 01-02: usar API v5 do activitylog (`beforeActivityLogged`, `attribute_changes`, action classes) — exemplos antigos da web usam API v4

@@ -1,6 +1,6 @@
 # HU-072 — Confirmar pagamento do DAM
 
-> **Status: Escopo revisado (2026-06-11)** — no fluxo Regin, pagamento do DAM e liberação tributária são responsabilidade da **SEFAZ**. O SILE pode **sincronizar status** de pagamento via API (consulta) para exibição no processo, mas **não bloqueia** emissão de resultado de viabilidade aguardando DAM — o TVL não é mais entregue ao requerente (HU-076). Indeferimento por não pagamento aplica-se apenas se a SEDUR confirmar essa regra para fluxos diretos pelo portal.
+> **Status: Escopo revisado (2026-06-11)** — no fluxo Regin, pagamento do DAM e liberação tributária são responsabilidade da **SEFAZ**. O Viabiliza pode **sincronizar status** de pagamento via API (consulta) para exibição no processo, mas **não bloqueia** emissão de resultado de viabilidade aguardando DAM — o TVL não é mais entregue ao requerente (HU-076). Indeferimento por não pagamento aplica-se apenas se a SEDUR confirmar essa regra para fluxos diretos pelo portal.
 
 ## Épica
 **EP08 — Solicitação de Viabilidade**
@@ -19,7 +19,7 @@ No fluxo atual, o TVL é disponibilizado após o pagamento do DAM mediante compe
 ## Atores Envolvidos
 - Cidadão / empresário / contador / procurador.
 - Operador SEDUR (baixa manual).
-- Sistema SILE e API da SEFAZ Salvador.
+- Sistema Viabiliza e API da SEFAZ Salvador.
 
 ## Pré-condições
 - DAM gerado para a solicitação (HU-071).
@@ -138,4 +138,4 @@ O sistema deve manter registro completo da execução desta HU, incluindo:
 A definir (depende da confirmação de escopo com a SEDUR)
 
 ## Observações
-Implementação de referência no projeto SIGVISA (`sls-sms`): comando `dam:baixar-pagos` agendado de hora em hora (`app/Console/Commands/BaixarDamsPagos.php`, `app/Jobs/BaixarDamsPagosJob.php`), consulta em lotes de 100 à API `POST /DAM/ConsultarDamsSEMOP`, baixa manual com validações e emissão automática do alvará quando todos os DAMs da solicitação estão pagos — no SILE, o equivalente é a liberação do TVL. Confirmar com a SEDUR se a conciliação ocorre no SILE ou permanece no Simplifica/SEFAZ.
+Implementação de referência no projeto SIGVISA (`sls-sms`): comando `dam:baixar-pagos` agendado de hora em hora (`app/Console/Commands/BaixarDamsPagos.php`, `app/Jobs/BaixarDamsPagosJob.php`), consulta em lotes de 100 à API `POST /DAM/ConsultarDamsSEMOP`, baixa manual com validações e emissão automática do alvará quando todos os DAMs da solicitação estão pagos — no Viabiliza, o equivalente é a liberação do TVL. Confirmar com a SEDUR se a conciliação ocorre no Viabiliza ou permanece no Simplifica/SEFAZ.

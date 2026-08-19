@@ -83,7 +83,7 @@ class AbrigadoDesvinculadoNotification extends Notification implements ProcessNo
             ->greeting('Olá!')
             ->line("A sede de escritório virtual da inscrição imobiliária {$this->propertyRegistration} deixou de estar vinculada a este endereço.")
             ->line("Por isso, a sua solicitação {$this->protocolNumber} foi desvinculada da sede. Regularize a situação do seu endereço junto à SEDUR.")
-            ->action('Abrir o processo no SILE', $this->url)
+            ->action('Abrir o processo no Viabiliza', $this->url)
             ->line('Este é um aviso automático — não responda a esta mensagem.');
     }
 

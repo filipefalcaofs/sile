@@ -12,7 +12,7 @@
 **System Type:** Hybrid — Extraction (OCR/classificação documental) + Content Generation (resumos, minuta de parecer, explicação) + RAG/Conversational (assistentes).
 
 **Description:**
-Camada de IA **assistiva** do SILE. Acelera a análise documental e a comunicação no licenciamento de viabilidade: lê e classifica documentos, aponta inconsistências, resume processos, sugere minuta de parecer ao analista e explica resultados ao cidadão, além de assistentes conversacionais. Usuários: analistas da SEDUR (retaguarda) e cidadãos/contadores (portal). "Bom" = **acelera sem decidir** — toda saída é sugestão revisável, com fonte citada; a decisão de viabilidade continua no motor de regras determinístico (Fases 5/6/9/10) e/ou no servidor humano.
+Camada de IA **assistiva** do Viabiliza. Acelera a análise documental e a comunicação no licenciamento de viabilidade: lê e classifica documentos, aponta inconsistências, resume processos, sugere minuta de parecer ao analista e explica resultados ao cidadão, além de assistentes conversacionais. Usuários: analistas da SEDUR (retaguarda) e cidadãos/contadores (portal). "Bom" = **acelera sem decidir** — toda saída é sugestão revisável, com fonte citada; a decisão de viabilidade continua no motor de regras determinístico (Fases 5/6/9/10) e/ou no servidor humano.
 
 **Critical Failure Modes:**
 1. **IA decidir a viabilidade** ou ter o parecer tratado como vinculante (viola HU-118 RN-004/RN-005 — a IA é apoio, sempre revisável).

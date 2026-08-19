@@ -1,4 +1,4 @@
-# Catálogo de Histórias de Usuário — SILE
+# Catálogo de Histórias de Usuário — Viabiliza
 
 Gerado em: 2026-06-09
 Revisado em: 2026-06-09 — alinhamento com as fontes oficiais (LOUOS Lei nº 9.148/2016, Decreto nº 32.636/2020, Portal Simplifica, CNAE 2.3 IBGE/CONCLA); épicas e HUs renumeradas em ordem cronológica de desenvolvimento.

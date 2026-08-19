@@ -1,6 +1,6 @@
 # HU-140 — Pré-analisar processo pelo motor
 
-> **Status: Aceita (2026-06-12)** — melhoria além do legado. No SAPS, o analista preenche a ficha do zero; no SILE, o motor roda **sempre** e a ficha chega pré-preenchida (human-in-the-loop).
+> **Status: Aceita (2026-06-12)** — melhoria além do legado. No SAPS, o analista preenche a ficha do zero; no Viabiliza, o motor roda **sempre** e a ficha chega pré-preenchida (human-in-the-loop).
 
 ## Épica
 **EP10 — Análise Técnica SEDUR**

@@ -9,12 +9,12 @@
 
 ## 1. Problema
 
-A ficha de análise do SILE (`gestao/ficha-analise/show`) diverge do layout operacional do SAPS:
+A ficha de análise do Viabiliza (`gestao/ficha-analise/show`) diverge do layout operacional do SAPS:
 
 - Localização virou card lateral com mapa + endereço em uma linha.
 - Não há o bloco “Endereço Inscrição Imobiliária” (CodLog, Logradouro, Nº Métrico, Bairro, CEP, Ponto de Referência).
 - Não há a faixa “Dados do TVL” no formato do legado.
-- O espaço em branco à direita da Localização no SAPS permanece morto no SILE — e deve receber os dados da **certidão IPTU / Cadastro Imobiliário**.
+- O espaço em branco à direita da Localização no SAPS permanece morto no Viabiliza — e deve receber os dados da **certidão IPTU / Cadastro Imobiliário**.
 
 Decisão de produto: **aproximar do legado (abordagem A)** e preencher o branco com o bloco Cadastro Imobiliário (IPTU), sem inventar dado quando a integração estiver indisponível.
 

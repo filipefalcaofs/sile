@@ -12,13 +12,13 @@ Garantir ciência do resultado ao requerente pelos canais oficiais (Regin/Junta 
 **para** que o requerente acompanhe pelo Regin ou portal conforme parametrização.
 
 ## Contexto de Negócio
-O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
 
 ## Atores Envolvidos
 - Cidadão / empresário / contador / procurador, quando aplicável.
 - Servidor ou analista da SEDUR, quando aplicável.
 - Administrador do sistema, quando aplicável.
-- Sistema SILE e serviços integrados.
+- Sistema Viabiliza e serviços integrados.
 
 ## Pré-condições
 - Usuário autenticado quando a funcionalidade exigir identificação.
@@ -59,7 +59,7 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 ## Regras de Negócio
 - RN-001: O sistema deve validar dados obrigatórios antes de avançar o fluxo.
 - RN-002: Toda ação relevante deve ser registrada em auditoria com usuário, data, hora e origem.
-- RN-004: A notificação primária de viabilidade via Regin ocorre pelo integrador (HU-104); o SILE pode complementar com e-mail/WhatsApp parametrizados (EP11) sem anexar PDF/TVL.
+- RN-004: A notificação primária de viabilidade via Regin ocorre pelo integrador (HU-104); o Viabiliza pode complementar com e-mail/WhatsApp parametrizados (EP11) sem anexar PDF/TVL.
 - RN-005: Status e mensagem devem ser parametrizáveis (HU-014).
 
 ## Critérios de Aceite — BDD

@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\DB;
  * PendenciaRespondida — o listener auto-descoberto NotificarRespostaPendencia
  * avisa o analista responsável que a análise reabriu (HU-091/092).
  *
- * Anti-fachada: estado em_pendencia, portal SILE e a comunicação multicanal real
+ * Anti-fachada: estado em_pendencia, portal Viabiliza e a comunicação multicanal real
  * executam de verdade; os eventos são ganchos honestos, nunca um "enviado"
  * simulado. A expiração por prazo (HU-147) é gancho do scheduler do EP11 — fora
  * do escopo; o due_at já fica gravado.

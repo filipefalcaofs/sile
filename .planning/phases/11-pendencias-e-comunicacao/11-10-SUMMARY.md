@@ -85,7 +85,7 @@ Verificação independente com evidência fresca (reexecutou pint + os 3 testes 
 ## Bloqueios / pendências SEDUR (registrados — nunca simulados)
 
 - **WhatsApp provedor real (HU-095)** → **Fase 13**: toggle off + contrato `UnavailableWhatsAppGateway`; liga trocando SÓ o binding (credenciais `integrations.whatsapp.*` criptografadas + teste de conexão já previstos). Hoje degrada honesto (`desativado`/`bloqueado`).
-- **Convite/resposta via Simplifica/Regin (HU-091 RN-004)** → **Fase 13**: a resposta pelo portal SILE já funciona desde a Fase 10; o convite via integrador federal entra com o Regin real.
+- **Convite/resposta via Simplifica/Regin (HU-091 RN-004)** → **Fase 13**: a resposta pelo portal Viabiliza já funciona desde a Fase 10; o convite via integrador federal entra com o Regin real.
 - **Destinatário "gestor do setor" do escalonamento (HU-147)** → roteamento automático ao setor é pendência **SEDUR**; default `role gestor` parametrizável (`notificacoes.escalonamento.tratamento`).
 - **Rito de não-resposta de pendência (indeferir por prazo)** → **SEDUR** (sem rito definido): hoje `pendencias:expirar` expira + notifica + mantém o estado, SEM decisão automática (anti-fachada).
 - **Templates oficiais (texto/identidade visual/base legal das comunicações)** → **SEDUR**: pt-BR default parametrizável (`notificacoes.pendencia.*`) sem deploy.

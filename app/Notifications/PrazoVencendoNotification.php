@@ -91,7 +91,7 @@ class PrazoVencendoNotification extends Notification implements ProcessNotificat
             ->subject($this->assunto)
             ->greeting('Olá!')
             ->line($this->detalhe)
-            ->action('Abrir no SILE', $this->url)
+            ->action('Abrir no Viabiliza', $this->url)
             ->line('Este é um aviso automático — não responda a esta mensagem.');
     }
 

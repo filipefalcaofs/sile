@@ -198,11 +198,11 @@ function HeroSection() {
                     </span>
 
                     <h1 className="mt-6 text-title-sm font-semibold tracking-tight text-white sm:text-title-md lg:text-title-lg">
-                        Licenciamento de atividades econômicas em Salvador
+                        Viabiliza — a viabilidade certa, no lugar certo
                     </h1>
 
                     <p className="mt-5 max-w-xl text-base leading-7 text-white/70 sm:text-lg sm:leading-8">
-                        O Simplifica Salvador é o sistema de licenciamento eletrônico da SEDUR.
+                        O Viabiliza Salvador é o sistema de licenciamento eletrônico da SEDUR.
                         Ele responde à viabilidade locacional de forma automatizada, aplicando as
                         regras da LOUOS e a classificação de risco municipal, com fundamentação
                         legal registrada em cada decisão.
@@ -235,7 +235,7 @@ function ServicesSection() {
                         Serviços do portal
                     </h2>
                     <p className="mt-3 text-base text-gray-500 dark:text-gray-400">
-                        Recursos do Simplifica para requerentes, procuradores e responsáveis por
+                        Recursos do Viabiliza para requerentes, procuradores e responsáveis por
                         atividades econômicas no Município de Salvador.
                     </p>
                 </div>
@@ -328,7 +328,7 @@ function LegalBasisSection() {
                         Base legal
                     </h2>
                     <p className="mt-3 text-base text-gray-500 dark:text-gray-400">
-                        As verificações do Simplifica são fundamentadas na legislação municipal e nas
+                        As verificações do Viabiliza são fundamentadas na legislação municipal e nas
                         classificações oficiais.
                     </p>
                 </div>
@@ -363,7 +363,7 @@ function FinalCtaSection() {
                         Comece pelo portal
                     </h2>
                     <p className="relative mx-auto mt-3 max-w-xl text-base text-gray-400">
-                        Crie sua conta para acessar os serviços do Simplifica ou entre com seu cadastro
+                        Crie sua conta para acessar os serviços do Viabiliza ou entre com seu cadastro
                         existente.
                     </p>
                     <div className="relative mt-8 flex flex-col justify-center gap-4 sm:flex-row">
@@ -397,7 +397,7 @@ function SiteFooter() {
                         textClassName="text-lg font-semibold tracking-tight text-gray-800 dark:text-white/90"
                     />
                     <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
-                        Sistema de Licenciamento Eletrônico
+                        A viabilidade certa, no lugar certo.
                         <br />
                         SEDUR — Secretaria Municipal de Desenvolvimento Urbano
                         <br />
@@ -451,8 +451,8 @@ function SiteFooter() {
 
             <div className="border-t border-gray-200 dark:border-gray-800">
                 <p className="mx-auto w-full max-w-(--breakpoint-xl) px-4 py-6 text-sm text-gray-500 dark:text-gray-400 sm:px-6">
-                    © {new Date().getFullYear()} Simplifica Salvador — Sistema de Licenciamento
-                    Eletrônico · SEDUR · Prefeitura de Salvador
+                    © {new Date().getFullYear()} Viabiliza Salvador — A viabilidade certa, no lugar
+                    certo · SEDUR · Prefeitura de Salvador
                 </p>
             </div>
         </footer>
@@ -462,7 +462,7 @@ function SiteFooter() {
 export default function Home() {
     return (
         <ThemeProvider>
-            <Head title="Simplifica Salvador — Licenciamento Eletrônico" />
+            <Head title="Viabiliza Salvador — A viabilidade certa, no lugar certo" />
             <div className="flex min-h-screen flex-col bg-white dark:bg-gray-900">
                 <AccessibilityBar />
                 <SiteHeader />

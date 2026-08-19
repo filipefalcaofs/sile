@@ -14,7 +14,7 @@ Permitir que atendente autorizado da SEDUR execute ações no portal em nome do 
 **para** garantir atendimento a quem não consegue usar o canal digital.
 
 ## Contexto de Negócio
-Órgão público não pode condicionar o serviço à habilidade digital do cidadão. O mecanismo de representação já existe no SILE desde a Fase 1 (procuração — ações "em nome de" identificadas); esta HU estende o padrão ao perfil atendente, com salvaguardas próprias.
+Órgão público não pode condicionar o serviço à habilidade digital do cidadão. O mecanismo de representação já existe no Viabiliza desde a Fase 1 (procuração — ações "em nome de" identificadas); esta HU estende o padrão ao perfil atendente, com salvaguardas próprias.
 
 ## Fluxo Principal
 1. Atendente autenticado inicia atendimento informando CPF do cidadão presente.

@@ -1,6 +1,6 @@
 # Do papo com o cliente ao sistema rodando — startando projetos com IA
 
-Material-base para workshop. Tom de conversa, mas denso: teoria e prática juntas. Cada bloco é um momento da apresentação. Caso real usado do início ao fim: o SILE (sistema de licenciamento da SEDUR, Prefeitura de Salvador).
+Material-base para workshop. Tom de conversa, mas denso: teoria e prática juntas. Cada bloco é um momento da apresentação. Caso real usado do início ao fim: o Viabiliza (sistema de licenciamento da SEDUR, Prefeitura de Salvador).
 
 Convenção didática do material: o termo técnico é o protagonista (em inglês quando for o uso de mercado), sempre **explicado de verdade** na primeira aparição; a analogia vem depois, como reforço — nunca no lugar do conceito.
 
@@ -131,7 +131,7 @@ Vibe coding × spec-driven development. O resto do workshop é como ficar do lad
 
 Levantamento de requisitos começa numa conversa. O segredo: **grava** (com autorização). A gravação é o insumo mais valioso da trilha inteira.
 
-E conversa com quem **opera** o processo, não só com quem assina o contrato. No SILE, falei com a responsável técnica do setor na SEDUR — quem vive o fluxo todo dia. Requisito de verdade mora na operação.
+E conversa com quem **opera** o processo, não só com quem assina o contrato. No Viabiliza, falei com a responsável técnica do setor na SEDUR — quem vive o fluxo todo dia. Requisito de verdade mora na operação.
 
 As perguntas que destravam o domínio:
 
@@ -141,7 +141,7 @@ As perguntas que destravam o domínio:
 - "Esse sistema conversa com quem?" (as integrações)
 - "O que no sistema atual te dá dor de cabeça?" (o legado e a dor real)
 
-Trinta minutos disso no SILE renderam: o fluxo expresso vs. análise técnica humana, os quadros da LOUOS (a lei municipal de uso do solo), a regra de baixo risco (área até 1.250 m², imóvel não residencial), a volumetria de 1.332 CNAEs (os códigos nacionais de atividade econômica) e o desabafo sobre o legado .NET instável. Cada frase virou requisito.
+Trinta minutos disso no Viabiliza renderam: o fluxo expresso vs. análise técnica humana, os quadros da LOUOS (a lei municipal de uso do solo), a regra de baixo risco (área até 1.250 m², imóvel não residencial), a volumetria de 1.332 CNAEs (os códigos nacionais de atividade econômica) e o desabafo sobre o legado .NET instável. Cada frase virou requisito.
 
 **Mas levantamento de verdade vai além da reunião no Meet.** Requisito de qualidade se colhe **em campo**, vendo o trabalho acontecer. As técnicas práticas:
 
@@ -154,7 +154,7 @@ Trinta minutos disso no SILE renderam: o fluxo expresso vs. análise técnica hu
 
 E o detalhe que conecta com a trilha: **tudo que o campo render — foto, anotação, fluxo desenhado, planilha coletada — entra no acervo do passo 2** e alimenta a IA junto com a transcrição. Campo rico, spec rica.
 
-No SILE: a reunião inicial já fechou com visita técnica marcada — ver o sistema atual operando em homologação e acompanhar uma abertura de processo de ponta a ponta, do protocolo à decisão. Sempre feche o papo com o campo agendado.
+No Viabiliza: a reunião inicial já fechou com visita técnica marcada — ver o sistema atual operando em homologação e acompanhar uma abertura de processo de ponta a ponta, do protocolo à decisão. Sempre feche o papo com o campo agendado.
 
 ---
 
@@ -193,7 +193,7 @@ Decisões de organização que economizam dor:
 - **Uma HU por arquivo Markdown**, em pastas por épico. Markdown porque é o formato que a IA lê e escreve melhor e o Git versiona linha a linha — é o formato de trabalho; o documento formal vem no passo 8.
 - **Numerar as HUs em ordem cronológica de desenvolvimento** (a ordem do roadmap), não na ordem da conversa. Renumerar cedo é barato; tarde, quebra referências em cascata.
 
-No SILE: 127 HUs em 15 épicos na primeira geração. Após a revisão do passo 6: 131.
+No Viabiliza: 127 HUs em 15 épicos na primeira geração. Após a revisão do passo 6: 131.
 
 ---
 
@@ -204,7 +204,7 @@ No SILE: 127 HUs em 15 épicos na primeira geração. Após a revisão do passo 
 **Como se decide a stack — cinco critérios, nesta ordem:**
 
 1. **Restrições contratuais do cliente.** O critério que elimina 90% da discussão. Prefeitura de Salvador: os contratos preveem PHP, Java, .NET e Maker. Stack fora do contrato é risco jurídico, não escolha técnica.
-2. **Ecossistema do cliente.** Com o que o sistema conversa? No SILE: integrador da REDESIM, API da SEFAZ, GIS municipal (o sistema de mapas), legado .NET a substituir.
+2. **Ecossistema do cliente.** Com o que o sistema conversa? No Viabiliza: integrador da REDESIM, API da SEFAZ, GIS municipal (o sistema de mapas), legado .NET a substituir.
 3. **Implementações de referência.** O que você já tem pronto e validado no mesmo domínio? Existia o SIGVISA — sistema irmão de licenciamento sanitário, mesma prefeitura — com módulo de DAM (a guia de pagamento municipal), integração SEFAZ e assinatura digital gov.br rodando em produção, em Laravel. Reuso pesa mais que preferência.
 4. **Competência do time.** Atenção, porque aqui o spec-driven development muda tudo: competência **não é decorar sintaxe** — a IA cobre. É ter a base de conhecimento para **decidir naquela stack**: bater o olho na arquitetura proposta pela IA e julgar se está certa, reconhecer anti-pattern (os vícios clássicos de projeto), avaliar trade-off de segurança e performance. O time precisa exercer o papel de sênior revisando o júnior-IA.
 5. **Requisitos não funcionais.** Volumetria, georreferenciamento, filas e processamento assíncrono, relatórios pesados, IA embarcada — a stack escolhida tem biblioteca madura para cada um?
@@ -303,7 +303,7 @@ A disciplina que muda o resultado: **Plan antes de Agent em tudo que importa.** 
 2. **Uma missão por sessão.** Sessão longa acumula ruído e o agente começa a se perder. Terminou a tarefa? Sessão nova, contexto limpo. O GSD existe para isso: o estado do projeto fica em arquivos (`STATE.md`, roadmap), não na memória da conversa.
 3. **Diff pequeno, commit frequente.** Nunca aceite uma parede de 40 arquivos alterados sem ler. Peça mudanças em fatias revisáveis, leia o diff (a comparação do antes/depois), commite. O Git é seu botão de desfazer infinito — use checkpoints.
 4. **Exija evidência, sempre.** "Rodei os testes e passaram" sem output colado não vale. Lembra do caso Replit: IA também inventa que o teste passou. Evidência fresca é inegociável.
-5. **Plugue ferramentas via MCP** (Model Context Protocol — o protocolo que conecta o agente a sistemas externos). No SILE, o agente consulta a documentação oficial do framework (`search-docs`), inspeciona o schema do banco e lê logs do navegador direto, sem você copiar e colar. Menos alucinação, mais fato.
+5. **Plugue ferramentas via MCP** (Model Context Protocol — o protocolo que conecta o agente a sistemas externos). No Viabiliza, o agente consulta a documentação oficial do framework (`search-docs`), inspeciona o schema do banco e lê logs do navegador direto, sem você copiar e colar. Menos alucinação, mais fato.
 6. **Paralelize com subagentes.** Duas tarefas independentes? Despache dois agentes em paralelo, cada um no seu domínio. Investigação sequencial do que pode ser paralelo é tempo jogado fora.
 7. **Peça os requisitos não funcionais explicitamente.** Performance, segurança e usabilidade não vêm de graça — entram na spec e no prompt: "valide entrada no servidor", "evite N+1 (o vício de fazer uma consulta ao banco por item da lista)", "essa tela precisa funcionar no celular", "rode o linter e o analisador estático". O que não é pedido nem revisado, não existe — os casos lá de cima provam.
 8. **Segredo nunca entra no prompt.** Senha, token, chave de API: nem no chat, nem no repositório. Credencial vive em variável de ambiente — e o `.env` está no `.gitignore` (a lista do que o Git nunca versiona). De novo o caso Abraham.
@@ -359,7 +359,7 @@ Junta tudo: as HUs entram em `docs/` do projeto clonado, e a IA recebe três mis
 
 **Missão 3 — Materializar cada achado.** Regra genérica vira RN concreta com a lei citada; lacuna vira HU nova; tabela oficial baixada vira **seed** (a carga inicial do banco de dados — o estoque de abertura da loja); divergência vira pergunta de pauta para o cliente.
 
-Os causos reais dessa etapa no SILE (conta no palco — a plateia adora):
+Os causos reais dessa etapa no Viabiliza (conta no palco — a plateia adora):
 
 - A IA descobriu que **o número da lei citado no portal oficial da prefeitura estava errado** (9.146 em vez de 9.148/2016).
 - Descobriu que o "Quadro 11" que todo mundo cita **não existe na lei** — existem o 11A e o 11B.
@@ -388,7 +388,7 @@ Roda o prompt, as skills acendem, o projeto anda no padrão — sem você repeti
 
 O desenvolvimento começou, mas o ciclo volta ao cliente em ritmo curto:
 
-- **A pauta nasce da análise.** Cada divergência do passo 6 vira pergunta objetiva. No SILE: 16 perguntas organizadas por tema (regras da lei, classificação de risco, pagamento, integrações, legado, acessos). Você chega na reunião parecendo que estudou por semanas — estudou em horas.
+- **A pauta nasce da análise.** Cada divergência do passo 6 vira pergunta objetiva. No Viabiliza: 16 perguntas organizadas por tema (regras da lei, classificação de risco, pagamento, integrações, legado, acessos). Você chega na reunião parecendo que estudou por semanas — estudou em horas.
 - **Visita técnica:** ver o sistema atual operando em homologação, acompanhar um processo de ponta a ponta.
 - **Acessos cedo:** documentação das APIs, credenciais de homologação, planilhas oficiais. Sem isso as fases de integração **bloqueiam** — e o padrão proíbe simular integração para "destravar".
 - **UAT — User Acceptance Testing** (teste de aceitação do usuário): ao fim de cada fase, o usuário-chave valida contra os critérios de aceite — aquelas frases Dado/Quando/Então que ele mesmo consegue ler.

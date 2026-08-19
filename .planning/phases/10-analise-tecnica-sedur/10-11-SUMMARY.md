@@ -189,7 +189,7 @@ Nenhum — sem CLI/credencial externa neste plano.
 
 ## Bloqueios honestos (registrados, NÃO simulados → EP11/Fase 13)
 
-- **Convite via Simplifica/Regin** (HU-083 RN-004) e **comunicação multicanal** (WhatsApp/in-app/templates) → EP11. O evento `PendenciaSolicitada` é o gancho honesto; hoje só o ciclo interno (portal SILE + e-mail simples) é REAL.
+- **Convite via Simplifica/Regin** (HU-083 RN-004) e **comunicação multicanal** (WhatsApp/in-app/templates) → EP11. O evento `PendenciaSolicitada` é o gancho honesto; hoje só o ciclo interno (portal Viabiliza + e-mail simples) é REAL.
 - **Expiração por prazo da pendência** (HU-147) → gancho do scheduler do EP11; o `due_at` já fica gravado.
 - A **abertura pelo analista** (endpoint gestão chamando `PendenciaService::abrir`) é wiring do **10-15** — aqui entregamos o serviço + evento + e-mail + a resposta pelo portal.
 

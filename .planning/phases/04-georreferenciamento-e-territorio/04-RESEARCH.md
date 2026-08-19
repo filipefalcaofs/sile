@@ -366,7 +366,7 @@ RateLimiter::for('geocoding', function (Request $request) {
 'seguranca' => ['throttle' => ['geocoding' => ['por_minuto' => 60]]],
 'integrations' => ['geocoding' => [
     'base_url' => 'https://nominatim.openstreetmap.org',
-    'user_agent' => 'SILE-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',
+    'user_agent' => 'Viabiliza-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',
     'timeout' => 8, 'retries' => 2, 'backoff_ms' => 1000, 'cache_ttl' => 86400,
 ]],
 ```
@@ -462,7 +462,7 @@ Política oficial (`https://operations.osmfoundation.org/policies/nominatim/`, c
 - **User-Agent (ou Referer) obrigatório** identificando a aplicação — User-Agents padrão de libs HTTP são bloqueados (vira HTML de bloqueio, não JSON → tratar como falha).
 - **Cache obrigatório** do lado cliente (consultas repetidas idênticas podem ser bloqueadas) — o `Cache::remember` de sucesso já cobre.
 - **Sem uso pesado/distribuído**; scripts periódicos/batch são restritos a **4 req/min** e fortemente desencorajados — geocodificação em lote deve ir para **self-host** (a `base_url` parametrizável permite isso sem deploy).
-- **Cláusula 2025:** a API pública não pode ser embutida/sugerida por plataformas no-code/low-code/"vibe-coding" como serviço genérico — uso só quando o desenvolvedor faz escolha deliberada e é responsável pela conformidade. SILE é app governamental deliberado → OK, mas reforça o caminho self-host em produção (já decidido como diferido no CONTEXT).
+- **Cláusula 2025:** a API pública não pode ser embutida/sugerida por plataformas no-code/low-code/"vibe-coding" como serviço genérico — uso só quando o desenvolvedor faz escolha deliberada e é responsável pela conformidade. Viabiliza é app governamental deliberado → OK, mas reforça o caminho self-host em produção (já decidido como diferido no CONTEXT).
 - **Endpoint:** `GET {base_url}/search?q=...&format=jsonv2&addressdetails=1&countrycodes=br&limit=1`. Resposta: `lat`, `lon`, `display_name`, `importance` (0–1, proxy de confiança), `address{}`, `boundingbox`.
 - **Atribuição** OSM e licença **ODbL** (share-alike) devem ser exibidas no mapa.
 
@@ -526,7 +526,7 @@ Mapeia cada garantia ao tipo de teste e ao que prova — respeitando "sem fachad
 1. **Zona urbanística LOUOS (Quadro 10)** — não há camada vetorial pública. **Recomendação:** bloquear (STATE/ROADMAP + UI), pedir à SEDUR a base de zoneamento (SIGIS/CA 2000). É o insumo crítico da Fase 5; o bloqueio precisa ficar explícito porque a Fase 5 depende dele.
 2. **Lote cadastral com inscrição imobiliária** — restrito (Cadastro Multifinalitário/SEFAZ). **Recomendação:** infra de sobreposição pronta e testada com fixtures; HU-033 e HU-037 RN-004/RN-005 bloqueadas até o dado oficial.
 3. **PDDU ≟ LOUOS na classificação viária e nas restrições** — as camadas públicas são do PDDU 2016; confirmar com a SEDUR se são as operativas para os Quadros 11/11A e para as restrições da LOUOS, ou se há versão LOUOS específica a aguardar.
-4. **Licença/uso do GeoSalvador** — endpoint `access:public`, mas confirmar com a SEDUR os termos de uso/atribuição para embutir os dados no SILE (provável trivial por ser o próprio órgão dono, mas registrar).
+4. **Licença/uso do GeoSalvador** — endpoint `access:public`, mas confirmar com a SEDUR os termos de uso/atribuição para embutir os dados no Viabiliza (provável trivial por ser o próprio órgão dono, mas registrar).
 5. **CRS de import** — padronizar tudo em 4326 (via `outSR=4326` no ArcGIS; `ST_Transform` para IBGE 4674 / WFS 31984).
 
 ## Sources

@@ -1,6 +1,6 @@
 # HU-144 — Fila de trabalho do analista com SLA visual
 
-> **Status: Aceita (2026-06-12)** — melhoria além do legado. O SAPS é orientado a "consultar processo" (tela de filtros); o SILE entrega o trabalho ordenado por prioridade, com prazo visível.
+> **Status: Aceita (2026-06-12)** — melhoria além do legado. O SAPS é orientado a "consultar processo" (tela de filtros); o Viabiliza entrega o trabalho ordenado por prioridade, com prazo visível.
 
 ## Épica
 **EP10 — Análise Técnica SEDUR**

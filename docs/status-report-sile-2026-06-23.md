@@ -53,7 +53,7 @@ A engenharia está adiantada: **13 das 15 fases concluídas (135/138 planos, ~98
 | Sev. | Bloqueio | Impacto | Dono | Ação necessária |
 |---|---|---|---|---|
 | Alta | Integrações Regin/JUCEB, SEFAZ e ambiente de homologação | Impede entrada em produção (EP13) | SEDUR | Disponibilizar contrato, credenciais e homologação |
-| Alta | Acesso à base GIS oficial (GeoServer SEDUR) barrado pelo firewall da PMS | Zona urbanística (Quadro 10) degrada o veredito locacional do core value | SEDUR/NTI | Liberar rede para o IP do SILE + confirmar camadas |
+| Alta | Acesso à base GIS oficial (GeoServer SEDUR) barrado pelo firewall da PMS | Zona urbanística (Quadro 10) degrada o veredito locacional do core value | SEDUR/NTI | Liberar rede para o IP do Viabiliza + confirmar camadas |
 | Média | Credenciamento GOV.BR (Login Único) | Login gov.br pronto, porém desligado | SEDUR/SGD | Assinar Termo de Adesão |
 | Média | Datasets rotulados + DPA/base legal LGPD para IA | Limita calibração e Onda 3 da IA | SEDUR/DPO | Fornecer datasets e definições do DPO |
 | Média | Planilhas oficiais (Quadros LOUOS, tipos de serviço, requisitos por CNAE, feriados) | Sistema roda com dados públicos/seeds; aguarda carga oficial | SEDUR | Entregar planilhas vigentes |

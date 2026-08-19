@@ -5,7 +5,7 @@ Status: aprovado em discussão; aguardando revisão final da spec
 
 ## 1. Contexto e objetivo
 
-O SILE (Tailwind v4 + React 19 + Inertia v3) tem transições esparsas e inconsistentes: alguns componentes usam `transition`, a maioria não; modais e dropdowns aparecem/somem de forma abrupta; não há barra de progresso de navegação; não existe tratamento de `prefers-reduced-motion`; e as listagens viram scroll horizontal no celular.
+O Viabiliza (Tailwind v4 + React 19 + Inertia v3) tem transições esparsas e inconsistentes: alguns componentes usam `transition`, a maioria não; modais e dropdowns aparecem/somem de forma abrupta; não há barra de progresso de navegação; não existe tratamento de `prefers-reduced-motion`; e as listagens viram scroll horizontal no celular.
 
 Objetivo: dar fluidez consistente a todo o frontend (portal do cidadão, backoffice de gestão e telas de auth) e tornar isso o padrão do projeto daqui em diante, sem comprometer a acessibilidade (eMAG/gov.br).
 

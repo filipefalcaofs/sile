@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Motor de decisão do fluxo expresso (HU-073 a HU-078) — o CORE VALUE do SILE.
+ * Motor de decisão do fluxo expresso (HU-073 a HU-078) — o CORE VALUE do Viabiliza.
  *
  * `decide()` é AUTORITATIVO: sob Cache::lock por solicitação + re-check de
  * status (idempotência), REEXECUTA o SolicitacaoViabilityResolver FRESCO —

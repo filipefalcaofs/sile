@@ -12,13 +12,13 @@ Concluir automaticamente o processo de viabilidade (deferido ou indeferido), com
 **para** finalizar processo sem intervenção humana e integrar Regin, SEFAZ e retaguarda SEDUR.
 
 ## Contexto de Negócio
-O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
 
 ## Atores Envolvidos
 - Cidadão / empresário / contador / procurador, quando aplicável.
 - Servidor ou analista da SEDUR, quando aplicável.
 - Administrador do sistema, quando aplicável.
-- Sistema SILE e serviços integrados.
+- Sistema Viabiliza e serviços integrados.
 
 ## Pré-condições
 - Usuário autenticado quando a funcionalidade exigir identificação.
@@ -142,6 +142,6 @@ Alta
 ## Observações
 Refinada com base na reunião SEDUR (2026-06-11): o documento de viabilidade **não é mais liberado ao requerente** — os dados seguem via API à SEFAZ e o parecer via Regin. O PDF/TVL permanece como **relatório emitível pelo analista no backoffice** (HU-132), útil para arquivo, malha fina e atendimento presencial.
 
-O DAM de viabilidade via Regin é emitido/pago pela SEFAZ — fora do escopo de geração no SILE (ver HU-071 revisada). Pendente confirmar formato final do PDF com Anderson (assinatura: hoje é imagem do diretor, não ICP-Brasil).
+O DAM de viabilidade via Regin é emitido/pago pela SEFAZ — fora do escopo de geração no Viabiliza (ver HU-071 revisada). Pendente confirmar formato final do PDF com Anderson (assinatura: hoje é imagem do diretor, não ICP-Brasil).
 
 Implementação de referência no SIGVISA (`sls-sms`): geração de PDF com QR code (`AlvaraService` + rota `/verificar-alvara/{codigo}`) — avaliar reutilização para HU-132.

@@ -102,7 +102,7 @@ final class EncaminhadoParaAnalise implements ShouldDispatchAfterCommit
 ## Decisions Made
 
 - **em_analise/em_pendencia ADICIONADOS, decisão FINAL preservada** — `deferida`/`indeferida` continuam sem entrada no mapa; encerramento (HU-089) é a ausência de saída, não um estado novo.
-- **Evento espelha os irmãos (`Dispatchable` + `ShouldDispatchAfterCommit`, sem `SerializesModels`)** — consistência com `ResultadoEmitido`/`SolicitacaoProtocolada` (os 3 eventos do SILE), conforme a diretriz repetida do plano "espelha SolicitacaoProtocolada/ResultadoEmitido". Ver Deviations #1.
+- **Evento espelha os irmãos (`Dispatchable` + `ShouldDispatchAfterCommit`, sem `SerializesModels`)** — consistência com `ResultadoEmitido`/`SolicitacaoProtocolada` (os 3 eventos do Viabiliza), conforme a diretriz repetida do plano "espelha SolicitacaoProtocolada/ResultadoEmitido". Ver Deviations #1.
 - **Auto-descoberta, NUNCA `Event::listen`** — o seam fica estável aqui; o listener (10-08) só faz type-hint do evento no `handle`.
 - **Reuso de `transition()`** — timeline + auditoria RN-002 sem mecânica nova; o caller controla a transação (padrão atual).
 
@@ -111,7 +111,7 @@ final class EncaminhadoParaAnalise implements ShouldDispatchAfterCommit
 ### 1. [Decisão de implementação] Evento SEM `SerializesModels`
 
 - **Texto da Task 2:** "espelhar `ResultadoEmitido`/`SolicitacaoProtocolada`: `use Dispatchable, SerializesModels;`" — há contradição interna: os DOIS eventos irmãos citados usam SÓ `Dispatchable` (+ `ShouldDispatchAfterCommit`), nunca `SerializesModels`.
-- **O que foi feito:** priorizei a diretriz dominante e repetida (user query + must_haves + key_links: "espelha SolicitacaoProtocolada/ResultadoEmitido") e a regra de consistência com arquivos irmãos — `EncaminhadoParaAnalise` usa exatamente `Dispatchable` + `ShouldDispatchAfterCommit`. `SerializesModels` só importa para eventos enfileirados; os 3 eventos do SILE têm listeners SÍNCRONOS auto-descobertos, então é inerte aqui e introduziria inconsistência num único dos três.
+- **O que foi feito:** priorizei a diretriz dominante e repetida (user query + must_haves + key_links: "espelha SolicitacaoProtocolada/ResultadoEmitido") e a regra de consistência com arquivos irmãos — `EncaminhadoParaAnalise` usa exatamente `Dispatchable` + `ShouldDispatchAfterCommit`. `SerializesModels` só importa para eventos enfileirados; os 3 eventos do Viabiliza têm listeners SÍNCRONOS auto-descobertos, então é inerte aqui e introduziria inconsistência num único dos três.
 - **Impacto:** nenhum no contrato/payload nem nos testes (provam after-commit + payload). Se 10-08 vier a enfileirar o listener (`ShouldQueue`), basta adicionar `SerializesModels` ao evento — gancho trivial, registrado.
 
 ### 2. [Fora do escopo — observação, NÃO corrigido] Regressão cruzada do 10-01 na suíte completa

@@ -6,7 +6,7 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
- * Padrão SILE de auditoria de models de domínio (RN-002): loga apenas
+ * Padrão Viabiliza de auditoria de models de domínio (RN-002): loga apenas
  * atributos fillable efetivamente alterados e nunca campos sensíveis.
  */
 trait HasAuditoria

@@ -33,7 +33,7 @@ Mantém todos os itens e seus nomes; muda apenas o agrupamento e a ordem (por jo
 | 5 | **Auditoria e compliance** | Trilha de auditoria · Conformidade LGPD · Alertas de abuso |
 | 6 | **Administração** | Usuários · Perfis · Parâmetros · E-mails |
 
-Racional: separa o motor de regras (core do SILE) num grupo próprio; tira acesso/config do balaio "Cadastros" para "Administração"; separa dashboard (Início) das ações de balcão (Atendimento e operação). O filtro por permissão (`visible`) de cada item é preservado integralmente.
+Racional: separa o motor de regras (core do Viabiliza) num grupo próprio; tira acesso/config do balaio "Cadastros" para "Administração"; separa dashboard (Início) das ações de balcão (Atendimento e operação). O filtro por permissão (`visible`) de cada item é preservado integralmente.
 
 ### 3.2 Estrutura de dados e propriedade
 

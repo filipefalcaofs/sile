@@ -19,7 +19,7 @@ class DevAdminSeeder extends Seeder
         $admin = User::firstOrCreate(
             ['email' => 'admin@sile.dev'],
             [
-                'name' => 'Administrador SILE',
+                'name' => 'Administrador Viabiliza',
                 'cpf' => '11144477735',
                 'phone' => null,
                 'password' => 'password',

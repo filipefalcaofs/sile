@@ -84,7 +84,7 @@ class PendenciaExpiradaNotification extends Notification implements ProcessNotif
             ->greeting('Olá!')
             ->line("O convite da solicitação {$this->protocolNumber} expirou sem resposta do requerente dentro do prazo, e o processo foi indeferido automaticamente.")
             ->line("Convite: {$this->descricao}")
-            ->action('Abrir o processo no SILE', $this->url)
+            ->action('Abrir o processo no Viabiliza', $this->url)
             ->line('Este é um aviso automático — não responda a esta mensagem.');
     }
 

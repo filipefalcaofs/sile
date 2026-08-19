@@ -6,24 +6,24 @@
 **EP13 — Integrações**
 
 ## Objetivo
-Migrar para o SILE os dados relevantes do sistema legado (processos, viabilidades emitidas, cadastros) e definir a estratégia de convivência durante a transição.
+Migrar para o Viabiliza os dados relevantes do sistema legado (processos, viabilidades emitidas, cadastros) e definir a estratégia de convivência durante a transição.
 
 ## História de Usuário
 **Como** gestor SEDUR,  
-**quero** migrar os dados do sistema atual para o SILE,  
+**quero** migrar os dados do sistema atual para o Viabiliza,  
 **para** preservar o histórico de processos e permitir a desativação do legado sem perda de informação.
 
 ## Contexto de Negócio
-O sistema atual de viabilidade da SEDUR, desenvolvido em .NET, apresenta instabilidade recorrente e ficou indisponível por dias seguidos. A equipe da SEDUR chegou a criar um proxy para viabilizar o consumo de serviços. A substituição pelo SILE exige decidir o que migrar (histórico de processos, TVLs emitidos, cadastros, parametrizações) e como operar durante a transição.
+O sistema atual de viabilidade da SEDUR, desenvolvido em .NET, apresenta instabilidade recorrente e ficou indisponível por dias seguidos. A equipe da SEDUR chegou a criar um proxy para viabilizar o consumo de serviços. A substituição pelo Viabiliza exige decidir o que migrar (histórico de processos, TVLs emitidos, cadastros, parametrizações) e como operar durante a transição.
 
 ## Atores Envolvidos
 - Gestor SEDUR e administrador do sistema.
 - Equipe técnica responsável pelo legado.
-- Sistema SILE.
+- Sistema Viabiliza.
 
 ## Pré-condições
 - Acesso à base de dados ou a serviços de exportação do sistema legado.
-- Mapeamento de-para entre os modelos de dados do legado e do SILE.
+- Mapeamento de-para entre os modelos de dados do legado e do Viabiliza.
 - Estratégia de transição aprovada pela SEDUR.
 
 ## Fluxo Principal
@@ -36,7 +36,7 @@ O sistema atual de viabilidade da SEDUR, desenvolvido em .NET, apresenta instabi
 
 ## Fluxos Alternativos
 ### FA-01 — Registro inválido ou inconsistente
-1. O sistema identifica registro que viola as validações do SILE.
+1. O sistema identifica registro que viola as validações do Viabiliza.
 2. O registro é rejeitado e listado no relatório de conciliação com o motivo.
 3. A carga prossegue para os demais registros.
 
@@ -103,7 +103,7 @@ O sistema deve manter registro completo da execução desta HU, incluindo:
 
 ## Dependências
 - Acesso à base/serviços do sistema legado (definir com a SEDUR).
-- Modelos de dados do SILE consolidados (EP01, EP03, EP08).
+- Modelos de dados do Viabiliza consolidados (EP01, EP03, EP08).
 - Módulo de auditoria.
 
 ## Prioridade

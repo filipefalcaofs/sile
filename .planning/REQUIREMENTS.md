@@ -1,4 +1,4 @@
-# Requirements: SILE — Sistema de Licenciamento Eletrônico
+# Requirements: Viabiliza — Sistema de Licenciamento Eletrônico
 
 **Defined:** 2026-06-09
 **Core Value:** Responder a viabilidade locacional de atividade econômica de forma automática, correta e auditável — fluxo expresso quando a lei permite, fundamentação legal em toda decisão.
@@ -129,7 +129,7 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 ### EP11 — Pendências e Comunicação
 
 - [x] **HU-090**: Notificar pendência
-- [x] **HU-091**: Responder pendência (pelo portal SILE; convite Simplifica/Regin → Fase 13)
+- [x] **HU-091**: Responder pendência (pelo portal Viabiliza; convite Simplifica/Regin → Fase 13)
 - [x] **HU-092**: Reabrir análise
 - [x] **HU-093**: Notificar vencimentos
 - [x] **HU-094**: Enviar e-mail
@@ -192,14 +192,14 @@ Fonte de verdade: 131 Histórias de Usuário em `docs/SILE_HUs_Completas_MD/` (�
 | Feature | Reason |
 |---------|--------|
 | Features de fachada (resultado simulado, adaptador falso, botão sem ação) | Proibidas pelas regras de execução; dependência indisponível = feature bloqueada e registrada |
-| Cálculo de taxa no modelo TVS (SIGVISA) | O SILE usa TLL (atividade de maior valor + taxa de serviço); mecânica de DAM reaproveitável, fórmula não |
-| Porte direto do frontend SIGVISA (Vue/PrimeVue) | Stack do SILE é React 19 + Inertia v3; apenas padrões de fluxo/tela servem de referência |
+| Cálculo de taxa no modelo TVS (SIGVISA) | O Viabiliza usa TLL (atividade de maior valor + taxa de serviço); mecânica de DAM reaproveitável, fórmula não |
+| Porte direto do frontend SIGVISA (Vue/PrimeVue) | Stack do Viabiliza é React 19 + Inertia v3; apenas padrões de fluxo/tela servem de referência |
 
 ## Pendências de confirmação (SEDUR)
 
 | Item | HUs afetadas | Status |
 |------|--------------|--------|
-| Escopo de DAM/pagamento dentro do SILE | HU-071, HU-072 | Aguardando confirmação |
+| Escopo de DAM/pagamento dentro do Viabiliza | HU-071, HU-072 | Aguardando confirmação |
 | Estratégia de migração/convivência com legado .NET | HU-111 | Aguardando definição |
 | Endpoint e credenciais SEFAZ (envio de deferimento) | HU-110 | API confirmada; contrato pendente |
 | Correspondência "Quadro 11" ↔ Quadro 11B oficial | HU-017, HU-018, HU-040, HU-041 | Aguardando confirmação |

@@ -24,7 +24,7 @@ import GestaoLayout from '@/layouts/gestao-layout';
  * Linha do relatório "Tempo de Emissão de TVL" (Tela R2 — SAPS): um processo
  * DECIDIDO no recorte com o tempo Emissão−Abertura em minutos ÚTEIS. Campos
  * anuláveis degradam para travessão — nunca um dado inventado. Os blocos DAM não
- * são modelados no SILE (vêm em branco) e o `tipo` é sempre "Viabilidade" (a
+ * são modelados no Viabiliza (vêm em branco) e o `tipo` é sempre "Viabilidade" (a
  * Revisão via REDESIM não é homologada).
  */
 interface TvlRow {
@@ -87,7 +87,7 @@ interface FiltrosForm {
 
 const URL_TEMPO_EMISSAO_TVL = '/gestao/relatorios/tempo-emissao-tvl';
 
-/** Blocos DAM (Documento de Arrecadação Municipal) — não modelados no SILE. */
+/** Blocos DAM (Documento de Arrecadação Municipal) — não modelados no Viabiliza. */
 const COLUNAS_DAM = ['dam_numero', 'dam_emissao', 'dam_pagamento', 'dam_valor'] as const;
 
 /**
@@ -516,7 +516,7 @@ function AvisoRevisao() {
             <p className="text-theme-sm text-warning-700 dark:text-orange-300">
                 Este relatório cobre a <strong>Viabilidade</strong>. As <strong>Revisões via REDESIM</strong> dependem de uma
                 integração ainda <strong>não homologada</strong> — o modo aparece desabilitado e nenhum dado de revisão é
-                exibido. Os blocos <strong>DAM</strong> não são modelados no SILE e ficam em branco (ocultos por padrão no seletor
+                exibido. Os blocos <strong>DAM</strong> não são modelados no Viabiliza e ficam em branco (ocultos por padrão no seletor
                 de colunas).
             </p>
         </div>

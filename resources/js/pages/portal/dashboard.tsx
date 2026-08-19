@@ -396,7 +396,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes, 
 
                 <div className="col-span-12">
                     <Card>
-                        <CardHeader title="Minha conta" description="Bem-vindo(a) ao Simplifica." />
+                        <CardHeader title="Minha conta" description="Bem-vindo(a) ao Viabiliza." />
                         <CardContent>
                             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
                                 <div>

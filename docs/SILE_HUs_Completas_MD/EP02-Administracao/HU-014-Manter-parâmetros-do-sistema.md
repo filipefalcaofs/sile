@@ -4,7 +4,7 @@
 **EP02 — Administração**
 
 ## Objetivo
-Gerenciar parâmetros gerais e funcionalidades ativáveis do sistema, de forma que o administrador ajuste o comportamento do SILE sem depender de desenvolvedor ou de novo deploy.
+Gerenciar parâmetros gerais e funcionalidades ativáveis do sistema, de forma que o administrador ajuste o comportamento do Viabiliza sem depender de desenvolvedor ou de novo deploy.
 
 ## História de Usuário
 **Como** administrador,  
@@ -12,13 +12,13 @@ Gerenciar parâmetros gerais e funcionalidades ativáveis do sistema, de forma q
 **para** ajustar o comportamento do sistema sem intervenção técnica.
 
 ## Contexto de Negócio
-O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
 
 ## Atores Envolvidos
 - Cidadão / empresário / contador / procurador, quando aplicável.
 - Servidor ou analista da SEDUR, quando aplicável.
 - Administrador do sistema, quando aplicável.
-- Sistema SILE e serviços integrados.
+- Sistema Viabiliza e serviços integrados.
 
 ## Pré-condições
 - Usuário autenticado quando a funcionalidade exigir identificação.
@@ -159,4 +159,4 @@ Alta
 ## Observações
 Esta HU deverá ser refinada com a equipe da SEDUR quando forem disponibilizadas as tabelas oficiais, planilhas, parâmetros da LOUOS, regras de risco e integrações existentes.
 
-Exemplos de domínios parametrizáveis no SILE: prazos (vencimento de DAM, resposta de pendência), valores e tabelas de taxa por exercício, textos de e-mails e notificações, termos LGPD, credenciais e URLs de integrações (SEFAZ, REDESIM, GIS), limiares do fluxo expresso, configuração de IA (modelo, prompts, ativação) e canais de comunicação. Modelo de referência no projeto SIGVISA (`sls-sms`): entidades de configuração segregadas por domínio (`ConfigDam`, `ConfigEmail`, `ConfigIa`, `ConfigPortal`, `ConfigGovBr`, `ConfigAprovacaoAutomatica`, `ConfigRt`), cada uma com tela própria de administração, credenciais criptografadas e botões de teste de conexão.
+Exemplos de domínios parametrizáveis no Viabiliza: prazos (vencimento de DAM, resposta de pendência), valores e tabelas de taxa por exercício, textos de e-mails e notificações, termos LGPD, credenciais e URLs de integrações (SEFAZ, REDESIM, GIS), limiares do fluxo expresso, configuração de IA (modelo, prompts, ativação) e canais de comunicação. Modelo de referência no projeto SIGVISA (`sls-sms`): entidades de configuração segregadas por domínio (`ConfigDam`, `ConfigEmail`, `ConfigIa`, `ConfigPortal`, `ConfigGovBr`, `ConfigAprovacaoAutomatica`, `ConfigRt`), cada uma com tela própria de administração, credenciais criptografadas e botões de teste de conexão.

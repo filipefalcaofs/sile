@@ -17,7 +17,7 @@ Enviar à SEFAZ municipal, via API, os dados da viabilidade deferida, permitindo
 Conforme informado pela SEDUR, após a conclusão do processo de viabilidade a resposta é encaminhada para dois destinos: a Junta Comercial (integrador), com o parecer de deferimento ou indeferimento, e a SEFAZ municipal, que recebe os dados da viabilidade deferida via API. Nos casos em que o requerente já possui CNPJ, ele segue diretamente com a SEFAZ.
 
 ## Atores Envolvidos
-- Sistema SILE.
+- Sistema Viabiliza.
 - API da SEFAZ municipal.
 - Servidor ou analista da SEDUR (acompanhamento de falhas), quando aplicável.
 
@@ -118,4 +118,4 @@ Alta
 ## Observações
 Implementação de referência da integração SEFAZ no projeto SIGVISA (`sls-sms`): `app/Services/SefazService.php` (autenticação JWT com cache, retentativas, normalização de respostas), tela de parametrização com credenciais criptografadas e botões de teste de conexão. Padrões de resiliência já validados em produção: timeout 30s, connect timeout 10s, 3 retentativas, renovação automática em 401.
 
-Pendências com a SEDUR: endpoint específico para envio do deferimento de viabilidade (a documentação conhecida cobre apenas consultas), credenciais SenhaWeb para o SILE e acesso à homologação. Avaliar sobreposição com a HU-109 (Portal do Contribuinte) quando o escopo de ambas estiver confirmado.
+Pendências com a SEDUR: endpoint específico para envio do deferimento de viabilidade (a documentação conhecida cobre apenas consultas), credenciais SenhaWeb para o Viabiliza e acesso à homologação. Avaliar sobreposição com a HU-109 (Portal do Contribuinte) quando o escopo de ambas estiver confirmado.

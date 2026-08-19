@@ -14,13 +14,13 @@ Consultar o SIGIS/GIS municipal para identificar zona, via, polígono validado e
 **para** identificar zona, via e restrições.
 
 ## Contexto de Negócio
-O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
 
 ## Atores Envolvidos
 - Cidadão / empresário / contador / procurador, quando aplicável.
 - Servidor ou analista da SEDUR, quando aplicável.
 - Administrador do sistema, quando aplicável.
-- Sistema SILE e serviços integrados.
+- Sistema Viabiliza e serviços integrados.
 
 ## Pré-condições
 - Usuário autenticado quando a funcionalidade exigir identificação.

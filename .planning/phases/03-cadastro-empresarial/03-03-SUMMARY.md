@@ -135,7 +135,7 @@ Nota operacional (não é deviation de escopo): o smoke test real do plano suger
 
 ## Pendência REGIN/SEDUR (registrada para a Fase 13)
 
-A estrutura do payload é **referência a validar com a SEDUR** — o manual nacional REDESIM (WS01/WS02/...) não é público; na Bahia o integrador é o REGIN (JUCEB). Falta o XSD/JSON oficial e credenciais de homologação. O contrato `RedesimImportService` + comando isolam o ajuste fino do parsing na Fase 13 (HU-103/transporte) sem retrabalho de domínio. Associação empresa importada ↔ usuário do portal também é definida na Fase 13 (payload não traz o usuário do SILE).
+A estrutura do payload é **referência a validar com a SEDUR** — o manual nacional REDESIM (WS01/WS02/...) não é público; na Bahia o integrador é o REGIN (JUCEB). Falta o XSD/JSON oficial e credenciais de homologação. O contrato `RedesimImportService` + comando isolam o ajuste fino do parsing na Fase 13 (HU-103/transporte) sem retrabalho de domínio. Associação empresa importada ↔ usuário do portal também é definida na Fase 13 (payload não traz o usuário do Viabiliza).
 
 ## Known Stubs
 

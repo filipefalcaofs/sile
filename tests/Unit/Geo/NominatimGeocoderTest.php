@@ -88,7 +88,7 @@ class NominatimGeocoderTest extends TestCase
         // Política do Nominatim: User-Agent identificável é obrigatório
         // (libs HTTP genéricas são bloqueadas).
         Http::assertSent(fn ($request) => $request->hasHeader('User-Agent')
-            && str_contains($request->header('User-Agent')[0], 'SILE'));
+            && str_contains($request->header('User-Agent')[0], 'Viabiliza'));
     }
 
     public function test_consulta_usa_parametros_oficiais_do_nominatim(): void

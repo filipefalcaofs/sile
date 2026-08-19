@@ -1,9 +1,9 @@
 ---
-description: Agents especialistas do SILE e sua integração ao fluxo de desenvolvimento autônomo
+description: Agents especialistas do Viabiliza e sua integração ao fluxo de desenvolvimento autônomo
 alwaysApply: true
 ---
 
-# Agents Especialistas do SILE — Desenvolvimento Autônomo
+# Agents Especialistas do Viabiliza — Desenvolvimento Autônomo
 
 O projeto tem 6 subagents especialistas em `.cursor/agents/`. Eles existem para **substituir os pontos onde o fluxo pararia para perguntar ao humano**, maximizando a autonomia sem abrir mão das regras do projeto (TDD, auditoria, parametrização, zero fachada).
 

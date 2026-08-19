@@ -14,13 +14,13 @@ Receber solicitações de viabilidade do Regin, hospedar o formulário complemen
 **para** manter o fluxo nacional/municipal conectado de ponta a ponta.
 
 ## Contexto de Negócio
-O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
+O Viabiliza deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades econômicas, priorizando automação, precisão, rastreabilidade e redução de análise manual. Esta HU faz parte do fluxo de Portal do Cidadão, Retaguarda SEDUR, Motor de Regras da LOUOS, integrações, auditoria ou indicadores, conforme sua épica.
 
 ## Atores Envolvidos
 - Cidadão / empresário / contador / procurador, quando aplicável.
 - Servidor ou analista da SEDUR, quando aplicável.
 - Administrador do sistema, quando aplicável.
-- Sistema SILE e serviços integrados.
+- Sistema Viabiliza e serviços integrados.
 
 ## Pré-condições
 - Usuário autenticado quando a funcionalidade exigir identificação.
@@ -68,7 +68,7 @@ O SILE deverá apoiar a SEDUR na gestão da viabilidade locacional de atividades
 - RN-006: O sistema deve tratar indisponibilidade do serviço externo com fila de retentativa e pendência operacional visível.
 - RN-007: Processo sem BAP vinculado dentro do prazo parametrizado (padrão 48h) deve ser indeferido automaticamente por "sem atuação" (HU-134).
 - RN-008: Renovação de TVL e fluxos diretos pelo portal Simplifica **não** passam pelo Regin — rotas distintas (ver HU-061).
-- RN-009: **Recepção durável**: mensagens recebidas do Regin entram em fila durável com confirmação (ack) somente após persistência; falha de processamento envia para dead-letter com replay manual/automático — indisponibilidade momentânea do SILE não pode perder solicitação (causa raiz do "mensagem que não chega" do legado).
+- RN-009: **Recepção durável**: mensagens recebidas do Regin entram em fila durável com confirmação (ack) somente após persistência; falha de processamento envia para dead-letter com replay manual/automático — indisponibilidade momentânea do Viabiliza não pode perder solicitação (causa raiz do "mensagem que não chega" do legado).
 - RN-010: **Proteção do endpoint público**: a página/endpoint do formulário (equivalente ao `ps001_Regin`) deve validar token de sessão emitido no fluxo Regin, aplicar rate limiting e proteção anti-bot — é superfície exposta na internet.
 
 ## Critérios de Aceite — BDD

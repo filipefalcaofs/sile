@@ -40,7 +40,7 @@ Renomear (sem alterar o comportamento/rotas):
 
 ### 3.2 Novo bloco "Confirmações do imóvel" — entre Dados do TVL e Enquadramento por CNAE
 
-**Correção de posicionamento** (releitura cuidadosa dos prints): "Atividade em área pública?" e "Endereço correto?" NÃO são por-CNAE nem ficam no card Polígono — no legado formam um bloco único, de nível de processo, posicionado **depois da faixa "Dados do TVL" e antes de "Atividades do Processo"**. Também corrige a citação incorreta ao campo "Confirma polígono diferente do requerente?", que **não existe hoje** no SILE (verificado em `show.tsx` — nenhuma referência).
+**Correção de posicionamento** (releitura cuidadosa dos prints): "Atividade em área pública?" e "Endereço correto?" NÃO são por-CNAE nem ficam no card Polígono — no legado formam um bloco único, de nível de processo, posicionado **depois da faixa "Dados do TVL" e antes de "Atividades do Processo"**. Também corrige a citação incorreta ao campo "Confirma polígono diferente do requerente?", que **não existe hoje** no Viabiliza (verificado em `show.tsx` — nenhuma referência).
 
 Novo `Card` "Confirmações do imóvel", entre o card "Dados do TVL" (3.1) e o card "Enquadramento por atividade (CNAE)":
 

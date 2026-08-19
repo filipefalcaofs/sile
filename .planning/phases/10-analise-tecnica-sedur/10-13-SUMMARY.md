@@ -59,7 +59,7 @@ key-decisions:
   - "paper/orientation como constantes técnicas em config (fora do catálogo HU-014 — precedente 02-02)"
 
 patterns-established:
-  - "Geração de PDF no SILE: dompdf + Blade + Storage::fake nos testes (assert %PDF + linha auditada no disco não público)"
+  - "Geração de PDF no Viabiliza: dompdf + Blade + Storage::fake nos testes (assert %PDF + linha auditada no disco não público)"
 
 # Metrics
 duration: ~18min

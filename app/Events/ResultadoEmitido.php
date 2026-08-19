@@ -8,7 +8,7 @@ use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /**
- * SEGUNDO evento de domínio do SILE: o resultado do fluxo expresso foi emitido
+ * SEGUNDO evento de domínio do Viabiliza: o resultado do fluxo expresso foi emitido
  * (HU-076). Carrega a solicitação e a decisão imutável (ViabilityDecision) já
  * registrada — deferimento ou indeferimento.
  *

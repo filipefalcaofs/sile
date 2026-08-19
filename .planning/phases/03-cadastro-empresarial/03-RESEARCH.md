@@ -12,7 +12,7 @@ A fase cria o cadastro empresarial completo do portal: empresas com CNPJ único,
 
 **REDESIM (HU-022):** não existe XSD/JSON público de fácil acesso do integrador — o Manual de Integração nacional (protocolo versionado, serviços WS01/WS02/WS15/WS29) circula apenas entre órgãos conveniados, e na Bahia o integrador estadual é o **REGIN (JUCEB)**, que já se comunica com a SEDUR por webservice (TVL). O payload de referência foi definido a partir dos campos documentados da consulta prévia de viabilidade REDESIM (protocolo, evento, empresa, endereço, atividades) e está **explicitamente marcado como estrutura a validar com a SEDUR** — o contrato `RedesimImportService` + comando `redesim:importar {arquivo}` isolam o ajuste fino da Fase 13.
 
-**Achado crítico de atualidade:** a partir de **julho/2026** (mês seguinte ao planejamento desta fase) a RFB começa a emitir **CNPJ alfanumérico** (IN RFB 2.229/2024) para novas inscrições — exatamente o público do SILE. A Rule `ValidCnpj` DEVE nascer com o algoritmo módulo 11 sobre ASCII-48, que cobre os formatos numérico e alfanumérico de uma vez. Coluna `cnpj` é string(14), nunca tipo numérico.
+**Achado crítico de atualidade:** a partir de **julho/2026** (mês seguinte ao planejamento desta fase) a RFB começa a emitir **CNPJ alfanumérico** (IN RFB 2.229/2024) para novas inscrições — exatamente o público do Viabiliza. A Rule `ValidCnpj` DEVE nascer com o algoritmo módulo 11 sobre ASCII-48, que cobre os formatos numérico e alfanumérico de uma vez. Coluna `cnpj` é string(14), nunca tipo numérico.
 
 **Recomendação primária:** implementar em 4 blocos — (1) schema+models+factories, (2) contrato CnpjLookup com provider BrasilAPI real + toggle, (3) RedesimImportService + comando artisan, (4) telas do portal (lista + página de cadastro + página de detalhe) — com TDD estrito por HU (8 HUs × CA-01..04).
 
@@ -321,7 +321,7 @@ A Fase 2.4 (em execução paralela) entrega `PageHeader`, `Card`, `DataTable` ti
 ## Common Pitfalls
 
 ### Pitfall 1 — ValidCnpj só numérica (quebra em julho/2026)
-**O que acontece:** novas inscrições RFB a partir de julho/2026 podem ter CNPJ alfanumérico (12 alfanuméricos + 2 DV numéricos); validação `\d{14}` rejeitaria empresa recém-aberta — exatamente o público do SILE.
+**O que acontece:** novas inscrições RFB a partir de julho/2026 podem ter CNPJ alfanumérico (12 alfanuméricos + 2 DV numéricos); validação `\d{14}` rejeitaria empresa recém-aberta — exatamente o público do Viabiliza.
 **Prevenção:** normalizar com `preg_replace('/[^A-Z0-9]/', '', strtoupper($value))`; validar `/^[A-Z\d]{12}\d{2}$/`; DV por módulo 11 com valor `ord($char) - 48` (cobre dígitos e letras de uma vez — fórmula oficial IN RFB 2.229/2024). Rejeitar repetição uniforme (`/^(.)\1{13}$/`).
 **Sinal de alerta:** teste com CNPJ alfanumérico de exemplo oficial (`12.ABC.345/01DE-35`) deve passar.
 
@@ -522,7 +522,7 @@ npm run types && npm run build                                          # typech
    - Tratamento: payload de referência marcado "a validar com a SEDUR"; o contrato (service + comando) absorve o ajuste sem retrabalho de domínio.
 2. **Viabilidade de CONSTITUIÇÃO sem CNPJ** — na abertura de empresa nova a consulta prévia ocorre antes de existir CNPJ. O upsert por CNPJ (decisão de contexto) cobre alteração/regularização; o caso "sem CNPJ ainda" pertence à solicitação (Fase 8) e ao transporte (Fase 13). Confirmar com a SEDUR se o cadastro empresarial deve aceitar registro provisório sem CNPJ (hoje: não).
 3. **Providers públicos × CNPJ alfanumérico** — nenhum CNPJ alfanumérico existe ainda (emissão começa em julho/2026); não foi possível testar se BrasilAPI/minhareceita aceitarão letras no path. Risco baixo (dataset RFB os incluirá), monitorar no primeiro mês; a validação local já estará pronta.
-4. **Associação empresa importada ↔ usuário do portal** — payload REDESIM não traz usuário do SILE; empresa importada fica sem vínculo até a Fase 13 definir a associação (CPF do responsável? reivindicação?). Registrar na pauta SEDUR.
+4. **Associação empresa importada ↔ usuário do portal** — payload REDESIM não traz usuário do Viabiliza; empresa importada fica sem vínculo até a Fase 13 definir a associação (CPF do responsável? reivindicação?). Registrar na pauta SEDUR.
 
 ## Sources
 
