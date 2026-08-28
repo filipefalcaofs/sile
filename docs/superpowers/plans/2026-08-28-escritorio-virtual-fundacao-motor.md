@@ -517,63 +517,137 @@ git commit -m "feat(ev): deriva intencao de escritorio virtual e bloqueia recusa
 
 ---
 
-### Task 3: Log e contrato da consulta SEFAZ
+### Task 3: Log e contrato da consulta SEFAZ — PARQUEADA
 
-Sentido de entrada, novo. O contrato consulta por CNPJ e devolve a cadeia; a indisponibilidade **bloqueia** a decisão.
+Sentido de entrada (consulta CNPJ → viabilidade da sede). **Não implementar nesta rodada.**
 
-**Files:**
-- Create: `database/migrations/2026_08_28_110000_create_sefaz_hq_queries_table.php`
-- Create: `app/Models/SefazHqQuery.php`
-- Create: `app/Services/Sefaz/SefazHqLookup.php` (interface)
-- Create: `app/Services/Sefaz/SefazHqLookupResult.php` (DTO readonly)
-- Create: `app/Services/Sefaz/UnavailableSefazHqLookup.php`
-- Create: `tests/Feature/EscritorioVirtual/ConsultaSedeSefazTest.php`
-- Modify: `app/Providers/AppServiceProvider.php` (binding)
+O contrato desenhado é `lookup(string $cnpj)` e a tabela de log registra "CNPJ consultado" — ambos assumem que o abrigado identifica a sede por CNPJ. É exatamente o que `[OPEN-EV-10]` pergunta: o requisito novo pede CNPJ, o legado usa número de TVL (`docs/artefatos/Processo - abrigado da sede 2108519.pdf` traz `TVL Sede: 2108519` e nenhum campo de CNPJ). Construir antes da resposta arrisca jogar fora contrato, migration e testes.
 
-**Interfaces:**
-- Produces: `SefazHqLookup::lookup(string $cnpj): SefazHqLookupResult`, lançando `SefazUnavailableException` quando a API não responde.
-- Produces: `SefazHqLookupResult` readonly com `status` ∈ {`confirmada`, `cnpj_nao_localizado`, `sem_viabilidade`, `nao_e_sede`, `retorno_incompleto`}, mais `viabilidade` e `inscricaoImobiliaria` nuláveis. A divergência de inscrição **não** é status do gateway: é comparação de quem chama, porque só o chamador conhece a inscrição da solicitação.
-- Produces: `SefazHqQuery` — registro de auditoria com os 9 campos do `Constituição` §11.
-
-Detalhamento dos passos: escrever o teste dos cinco status mais o caminho de indisponibilidade; rodar e ver falhar; criar migration, model, DTO, interface e a implementação `Unavailable` que sempre lança; registrar o binding; rodar e ver passar; commit.
-
-O `UnavailableSefazHqLookup` é o binding **padrão** até a SEDUR homologar o endpoint — mesmo padrão de `UnavailableSefazViabilidadeGateway`. Isso é deliberado: sem endpoint, o fluxo de abrigado fica bloqueado e visível, nunca fingindo sucesso.
+Retomar quando `[OPEN-EV-10]` fechar.
 
 ---
 
-### Task 4: Log da comunicação SEFAZ com reprocessamento
+### Task 4: Comunicação SEFAZ com reprocessamento
 
-Sentido de saída. Falha **não** desfaz deferimento.
+Sentido de saída. A regra que estrutura tudo: **falha na comunicação não desfaz o deferimento** (`Alteração de Endereço` §4.3.3). Hoje `DesvincularInscricaoService` grava a pendência como a string `'pendente (integração bloqueada — Fase 13)'` dentro das properties da auditoria — legível por humano, mas não consultável nem reprocessável. Esta tarefa a transforma em registro de primeira classe.
+
+Verificação prévia: a notificação aos abrigados que o plano previa como Task 5 **já existe** em `DesvincularInscricaoService` (consulta os abrigados por `is_virtual_office_tenant`, dispara `AbrigadoDesvinculadoNotification` a cada um, sem cassação). A RN-AE-04 já está satisfeita. Esta tarefa apenas acrescenta o registro de comunicação ao lado dela.
 
 **Files:**
 - Create: `database/migrations/2026_08_28_120000_create_sefaz_notifications_table.php`
 - Create: `app/Models/SefazNotification.php`
+- Create: `app/Enums/SefazNotificationStatus.php`
+- Create: `app/Enums/SefazNotificationEvent.php`
 - Create: `tests/Feature/EscritorioVirtual/ComunicacaoSefazTest.php`
-- Modify: `app/Services/Sefaz/SefazViabilidadeGateway.php` (novo método de evento)
-- Modify: `app/Services/Sefaz/UnavailableSefazViabilidadeGateway.php`
 - Modify: `app/Services/EscritorioVirtual/DesvincularInscricaoService.php`
 
 **Interfaces:**
-- Consumes: `DesvincularInscricaoService::desvincular(VirtualOfficeInscriptionLock $lock, string $motivo, ?User $actor = null): array` (já existe).
-- Produces: `SefazNotification` com os campos do `Alteração de Endereço` §4.3.2 mais `status` ∈ {`pendente`, `enviada`, `falha`} e `tentativas`.
-- Produces: `SefazViabilidadeGateway::notifyEvent(SefazNotification $notification): void`.
+- Consumes: `DesvincularInscricaoService::desvincular(VirtualOfficeInscriptionLock $lock, string $motivo, ?User $actor = null): array` — o retorno ganha a chave `sefaz_notification_id`.
+- Produces: `SefazNotificationStatus` — `Pendente = 'pendente'`, `Enviada = 'enviada'`, `Falha = 'falha'`.
+- Produces: `SefazNotificationEvent` — `SedeEncerrada = 'sede_encerrada'`, `SedeMudouEndereco = 'sede_mudou_endereco'`, `SedePerdeuCondicao = 'sede_perdeu_condicao'`.
+- Produces: `SefazNotification` com os campos do `Alteração de Endereço` §4.3.2.
 
-O teste central é o CA-12 do motor: deferimento concluído + comunicação que falha ⇒ o deferimento **permanece**, a `SefazNotification` fica em `falha` com o código de erro, e o reprocessamento é possível. Escrever com o gateway forjado para lançar.
+- [ ] **Step 1: Escrever o teste que falha**
+
+Criar `tests/Feature/EscritorioVirtual/ComunicacaoSefazTest.php`. Três casos, cobrindo o CA-12 da spec do motor:
+
+```php
+    /**
+     * A desvinculacao registra a comunicacao devida a SEFAZ como registro
+     * consultavel, nao como texto dentro da auditoria (RN-EV-09/EV-10).
+     */
+    public function test_desvinculacao_registra_a_comunicacao_devida(): void
+    {
+        // desvincular() → existe uma SefazNotification com o evento, o CNPJ,
+        // a inscricao anterior e status Pendente.
+    }
+
+    /**
+     * Falha na comunicacao NAO desfaz o deferimento nem a desvinculacao
+     * (Alteracao de Endereco §4.3.3). O registro guarda o erro e continua
+     * disponivel para reprocessamento.
+     */
+    public function test_falha_na_comunicacao_nao_desfaz_a_desvinculacao(): void
+    {
+        // gateway forjado que lanca SefazUnavailableException →
+        // o lock continua inativo (desvinculacao valeu),
+        // os abrigados continuam notificados,
+        // e a SefazNotification fica em status Falha com a mensagem de erro.
+    }
+
+    /**
+     * O registro em falha e reprocessavel e converge quando a SEFAZ volta.
+     */
+    public function test_comunicacao_em_falha_pode_ser_reprocessada(): void
+    {
+        // reprocessar com gateway que aceita → status Enviada, tentativas = 2.
+    }
+```
+
+Para o gateway forjado, use `$this->app->bind(SefazViabilidadeGateway::class, ...)` no padrão que os testes de EV já usam, ou `Mockery`. O binding padrão da aplicação é `UnavailableSefazViabilidadeGateway`, que sempre lança `SefazUnavailableException` — então o caso da falha é o comportamento **atual** do ambiente, e o caso de sucesso é que precisa de gateway forjado.
+
+- [ ] **Step 2: Rodar e confirmar que falha**
+
+Run: `php artisan test --filter=ComunicacaoSefazTest`
+Expected: FAIL — `SefazNotification` não existe.
+
+- [ ] **Step 3: Enums**
+
+`app/Enums/SefazNotificationStatus.php` e `app/Enums/SefazNotificationEvent.php`, backed por string, com docblock em português explicando a RN, no estilo dos enums existentes em `app/Enums/`.
+
+- [ ] **Step 4: Migration**
+
+`create_sefaz_notifications_table` com os campos do `Alteração de Endereço` §4.3.2: `viability_request_id` (FK), `event` (string), `cnpj` (nulável), `property_registration_anterior`, `property_registration_nova` (nulável), `endereco_anterior`, `endereco_novo` (nulável), `status` (string, default `pendente`), `tentativas` (integer, default 0), `erro` (text nulável), `retorno` (json nulável), `enviada_em` (timestamp nulável), `timestamps`.
+
+Índice em `(status, created_at)` — o recorte operacional é "pendências por ordem de chegada".
+
+Nuláveis onde o requisito diz "quando aplicável": num encerramento de sede não há endereço novo.
+
+- [ ] **Step 5: Model**
+
+`app/Models/SefazNotification.php` com `#[Fillable]`, casts dos dois enums, cast de `retorno` para `array`, `belongsTo(ViabilityRequest::class)`, e um scope `pendentes()` que devolve `status` em `Pendente` ou `Falha` — as duas são reprocessáveis; `Enviada` não.
+
+- [ ] **Step 6: Registrar a comunicação na desvinculação**
+
+Em `DesvincularInscricaoService::desvincular()`:
+
+1. Dentro da transação, criar a `SefazNotification` em status `Pendente` com os dados do lock e da sede.
+2. **Fora** da transação, depois do commit e junto do laço de notificação aos abrigados, tentar o envio pelo gateway dentro de `try/catch (SefazUnavailableException $e)`. Sucesso → `Enviada`, `enviada_em`, incrementa `tentativas`. Falha → `Falha`, grava `erro`, incrementa `tentativas`.
+3. Trocar a property de auditoria `'sefaz' => 'pendente (integração bloqueada — Fase 13)'` por `'sefaz_notification_id' => $notification->id`. O texto some; o registro fica.
+4. Acrescentar `sefaz_notification_id` ao array de retorno.
+
+A ordem importa: a tentativa de envio fica **fora** da transação porque uma falha de rede não pode arrastar a desvinculação no rollback. É essa ordenação que implementa o §4.3.3.
+
+Atualizar o docblock da classe: a linha que hoje diz "registra a pendência SEFAZ (bloqueio honesto — Fase 13; o gateway não tem método de desvinculação, nada de fachada)" passa a descrever o registro reprocessável.
+
+- [ ] **Step 7: Rodar e confirmar que passa**
+
+Run: `php artisan test --filter=ComunicacaoSefazTest`
+Expected: PASS, 3 testes.
+
+- [ ] **Step 8: Rodar a suíte de EV**
+
+Run: `php artisan test --filter=EscritorioVirtual`
+Expected: PASS. Atenção a `DesvincularInscricaoTest` e `DesvincularInscricaoEndpointTest`, que asseveram o retorno e a auditoria de `desvincular()` — se asseverarem a property `'sefaz'` como string, atualize-as para o registro novo, e anote no relatório.
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add database/migrations/2026_08_28_120000_create_sefaz_notifications_table.php app/Models/SefazNotification.php app/Enums/SefazNotificationStatus.php app/Enums/SefazNotificationEvent.php app/Services/EscritorioVirtual/DesvincularInscricaoService.php tests/Feature/EscritorioVirtual/ComunicacaoSefazTest.php
+git commit -m "feat(ev): registra comunicacao a sefaz como pendencia reprocessavel"
+```
+
+Acrescente ao `git add` qualquer teste existente que você tenha precisado atualizar no Step 8.
 
 ---
 
-### Task 5: Abrigados ativos de uma sede e notificação
+### Task 5: Notificação aos abrigados — JÁ ATENDIDA
 
-**Files:**
-- Create: `tests/Feature/EscritorioVirtual/NotificacaoAbrigadosTest.php`
-- Modify: `app/Services/EscritorioVirtual/AbrigadoResolver.php` (consulta inversa)
-- Modify: `app/Services/EscritorioVirtual/DesvincularInscricaoService.php`
+Verificado no código durante o planejamento: `DesvincularInscricaoService` já identifica os abrigados ativos da inscrição (por `is_virtual_office_tenant` na decisão), dispara `AbrigadoDesvinculadoNotification` a cada requerente, e não cassa nem transfere ninguém — que é exatamente a RN-AE-04 e o CA-06 do motor.
 
-**Interfaces:**
-- Consumes: `NotificationDispatcher` (já existe).
-- Produces: `AbrigadoResolver::abrigadosAtivos(VirtualOfficeInscriptionLock $lock): Collection<ViabilityRequest>`.
+A extração de `AbrigadoResolver::abrigadosAtivos()` que o plano previa seria refatoração sem consumidor novo: a única chamada é a que já existe inline. YAGNI.
 
-O teste cobre o CA-06 do motor: sede sai da inscrição ⇒ todos os abrigados ativos recebem notificação individual com o texto do `Alteração de Endereço` §3.3.1, e **nenhum** é transferido ou cassado (RN-AE-04).
+Resta um ajuste de conteúdo, dobrado na Task 4: conferir se o texto de `AbrigadoDesvinculadoNotification` corresponde ao do `Alteração de Endereço` §3.3.1. Se divergir, alinhar; se já corresponder, registrar no relatório e seguir.
 
 ---
 
