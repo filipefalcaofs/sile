@@ -1,11 +1,12 @@
 # Escritório virtual — ficha de análise e envio de TVL para análise — design
 
-**Data:** 2026-07-16 · **Revisão:** 2 (F-2/F-3 fechados; F-1 pendente SEDUR)  
+**Data:** 2026-07-16 · **Revisão:** 4 (pacote normativo SEDUR 2026-08-28)  
 **Origem:** Reunião SEDUR 2026-07-16 + prints.  
 **Artefatos UI:** `inventario-telas-ui.md` (T02, T03, T06) + `prints/catalogo/02*`, `03*`, `04*`, `09*`.  
-**Status:** RASCUNHO — `[OPEN-F-2/F-3]` fechados (SEDUR 2026-07-16); `[OPEN-F-1]` ainda pendente (lista de campos da ficha; não bloqueia o "enviar p/ análise"). Ficha depende do motor.  
+**Status:** RASCUNHO — `[OPEN-F-2/F-3]` fechados; `[OPEN-F-1]` pendente SEDUR; revisão 3 acrescenta RN-F-01 (reenvio **não** notifica SEFAZ); revisão 4 acrescenta §9 (impactos do pacote normativo).  
 **Relacionado:**  
-- `2026-07-16-escritorio-virtual-motor-design.md`  
+- `2026-07-16-escritorio-virtual-motor-design.md` (revisão 4)  
+- `2026-08-28-escritorio-virtual-constituicao-design.md`  
 - `2026-07-14-status-analise-processo-design.md`  
 - `2026-07-14-desfecho-analise-produto-design.md`  
 - `2026-06-14-analise-tecnica-design.md`
@@ -20,7 +21,7 @@ Na demo, a operação:
 2. Usa **condicionantes** com busca no legado.
 3. Usa a tela **Enviar processo de TVL para análise** para empurrar processos à fila — com modal “não encontrado” (contraste ruim).
 
-O SILE precisa cobrir esses fluxos com paridade + UX melhor, sem inventar regra fiscal.
+O Viabiliza precisa cobrir esses fluxos com paridade + UX melhor, sem inventar regra fiscal.
 
 ## 2. Objetivos / Não-objetivos
 
@@ -68,14 +69,14 @@ Do print `02b`:
 
 ### 4.2 Melhorias
 
-- Card lateral “Escritório virtual”: tipo (Sede|Abrigado), TVL sede, inscrição, validade sede, status produto.
+- Card lateral “Escritório virtual”: tipo (Sede|Abrigado), campo estruturado **“Sede de escritório virtual? Sim/Não”** (RN-EV-04 — não só texto de condicionante), TVL sede, inscrição, validade sede, status produto.
 - Respeitar visibilidade interna (spec desfecho).
 - Contraste e controles do viewer acessíveis.
 
 ### 4.3 CA
 
 **CA-P-01** Abrigado exibe End. Virtual = TVL da sede.  
-**CA-P-02** Requerente externo **não** acessa o PDF do produto pelo SILE.
+**CA-P-02** Requerente externo **não** acessa o PDF do produto pelo Viabiliza.
 
 ## 5. Enviar processo de TVL para análise (T06)
 
@@ -99,13 +100,15 @@ Do print `02b`:
 - **Sem trava por status (`[OPEN-F-2]` fechado, SEDUR 2026-07-16):** QUALQUER status permite enviar para análise — não há filtro de elegibilidade por estado. Exigências: o processo **existir**, permissão dedicada, auditoria (RN-002) e **idempotência** (se já estiver em análise, não duplica tramitação).
 - **Vale para todos (`[OPEN-F-3]` fechado):** sede **e** abrigado — a tela não distingue tipo.
 - “Não encontrado” ≠ erro 500; resposta 422/404 de domínio com mensagem parametrizada.
+- **RN-F-01 — Reenvio não notifica a SEFAZ.** Ao enviar um processo já deferido/concluído de volta para análise, o status operacional passa a “em análise” **sem** disparar o gateway SEFAZ. Lisa (~00:35:20–00:35:50): *“E a SEFAZ tem que ser informada? — Só se o status muda. […] Cassado, revogado ou desativado? Aí a gente encaminha. Se não tiver alteração de status, não se faz necessária.”* Comunicação à SEFAZ fica restrita aos desfechos finais da spec de 14/07. Sem esta regra, uma implementação ingênua notificaria a SEFAZ na reabertura.
 
 ### 5.4 CA
 
 **CA-E-01** Processo inexistente → mensagem clara + FECHAR; sem alteração de estado.  
 **CA-E-02** Processo encontrado (qualquer status) → após confirmar, entra na caixa/análise com status operacional adequado e auditoria.  
 **CA-E-03** Processo já em análise → aviso “já está em análise” sem duplicar tramitação.  
-**CA-E-04** Sem permissão → 403.
+**CA-E-04** Sem permissão → 403.  
+**CA-E-05** Processo deferido reenviado para análise → status operacional “em análise”; **nenhuma** chamada ao `SefazViabilidadeGateway` (RN-F-01); trilha registra o reenvio.
 
 ## 6. Parametrização
 
@@ -124,3 +127,13 @@ Do print `02b`:
 - `[OPEN-F-1]` **PENDENTE (SEDUR vai enviar):** lista exata dos campos SEFAZ/“abrigados” a embutir na ficha. Até chegar, a ficha mostra placeholder “campos pendentes da SEDUR” (§3.2) — **não bloqueia** o motor nem o "enviar p/ análise".  
 - ~~`[OPEN-F-2]`~~ **FECHADO (SEDUR 2026-07-16):** qualquer status pode ser enviado para análise (sem trava de elegibilidade). Ver §5.3.  
 - ~~`[OPEN-F-3]`~~ **FECHADO (SEDUR 2026-07-16):** vale para todos (sede e abrigado). Ver §5.3.
+
+## 9. Impactos do pacote normativo SEDUR (revisão 4)
+
+O pacote de 2026-08-28 (`docs/artefatos/`) acrescenta três exigências que tocam esta spec. Nenhuma altera as RNs existentes; todas somam.
+
+**9.1 Flag de análise da sede.** A constituição de sede passa a chegar à análise com a flag *"Verificar se atende ao §2º do artigo 6º do Decreto Municipal nº 35.062, de 29 de dezembro de 2021."* (`Constituição` §6.2 e §13.1). A ficha precisa exibi-la como motivo de análise, junto dos demais. Condicionado a `[OPEN-EV-9]` — o protocolo legado saiu deferido automaticamente.
+
+**9.2 Campo de identificação da sede no fluxo de abrigado.** O requerente informa a sede e o sistema valida a cadeia via SEFAZ (RN-EV-08 do motor). A ficha exibe o resultado da consulta — sede confirmada, inscrição conferida — em vez de o analista conferir manualmente. Condicionado a `[OPEN-EV-10]`, que define se o campo é CNPJ ou nº de TVL.
+
+**9.3 Rastreabilidade das integrações.** As consultas e comunicações SEFAZ da solicitação ficam visíveis na ficha, com data/hora, resultado e código de retorno (RN-EV-10 do motor). Para a comunicação, a ficha também expõe o estado de reprocessamento — falha de comunicação não desfaz o deferimento (RN-EV-09), então a operação precisa enxergar a pendência para reprocessar.
