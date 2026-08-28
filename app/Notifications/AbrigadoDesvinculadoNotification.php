@@ -81,8 +81,8 @@ class AbrigadoDesvinculadoNotification extends Notification implements ProcessNo
         return (new MailMessage)
             ->subject("Escritório virtual desvinculado — solicitação {$this->protocolNumber}")
             ->greeting('Olá!')
-            ->line("A sede de escritório virtual da inscrição imobiliária {$this->propertyRegistration} deixou de estar vinculada a este endereço.")
-            ->line("Por isso, a sua solicitação {$this->protocolNumber} foi desvinculada da sede. Regularize a situação do seu endereço junto à SEDUR.")
+            ->line('A Sede de Escritório Virtual à qual sua empresa está vinculada deixou de prestar o serviço de Sede neste endereço.')
+            ->line('Para regularização do cadastro, deverá ser solicitada a alteração de endereço da empresa.')
             ->action('Abrir o processo no Viabiliza', $this->url)
             ->line('Este é um aviso automático — não responda a esta mensagem.');
     }
@@ -97,7 +97,7 @@ class AbrigadoDesvinculadoNotification extends Notification implements ProcessNo
             'viability_request_id' => $this->viabilityRequestId,
             'protocolo' => $this->protocolNumber,
             'titulo' => "Escritório virtual desvinculado — {$this->protocolNumber}",
-            'mensagem' => "A sede da inscrição {$this->propertyRegistration} foi desvinculada; sua solicitação {$this->protocolNumber} deixou de estar vinculada à sede.",
+            'mensagem' => 'A Sede de Escritório Virtual à qual sua empresa está vinculada deixou de prestar o serviço de Sede neste endereço. Para regularização do cadastro, deverá ser solicitada a alteração de endereço da empresa.',
             'url' => $this->url,
         ];
     }
@@ -106,7 +106,7 @@ class AbrigadoDesvinculadoNotification extends Notification implements ProcessNo
     {
         return new WhatsAppMessage(
             to: '',
-            body: "A sede de escritório virtual da inscrição {$this->propertyRegistration} foi desvinculada; sua solicitação {$this->protocolNumber} perdeu o vínculo com a sede.",
+            body: 'A Sede de Escritório Virtual à qual sua empresa está vinculada deixou de prestar o serviço de Sede neste endereço. Para regularização do cadastro, deverá ser solicitada a alteração de endereço da empresa.',
             meta: ['tipo' => CommunicationType::Resultado->value, 'protocolo' => $this->protocolNumber],
         );
     }
