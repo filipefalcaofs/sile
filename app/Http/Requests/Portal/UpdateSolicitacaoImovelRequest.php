@@ -47,6 +47,7 @@ class UpdateSolicitacaoImovelRequest extends FormRequest
 
             'is_virtual_office' => ['sometimes', 'boolean'],
             'wants_virtual_office_hq' => ['sometimes', 'boolean'],
+            'wants_virtual_office_tenant' => ['sometimes', 'nullable', 'boolean'],
             'is_public_area' => ['sometimes', 'boolean'],
             'has_independent_access' => ['sometimes', 'boolean'],
         ];

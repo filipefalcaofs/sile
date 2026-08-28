@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Portal;
 
+use App\Enums\VirtualOfficeIntent;
 use App\Models\Cnae;
 use App\Models\VirtualOfficeActivityCnae;
 use App\Models\VirtualOfficeInscriptionLock;
@@ -82,6 +83,27 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                 // Só é abrigado se a inscrição existe E tem uma sede ativa; sem
                 // sede ativa (ou inscrição vazia) não há restrição de Lista EV.
                 if (blank($inscricao) || ! VirtualOfficeInscriptionLock::ativoPara($inscricao)) {
+                    return;
+                }
+
+                // Recusa de abrigo em inscrição travada (Constituição §10.1,
+                // RN-EV-01): quem respondeu "Não" à pergunta geral numa
+                // inscrição com sede ativa é indeferido com orientação para se
+                // abrigar — ANTES da validação de CNAEs do Anexo B, para não
+                // somar dois pareceres de causas diferentes no mesmo erro.
+                if (
+                    $solicitacao->wants_virtual_office_tenant === false
+                    && $solicitacao->virtualOfficeIntent() === VirtualOfficeIntent::Nenhum
+                    && VirtualOfficeInscriptionLock::sedeAtiva($inscricao) !== null
+                ) {
+                    $validator->errors()->add(
+                        'principal_cnae_id',
+                        Settings::get(
+                            'escritorio_virtual.mensagem.recusa_abrigo',
+                            'Inscrição imobiliária vinculada a uma sede de escritório virtual. Para exercer atividades nesse local, deverá ser abrigado da sede vinculada.',
+                        ),
+                    );
+
                     return;
                 }
 

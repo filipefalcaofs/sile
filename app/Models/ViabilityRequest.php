@@ -8,6 +8,7 @@ use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Enums\VirtualOfficeIntent;
 use Database\Factories\ViabilityRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -37,7 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'used_area_m2', 'property_registration',
     'address_street', 'address_number', 'address_complement', 'address_neighborhood', 'address_zip', 'address_reference',
     'property_polygon_geojson',
-    'is_virtual_office', 'wants_virtual_office_hq', 'is_public_area', 'has_independent_access',
+    'is_virtual_office', 'wants_virtual_office_hq', 'wants_virtual_office_tenant', 'is_public_area', 'has_independent_access',
     'simulation_snapshot', 'simulation_rules_versions', 'simulation_resultado', 'simulated_at',
     'applicant_proceeded_despite', 'contingency_reason', 'external_reference',
 ])]
@@ -62,6 +63,7 @@ class ViabilityRequest extends Model
             'used_area_m2' => 'decimal:2',
             'is_virtual_office' => 'boolean',
             'wants_virtual_office_hq' => 'boolean',
+            'wants_virtual_office_tenant' => 'boolean',
             'is_public_area' => 'boolean',
             'has_independent_access' => 'boolean',
             'applicant_proceeded_despite' => 'boolean',
@@ -96,6 +98,23 @@ class ViabilityRequest extends Model
             'simulation_resultado' => null,
             'simulated_at' => null,
         ])->save();
+    }
+
+    /**
+     * Intencao de escritorio virtual derivada das duas respostas (RN-EV-01).
+     * A pergunta geral manda: so quando ela e "Nao" a vinculada e exibida.
+     */
+    public function virtualOfficeIntent(): VirtualOfficeIntent
+    {
+        if ($this->wants_virtual_office_tenant === true) {
+            return VirtualOfficeIntent::Abrigado;
+        }
+
+        if ($this->wants_virtual_office_tenant === false && $this->wants_virtual_office_hq) {
+            return VirtualOfficeIntent::Sede;
+        }
+
+        return VirtualOfficeIntent::Nenhum;
     }
 
     /**
