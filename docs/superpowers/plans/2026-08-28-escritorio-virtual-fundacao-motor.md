@@ -250,72 +250,269 @@ git commit -m "feat(ev): separa listas de atividade por anexo do decreto 35.062"
 
 ---
 
-### Task 2: Terceiro ponto da trava de inscrição
+### Task 2: Campo de intenção e terceiro ponto da trava de inscrição
 
-`Constituição` §10.1: numa inscrição com sede ativa, quem responde "Não" à pergunta geral é indeferido com orientação para se abrigar. Hoje a trava só impede segunda sede e exige sede para abrigado.
+Duas coisas indivisíveis. `Constituição` §10.1 diz que numa inscrição com sede ativa, quem responde "Não" à pergunta geral é indeferido com orientação para se abrigar. Mas o campo que existe hoje, `wants_virtual_office_hq`, significa "quero ser **sede**" — é o que `SedeEscritorioVirtualGatilho:21` lê. Ele **não** responde a pergunta geral ("deseja ser **abrigado**?"). Implementar a regra sobre ele inverteria o sentido. Então o campo de intenção da RN-EV-01 vem primeiro, na mesma tarefa.
 
 **Files:**
+- Create: `database/migrations/2026_08_28_105000_add_virtual_office_intent_to_viability_requests.php`
+- Create: `app/Enums/VirtualOfficeIntent.php`
+- Create: `tests/Feature/EscritorioVirtual/IntencaoEscritorioVirtualTest.php`
 - Create: `tests/Feature/EscritorioVirtual/RecusaAbrigoEmInscricaoTravadaTest.php`
+- Modify: `app/Models/ViabilityRequest.php`
+- Modify: `app/Http/Requests/Portal/UpdateSolicitacaoImovelRequest.php`
+- Modify: `app/Http/Controllers/Portal/SolicitacaoImovelController.php`
 - Modify: `app/Http/Requests/Portal/UpdateSolicitacaoAtividadesRequest.php`
 
 **Interfaces:**
-- Consumes: `VirtualOfficeInscriptionLock::sedeAtiva(string $propertyRegistration): ?self` (já existe).
-- Produces: nenhuma API nova — é regra de validação no protocolo do portal.
+- Produces: `App\Enums\VirtualOfficeIntent` com os casos `Abrigado = 'abrigado'`, `Sede = 'sede'`, `Nenhum = 'nenhum'`.
+- Produces: `viability_requests.wants_virtual_office_tenant` (bool nulável) — a resposta crua da **pergunta geral**. `null` = ainda não perguntado.
+- Produces: `ViabilityRequest::virtualOfficeIntent(): VirtualOfficeIntent` — deriva a intenção das duas respostas cruas.
+- Preserva: `wants_virtual_office_hq` continua sendo a resposta crua da **pergunta vinculada**, com a semântica atual, e `SedeEscritorioVirtualGatilho` segue lendo-a sem alteração.
 
-- [ ] **Step 1: Escrever o teste que falha**
+Por que dois booleanos crus mais um derivado, e não um enum persistido: as duas respostas são fatos do requerente e precisam sobreviver na auditoria; a intenção é conclusão do sistema. Persistir só a conclusão perderia a trilha, e persistir a conclusão junto criaria dois estados que podem divergir.
 
-Criar `tests/Feature/EscritorioVirtual/RecusaAbrigoEmInscricaoTravadaTest.php`. Copiar de `AbrigadoCnaeBlockTest.php` o `setUp`, o helper `portalUser()` e o helper de rascunho — **não** importar de lá; repetir, porque os testes são lidos isoladamente.
+- [ ] **Step 1: Escrever o teste de derivação da intenção**
 
-Três casos:
+Criar `tests/Feature/EscritorioVirtual/IntencaoEscritorioVirtualTest.php`, cobrindo a tabela de derivação da RN-EV-01:
+
+```php
+<?php
+
+namespace Tests\Feature\EscritorioVirtual;
+
+use App\Enums\VirtualOfficeIntent;
+use App\Models\ViabilityRequest;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Tests\TestCase;
+
+/**
+ * Intencao de escritorio virtual derivada das DUAS respostas (RN-EV-01,
+ * revisao 4): a pergunta geral ("deseja ser abrigado?") e a pergunta
+ * vinculada ao CNAE 8211-3/00 ("ira prestar servico de escritorio virtual,
+ * centro de negocios ou coworking?"). As respostas cruas ficam persistidas
+ * para auditoria; a intencao e conclusao do sistema.
+ */
+class IntencaoEscritorioVirtualTest extends TestCase
+{
+    use LazilyRefreshDatabase;
+
+    public function test_resposta_sim_na_pergunta_geral_indica_abrigado(): void
+    {
+        $request = ViabilityRequest::factory()->create([
+            'wants_virtual_office_tenant' => true,
+            'wants_virtual_office_hq' => false,
+        ]);
+
+        $this->assertSame(VirtualOfficeIntent::Abrigado, $request->virtualOfficeIntent());
+    }
+
+    public function test_nao_na_geral_e_sim_na_vinculada_indica_sede(): void
+    {
+        $request = ViabilityRequest::factory()->create([
+            'wants_virtual_office_tenant' => false,
+            'wants_virtual_office_hq' => true,
+        ]);
+
+        $this->assertSame(VirtualOfficeIntent::Sede, $request->virtualOfficeIntent());
+    }
+
+    public function test_nao_nas_duas_nao_e_escritorio_virtual(): void
+    {
+        $request = ViabilityRequest::factory()->create([
+            'wants_virtual_office_tenant' => false,
+            'wants_virtual_office_hq' => false,
+        ]);
+
+        $this->assertSame(VirtualOfficeIntent::Nenhum, $request->virtualOfficeIntent());
+    }
+
+    public function test_pergunta_geral_nao_respondida_nao_e_escritorio_virtual(): void
+    {
+        $request = ViabilityRequest::factory()->create([
+            'wants_virtual_office_tenant' => null,
+            'wants_virtual_office_hq' => false,
+        ]);
+
+        $this->assertSame(VirtualOfficeIntent::Nenhum, $request->virtualOfficeIntent());
+    }
+
+    public function test_sim_na_geral_prevalece_sobre_a_vinculada(): void
+    {
+        // A pergunta vinculada so e exibida quando a geral e "Nao"; se as duas
+        // vierem "Sim" por dado legado, a geral manda (fluxo de abrigado).
+        $request = ViabilityRequest::factory()->create([
+            'wants_virtual_office_tenant' => true,
+            'wants_virtual_office_hq' => true,
+        ]);
+
+        $this->assertSame(VirtualOfficeIntent::Abrigado, $request->virtualOfficeIntent());
+    }
+}
+```
+
+- [ ] **Step 2: Rodar e confirmar que falha**
+
+Run: `php artisan test --filter=IntencaoEscritorioVirtualTest`
+Expected: FAIL — coluna e enum inexistentes.
+
+- [ ] **Step 3: Enum da intenção**
+
+Criar `app/Enums/VirtualOfficeIntent.php`, seguindo o estilo dos enums existentes em `app/Enums/` (backed por string, com docblock explicando a RN):
+
+```php
+<?php
+
+namespace App\Enums;
+
+/**
+ * Intencao do requerente quanto a escritorio virtual (RN-EV-01), derivada das
+ * duas respostas cruas da solicitacao. Nao e persistida: e conclusao do
+ * sistema sobre os fatos declarados, e persistir as duas coisas permitiria
+ * que divergissem.
+ */
+enum VirtualOfficeIntent: string
+{
+    case Abrigado = 'abrigado';
+    case Sede = 'sede';
+    case Nenhum = 'nenhum';
+}
+```
+
+- [ ] **Step 4: Migration da resposta da pergunta geral**
+
+Criar `database/migrations/2026_08_28_105000_add_virtual_office_intent_to_viability_requests.php`:
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * Resposta da PERGUNTA GERAL de escritorio virtual ("deseja ser abrigado?",
+ * RN-EV-01 da revisao 4). O campo `wants_virtual_office_hq` que ja existe
+ * responde outra coisa — a pergunta VINCULADA ao CNAE 8211-3/00 ("ira prestar
+ * servico de escritorio virtual, centro de negocios ou coworking?") — e
+ * continua com a semantica dele.
+ *
+ * Nulavel de proposito: null significa "ainda nao perguntado", que e o estado
+ * de todo rascunho anterior a esta migration e nao pode ser confundido com
+ * uma recusa.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('viability_requests', function (Blueprint $table): void {
+            $table->boolean('wants_virtual_office_tenant')->nullable()->after('wants_virtual_office_hq');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('viability_requests', function (Blueprint $table): void {
+            $table->dropColumn('wants_virtual_office_tenant');
+        });
+    }
+};
+```
+
+- [ ] **Step 5: Model — fillable, cast e derivação**
+
+Em `app/Models/ViabilityRequest.php`: acrescentar `'wants_virtual_office_tenant'` à lista de fillable (linha 40) e `'wants_virtual_office_tenant' => 'boolean'` aos casts (junto da linha 64). Adicionar o método:
+
+```php
+    /**
+     * Intencao de escritorio virtual derivada das duas respostas (RN-EV-01).
+     * A pergunta geral manda: so quando ela e "Nao" a vinculada e exibida.
+     */
+    public function virtualOfficeIntent(): VirtualOfficeIntent
+    {
+        if ($this->wants_virtual_office_tenant === true) {
+            return VirtualOfficeIntent::Abrigado;
+        }
+
+        if ($this->wants_virtual_office_tenant === false && $this->wants_virtual_office_hq) {
+            return VirtualOfficeIntent::Sede;
+        }
+
+        return VirtualOfficeIntent::Nenhum;
+    }
+```
+
+- [ ] **Step 6: Aceitar a resposta no protocolo do portal**
+
+Em `UpdateSolicitacaoImovelRequest::rules()`, junto da regra existente de `wants_virtual_office_hq` (linha 49):
+
+```php
+            'wants_virtual_office_tenant' => ['sometimes', 'nullable', 'boolean'],
+```
+
+Em `SolicitacaoImovelController`, junto da atribuição existente (linha 67), gravar o novo campo. Usar `$request->has('wants_virtual_office_tenant') ? $request->boolean('wants_virtual_office_tenant') : null` — `boolean()` converte ausência em `false`, e ausência aqui significa "não perguntado", não "recusou".
+
+- [ ] **Step 7: Rodar e confirmar que passa**
+
+Run: `php artisan test --filter=IntencaoEscritorioVirtualTest`
+Expected: PASS, 5 testes.
+
+- [ ] **Step 8: Escrever o teste do bloqueio**
+
+Criar `tests/Feature/EscritorioVirtual/RecusaAbrigoEmInscricaoTravadaTest.php`. Copiar de `tests/Feature/EscritorioVirtual/AbrigadoCnaeBlockTest.php` o `setUp`, o helper `portalUser()` e o helper de rascunho — **repetir o código, não importar**, porque os testes são lidos isoladamente.
+
+Três casos, todos exercitando o endpoint de atividades do portal:
 
 ```php
     public function test_recusar_abrigo_em_inscricao_com_sede_ativa_bloqueia(): void
     {
-        // inscricao travada por sede ativa + resposta "Nao" a pergunta geral
-        // → 422 com a mensagem de orientacao para se abrigar.
+        // rascunho com wants_virtual_office_tenant = false numa inscricao que
+        // tem VirtualOfficeInscriptionLock ativa → 422 com a mensagem de
+        // orientacao para se abrigar.
     }
 
     public function test_recusar_abrigo_em_inscricao_sem_sede_nao_bloqueia(): void
     {
-        // mesma resposta "Nao", inscricao livre → passa.
+        // mesma resposta, inscricao livre → a requisicao passa.
     }
 
     public function test_aceitar_abrigo_em_inscricao_com_sede_ativa_nao_bloqueia(): void
     {
-        // resposta "Sim" → segue para as demais validacoes (Anexo B).
+        // wants_virtual_office_tenant = true → segue para a validacao do
+        // Anexo B, sem o bloqueio desta regra.
     }
 ```
 
-A mensagem esperada, verbatim do requisito: *"Inscrição imobiliária vinculada a uma sede de escritório virtual. Para exercer atividades nesse local, deverá ser abrigado da sede vinculada."*
+Mensagem esperada, verbatim do requisito: `Inscrição imobiliária vinculada a uma sede de escritório virtual. Para exercer atividades nesse local, deverá ser abrigado da sede vinculada.`
 
-Nota: o campo que carrega a resposta da pergunta geral ainda é `wants_virtual_office_hq` no schema atual. A revisão 4 prevê substituí-lo por um campo de intenção de três estados, mas **essa troca não está neste plano** — ela depende de `[OPEN-EV-10]`. Usar o campo atual e deixar comentário `// TODO revisao 4: trocar por campo de intencao quando OPEN-EV-10 fechar` **não** é aceitável; em vez disso, escrever a validação lendo o campo atual e registrar a dependência no docblock do teste.
-
-- [ ] **Step 2: Rodar e confirmar que falha**
+- [ ] **Step 9: Rodar e confirmar que falha**
 
 Run: `php artisan test --filter=RecusaAbrigoEmInscricaoTravadaTest`
-Expected: FAIL — a resposta é 200/302 em vez de 422 no primeiro caso.
+Expected: FAIL — o primeiro caso não retorna 422.
 
-- [ ] **Step 3: Implementar a validação**
+- [ ] **Step 10: Implementar o bloqueio**
 
-Em `UpdateSolicitacaoAtividadesRequest::after()`, no closure que já trata a inscrição travada, acrescentar o ramo da recusa antes da checagem de CNAEs do Anexo B: com `sedeAtiva($inscricao)` não nulo e resposta negativa à pergunta geral, adicionar o erro com a mensagem parametrizada.
+Em `UpdateSolicitacaoAtividadesRequest::after()`, no closure que já resolve a inscrição travada: quando `VirtualOfficeInscriptionLock::sedeAtiva($inscricao)` não é nulo **e** a intenção da solicitação é `VirtualOfficeIntent::Nenhum` com a pergunta geral respondida (`wants_virtual_office_tenant === false`), adicionar o erro.
 
-Ler o texto de `Settings::get('escritorio_virtual.mensagem.recusa_abrigo', <default verbatim>)`, no mesmo padrão da mensagem de bloqueio já existente.
+Ler o texto com `Settings::get('escritorio_virtual.mensagem.recusa_abrigo', <default verbatim acima>)`, no mesmo padrão da mensagem de bloqueio de CNAE já existente naquele arquivo.
 
-- [ ] **Step 4: Rodar e confirmar que passa**
+Cuidado com a ordem: a regra da recusa vem **antes** da validação de CNAEs do Anexo B. Quem recusou ser abrigado não deve receber, além do bloqueio, uma lista de CNAEs reprovados — são erros de causas diferentes e o requisito manda um parecer só.
+
+- [ ] **Step 11: Rodar e confirmar que passa**
 
 Run: `php artisan test --filter=RecusaAbrigoEmInscricaoTravadaTest`
 Expected: PASS, 3 testes.
 
-- [ ] **Step 5: Rodar a suíte de EV**
+- [ ] **Step 12: Rodar a suíte de EV inteira**
 
 Run: `php artisan test --filter=EscritorioVirtual`
-Expected: PASS.
+Expected: PASS. Atenção a `SedePerguntaPortalTest` e `GatilhoSedeTest`, que exercitam o campo antigo — a semântica dele não mudou, então devem continuar verdes; se falharem, é sinal de que a derivação está lendo o campo errado.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 13: Commit**
 
 ```bash
-git add tests/Feature/EscritorioVirtual/RecusaAbrigoEmInscricaoTravadaTest.php app/Http/Requests/Portal/UpdateSolicitacaoAtividadesRequest.php
-git commit -m "feat(ev): bloqueia recusa de abrigo em inscricao com sede ativa"
+git add app/Enums/VirtualOfficeIntent.php database/migrations/2026_08_28_105000_add_virtual_office_intent_to_viability_requests.php app/Models/ViabilityRequest.php app/Http/Requests/Portal/UpdateSolicitacaoImovelRequest.php app/Http/Controllers/Portal/SolicitacaoImovelController.php app/Http/Requests/Portal/UpdateSolicitacaoAtividadesRequest.php tests/Feature/EscritorioVirtual/IntencaoEscritorioVirtualTest.php tests/Feature/EscritorioVirtual/RecusaAbrigoEmInscricaoTravadaTest.php
+git commit -m "feat(ev): deriva intencao de escritorio virtual e bloqueia recusa de abrigo"
 ```
 
 ---
