@@ -7,8 +7,10 @@ use App\Enums\SefazNotificationStatus;
 use App\Models\Company;
 use App\Models\SefazNotification;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
+use App\Notifications\AbrigadoDesvinculadoNotification;
 use App\Services\EscritorioVirtual\DesvincularInscricaoService;
 use App\Services\Sefaz\SefazUnavailableException;
 use App\Services\Sefaz\SefazViabilidadeGateway;
@@ -41,6 +43,27 @@ class ComunicacaoSefazTest extends TestCase
             'active' => true,
             'locked_at' => now(),
         ]);
+    }
+
+    /**
+     * Abrigado de verdade vinculado a `$inscricao` (decisao com
+     * is_virtual_office_tenant), com requerente proprio para receber a
+     * notificacao de desvinculo — usado para provar que o efeito mais visivel
+     * ao cidadao sobrevive a uma falha na comunicacao com a SEFAZ (§4.3.3).
+     */
+    private function abrigado(string $inscricao): ViabilityRequest
+    {
+        $requester = User::factory()->create();
+        $abrigado = ViabilityRequest::factory()->protocoled()->create([
+            'property_registration' => $inscricao,
+            'requester_user_id' => $requester->id,
+        ]);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $abrigado->id,
+            'is_virtual_office_tenant' => true,
+        ]);
+
+        return $abrigado;
     }
 
     /**
@@ -78,6 +101,7 @@ class ComunicacaoSefazTest extends TestCase
         NotificationFacade::fake();
 
         $lock = $this->lockComSede();
+        $abrigado = $this->abrigado('123.456.789');
 
         // Binding default = UnavailableSefazViabilidadeGateway (Fase 13):
         // representa o estado NORMAL deste ambiente hoje, sem gateway forjado.
@@ -87,7 +111,14 @@ class ComunicacaoSefazTest extends TestCase
         $lock->refresh();
         $this->assertFalse($lock->active, 'a desvinculacao valeu mesmo com a SEFAZ indisponivel');
 
-        NotificationFacade::assertSentTimes(\App\Notifications\AbrigadoDesvinculadoNotification::class, 0);
+        // O efeito mais visivel ao cidadao sobrevive a falha do SEFAZ: o
+        // abrigado FOI notificado, nao apesar da falha, mas independente dela
+        // (§4.3.3) — se o envio a SEFAZ fosse movido para antes deste laco ou
+        // para dentro da transacao, esta asserçao teria que falhar.
+        NotificationFacade::assertSentTo(
+            $abrigado->requester,
+            AbrigadoDesvinculadoNotification::class,
+        );
 
         $notification = SefazNotification::find($resultado['sefaz_notification_id']);
 
