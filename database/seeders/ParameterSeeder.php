@@ -418,6 +418,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:2000'],
                 'description' => 'Mensagem de bloqueio quando o abrigado informa CNAE fora da Lista EV numa inscrição com sede ativa',
             ],
+            'analise.escritorio_virtual.mensagem_recusa_abrigo' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'Inscrição imobiliária vinculada a uma sede de escritório virtual. Para exercer atividades nesse local, deverá ser abrigado da sede vinculada.',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Mensagem de indeferimento quando a inscrição tem sede ativa e o requerente recusa a condição de abrigado',
+            ],
             'analise.precedentes.janela_meses' => [
                 'group' => 'analise',
                 'type' => 'integer',

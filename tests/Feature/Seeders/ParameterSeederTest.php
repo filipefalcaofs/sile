@@ -4,18 +4,18 @@ namespace Tests\Feature\Seeders;
 
 use App\Models\Parameter;
 use Database\Seeders\ParameterSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class ParameterSeederTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_seeder_cria_catalogo_completo(): void
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(95, Parameter::query()->count());
+        $this->assertSame(96, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -829,6 +829,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(95, Parameter::query()->count());
+        $this->assertSame(96, Parameter::query()->count());
     }
 }

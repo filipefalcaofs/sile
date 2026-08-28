@@ -3,6 +3,7 @@
 namespace Tests\Feature\EscritorioVirtual;
 
 use App\Models\Cnae;
+use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
@@ -90,6 +91,40 @@ class RecusaAbrigoEmInscricaoTravadaTest extends TestCase
 
         // Bloqueado → nenhum CNAE sincronizado.
         $this->assertSame(0, $solicitacao->cnaes()->count());
+    }
+
+    /**
+     * A mensagem de recusa de abrigo e parametrizavel de verdade (I3):
+     * sobrescrever analise.escritorio_virtual.mensagem_recusa_abrigo no
+     * catalogo de parametros (HU-014) muda o texto devolvido pela validacao,
+     * a mesma disciplina da mensagem irma (mensagem_bloqueio_abrigado).
+     */
+    public function test_mensagem_de_recusa_de_abrigo_e_parametrizavel(): void
+    {
+        Parameter::factory()->create([
+            'key' => 'analise.escritorio_virtual.mensagem_recusa_abrigo',
+            'group' => 'analise',
+            'type' => 'string',
+            'value' => 'Mensagem customizada de recusa de abrigo.',
+        ]);
+
+        $user = $this->portalUser();
+        $solicitacao = $this->draftFor($user, 'X', wantsVirtualOfficeTenant: false);
+        $this->sedeAtivaEm('X');
+        $minimercado = Cnae::factory()->create(['code' => '4712-1/00']);
+
+        $this->actingAs($user)
+            ->from(route('portal.solicitacoes.index'))
+            ->put(route('portal.solicitacoes.atividades', $solicitacao), [
+                'principal_cnae_id' => $minimercado->id,
+            ])
+            ->assertSessionHasErrors('principal_cnae_id');
+
+        $errors = session('errors')->getBag('default');
+        $this->assertSame(
+            'Mensagem customizada de recusa de abrigo.',
+            $errors->first('principal_cnae_id'),
+        );
     }
 
     public function test_recusar_abrigo_em_inscricao_sem_sede_nao_bloqueia(): void

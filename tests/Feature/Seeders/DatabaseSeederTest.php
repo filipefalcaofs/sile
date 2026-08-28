@@ -30,7 +30,7 @@ use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use Database\Seeders\ExpressoDevSeeder;
 use Database\Seeders\ZonaFicticiaDevSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -38,7 +38,7 @@ use Tests\TestCase;
 
 class DatabaseSeederTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_seed_completo_prepara_ambiente_de_desenvolvimento(): void
     {
@@ -67,7 +67,7 @@ class DatabaseSeederTest extends TestCase
         // analise.escritorio_virtual.mensagem_bloqueio_abrigado)
         // + 3 do envio manual à análise (tela T06: features.enviar_tvl_analise +
         // analise.enviar_analise.mensagem_nao_encontrado/mensagem_confirmacao).
-        $this->assertSame(95, Parameter::query()->count());
+        $this->assertSame(96, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -327,7 +327,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(95, Parameter::query()->count());
+        $this->assertSame(96, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

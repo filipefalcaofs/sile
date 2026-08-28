@@ -163,6 +163,7 @@ return [
             'cnae_gatilho_sede' => '8211-3/00',
             'condicionante_sede' => 'A viabilidade é DEFERIDA na condição de prestação de serviços de escritório virtual, nos termos da legislação vigente.',
             'mensagem_bloqueio_abrigado' => 'A atividade informada não está na lista de atividades permitidas para escritório virtual nesta inscrição.',
+            'mensagem_recusa_abrigo' => 'Inscrição imobiliária vinculada a uma sede de escritório virtual. Para exercer atividades nesse local, deverá ser abrigado da sede vinculada.',
         ],
         'precedentes' => [
             'janela_meses' => 12,

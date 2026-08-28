@@ -37,8 +37,12 @@ class DesvincularInscricaoService
     /**
      * @return array{abrigados_notificados: int, sefaz_notification_id: int}
      */
-    public function desvincular(VirtualOfficeInscriptionLock $lock, string $motivo, ?User $actor = null): array
-    {
+    public function desvincular(
+        VirtualOfficeInscriptionLock $lock,
+        string $motivo,
+        ?User $actor = null,
+        SefazNotificationEvent $evento = SefazNotificationEvent::SedeEncerrada,
+    ): array {
         $inscricao = (string) $lock->property_registration;
         $sede = $lock->sede;
 
@@ -48,18 +52,19 @@ class DesvincularInscricaoService
             ->with('requester')
             ->get();
 
-        $notification = DB::transaction(function () use ($lock, $sede, $inscricao, $motivo, $actor, $abrigados): SefazNotification {
+        $notification = DB::transaction(function () use ($lock, $sede, $inscricao, $motivo, $actor, $evento, $abrigados): SefazNotification {
             // Libera a inscrição: o vínculo dos abrigados é DERIVADO do lock ativo,
             // então desativá-lo já os desvincula (a decisão do abrigado é imutável,
             // nada a mutar nela).
             $lock->forceFill(['active' => false, 'released_at' => now()])->save();
 
-            // Este serviço só implementa hoje o fluxo de encerramento (sem
-            // endereço/inscrição novos) — mudança de endereço e desfechos da
-            // análise são call sites futuros que precisarão de um evento próprio.
+            // O evento default (SedeEncerrada) cobre o gatilho manual da
+            // retaguarda; mudança de endereço e desfechos da análise passam o
+            // evento correspondente (RN-EV-09) para o registro não nascer
+            // contraditório com o motivo.
             $notification = SefazNotification::create([
                 'viability_request_id' => $sede->id,
-                'event' => SefazNotificationEvent::SedeEncerrada,
+                'event' => $evento,
                 'cnpj' => $sede->company?->cnpj,
                 'property_registration_anterior' => $inscricao,
                 'property_registration_nova' => null,

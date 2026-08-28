@@ -77,14 +77,16 @@ class ComunicacaoSefazTest extends TestCase
         $lock = $this->lockComSede();
 
         $resultado = app(DesvincularInscricaoService::class)
-            ->desvincular($lock, 'Sede mudou de endereço.', User::factory()->create());
+            ->desvincular($lock, 'Sede mudou de endereço.', User::factory()->create(), SefazNotificationEvent::SedeMudouEndereco);
 
         $this->assertNotNull($resultado['sefaz_notification_id']);
 
         $notification = SefazNotification::find($resultado['sefaz_notification_id']);
 
         $this->assertNotNull($notification);
-        $this->assertSame(SefazNotificationEvent::SedeEncerrada, $notification->event);
+        // O registro acompanha o gatilho informado: motivo de mudança de
+        // endereço grava evento de mudança de endereço, não de encerramento.
+        $this->assertSame(SefazNotificationEvent::SedeMudouEndereco, $notification->event);
         $this->assertSame('12345678000199', $notification->cnpj);
         $this->assertSame('123.456.789', $notification->property_registration_anterior);
         // A auditoria nao guarda mais o texto solto: so a referencia ao registro.

@@ -99,8 +99,8 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                     $validator->errors()->add(
                         'principal_cnae_id',
                         Settings::get(
-                            'escritorio_virtual.mensagem.recusa_abrigo',
-                            'Inscrição imobiliária vinculada a uma sede de escritório virtual. Para exercer atividades nesse local, deverá ser abrigado da sede vinculada.',
+                            'analise.escritorio_virtual.mensagem_recusa_abrigo',
+                            config('sile.analise.escritorio_virtual.mensagem_recusa_abrigo'),
                         ),
                     );
 
