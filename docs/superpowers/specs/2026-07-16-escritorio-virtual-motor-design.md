@@ -47,7 +47,7 @@ Esta spec é a **camada de domínio compartilhada**. Ela define o que os três s
 | **Sede** | Viabilidade deferida com CNAE 8211-3/00 e confirmação de que prestará serviço de escritório virtual; inscrição imobiliária vinculada/travada |
 | **Abrigado** | Viabilidade na mesma inscrição da sede, com TVL próprio e referência ao nº TVL da sede |
 | **Anexo A** | Lista de atividades permitidas **para a sede** — 6 CNAEs (Decreto 35.062/2021) |
-| **Anexo B** | Lista de atividades permitidas **em escritório virtual**, para o abrigado — 319 CNAEs |
+| **Anexo B** | Lista de atividades permitidas **em escritório virtual**, para o abrigado — 319 CNAEs. O Anexo A é subconjunto próprio dele: as 6 atividades da sede também são permitidas ao abrigado, e 313 são exclusivas do abrigado |
 | **Pergunta geral** | "Deseja ser abrigado de escritório virtual?" — determina o fluxo |
 | **Pergunta vinculada** | Desmembramento do CNAE 8211-3/00, exibido quando a pergunta geral é respondida "Não" |
 
@@ -258,7 +258,7 @@ DADO um deferimento já concluído, QUANDO a comunicação à SEFAZ falha, ENTÃ
 - ~~`[OPEN-EV-4]`~~ **CONFIRMADO (SEDUR):** viabilidade da sede só interna + SEFAZ via API.
 - ~~`[OPEN-EV-5]`~~ **FECHADO (SEDUR 2026-08-28):** gatilho é CNAE + resposta "Sim" à pergunta **vinculada**. Ver RN-EV-01.
 - ~~`[OPEN-EV-6]`~~ **FECHADO (SEDUR 2026-08-28):** SEFAZ tem dois sentidos, com tratamentos opostos de indisponibilidade. Ver RN-EV-08/09.
-- `[OPEN-EV-7]` **ABERTO — TRAVA MODELO DE DADOS.** O CNAE 8211-3/00 é o gatilho da sede (`Constituição` §4.1.2) ou é CNAE **vedado** em sede (`Alteração de Atividade` §3.3 e §12.3, citando o Anexo A)? O Anexo A não contém o 8211-3/00. As três fontes não fecham entre si. Sem isso não dá para escrever a validação de inclusão de atividade em sede.
+- `[OPEN-EV-7]` **ABERTO — TRAVA MODELO DE DADOS.** O CNAE 8211-3/00 é o gatilho da sede (`Constituição` §4.1.2) ou é CNAE **vedado** em sede (`Alteração de Atividade` §3.3 e §12.3, citando o Anexo A)? Conferido nos dois anexos extraídos: **o 8211-3/00 não consta de nenhum dos dois** — nem do Anexo A (6 CNAEs) nem do Anexo B (319). O CNAE que constitui a sede não está em nenhuma lista de atividade permitida. As três fontes não fecham entre si, e sem isso não dá para escrever a validação de inclusão de atividade em sede.
 - `[OPEN-EV-8]` **ABERTO:** enunciado oficial da pergunta geral — três redações nos artefatos. Ver RN-EV-01.
 - `[OPEN-EV-9]` **ABERTO:** a sede passa a ir **sempre** à análise com a flag do §2º art. 6º? O protocolo real `Processo - sede de virtual.pdf` saiu **deferido automaticamente**. Se a regra nova vale, é mudança de comportamento frente ao legado e precisa ser confirmada como intencional.
 - `[OPEN-EV-10]` **ABERTO — TRAVA MODELO DE DADOS.** O abrigado identifica a sede pelo **CNPJ** (spec nova, §7.2.1) ou pelo **nº do TVL da sede** (legado — `Processo - abrigado da sede 2108519.pdf` traz `TVL Sede: 2108519`)? Ou os dois, com o CNPJ como validação da cadeia?
