@@ -7,6 +7,8 @@ use App\Models\RuleVersion;
 use App\Models\VirtualOfficeActivityCnae;
 use Database\Seeders\EscritorioVirtualCnaeSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -93,5 +95,29 @@ class AnexoListaEvTest extends TestCase
         $this->assertTrue(VirtualOfficeActivityCnae::permitido('8630-5/99'));
         $this->assertFalse(VirtualOfficeActivityCnae::permitido('8211-3/00'));
         $this->assertFalse(VirtualOfficeActivityCnae::permitido('9999-9/99'));
+    }
+
+    /**
+     * Reversibilidade da migration do discriminador: como o Anexo A e
+     * subconjunto do Anexo B, apos o seed existem pares (rule_version_id,
+     * cnae_code) duplicados entre 'A' e 'B'. O down() precisa remover as
+     * linhas do Anexo A antes de reimpor o unique antigo (rule_version_id,
+     * cnae_code) — senao a unicidade colide e o rollback lanca excecao.
+     * Este teste roda o down() de verdade sobre um banco ja semeado e
+     * confere que sobra so o Anexo B, sem coluna anexo.
+     */
+    public function test_migration_reverte_sem_quebrar_com_os_dois_anexos_semeados(): void
+    {
+        $totalAntes = VirtualOfficeActivityCnae::query()->count();
+        $this->assertSame(325, $totalAntes); // 6 (A) + 319 (B)
+
+        $migration = require database_path('migrations/2026_08_28_100000_add_anexo_to_virtual_office_activity_cnaes.php');
+
+        $migration->down();
+
+        $this->assertFalse(Schema::hasColumn('virtual_office_activity_cnaes', 'anexo'));
+
+        $totalDepois = DB::table('virtual_office_activity_cnaes')->count();
+        $this->assertSame(319, $totalDepois);
     }
 }
