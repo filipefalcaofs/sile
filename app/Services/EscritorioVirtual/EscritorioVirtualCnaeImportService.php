@@ -8,15 +8,16 @@ use RuntimeException;
 use SplFileObject;
 
 /**
- * Import versionado da Lista EV (CNAEs permitidos para ABRIGADO de escritório
- * virtual, RN-EV-05/07) a partir do snapshot CSV commitado em
- * database/data/escritorio-virtual/ — espelha RiscoSanitarioImportService.
+ * Import versionado das listas de atividade por anexo do Decreto 35.062/2021
+ * (Anexo A = SEDE, Anexo B = ABRIGADO, RN-EV-05/07) a partir dos snapshots
+ * CSV commitados em database/data/escritorio-virtual/ — espelha
+ * RiscoSanitarioImportService.
  *
  * Fonte oficial: endpoint SEDUR AtividadesPermitidasEmEscritorioVirtual.php;
- * este CSV é o snapshot vigente até a integração live com o endpoint.
+ * estes CSVs são o snapshot vigente até a integração live com o endpoint.
  *
- * Idempotente: upsert por (rule_version_id, cnae_code) — sem model events
- * (a auditoria é o log explícito do relatório no seeder).
+ * Idempotente: upsert por (rule_version_id, anexo, cnae_code) — sem model
+ * events (a auditoria é o log explícito do relatório no seeder).
  */
 class EscritorioVirtualCnaeImportService
 {
@@ -25,7 +26,7 @@ class EscritorioVirtualCnaeImportService
     /**
      * @return array{importados: int}
      */
-    public function import(RuleVersion $version, string $csvPath): array
+    public function import(RuleVersion $version, string $csvPath, string $anexo): array
     {
         $file = new SplFileObject($csvPath, 'r');
         $file->setFlags(SplFileObject::READ_CSV | SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY);
@@ -62,6 +63,7 @@ class EscritorioVirtualCnaeImportService
 
             $rows[$code] = [
                 'rule_version_id' => $version->getKey(),
+                'anexo' => $anexo,
                 'cnae_code' => $code,
                 'cnae_description' => $data['cnae_description'] !== '' ? $data['cnae_description'] : null,
             ];
@@ -70,7 +72,7 @@ class EscritorioVirtualCnaeImportService
         foreach (array_chunk(array_values($rows), 500) as $chunk) {
             VirtualOfficeActivityCnae::query()->upsert(
                 $chunk,
-                ['rule_version_id', 'cnae_code'],
+                ['rule_version_id', 'anexo', 'cnae_code'],
                 ['cnae_description'],
             );
         }
