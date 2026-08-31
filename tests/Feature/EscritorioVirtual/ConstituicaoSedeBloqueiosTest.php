@@ -94,6 +94,14 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
      * inscrição COM sede ativa cai nos dois closures se a divisão falhar —
      * este teste prova que cai em só um, contando as mensagens em vez de só
      * checar presença (senão a duplicação passaria despercebida).
+     *
+     * Achado 1 da revisão final: este é exatamente o caso do abrigado
+     * LEGÍTIMO (por definição tem sede ativa na inscrição). Sem a correção,
+     * o único erro emitido era o genérico do Anexo B
+     * (mensagem_bloqueio_abrigado, que não cita o CNAE nem o decreto) — o
+     * texto exigido (mensagem_cnae_sede_em_abrigado) nunca chegava para o
+     * caso mais comum. A asserção do TEXTO, não só da contagem, é o que
+     * prova a correção.
      */
     public function test_cnae_de_sede_com_intencao_de_abrigado_em_inscricao_com_sede_ativa_gera_um_unico_erro(): void
     {
@@ -111,6 +119,38 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
 
         $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
         $this->assertCount(1, $errors);
+        $this->assertSame(
+            str_replace(':cnae', '8211-3/00', config('sile.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado')),
+            $errors[0],
+        );
+    }
+
+    /**
+     * Contraste com o teste anterior: o abrigado legítimo com um CNAE COMUM
+     * (fora do Anexo B, mas que não é o gatilho) continua recebendo a
+     * mensagem genérica — só o gatilho ganha o texto específico do decreto.
+     */
+    public function test_cnae_comum_fora_do_anexo_b_com_sede_ativa_recebe_mensagem_generica(): void
+    {
+        $user = $this->portalUser();
+        $solicitacao = $this->draftFor($user, 'X', wantsTenant: true);
+        $this->sedeAtivaEm('X');
+        // Minimercado (4712-1/00) não consta do Anexo B nem é o gatilho.
+        $minimercado = Cnae::factory()->create(['code' => '4712-1/00']);
+
+        $this->actingAs($user)
+            ->from(route('portal.solicitacoes.index'))
+            ->put(route('portal.solicitacoes.atividades', $solicitacao), [
+                'principal_cnae_id' => $minimercado->id,
+            ])
+            ->assertSessionHasErrors('principal_cnae_id');
+
+        $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
+        $this->assertCount(1, $errors);
+        $this->assertSame(
+            config('sile.analise.escritorio_virtual.mensagem_bloqueio_abrigado'),
+            $errors[0],
+        );
     }
 
     public function test_sede_em_inscricao_que_ja_tem_sede_e_bloqueada(): void

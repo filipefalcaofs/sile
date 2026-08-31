@@ -193,12 +193,16 @@ interface AbrigadoLinha {
 }
 
 interface EscritorioVirtual {
-    /** Gatilho de sede disparou (RN-EV-01: CNAE 8211-3/00 + requerente "quero ser sede"). */
+    /** Gatilho de sede disparou (RN-EV-01: CNAE gatilho + requerente "quero ser sede"). */
     gatilho: boolean;
     /** O analista marcou a sede nesta ficha. */
     is_sede: boolean;
     inscricao: string | null;
     abrigados: AbrigadoLinha[];
+    /** Código do CNAE gatilho da sede (parametrizável — default 8211-3/00). */
+    cnae_gatilho: string;
+    /** Texto do parâmetro `analise.escritorio_virtual.flag_analise_sede` (§2º art. 6º do Decreto 35.062/2021). */
+    flag_analise_sede: string;
 }
 
 interface FichaAnaliseShowProps {
@@ -1090,9 +1094,9 @@ export default function FichaAnaliseShow({
                         <AlertIcon className="size-5 shrink-0 fill-current text-brand-500" />
                         <p className="text-theme-sm text-gray-600 dark:text-gray-300">
                             <strong>Gatilho — Sede de Escritório Virtual:</strong> o processo contém o CNAE gatilho
-                            (8211-3/00) e o requerente pediu para ser sede (RN-EV-01). Confirme o desfecho de sede
-                            abaixo — ao deferir como sede, a inscrição imobiliária é travada para escritório virtual
-                            (RN-EV-03).
+                            ({escritorioVirtual.cnae_gatilho}) e o requerente pediu para ser sede (RN-EV-01).{' '}
+                            {escritorioVirtual.flag_analise_sede} Confirme o desfecho de sede abaixo — ao deferir
+                            como sede, a inscrição imobiliária é travada para escritório virtual (RN-EV-03).
                         </p>
                     </div>
                 )}

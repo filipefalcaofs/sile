@@ -7,14 +7,16 @@ use App\Enums\RuleDomain;
 use App\Models\AnalysisRecord;
 use App\Models\Cnae;
 use App\Models\Company;
+use App\Models\Parameter;
 use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
+use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -32,7 +34,7 @@ use Tests\TestCase;
  */
 class FichaEvPainelTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -132,6 +134,45 @@ class FichaEvPainelTest extends TestCase
                     ->hasAll(['tvl', 'razao_social', 'validade'])
                     ->where('validade', null)
                     ->etc()));
+    }
+
+    /**
+     * Achado 3 da revisão final: o texto do §2º do art. 6º do Decreto
+     * 35.062/2021 (Tarefa 3) precisa chegar ao PAINEL do analista — hoje só
+     * está em `ViabilityRequestTransition.reason` (tabela da fila, visível
+     * ao requerente via TimelineSolicitacao) e não em `AnalysisStatusTransition`
+     * (tabela que a ficha lê). O bloco `escritorioVirtual` da ficha carrega o
+     * texto do parâmetro, para o card renderizá-lo em vez do aviso genérico
+     * hardcoded.
+     */
+    public function test_ficha_da_sede_expoe_o_texto_da_flag_de_analise(): void
+    {
+        $sede = $this->criarSedeAtiva('INSC-EV-FLAG', 'VIA-EV-FLAG', 'TVL-EV-FLAG');
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$sede->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where(
+                    'escritorioVirtual.flag_analise_sede',
+                    config('sile.analise.escritorio_virtual.flag_analise_sede'),
+                )
+                ->where('escritorioVirtual.cnae_gatilho', config('sile.analise.escritorio_virtual.cnae_gatilho_sede')));
+    }
+
+    public function test_sobrescrever_o_parametro_muda_o_texto_que_chega_a_ficha(): void
+    {
+        $this->seed(ParameterSeeder::class);
+        Parameter::query()->where('key', 'analise.escritorio_virtual.flag_analise_sede')->first()
+            ->update(['value' => 'Verificar condição excepcional de sede (teste ficha).']);
+
+        $sede = $this->criarSedeAtiva('INSC-EV-FLAG2', 'VIA-EV-FLAG2', 'TVL-EV-FLAG2');
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$sede->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('escritorioVirtual.flag_analise_sede', 'Verificar condição excepcional de sede (teste ficha).'));
     }
 
     public function test_sede_sem_abrigados_tem_painel_vazio(): void

@@ -19,6 +19,7 @@ use App\Services\Analise\CadastroImobiliarioFichaService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Support\Audit\AuditService;
+use App\Support\Settings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -376,7 +377,17 @@ class AnalysisRecordController extends Controller
      *    spec-2) e degrada para null → "—" na tela, jamais inventada. Vazio quando
      *    não há abrigado (CA-F-03).
      *
-     * @return array{gatilho: bool, is_sede: bool, inscricao: string|null, abrigados: list<array{tvl: string|null, razao_social: string|null, validade: null}>}
+     * Também expõe (achado 3 da revisão final): `cnae_gatilho`, o código
+     * parametrizável exibido no card do gatilho (o JSX não pode mais
+     * cravar "8211-3/00" literal); e `flag_analise_sede`, o texto do
+     * parâmetro `analise.escritorio_virtual.flag_analise_sede` (Tarefa 3) —
+     * hoje esse texto só é gravado em `ViabilityRequestTransition.reason`
+     * (fila de tramitação, tabela diferente da que a ficha lê) e fica
+     * visível ao REQUERENTE via TimelineSolicitacao, nunca ao analista. A
+     * ficha precisa do mesmo texto, lido do parâmetro (não da transição),
+     * para renderizar no card em vez do aviso genérico.
+     *
+     * @return array{gatilho: bool, is_sede: bool, inscricao: string|null, abrigados: list<array{tvl: string|null, razao_social: string|null, validade: null}>, cnae_gatilho: string, flag_analise_sede: string}
      */
     private function escritorioVirtual(ViabilityRequest $request, AnalysisRecord $record): array
     {
@@ -409,6 +420,14 @@ class AnalysisRecordController extends Controller
             'is_sede' => (bool) $record->is_virtual_office_hq,
             'inscricao' => $inscricao,
             'abrigados' => $abrigados,
+            'cnae_gatilho' => (string) Settings::get(
+                'analise.escritorio_virtual.cnae_gatilho_sede',
+                config('sile.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
+            ),
+            'flag_analise_sede' => (string) Settings::get(
+                'analise.escritorio_virtual.flag_analise_sede',
+                config('sile.analise.escritorio_virtual.flag_analise_sede'),
+            ),
         ];
     }
 

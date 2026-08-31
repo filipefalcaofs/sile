@@ -137,15 +137,36 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
 
                 $codes = Cnae::query()->whereIn('id', $ids)->pluck('code');
 
+                // O CNAE gatilho nunca consta do Anexo B (de propósito — RN-C-02),
+                // então ele sempre reprova neste loop. Para quem tem intenção de
+                // Abrigado, o parecer não pode ser o genérico de "fora da lista":
+                // o decreto exige o texto que cita o CNAE e o Anexo B (achado 1
+                // da revisão final — sem isto, o abrigado legítimo com sede ativa
+                // nunca via o texto exigido, porque o closure irmão (RN-C-02)
+                // para exatamente neste caso).
+                $gatilho = $solicitacao->virtualOfficeIntent() === VirtualOfficeIntent::Abrigado
+                    ? app(SedeEscritorioVirtualGatilho::class)->cnaeGatilho()
+                    : null;
+
                 foreach ($codes as $code) {
                     if (! VirtualOfficeActivityCnae::permitido($code)) {
-                        $validator->errors()->add(
-                            'principal_cnae_id',
-                            Settings::get(
-                                'analise.escritorio_virtual.mensagem_bloqueio_abrigado',
-                                config('sile.analise.escritorio_virtual.mensagem_bloqueio_abrigado'),
-                            ),
-                        );
+                        if ($gatilho !== null && preg_replace('/\D/', '', $code) === $gatilho) {
+                            $validator->errors()->add(
+                                'principal_cnae_id',
+                                str_replace(':cnae', $code, Settings::get(
+                                    'analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado',
+                                    config('sile.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado'),
+                                )),
+                            );
+                        } else {
+                            $validator->errors()->add(
+                                'principal_cnae_id',
+                                Settings::get(
+                                    'analise.escritorio_virtual.mensagem_bloqueio_abrigado',
+                                    config('sile.analise.escritorio_virtual.mensagem_bloqueio_abrigado'),
+                                ),
+                            );
+                        }
 
                         break;
                     }
@@ -195,10 +216,10 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                         if (preg_replace('/\D/', '', $code) === $gatilho) {
                             $validator->errors()->add(
                                 'principal_cnae_id',
-                                Settings::get(
+                                str_replace(':cnae', $code, Settings::get(
                                     'analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado',
                                     config('sile.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado'),
-                                ),
+                                )),
                             );
 
                             return;
@@ -226,8 +247,19 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                 }
 
                 // RN-C-03: a sede só pode exercer {CNAE gatilho} ∪ Anexo A —
-                // um erro por CNAE reprovado, para identificar todos.
-                $naoPermitidos = app(SedeAtividadesResolver::class)->naoPermitidos($codes);
+                // um erro por CNAE reprovado, para identificar todos. Sem
+                // versão vigente do Anexo A, a lista está indisponível (dado
+                // ausente, não "nenhuma atividade permitida") — não bloqueia
+                // o passo: segue para a análise decidir, honesto (achado 2 da
+                // revisão final; mesmo princípio anti-fachada do
+                // FluxoExpressoService).
+                $resolver = app(SedeAtividadesResolver::class);
+
+                if (! $resolver->listaDisponivel()) {
+                    return;
+                }
+
+                $naoPermitidos = $resolver->naoPermitidos($codes);
 
                 foreach ($naoPermitidos as $code) {
                     $validator->errors()->add(

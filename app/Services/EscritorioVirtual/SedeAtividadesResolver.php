@@ -2,6 +2,8 @@
 
 namespace App\Services\EscritorioVirtual;
 
+use App\Enums\RuleDomain;
+use App\Models\RuleVersion;
 use App\Models\VirtualOfficeActivityCnae;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 
@@ -17,6 +19,23 @@ use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 class SedeAtividadesResolver
 {
     public function __construct(private readonly SedeEscritorioVirtualGatilho $gatilho) {}
+
+    /**
+     * Existe versao VIGENTE do dominio AtividadesEscritorioVirtual? O Anexo A
+     * nao tem endpoint conhecido (`[OPEN-EV-2-bis]`) e depende de importacao
+     * administrativa versionada — numa janela sem vigente (seeder ainda nao
+     * rodou, ou publicacao de versao nova em andamento), `permitida()`
+     * reprovaria TODOS os codigos (menos o gatilho), o que pareceria "nenhuma
+     * atividade permitida" quando na verdade e "dado ausente". Quem chama
+     * `naoPermitidos()` para decidir bloqueio deve checar isto ANTES: lista
+     * indisponivel nao e "toda atividade fora do Anexo A", e um indeferimento
+     * automatico sobre essa base seria uma decisao tomada sem dado (o mesmo
+     * principio anti-fachada que o FluxoExpressoService honra em toda parte).
+     */
+    public function listaDisponivel(): bool
+    {
+        return RuleVersion::vigente(RuleDomain::AtividadesEscritorioVirtual)->exists();
+    }
 
     /**
      * Um codigo e permitido a sede se for o CNAE gatilho ou constar do

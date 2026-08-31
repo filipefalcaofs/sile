@@ -64,10 +64,13 @@ class SolicitacaoImovelController extends Controller
                 'address_reference' => $request->validated('address_reference'),
                 'property_registration' => $request->validated('property_registration'),
                 'is_virtual_office' => $request->boolean('is_virtual_office'),
-                'wants_virtual_office_hq' => $request->boolean('wants_virtual_office_hq'),
-                // A tela do imóvel ([OPEN-EV-8] pendente) ainda não envia esta
-                // chave: ausência é "não perguntou desta vez", não "apague a
-                // resposta anterior" — preserva o valor já gravado (I4).
+                // A tela do imóvel ([OPEN-EV-8] pendente) ainda não envia estas
+                // duas chaves: ausência é "não perguntou desta vez", não "apague a
+                // resposta anterior" — preserva o valor já gravado (I4), simétrico
+                // para sede e abrigado.
+                'wants_virtual_office_hq' => $request->has('wants_virtual_office_hq')
+                    ? $request->boolean('wants_virtual_office_hq')
+                    : $solicitacao->wants_virtual_office_hq,
                 'wants_virtual_office_tenant' => $request->has('wants_virtual_office_tenant')
                     ? $request->boolean('wants_virtual_office_tenant')
                     : $solicitacao->wants_virtual_office_tenant,

@@ -428,9 +428,9 @@ class ParameterSeeder extends Seeder
             'analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado' => [
                 'group' => 'analise',
                 'type' => 'string',
-                'default_value' => 'O CNAE 8211-3/00 não é permitido para exercício em escritório virtual e coworking, conforme as disposições do Anexo B do Decreto Municipal nº 35.062/2021.',
+                'default_value' => 'O CNAE :cnae não é permitido para exercício em escritório virtual e coworking, conforme as disposições do Anexo B do Decreto Municipal nº 35.062/2021.',
                 'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Mensagem de indeferimento quando o abrigado informa o CNAE gatilho da sede (RN-C-02)',
+                'description' => 'Mensagem de indeferimento quando o abrigado informa o CNAE gatilho da sede (RN-C-02), com :cnae substituído pelo código do gatilho',
             ],
             'analise.escritorio_virtual.mensagem_sede_duplicada' => [
                 'group' => 'analise',
