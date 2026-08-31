@@ -6,6 +6,8 @@ use App\Enums\VirtualOfficeIntent;
 use App\Models\Cnae;
 use App\Models\VirtualOfficeActivityCnae;
 use App\Models\VirtualOfficeInscriptionLock;
+use App\Services\EscritorioVirtual\SedeAtividadesResolver;
+use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Support\Settings;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -131,6 +133,94 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
 
                         break;
                     }
+                }
+            },
+            function (Validator $validator) {
+                $solicitacao = $this->route('solicitacao');
+
+                $intent = $solicitacao?->virtualOfficeIntent() ?? VirtualOfficeIntent::Nenhum;
+
+                if ($intent === VirtualOfficeIntent::Nenhum) {
+                    return;
+                }
+
+                $ids = array_map('intval', array_merge(
+                    [(int) $this->input('principal_cnae_id')],
+                    (array) $this->input('complementares', []),
+                ));
+                $ids = array_values(array_filter($ids));
+
+                if ($ids === []) {
+                    return;
+                }
+
+                $codes = Cnae::query()->whereIn('id', $ids)->pluck('code');
+
+                // RN-C-02 (constituição de sede): o CNAE gatilho (8211-3/00)
+                // caracteriza a sede e, de propósito, não consta do Anexo B —
+                // um abrigado que o peça é sempre indeferido. O closure
+                // existente (validação geral do Anexo B) já cobre esse mesmo
+                // CNAE, mas SÓ roda quando a inscrição tem sede ativa
+                // (`blank($inscricao) || ! VirtualOfficeInscriptionLock::ativoPara($inscricao)`
+                // no topo dele). Para não somar dois pareceres da mesma causa
+                // no mesmo campo, este ramo cobre exatamente o complemento:
+                // inscrição em branco ou sem sede ativa. Juntos, os dois
+                // fecham o domínio inteiro sem se sobrepor.
+                if ($intent === VirtualOfficeIntent::Abrigado) {
+                    $inscricaoAbrigado = $solicitacao->property_registration;
+
+                    if (filled($inscricaoAbrigado) && VirtualOfficeInscriptionLock::ativoPara($inscricaoAbrigado)) {
+                        return;
+                    }
+
+                    $gatilho = app(SedeEscritorioVirtualGatilho::class)->cnaeGatilho();
+
+                    foreach ($codes as $code) {
+                        if (preg_replace('/\D/', '', $code) === $gatilho) {
+                            $validator->errors()->add(
+                                'principal_cnae_id',
+                                Settings::get(
+                                    'analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado',
+                                    config('sile.analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado'),
+                                ),
+                            );
+
+                            return;
+                        }
+                    }
+
+                    return;
+                }
+
+                // RN-C-01: inscrição que já tem sede ativa não pode receber
+                // outra constituição de sede. Sem inscrição informada não há
+                // como já existir sede vinculada — segue direto para RN-C-03.
+                $inscricao = $solicitacao->property_registration;
+
+                if (filled($inscricao) && VirtualOfficeInscriptionLock::sedeAtiva($inscricao) !== null) {
+                    $validator->errors()->add(
+                        'principal_cnae_id',
+                        Settings::get(
+                            'analise.escritorio_virtual.mensagem_sede_duplicada',
+                            config('sile.analise.escritorio_virtual.mensagem_sede_duplicada'),
+                        ),
+                    );
+
+                    return;
+                }
+
+                // RN-C-03: a sede só pode exercer {CNAE gatilho} ∪ Anexo A —
+                // um erro por CNAE reprovado, para identificar todos.
+                $naoPermitidos = app(SedeAtividadesResolver::class)->naoPermitidos($codes);
+
+                foreach ($naoPermitidos as $code) {
+                    $validator->errors()->add(
+                        'principal_cnae_id',
+                        str_replace(':cnae', $code, Settings::get(
+                            'analise.escritorio_virtual.mensagem_cnae_fora_anexo_a',
+                            config('sile.analise.escritorio_virtual.mensagem_cnae_fora_anexo_a'),
+                        )),
+                    );
                 }
             },
         ];

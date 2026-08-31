@@ -425,6 +425,27 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:2000'],
                 'description' => 'Mensagem de indeferimento quando a inscrição tem sede ativa e o requerente recusa a condição de abrigado',
             ],
+            'analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'O CNAE 8211-3/00 não é permitido para exercício em escritório virtual e coworking, conforme as disposições do Anexo B do Decreto Municipal nº 35.062/2021.',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Mensagem de indeferimento quando o abrigado informa o CNAE gatilho da sede (RN-C-02)',
+            ],
+            'analise.escritorio_virtual.mensagem_sede_duplicada' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'Já existe uma sede de escritório virtual vinculada a esta inscrição imobiliária.',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Mensagem de indeferimento quando a intenção é constituir sede numa inscrição que já tem sede ativa (RN-C-01)',
+            ],
+            'analise.escritorio_virtual.mensagem_cnae_fora_anexo_a' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'O CNAE :cnae não é permitido para exercício em sede de escritório virtual, conforme as disposições do Anexo A do Decreto Municipal nº 35.062/2021.',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Mensagem de indeferimento quando a sede informa atividade fora de {CNAE gatilho} ∪ Anexo A (RN-C-03), com :cnae substituído pelo código reprovado',
+            ],
             'analise.precedentes.janela_meses' => [
                 'group' => 'analise',
                 'type' => 'integer',
