@@ -128,6 +128,68 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
             ->assertSessionHasErrors('principal_cnae_id');
     }
 
+    /**
+     * O closure pré-existente (validação de Anexo B) assumia "inscrição com
+     * sede ativa ⇒ é abrigado" — premissa que não vale mais para quem está
+     * CONSTITUINDO sede (intenção Sede). Sem a exclusão dessa intenção no
+     * closure existente, um CNAE fora do Anexo B (mas também fora do Anexo A)
+     * disparava DOIS pareceres de causas diferentes: o do Anexo B (closure
+     * antigo) e o de sede duplicada (RN-C-01, closure novo). Este teste prova
+     * que sobra só o de sede duplicada — contando os erros, não só checando
+     * presença, para não deixar a duplicação passar despercebida.
+     */
+    public function test_sede_em_inscricao_que_ja_tem_sede_com_cnae_fora_dos_dois_anexos_gera_um_unico_erro(): void
+    {
+        $user = $this->portalUser();
+        $solicitacao = $this->draftFor($user, 'X', wantsHq: true);
+        $this->sedeAtivaEm('X');
+        // 4712-1/00 (minimercado) não consta de nenhum dos dois anexos.
+        $foraDosDoisAnexos = Cnae::factory()->create(['code' => '4712-1/00']);
+
+        $this->actingAs($user)
+            ->from(route('portal.solicitacoes.index'))
+            ->put(route('portal.solicitacoes.atividades', $solicitacao), [
+                'principal_cnae_id' => $foraDosDoisAnexos->id,
+            ])
+            ->assertSessionHasErrors('principal_cnae_id');
+
+        $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
+        $this->assertCount(1, $errors);
+        $this->assertSame(
+            config('sile.analise.escritorio_virtual.mensagem_sede_duplicada'),
+            $errors[0],
+        );
+    }
+
+    /**
+     * O requisito manda identificar TODOS os CNAEs reprovados, não só o
+     * primeiro — o foreach da RN-C-03 já faz isso, mas sem este teste um
+     * `break` (padrão que o closure vizinho do Anexo B usa) quebraria a
+     * regra sem quebrar teste nenhum.
+     */
+    public function test_sede_com_dois_cnaes_fora_do_anexo_a_nomeia_ambos(): void
+    {
+        $user = $this->portalUser();
+        $solicitacao = $this->draftFor($user, null, wantsHq: true);
+        $gatilho = Cnae::factory()->create(['code' => '8211-3/00']);
+        // Nenhum dos dois consta do Anexo A (um só está no Anexo B, o outro em nenhum).
+        $foraA1 = Cnae::factory()->create(['code' => '8630-5/99']);
+        $foraA2 = Cnae::factory()->create(['code' => '4712-1/00']);
+
+        $this->actingAs($user)
+            ->from(route('portal.solicitacoes.index'))
+            ->put(route('portal.solicitacoes.atividades', $solicitacao), [
+                'principal_cnae_id' => $gatilho->id,
+                'complementares' => [$foraA1->id, $foraA2->id],
+            ])
+            ->assertSessionHasErrors('principal_cnae_id');
+
+        $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
+        $this->assertCount(2, $errors);
+        $this->assertNotEmpty(array_filter($errors, fn ($msg) => str_contains($msg, '8630-5/99')));
+        $this->assertNotEmpty(array_filter($errors, fn ($msg) => str_contains($msg, '4712-1/00')));
+    }
+
     public function test_sede_com_atividade_fora_do_anexo_a_e_bloqueada(): void
     {
         $user = $this->portalUser();

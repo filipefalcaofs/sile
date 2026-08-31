@@ -57,7 +57,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(30, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
-        // 95 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
+        // 99 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
         // + 1 (analise.convite.prazo_resposta_horas_uteis, Fase 2a)
         // (Módulo 2: relatorios.saturacao.*) + 3 da Auditoria Preditiva (Módulo 3:
         // features.ia_auditoria_preditiva + ia.auditoria_preditiva.janela/limiar)
@@ -66,7 +66,10 @@ class DatabaseSeederTest extends TestCase
         // + 1 do bloqueio de CNAE do abrigado (Plano M2, Tarefa 4:
         // analise.escritorio_virtual.mensagem_bloqueio_abrigado)
         // + 3 do envio manual à análise (tela T06: features.enviar_tvl_analise +
-        // analise.enviar_analise.mensagem_nao_encontrado/mensagem_confirmacao).
+        // analise.enviar_analise.mensagem_nao_encontrado/mensagem_confirmacao)
+        // + 3 dos bloqueios de constituição de sede (SDD escritorio-virtual-
+        // constituicao-sede, Tarefa 2: mensagem_cnae_sede_em_abrigado/
+        // mensagem_sede_duplicada/mensagem_cnae_fora_anexo_a).
         $this->assertSame(99, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()

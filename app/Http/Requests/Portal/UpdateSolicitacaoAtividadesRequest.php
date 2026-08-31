@@ -55,9 +55,11 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
     /**
      * A atividade principal nunca aparece entre os complementares (intenções
      * distintas — espelha a separação principal × secundários do [03-06]). E,
-     * quando a inscrição já tem uma SEDE de escritório virtual ativa, a
-     * solicitação é ABRIGADA: todos os CNAEs precisam estar na Lista EV vigente
-     * (RN-EV-05/CA-04).
+     * quando a inscrição já tem uma SEDE de escritório virtual ativa e a
+     * intenção NÃO é constituir outra sede, a solicitação é ABRIGADA: todos os
+     * CNAEs precisam estar na Lista EV vigente (RN-EV-05/CA-04). Quem constitui
+     * sede numa inscrição já travada cai nos bloqueios de constituição de sede
+     * (RN-C-01/02/03), não neste.
      *
      * @return array<int, callable(Validator): void>
      */
@@ -84,7 +86,21 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
 
                 // Só é abrigado se a inscrição existe E tem uma sede ativa; sem
                 // sede ativa (ou inscrição vazia) não há restrição de Lista EV.
-                if (blank($inscricao) || ! VirtualOfficeInscriptionLock::ativoPara($inscricao)) {
+                //
+                // "Inscrição com sede ativa" não implica mais "é abrigado": antes
+                // de virtualOfficeIntent() existir, essa era a única premissa
+                // disponível, mas quem está CONSTITUINDO a sede (intenção Sede)
+                // também cai numa inscrição com sede ativa quando ela já é
+                // duplicada — e não é abrigado nenhum. A lista do Anexo B é do
+                // abrigado; a lista da sede é {gatilho} ∪ Anexo A, coberta pela
+                // RN-C-03 no closure novo. Sem esta exclusão, os dois closures
+                // somavam dois pareceres de causas diferentes (Anexo B + sede
+                // duplicada) no mesmo campo para quem constitui sede.
+                if (
+                    blank($inscricao)
+                    || ! VirtualOfficeInscriptionLock::ativoPara($inscricao)
+                    || $solicitacao->virtualOfficeIntent() === VirtualOfficeIntent::Sede
+                ) {
                     return;
                 }
 
