@@ -57,7 +57,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(30, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
-        // 99 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
+        // 100 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
         // + 1 (analise.convite.prazo_resposta_horas_uteis, Fase 2a)
         // (Módulo 2: relatorios.saturacao.*) + 3 da Auditoria Preditiva (Módulo 3:
         // features.ia_auditoria_preditiva + ia.auditoria_preditiva.janela/limiar)
@@ -69,8 +69,10 @@ class DatabaseSeederTest extends TestCase
         // analise.enviar_analise.mensagem_nao_encontrado/mensagem_confirmacao)
         // + 3 dos bloqueios de constituição de sede (SDD escritorio-virtual-
         // constituicao-sede, Tarefa 2: mensagem_cnae_sede_em_abrigado/
-        // mensagem_sede_duplicada/mensagem_cnae_fora_anexo_a).
-        $this->assertSame(99, Parameter::query()->count());
+        // mensagem_sede_duplicada/mensagem_cnae_fora_anexo_a)
+        // + 1 da flag de encaminhamento à análise da sede (SDD escritorio-virtual-
+        // constituicao-sede, Tarefa 3: analise.escritorio_virtual.flag_analise_sede).
+        $this->assertSame(100, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -330,7 +332,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(99, Parameter::query()->count());
+        $this->assertSame(100, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

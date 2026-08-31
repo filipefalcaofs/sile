@@ -167,6 +167,7 @@ return [
             'mensagem_cnae_sede_em_abrigado' => 'O CNAE 8211-3/00 não é permitido para exercício em escritório virtual e coworking, conforme as disposições do Anexo B do Decreto Municipal nº 35.062/2021.',
             'mensagem_sede_duplicada' => 'Já existe uma sede de escritório virtual vinculada a esta inscrição imobiliária.',
             'mensagem_cnae_fora_anexo_a' => 'O CNAE :cnae não é permitido para exercício em sede de escritório virtual, conforme as disposições do Anexo A do Decreto Municipal nº 35.062/2021.',
+            'flag_analise_sede' => 'Verificar se atende ao §2º do artigo 6º do Decreto Municipal nº 35.062, de 29 de dezembro de 2021.',
         ],
         'precedentes' => [
             'janela_meses' => 12,

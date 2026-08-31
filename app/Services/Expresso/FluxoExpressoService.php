@@ -116,10 +116,20 @@ class FluxoExpressoService
             );
         }
 
-        // RN-EV-01: CNAE gatilho (default 8211-3/00) + "será sede? = Sim" não
-        // conclui no expresso — vai para análise humana (gatilho parametrizável).
+        // RN-EV-01/RN-C-04: CNAE gatilho (default 8211-3/00) + "será sede? =
+        // Sim" não conclui no expresso — vai para análise humana (gatilho
+        // parametrizável). O motivo registrado é o texto da flag do §2º do
+        // art. 6º do Decreto 35.062/2021 (não a descrição interna do
+        // gatilho): é isso que a operação lê na fila de análise, e a
+        // informação de que foi o gatilho de sede já está na trilha de
+        // auditoria por outros campos (resultado, consolidado, por_cnae).
         if ($this->gatilhoSede->aplica($request)) {
-            return $this->encaminharAnalise($request, 'gatilho: sede de escritório virtual', $actor, $resolved);
+            $flag = (string) Settings::get(
+                'analise.escritorio_virtual.flag_analise_sede',
+                config('sile.analise.escritorio_virtual.flag_analise_sede'),
+            );
+
+            return $this->encaminharAnalise($request, $flag, $actor, $resolved);
         }
 
         return $this->emitir($request, $resolved, $actor);

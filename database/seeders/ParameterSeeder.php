@@ -446,6 +446,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:2000'],
                 'description' => 'Mensagem de indeferimento quando a sede informa atividade fora de {CNAE gatilho} ∪ Anexo A (RN-C-03), com :cnae substituído pelo código reprovado',
             ],
+            'analise.escritorio_virtual.flag_analise_sede' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'Verificar se atende ao §2º do artigo 6º do Decreto Municipal nº 35.062, de 29 de dezembro de 2021.',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Motivo registrado quando o gatilho de sede encaminha a solicitação à análise (RN-C-04): a flag do §2º do art. 6º que a operação lê na fila',
+            ],
             'analise.precedentes.janela_meses' => [
                 'group' => 'analise',
                 'type' => 'integer',
