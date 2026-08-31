@@ -1,8 +1,8 @@
 # Motor de risco — planilha de regras 20.08.26 — design
 
-**Data:** 2026-08-28 · **Revisão:** 1
+**Data:** 2026-08-28 · **Revisão:** 2 (respostas SEDUR 2026-08-31)
 **Origem:** `docs/artefatos/Planilha de regras - versão 20.08.26.xlsx`, aba *Regras de tratamento para as perguntas* (pacote normativo SEDUR 2026-08-28).
-**Status:** RASCUNHO — depende de captura de dado que hoje não existe (`[OPEN-MR-1]`).
+**Status:** RASCUNHO — `[OPEN-MR-1]` fechado pela SEDUR em 2026-08-31: o tipo de imóvel vem do REGIN e só três valores dirigem regra. Nenhuma pendência restante bloqueia o início.
 **Relacionado:** `2026-06-13-classificacao-de-risco-design.md`, `2026-06-14-motor-louos-design.md`, `2026-06-14-fluxo-expresso-design.md`
 
 ---
@@ -21,7 +21,7 @@ Na versão 20.08.26, o nível é atributo **do ramo da regra**. A mesma atividad
 |---|---|---|
 | Resposta à pergunta condicionante | "Se a resposta for NÃO na pergunta 2" | Existe (`respostasCondicionantes`) |
 | Área construída, corte em 1.250 m² | "área menor ou igual a 1.250 m²" | Existe, mas em `EnquadramentoInput.area` |
-| Tipo de imóvel | "GALPÃO", "CONTAINER", "EDIFICAÇÃO RESIDENCIAL" | **Não existe em lugar nenhum** |
+| Tipo de imóvel | "GALPÃO", "CONTAINER", "EDIFICAÇÃO RESIDENCIAL" | **Não existe em lugar nenhum.** Vem do REGIN (SEDUR 2026-08-31) |
 | Subcategoria de uso | "ALTO RISCO SE ENQUADRADO COMO ID" | Existe, em `EnquadramentoResult.quadro7.subgrupo` |
 
 Duas dessas variáveis são **saída do motor de enquadramento LOUOS**, e uma não é capturada em canto nenhum do sistema.
@@ -54,9 +54,11 @@ A `Regra 25` mostra a variação de nível **dentro** da mesma regra: resposta "
 
 A `Regra 1` é a única que condiciona o nível à subcategoria: *"MÉDIO RISCO / ALTO RISCO SE ENQUADRADO COMO ID"*.
 
-### MR-02 — Tipo de imóvel não é capturado
+### MR-02 — Tipo de imóvel não é capturado, e vem do REGIN
 
 `viability_requests` não tem campo de tipo de imóvel — nenhuma migration o cria. Os protocolos legados trazem o dado (`Tipo de imóvel: Galpão` em `Processo 43747.pdf`, `Edificação Comercial` na maioria, `Sala` no de sede).
+
+A SEDUR confirmou em 2026-08-31 que o dado **vem do REGIN** para o nosso sistema — não é campo que o requerente preenche — e que **só três valores dirigem regra**: galpão, container e edificação residencial.
 
 Sem esse campo, o ramo semiexpresso de **33 regras atualizadas** é inaplicável. É a lacuna que trava a entrega.
 
@@ -68,9 +70,13 @@ Sem esse campo, o ramo semiexpresso de **33 regras atualizadas** é inaplicável
 
 ### 4.1 Captura
 
-Campo de tipo de imóvel em `viability_requests`, com domínio fechado alinhado ao legado (edificação comercial, edificação residencial, galpão, container, sala, e o que a SEDUR confirmar — `[OPEN-MR-1]`). Preenchido no protocolo do portal.
+Campo de tipo de imóvel em `viability_requests`, alimentado pelo **REGIN** na entrada da solicitação.
 
-Sem o campo preenchido, o ramo que depende dele não pode ser avaliado, e a decisão vai à análise com o motivo registrado — nunca um nível inventado.
+Só três valores dirigem regra: galpão, container e edificação residencial. Os demais que os protocolos mostram — "Edificação Comercial", "Sala" — não acionam o ramo semiexpresso; caem no ramo comum.
+
+Isso simplifica a captura, mas cria um risco que precisa de tratamento explícito. Se a regra for "é um dos três? senão, ramo comum", qualquer valor que o REGIN mande fora do esperado — variante de grafia, acento diferente, valor novo — é silenciosamente tratado como "não é galpão", e o processo segue pelo expresso. Isso é fachada: decisão automática tomada sobre dado que não foi reconhecido.
+
+O tratamento: normalizar o valor recebido e compará-lo ao conjunto conhecido. Valor **não reconhecido** não vira "não é um dos três" — vira encaminhamento à análise com o motivo do valor desconhecido. Só valor reconhecido, esteja dentro ou fora dos três, decide automaticamente. Ver `[OPEN-MR-6]`.
 
 ### 4.2 Composição, não acoplamento
 
@@ -94,6 +100,8 @@ Das 47 regras, 35 têm data de atualização (33 em 21/08/2026, 2 em 21/07/2026)
 
 **CA-MR-01** — DADO uma solicitação sem tipo de imóvel informado, QUANDO uma regra depende do tipo, ENTÃO a decisão vai à análise com o motivo da ausência; nunca é classificada por omissão.
 
+**CA-MR-01b** — DADO um tipo de imóvel que o REGIN enviou e o sistema não reconhece, QUANDO uma regra depende do tipo, ENTÃO a decisão vai à análise com o motivo do valor desconhecido; nunca é tratada como "não é um dos três".
+
 **CA-MR-02** — DADO a `Regra 24`, resposta "Não" à pergunta 2 e área ≤ 1.250 m², ENTÃO expresso, médio risco, enquadramento 07.12.13.
 
 **CA-MR-03** — DADO a `Regra 24`, imóvel galpão e resposta "Não" à pergunta 2, ENTÃO semiexpresso, médio risco, remetido à crítica do analista.
@@ -110,7 +118,8 @@ Das 47 regras, 35 têm data de atualização (33 em 21/08/2026, 2 em 21/07/2026)
 
 ## 6. Questões abertas
 
-- `[OPEN-MR-1]` **ABERTO — TRAVA A ENTREGA.** Qual o domínio fechado de "tipo de imóvel"? A planilha cita galpão, container e edificação residencial; os protocolos trazem também edificação comercial e sala. Precisamos da lista oficial e de como ela é coletada no protocolo — campo do requerente ou dado do cadastro imobiliário?
+- ~~`[OPEN-MR-1]`~~ **FECHADO (SEDUR 2026-08-31):** só galpão, container e edificação residencial dirigem regra, e o dado vem do REGIN — não é campo do requerente. Ver §4.1.
+- `[OPEN-MR-6]` **ABERTO:** quais os valores exatos que o REGIN envia no campo de tipo de imóvel? Precisamos da enumeração para normalizar com segurança. Não bloqueia o início: a §4.1 manda encaminhar valor desconhecido à análise em vez de assumir, então a ausência da lista degrada honesto.
 - `[OPEN-MR-2]` **ABERTO:** o corte de 1.250 m² usa a área **utilizada** declarada (que os protocolos trazem) ou a área construída do imóvel? Nos protocolos os dois conceitos aparecem misturados.
 - `[OPEN-MR-3]` **ABERTO:** "ID" na `Regra 1` é subcategoria de uso do Quadro 7. Confirmar o código exato e se há outras subcategorias com o mesmo efeito de elevação de risco.
 - `[OPEN-MR-4]` **ABERTO:** as 35 regras carimbadas com data de atualização mudaram de comportamento, ou parte é revisão de redação? O diff contra a parametrização vigente responde — mas convém a SEDUR indicar quais são materiais, para dirigir a conferência.

@@ -1,9 +1,9 @@
 # Escritório virtual — motor sede × abrigado — design
 
-**Data:** 2026-07-16 · **Revisão:** 4 (pacote normativo SEDUR 2026-08-28)
+**Data:** 2026-07-16 · **Revisão:** 5 (respostas SEDUR 2026-08-31)
 **Origem:** Reunião SEDUR (Lisa Santos) 2026-07-16 — Meet `dhv-isxt-ibp` (~37 min); pacote normativo SEDUR recebido em 2026-08-28.
 **Artefatos:** `docs/reunioes/2026-07-16-cliente/` (transcrição, ata, prints) e `docs/artefatos/` (requisitos, listas de atividade, planilha de regras 20.08.26, 11 protocolos de teste).
-**Status:** RASCUNHO — a revisão 4 **fecha** `[OPEN-EV-1]`, `[OPEN-EV-5]` e `[OPEN-EV-6]` com base no pacote normativo, e abre `[OPEN-EV-7]` a `[OPEN-EV-11]`. **EV-7 e EV-10 travam o modelo de dados: não gerar plano antes deles.**
+**Status:** RASCUNHO — a revisão 5 **fecha** `[OPEN-EV-7]`, `[OPEN-EV-9]` e `[OPEN-EV-10]` com as respostas da SEDUR de 2026-08-31, e abre `[OPEN-EV-12]` a `[OPEN-EV-14]`. **`[OPEN-EV-12]` precisa de confirmação por escrito antes de qualquer implementação: ele retira do nosso escopo um subsistema inteiro que o requisito descreve como nosso.**
 **Relacionado:**
 - `2026-08-28-escritorio-virtual-constituicao-design.md`
 - `2026-08-28-escritorio-virtual-alteracao-endereco-design.md`
@@ -102,11 +102,22 @@ O texto de condicionante pode continuar no PDF como cláusula legal, mas não su
 
 - N abrigados por sede; mesma inscrição imobiliária da sede.
 - CNAEs ⊆ **Anexo B**; fora da lista → indeferimento automático com o CNAE identificado na mensagem.
+- O 8211-3/00 **não** consta do Anexo B, e isso é deliberado: impede que uma sede se estabeleça dentro de outro escritório virtual (SEDUR 2026-08-31).
 - Produto traz **End. Virtual - TVL Nº** = TVL da sede.
 - Validade do abrigado = validade da sede, enquanto a sede estiver ativa na inscrição.
 - Pode ser expresso se a sede já estiver deferida/ativa no local.
 
 A identificação da sede pelo requerente passa por consulta SEFAZ (RN-EV-08), não por digitação livre.
+
+### RN-EV-05c — Atividades permitidas à sede — NOVO (SEDUR 2026-08-31)
+
+O conjunto de atividades que uma sede pode exercer é **{8211-3/00} ∪ Anexo A**, não o Anexo A sozinho.
+
+O 8211-3/00 é o CNAE que **caracteriza** a sede e por isso não figura no Anexo A — ele não é uma atividade que a sede exerce entre outras, é a declaração de que o estabelecimento presta o serviço de escritório virtual. O Anexo A lista as atividades que um estabelecimento **que já é sede** pode acumular, seja no próprio processo de constituição, seja depois por alteração de atividade econômica.
+
+Consequência direta para a validação: ao conferir as atividades de uma solicitação de sede contra o Anexo A, o 8211-3/00 é **excluído da conferência**. Sem essa exceção, toda sede seria indeferida pelo próprio CNAE que a define.
+
+Os demais CNAEs do Anexo A **não** caracterizam sede por si só. Um estabelecimento que peça apenas contabilidade (6920-6/01) sem o 8211-3/00 e sem responder "Sim" à pergunta vinculada não é sede.
 
 ### RN-EV-05b — Consultas operam sobre vínculo ativo
 
@@ -132,25 +143,19 @@ Quando a sede sai da inscrição — por mudança de endereço, encerramento da 
 
 > **`[OPEN-EV-2-bis]` ABERTO.** `[OPEN-EV-2]` fechou o endpoint SEDUR `AtividadesPermitidasEmEscritorioVirtual.php` como fonte oficial, mas ele aparenta cobrir só o **Anexo B**. O Anexo A (6 CNAEs) só existe no PDF `docs/artefatos/Atividades permitidas para sede de Escritório Virtual.pdf`. Confirmar se há endpoint para o Anexo A; enquanto não houver, ele entra por importação administrativa versionada e o PDF fica registrado como origem — não como fonte automatizada.
 
-### RN-EV-08 — Consulta SEFAZ (sentido de entrada) — NOVO
+### RN-EV-08 — Identificação da sede vem do REGIN, não de consulta nossa (REVISTA)
 
-Antes de enquadrar um abrigado, o sistema consulta a SEFAZ pelo CNPJ da empresa sede informado pelo requerente e valida a cadeia: CNPJ existe → tem viabilidade vinculada → a viabilidade é de uma sede de EV → a inscrição imobiliária dela é a mesma da solicitação.
+**A revisão 5 retira esta regra do nosso escopo.** A SEDUR informou em 2026-08-31 que a solicitação de abrigado **não é feita no nosso sistema**: ela ocorre no REGIN, e é lá que o abrigado informa o CNPJ da empresa sede.
 
-Sete desfechos, todos com mensagem própria (`Constituição` §8):
+O papel do nosso sistema passa a ser apenas **identificar a viabilidade da sede** à qual o abrigado está vinculado, a partir do que o REGIN nos entrega. Não há campo de CNPJ para o requerente preencher, não há consulta à SEFAZ por CNPJ, e não há os sete tratamentos de retorno.
 
-| Desfecho | Tratamento |
-|---|---|
-| Cadeia completa e coerente | Enquadra como abrigado; segue para zona/via |
-| CNPJ não localizado | Bloqueia enquadramento; permite corrigir o CNPJ |
-| CNPJ sem viabilidade vinculada | Bloqueia; permite corrigir |
-| Viabilidade não é sede de EV | Bloqueia; permite corrigir |
-| Inscrição imobiliária divergente | Bloqueia; permite corrigir |
-| Retorno incompleto | Bloqueia; permite nova consulta |
-| API indisponível | **Não defere e não indefere.** Informa, permite nova tentativa, registra a ocorrência |
+O que sai do escopo, por consequência: `Constituição` §7.2.1 itens 1 a 3, §8 inteiro (os sete tratamentos), §11 inteiro (registro das consultas) e os critérios de aceite 13.5, 13.7, 13.8 e 13.9.
 
-A última linha é a regra crítica: indisponibilidade da API **nunca** vira indeferimento. É o mesmo princípio anti-fachada já aplicado no enquadramento LOUOS (`EnquadramentoResult::STATUS_INDISPONIVEL`).
+> **`[OPEN-EV-12]` ABERTO — CONTRADIZ O REQUISITO ESCRITO. Confirmação por escrito antes de implementar.** A `Constituição - Virtual.pdf` §7.2.1 diz literalmente que o sistema deve "disponibilizar campo para informação do CNPJ da empresa sede", "receber o CNPJ informado pelo usuário" e "realizar consulta à SEFAZ por meio de API", e dedica as seções §8 e §11 a isso. A resposta de 2026-08-31 diz o oposto. Estamos tratando a resposta como vigente por ser posterior e específica, mas **retirar um subsistema inteiro do escopo com base numa resposta de mensagem é risco alto** — se estivermos errados, falta ao produto uma integração que o requisito exige. Pedir confirmação formal e, idealmente, revisão do documento.
 
-### RN-EV-09 — Comunicação SEFAZ (sentido de saída)
+> **`[OPEN-EV-13]` ABERTO — TRAVA MODELO DE DADOS.** Qual dado o REGIN nos entrega para identificar a sede? O CNPJ da sede (e nós resolvemos a viabilidade dela por esse CNPJ), ou apenas a inscrição imobiliária (e nós resolvemos pela sede ativa naquela inscrição)? A pergunta de modelagem que `[OPEN-EV-10]` fazia não desapareceu — mudou de fonte. Hoje `AbrigadoResolver` resolve pela inscrição; se o REGIN mandar o CNPJ, precisamos conferir os dois e tratar divergência.
+
+### RN-EV-09 — Comunicação SEFAZ (sentido de saída)### RN-EV-09 — Comunicação SEFAZ (sentido de saída)
 
 Após deferimento, o sistema comunica à SEFAZ os eventos que mudam a condição cadastral: encerramento da sede, mudança de endereço da sede, perda da condição de sede por exclusão do 8211-3/00, entrada/saída da condição de abrigado.
 
@@ -258,8 +263,11 @@ DADO um deferimento já concluído, QUANDO a comunicação à SEFAZ falha, ENTÃ
 - ~~`[OPEN-EV-4]`~~ **CONFIRMADO (SEDUR):** viabilidade da sede só interna + SEFAZ via API.
 - ~~`[OPEN-EV-5]`~~ **FECHADO (SEDUR 2026-08-28):** gatilho é CNAE + resposta "Sim" à pergunta **vinculada**. Ver RN-EV-01.
 - ~~`[OPEN-EV-6]`~~ **FECHADO (SEDUR 2026-08-28):** SEFAZ tem dois sentidos, com tratamentos opostos de indisponibilidade. Ver RN-EV-08/09.
-- `[OPEN-EV-7]` **ABERTO — TRAVA MODELO DE DADOS.** O CNAE 8211-3/00 é o gatilho da sede (`Constituição` §4.1.2) ou é CNAE **vedado** em sede (`Alteração de Atividade` §3.3 e §12.3, citando o Anexo A)? Conferido nos dois anexos extraídos: **o 8211-3/00 não consta de nenhum dos dois** — nem do Anexo A (6 CNAEs) nem do Anexo B (319). O CNAE que constitui a sede não está em nenhuma lista de atividade permitida. As três fontes não fecham entre si, e sem isso não dá para escrever a validação de inclusão de atividade em sede.
+- ~~`[OPEN-EV-7]`~~ **FECHADO (SEDUR 2026-08-31):** a ausência do 8211-3/00 nos dois anexos é deliberada. Ele caracteriza a sede em vez de ser atividade dela; o Anexo A lista o que a sede pode acumular. A validação da sede exclui o 8211-3/00 da conferência contra o Anexo A. Ver RN-EV-05c.
 - `[OPEN-EV-8]` **ABERTO:** enunciado oficial da pergunta geral — três redações nos artefatos. Ver RN-EV-01.
-- `[OPEN-EV-9]` **ABERTO:** a sede passa a ir **sempre** à análise com a flag do §2º art. 6º? O protocolo real `Processo - sede de virtual.pdf` saiu **deferido automaticamente**. Se a regra nova vale, é mudança de comportamento frente ao legado e precisa ser confirmada como intencional.
-- `[OPEN-EV-10]` **ABERTO — TRAVA MODELO DE DADOS.** O abrigado identifica a sede pelo **CNPJ** (spec nova, §7.2.1) ou pelo **nº do TVL da sede** (legado — `Processo - abrigado da sede 2108519.pdf` traz `TVL Sede: 2108519`)? Ou os dois, com o CNPJ como validação da cadeia?
+- ~~`[OPEN-EV-9]`~~ **FECHADO (SEDUR 2026-08-31):** sim. CNAE 8211-3/00 **mais** resposta "Sim" à pergunta vinculada ⇒ sempre análise. Resposta "Não" ⇒ segue o expresso, salvo outra condição que puxe para análise. Confirma a RN-EV-01 como implementada.
+- ~~`[OPEN-EV-10]`~~ **FECHADO (SEDUR 2026-08-31):** nenhum dos dois, no nosso sistema. A identificação acontece no **REGIN**, onde o abrigado informa o CNPJ da sede. Nosso papel é só resolver a viabilidade da sede vinculada. Ver RN-EV-08 revista, e as pendências novas `[OPEN-EV-12]` e `[OPEN-EV-13]` que isso abriu.
+- `[OPEN-EV-12]` **ABERTO — CONFIRMAÇÃO FORMAL.** A resposta acima contradiz `Constituição` §7.2.1/§8/§11 e os CA 13.5/13.7/13.8/13.9. Ver RN-EV-08.
+- `[OPEN-EV-13]` **ABERTO — TRAVA MODELO DE DADOS.** Que dado o REGIN entrega para identificar a sede — CNPJ da sede ou inscrição imobiliária? Ver RN-EV-08.
+- `[OPEN-EV-14]` **ABERTO:** `Alteração de Atividade` §3.3 e §12.3 continuam mandando indeferir a inclusão do 8211-3/00 numa **Sede**, citando o Anexo A. Pela resposta de 2026-08-31 isso parece texto deslocado — a vedação faz sentido para o **abrigado** (Anexo B), impedindo sede dentro de escritório virtual, não para a sede. Confirmar se os itens se referem ao abrigado.
 - `[OPEN-EV-11]` **ABERTO:** comportamento quando a inscrição imobiliária é ausente ou zero. `docs/artefatos/Processo 33072.pdf` tem `Inscrição Imobiliária: 0`, e todo o conjunto de regras de EV é chaveado por ela.

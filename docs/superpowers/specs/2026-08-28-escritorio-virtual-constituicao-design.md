@@ -1,8 +1,8 @@
 # Escritório virtual — constituição de sede e abrigado — design
 
-**Data:** 2026-08-28 · **Revisão:** 1
+**Data:** 2026-08-28 · **Revisão:** 2 (respostas SEDUR 2026-08-31)
 **Origem:** `docs/artefatos/Constituição - Virtual.pdf` (pacote normativo SEDUR 2026-08-28).
-**Status:** RASCUNHO — bloqueado por `[OPEN-EV-7]` e `[OPEN-EV-10]` do motor.
+**Status:** RASCUNHO — `[OPEN-EV-7]` e `[OPEN-EV-10]` fechados pela SEDUR em 2026-08-31. Bloqueado agora por `[OPEN-EV-12]` (confirmação formal do escopo da consulta SEFAZ) e `[OPEN-EV-13]` (dado que o REGIN entrega).
 **Relacionado:** `2026-07-16-escritorio-virtual-motor-design.md` (domínio), `2026-08-28-escritorio-virtual-alteracao-endereco-design.md`, `2026-08-28-escritorio-virtual-alteracao-atividade-design.md`
 
 ---
@@ -54,9 +54,11 @@ Pergunta geral respondida **Sim** e a solicitação contém 8211-3/00 → indefe
 
 ### RN-C-03 — Validação das atividades da sede
 
-Com intenção de sede, todas as atividades da solicitação são verificadas contra o **Anexo A**. Havendo atividade fora dele, indeferimento automático citando o Anexo A. Todas dentro → segue para RN-C-01.
+Com intenção de sede, as atividades da solicitação são verificadas contra **{8211-3/00} ∪ Anexo A**. O 8211-3/00 é **excluído** da conferência contra o Anexo A: ele caracteriza a sede, não é atividade dela. Havendo qualquer outra atividade fora do Anexo A, indeferimento automático citando o Anexo A. Todas dentro → segue para RN-C-01.
 
-> **Bloqueio `[OPEN-EV-7]`.** O documento manda indeferir citando o Anexo A quando "uma ou mais atividades não possa ser exercida por uma sede", mas o próprio 8211-3/00 — que é o gatilho da sede — **não consta do Anexo A**. Aplicada literalmente, a regra indefere toda sede. Não implementar até a SEDUR resolver: ou o Anexo A é incompleto, ou o 8211-3/00 é exceção implícita ao seu próprio teste.
+`[OPEN-EV-7]` fechado (SEDUR 2026-08-31): a ausência do 8211-3/00 no Anexo A é deliberada. O Anexo A lista o que um estabelecimento **que já é sede** pode acumular — no próprio processo de constituição ou depois, por alteração de atividade. Ver RN-EV-05c do motor.
+
+Sem essa exceção a regra indeferiria toda sede pelo próprio CNAE que a define. É o defeito que o `[OPEN-EV-7]` apontava, e a exceção é a correção.
 
 ### RN-C-04 — Zona e via da sede
 
@@ -77,15 +79,21 @@ Todas as atividades verificadas contra o **Anexo B**. Fora da lista → indeferi
 
 Com mais de um CNAE reprovado, todos são identificados. A regra de composição da mensagem para N CNAEs é parametrizada.
 
-### RN-C-06 — Existência de sede para o abrigado
+### RN-C-06 — Existência de sede para o abrigado (REVISTA)
 
 Sem sede vinculada à inscrição → indeferimento automático:
 
 > "Não existe uma sede de escritório virtual vinculada a esta inscrição imobiliária para que a empresa seja abrigada."
 
-Com sede vinculada → o sistema pede o CNPJ da empresa sede e executa a cadeia SEFAZ (RN-EV-08 do motor).
+Com sede vinculada, o sistema **identifica a viabilidade da sede** e segue para a validação de zona e via.
 
-> **Bloqueio `[OPEN-EV-10]`.** O legado identifica a sede pelo **nº do TVL** (`Processo - abrigado da sede 2108519.pdf` traz `TVL Sede: 2108519` e nenhum campo de CNPJ). O requisito novo pede **CNPJ**. Definir qual é o campo de entrada antes de desenhar a tela e a consulta.
+**O que mudou na revisão 2.** A revisão 1 previa que o sistema pedisse o CNPJ da sede ao requerente e consultasse a SEFAZ, com sete tratamentos de retorno — é o que `Constituição` §7.2.1 e §8 descrevem. A SEDUR informou em 2026-08-31 que essa etapa **não acontece no nosso sistema**: a solicitação de abrigado é feita no REGIN, e é lá que o abrigado informa o CNPJ da sede. Nosso papel é só resolver a viabilidade da sede vinculada.
+
+Saem do escopo: o campo de CNPJ, a consulta à SEFAZ por CNPJ, os sete tratamentos do §8 e o registro de consultas do §11.
+
+> **`[OPEN-EV-12]`.** Isso contradiz o requisito escrito, que atribui as três coisas ao nosso sistema. Não implementar a remoção — nem a manutenção — antes de confirmação formal. Ver RN-EV-08 do motor.
+
+> **`[OPEN-EV-13]`.** Qual dado o REGIN entrega: o CNPJ da sede ou a inscrição imobiliária? Hoje `AbrigadoResolver` resolve pela sede ativa na inscrição. Se o REGIN mandar o CNPJ, é preciso conferir os dois e definir o que fazer quando divergirem.
 
 ### RN-C-07 — Zona e via do abrigado
 
@@ -112,11 +120,11 @@ Espelham os do documento SEDUR (§13), na mesma numeração.
 | 13.2 | Com sede na inscrição, nova sede → indefere | RN-C-01 |
 | 13.3 | Atividade não permitida em EV, pedido de abrigado → indefere automaticamente informando o CNAE | RN-C-05 |
 | 13.4 | Pedido de abrigado sem sede na inscrição → indefere informando a ausência de sede | RN-C-06 |
-| 13.5 | Com sede na inscrição, CNPJ informado → consulta SEFAZ e valida CNPJ + inscrição | RN-C-06 |
-| 13.6 | CNPJ corresponde a sede vinculada à inscrição → enquadra como abrigada e valida zoneamento | RN-C-06, RN-C-07 |
-| 13.7 | CNPJ não localizado → impede enquadramento e permite corrigir | RN-EV-08 |
-| 13.8 | Inscrição da sede divergente → impede enquadramento e pede correção do CNPJ | RN-EV-08 |
-| 13.9 | API indisponível → não defere nem indefere; permite nova tentativa | RN-EV-08 |
+| 13.5 | ~~Com sede na inscrição, CNPJ informado → consulta SEFAZ e valida CNPJ + inscrição~~ | **Fora de escopo** — REGIN (`[OPEN-EV-12]`) |
+| 13.6 | Sede vinculada à inscrição identificada → enquadra como abrigada e valida zoneamento | RN-C-06, RN-C-07 |
+| 13.7 | ~~CNPJ não localizado → impede enquadramento e permite corrigir~~ | **Fora de escopo** — REGIN (`[OPEN-EV-12]`) |
+| 13.8 | ~~Inscrição da sede divergente → impede enquadramento e pede correção do CNPJ~~ | **Fora de escopo** — REGIN (`[OPEN-EV-12]`) |
+| 13.9 | ~~API indisponível → não defere nem indefere; permite nova tentativa~~ | **Fora de escopo** — REGIN (`[OPEN-EV-12]`) |
 | 13.10 | Sede confirmada, atividades permitidas em EV e na zona/via → defere | RN-C-07 |
 | 13.11 | Sede confirmada, atividade não permitida na zona/via → indefere | RN-C-07 |
 | 13.12 | Sede na inscrição e resposta "Não" → indefere orientando a se abrigar | RN-C-08 |
@@ -143,6 +151,8 @@ Casos derivados dos protocolos de teste em `docs/artefatos/`:
 
 ## 7. Questões abertas
 
-Todas herdadas do motor: `[OPEN-EV-7]` (8211-3/00 e Anexo A), `[OPEN-EV-8]` (enunciado das perguntas), `[OPEN-EV-9]` (sede sempre à análise), `[OPEN-EV-10]` (CNPJ ou TVL), `[OPEN-EV-11]` (inscrição ausente).
+Fechadas pela SEDUR em 2026-08-31: `[OPEN-EV-7]` (o 8211-3/00 caracteriza a sede e sai da conferência contra o Anexo A), `[OPEN-EV-9]` (sede vai sempre à análise quando o CNAE está presente e a resposta é "Sim"), `[OPEN-EV-10]` (a identificação da sede acontece no REGIN).
 
-Nenhuma é decidida aqui. EV-7 e EV-10 impedem a geração do plano de implementação.
+Continuam abertas, herdadas do motor: `[OPEN-EV-8]` (enunciado oficial das perguntas), `[OPEN-EV-11]` (inscrição imobiliária ausente), `[OPEN-EV-12]` (confirmação formal de que a consulta SEFAZ sai do escopo), `[OPEN-EV-13]` (dado que o REGIN entrega) e `[OPEN-EV-14]` (a vedação do 8211-3/00 na Alteração de Atividade se refere ao abrigado?).
+
+`[OPEN-EV-12]` e `[OPEN-EV-13]` impedem a geração do plano do fluxo de abrigado. O fluxo de **sede** está desbloqueado.
