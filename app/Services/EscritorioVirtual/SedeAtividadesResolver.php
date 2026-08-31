@@ -3,26 +3,28 @@
 namespace App\Services\EscritorioVirtual;
 
 use App\Models\VirtualOfficeActivityCnae;
-use App\Support\Settings;
+use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 
 /**
  * Atividades que uma SEDE de escritorio virtual pode exercer (RN-EV-05c):
  * {CNAE gatilho} uniao Anexo A. O CNAE gatilho (default 8211-3/00,
  * parametrizavel) caracteriza a sede e por isso nao figura no Anexo A —
  * precisa ser excluido da conferencia, senao toda sede seria indeferida
- * pelo proprio CNAE que a define (SEDUR 2026-08-31). O parametro e lido
- * pelo mesmo caminho que SedeEscritorioVirtualGatilho::temCnaeGatilho()
- * usa, ja que aqui so ha codigos de CNAE, sem um ViabilityRequest.
+ * pelo proprio CNAE que a define (SEDUR 2026-08-31). O codigo em si vem de
+ * SedeEscritorioVirtualGatilho::cnaeGatilho() — fonte unica de verdade,
+ * evitando reler o parametro aqui.
  */
 class SedeAtividadesResolver
 {
+    public function __construct(private readonly SedeEscritorioVirtualGatilho $gatilho) {}
+
     /**
      * Um codigo e permitido a sede se for o CNAE gatilho ou constar do
      * Anexo A na versao vigente do dominio.
      */
     public function permitida(string $cnaeCode): bool
     {
-        if ($this->normalizar($cnaeCode) === $this->cnaeGatilho()) {
+        if ($this->normalizar($cnaeCode) === $this->gatilho->cnaeGatilho()) {
             return true;
         }
 
@@ -49,16 +51,7 @@ class SedeAtividadesResolver
         return $naoPermitidos;
     }
 
-    /** CNAE gatilho da sede, normalizado a digitos (mesmo caminho de SedeEscritorioVirtualGatilho). */
-    private function cnaeGatilho(): string
-    {
-        return $this->normalizar((string) Settings::get(
-            'analise.escritorio_virtual.cnae_gatilho_sede',
-            config('sile.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
-        ));
-    }
-
-    /** Só dígitos, para comparar 8211-3/00 == 8211300. */
+    /** Codigo de entrada normalizado a digitos, para comparar com o gatilho ja normalizado. */
     private function normalizar(string $code): string
     {
         return preg_replace('/\D/', '', $code) ?? '';

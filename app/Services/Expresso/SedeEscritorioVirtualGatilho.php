@@ -28,12 +28,23 @@ class SedeEscritorioVirtualGatilho
      */
     public function temCnaeGatilho(ViabilityRequest $request): bool
     {
-        $cnaeGatilho = $this->normalizar((string) Settings::get(
+        $cnaeGatilho = $this->cnaeGatilho();
+
+        return $request->cnaes->contains(fn ($cnae): bool => $this->normalizar($cnae->code) === $cnaeGatilho);
+    }
+
+    /**
+     * Código do CNAE gatilho da sede (default 8211-3/00, parametrizável),
+     * já normalizado a dígitos. Fonte única de verdade — quem precisar do
+     * gatilho fora deste serviço (ex.: SedeAtividadesResolver) consome este
+     * método em vez de reler o parâmetro.
+     */
+    public function cnaeGatilho(): string
+    {
+        return $this->normalizar((string) Settings::get(
             'analise.escritorio_virtual.cnae_gatilho_sede',
             config('sile.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
         ));
-
-        return $request->cnaes->contains(fn ($cnae): bool => $this->normalizar($cnae->code) === $cnaeGatilho);
     }
 
     /** Só dígitos, para comparar 8211-3/00 == 8211300. */
