@@ -103,6 +103,12 @@ class ViabilityRequest extends Model
     /**
      * Intencao de escritorio virtual derivada das duas respostas (RN-EV-01).
      * A pergunta geral manda: so quando ela e "Nao" a vinculada e exibida.
+     * Quem caracteriza a sede e a pergunta vinculada (CNAE 8211-3/00 + "Sim"),
+     * nao a geral (SEDUR 2026-08-31): por isso a condicao e `!== true`, e nao
+     * `=== false`. `null` e dado legado — a coluna da pergunta geral so passou
+     * a existir na migration de 2026-08-28, entao toda solicitacao anterior
+     * tem `tenant = null` e nao pode ser reclassificada como "nenhum" so por
+     * isso.
      */
     public function virtualOfficeIntent(): VirtualOfficeIntent
     {
@@ -110,7 +116,7 @@ class ViabilityRequest extends Model
             return VirtualOfficeIntent::Abrigado;
         }
 
-        if ($this->wants_virtual_office_tenant === false && $this->wants_virtual_office_hq) {
+        if ($this->wants_virtual_office_tenant !== true && $this->wants_virtual_office_hq) {
             return VirtualOfficeIntent::Sede;
         }
 

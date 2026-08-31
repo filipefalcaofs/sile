@@ -48,7 +48,28 @@ class IntencaoEscritorioVirtualTest extends TestCase
         $this->assertSame(VirtualOfficeIntent::Nenhum, $request->virtualOfficeIntent());
     }
 
-    public function test_pergunta_geral_nao_respondida_nao_e_escritorio_virtual(): void
+    /**
+     * Sede legada: a coluna da pergunta geral so passou a existir na migration
+     * de 2026-08-28, entao toda solicitacao anterior tem `tenant = null`. O que
+     * caracteriza a sede e o CNAE 8211-3/00 mais o "Sim" na pergunta vinculada
+     * (SEDUR 2026-08-31) — a pergunta geral nao entra nessa caracterizacao.
+     * Sem isto, sede legada seria reclassificada como "nenhum" e divergiria do
+     * SedeEscritorioVirtualGatilho, que le so a pergunta vinculada.
+     */
+    public function test_sede_legada_sem_resposta_na_pergunta_geral_continua_sede(): void
+    {
+        $request = ViabilityRequest::factory()->create([
+            'wants_virtual_office_tenant' => null,
+            'wants_virtual_office_hq' => true,
+        ]);
+
+        $this->assertSame(VirtualOfficeIntent::Sede, $request->virtualOfficeIntent());
+    }
+
+    /**
+     * Sem nenhuma das duas respostas afirmativas, nao e escritorio virtual.
+     */
+    public function test_sem_resposta_e_sem_pergunta_vinculada_nao_e_escritorio_virtual(): void
     {
         $request = ViabilityRequest::factory()->create([
             'wants_virtual_office_tenant' => null,
