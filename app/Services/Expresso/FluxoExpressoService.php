@@ -8,6 +8,7 @@ use App\Enums\DecisionOutcome;
 use App\Enums\Fluxo;
 use App\Enums\IntencaoAtividade;
 use App\Enums\ResultadoViabilidade;
+use App\Enums\SefazNotificationEvent;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\EncaminhadoParaAnalise;
 use App\Events\ResultadoEmitido;
@@ -16,9 +17,11 @@ use App\Models\ExpressoQueda;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Analise\AnalysisSlaService;
 use App\Services\Auditoria\DecisionTraceBuilder;
 use App\Services\EscritorioVirtual\AbrigadoResolver;
+use App\Services\EscritorioVirtual\DesvincularInscricaoService;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
@@ -66,6 +69,7 @@ class FluxoExpressoService
         private DecisionTraceBuilder $traceBuilder,
         private SedeEscritorioVirtualGatilho $gatilhoSede,
         private AbrigadoResolver $abrigadoResolver,
+        private DesvincularInscricaoService $desvincular,
     ) {}
 
     /**
@@ -122,6 +126,36 @@ class FluxoExpressoService
         // para a resolução normal, onde o gatilho de sede é avaliado adiante.
         if ($request->exclusivamenteExclusao() && ! $this->gatilhoSede->temCnaeGatilho($request)) {
             return $this->deferirExclusao($request, $actor);
+        }
+
+        // RN-AA-04: exclusão EXCLUSIVA do CNAE gatilho da sede, na inscrição
+        // que TEM sede ativa. Excluir esse CNAE derruba a caracterização de
+        // sede — cascata de maior consequência (desvincula a inscrição,
+        // derruba o vínculo de todas as abrigadas do endereço), então exige
+        // confirmação EXPLÍCITA do requerente antes de executar (anti-fachada:
+        // `confirma_perda_condicao_sede === null`, "ainda não perguntado", NUNCA
+        // equivale a "sim" — nem `false`, a recusa). Sem sede ativa na
+        // inscrição, não há condição a perder: segue para a resolução normal,
+        // onde a ausência do gatilho simplesmente não aplica RN-EV-01.
+        if ($request->exclusivamenteExclusao() && $this->gatilhoSede->temCnaeGatilho($request)) {
+            $lock = VirtualOfficeInscriptionLock::sedeAtiva((string) $request->property_registration);
+
+            if ($lock !== null) {
+                if ($request->confirma_perda_condicao_sede !== true) {
+                    $mensagem = str_replace(
+                        ':cnae',
+                        $this->gatilhoSede->cnaeGatilho(),
+                        (string) Settings::get(
+                            'analise.escritorio_virtual.mensagem_confirma_perda_sede',
+                            config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
+                        ),
+                    );
+
+                    return $this->encaminharAnalise($request, $mensagem, $actor);
+                }
+
+                return $this->deferirExclusaoDeSede($request, $lock, $actor);
+            }
         }
 
         // Reexecução FRESCA dos motores — a decisão é autoritativa, não o snapshot.
@@ -382,6 +416,105 @@ class FluxoExpressoService
         }
 
         // APÓS o commit: só decisões efetivadas geram efeitos.
+        ResultadoEmitido::dispatch($request, $decision);
+
+        return DecisionResult::decidida($decision, emitted: true);
+    }
+
+    /**
+     * Defere a exclusão CONFIRMADA do CNAE gatilho da sede (RN-AA-04): mesma
+     * base de `deferirExclusao()` (decisão sem enquadramento, TVL, transição,
+     * auditoria síncrona, tudo numa transação), mas esta solicitação NUNCA é
+     * abrigada da sede que ela mesma está desativando — `is_virtual_office_tenant`
+     * fica sempre falso, sem consultar o AbrigadoResolver.
+     *
+     * A cascata de desvinculação (RN-EV-06) só roda APÓS o commit da decisão,
+     * chamando o serviço COMPARTILHADO `DesvincularInscricaoService` — nunca
+     * reimplementada aqui (RN-EV-06 do motor proíbe duplicar a lógica). Isolar
+     * a chamada fora da transação da decisão é o mesmo motivo pelo qual o
+     * próprio serviço isola o envio à SEFAZ do resto: uma falha na cascata
+     * (rede, notificação) não pode desfazer, num rollback, uma decisão já
+     * efetivada e commitada.
+     */
+    private function deferirExclusaoDeSede(ViabilityRequest $request, VirtualOfficeInscriptionLock $lock, ?User $actor): DecisionResult
+    {
+        try {
+            $decision = DB::transaction(function () use ($request, $actor, $lock): ViabilityDecision {
+                $cnaesExcluidos = $request->cnaesParaExcluir();
+
+                $decision = ViabilityDecision::create([
+                    'viability_request_id' => $request->id,
+                    'flow' => 'expresso',
+                    'outcome' => DecisionOutcome::Deferida,
+                    'consolidated_result' => ResultadoViabilidade::Permitido->value,
+                    'is_virtual_office_tenant' => false,
+                    'virtual_office_hq_tvl_number' => null,
+                    'tvl_product_number' => $this->tvl->generate(),
+                    'per_cnae' => $cnaesExcluidos
+                        ->map(fn (Cnae $cnae): array => [
+                            'cnae' => $cnae->code,
+                            'cnae_formatado' => $cnae->formatted_code,
+                            'intencao' => IntencaoAtividade::Excluir->value,
+                        ])
+                        ->values()
+                        ->all(),
+                    'rules_versions' => [],
+                    'fundamentacao' => [
+                        'RN-AA-04 — exclusão do CNAE gatilho da sede, confirmada pelo requerente, retira a condição de sede',
+                    ],
+                    'decision_trace' => null,
+                    'reason' => 'exclusão do CNAE gatilho da sede — confirmação explícita do requerente para a perda da condição',
+                    'decided_by_user_id' => $actor?->id,
+                    'decided_at' => now(),
+                ]);
+
+                $this->stateMachine->transition(
+                    $request,
+                    ViabilityRequestStatus::Deferida,
+                    $actor,
+                    publicLabel: ViabilityRequestStatus::Deferida->publicLabel(),
+                );
+
+                $this->audit->log(
+                    logName: 'expresso',
+                    event: 'decisao',
+                    description: "Deferimento automático de exclusão do CNAE gatilho da sede da solicitação #{$request->id}",
+                    properties: [
+                        'viability_request_id' => $request->id,
+                        'protocol_number' => $request->protocol_number,
+                        'outcome' => DecisionOutcome::Deferida->value,
+                        'consolidado' => $decision->consolidated_result,
+                        'tvl_product_number' => $decision->tvl_product_number,
+                        'cnaes_excluidos' => $cnaesExcluidos->pluck('code')->all(),
+                        'sede_viability_request_id' => $lock->sede_viability_request_id,
+                    ],
+                    subject: $request,
+                    result: DecisionOutcome::Deferida->value,
+                    rulesVersion: null,
+                );
+
+                return $decision;
+            });
+        } catch (QueryException $e) {
+            $existente = $request->decision()->first();
+
+            if ($existente !== null) {
+                return DecisionResult::decidida($existente, emitted: false);
+            }
+
+            throw $e;
+        }
+
+        // APÓS o commit: cascata compartilhada (RN-EV-06) — desvincula o lock,
+        // notifica cada abrigado e registra a comunicação reprocessável à
+        // SEFAZ. NÃO reimplementada aqui.
+        $this->desvincular->desvincular(
+            $lock,
+            "exclusão do CNAE gatilho ({$this->gatilhoSede->cnaeGatilho()}) da sede, confirmada pelo requerente na solicitação #{$request->id}",
+            $actor,
+            SefazNotificationEvent::SedePerdeuCondicao,
+        );
+
         ResultadoEmitido::dispatch($request, $decision);
 
         return DecisionResult::decidida($decision, emitted: true);

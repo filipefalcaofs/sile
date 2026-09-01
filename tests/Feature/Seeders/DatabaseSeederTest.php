@@ -71,8 +71,10 @@ class DatabaseSeederTest extends TestCase
         // constituicao-sede, Tarefa 2: mensagem_cnae_sede_em_abrigado/
         // mensagem_sede_duplicada/mensagem_cnae_fora_anexo_a)
         // + 1 da flag de encaminhamento à análise da sede (SDD escritorio-virtual-
-        // constituicao-sede, Tarefa 3: analise.escritorio_virtual.flag_analise_sede).
-        $this->assertSame(100, Parameter::query()->count());
+        // constituicao-sede, Tarefa 3: analise.escritorio_virtual.flag_analise_sede)
+        // + 1 da confirmação de perda da condição de sede (SDD escritorio-virtual-
+        // exclusao-atividade, Tarefa 3: analise.escritorio_virtual.mensagem_confirma_perda_sede).
+        $this->assertSame(101, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -332,7 +334,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(100, Parameter::query()->count());
+        $this->assertSame(101, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

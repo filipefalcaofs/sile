@@ -453,6 +453,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:2000'],
                 'description' => 'Motivo registrado quando o gatilho de sede encaminha a solicitação à análise (RN-C-04): a flag do §2º do art. 6º que a operação lê na fila',
             ],
+            'analise.escritorio_virtual.mensagem_confirma_perda_sede' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'A exclusão do CNAE :cnae fará com que a empresa deixe de ser caracterizada como Sede de Escritório Virtual. Deseja prosseguir com a exclusão?',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Pergunta de confirmação exibida ao requerente ao excluir o CNAE gatilho da sede (RN-AA-04), com :cnae substituído pelo código do gatilho vigente',
+            ],
             'analise.precedentes.janela_meses' => [
                 'group' => 'analise',
                 'type' => 'integer',
