@@ -6,10 +6,12 @@ use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\DecisionOutcome;
 use App\Enums\Fluxo;
+use App\Enums\IntencaoAtividade;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\EncaminhadoParaAnalise;
 use App\Events\ResultadoEmitido;
+use App\Models\Cnae;
 use App\Models\ExpressoQueda;
 use App\Models\User;
 use App\Models\ViabilityDecision;
@@ -36,6 +38,10 @@ use Illuminate\Support\Facades\DB;
  *
  *  - toggle features.fluxo_expresso desligado → em_analise (degradação
  *    comunicada da funcionalidade acoplável, HU-014);
+ *  - EXCLUSIVAMENTE exclusão de atividade, sem o CNAE gatilho da sede
+ *    (RN-AA-03/RN-AA-05) → DEFERE automaticamente SEM consultar o
+ *    enquadramento (nada de novo a avaliar) — exceção justificada ao
+ *    anti-fachada, testada antes da resolução;
  *  - inelegível (algum CNAE encaminhado à análise pelo motor de risco) →
  *    em_analise (semi-expresso, HU-073/RN-008);
  *  - veredito consolidado pendente (sem a zona oficial — Quadro 10 indisponível)
@@ -95,6 +101,27 @@ class FluxoExpressoService
 
         if (! $toggleAtivo) {
             return $this->encaminharAnalise($request, 'fluxo expresso desativado', $actor);
+        }
+
+        // RN-AA-03/RN-AA-05: solicitação EXCLUSIVAMENTE de exclusão de
+        // atividade (todos os CNAEs marcados "excluir") defere
+        // automaticamente, SEM consultar o enquadramento LOUOS/risco — nada
+        // de novo vai ser exercido no local, então não há veredito
+        // locacional a produzir. Testada ANTES da resolução do enquadramento
+        // (resolver para descartar depois seria trabalho inútil e confuso de
+        // ler) e é a ÚNICA exceção justificada ao anti-fachada: aqui não
+        // falta dado, o caso é estruturalmente diferente (ausência de
+        // atividade a licenciar, não degradação por dado indisponível).
+        //
+        // CUIDADO com a exclusão do CNAE GATILHO da sede (default
+        // 8211-3/00): ela tem cascata própria (perda da condição de sede,
+        // desvinculação da inscrição, notificação de terceiros — Task 3) e
+        // NÃO cai neste ramo. `temCnaeGatilho` checa a presença do CNAE
+        // gatilho no processo independentemente da intenção declarada, então
+        // uma solicitação que o inclui (mesmo marcado para exclusão) segue
+        // para a resolução normal, onde o gatilho de sede é avaliado adiante.
+        if ($request->exclusivamenteExclusao() && ! $this->gatilhoSede->temCnaeGatilho($request)) {
+            return $this->deferirExclusao($request, $actor);
         }
 
         // Reexecução FRESCA dos motores — a decisão é autoritativa, não o snapshot.
@@ -262,6 +289,90 @@ class FluxoExpressoService
                 'motivo' => $encaminhamento['motivo'] ?? $reason,
             ]);
         }
+    }
+
+    /**
+     * Defere automaticamente a solicitação exclusivamente de exclusão de
+     * atividade (RN-AA-03/RN-AA-05), SEM enquadramento: cria a
+     * ViabilityDecision imutável com per_cnae/fundamentação próprios do caso
+     * (sem ConsultaViabilidadeResult — nenhum motor rodou), gera o número TVL
+     * (RN-007, todo deferimento tem produto), transiciona pela StateMachine e
+     * AUDITA SÍNCRONO, tudo numa transação. O ResultadoEmitido é disparado
+     * APÓS o commit — mesmo contrato de `emitir()`.
+     *
+     * Robustez idempotente igual a `emitir()`: corrida rara que escape do
+     * Cache::lock vira NO-OP via a unique(viability_request_id).
+     */
+    private function deferirExclusao(ViabilityRequest $request, ?User $actor): DecisionResult
+    {
+        try {
+            $decision = DB::transaction(function () use ($request, $actor): ViabilityDecision {
+                $cnaesExcluidos = $request->cnaesParaExcluir();
+
+                $decision = ViabilityDecision::create([
+                    'viability_request_id' => $request->id,
+                    'flow' => 'expresso',
+                    'outcome' => DecisionOutcome::Deferida,
+                    'consolidated_result' => ResultadoViabilidade::Permitido->value,
+                    'tvl_product_number' => $this->tvl->generate(),
+                    'per_cnae' => $cnaesExcluidos
+                        ->map(fn (Cnae $cnae): array => [
+                            'cnae' => $cnae->code,
+                            'cnae_formatado' => $cnae->formatted_code,
+                            'intencao' => IntencaoAtividade::Excluir->value,
+                        ])
+                        ->values()
+                        ->all(),
+                    'rules_versions' => [],
+                    'fundamentacao' => [
+                        'RN-AA-03/RN-AA-05 — exclusão de atividade defere automaticamente, sem enquadramento',
+                    ],
+                    'decision_trace' => null,
+                    'reason' => 'exclusão de atividade — deferimento automático, sem consulta de enquadramento',
+                    'decided_by_user_id' => $actor?->id,
+                    'decided_at' => now(),
+                ]);
+
+                $this->stateMachine->transition(
+                    $request,
+                    ViabilityRequestStatus::Deferida,
+                    $actor,
+                    publicLabel: ViabilityRequestStatus::Deferida->publicLabel(),
+                );
+
+                $this->audit->log(
+                    logName: 'expresso',
+                    event: 'decisao',
+                    description: "Deferimento automático de exclusão de atividade da solicitação #{$request->id}",
+                    properties: [
+                        'viability_request_id' => $request->id,
+                        'protocol_number' => $request->protocol_number,
+                        'outcome' => DecisionOutcome::Deferida->value,
+                        'consolidado' => $decision->consolidated_result,
+                        'tvl_product_number' => $decision->tvl_product_number,
+                        'cnaes_excluidos' => $cnaesExcluidos->pluck('code')->all(),
+                    ],
+                    subject: $request,
+                    result: DecisionOutcome::Deferida->value,
+                    rulesVersion: null,
+                );
+
+                return $decision;
+            });
+        } catch (QueryException $e) {
+            $existente = $request->decision()->first();
+
+            if ($existente !== null) {
+                return DecisionResult::decidida($existente, emitted: false);
+            }
+
+            throw $e;
+        }
+
+        // APÓS o commit: só decisões efetivadas geram efeitos.
+        ResultadoEmitido::dispatch($request, $decision);
+
+        return DecisionResult::decidida($decision, emitted: true);
     }
 
     /**
