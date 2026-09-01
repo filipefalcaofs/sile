@@ -123,28 +123,50 @@ class FluxoExpressoService
         // NÃO cai neste ramo. `temCnaeGatilho` checa a presença do CNAE
         // gatilho no processo independentemente da intenção declarada, então
         // uma solicitação que o inclui (mesmo marcado para exclusão) segue
-        // para a resolução normal, onde o gatilho de sede é avaliado adiante.
+        // para o ramo seguinte, que decide com base na INTENÇÃO de exclusão
+        // do gatilho (`excluiCnaeGatilho`), inclusive nas mistas.
         if ($request->exclusivamenteExclusao() && ! $this->gatilhoSede->temCnaeGatilho($request)) {
             return $this->deferirExclusao($request, $actor);
         }
 
-        // RN-AA-04: exclusão EXCLUSIVA do CNAE gatilho da sede, na inscrição
-        // que TEM sede ativa. Excluir esse CNAE derruba a caracterização de
-        // sede — cascata de maior consequência (desvincula a inscrição,
-        // derruba o vínculo de todas as abrigadas do endereço), então exige
-        // confirmação EXPLÍCITA do requerente antes de executar (anti-fachada:
+        // RN-AA-04/RN-AA-07: exclusão do CNAE gatilho da sede, na inscrição
+        // que TEM sede ativa — SEM exigir `exclusivamenteExclusao()`. Uma
+        // solicitação MISTA (inclusão + exclusão) que marca o gatilho para
+        // sair derruba a condição de sede do mesmo jeito (RN-AA-07: a regra
+        // da RN-AA-04 se aplica INTEGRALMENTE também na mista); exigir
+        // exclusividade aqui deixava a mista escapar dos dois ramos e cair
+        // direto em `emitir()`, deferindo sem confirmação e sem cascata — o
+        // C1 da revisão final. `excluiCnaeGatilho()` olha a INTENÇÃO
+        // declarada (RN-AA-05b), não a mera presença do CNAE no processo.
+        //
+        // Excluir esse CNAE derruba a caracterização de sede — cascata de
+        // maior consequência (desvincula a inscrição, derruba o vínculo de
+        // todas as abrigadas do endereço), então exige confirmação EXPLÍCITA
+        // do requerente antes de executar (anti-fachada:
         // `confirma_perda_condicao_sede === null`, "ainda não perguntado", NUNCA
-        // equivale a "sim" — nem `false`, a recusa). Sem sede ativa na
-        // inscrição, não há condição a perder: segue para a resolução normal,
-        // onde a ausência do gatilho simplesmente não aplica RN-EV-01.
-        if ($request->exclusivamenteExclusao() && $this->gatilhoSede->temCnaeGatilho($request)) {
+        // equivale a "sim" — nem `false`, a recusa).
+        if ($this->gatilhoSede->excluiCnaeGatilho($request)) {
             $lock = VirtualOfficeInscriptionLock::sedeAtiva((string) $request->property_registration);
 
             if ($lock !== null) {
+                // C2 da revisão final: a cascata só pode derrubar a sede de
+                // quem É a titular do vínculo. `deferirExclusaoDeSede()`
+                // localizava o lock só pela inscrição, sem checar de quem é
+                // — uma solicitação de OUTRA empresa na mesma inscrição
+                // conseguia derrubar a sede alheia. Sem correspondência,
+                // encaminha à análise com o motivo registrado; nunca executa.
+                if (! $this->titularDaSede($request, $lock)) {
+                    return $this->encaminharAnalise(
+                        $request,
+                        'exclusão do CNAE gatilho da sede pedida por solicitação que não é a titular do vínculo de sede — encaminhado para verificação',
+                        $actor,
+                    );
+                }
+
                 if ($request->confirma_perda_condicao_sede !== true) {
                     $mensagem = str_replace(
                         ':cnae',
-                        $this->gatilhoSede->cnaeGatilho(),
+                        $this->gatilhoSede->cnaeGatilhoFormatado(),
                         (string) Settings::get(
                             'analise.escritorio_virtual.mensagem_confirma_perda_sede',
                             config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
@@ -155,6 +177,29 @@ class FluxoExpressoService
                 }
 
                 return $this->deferirExclusaoDeSede($request, $lock, $actor);
+            }
+
+            // I1 da revisão final: sem vínculo de sede ATIVO na inscrição, não
+            // há condição de sede a perder — RN-EV-01 simplesmente não se
+            // aplica. Sem isso, uma solicitação exclusivamente de exclusão
+            // caía na resolução normal e passava por zoneamento (contradiz
+            // RN-AA-03/05: exclusão defere automaticamente, sem zoneamento).
+            // Só se aplica à exclusão PURA — a mista sem sede ativa segue
+            // para a resolução normal, onde a parte de inclusão precisa
+            // mesmo do enquadramento (fora do escopo desta correção).
+            if ($request->exclusivamenteExclusao()) {
+                // property_registration é nulável: sobre inscrição
+                // desconhecida o honesto é encaminhar à análise com o motivo,
+                // nunca deferir uma exclusão de sede sem saber qual sede.
+                if (blank($request->property_registration)) {
+                    return $this->encaminharAnalise(
+                        $request,
+                        'exclusão do CNAE gatilho sem inscrição imobiliária informada — encaminhado para verificação',
+                        $actor,
+                    );
+                }
+
+                return $this->deferirExclusao($request, $actor);
             }
         }
 
@@ -422,11 +467,31 @@ class FluxoExpressoService
     }
 
     /**
+     * A solicitação que pede a exclusão do gatilho é da MESMA empresa que
+     * detém o vínculo de sede (`$lock->sede`)? RN-AA-04 é "exclusão do CNAE
+     * gatilho EM sede" — quem perde a condição tem que ser quem a detém, não
+     * qualquer solicitação que caia na mesma inscrição imobiliária (C2 da
+     * revisão final: `deferirExclusaoDeSede()` localizava o lock só pela
+     * inscrição e desativava a sede de quem quer que a detivesse). Compara
+     * pela empresa (`company_id`) — é o vínculo inequívoco entre a solicitação
+     * e a pessoa jurídica titular, ao contrário do requerente (usuário), que
+     * pode variar entre protocolações da mesma empresa.
+     */
+    private function titularDaSede(ViabilityRequest $request, VirtualOfficeInscriptionLock $lock): bool
+    {
+        $sede = $lock->sede;
+
+        return $sede !== null && $sede->company_id !== null && $sede->company_id === $request->company_id;
+    }
+
+    /**
      * Defere a exclusão CONFIRMADA do CNAE gatilho da sede (RN-AA-04): mesma
      * base de `deferirExclusao()` (decisão sem enquadramento, TVL, transição,
      * auditoria síncrona, tudo numa transação), mas esta solicitação NUNCA é
      * abrigada da sede que ela mesma está desativando — `is_virtual_office_tenant`
-     * fica sempre falso, sem consultar o AbrigadoResolver.
+     * fica sempre falso, sem consultar o AbrigadoResolver. Coerente com a
+     * verificação de titularidade em `titularDaSede()`: quem chega aqui É a
+     * titular do vínculo que está desativando, então nunca é abrigada dele.
      *
      * A cascata de desvinculação (RN-EV-06) só roda APÓS o commit da decisão,
      * chamando o serviço COMPARTILHADO `DesvincularInscricaoService` — nunca

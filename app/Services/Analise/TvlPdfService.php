@@ -2,6 +2,7 @@
 
 namespace App\Services\Analise;
 
+use App\Enums\IntencaoAtividade;
 use App\Models\AnalysisRecord;
 use App\Models\Cnae;
 use App\Models\Company;
@@ -46,7 +47,7 @@ class TvlPdfService
     public function generate(ViabilityDecision $decision, ?User $ator = null): TvlDocument
     {
         if (! $decision->isDeferida()) {
-            throw new DomainException('O TVL só pode ser emitido para decisões deferidas (HU-132 FA-01).');
+            throw new DomainException('O TVL só pode ser emitido para decisões deferidas.');
         }
 
         $disk = $this->resolverDisco();
@@ -129,7 +130,7 @@ class TvlPdfService
         $disk = (string) Settings::get('analise.tvl.disk', config('sile.analise.tvl.disk', 'local'));
 
         if ($disk === 'public') {
-            throw new RuntimeException('O disco do TVL não pode ser público (analise.tvl.disk) — o documento é interno (HU-132 CA-02).');
+            throw new RuntimeException('O disco do TVL não pode ser público (analise.tvl.disk) — o documento é interno.');
         }
 
         return $disk;
@@ -181,15 +182,31 @@ class TvlPdfService
     }
 
     /**
-     * Atividades (CNAE) deferidas da decisão: numa decisão deferida todas as CNAEs
-     * do per_cnae estão deferidas (consolidação RN-009). A descrição é enriquecida
-     * pelo cadastro de CNAE; o código formatado vem do snapshot ou é derivado.
+     * Atividades (CNAE) deferidas da decisão: numa decisão comum (motor
+     * LOUOS/risco) todas as CNAEs do per_cnae estão deferidas (consolidação
+     * RN-009). Já nos ramos de exclusão de atividade (RN-AA-03/04/05), o
+     * per_cnae grava exatamente os CNAEs EXCLUÍDOS — dizer que uma exclusão
+     * foi "deferida" sob o título "Atividades deferidas" afirmaria o oposto
+     * do que aconteceu (I2 da revisão final). A chave `intencao` (gravada
+     * pelo FluxoExpressoService) já distingue o caso: item marcado
+     * `IntencaoAtividade::Excluir` some da lista; sem a chave (fluxo comum),
+     * segue sendo tratado como deferido. Escopo deliberadamente limitado —
+     * como o TVL deve APRESENTAR uma exclusão é pergunta em aberto para a
+     * SEDUR, não decidida aqui; a seção pode ficar vazia e o Blade já lida
+     * com isso.
+     *
+     * A descrição é enriquecida pelo cadastro de CNAE; o código formatado vem
+     * do snapshot ou é derivado.
      *
      * @return list<array<string, mixed>>
      */
     private function atividadesDeferidas(ViabilityDecision $decision): array
     {
         $perCnae = is_array($decision->per_cnae) ? $decision->per_cnae : [];
+        $perCnae = array_values(array_filter(
+            $perCnae,
+            static fn ($item): bool => ! (is_array($item) && ($item['intencao'] ?? null) === IntencaoAtividade::Excluir->value),
+        ));
 
         $codigos = [];
         foreach ($perCnae as $item) {

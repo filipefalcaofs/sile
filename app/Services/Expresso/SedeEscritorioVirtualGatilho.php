@@ -47,6 +47,32 @@ class SedeEscritorioVirtualGatilho
         ));
     }
 
+    /**
+     * O CNAE gatilho da sede formatado no padrão oficial (NNNN-N/NN), para uso
+     * em mensagens ao requerente — `cnaeGatilho()` devolve só dígitos, próprio
+     * para comparação, não para exibição (M1).
+     */
+    public function cnaeGatilhoFormatado(): string
+    {
+        return preg_replace('/^(\d{4})(\d)(\d{2})$/', '$1-$2/$3', $this->cnaeGatilho()) ?? $this->cnaeGatilho();
+    }
+
+    /**
+     * Dentre os CNAEs marcados para EXCLUSÃO na solicitação (intenção,
+     * RN-AA-05b), algum é o CNAE gatilho da sede? Diferente de
+     * `temCnaeGatilho()` (presença no processo, independente da intenção),
+     * este método é o que decide se a exclusão pedida derruba a condição de
+     * sede (RN-AA-04/RN-AA-07) — inclusive numa solicitação MISTA (inclusão +
+     * exclusão), onde `exclusivamenteExclusao()` é falso mas o gatilho ainda
+     * está marcado para sair.
+     */
+    public function excluiCnaeGatilho(ViabilityRequest $request): bool
+    {
+        $cnaeGatilho = $this->cnaeGatilho();
+
+        return $request->cnaesParaExcluir()->contains(fn ($cnae): bool => $this->normalizar($cnae->code) === $cnaeGatilho);
+    }
+
     /** Só dígitos, para comparar 8211-3/00 == 8211300. */
     private function normalizar(string $code): string
     {

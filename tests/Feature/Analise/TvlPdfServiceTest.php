@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Analise;
 
+use App\Enums\IntencaoAtividade;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
 use App\Models\AnalysisRecord;
@@ -12,7 +13,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\TvlPdfService;
 use DomainException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Tests\TestCase;
@@ -30,7 +31,7 @@ use Tests\TestCase;
  */
 class TvlPdfServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -241,6 +242,66 @@ class TvlPdfServiceTest extends TestCase
         $this->assertStringContainsString('data:image', $html);
 
         @unlink($caminho);
+    }
+
+    /**
+     * I2 da revisão final: os ramos de exclusão de atividade (RN-AA-03/04/05)
+     * gravam no per_cnae exatamente os CNAEs EXCLUÍDOS, com
+     * `intencao => 'excluir'` (App\Enums\IntencaoAtividade). O TVL não pode
+     * afirmar que uma atividade excluída foi deferida — a seção "Atividades
+     * deferidas" precisa desconsiderar esses itens. Não é a decisão do
+     * layout de exclusão (questão de negócio em aberto com a SEDUR): a seção
+     * fica vazia e o Blade já lida com isso ("—").
+     */
+    public function test_atividade_excluida_nao_aparece_como_atividade_deferida(): void
+    {
+        Cnae::factory()->create([
+            'code' => '8211300',
+            'description' => 'Serviços combinados de escritório e apoio administrativo',
+        ]);
+
+        $decision = $this->decisaoDeferida([
+            'per_cnae' => [
+                [
+                    'cnae' => '8211300',
+                    'cnae_formatado' => '8211-3/00',
+                    'intencao' => IntencaoAtividade::Excluir->value,
+                ],
+            ],
+        ]);
+
+        $dados = $this->service()->montarDados($decision, 'TVL-COD-EXCLUSAO');
+
+        $this->assertSame([], $dados['atividades'], 'atividade excluída não pode ser listada como deferida');
+
+        $html = view('tvl.documento', $dados)->render();
+
+        $this->assertStringContainsString('Atividades deferidas', $html);
+        $this->assertStringNotContainsString('8211-3/00', $html);
+        $this->assertStringNotContainsString('Serviços combinados de escritório e apoio administrativo', $html);
+    }
+
+    /**
+     * Numa solicitação MISTA (inclusão + exclusão), só o CNAE efetivamente
+     * incluído/deferido aparece na seção — o excluído some, sem quebrar a
+     * listagem dos demais.
+     */
+    public function test_atividade_incluida_permanece_listada_ao_lado_de_uma_excluida(): void
+    {
+        Cnae::factory()->create(['code' => '4712100', 'description' => 'Comércio varejista de mercadorias em geral']);
+        Cnae::factory()->create(['code' => '8211300', 'description' => 'Serviços combinados de escritório e apoio administrativo']);
+
+        $decision = $this->decisaoDeferida([
+            'per_cnae' => [
+                ['cnae' => '4712100', 'cnae_formatado' => '4712-1/00', 'intencao' => IntencaoAtividade::Incluir->value],
+                ['cnae' => '8211300', 'cnae_formatado' => '8211-3/00', 'intencao' => IntencaoAtividade::Excluir->value],
+            ],
+        ]);
+
+        $dados = $this->service()->montarDados($decision, 'TVL-COD-MISTA');
+
+        $this->assertCount(1, $dados['atividades']);
+        $this->assertSame('4712100', $dados['atividades'][0]['codigo']);
     }
 
     public function test_assinatura_parametrizavel_modo_nenhuma_nao_assina(): void
