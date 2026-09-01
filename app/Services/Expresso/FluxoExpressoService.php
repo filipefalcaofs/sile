@@ -300,13 +300,23 @@ class FluxoExpressoService
      * AUDITA SÍNCRONO, tudo numa transação. O ResultadoEmitido é disparado
      * APÓS o commit — mesmo contrato de `emitir()`.
      *
+     * Abrigado de escritório virtual (RN-EV-05): resolvido do MESMO jeito que
+     * `emitir()` resolve. O vínculo de abrigado da inscrição já existe ANTES
+     * da exclusão (sede ativa + CNAEs na Lista EV) — esta decisão não o cria,
+     * só o REFLETE; omitir is_virtual_office_tenant/virtual_office_hq_tvl_number
+     * aqui faria o processo sumir do relatório de sede×abrigados e da tela
+     * (RelatorioSedeEscritorioVirtualService/ProcessoResource leem esses
+     * campos da decisão, não da inscrição).
+     *
      * Robustez idempotente igual a `emitir()`: corrida rara que escape do
      * Cache::lock vira NO-OP via a unique(viability_request_id).
      */
     private function deferirExclusao(ViabilityRequest $request, ?User $actor): DecisionResult
     {
+        $abrigado = $this->abrigadoResolver->resolve($request);
+
         try {
-            $decision = DB::transaction(function () use ($request, $actor): ViabilityDecision {
+            $decision = DB::transaction(function () use ($request, $actor, $abrigado): ViabilityDecision {
                 $cnaesExcluidos = $request->cnaesParaExcluir();
 
                 $decision = ViabilityDecision::create([
@@ -314,6 +324,8 @@ class FluxoExpressoService
                     'flow' => 'expresso',
                     'outcome' => DecisionOutcome::Deferida,
                     'consolidated_result' => ResultadoViabilidade::Permitido->value,
+                    'is_virtual_office_tenant' => $abrigado !== null,
+                    'virtual_office_hq_tvl_number' => $abrigado['hq_tvl_number'] ?? null,
                     'tvl_product_number' => $this->tvl->generate(),
                     'per_cnae' => $cnaesExcluidos
                         ->map(fn (Cnae $cnae): array => [

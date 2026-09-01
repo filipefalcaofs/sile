@@ -16,9 +16,12 @@ use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
+use Database\Seeders\EscritorioVirtualCnaeSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
@@ -59,9 +62,12 @@ class ExclusaoAtividadeDeferimentoTest extends TestCase
      * Solicitação protocolada com um CNAE marcado para exclusão (não o CNAE
      * gatilho da sede — fora do escopo desta tarefa, ver Task 3).
      */
-    private function protocoladaComExclusao(string $cnae = '4712100'): ViabilityRequest
+    private function protocoladaComExclusao(string $cnae = '4712100', ?string $propertyRegistration = null): ViabilityRequest
     {
-        $solicitacao = ViabilityRequest::factory()->protocoled()->create(['used_area_m2' => 120.0]);
+        $solicitacao = ViabilityRequest::factory()->protocoled()->create([
+            'used_area_m2' => 120.0,
+            'property_registration' => $propertyRegistration,
+        ]);
         $cnaeModel = Cnae::factory()->create(['code' => $cnae]);
         $solicitacao->cnaes()->attach($cnaeModel->id, [
             'is_primary' => true,
@@ -69,6 +75,30 @@ class ExclusaoAtividadeDeferimentoTest extends TestCase
         ]);
 
         return $solicitacao;
+    }
+
+    /**
+     * Sede deferida com produto (TVL) que trava ATIVAMENTE a inscrição
+     * informada — mesmo arranjo de `ProdutoAbrigadoTest::test_abrigado_grava_
+     * tenant_e_tvl_da_sede`.
+     */
+    private function sedeAtivaNaInscricao(string $inscricao, string $tvl = 'TVL-2026-SEDE01'): void
+    {
+        $sede = ViabilityRequest::factory()->protocoled()->create([
+            'property_registration' => $inscricao,
+            'protocol_number' => 'VIA-2026-SEDE01',
+        ]);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $sede->id,
+            'is_virtual_office_hq' => true,
+            'tvl_product_number' => $tvl,
+        ]);
+        VirtualOfficeInscriptionLock::create([
+            'property_registration' => $inscricao,
+            'sede_viability_request_id' => $sede->id,
+            'active' => true,
+            'locked_at' => now(),
+        ]);
     }
 
     /**
@@ -203,5 +233,55 @@ class ExclusaoAtividadeDeferimentoTest extends TestCase
         $this->assertNotNull($fresh->decision()->first());
 
         Event::assertDispatched(ResultadoEmitido::class);
+    }
+
+    /**
+     * Achado da revisão (rodada 1): o vínculo de abrigado (RN-EV-05) já
+     * existe ANTES da exclusão — sede ativa vinculada à inscrição + CNAE do
+     * processo na Lista EV. `deferirExclusao()` não cria esse vínculo, só o
+     * REFLETE na decisão, exatamente como `emitir()` faz no caminho normal:
+     * sem isso, o processo some do relatório de sede×abrigados
+     * (RelatorioSedeEscritorioVirtualService) e a tela para de mostrar o TVL
+     * da sede (ProcessoResource) — ambos leem esses campos da decisão.
+     */
+    public function test_exclusao_em_inscricao_abrigada_grava_tenant_e_tvl_da_sede(): void
+    {
+        Event::fake([ResultadoEmitido::class, EncaminhadoParaAnalise::class]);
+
+        $this->seed(EscritorioVirtualCnaeSeeder::class);
+        $this->sedeAtivaNaInscricao('X');
+
+        // CNAE da Lista EV (6204-0/00), marcado para exclusão, na inscrição abrigada.
+        $request = $this->protocoladaComExclusao('6204000', 'X');
+
+        $this->service()->decide($request);
+
+        $decision = $request->fresh()->decision;
+        $this->assertSame(ViabilityRequestStatus::Deferida, $request->fresh()->status);
+        $this->assertNotNull($decision);
+        $this->assertTrue($decision->is_virtual_office_tenant);
+        $this->assertSame('TVL-2026-SEDE01', $decision->virtual_office_hq_tvl_number);
+    }
+
+    /**
+     * Sem sede ativa na inscrição, a exclusão continua deferindo normalmente,
+     * mas SEM os campos de abrigado — a correção não pode vazar para quem não
+     * é abrigado.
+     */
+    public function test_exclusao_em_inscricao_sem_sede_nao_grava_campos_de_abrigado(): void
+    {
+        Event::fake([ResultadoEmitido::class, EncaminhadoParaAnalise::class]);
+
+        $this->seed(EscritorioVirtualCnaeSeeder::class);
+
+        $request = $this->protocoladaComExclusao('6204000', 'Y');
+
+        $this->service()->decide($request);
+
+        $decision = $request->fresh()->decision;
+        $this->assertSame(ViabilityRequestStatus::Deferida, $request->fresh()->status);
+        $this->assertNotNull($decision);
+        $this->assertFalse($decision->is_virtual_office_tenant);
+        $this->assertNull($decision->virtual_office_hq_tvl_number);
     }
 }
