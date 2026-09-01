@@ -1,8 +1,8 @@
 # Escritório virtual — alteração de atividade econômica — design
 
-**Data:** 2026-08-28 · **Revisão:** 1
+**Data:** 2026-08-28 · **Revisão:** 2 (respostas SEDUR 2026-08-31 + auditoria de código)
 **Origem:** `docs/artefatos/Alteração de Atividade  - Virtual.pdf` (pacote normativo SEDUR 2026-08-28).
-**Status:** RASCUNHO — **bloqueado por `[OPEN-EV-7]`**, que é uma contradição interna deste documento.
+**Status:** RASCUNHO — `[OPEN-EV-7]` fechado pela SEDUR em 2026-08-31. A auditoria de código para o plano abriu `[OPEN-AA-3]` e `[OPEN-AA-4]`, ambos sobre lacunas do sistema, não do requisito. O fluxo de **exclusão** está desbloqueado; a **isenção de TLL** não tem ponto de aplicação.
 **Relacionado:** `2026-07-16-escritorio-virtual-motor-design.md` (domínio), `2026-08-28-escritorio-virtual-constituicao-design.md`, `2026-08-28-escritorio-virtual-alteracao-endereco-design.md`
 
 ---
@@ -30,7 +30,9 @@ Há ainda uma regra fiscal: solicitação exclusivamente de exclusão não gera 
 
 A atividade é verificada contra o **Anexo A**. Não permitida → indeferimento automático, inclusão barrada, mensagem parametrizada. Permitida → valida zona e via pelos Quadros 10 e 11A; permitida defere, não permitida indefere.
 
-> **Bloqueio `[OPEN-EV-7]` — contradição interna do documento.** Os §3.3 e §12.3 mandam indeferir a inclusão do **8211-3/00** em sede, citando o Anexo A. Mas o 8211-3/00 é justamente o CNAE que **constitui** a sede (`Constituição` §4.1.2), e ele não consta do Anexo A. Aplicada literalmente, a regra torna impossível uma sede incluir o CNAE que a define. Não implementar até a SEDUR se manifestar.
+A atividade é verificada contra **{8211-3/00} ∪ Anexo A**, com o 8211-3/00 excluído da conferência contra o Anexo A — mesma regra da constituição (RN-EV-05c do motor).
+
+> **`[OPEN-EV-7]` fechado (SEDUR 2026-08-31).** A ausência do 8211-3/00 no Anexo A é deliberada: ele caracteriza a sede em vez de ser atividade dela. Resta `[OPEN-EV-14]`: os §3.3 e §12.3 continuam mandando indeferir a inclusão do 8211-3/00 numa **Sede**, o que pela resposta da SEDUR parece texto deslocado — a vedação faz sentido para o **abrigado** (Anexo B), impedindo sede dentro de escritório virtual. Confirmar antes de implementar o CA 12.3.
 
 ### RN-AA-02 — Inclusão em abrigado
 
@@ -56,6 +58,18 @@ O caminho do "Sim" é o mesmo `DesvincularInscricaoService` da RN-EV-06 do motor
 
 Exclui a atividade, defere automaticamente e mantém o enquadramento de abrigado, desde que as demais condições cadastrais o sustentem. **Sem** validação de zoneamento.
 
+### RN-AA-05b — Como o sistema sabe o que está sendo excluído — NOVO
+
+O requisito assume que o sistema distingue as atividades **incluídas** das **excluídas** numa solicitação (RN-AA-06 item 1). Hoje ele não distingue: `viability_request_cnaes` guarda só os CNAEs pedidos, com `is_primary`, e não há marcação de intenção por atividade.
+
+Duas formas de resolver, e a escolha não é indiferente:
+
+**Derivar do delta** contra `company_cnae` (o cadastro atual da empresa): excluídas = estão no cadastro e não na solicitação. Não exige mudança de schema, mas é frágil de um jeito perigoso — se o requerente informar apenas as atividades que quer acrescentar, o delta leria **todo o cadastro atual como exclusão**. E não distingue "não mexi nisso" de "quero excluir".
+
+**Marcar a intenção por atividade** na solicitação. Exige coluna nova no pivot, e é a única forma que expressa os casos que o requisito pede: a RN-AA-06 descreve uma solicitação com inclusão **e** exclusão simultâneas, o que o delta não consegue representar sem conhecer o conjunto completo pretendido.
+
+**Decisão: marcação explícita.** É a leitura que o requisito sustenta e a única que expressa a solicitação mista. O custo é uma coluna e o preenchimento dela no portal.
+
 ### RN-AA-06 — Inclusão e exclusão simultâneas
 
 As duas operações são aplicadas **concomitante e independentemente**, na mesma solicitação:
@@ -73,11 +87,15 @@ Havendo operação que impeça o processamento conjunto das demais, aplicar a re
 
 A regra da RN-AA-04 se aplica integralmente, inclusive a confirmação. Resposta "Não" mantém o CNAE e as demais alterações seguem normalmente.
 
-### RN-AA-08 — Isenção de TLL
+### RN-AA-08 — Isenção de TLL (SEM PONTO DE APLICAÇÃO)
 
-Solicitação **exclusivamente** de exclusão de atividade não gera cobrança de TLL. Vale para sede e para abrigado. O sistema identifica o tipo de solicitação e impede a geração da taxa.
+Solicitação **exclusivamente** de exclusão de atividade não gera cobrança de TLL. Vale para sede e para abrigado.
 
-Consequência da RN-AA-06: uma solicitação com inclusão **e** exclusão não é exclusivamente de exclusão, logo **não** é isenta. Está implícito no requisito; a spec explicita.
+Consequência da RN-AA-06: uma solicitação com inclusão **e** exclusão não é exclusivamente de exclusão, logo **não** é isenta. Está implícito no requisito; a spec explicita. Ver `[OPEN-AA-2]`.
+
+> **`[OPEN-AA-3]` ABERTO — O SISTEMA NÃO COBRA TLL.** A auditoria de código para o plano encontrou que **não existe módulo de taxa** no Viabiliza: nenhuma migration de taxa, cobrança ou pagamento, e as ocorrências de "taxa" no código são taxa de deferimento em relatórios (percentual), não emolumento. O único "TLL" é o campo `codigo_tll` da ficha, que é código LOUOS, não valor a pagar.
+>
+> Uma regra que "impede a geração da taxa" não tem do que isentar, e nenhum teste pode provar que nada foi cobrado quando nada cobra. Implementar um marcador de isenção é defensável — o módulo futuro o consome —, mas o **CA 12.11 não pode ser declarado entregue** até existir o ponto de aplicação. Confirmar com a SEDUR onde a TLL é gerada hoje: é o Viabiliza que deveria gerar, ou outro sistema?
 
 ### RN-AA-09 — Atualização cadastral e comunicação
 
@@ -116,6 +134,9 @@ Comunicar à SEFAZ na perda da condição de sede, com: CNPJ, número da solicit
 
 ## 6. Questões abertas
 
-- `[OPEN-EV-7]` (motor) — bloqueia a RN-AA-01 e o CA 12.3.
+- ~~`[OPEN-EV-7]`~~ **FECHADO (SEDUR 2026-08-31):** o 8211-3/00 caracteriza a sede; a conferência contra o Anexo A o exclui. Ver RN-AA-01.
+- `[OPEN-EV-14]` **ABERTO:** os §3.3 e §12.3 se referem ao abrigado, não à sede? Bloqueia o CA 12.3. Ver RN-AA-01.
 - `[OPEN-AA-1]` **ABERTO:** qual o resultado consolidado de uma solicitação com inclusão indeferida e exclusão deferida? O documento manda registrar o resultado de cada operação, mas o produto (TVL) e o status do processo são únicos. Confirmar se a solicitação fica parcialmente deferida, se o indeferimento de uma inclusão derruba a solicitação inteira, ou se as operações geram desfechos separados.
 - `[OPEN-AA-2]` **ABERTO:** a isenção de TLL vale para solicitação mista (inclusão + exclusão)? A leitura literal diz que não — "exclusivamente" —, mas convém confirmar, porque é regra de arrecadação.
+- `[OPEN-AA-3]` **ABERTO — SEM PONTO DE APLICAÇÃO.** O Viabiliza não tem módulo de taxa. Onde a TLL é gerada hoje? Ver RN-AA-08.
+- `[OPEN-AA-4]` **DECIDIDO (nossa, 2026-08-31):** a intenção por atividade (incluir ou excluir) passa a ser marcada explicitamente na solicitação, em vez de derivada do delta contra o cadastro. Ver RN-AA-05b. Registrar como decisão nossa a confirmar com a SEDUR no desenho da tela.
