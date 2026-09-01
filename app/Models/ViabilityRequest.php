@@ -6,6 +6,7 @@ use App\Concerns\HasAuditoria;
 use App\Enums\AnalysisCategory;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
+use App\Enums\IntencaoAtividade;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Enums\VirtualOfficeIntent;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 
 /**
  * Solicitação de viabilidade (EP08) — aggregate root com o imóvel embutido 1:1.
@@ -187,7 +189,7 @@ class ViabilityRequest extends Model
      */
     public function cnaes(): BelongsToMany
     {
-        return $this->belongsToMany(Cnae::class, 'viability_request_cnaes')->withPivot('is_primary')->withTimestamps();
+        return $this->belongsToMany(Cnae::class, 'viability_request_cnaes')->withPivot('is_primary', 'intencao')->withTimestamps();
     }
 
     /**
@@ -198,6 +200,33 @@ class ViabilityRequest extends Model
     public function primaryCnae(): BelongsToMany
     {
         return $this->cnaes()->wherePivot('is_primary', true);
+    }
+
+    /**
+     * CNAEs marcados para saída na alteração de atividade (RN-AA-05b).
+     *
+     * @return Collection<int, Cnae>
+     */
+    public function cnaesParaExcluir(): Collection
+    {
+        return $this->cnaes()->wherePivot('intencao', IntencaoAtividade::Excluir->value)->get();
+    }
+
+    /**
+     * Verdadeiro quando a solicitação lista ao menos um CNAE e todos estão
+     * marcados para exclusão. Exige a linha antes de avaliar "todos": sem
+     * isso, uma solicitação sem CNAE nenhum passaria pelo quantificador
+     * universal sobre conjunto vazio, que em PHP é verdadeiro.
+     */
+    public function exclusivamenteExclusao(): bool
+    {
+        $intencoes = $this->cnaes()->pluck('viability_request_cnaes.intencao');
+
+        if ($intencoes->isEmpty()) {
+            return false;
+        }
+
+        return $intencoes->every(fn (?string $intencao) => $intencao === IntencaoAtividade::Excluir->value);
     }
 
     /**
