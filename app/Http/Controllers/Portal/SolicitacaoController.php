@@ -327,6 +327,15 @@ class SolicitacaoController extends Controller
                 'is_virtual_office' => (bool) $solicitacao->is_virtual_office,
                 'is_public_area' => (bool) $solicitacao->is_public_area,
                 'has_independent_access' => (bool) $solicitacao->has_independent_access,
+                // Sem cast para bool: null é o estado "ainda não respondido"
+                // (RN-EV-01) — nem sim nem não, e precisa chegar assim à tela.
+                'wants_virtual_office_tenant' => $solicitacao->wants_virtual_office_tenant,
+            ],
+            'escritorio_virtual' => [
+                'pergunta_geral' => Settings::get(
+                    'analise.escritorio_virtual.pergunta_geral',
+                    config('sile.analise.escritorio_virtual.pergunta_geral'),
+                ),
             ],
             'cnaes' => $solicitacao->cnaes
                 ->sortByDesc(fn (Cnae $cnae) => (bool) $cnae->pivot->is_primary)

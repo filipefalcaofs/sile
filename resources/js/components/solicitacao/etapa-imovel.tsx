@@ -44,6 +44,12 @@ interface Indicators {
     is_virtual_office: boolean;
     is_public_area: boolean;
     has_independent_access: boolean;
+    wants_virtual_office_tenant: boolean | null;
+}
+
+/** Bloco de textos administráveis do escritório virtual (Settings::get). */
+interface EscritorioVirtualTextos {
+    pergunta_geral: string;
 }
 
 interface EtapaImovelProps {
@@ -52,6 +58,7 @@ interface EtapaImovelProps {
     address: AddressData;
     usedArea: string | number | null;
     indicators: Indicators;
+    escritorioVirtual: EscritorioVirtualTextos;
     territorio: TerritorioResumo | null;
     areaAlert: AreaAlert | null;
     onSaved: () => void;
@@ -139,6 +146,7 @@ export default function EtapaImovel({
     address,
     usedArea,
     indicators,
+    escritorioVirtual,
     territorio,
     areaAlert,
     onSaved,
@@ -164,6 +172,7 @@ export default function EtapaImovel({
         is_virtual_office: indicators.is_virtual_office,
         is_public_area: indicators.is_public_area,
         has_independent_access: indicators.has_independent_access,
+        wants_virtual_office_tenant: indicators.wants_virtual_office_tenant,
     });
 
     const area = Number(data.used_area_m2);
@@ -365,6 +374,40 @@ export default function EtapaImovel({
                                 Possui acesso independente
                             </label>
                         </div>
+                    </fieldset>
+
+                    <fieldset className="mt-6 border-t border-gray-100 pt-5 dark:border-gray-800">
+                        <legend className="mb-3 text-sm font-semibold text-gray-800 dark:text-white/90">
+                            {escritorioVirtual.pergunta_geral}
+                        </legend>
+                        {/* Três estados (RN-EV-01): sim, não, ainda não respondido. Sem
+                        pré-seleção quando null — um checkbox não expressaria a ausência
+                        de resposta sem presumir recusa. */}
+                        <div className="flex items-center gap-6">
+                            <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                                <input
+                                    type="radio"
+                                    name="wants_virtual_office_tenant"
+                                    checked={data.wants_virtual_office_tenant === true}
+                                    onChange={() => setData('wants_virtual_office_tenant', true)}
+                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                />
+                                Sim
+                            </label>
+                            <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                                <input
+                                    type="radio"
+                                    name="wants_virtual_office_tenant"
+                                    checked={data.wants_virtual_office_tenant === false}
+                                    onChange={() => setData('wants_virtual_office_tenant', false)}
+                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                />
+                                Não
+                            </label>
+                        </div>
+                        {errors.wants_virtual_office_tenant && (
+                            <p className="mt-2 text-theme-xs text-error-500">{errors.wants_virtual_office_tenant}</p>
+                        )}
                     </fieldset>
 
                     <div className="mt-6 flex justify-end">

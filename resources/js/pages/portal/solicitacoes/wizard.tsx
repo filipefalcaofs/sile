@@ -77,6 +77,10 @@ export interface SolicitacaoDraft {
         is_virtual_office: boolean;
         is_public_area: boolean;
         has_independent_access: boolean;
+        wants_virtual_office_tenant: boolean | null;
+    };
+    escritorio_virtual: {
+        pergunta_geral: string;
     };
     cnaes: CnaeItem[];
     documentos: DocumentoItem[];
@@ -387,6 +391,7 @@ function WizardEdicao({
                     address={solicitacao.address}
                     usedArea={solicitacao.used_area_m2}
                     indicators={solicitacao.indicators}
+                    escritorioVirtual={solicitacao.escritorio_virtual}
                     territorio={territorio}
                     areaAlert={areaAlert}
                     onSaved={avancar}

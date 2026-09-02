@@ -460,6 +460,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:2000'],
                 'description' => 'Pergunta de confirmação exibida ao requerente ao excluir o CNAE gatilho da sede (RN-AA-04), com :cnae substituído pelo código do gatilho vigente',
             ],
+            'analise.escritorio_virtual.pergunta_geral' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'Deseja ser abrigado de escritório virtual?',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Texto da pergunta geral de intenção de abrigo exibida no passo do imóvel do portal (RN-EV-01, OPEN-EV-8)',
+            ],
             'analise.precedentes.janela_meses' => [
                 'group' => 'analise',
                 'type' => 'integer',
