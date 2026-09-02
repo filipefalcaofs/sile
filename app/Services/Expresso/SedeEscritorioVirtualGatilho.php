@@ -3,6 +3,7 @@
 namespace App\Services\Expresso;
 
 use App\Models\ViabilityRequest;
+use App\Models\VirtualOfficeInscriptionLock;
 use App\Support\Settings;
 
 /**
@@ -71,6 +72,24 @@ class SedeEscritorioVirtualGatilho
         $cnaeGatilho = $this->cnaeGatilho();
 
         return $request->cnaesParaExcluir()->contains(fn ($cnae): bool => $this->normalizar($cnae->code) === $cnaeGatilho);
+    }
+
+    /**
+     * A solicitação é da MESMA empresa que detém o vínculo de sede
+     * ($lock->sede)? Fonte única da verificação de titularidade — RN-AA-04
+     * ("exclusão do CNAE gatilho EM sede") e RN-C-01 ("sede duplicada") são
+     * regras irmãs sobre o mesmo vínculo: quem já É a sede não pode ser
+     * bloqueada por uma sede que é ela mesma, e ninguém além da titular pode
+     * derrubar ou substituir essa sede. Compara pela empresa (`company_id`)
+     * — é o vínculo inequívoco entre a solicitação e a pessoa jurídica
+     * titular, ao contrário do requerente (usuário), que pode variar entre
+     * protocolações da mesma empresa.
+     */
+    public function titularDoVinculo(ViabilityRequest $request, VirtualOfficeInscriptionLock $lock): bool
+    {
+        $sede = $lock->sede;
+
+        return $sede !== null && $sede->company_id !== null && $sede->company_id === $request->company_id;
     }
 
     /** Só dígitos, para comparar 8211-3/00 == 8211300. */

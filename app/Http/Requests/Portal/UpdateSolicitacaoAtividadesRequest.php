@@ -234,16 +234,29 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                 // como já existir sede vinculada — segue direto para RN-C-03.
                 $inscricao = $solicitacao->property_registration;
 
-                if (filled($inscricao) && VirtualOfficeInscriptionLock::sedeAtiva($inscricao) !== null) {
-                    $validator->errors()->add(
-                        'principal_cnae_id',
-                        Settings::get(
-                            'analise.escritorio_virtual.mensagem_sede_duplicada',
-                            config('sile.analise.escritorio_virtual.mensagem_sede_duplicada'),
-                        ),
-                    );
+                if (filled($inscricao)) {
+                    $lock = VirtualOfficeInscriptionLock::sedeAtiva($inscricao);
 
-                    return;
+                    // A própria sede titular do vínculo precisa poder alterar
+                    // as próprias atividades, inclusive excluir o CNAE que a
+                    // caracteriza (Task 3) — sem esta exceção, RN-C-01
+                    // bloqueava a sede por já existir a sede que ela é.
+                    // `titularDoVinculo()` é a mesma checagem de
+                    // `FluxoExpressoService` (fonte única): quem NÃO é a
+                    // titular continua bloqueada, guarda contra qualquer
+                    // empresa constituir sede numa inscrição já travada por
+                    // outra.
+                    if ($lock !== null && ! app(SedeEscritorioVirtualGatilho::class)->titularDoVinculo($solicitacao, $lock)) {
+                        $validator->errors()->add(
+                            'principal_cnae_id',
+                            Settings::get(
+                                'analise.escritorio_virtual.mensagem_sede_duplicada',
+                                config('sile.analise.escritorio_virtual.mensagem_sede_duplicada'),
+                            ),
+                        );
+
+                        return;
+                    }
                 }
 
                 // RN-C-03: a sede só pode exercer {CNAE gatilho} ∪ Anexo A —

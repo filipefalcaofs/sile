@@ -155,7 +155,7 @@ class FluxoExpressoService
                 // — uma solicitação de OUTRA empresa na mesma inscrição
                 // conseguia derrubar a sede alheia. Sem correspondência,
                 // encaminha à análise com o motivo registrado; nunca executa.
-                if (! $this->titularDaSede($request, $lock)) {
+                if (! $this->gatilhoSede->titularDoVinculo($request, $lock)) {
                     return $this->encaminharAnalise(
                         $request,
                         'exclusão do CNAE gatilho da sede pedida por solicitação que não é a titular do vínculo de sede — encaminhado para verificação',
@@ -467,30 +467,12 @@ class FluxoExpressoService
     }
 
     /**
-     * A solicitação que pede a exclusão do gatilho é da MESMA empresa que
-     * detém o vínculo de sede (`$lock->sede`)? RN-AA-04 é "exclusão do CNAE
-     * gatilho EM sede" — quem perde a condição tem que ser quem a detém, não
-     * qualquer solicitação que caia na mesma inscrição imobiliária (C2 da
-     * revisão final: `deferirExclusaoDeSede()` localizava o lock só pela
-     * inscrição e desativava a sede de quem quer que a detivesse). Compara
-     * pela empresa (`company_id`) — é o vínculo inequívoco entre a solicitação
-     * e a pessoa jurídica titular, ao contrário do requerente (usuário), que
-     * pode variar entre protocolações da mesma empresa.
-     */
-    private function titularDaSede(ViabilityRequest $request, VirtualOfficeInscriptionLock $lock): bool
-    {
-        $sede = $lock->sede;
-
-        return $sede !== null && $sede->company_id !== null && $sede->company_id === $request->company_id;
-    }
-
-    /**
      * Defere a exclusão CONFIRMADA do CNAE gatilho da sede (RN-AA-04): mesma
      * base de `deferirExclusao()` (decisão sem enquadramento, TVL, transição,
      * auditoria síncrona, tudo numa transação), mas esta solicitação NUNCA é
      * abrigada da sede que ela mesma está desativando — `is_virtual_office_tenant`
      * fica sempre falso, sem consultar o AbrigadoResolver. Coerente com a
-     * verificação de titularidade em `titularDaSede()`: quem chega aqui É a
+     * verificação de titularidade em `gatilhoSede->titularDoVinculo()`: quem chega aqui É a
      * titular do vínculo que está desativando, então nunca é abrigada dele.
      *
      * A cascata de desvinculação (RN-EV-06) só roda APÓS o commit da decisão,
