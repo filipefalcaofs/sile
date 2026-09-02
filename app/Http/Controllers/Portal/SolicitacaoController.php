@@ -350,9 +350,18 @@ class SolicitacaoController extends Controller
                     'analise.escritorio_virtual.pergunta_vinculada',
                     config('sile.analise.escritorio_virtual.pergunta_vinculada'),
                 ),
-                'mensagem_confirma_perda_sede' => Settings::get(
-                    'analise.escritorio_virtual.mensagem_confirma_perda_sede',
-                    config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
+                // Interpolado AQUI, não no front (achado C1 da revisão da
+                // Task 3): o marcador :cnae é implementação do texto
+                // administrável, e o front não deve conhecer nem o marcador
+                // nem o código do CNAE gatilho — mesma fonte única
+                // (cnaeGatilhoFormatado()) usada por FluxoExpressoService.
+                'mensagem_confirma_perda_sede' => str_replace(
+                    ':cnae',
+                    app(SedeEscritorioVirtualGatilho::class)->cnaeGatilhoFormatado(),
+                    (string) Settings::get(
+                        'analise.escritorio_virtual.mensagem_confirma_perda_sede',
+                        config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
+                    ),
                 ),
                 // Id do CNAE gatilho no cadastro (fonte única em
                 // SedeEscritorioVirtualGatilho::cnaeGatilho()), ou null se ainda

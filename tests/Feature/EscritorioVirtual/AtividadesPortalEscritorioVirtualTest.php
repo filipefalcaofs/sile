@@ -77,11 +77,33 @@ class AtividadesPortalEscritorioVirtualTest extends TestCase
                 'analise.escritorio_virtual.pergunta_vinculada',
                 config('sile.analise.escritorio_virtual.pergunta_vinculada'),
             ))
-            ->where('solicitacao.escritorio_virtual.mensagem_confirma_perda_sede', Settings::get(
-                'analise.escritorio_virtual.mensagem_confirma_perda_sede',
-                config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
-            ))
             ->where('solicitacao.escritorio_virtual.cnae_gatilho_id', $gatilho->id));
+    }
+
+    /**
+     * C1 (Critical) da revisão da Task 3: o payload entrega a mensagem de
+     * confirmação de perda da sede JÁ INTERPOLADA — o front não conhece o
+     * marcador `:cnae` nem o código do CNAE gatilho. Antes da correção, o
+     * payload entregava o texto CRU (com `:cnae` literal), e o teste
+     * anterior não pegava isso porque comparava contra a mesma expressão
+     * `Settings::get(...)` do controller, sem nunca interpolar. Este teste
+     * assere as duas pontas: o payload não contém `:cnae` e contém o código
+     * formatado do gatilho.
+     */
+    public function test_mensagem_de_confirmacao_de_perda_de_sede_chega_interpolada(): void
+    {
+        $user = $this->portalUser();
+        $solicitacao = $this->draftAlteracaoAtividade($user);
+        $this->gatilho();
+
+        $response = $this->actingAs($user)->get(route('portal.solicitacoes.edit', $solicitacao));
+
+        $cnaeFormatado = app(SedeEscritorioVirtualGatilho::class)->cnaeGatilhoFormatado();
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('solicitacao.escritorio_virtual.mensagem_confirma_perda_sede', function (string $mensagem) use ($cnaeFormatado) {
+                return ! str_contains($mensagem, ':cnae') && str_contains($mensagem, $cnaeFormatado);
+            }));
     }
 
     public function test_marcacao_de_exclusao_e_persistida_na_intencao_do_pivot(): void
@@ -134,7 +156,20 @@ class AtividadesPortalEscritorioVirtualTest extends TestCase
         $this->assertNull($solicitacao->cnaes()->find($complementar->id)->pivot->intencao);
     }
 
-    public function test_regravar_as_atividades_preserva_a_marcacao(): void
+    /**
+     * Regravar as atividades RECOMPUTA a intenção a partir do payload
+     * entrante — não é "preservação" (achado I3 da revisão da Task 3): a
+     * `intencao` é função pura do payload de cada PUT (`$intencaoPara()` no
+     * controller decide olhando só para `exclusoes` deste request), e o
+     * único outro `sync()` desse pivot (`ContingenciaController::syncCnaes()`)
+     * é caminho de CRIAÇÃO, não de regravação — não existe guard de
+     * "preservar marcação antiga" para este teste provar. Dois PUTs com o
+     * MESMO `exclusoes` só provam que a recomputação é idempotente; o
+     * segundo caso, com `exclusoes` diferente entre os dois PUTs, prova a
+     * recomputação de verdade — a intenção do segundo PUT acompanha o
+     * payload dele, não o do primeiro.
+     */
+    public function test_regravar_as_atividades_recomputa_a_intencao_a_partir_do_payload(): void
     {
         $user = $this->portalUser();
         $solicitacao = $this->draftAlteracaoAtividade($user);
@@ -156,6 +191,20 @@ class AtividadesPortalEscritorioVirtualTest extends TestCase
         $this->assertSame(
             IntencaoAtividade::Excluir->value,
             $solicitacao->cnaes()->find($complementar->id)->pivot->intencao,
+        );
+
+        // Segundo PUT muda `exclusoes`: o complementar deixa de ser marcado
+        // para exclusão, e a intenção precisa acompanhar — se o valor viesse
+        // "preservado" do primeiro PUT, continuaria Excluir.
+        $this->actingAs($user)->put(route('portal.solicitacoes.atividades', $solicitacao), [
+            'principal_cnae_id' => $principal->id,
+            'complementares' => [$complementar->id],
+            'exclusoes' => [],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame(
+            IntencaoAtividade::Incluir->value,
+            $solicitacao->refresh()->cnaes()->find($complementar->id)->pivot->intencao,
         );
     }
 

@@ -161,12 +161,20 @@ export default function EtapaAtividades({
             return;
         }
 
+        // Filtra `exclusoes` pelos ids efetivamente submetidos (achado I1 da
+        // revisão da Task 3): remover o complementar pelo botão de remover,
+        // ou trocar o principal, tira o id de `excludeIds` mas não limpava a
+        // marcação — o PUT seguinte caía no `after()` de pertinência
+        // ("só se exclui o que a própria solicitação está submetendo") e
+        // voltava com erro, sem o checkbox na tela para desmarcar.
+        const exclusoesValidas = exclusoes.filter((id) => excludeIds.includes(id));
+
         router.put(
             `/portal/solicitacoes/${solicitacaoId}/atividades`,
             {
                 principal_cnae_id: principal.id,
                 complementares: complementares.map((cnae) => cnae.id),
-                exclusoes,
+                exclusoes: exclusoesValidas,
                 // A chave só entra no payload quando há resposta: mandar
                 // `null` explícito seria uma chave PRESENTE com valor nulo, e
                 // o backend trata presença da chave como resposta — viraria
@@ -174,7 +182,13 @@ export default function EtapaAtividades({
                 // corrigida antes neste projeto), mesmo sem o requerente ter
                 // respondido nada.
                 ...(confirmaPerda !== null ? { confirma_perda_condicao_sede: confirmaPerda } : {}),
-                wants_virtual_office_hq: prestaServicoVinculado,
+                // Mesmo padrão: só entra quando a pergunta vinculada está
+                // visível (achado I2 da revisão da Task 3) — do contrário o
+                // estado local sobrevivia à pergunta sumir (ex.: gatilho
+                // removido da lista) e escrevia `hq` com valor velho, vindo
+                // das props do carregamento, numa solicitação que já não
+                // declara mais o gatilho.
+                ...(exibirPerguntaVinculada ? { wants_virtual_office_hq: prestaServicoVinculado } : {}),
             },
             {
                 preserveScroll: true,

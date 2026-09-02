@@ -93,6 +93,13 @@ class SolicitacaoAtividadeController extends Controller
             $after = [
                 'principal' => Cnae::query()->whereKey($primaryId)->value('code'),
                 'complementares' => Cnae::query()->whereIn('id', $complementaresIds)->orderBy('code')->pluck('code')->all(),
+                // Simétrico ao `intencao` já presente em `$before` (achado M1
+                // da revisão da Task 3): é a mudança de intenção que derruba
+                // o vínculo das abrigadas, então ela precisa aparecer no
+                // "depois" da auditoria, não só no "antes".
+                'intencao' => $solicitacao->cnaes()->get()->mapWithKeys(fn (Cnae $cnae) => [
+                    $cnae->code => $cnae->pivot->intencao,
+                ])->all(),
             ];
 
             $this->audit->log('solicitacoes', 'solicitacao-cnaes', 'Atividades da solicitação atualizadas', [

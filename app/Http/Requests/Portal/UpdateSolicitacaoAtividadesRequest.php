@@ -4,6 +4,7 @@ namespace App\Http\Requests\Portal;
 
 use App\Enums\VirtualOfficeIntent;
 use App\Models\Cnae;
+use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeActivityCnae;
 use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\EscritorioVirtual\SedeAtividadesResolver;
@@ -50,10 +51,15 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
             'complementares' => ['nullable', 'array', "max:{$max}"],
             'complementares.*' => ['integer', 'distinct', Rule::exists('cnaes', 'id')->where('active', true)],
             // CNAEs marcados para EXCLUSÃO na alteração de atividade (RN-AA-05b).
-            // Sem `active`, ao contrário dos complementares: uma atividade que a
-            // empresa quer abandonar pode ter sido desativada no cadastro DEPOIS
-            // de ela passar a exercê-la — exigir `active` a prenderia à
-            // atividade obsoleta, impedindo justamente a saída que ela pede.
+            // Sem `active` aqui — mas isso NÃO habilita exclusão de CNAE
+            // desativado hoje (achado I4 da revisão da Task 3): o `after()`
+            // de pertinência exige que o id esteja entre `principal_cnae_id`/
+            // `complementares`, e esses DOIS campos exigem `active`. Na
+            // prática, só CNAE ativo chega a `exclusoes`. Suportar exclusão
+            // de CNAE desativado no cadastro (abandonar atividade obsoleta)
+            // exigiria relaxar condicionalmente a validação de `active` nos
+            // outros dois campos — decisão pendente da SEDUR, fora do escopo
+            // desta correção.
             'exclusoes' => ['nullable', 'array'],
             'exclusoes.*' => ['integer', 'distinct', Rule::exists('cnaes', 'id')],
             'confirma_perda_condicao_sede' => ['sometimes', 'nullable', 'boolean'],
@@ -121,6 +127,14 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
 
                 $inscricao = $solicitacao?->property_registration;
 
+                // Intenção RESOLVIDA (achado C2 da revisão da Task 3, aplicado
+                // aqui pela mesma razão): este closure também decide olhando
+                // para a intenção, e este request também pode ESTAR
+                // declarando Sede agora (`wants_virtual_office_hq` no
+                // payload) — julgar pelo persistido reabriria o mesmo furo
+                // que o closure de RN-C-01/03 tinha.
+                $intentAtual = $this->resolvedVirtualOfficeIntent($solicitacao);
+
                 // Só é abrigado se a inscrição existe E tem uma sede ativa; sem
                 // sede ativa (ou inscrição vazia) não há restrição de Lista EV.
                 //
@@ -136,7 +150,7 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                 if (
                     blank($inscricao)
                     || ! VirtualOfficeInscriptionLock::ativoPara($inscricao)
-                    || $solicitacao->virtualOfficeIntent() === VirtualOfficeIntent::Sede
+                    || $intentAtual === VirtualOfficeIntent::Sede
                 ) {
                     return;
                 }
@@ -148,7 +162,7 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                 // somar dois pareceres de causas diferentes no mesmo erro.
                 if (
                     $solicitacao->wants_virtual_office_tenant === false
-                    && $solicitacao->virtualOfficeIntent() === VirtualOfficeIntent::Nenhum
+                    && $intentAtual === VirtualOfficeIntent::Nenhum
                     && VirtualOfficeInscriptionLock::sedeAtiva($inscricao) !== null
                 ) {
                     $validator->errors()->add(
@@ -181,7 +195,7 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                 // da revisão final — sem isto, o abrigado legítimo com sede ativa
                 // nunca via o texto exigido, porque o closure irmão (RN-C-02)
                 // para exatamente neste caso).
-                $gatilho = $solicitacao->virtualOfficeIntent() === VirtualOfficeIntent::Abrigado
+                $gatilho = $intentAtual === VirtualOfficeIntent::Abrigado
                     ? app(SedeEscritorioVirtualGatilho::class)->cnaeGatilho()
                     : null;
 
@@ -212,7 +226,7 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
             function (Validator $validator) {
                 $solicitacao = $this->route('solicitacao');
 
-                $intent = $solicitacao?->virtualOfficeIntent() ?? VirtualOfficeIntent::Nenhum;
+                $intent = $this->resolvedVirtualOfficeIntent($solicitacao);
 
                 if ($intent === VirtualOfficeIntent::Nenhum) {
                     return;
@@ -322,6 +336,46 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
                 }
             },
         ];
+    }
+
+    /**
+     * Intenção resultante DESTE PUT (achado C2 da revisão da Task 3), não a
+     * intenção já persistida. Este mesmo FormRequest grava
+     * `wants_virtual_office_hq` (é `hq` que produz VirtualOfficeIntent::Sede
+     * — ver ViabilityRequest::virtualOfficeIntent()), então julgar pelo
+     * estado persistido deixava passar sem validação exatamente o PUT que
+     * DECLARA a sede: a solicitação chegava com `hq=false` (intenção
+     * "nenhum"), o cidadão marcava a pergunta vinculada, e as regras de
+     * sede duplicada (RN-C-01) e Anexo A (RN-C-03) nunca rodavam, porque
+     * olhavam o que a solicitação ERA antes do PUT, não o que ela VAI SER
+     * depois dele.
+     *
+     * Só `wants_virtual_office_hq` é sobreposto (é o único campo de intenção
+     * que este passo escreve); `wants_virtual_office_tenant` sempre vem do
+     * estado persistido, porque só o passo do imóvel grava esse campo. Sem a
+     * chave no payload — o passo não perguntou desta vez (mesmo padrão de
+     * preservação do controller) —, cai para o valor persistido.
+     */
+    private function resolvedVirtualOfficeIntent(?ViabilityRequest $solicitacao): VirtualOfficeIntent
+    {
+        if ($solicitacao === null) {
+            return VirtualOfficeIntent::Nenhum;
+        }
+
+        $tenant = $solicitacao->wants_virtual_office_tenant;
+        $hq = $this->has('wants_virtual_office_hq')
+            ? $this->boolean('wants_virtual_office_hq')
+            : $solicitacao->wants_virtual_office_hq;
+
+        if ($tenant === true) {
+            return VirtualOfficeIntent::Abrigado;
+        }
+
+        if ($tenant !== true && $hq) {
+            return VirtualOfficeIntent::Sede;
+        }
+
+        return VirtualOfficeIntent::Nenhum;
     }
 
     /**

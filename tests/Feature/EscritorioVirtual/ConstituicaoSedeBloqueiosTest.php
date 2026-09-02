@@ -286,6 +286,43 @@ class ConstituicaoSedeBloqueiosTest extends TestCase
         $this->assertSame(1, $solicitacao->cnaes()->count());
     }
 
+    /**
+     * C2 (Critical) da revisão da Task 3: o mesmo PUT que DECLARA a sede
+     * (marca a pergunta vinculada, `wants_virtual_office_hq`) precisa ser
+     * julgado pela intenção que a solicitação VAI FICAR SENDO depois dele,
+     * não pela intenção já persistida. Aqui `hq=false` é o estado persistido
+     * (intenção "nenhum" antes do PUT) — sem a correção, RN-C-01 olhava só
+     * para esse estado, via em branco, e deixava passar sem bloqueio o PUT
+     * que declara sede numa inscrição já travada por OUTRA empresa
+     * (`sedeAtivaEm()` cria o vínculo com uma solicitação protocolada
+     * distinta). Este teste falha sem a correção e prova que ela funciona.
+     */
+    public function test_sede_declarada_no_mesmo_put_e_bloqueada_por_sede_duplicada(): void
+    {
+        $user = $this->portalUser();
+        // hq=false persistido: a intenção ANTES deste PUT é "nenhum".
+        $solicitacao = $this->draftFor($user, 'X', wantsHq: false);
+        // Sede ATIVA na inscrição, de outra empresa/solicitação.
+        $this->sedeAtivaEm('X');
+        $consultoria = Cnae::factory()->create(['code' => '6920-6/01']);
+
+        $this->actingAs($user)
+            ->from(route('portal.solicitacoes.index'))
+            ->put(route('portal.solicitacoes.atividades', $solicitacao), [
+                'principal_cnae_id' => $consultoria->id,
+                // Marca a pergunta vinculada NESTE PUT — é o que declara a
+                // intenção de sede, não o estado persistido.
+                'wants_virtual_office_hq' => true,
+            ])
+            ->assertSessionHasErrors('principal_cnae_id');
+
+        $errors = $this->app['session']->get('errors')->getBag('default')->get('principal_cnae_id');
+        $this->assertSame(
+            config('sile.analise.escritorio_virtual.mensagem_sede_duplicada'),
+            $errors[0],
+        );
+    }
+
     public function test_solicitacao_sem_intencao_de_escritorio_virtual_nao_sofre_bloqueio(): void
     {
         $user = $this->portalUser();
