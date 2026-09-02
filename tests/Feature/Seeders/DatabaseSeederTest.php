@@ -76,8 +76,11 @@ class DatabaseSeederTest extends TestCase
         // exclusao-atividade, Tarefa 3: analise.escritorio_virtual.mensagem_confirma_perda_sede)
         // + 1 da pergunta geral de intenção de abrigo no passo do imóvel do
         // portal (SDD escritorio-virtual-telas-portal, Tarefa 1:
-        // analise.escritorio_virtual.pergunta_geral).
-        $this->assertSame(102, Parameter::query()->count());
+        // analise.escritorio_virtual.pergunta_geral)
+        // + 1 da pergunta vinculada de intenção de sede no passo de
+        // atividades do portal (SDD escritorio-virtual-telas-portal, Tarefa 3:
+        // analise.escritorio_virtual.pergunta_vinculada).
+        $this->assertSame(103, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -337,7 +340,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(102, Parameter::query()->count());
+        $this->assertSame(103, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

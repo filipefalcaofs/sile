@@ -49,6 +49,20 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
             // Complementares opcionais, até o limite parametrizável, sem duplicados e ATIVOS.
             'complementares' => ['nullable', 'array', "max:{$max}"],
             'complementares.*' => ['integer', 'distinct', Rule::exists('cnaes', 'id')->where('active', true)],
+            // CNAEs marcados para EXCLUSÃO na alteração de atividade (RN-AA-05b).
+            // Sem `active`, ao contrário dos complementares: uma atividade que a
+            // empresa quer abandonar pode ter sido desativada no cadastro DEPOIS
+            // de ela passar a exercê-la — exigir `active` a prenderia à
+            // atividade obsoleta, impedindo justamente a saída que ela pede.
+            'exclusoes' => ['nullable', 'array'],
+            'exclusoes.*' => ['integer', 'distinct', Rule::exists('cnaes', 'id')],
+            'confirma_perda_condicao_sede' => ['sometimes', 'nullable', 'boolean'],
+            // Resposta da pergunta vinculada (RN-EV-01) — este passo é onde os
+            // CNAEs são conhecidos, então é aqui que ela é perguntada, mesmo
+            // escrevendo um campo do imóvel (wants_virtual_office_hq). O
+            // preenchimento simétrico ao de SolicitacaoImovelController (ver
+            // Task 3) evita que os dois passos briguem pelo mesmo campo.
+            'wants_virtual_office_hq' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -77,6 +91,29 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
 
                 if (in_array($primaryId, $complementares, true)) {
                     $validator->errors()->add('complementares', 'A atividade principal não pode estar entre os CNAEs complementares.');
+                }
+            },
+            function (Validator $validator) {
+                // Só se exclui o que a própria solicitação está submetendo
+                // (principal ou complementar) — exclusoes não é um segundo
+                // canal para mencionar CNAEs fora do escopo do passo.
+                $exclusoes = array_map('intval', (array) $this->input('exclusoes', []));
+
+                if ($exclusoes === []) {
+                    return;
+                }
+
+                $submetidos = array_map('intval', array_merge(
+                    [(int) $this->input('principal_cnae_id')],
+                    (array) $this->input('complementares', []),
+                ));
+
+                foreach ($exclusoes as $id) {
+                    if (! in_array($id, $submetidos, true)) {
+                        $validator->errors()->add('exclusoes', 'Só é possível marcar para exclusão um CNAE que está entre os CNAEs submetidos.');
+
+                        break;
+                    }
                 }
             },
             function (Validator $validator) {
@@ -298,6 +335,8 @@ class UpdateSolicitacaoAtividadesRequest extends FormRequest
             'complementares.max' => 'O número de CNAEs complementares excede o limite permitido.',
             'complementares.*.exists' => 'Há CNAE complementar inativo ou inexistente na seleção.',
             'complementares.*.distinct' => 'Há CNAE complementar duplicado na seleção.',
+            'exclusoes.*.exists' => 'Há CNAE marcado para exclusão inexistente na tabela oficial.',
+            'exclusoes.*.distinct' => 'Há CNAE duplicado na marcação de exclusão.',
         ];
     }
 }

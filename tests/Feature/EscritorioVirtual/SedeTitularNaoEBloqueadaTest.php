@@ -19,8 +19,8 @@ use Tests\TestCase;
  * ela mesma: sem exceção, ela nunca conseguiria alterar as próprias
  * atividades, nem excluir o CNAE gatilho que a caracteriza (Task 3). A
  * titularidade é decidida pela mesma comparação usada em
- * `FluxoExpressoService::titularDaSede()` (empresa da solicitação × empresa
- * da solicitação que detém o vínculo).
+ * `SedeEscritorioVirtualGatilho::titularDoVinculo()` (empresa da solicitação
+ * × empresa da solicitação que detém o vínculo).
  */
 class SedeTitularNaoEBloqueadaTest extends TestCase
 {

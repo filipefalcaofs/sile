@@ -467,6 +467,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:2000'],
                 'description' => 'Texto da pergunta geral de intenção de abrigo exibida no passo do imóvel do portal (RN-EV-01, OPEN-EV-8)',
             ],
+            'analise.escritorio_virtual.pergunta_vinculada' => [
+                'group' => 'analise',
+                'type' => 'string',
+                'default_value' => 'Irá prestar serviço de escritório virtual, centro de negócios ou coworking?',
+                'validation_rules' => ['required', 'string', 'max:2000'],
+                'description' => 'Texto da pergunta vinculada de intenção de sede exibida no passo de atividades do portal (RN-EV-01, OPEN-EV-8), texto do legado',
+            ],
             'analise.precedentes.janela_meses' => [
                 'group' => 'analise',
                 'type' => 'integer',

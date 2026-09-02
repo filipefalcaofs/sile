@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Portal;
 
+use App\Enums\IntencaoAtividade;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\UpdateSolicitacaoAtividadesRequest;
 use App\Models\Cnae;
@@ -31,22 +32,60 @@ class SolicitacaoAtividadeController extends Controller
 
         $primaryId = (int) $request->validated('principal_cnae_id');
         $complementaresIds = array_values(array_map('intval', (array) $request->validated('complementares', [])));
+        $exclusoesIds = array_values(array_map('intval', (array) $request->validated('exclusoes', [])));
 
-        DB::transaction(function () use ($solicitacao, $primaryId, $complementaresIds) {
+        // A intenção por CNAE (RN-AA-05b) só existe quando a solicitação É de
+        // alteração de atividade econômica — primeiro estabelecimento e
+        // renovação não declaram intenção por atividade (o pivot fica null).
+        $isAlteracaoAtividade = $solicitacao->serviceType?->code === 'alteracao-atividade';
+
+        $intencaoPara = function (int $id) use ($isAlteracaoAtividade, $exclusoesIds): ?string {
+            if (! $isAlteracaoAtividade) {
+                return null;
+            }
+
+            return in_array($id, $exclusoesIds, true)
+                ? IntencaoAtividade::Excluir->value
+                : IntencaoAtividade::Incluir->value;
+        };
+
+        DB::transaction(function () use ($request, $solicitacao, $primaryId, $complementaresIds, $intencaoPara) {
             $before = $solicitacao->cnaes()->get()->map(fn (Cnae $cnae) => [
                 'code' => $cnae->code,
                 'is_primary' => (bool) $cnae->pivot->is_primary,
+                'intencao' => $cnae->pivot->intencao,
             ])->all();
 
             // Conjunto exato: o principal entra primeiro (is_primary=true) e os
             // complementares como secundários — um único sync garante a invariante.
-            $payload = [$primaryId => ['is_primary' => true]];
+            // A `intencao` precisa ir no MESMO payload do sync: ele substitui o
+            // pivot inteiro, e uma chamada que só levasse is_primary apagaria a
+            // intenção já gravada (armadilha conhecida deste projeto).
+            $payload = [$primaryId => ['is_primary' => true, 'intencao' => $intencaoPara($primaryId)]];
 
             foreach ($complementaresIds as $id) {
-                $payload[$id] = ['is_primary' => false];
+                $payload[$id] = ['is_primary' => false, 'intencao' => $intencaoPara($id)];
             }
 
             $solicitacao->cnaes()->sync($payload);
+
+            // Confirmação de perda da condição de sede (RN-AA-04): ausência da
+            // chave no payload é "não perguntou desta vez", nunca "recusou" —
+            // preserva o valor já gravado, o mesmo padrão já corrigido antes
+            // neste projeto para outros campos de resposta do requerente.
+            $solicitacao->confirma_perda_condicao_sede = $request->has('confirma_perda_condicao_sede')
+                ? $request->boolean('confirma_perda_condicao_sede')
+                : $solicitacao->confirma_perda_condicao_sede;
+
+            // Pergunta vinculada (RN-EV-01), mesmo padrão de preservação:
+            // ausência da chave é "este passo não perguntou desta vez", nunca
+            // "respondeu não" — simétrico ao que SolicitacaoImovelController já
+            // faz para o mesmo campo.
+            $solicitacao->wants_virtual_office_hq = $request->has('wants_virtual_office_hq')
+                ? $request->boolean('wants_virtual_office_hq')
+                : $solicitacao->wants_virtual_office_hq;
+
+            $solicitacao->save();
 
             // Mudou os CNAEs → a simulação anterior não vale mais (RN-005).
             $solicitacao->markSimulationStale();

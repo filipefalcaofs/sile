@@ -15,17 +15,49 @@ interface CnaeItem {
     formatted_code: string;
     description: string;
     is_primary: boolean;
+    intencao: 'incluir' | 'excluir' | null;
+}
+
+/** Bloco de textos administráveis do escritório virtual (Settings::get). */
+interface EscritorioVirtualTextos {
+    pergunta_vinculada: string;
+    mensagem_confirma_perda_sede: string;
+    cnae_gatilho_id: number | null;
 }
 
 interface EtapaAtividadesProps {
     solicitacaoId: number;
     cnaes: CnaeItem[];
     max: number;
+    /** Visibilidade do controle de exclusão (RN-AA-05b) — vem do backend, não é deduzida no front. */
+    isAlteracaoAtividade: boolean;
+    /** Confirmação de perda da condição de sede já gravada (RN-AA-04); null = ainda não perguntado. */
+    confirmaPerdaCondicaoSede: boolean | null;
+    /** Resposta da pergunta geral do passo do imóvel (RN-EV-01) — condiciona a pergunta vinculada. */
+    wantsVirtualOfficeTenant: boolean | null;
+    /** Resposta atual da pergunta vinculada (campo do imóvel, escrito por este passo — Task 3). */
+    wantsVirtualOfficeHq: boolean;
+    escritorioVirtual: EscritorioVirtualTextos;
     onSaved: () => void;
 }
 
 function toOption(cnae: CnaeItem): CnaeOption {
     return { id: cnae.id, formatted_code: cnae.formatted_code, description: cnae.description };
+}
+
+/** Checkbox "Excluir esta atividade" (RN-AA-05b) — só aparece na alteração de atividade. */
+function ExclusaoCheckbox({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+    return (
+        <label className="flex items-center gap-2 text-theme-xs text-gray-600 dark:text-gray-400">
+            <input
+                type="checkbox"
+                checked={checked}
+                onChange={onChange}
+                className="size-4 rounded border-gray-300 text-error-500 focus:ring-error-500/30 dark:border-gray-700 dark:bg-gray-900"
+            />
+            Excluir esta atividade
+        </label>
+    );
 }
 
 function CnaeLine({ cnae, action }: { cnae: CnaeOption; action?: React.ReactNode }) {
@@ -45,8 +77,26 @@ function CnaeLine({ cnae, action }: { cnae: CnaeOption; action?: React.ReactNode
  * (até o limite parametrizável) reusando o picker da Fase 3 (só CNAEs ativos da
  * tabela oficial). Envia ao PUT solicitacoes.atividades (08-07), que grava o
  * pivot e invalida a simulação anterior (RN-005).
+ *
+ * Task 3 (escritório virtual): na alteração de atividade, cada CNAE ganha um
+ * controle de exclusão (RN-AA-05b — vira `exclusoes` no payload); marcar o
+ * CNAE gatilho para exclusão exige a confirmação explícita de perda da
+ * condição de sede (RN-AA-04, sem pré-seleção); e o gatilho entre as
+ * atividades, com a pergunta geral do imóvel respondida "Não", exibe a
+ * pergunta vinculada (RN-EV-01) — que escreve `wants_virtual_office_hq`,
+ * campo do imóvel, aqui porque é neste passo que os CNAEs são conhecidos.
  */
-export default function EtapaAtividades({ solicitacaoId, cnaes, max, onSaved }: EtapaAtividadesProps) {
+export default function EtapaAtividades({
+    solicitacaoId,
+    cnaes,
+    max,
+    isAlteracaoAtividade,
+    confirmaPerdaCondicaoSede,
+    wantsVirtualOfficeTenant,
+    wantsVirtualOfficeHq,
+    escritorioVirtual,
+    onSaved,
+}: EtapaAtividadesProps) {
     const { errors } = usePage<SharedProps>().props;
 
     const [principal, setPrincipal] = useState<CnaeOption | null>(() => {
@@ -60,8 +110,23 @@ export default function EtapaAtividades({ solicitacaoId, cnaes, max, onSaved }: 
     const [processing, setProcessing] = useState(false);
     const [trocarPrincipal, setTrocarPrincipal] = useState(false);
 
+    // Marcação de exclusão por atividade (RN-AA-05b) — só existe visualmente
+    // na alteração de atividade; os demais tipos nem exibem o controle.
+    const [exclusoes, setExclusoes] = useState<number[]>(() =>
+        cnaes.filter((cnae) => cnae.intencao === 'excluir').map((cnae) => cnae.id),
+    );
+    const [confirmaPerda, setConfirmaPerda] = useState<boolean | null>(confirmaPerdaCondicaoSede);
+    const [prestaServicoVinculado, setPrestaServicoVinculado] = useState(wantsVirtualOfficeHq);
+
     const atividadeErrors = Object.entries(errors as Record<string, string>)
-        .filter(([key]) => key === 'principal_cnae_id' || key === 'complementares' || key.startsWith('complementares.'))
+        .filter(
+            ([key]) =>
+                key === 'principal_cnae_id' ||
+                key === 'complementares' ||
+                key.startsWith('complementares.') ||
+                key === 'exclusoes' ||
+                key.startsWith('exclusoes.'),
+        )
         .map(([, message]) => message);
 
     const noLimite = complementares.length >= max;
@@ -70,6 +135,26 @@ export default function EtapaAtividades({ solicitacaoId, cnaes, max, onSaved }: 
         ...(principal ? [principal.id] : []),
         ...complementares.map((cnae) => cnae.id),
     ];
+
+    function toggleExclusao(id: number) {
+        setExclusoes((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+    }
+
+    // O CNAE gatilho está entre as atividades atuais e foi marcado para
+    // exclusão? É o gatilho da confirmação de perda da condição de sede.
+    const gatilhoMarcadoParaExclusao =
+        escritorioVirtual.cnae_gatilho_id !== null &&
+        excludeIds.includes(escritorioVirtual.cnae_gatilho_id) &&
+        exclusoes.includes(escritorioVirtual.cnae_gatilho_id);
+
+    // A pergunta vinculada aparece quando o gatilho está entre as atividades
+    // (independente de exclusão) e a pergunta geral do imóvel foi respondida
+    // "Não" — quem já respondeu "Sim" já declarou a intenção de abrigado, não
+    // de sede.
+    const exibirPerguntaVinculada =
+        escritorioVirtual.cnae_gatilho_id !== null &&
+        excludeIds.includes(escritorioVirtual.cnae_gatilho_id) &&
+        wantsVirtualOfficeTenant === false;
 
     function salvar() {
         if (!principal) {
@@ -81,6 +166,15 @@ export default function EtapaAtividades({ solicitacaoId, cnaes, max, onSaved }: 
             {
                 principal_cnae_id: principal.id,
                 complementares: complementares.map((cnae) => cnae.id),
+                exclusoes,
+                // A chave só entra no payload quando há resposta: mandar
+                // `null` explícito seria uma chave PRESENTE com valor nulo, e
+                // o backend trata presença da chave como resposta — viraria
+                // "não" por ausência mal disfarçada (a mesma armadilha já
+                // corrigida antes neste projeto), mesmo sem o requerente ter
+                // respondido nada.
+                ...(confirmaPerda !== null ? { confirma_perda_condicao_sede: confirmaPerda } : {}),
+                wants_virtual_office_hq: prestaServicoVinculado,
             },
             {
                 preserveScroll: true,
@@ -109,7 +203,13 @@ export default function EtapaAtividades({ solicitacaoId, cnaes, max, onSaved }: 
                             <CnaeLine
                                 cnae={principal}
                                 action={
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-3">
+                                        {isAlteracaoAtividade && (
+                                            <ExclusaoCheckbox
+                                                checked={exclusoes.includes(principal.id)}
+                                                onChange={() => toggleExclusao(principal.id)}
+                                            />
+                                        )}
                                         <Badge size="sm">Principal</Badge>
                                         <Button size="xs" variant="outline" onClick={() => setTrocarPrincipal(true)}>
                                             Alterar
@@ -145,19 +245,27 @@ export default function EtapaAtividades({ solicitacaoId, cnaes, max, onSaved }: 
                                         key={cnae.id}
                                         cnae={cnae}
                                         action={
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setComplementares((current) =>
-                                                        current.filter((item) => item.id !== cnae.id),
-                                                    )
-                                                }
-                                                aria-label={`Remover ${cnae.formatted_code}`}
-                                                title="Remover da seleção"
-                                                className="flex size-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10 dark:hover:text-error-400"
-                                            >
-                                                <CloseIcon className="size-4" />
-                                            </button>
+                                            <div className="flex items-center gap-3">
+                                                {isAlteracaoAtividade && (
+                                                    <ExclusaoCheckbox
+                                                        checked={exclusoes.includes(cnae.id)}
+                                                        onChange={() => toggleExclusao(cnae.id)}
+                                                    />
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setComplementares((current) =>
+                                                            current.filter((item) => item.id !== cnae.id),
+                                                        )
+                                                    }
+                                                    aria-label={`Remover ${cnae.formatted_code}`}
+                                                    title="Remover da seleção"
+                                                    className="flex size-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10 dark:hover:text-error-400"
+                                                >
+                                                    <CloseIcon className="size-4" />
+                                                </button>
+                                            </div>
                                         }
                                     />
                                 ))}
@@ -184,6 +292,61 @@ export default function EtapaAtividades({ solicitacaoId, cnaes, max, onSaved }: 
                     </div>
                 </CardContent>
             </Card>
+
+            {exibirPerguntaVinculada && (
+                <Card>
+                    <CardHeader title="Escritório virtual" />
+                    <CardContent>
+                        <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                            <input
+                                type="checkbox"
+                                checked={prestaServicoVinculado}
+                                onChange={(event) => setPrestaServicoVinculado(event.target.checked)}
+                                className="size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                            />
+                            {escritorioVirtual.pergunta_vinculada}
+                        </label>
+                    </CardContent>
+                </Card>
+            )}
+
+            {gatilhoMarcadoParaExclusao && (
+                <Card>
+                    <CardHeader title="Confirmação necessária" />
+                    <CardContent>
+                        <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
+                            {escritorioVirtual.mensagem_confirma_perda_sede}
+                        </p>
+                        {/* Sem pré-seleção: null é "ainda não respondido", nunca uma
+                        recusa presumida. */}
+                        <div className="flex items-center gap-6">
+                            <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                                <input
+                                    type="radio"
+                                    name="confirma_perda_condicao_sede"
+                                    checked={confirmaPerda === true}
+                                    onChange={() => setConfirmaPerda(true)}
+                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                />
+                                Sim
+                            </label>
+                            <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                                <input
+                                    type="radio"
+                                    name="confirma_perda_condicao_sede"
+                                    checked={confirmaPerda === false}
+                                    onChange={() => setConfirmaPerda(false)}
+                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                />
+                                Não
+                            </label>
+                        </div>
+                        {errors.confirma_perda_condicao_sede && (
+                            <p className="mt-2 text-theme-xs text-error-500">{errors.confirma_perda_condicao_sede}</p>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
 
             <div className="flex justify-end">
                 <Button size="sm" onClick={salvar} disabled={processing || !principal} loading={processing}>

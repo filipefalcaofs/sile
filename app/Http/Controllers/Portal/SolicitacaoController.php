@@ -18,6 +18,7 @@ use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestDocument;
 use App\Models\ViabilityServiceType;
 use App\Services\Ai\ResumoSolicitacaoService;
+use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Solicitacao\DocumentRequirementResolver;
 use App\Services\Solicitacao\DuplicateRequestDetector;
 use App\Support\Representation\CurrentRepresentation;
@@ -308,6 +309,12 @@ class SolicitacaoController extends Controller
             ],
             'service_type' => $solicitacao->serviceType?->name,
             'service_type_id' => $solicitacao->service_type_id,
+            // A tela decide a VISIBILIDADE do controle de exclusão por este
+            // flag (não deduz comparando o nome/código do tipo de serviço no
+            // front) — só alteração de atividade declara intenção por CNAE
+            // (RN-AA-05b).
+            'is_alteracao_atividade' => $solicitacao->serviceType?->code === 'alteracao-atividade',
+            'confirma_perda_condicao_sede' => $solicitacao->confirma_perda_condicao_sede,
             'company' => $solicitacao->company ? [
                 'id' => $solicitacao->company->id,
                 'legal_name' => $solicitacao->company->legal_name,
@@ -330,12 +337,30 @@ class SolicitacaoController extends Controller
                 // Sem cast para bool: null é o estado "ainda não respondido"
                 // (RN-EV-01) — nem sim nem não, e precisa chegar assim à tela.
                 'wants_virtual_office_tenant' => $solicitacao->wants_virtual_office_tenant,
+                // Coluna não nulável (default false) — a pergunta vinculada do
+                // passo de atividades é um controle de dois estados, não três.
+                'wants_virtual_office_hq' => (bool) $solicitacao->wants_virtual_office_hq,
             ],
             'escritorio_virtual' => [
                 'pergunta_geral' => Settings::get(
                     'analise.escritorio_virtual.pergunta_geral',
                     config('sile.analise.escritorio_virtual.pergunta_geral'),
                 ),
+                'pergunta_vinculada' => Settings::get(
+                    'analise.escritorio_virtual.pergunta_vinculada',
+                    config('sile.analise.escritorio_virtual.pergunta_vinculada'),
+                ),
+                'mensagem_confirma_perda_sede' => Settings::get(
+                    'analise.escritorio_virtual.mensagem_confirma_perda_sede',
+                    config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
+                ),
+                // Id do CNAE gatilho no cadastro (fonte única em
+                // SedeEscritorioVirtualGatilho::cnaeGatilho()), ou null se ainda
+                // não cadastrado — a tela usa o id para saber a qual item exibir
+                // a pergunta vinculada, sem comparar código de CNAE no front.
+                'cnae_gatilho_id' => Cnae::query()
+                    ->where('code', app(SedeEscritorioVirtualGatilho::class)->cnaeGatilho())
+                    ->value('id'),
             ],
             'cnaes' => $solicitacao->cnaes
                 ->sortByDesc(fn (Cnae $cnae) => (bool) $cnae->pivot->is_primary)
@@ -345,6 +370,7 @@ class SolicitacaoController extends Controller
                     'formatted_code' => $cnae->formatted_code,
                     'description' => $cnae->description,
                     'is_primary' => (bool) $cnae->pivot->is_primary,
+                    'intencao' => $cnae->pivot->intencao,
                 ])
                 ->all(),
             'documentos' => $solicitacao->documents

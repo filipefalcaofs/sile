@@ -37,6 +37,8 @@ interface CnaeItem {
     formatted_code: string;
     description: string;
     is_primary: boolean;
+    /** Intenção declarada na alteração de atividade (RN-AA-05b); null fora dela. */
+    intencao: 'incluir' | 'excluir' | null;
 }
 
 interface DocumentoItem {
@@ -62,6 +64,10 @@ export interface SolicitacaoDraft {
     status: StatusInfo;
     service_type: string | null;
     service_type_id: number | null;
+    /** Visibilidade do controle de exclusão de atividade (RN-AA-05b) — a tela não deduz pelo tipo. */
+    is_alteracao_atividade: boolean;
+    /** Confirmação de perda da condição de sede (RN-AA-04). null = ainda não perguntado. */
+    confirma_perda_condicao_sede: boolean | null;
     company: { id: number; legal_name: string; formatted_cnpj: string } | null;
     used_area_m2: string | number | null;
     address: {
@@ -78,9 +84,13 @@ export interface SolicitacaoDraft {
         is_public_area: boolean;
         has_independent_access: boolean;
         wants_virtual_office_tenant: boolean | null;
+        wants_virtual_office_hq: boolean;
     };
     escritorio_virtual: {
         pergunta_geral: string;
+        pergunta_vinculada: string;
+        mensagem_confirma_perda_sede: string;
+        cnae_gatilho_id: number | null;
     };
     cnaes: CnaeItem[];
     documentos: DocumentoItem[];
@@ -403,6 +413,11 @@ function WizardEdicao({
                     solicitacaoId={solicitacao.id}
                     cnaes={solicitacao.cnaes}
                     max={cnaesComplementaresMax}
+                    isAlteracaoAtividade={solicitacao.is_alteracao_atividade}
+                    confirmaPerdaCondicaoSede={solicitacao.confirma_perda_condicao_sede}
+                    wantsVirtualOfficeTenant={solicitacao.indicators.wants_virtual_office_tenant}
+                    wantsVirtualOfficeHq={solicitacao.indicators.wants_virtual_office_hq}
+                    escritorioVirtual={solicitacao.escritorio_virtual}
                     onSaved={avancar}
                 />
             )}

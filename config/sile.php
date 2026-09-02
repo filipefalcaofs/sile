@@ -170,6 +170,7 @@ return [
             'flag_analise_sede' => 'Verificar se atende ao §2º do artigo 6º do Decreto Municipal nº 35.062, de 29 de dezembro de 2021.',
             'mensagem_confirma_perda_sede' => 'A exclusão do CNAE :cnae fará com que a empresa deixe de ser caracterizada como Sede de Escritório Virtual. Deseja prosseguir com a exclusão?',
             'pergunta_geral' => 'Deseja ser abrigado de escritório virtual?',
+            'pergunta_vinculada' => 'Irá prestar serviço de escritório virtual, centro de negócios ou coworking?',
         ],
         'precedentes' => [
             'janela_meses' => 12,

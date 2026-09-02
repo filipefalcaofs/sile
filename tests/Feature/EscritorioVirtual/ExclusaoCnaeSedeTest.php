@@ -55,9 +55,9 @@ class ExclusaoCnaeSedeTest extends TestCase
     /**
      * Sede deferida com produto (TVL) que trava ATIVAMENTE a inscrição
      * informada (mesmo arranjo de ExclusaoAtividadeDeferimentoTest). A
-     * empresa titular é sempre explicitada — é o que `titularDaSede()`
-     * (C2 da revisão final) compara contra a solicitação que pede a
-     * exclusão do gatilho.
+     * empresa titular é sempre explicitada — é o que
+     * `SedeEscritorioVirtualGatilho::titularDoVinculo()` (C2 da revisão
+     * final) compara contra a solicitação que pede a exclusão do gatilho.
      */
     private function sedeAtivaNaInscricao(string $inscricao, ?Company $titular = null, string $tvl = 'TVL-2026-SEDE01'): ViabilityRequest
     {
