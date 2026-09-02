@@ -165,12 +165,19 @@ class PerguntaGeralPortalTest extends TestCase
     }
 
     /**
-     * Resposta negativa (false) e persistida e NAO e confundida com ausencia:
-     * um PUT seguinte sem a chave preserva o false gravado — e o caso que
-     * trava a correcao ja feita no controller (I4). Sem ele, quem "simplificar"
-     * o has() para boolean() volta a apagar a resposta a cada gravacao.
+     * Resposta afirmativa (true) e preservada por um PUT seguinte SEM a chave
+     * wants_virtual_office_tenant — e o caso que de fato trava a correcao do
+     * controller (I4: has() em vez de boolean() direto). A prova precisa
+     * partir de true: se partisse de false, ausencia de chave e false
+     * explicito produziriam o mesmo resultado tanto com has() (correto,
+     * mantem o valor anterior) quanto com boolean() isolado (regressao,
+     * ausencia vira false) — o teste passaria nos dois casos e nao provaria
+     * nada. Partindo de true, so o has() preserva o valor; boolean() isolado
+     * apagaria para false e a asserção final quebraria. Quem "simplificar"
+     * o has() para boolean() direto volta a apagar a resposta a cada
+     * gravacao, e este teste acusa.
      */
-    public function test_resposta_negativa_e_persistida_e_nao_confundida_com_ausencia(): void
+    public function test_resposta_afirmativa_e_preservada_quando_put_seguinte_omite_a_chave(): void
     {
         $user = $this->portalUser();
         $solicitacao = $this->draftFor($user);
@@ -179,12 +186,12 @@ class PerguntaGeralPortalTest extends TestCase
             ->from('/portal/solicitacoes')
             ->put(
                 "/portal/solicitacoes/{$solicitacao->id}/imovel",
-                $this->payload(['wants_virtual_office_tenant' => false])
+                $this->payload(['wants_virtual_office_tenant' => true])
             )
             ->assertRedirect('/portal/solicitacoes')
             ->assertSessionHas('status');
 
-        $this->assertFalse($solicitacao->fresh()->wants_virtual_office_tenant);
+        $this->assertTrue($solicitacao->fresh()->wants_virtual_office_tenant);
 
         // Segundo PUT sem a chave wants_virtual_office_tenant no payload.
         $this->actingAs($user)
@@ -192,6 +199,30 @@ class PerguntaGeralPortalTest extends TestCase
             ->put(
                 "/portal/solicitacoes/{$solicitacao->id}/imovel",
                 $this->payload()
+            )
+            ->assertRedirect('/portal/solicitacoes')
+            ->assertSessionHas('status');
+
+        $this->assertTrue($solicitacao->fresh()->wants_virtual_office_tenant);
+    }
+
+    /**
+     * Resposta negativa (false) e persistida e distinguivel de null (ainda
+     * nao respondido): o campo tem tres estados, e gravar false precisa
+     * chegar como false, nao ficar preso no default nulo do rascunho.
+     */
+    public function test_resposta_negativa_e_persistida_e_distinta_de_ausencia_de_resposta(): void
+    {
+        $user = $this->portalUser();
+        $solicitacao = $this->draftFor($user);
+
+        $this->assertNull($solicitacao->wants_virtual_office_tenant);
+
+        $this->actingAs($user)
+            ->from('/portal/solicitacoes')
+            ->put(
+                "/portal/solicitacoes/{$solicitacao->id}/imovel",
+                $this->payload(['wants_virtual_office_tenant' => false])
             )
             ->assertRedirect('/portal/solicitacoes')
             ->assertSessionHas('status');
