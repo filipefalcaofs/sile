@@ -42,10 +42,12 @@ interface DiffInfo {
 
 interface ImportacaoRelatorio {
     arquivo?: string;
-    lidas: number;
-    importadas: number;
-    atualizadas: number;
-    rejeitadas: Array<{ linha: number; motivo: string }>;
+    lidos: number;
+    importados: number;
+    atualizados: number;
+    rejeitados: string[];
+    // Campos extras por quadro (ex.: quadro7 traz cnaes_distintos/total_faixas)
+    [key: string]: unknown;
 }
 
 interface RascunhoProps {
@@ -309,32 +311,30 @@ function RelatorioImportacao({ relatorio }: { relatorio: ImportacaoRelatorio }) 
             </div>
             <div className="mt-3 flex flex-wrap gap-4 text-theme-sm text-gray-600 dark:text-gray-400">
                 <span>
-                    <strong className="text-gray-800 dark:text-white/90">{relatorio.lidas}</strong> lidas
+                    <strong className="text-gray-800 dark:text-white/90">{relatorio.lidos}</strong> lidas
                 </span>
                 <span>
-                    <strong className="text-gray-800 dark:text-white/90">{relatorio.importadas}</strong> inseridas
+                    <strong className="text-gray-800 dark:text-white/90">{relatorio.importados}</strong> inseridas
                 </span>
                 <span>
-                    <strong className="text-gray-800 dark:text-white/90">{relatorio.atualizadas}</strong> atualizadas
+                    <strong className="text-gray-800 dark:text-white/90">{relatorio.atualizados}</strong> atualizadas
                 </span>
-                {relatorio.rejeitadas.length > 0 && (
+                {relatorio.rejeitados.length > 0 && (
                     <span className="text-error-600 dark:text-error-400">
-                        <strong>{relatorio.rejeitadas.length}</strong> rejeitadas
+                        <strong>{relatorio.rejeitados.length}</strong> rejeitadas
                     </span>
                 )}
             </div>
-            {relatorio.rejeitadas.length > 0 && (
+            {relatorio.rejeitados.length > 0 && (
                 <div className="mt-3 max-h-40 overflow-y-auto rounded-lg border border-error-200 bg-error-50 p-3 dark:border-error-500/30 dark:bg-error-500/10">
                     <p className="mb-1.5 text-theme-xs font-medium text-error-700 dark:text-error-400">
                         Linhas rejeitadas
                     </p>
-                    <ul className="space-y-1 text-theme-xs text-error-600 dark:text-error-400">
-                        {relatorio.rejeitadas.map((item) => (
-                            <li key={item.linha}>
-                                Linha {item.linha}: {item.motivo}
-                            </li>
+                    <ol className="space-y-1 text-theme-xs text-error-600 dark:text-error-400">
+                        {relatorio.rejeitados.map((motivo, index) => (
+                            <li key={index}>{motivo}</li>
                         ))}
-                    </ul>
+                    </ol>
                 </div>
             )}
         </div>
