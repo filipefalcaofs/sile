@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Gestao;
 
-use App\Enums\Quadro10Permissao;
+use App\Support\Louos\LouosLinhaRules;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -26,7 +26,6 @@ class PublishLouosVersionRequest extends FormRequest
     public const QUADRO_DOMAINS = [
         'quadro7' => 'louos_quadro7',
         'quadro10' => 'louos_quadro10',
-        'quadro11' => 'louos_quadro11',
         'quadro11a' => 'louos_quadro11a',
     ];
 
@@ -44,7 +43,7 @@ class PublishLouosVersionRequest extends FormRequest
         $domain = self::QUADRO_DOMAINS[$quadro] ?? '';
 
         return [
-            'quadro' => ['required', 'string', 'in:quadro7,quadro10,quadro11,quadro11a'],
+            'quadro' => ['required', 'string', 'in:quadro7,quadro10,quadro11a'],
             'version' => [
                 'required',
                 'string',
@@ -58,41 +57,14 @@ class PublishLouosVersionRequest extends FormRequest
     }
 
     /**
-     * Regras por Quadro para cada item de `alteracoes` — a chave natural é
-     * obrigatória (sem ela a alteração não casa com a linha da vigente) e os
-     * demais campos seguem o esquema da tabela tipada.
+     * Regras por Quadro para cada item de `alteracoes` — delega para
+     * `LouosLinhaRules::forQuadro` com prefixo 'alteracoes.*.'.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     private function alteracaoRules(string $quadro): array
     {
-        return match ($quadro) {
-            'quadro7' => [
-                'alteracoes.*.cnae_code' => ['required', 'string', 'max:14'],
-                'alteracoes.*.area_min' => ['required', 'numeric', 'min:0'],
-                'alteracoes.*.area_max' => ['nullable', 'numeric', 'min:0'],
-                'alteracoes.*.grupo' => ['required', 'string', 'max:50'],
-                'alteracoes.*.subgrupo' => ['nullable', 'string', 'max:50'],
-                'alteracoes.*.observacao' => ['nullable', 'string'],
-            ],
-            'quadro10' => [
-                'alteracoes.*.zona' => ['required', 'string', 'max:50'],
-                'alteracoes.*.grupo_uso' => ['required', 'string', 'max:50'],
-                'alteracoes.*.subgrupo' => ['nullable', 'string', 'max:50'],
-                'alteracoes.*.permissao' => ['required', Rule::enum(Quadro10Permissao::class)],
-                'alteracoes.*.condicionante_ref' => ['nullable', 'string', 'max:50'],
-                'alteracoes.*.base_legal' => ['nullable', 'string'],
-                'alteracoes.*.observacao' => ['nullable', 'string'],
-            ],
-            'quadro11', 'quadro11a' => [
-                'alteracoes.*.classe_via' => ['required', 'string', 'max:50'],
-                'alteracoes.*.grupo_uso' => ['nullable', 'string', 'max:50'],
-                'alteracoes.*.condicoes' => ['nullable', 'array'],
-                'alteracoes.*.base_legal' => ['nullable', 'string'],
-                'alteracoes.*.observacao' => ['nullable', 'string'],
-            ],
-            default => [],
-        };
+        return LouosLinhaRules::forQuadro($quadro, 'alteracoes.*.');
     }
 
     /**
