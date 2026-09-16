@@ -1,0 +1,465 @@
+<?php
+
+namespace App\Services\Louos;
+
+use App\Enums\RuleDomain;
+use App\Enums\RuleVersionStatus;
+use App\Exceptions\FourEyesViolationException;
+use App\Models\LouosQuadro10Permissao;
+use App\Models\LouosQuadro11CondicaoVia;
+use App\Models\LouosQuadro7Faixa;
+use App\Models\RuleVersion;
+use App\Services\Rules\RuleVersionService;
+use App\Support\Audit\AuditService;
+use DomainException;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
+
+/**
+ * CRUD de linhas dos Quadros da LOUOS sobre um rascunho versionado (HU-046).
+ * A versão vigente nunca é tocada; toda edição ocorre no rascunho coexistente;
+ * a publicação exige quatro olhos via RuleVersionService e audita o diff.
+ */
+final class LouosDraftService
+{
+    /** @var array<string, RuleDomain> */
+    public const QUADRO_DOMAINS = [
+        'quadro7' => RuleDomain::LouosQuadro7,
+        'quadro10' => RuleDomain::LouosQuadro10,
+        'quadro11a' => RuleDomain::LouosQuadro11a,
+    ];
+
+    public function __construct(
+        private RuleVersionService $ruleVersionService,
+        private LouosQuadroCopier $copier,
+        private AuditService $audit,
+        private LouosQuadro7ImportService $quadro7Import,
+        private LouosQuadro10ImportService $quadro10Import,
+        private LouosQuadro11ImportService $quadro11Import,
+    ) {}
+
+    /**
+     * Retorna o rascunho aberto mais recente para o domínio, ou null.
+     */
+    public function rascunhoAberto(RuleDomain $domain): ?RuleVersion
+    {
+        return RuleVersion::query()
+            ->where('domain', $domain->value)
+            ->where('status', RuleVersionStatus::Rascunho->value)
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * Retorna o rascunho aberto se já existir (idempotente) ou abre um novo
+     * copiando as linhas da vigente. `$version` é obrigatória na abertura.
+     *
+     * @throws InvalidArgumentException quando $version é nula e não há rascunho
+     */
+    public function abrirOuRetomar(RuleDomain $domain, ?string $version, int $userId): RuleVersion
+    {
+        $existing = $this->rascunhoAberto($domain);
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        if ($version === null) {
+            throw new InvalidArgumentException('Versão obrigatória para abertura de novo rascunho.');
+        }
+
+        $vigente = RuleVersion::vigente($domain)->first();
+
+        $draft = $this->ruleVersionService->openDraft($domain, $version, 'rascunho-editavel', $userId);
+
+        $this->copier->copy($domain, $vigente, $draft);
+
+        $this->audit->log(
+            logName: 'louos',
+            event: 'rascunho-aberto',
+            description: "Rascunho aberto para o domínio {$domain->label()} — versão {$version}",
+            properties: ['dominio' => $domain->value, 'versao' => $version],
+            subject: $draft,
+        );
+
+        return $draft;
+    }
+
+    /**
+     * Insere uma linha na tabela tipada do rascunho. Rejeita colisão de chave
+     * natural com ValidationException.
+     *
+     * @param  array<string, mixed>  $dados
+     *
+     * @throws ValidationException quando a chave natural já existe no rascunho
+     */
+    public function inserirLinha(RuleVersion $draft, array $dados): Model
+    {
+        $this->assertDraft($draft);
+
+        $dados = $this->normalize($draft->domain, $dados);
+
+        if ($this->existsByKey($draft->domain, $draft->id, $dados)) {
+            throw ValidationException::withMessages(['linha' => 'Já existe uma linha com esta chave no rascunho.']);
+        }
+
+        $modelClass = $this->modelClass($draft->domain);
+        /** @var Model $linha */
+        $linha = $modelClass::query()->create(array_merge(['rule_version_id' => $draft->id], $dados));
+
+        $this->audit->log(
+            logName: 'louos',
+            event: 'rascunho-linha-inserida',
+            description: "Linha inserida no rascunho do domínio {$draft->domain->label()}",
+            properties: ['dominio' => $draft->domain->value, 'chave' => $this->naturalKey($draft->domain, $dados)],
+            subject: $linha,
+        );
+
+        return $linha;
+    }
+
+    /**
+     * Altera uma linha do rascunho pelo id. Rejeita colisão de chave natural
+     * com outra linha existente (exceto a própria).
+     *
+     * @param  array<string, mixed>  $dados
+     *
+     * @throws ModelNotFoundException quando a linha não pertence a este rascunho
+     * @throws ValidationException quando a nova chave colide com outra linha
+     */
+    public function alterarLinha(RuleVersion $draft, int $linhaId, array $dados): Model
+    {
+        $this->assertDraft($draft);
+
+        $dados = $this->normalize($draft->domain, $dados);
+        $modelClass = $this->modelClass($draft->domain);
+
+        /** @var Model $linha */
+        $linha = $modelClass::query()
+            ->where('rule_version_id', $draft->id)
+            ->findOrFail($linhaId);
+
+        if ($this->existsByKey($draft->domain, $draft->id, $dados, $linhaId)) {
+            throw ValidationException::withMessages(['linha' => 'Já existe uma linha com esta chave no rascunho.']);
+        }
+
+        $linha->update(array_diff_key($dados, ['rule_version_id' => true]));
+
+        $this->audit->log(
+            logName: 'louos',
+            event: 'rascunho-linha-alterada',
+            description: "Linha alterada no rascunho do domínio {$draft->domain->label()}",
+            properties: ['dominio' => $draft->domain->value, 'id' => $linhaId, 'chave' => $this->naturalKey($draft->domain, $dados)],
+            subject: $linha,
+        );
+
+        return $linha;
+    }
+
+    /**
+     * Exclui uma linha do rascunho pelo id.
+     *
+     * @throws ModelNotFoundException quando a linha não pertence a este rascunho
+     */
+    public function excluirLinha(RuleVersion $draft, int $linhaId): void
+    {
+        $this->assertDraft($draft);
+
+        $modelClass = $this->modelClass($draft->domain);
+
+        /** @var Model $linha */
+        $linha = $modelClass::query()
+            ->where('rule_version_id', $draft->id)
+            ->findOrFail($linhaId);
+
+        $linha->delete();
+
+        $this->audit->log(
+            logName: 'louos',
+            event: 'rascunho-linha-excluida',
+            description: "Linha excluída do rascunho do domínio {$draft->domain->label()}",
+            properties: ['dominio' => $draft->domain->value, 'id' => $linhaId],
+            subject: $draft,
+        );
+    }
+
+    /**
+     * Descarta o rascunho: remove as linhas tipadas e o cabeçalho RuleVersion.
+     * A vigente é preservada intacta.
+     */
+    public function descartar(RuleVersion $draft): void
+    {
+        $this->assertDraft($draft);
+
+        $domain = $draft->domain;
+        $version = $draft->version;
+        $modelClass = $this->modelClass($domain);
+
+        $modelClass::query()->where('rule_version_id', $draft->id)->delete();
+        $draft->delete();
+
+        $this->audit->log(
+            logName: 'louos',
+            event: 'rascunho-descartado',
+            description: "Rascunho descartado do domínio {$domain->label()} — versão {$version}",
+            properties: ['dominio' => $domain->value, 'versao' => $version],
+        );
+    }
+
+    /**
+     * Compara rascunho × vigente por chave natural e retorna contagens.
+     *
+     * @return array{novas: int, alteradas: int, excluidas: int}
+     */
+    public function diff(RuleVersion $draft): array
+    {
+        $this->assertDraft($draft);
+
+        $domain = $draft->domain;
+        $modelClass = $this->modelClass($domain);
+        $vigente = RuleVersion::vigente($domain)->first();
+
+        $rascunhoLinhas = $modelClass::query()->where('rule_version_id', $draft->id)->get();
+        $rascunhoIndex = [];
+
+        foreach ($rascunhoLinhas as $linha) {
+            $rascunhoIndex[$this->naturalKey($domain, $linha->toArray())] = $linha;
+        }
+
+        if ($vigente === null) {
+            return ['novas' => count($rascunhoIndex), 'alteradas' => 0, 'excluidas' => 0];
+        }
+
+        $vigenteLinhas = $modelClass::query()->where('rule_version_id', $vigente->id)->get();
+        $vigenteIndex = [];
+
+        foreach ($vigenteLinhas as $linha) {
+            $vigenteIndex[$this->naturalKey($domain, $linha->toArray())] = $linha;
+        }
+
+        $novas = 0;
+        $alteradas = 0;
+        $excluidas = 0;
+
+        foreach ($rascunhoIndex as $chave => $linha) {
+            if (! isset($vigenteIndex[$chave])) {
+                $novas++;
+            } elseif ($this->payloadDiferente($domain, $linha, $vigenteIndex[$chave])) {
+                $alteradas++;
+            }
+        }
+
+        foreach (array_keys($vigenteIndex) as $chave) {
+            if (! isset($rascunhoIndex[$chave])) {
+                $excluidas++;
+            }
+        }
+
+        return compact('novas', 'alteradas', 'excluidas');
+    }
+
+    /**
+     * Delega a importação do CSV ao import service do domínio e audita.
+     *
+     * @return array<string, mixed> relatório do import service
+     */
+    public function importarCsv(RuleVersion $draft, string $csvPath): array
+    {
+        $this->assertDraft($draft);
+
+        $domain = $draft->domain;
+
+        $service = match ($domain) {
+            RuleDomain::LouosQuadro7 => $this->quadro7Import,
+            RuleDomain::LouosQuadro10 => $this->quadro10Import,
+            RuleDomain::LouosQuadro11a => $this->quadro11Import,
+            default => throw new DomainException("Import não suportado para o domínio {$domain->value}."),
+        };
+
+        $relatorio = $service->import($draft, $csvPath);
+
+        $this->audit->log(
+            logName: 'louos',
+            event: 'rascunho-importacao',
+            description: "Importação CSV no rascunho do domínio {$domain->label()}",
+            properties: array_merge($relatorio, ['arquivo' => basename($csvPath)]),
+            subject: $draft,
+        );
+
+        return $relatorio;
+    }
+
+    /**
+     * Publica o rascunho via RuleVersionService (quatro olhos enforced) e
+     * audita o diff na trilha `louos`.
+     *
+     * @throws FourEyesViolationException quando publicador = autor
+     */
+    public function publicar(RuleVersion $draft, int $publisherId): RuleVersion
+    {
+        $this->assertDraft($draft);
+
+        $diffResult = $this->diff($draft);
+
+        $published = $this->ruleVersionService->publish($draft, $publisherId);
+
+        $this->audit->log(
+            logName: 'louos',
+            event: 'rascunho-publicado',
+            description: "Rascunho publicado do domínio {$draft->domain->label()} — versão {$draft->version}",
+            properties: [
+                'dominio' => $draft->domain->value,
+                'versao' => $draft->version,
+                'diff' => $diffResult,
+            ],
+            subject: $published,
+        );
+
+        return $published;
+    }
+
+    /**
+     * Guarda comum: valida que o RuleVersion é um rascunho de domínio suportado.
+     *
+     * @throws DomainException
+     */
+    private function assertDraft(RuleVersion $draft): void
+    {
+        if ($draft->status !== RuleVersionStatus::Rascunho) {
+            throw new DomainException(
+                "A versão '{$draft->version}' não é um rascunho (status: {$draft->status->value})."
+            );
+        }
+
+        if (! in_array($draft->domain, self::QUADRO_DOMAINS, true)) {
+            throw new DomainException(
+                "O domínio '{$draft->domain->value}' não é um Quadro da LOUOS suportado pelo LouosDraftService."
+            );
+        }
+    }
+
+    /**
+     * Resolve a classe de model para o domínio informado.
+     *
+     * @return class-string<Model>
+     */
+    private function modelClass(RuleDomain $domain): string
+    {
+        return match ($domain) {
+            RuleDomain::LouosQuadro7 => LouosQuadro7Faixa::class,
+            RuleDomain::LouosQuadro10 => LouosQuadro10Permissao::class,
+            RuleDomain::LouosQuadro11a => LouosQuadro11CondicaoVia::class,
+            default => throw new DomainException("Domínio {$domain->value} não mapeado para model."),
+        };
+    }
+
+    /**
+     * Calcula a chave natural de uma linha para comparação cross-version.
+     *
+     * @param  array<string, mixed>  $dados
+     */
+    private function naturalKey(RuleDomain $domain, array $dados): string
+    {
+        return match ($domain) {
+            RuleDomain::LouosQuadro7 => (string) preg_replace('/\D/', '', (string) ($dados['cnae_code'] ?? ''))
+                .'|'.(float) ($dados['area_min'] ?? 0),
+
+            RuleDomain::LouosQuadro10 => ($dados['zona'] ?? '')
+                .'|'.($dados['grupo_uso'] ?? '')
+                .'|'.(string) ($dados['subgrupo'] ?? ''),
+
+            RuleDomain::LouosQuadro11a => ($dados['classe_via'] ?? '')
+                .'|'.(string) ($dados['grupo_uso'] ?? ''),
+
+            default => throw new DomainException("Chave natural não definida para o domínio {$domain->value}."),
+        };
+    }
+
+    /**
+     * Normaliza os dados de entrada antes de persistir.
+     *
+     * @param  array<string, mixed>  $dados
+     * @return array<string, mixed>
+     */
+    private function normalize(RuleDomain $domain, array $dados): array
+    {
+        return match ($domain) {
+            RuleDomain::LouosQuadro7 => array_merge($dados, [
+                'cnae_code' => (string) preg_replace('/\D/', '', (string) ($dados['cnae_code'] ?? '')),
+                'area_min' => (float) ($dados['area_min'] ?? 0),
+                'area_max' => isset($dados['area_max']) && $dados['area_max'] !== null
+                    ? (float) $dados['area_max']
+                    : null,
+            ]),
+            RuleDomain::LouosQuadro10 => array_merge($dados, [
+                'subgrupo' => (string) ($dados['subgrupo'] ?? ''),
+            ]),
+            RuleDomain::LouosQuadro11a => array_merge($dados, [
+                'grupo_uso' => (string) ($dados['grupo_uso'] ?? ''),
+                'condicoes' => $dados['condicoes'] ?? null,
+            ]),
+            default => $dados,
+        };
+    }
+
+    /**
+     * Verifica se já existe uma linha com a mesma chave natural no rascunho.
+     * Se `$excludeId` for fornecido, ignora essa linha (para alterações).
+     *
+     * @param  array<string, mixed>  $dados  (já normalizados)
+     */
+    private function existsByKey(RuleDomain $domain, int $versionId, array $dados, ?int $excludeId = null): bool
+    {
+        $modelClass = $this->modelClass($domain);
+        $query = $modelClass::query()->where('rule_version_id', $versionId);
+
+        match ($domain) {
+            RuleDomain::LouosQuadro7 => $query
+                ->where('cnae_code', $dados['cnae_code'])
+                ->where('area_min', $dados['area_min']),
+
+            RuleDomain::LouosQuadro10 => $query
+                ->where('zona', $dados['zona'])
+                ->where('grupo_uso', $dados['grupo_uso'])
+                ->where('subgrupo', $dados['subgrupo']),
+
+            RuleDomain::LouosQuadro11a => $query
+                ->where('classe_via', $dados['classe_via'])
+                ->where('grupo_uso', $dados['grupo_uso']),
+
+            default => throw new DomainException("Domínio {$domain->value} não suportado."),
+        };
+
+        if ($excludeId !== null) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return $query->exists();
+    }
+
+    /**
+     * Compara o payload de duas linhas da mesma chave natural em versões
+     * diferentes. Exclui id, rule_version_id e timestamps da comparação;
+     * normaliza floats no Quadro 7 e arrays no Quadro 11A.
+     */
+    private function payloadDiferente(RuleDomain $domain, Model $rascunho, Model $vigente): bool
+    {
+        $exclude = array_flip(['id', 'rule_version_id', 'created_at', 'updated_at']);
+
+        $a = array_diff_key($rascunho->toArray(), $exclude);
+        $b = array_diff_key($vigente->toArray(), $exclude);
+
+        if ($domain === RuleDomain::LouosQuadro7) {
+            foreach (['area_min', 'area_max'] as $field) {
+                if (array_key_exists($field, $a)) {
+                    $a[$field] = $a[$field] !== null ? (float) $a[$field] : null;
+                    $b[$field] = $b[$field] !== null ? (float) $b[$field] : null;
+                }
+            }
+        }
+
+        return $a !== $b;
+    }
+}
