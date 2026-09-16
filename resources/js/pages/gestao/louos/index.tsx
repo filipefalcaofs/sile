@@ -1,4 +1,4 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
@@ -19,6 +19,18 @@ import { Modal } from '@/components/ui/modal';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
+import {
+    type AlteracaoField,
+    type Quadro7Item,
+    type Quadro10Item,
+    type Quadro11Item,
+    type QuadroItem,
+    buildAlteracaoPayload,
+    faixaArea,
+    fieldsFor,
+    formatarData,
+    permissaoColor,
+} from './quadro-fields';
 
 interface QuadroResumo {
     quadro: string;
@@ -27,38 +39,6 @@ interface QuadroResumo {
     valid_from: string | null;
     total: number;
 }
-
-interface Quadro7Item {
-    id: number;
-    cnae_code: string;
-    formatted_code: string;
-    grupo: string;
-    subgrupo: string | null;
-    area_min: number;
-    area_max: number | null;
-    observacao: string | null;
-}
-
-interface Quadro10Item {
-    id: number;
-    zona: string;
-    grupo_uso: string;
-    subgrupo: string | null;
-    permissao: string;
-    permissao_label: string;
-    condicionante_ref: string | null;
-    base_legal: string | null;
-}
-
-interface Quadro11Item {
-    id: number;
-    classe_via: string;
-    grupo_uso: string | null;
-    condicoes: string[] | null;
-    base_legal: string | null;
-}
-
-type QuadroItem = Quadro7Item | Quadro10Item | Quadro11Item;
 
 interface LouosIndexProps {
     quadros: QuadroResumo[];
@@ -82,7 +62,7 @@ interface LouosIndexProps {
  * Metadados de UX por Quadro. `operacional` distingue o que já aplica de ponta a
  * ponta (Quadro 7 — faixa de área) do que está MODELADO a partir da Lei nº
  * 9.148/2016 mas depende de base territorial ainda pendente da SEDUR (Quadros 10
- * e 11/11A — zona urbanística e classificação viária). O aviso é honesto: a
+ * e 11A — zona urbanística e classificação viária). O aviso é honesto: a
  * regra existe e é versionada, mas não finge operação plena sem o insumo oficial.
  */
 const QUADROS_META: Record<string, { descricao: string; operacional: boolean; nota?: string }> = {
@@ -95,11 +75,6 @@ const QUADROS_META: Record<string, { descricao: string; operacional: boolean; no
         operacional: false,
         nota: 'Modelado a partir da Lei nº 9.148/2016. Aplica plenamente quando a base oficial de zonas urbanísticas (pendente SEDUR) for integrada; até lá, o uso por zona degrada para análise técnica.',
     },
-    quadro11: {
-        descricao: 'Condições de uso por classe de via.',
-        operacional: false,
-        nota: 'Modelado a partir da Lei nº 9.148/2016. Aplica plenamente quando a classificação viária oficial (pendente SEDUR) for confirmada.',
-    },
     quadro11a: {
         descricao: 'Condições de uso por classe de via (complementar).',
         operacional: false,
@@ -107,120 +82,75 @@ const QUADROS_META: Record<string, { descricao: string; operacional: boolean; no
     },
 };
 
-const PERMISSAO_OPTIONS = [
-    { value: 'permitido', label: 'Permitido' },
-    { value: 'permitido_condicionado', label: 'Permitido condicionado' },
-    { value: 'proibido', label: 'Proibido' },
-];
-
-interface AlteracaoField {
-    key: string;
-    label: string;
-    kind: 'text' | 'number' | 'select' | 'textarea';
-    required?: boolean;
-    options?: { value: string; label: string }[];
-    placeholder?: string;
-    /** Campo de texto que vira lista (uma entrada por linha) no payload. */
-    toArray?: boolean;
-    /** Ocupa a linha inteira do grid no modal. */
-    full?: boolean;
-}
-
-/**
- * Campos editáveis por Quadro numa alteração de publicação. Espelham a chave
- * natural e o esquema da tabela tipada validados no PublishLouosVersionRequest:
- * sem a chave natural (required) a alteração não casa com a linha vigente.
- */
-const ALTERACAO_FIELDS: Record<string, AlteracaoField[]> = {
-    quadro7: [
-        { key: 'cnae_code', label: 'CNAE', kind: 'text', required: true, placeholder: '0000-0/00' },
-        { key: 'area_min', label: 'Área mínima (m²)', kind: 'number', required: true, placeholder: '0' },
-        { key: 'area_max', label: 'Área máxima (m²)', kind: 'number', placeholder: 'sem limite' },
-        { key: 'grupo', label: 'Grupo', kind: 'text', required: true, placeholder: 'ex.: nR3' },
-        { key: 'subgrupo', label: 'Subgrupo', kind: 'text', placeholder: 'ex.: nR3-99' },
-    ],
-    quadro10: [
-        { key: 'zona', label: 'Zona', kind: 'text', required: true, placeholder: 'ex.: ZCAL.1' },
-        { key: 'grupo_uso', label: 'Grupo de uso', kind: 'text', required: true },
-        { key: 'subgrupo', label: 'Subgrupo', kind: 'text' },
-        { key: 'permissao', label: 'Permissão', kind: 'select', required: true, options: PERMISSAO_OPTIONS },
-        { key: 'condicionante_ref', label: 'Condicionante', kind: 'text' },
-        { key: 'base_legal', label: 'Base legal', kind: 'text', full: true },
-    ],
-    quadro11: [
-        { key: 'classe_via', label: 'Classe de via', kind: 'text', required: true, placeholder: 'ex.: Via arterial' },
-        { key: 'grupo_uso', label: 'Grupo de uso', kind: 'text' },
-        { key: 'condicoes', label: 'Condições (uma por linha)', kind: 'textarea', toArray: true, full: true },
-        { key: 'base_legal', label: 'Base legal', kind: 'text', full: true },
-    ],
-};
-ALTERACAO_FIELDS.quadro11a = ALTERACAO_FIELDS.quadro11;
-
-function fieldsFor(quadro: string): AlteracaoField[] {
-    return ALTERACAO_FIELDS[quadro] ?? ALTERACAO_FIELDS.quadro7;
-}
-
-function permissaoColor(permissao: string): 'success' | 'warning' | 'error' {
-    if (permissao === 'permitido') {
-        return 'success';
+function getColumns(quadro: string): ColumnDef<QuadroItem>[] {
+    if (quadro === 'quadro7') {
+        return [
+            {
+                id: 'cnae',
+                header: 'CNAE',
+                cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
+                cell: (row) => (row as Quadro7Item).formatted_code,
+            },
+            { id: 'grupo', header: 'Grupo', cell: (row) => (row as Quadro7Item).grupo },
+            { id: 'subgrupo', header: 'Subgrupo', cell: (row) => (row as Quadro7Item).subgrupo ?? '—' },
+            {
+                id: 'faixa',
+                header: 'Faixa de área',
+                cellClassName: 'whitespace-nowrap',
+                cell: (row) => faixaArea((row as Quadro7Item).area_min, (row as Quadro7Item).area_max),
+            },
+            { id: 'observacao', header: 'Observação', cell: (row) => (row as Quadro7Item).observacao ?? '—' },
+        ];
     }
 
-    if (permissao === 'proibido') {
-        return 'error';
+    if (quadro === 'quadro10') {
+        return [
+            {
+                id: 'zona',
+                header: 'Zona',
+                cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
+                cell: (row) => (row as Quadro10Item).zona,
+            },
+            { id: 'grupo_uso', header: 'Grupo de uso', cell: (row) => (row as Quadro10Item).grupo_uso },
+            { id: 'subgrupo', header: 'Subgrupo', cell: (row) => (row as Quadro10Item).subgrupo ?? '—' },
+            {
+                id: 'permissao',
+                header: 'Permissão',
+                cellClassName: 'whitespace-nowrap',
+                cell: (row) => (
+                    <Badge color={permissaoColor((row as Quadro10Item).permissao)} size="sm">
+                        {(row as Quadro10Item).permissao_label}
+                    </Badge>
+                ),
+            },
+            {
+                id: 'condicionante',
+                header: 'Condicionante',
+                cell: (row) => (row as Quadro10Item).condicionante_ref ?? '—',
+            },
+            { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro10Item).base_legal ?? '—' },
+        ];
     }
 
-    return 'warning';
-}
+    return [
+        {
+            id: 'classe_via',
+            header: 'Classe de via',
+            cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
+            cell: (row) => (row as Quadro11Item).classe_via,
+        },
+        { id: 'grupo_uso', header: 'Grupo de uso', cell: (row) => (row as Quadro11Item).grupo_uso ?? '—' },
+        {
+            id: 'condicoes',
+            header: 'Condições',
+            cell: (row) => {
+                const condicoes = (row as Quadro11Item).condicoes;
 
-/** Formata a data ISO (YYYY-MM-DD) para dd/mm/aaaa sem deslocamento de fuso. */
-function formatarData(iso: string | null): string | null {
-    if (!iso) {
-        return null;
-    }
-
-    const [ano, mes, dia] = iso.split('-');
-
-    return dia && mes && ano ? `${dia}/${mes}/${ano}` : iso;
-}
-
-/** Faixa de área legível: "0 – 350 m²" ou "≥ 200 m²" quando sem limite superior. */
-function faixaArea(min: number, max: number | null): string {
-    const fmt = (valor: number) => valor.toLocaleString('pt-BR');
-
-    return max === null ? `≥ ${fmt(min)} m²` : `${fmt(min)} – ${fmt(max)} m²`;
-}
-
-/**
- * Monta o payload de UMA alteração a partir dos campos preenchidos: converte
- * números, transforma textareas em listas e descarta campos vazios.
- */
-function buildAlteracaoPayload(fields: AlteracaoField[], row: Record<string, string>): Record<string, unknown> {
-    const payload: Record<string, unknown> = {};
-
-    for (const field of fields) {
-        const raw = (row[field.key] ?? '').trim();
-
-        if (raw === '') {
-            continue;
-        }
-
-        if (field.kind === 'number') {
-            payload[field.key] = Number(raw);
-        } else if (field.toArray) {
-            const itens = raw
-                .split('\n')
-                .map((line) => line.trim())
-                .filter((line) => line !== '');
-
-            if (itens.length > 0) {
-                payload[field.key] = itens;
-            }
-        } else {
-            payload[field.key] = raw;
-        }
-    }
-
-    return payload;
+                return Array.isArray(condicoes) && condicoes.length > 0 ? condicoes.join('; ') : '—';
+            },
+        },
+        { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro11Item).base_legal ?? '—' },
+    ];
 }
 
 /**
@@ -515,77 +445,6 @@ function QuadroSelectorCard({ resumo, selected, onSelect }: QuadroSelectorCardPr
     );
 }
 
-function getColumns(quadro: string): ColumnDef<QuadroItem>[] {
-    if (quadro === 'quadro7') {
-        return [
-            {
-                id: 'cnae',
-                header: 'CNAE',
-                cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-                cell: (row) => (row as Quadro7Item).formatted_code,
-            },
-            { id: 'grupo', header: 'Grupo', cell: (row) => (row as Quadro7Item).grupo },
-            { id: 'subgrupo', header: 'Subgrupo', cell: (row) => (row as Quadro7Item).subgrupo ?? '—' },
-            {
-                id: 'faixa',
-                header: 'Faixa de área',
-                cellClassName: 'whitespace-nowrap',
-                cell: (row) => faixaArea((row as Quadro7Item).area_min, (row as Quadro7Item).area_max),
-            },
-            { id: 'observacao', header: 'Observação', cell: (row) => (row as Quadro7Item).observacao ?? '—' },
-        ];
-    }
-
-    if (quadro === 'quadro10') {
-        return [
-            {
-                id: 'zona',
-                header: 'Zona',
-                cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-                cell: (row) => (row as Quadro10Item).zona,
-            },
-            { id: 'grupo_uso', header: 'Grupo de uso', cell: (row) => (row as Quadro10Item).grupo_uso },
-            { id: 'subgrupo', header: 'Subgrupo', cell: (row) => (row as Quadro10Item).subgrupo ?? '—' },
-            {
-                id: 'permissao',
-                header: 'Permissão',
-                cellClassName: 'whitespace-nowrap',
-                cell: (row) => (
-                    <Badge color={permissaoColor((row as Quadro10Item).permissao)} size="sm">
-                        {(row as Quadro10Item).permissao_label}
-                    </Badge>
-                ),
-            },
-            {
-                id: 'condicionante',
-                header: 'Condicionante',
-                cell: (row) => (row as Quadro10Item).condicionante_ref ?? '—',
-            },
-            { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro10Item).base_legal ?? '—' },
-        ];
-    }
-
-    return [
-        {
-            id: 'classe_via',
-            header: 'Classe de via',
-            cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-            cell: (row) => (row as Quadro11Item).classe_via,
-        },
-        { id: 'grupo_uso', header: 'Grupo de uso', cell: (row) => (row as Quadro11Item).grupo_uso ?? '—' },
-        {
-            id: 'condicoes',
-            header: 'Condições',
-            cell: (row) => {
-                const condicoes = (row as Quadro11Item).condicoes;
-
-                return Array.isArray(condicoes) && condicoes.length > 0 ? condicoes.join('; ') : '—';
-            },
-        },
-        { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro11Item).base_legal ?? '—' },
-    ];
-}
-
 export default function LouosIndex({ quadros, quadroSelecionado, itens, filtros, perPageOptions }: LouosIndexProps) {
     const { auth } = usePage<SharedProps>().props;
     const canMaintain = auth.permissions.includes('manter-louos');
@@ -632,9 +491,20 @@ export default function LouosIndex({ quadros, quadroSelecionado, itens, filtros,
                         description={vigenteDesc}
                         actions={
                             canMaintain ? (
-                                <Button size="sm" onClick={() => setShowPublish(true)}>
-                                    Publicar nova versão
-                                </Button>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() =>
+                                            router.get(`/gestao/louos/rascunho?quadro=${quadroSelecionado}`)
+                                        }
+                                    >
+                                        Editar Quadro
+                                    </Button>
+                                    <Button size="sm" onClick={() => setShowPublish(true)}>
+                                        Publicar nova versão
+                                    </Button>
+                                </div>
                             ) : undefined
                         }
                     />
@@ -711,3 +581,4 @@ export default function LouosIndex({ quadros, quadroSelecionado, itens, filtros,
 }
 
 LouosIndex.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;
+

@@ -5,7 +5,7 @@ namespace Tests\Feature\Louos;
 use App\Models\User;
 use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -19,7 +19,7 @@ use Tests\TestCase;
  */
 class LouosUiTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -67,7 +67,7 @@ class LouosUiTest extends TestCase
         $this->seed(LouosQuadro7Seeder::class);
 
         // O administrador tem manter-louos: a página renderiza com a permissão
-        // que habilita a ação "Publicar nova versão" (auth.permissions partilhado).
+        // que habilita as ações "Publicar nova versão" e "Editar Quadro" (auth.permissions partilhado).
         $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/louos')
             ->assertOk()
@@ -75,12 +75,30 @@ class LouosUiTest extends TestCase
                 ->component('gestao/louos/index')
                 ->where('auth.permissions', fn ($permissions) => collect($permissions)->contains('manter-louos')));
 
-        // O analista consulta mas NÃO mantém: sem manter-louos, sem a ação.
+        // O analista consulta mas NÃO mantém: sem manter-louos, sem as ações.
         $this->actingAs($this->analista(), 'gestao')
             ->get('/gestao/louos')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/louos/index')
                 ->where('auth.permissions', fn ($permissions) => ! collect($permissions)->contains('manter-louos')));
+    }
+
+    public function test_botao_editar_quadro_acessivel_a_mantenedor_e_inacessivel_a_consultor(): void
+    {
+        // Verificação via rota: o mantenedor (manter-louos) acessa a página de rascunho;
+        // o consultor (consultar-louos) recebe 403.
+        $this->actingAs($this->administrador(), 'gestao')
+            ->get('/gestao/louos/rascunho?quadro=quadro7')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/louos/rascunho')
+                ->where('quadro', 'quadro7')
+                ->has('draft')
+                ->has('canPublish'));
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/louos/rascunho?quadro=quadro7')
+            ->assertForbidden();
     }
 }
