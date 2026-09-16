@@ -32,6 +32,7 @@ use App\Http\Controllers\Gestao\ProcessoBuscaController;
 use App\Http\Controllers\Gestao\ProcessoController;
 use App\Http\Controllers\Gestao\ProcessoDecisaoController;
 use App\Http\Controllers\Gestao\ProcessoPendenciaController;
+use App\Http\Controllers\Gestao\ReginProtocoloSimulacaoController;
 use App\Http\Controllers\Gestao\RelatorioController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RoleController;
@@ -188,6 +189,11 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // frontend não tem modo somente-leitura para a ficha (HU-011 CA-04).
         Route::middleware('permission:consultar-cnaes')->group(function () {
             Route::get('cnaes', [CnaeController::class, 'index'])->name('cnaes.index');
+            // Homologação do motor: protocolos SEDUR entram como se o tipo de
+            // imóvel e a área tivessem chegado do REGIN. A tela declara a
+            // simulação — a integração REGIN continua stub.
+            Route::get('risco/simulacao-regin', [ReginProtocoloSimulacaoController::class, 'index'])->name('risco.simulacao-regin');
+            Route::post('risco/simulacao-regin', [ReginProtocoloSimulacaoController::class, 'simulate'])->name('risco.simulacao-regin.simular');
         });
 
         Route::middleware('permission:manter-cnaes')->group(function () {

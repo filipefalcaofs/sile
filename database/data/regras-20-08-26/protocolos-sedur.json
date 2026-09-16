@@ -1,0 +1,149 @@
+{
+  "origem": "Protocolos SEDUR (pasta compartilhada de validação). Campos pessoais omitidos. Tipo de imóvel e área entram no motor como se tivessem chegado do REGIN.",
+  "protocolos": [
+    {
+      "codigo": "abrigado-2108519",
+      "rotulo": "Abrigado da sede 2108519",
+      "processo": "5921000030-00037130/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": null,
+      "area_utilizada": 43.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "atividades": [
+        { "cnae": "8219-9/99", "perguntas": [] }
+      ]
+    },
+    {
+      "codigo": "sede-virtual",
+      "rotulo": "Sede de escritório virtual",
+      "processo": "5921000030-00068994/2024",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 81.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "atividades": [
+        {
+          "cnae": "8211-3/00",
+          "perguntas": [
+            { "codigo": "P4", "texto": "Irá prestar serviço de escritório virtual, centro de negócios ou coworking?", "resposta": "Sim", "valor": true }
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "33072",
+      "rotulo": "Processo 33072",
+      "processo": "5921000030-00033072/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 30.0,
+      "zona": "ZEIS 1",
+      "via": "VL",
+      "atividades": [
+        { "cnae": "6622-3/00", "perguntas": [] }
+      ]
+    },
+    {
+      "codigo": "43747",
+      "rotulo": "Processo 43747",
+      "processo": "5921000030-00043747/2026",
+      "servico": "Alteração do Termo de Viabilidade de Localização",
+      "tipo_imovel": "Galpão",
+      "area_utilizada": 834.0,
+      "zona": "ZPR 3",
+      "via": "VL",
+      "atividades": [
+        { "cnae": "6202-3/00", "perguntas": [] }
+      ]
+    },
+    {
+      "codigo": "53514",
+      "rotulo": "Processo 53514",
+      "processo": "5921000030-00053514/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 75.0,
+      "zona": "ZEIS 1",
+      "via": "VL",
+      "atividades": [
+        { "cnae": "4721-1/04", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "4771-7/01", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "4772-5/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "4773-3/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "8650-0/99", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "53528",
+      "rotulo": "Processo 53528",
+      "processo": "5921000030-00053528/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 156.0,
+      "zona": "ZCMe-1/03",
+      "via": "VE",
+      "atividades": [
+        { "cnae": "4781-4/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "54560",
+      "rotulo": "Processo 54560",
+      "processo": "5921000030-00054560/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 53.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "atividades": [
+        { "cnae": "1340-5/01", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "1412-6/02", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "1813-0/01", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "4781-4/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "54675",
+      "rotulo": "Processo 54675",
+      "processo": "5921000030-00054675/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 105.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "atividades": [
+        { "cnae": "7210-0/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "54709",
+      "rotulo": "Processo 54709",
+      "processo": "5921000030-00054709/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 100.0,
+      "zona": "ZPR 3",
+      "via": "VL",
+      "atividades": [
+        { "cnae": "4712-1/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "54772",
+      "rotulo": "Processo 54772",
+      "processo": "5921000030-00054772/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 10.0,
+      "zona": "ZPR 1",
+      "via": "VC-I",
+      "atividades": [
+        { "cnae": "3314-7/10", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "4751-2/01", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "6202-3/00", "perguntas": [{ "codigo": "P11", "texto": "Trata-se do escritório da empresa?", "resposta": "Sim, no local funcionará apenas o escritório da empresa.", "valor": true }] }
+      ]
+    }
+  ]
+}

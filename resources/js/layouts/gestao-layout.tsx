@@ -88,6 +88,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('consultar-cnaes'),
                 },
                 {
+                    name: 'Simulação REGIN',
+                    href: '/gestao/risco/simulacao-regin',
+                    icon: <PlugInIcon />,
+                    visible: auth.permissions.includes('consultar-cnaes'),
+                },
+                {
                     name: 'Tipos de serviço',
                     href: '/gestao/tipos-servico',
                     icon: <TagIcon />,
