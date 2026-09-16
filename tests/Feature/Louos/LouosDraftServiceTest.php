@@ -359,6 +359,42 @@ class LouosDraftServiceTest extends TestCase
         }
     }
 
+    public function test_normaliza_grupo_uso_nulo_no_quadro10(): void
+    {
+        $user = User::factory()->create();
+
+        $vigente10 = RuleVersion::factory()->create([
+            'domain' => RuleDomain::LouosQuadro10,
+            'status' => RuleVersionStatus::Vigente,
+            'version' => 'quadro10-norm-v1',
+            'valid_from' => now()->subYear()->toDateString(),
+        ]);
+
+        $draft10 = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-q10-norm', $user->id);
+
+        // Insere linha com grupo_uso vazio (string) e subgrupo null
+        $this->service()->inserirLinha($draft10, [
+            'zona' => 'ZPR-1',
+            'grupo_uso' => '',
+            'subgrupo' => null,
+            'permissao' => Quadro10Permissao::Proibido->value,
+        ]);
+
+        // Tenta inserir novamente com a mesma chave natural, mas grupo_uso chegando como null.
+        // Sem o normalize de grupo_uso, naturalKey e existsByKey divergem:
+        // naturalKey gera 'ZPR-1||' (null ?? ''), mas existsByKey faz WHERE grupo_uso IS NULL
+        // e não encontra a linha anterior (que tem grupo_uso = ''), permitindo duplicata.
+        // Com o fix, null é coercido para '' e a colisão é detectada corretamente.
+        $this->expectException(ValidationException::class);
+
+        $this->service()->inserirLinha($draft10, [
+            'zona' => 'ZPR-1',
+            'grupo_uso' => null,
+            'subgrupo' => '',
+            'permissao' => Quadro10Permissao::Permitido->value,
+        ]);
+    }
+
     public function test_auditoria_registra_mutacoes(): void
     {
         $this->seed(LouosQuadro7Seeder::class);

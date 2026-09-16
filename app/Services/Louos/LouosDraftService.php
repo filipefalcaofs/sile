@@ -14,6 +14,7 @@ use App\Support\Audit\AuditService;
 use DomainException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
@@ -60,31 +61,38 @@ final class LouosDraftService
      */
     public function abrirOuRetomar(RuleDomain $domain, ?string $version, int $userId): RuleVersion
     {
-        $existing = $this->rascunhoAberto($domain);
+        return DB::transaction(function () use ($domain, $version, $userId) {
+            $existing = RuleVersion::query()
+                ->where('domain', $domain->value)
+                ->where('status', RuleVersionStatus::Rascunho->value)
+                ->lockForUpdate()
+                ->latest()
+                ->first();
 
-        if ($existing !== null) {
-            return $existing;
-        }
+            if ($existing !== null) {
+                return $existing;
+            }
 
-        if ($version === null) {
-            throw new InvalidArgumentException('Versão obrigatória para abertura de novo rascunho.');
-        }
+            if ($version === null) {
+                throw new InvalidArgumentException('Versão obrigatória para abertura de novo rascunho.');
+            }
 
-        $vigente = RuleVersion::vigente($domain)->first();
+            $vigente = RuleVersion::vigente($domain)->first();
 
-        $draft = $this->ruleVersionService->openDraft($domain, $version, 'rascunho-editavel', $userId);
+            $draft = $this->ruleVersionService->openDraft($domain, $version, 'rascunho-editavel', $userId);
 
-        $this->copier->copy($domain, $vigente, $draft);
+            $this->copier->copy($domain, $vigente, $draft);
 
-        $this->audit->log(
-            logName: 'louos',
-            event: 'rascunho-aberto',
-            description: "Rascunho aberto para o domínio {$domain->label()} — versão {$version}",
-            properties: ['dominio' => $domain->value, 'versao' => $version],
-            subject: $draft,
-        );
+            $this->audit->log(
+                logName: 'louos',
+                event: 'rascunho-aberto',
+                description: "Rascunho aberto para o domínio {$domain->label()} — versão {$version}",
+                properties: ['dominio' => $domain->value, 'versao' => $version],
+                subject: $draft,
+            );
 
-        return $draft;
+            return $draft;
+        });
     }
 
     /**
@@ -394,6 +402,7 @@ final class LouosDraftService
                     : null,
             ]),
             RuleDomain::LouosQuadro10 => array_merge($dados, [
+                'grupo_uso' => (string) ($dados['grupo_uso'] ?? ''),
                 'subgrupo' => (string) ($dados['subgrupo'] ?? ''),
             ]),
             RuleDomain::LouosQuadro11a => array_merge($dados, [
