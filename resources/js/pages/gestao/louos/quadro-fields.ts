@@ -31,6 +31,7 @@ export interface Quadro10Item {
     permissao_label: string;
     condicionante_ref: string | null;
     base_legal: string | null;
+    observacao: string | null;
 }
 
 export interface Quadro11Item {
@@ -39,6 +40,7 @@ export interface Quadro11Item {
     grupo_uso: string | null;
     condicoes: string[] | null;
     base_legal: string | null;
+    observacao: string | null;
 }
 
 export type QuadroItem = Quadro7Item | Quadro10Item | Quadro11Item;
@@ -61,7 +63,6 @@ export const ALTERACAO_FIELDS: Record<string, AlteracaoField[]> = {
         { key: 'area_max', label: 'Área máxima (m²)', kind: 'number', placeholder: 'sem limite' },
         { key: 'grupo', label: 'Grupo', kind: 'text', required: true, placeholder: 'ex.: nR3' },
         { key: 'subgrupo', label: 'Subgrupo', kind: 'text', placeholder: 'ex.: nR3-99' },
-        { key: 'observacao', label: 'Observação', kind: 'text', full: true },
     ],
     quadro10: [
         { key: 'zona', label: 'Zona', kind: 'text', required: true, placeholder: 'ex.: ZCAL.1' },
@@ -83,6 +84,16 @@ ALTERACAO_FIELDS.quadro11 = ALTERACAO_FIELDS.quadro11a;
 
 export function fieldsFor(quadro: string): AlteracaoField[] {
     return ALTERACAO_FIELDS[quadro] ?? ALTERACAO_FIELDS.quadro7;
+}
+
+const OBSERVACAO_FIELD: AlteracaoField = { key: 'observacao', label: 'Observação', kind: 'textarea', full: true };
+
+/**
+ * Campos para o CRUD de uma linha do rascunho — inclui o campo `observacao` que
+ * existe nas três tabelas tipadas mas não faz parte do modal de publicação (ALTERACAO_FIELDS).
+ */
+export function linhaFieldsFor(quadro: string): AlteracaoField[] {
+    return [...fieldsFor(quadro), OBSERVACAO_FIELD];
 }
 
 /**

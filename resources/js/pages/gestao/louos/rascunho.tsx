@@ -6,7 +6,6 @@ import Input from '@/components/form/input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import { AlertIcon, FileIcon, InfoIcon, PencilIcon, TrashIcon } from '@/components/icons';
-import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table/data-table';
@@ -21,15 +20,11 @@ import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
 import {
     type AlteracaoField,
-    type Quadro7Item,
-    type Quadro10Item,
-    type Quadro11Item,
     type QuadroItem,
     buildAlteracaoPayload,
-    faixaArea,
-    fieldsFor,
-    permissaoColor,
+    linhaFieldsFor,
 } from './quadro-fields';
+import { getColumns } from './quadro-columns';
 
 const PER_PAGE_OPTIONS = [10, 15, 25, 50];
 
@@ -73,80 +68,9 @@ type SharedPropsWithImportacao = SharedProps & {
     flash: SharedProps['flash'] & { importacao?: ImportacaoRelatorio };
 };
 
-function getColumns(quadro: string): ColumnDef<QuadroItem>[] {
-    if (quadro === 'quadro7') {
-        return [
-            {
-                id: 'cnae',
-                header: 'CNAE',
-                cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-                cell: (row) => (row as Quadro7Item).formatted_code,
-            },
-            { id: 'grupo', header: 'Grupo', cell: (row) => (row as Quadro7Item).grupo },
-            { id: 'subgrupo', header: 'Subgrupo', cell: (row) => (row as Quadro7Item).subgrupo ?? '—' },
-            {
-                id: 'faixa',
-                header: 'Faixa de área',
-                cellClassName: 'whitespace-nowrap',
-                cell: (row) => faixaArea((row as Quadro7Item).area_min, (row as Quadro7Item).area_max),
-            },
-            { id: 'observacao', header: 'Observação', cell: (row) => (row as Quadro7Item).observacao ?? '—' },
-        ];
-    }
-
-    if (quadro === 'quadro10') {
-        return [
-            {
-                id: 'zona',
-                header: 'Zona',
-                cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-                cell: (row) => (row as Quadro10Item).zona,
-            },
-            { id: 'grupo_uso', header: 'Grupo de uso', cell: (row) => (row as Quadro10Item).grupo_uso },
-            { id: 'subgrupo', header: 'Subgrupo', cell: (row) => (row as Quadro10Item).subgrupo ?? '—' },
-            {
-                id: 'permissao',
-                header: 'Permissão',
-                cellClassName: 'whitespace-nowrap',
-                cell: (row) => (
-                    <Badge color={permissaoColor((row as Quadro10Item).permissao)} size="sm">
-                        {(row as Quadro10Item).permissao_label}
-                    </Badge>
-                ),
-            },
-            {
-                id: 'condicionante',
-                header: 'Condicionante',
-                cell: (row) => (row as Quadro10Item).condicionante_ref ?? '—',
-            },
-            { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro10Item).base_legal ?? '—' },
-        ];
-    }
-
-    return [
-        {
-            id: 'classe_via',
-            header: 'Classe de via',
-            cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-            cell: (row) => (row as Quadro11Item).classe_via,
-        },
-        { id: 'grupo_uso', header: 'Grupo de uso', cell: (row) => (row as Quadro11Item).grupo_uso ?? '—' },
-        {
-            id: 'condicoes',
-            header: 'Condições',
-            cell: (row) => {
-                const condicoes = (row as Quadro11Item).condicoes;
-
-                return Array.isArray(condicoes) && condicoes.length > 0 ? condicoes.join('; ') : '—';
-            },
-        },
-        { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro11Item).base_legal ?? '—' },
-    ];
-}
-
 /** Inicializa o formulário de uma linha a partir de uma linha existente. */
 function linhaToFormValues(quadro: string, row: QuadroItem): Record<string, string> {
-    const fields = fieldsFor(quadro);
+    const fields = linhaFieldsFor(quadro);
     const values: Record<string, string> = {};
 
     for (const field of fields) {
@@ -177,35 +101,27 @@ function LinhaQuadroModal({
     onClose: () => void;
 }) {
     const isEdit = linhaId !== null;
-    const fields = fieldsFor(quadro);
+    const fields = linhaFieldsFor(quadro);
 
-    const [formValues, setFormValues] = useState<Record<string, string>>(initialValues);
-    const [processing, setProcessing] = useState(false);
-
-    function updateField(key: string, value: string) {
-        setFormValues((prev) => ({ ...prev, [key]: value }));
-    }
+    const { data, setData, post, put, processing, errors, reset, transform } = useForm<Record<string, string>>(initialValues);
 
     function submit(event: FormEvent) {
         event.preventDefault();
-        setProcessing(true);
 
-        const payload = {
+        transform((current) => ({
             quadro,
-            ...buildAlteracaoPayload(fields, formValues),
-        };
+            ...buildAlteracaoPayload(fields, current),
+        }));
 
         if (isEdit) {
-            router.put(`/gestao/louos/rascunho/linhas/${linhaId}`, payload, {
+            put(`/gestao/louos/rascunho/linhas/${linhaId}`, {
                 preserveScroll: true,
-                onFinish: () => setProcessing(false),
-                onSuccess: () => onClose(),
+                onSuccess: () => { reset(); onClose(); },
             });
         } else {
-            router.post('/gestao/louos/rascunho/linhas', payload, {
+            post('/gestao/louos/rascunho/linhas', {
                 preserveScroll: true,
-                onFinish: () => setProcessing(false),
-                onSuccess: () => onClose(),
+                onSuccess: () => { reset(); onClose(); },
             });
         }
     }
@@ -222,7 +138,7 @@ function LinhaQuadroModal({
             <form onSubmit={submit} className="mt-6 grid gap-4 sm:grid-cols-2">
                 {fields.map((field: AlteracaoField) => {
                     const fieldId = `linha-${field.key}`;
-                    const value = formValues[field.key] ?? '';
+                    const value = data[field.key] ?? '';
 
                     return (
                         <div key={field.key} className={field.full ? 'sm:col-span-2' : ''}>
@@ -230,23 +146,28 @@ function LinhaQuadroModal({
                                 {field.label}
                             </Label>
                             {field.kind === 'select' ? (
-                                <Select
-                                    id={fieldId}
-                                    value={value}
-                                    onChange={(next) => updateField(field.key, next)}
-                                    placeholder="Selecione"
-                                    options={field.options ?? []}
-                                />
+                                <>
+                                    <Select
+                                        id={fieldId}
+                                        value={value}
+                                        onChange={(next) => setData(field.key, next)}
+                                        placeholder="Selecione"
+                                        options={field.options ?? []}
+                                    />
+                                    {errors[field.key] && (
+                                        <p className="mt-1 text-theme-xs text-error-500">{errors[field.key]}</p>
+                                    )}
+                                </>
                             ) : field.kind === 'textarea' ? (
                                 <textarea
                                     id={fieldId}
                                     value={value}
                                     onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-                                        updateField(field.key, event.target.value)
+                                        setData(field.key, event.target.value)
                                     }
                                     rows={4}
                                     placeholder={field.placeholder}
-                                    className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                                    className={`w-full rounded-lg border bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:ring-3 focus:outline-hidden dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${errors[field.key] ? 'border-error-300 focus:border-error-300 focus:ring-error-500/20 dark:border-error-700' : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700'}`}
                                 />
                             ) : (
                                 <Input
@@ -254,8 +175,10 @@ function LinhaQuadroModal({
                                     type={field.kind === 'number' ? 'number' : 'text'}
                                     min={field.kind === 'number' ? 0 : undefined}
                                     value={value}
-                                    onChange={(event) => updateField(field.key, event.target.value)}
+                                    onChange={(event) => setData(field.key, event.target.value)}
                                     placeholder={field.placeholder}
+                                    error={!!errors[field.key]}
+                                    hint={errors[field.key]}
                                 />
                             )}
                         </div>

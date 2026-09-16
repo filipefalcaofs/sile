@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table/data-table';
 import PerPageSelect from '@/components/ui/data-table/per-page-select';
 import TableToolbar from '@/components/ui/data-table/table-toolbar';
-import type { ColumnDef } from '@/components/ui/data-table/types';
 import { useServerTable } from '@/components/ui/data-table/use-server-table';
 import EmptyState from '@/components/ui/empty-state';
 import { Modal } from '@/components/ui/modal';
@@ -21,16 +20,12 @@ import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
 import {
     type AlteracaoField,
-    type Quadro7Item,
-    type Quadro10Item,
-    type Quadro11Item,
     type QuadroItem,
     buildAlteracaoPayload,
-    faixaArea,
     fieldsFor,
     formatarData,
-    permissaoColor,
 } from './quadro-fields';
+import { getColumns } from './quadro-columns';
 
 interface QuadroResumo {
     quadro: string;
@@ -81,77 +76,6 @@ const QUADROS_META: Record<string, { descricao: string; operacional: boolean; no
         nota: 'Modelado a partir da Lei nº 9.148/2016. Aplica plenamente quando a classificação viária oficial (pendente SEDUR) for confirmada.',
     },
 };
-
-function getColumns(quadro: string): ColumnDef<QuadroItem>[] {
-    if (quadro === 'quadro7') {
-        return [
-            {
-                id: 'cnae',
-                header: 'CNAE',
-                cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-                cell: (row) => (row as Quadro7Item).formatted_code,
-            },
-            { id: 'grupo', header: 'Grupo', cell: (row) => (row as Quadro7Item).grupo },
-            { id: 'subgrupo', header: 'Subgrupo', cell: (row) => (row as Quadro7Item).subgrupo ?? '—' },
-            {
-                id: 'faixa',
-                header: 'Faixa de área',
-                cellClassName: 'whitespace-nowrap',
-                cell: (row) => faixaArea((row as Quadro7Item).area_min, (row as Quadro7Item).area_max),
-            },
-            { id: 'observacao', header: 'Observação', cell: (row) => (row as Quadro7Item).observacao ?? '—' },
-        ];
-    }
-
-    if (quadro === 'quadro10') {
-        return [
-            {
-                id: 'zona',
-                header: 'Zona',
-                cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-                cell: (row) => (row as Quadro10Item).zona,
-            },
-            { id: 'grupo_uso', header: 'Grupo de uso', cell: (row) => (row as Quadro10Item).grupo_uso },
-            { id: 'subgrupo', header: 'Subgrupo', cell: (row) => (row as Quadro10Item).subgrupo ?? '—' },
-            {
-                id: 'permissao',
-                header: 'Permissão',
-                cellClassName: 'whitespace-nowrap',
-                cell: (row) => (
-                    <Badge color={permissaoColor((row as Quadro10Item).permissao)} size="sm">
-                        {(row as Quadro10Item).permissao_label}
-                    </Badge>
-                ),
-            },
-            {
-                id: 'condicionante',
-                header: 'Condicionante',
-                cell: (row) => (row as Quadro10Item).condicionante_ref ?? '—',
-            },
-            { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro10Item).base_legal ?? '—' },
-        ];
-    }
-
-    return [
-        {
-            id: 'classe_via',
-            header: 'Classe de via',
-            cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-            cell: (row) => (row as Quadro11Item).classe_via,
-        },
-        { id: 'grupo_uso', header: 'Grupo de uso', cell: (row) => (row as Quadro11Item).grupo_uso ?? '—' },
-        {
-            id: 'condicoes',
-            header: 'Condições',
-            cell: (row) => {
-                const condicoes = (row as Quadro11Item).condicoes;
-
-                return Array.isArray(condicoes) && condicoes.length > 0 ? condicoes.join('; ') : '—';
-            },
-        },
-        { id: 'base_legal', header: 'Base legal', cell: (row) => (row as Quadro11Item).base_legal ?? '—' },
-    ];
-}
 
 /**
  * Publicação versionada de um Quadro da LOUOS (HU-046). Publicar gera uma NOVA
