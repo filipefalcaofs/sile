@@ -4,30 +4,24 @@ namespace App\Services\Louos;
 
 use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\RuleVersion;
-use JsonException;
 use RuntimeException;
 use SplFileObject;
 
 /**
- * Import dos Quadros 11 e 11A da LOUOS (condições de instalação pela via —
- * HU-017/HU-018/HU-040/HU-041) a partir de um ÚNICO CSV versionado em
- * database/data/louos/. A coluna `quadro` (11 | 11a) distingue os dois domínios;
- * cada chamada importa só as linhas do quadro informado para a versão de regra
- * correspondente (rule_version_id, domínio louos_quadro11 ou louos_quadro11a).
+ * Importação do Quadro 11A da LOUOS (condições de instalação pela via —
+ * HU-017/HU-018/HU-040/HU-041) a partir de um CSV versionado em
+ * database/data/louos/. O "Quadro 11" não existe na publicação oficial da
+ * SEDUR — apenas 11A e 11B. Formato esperado: classe_via,grupo_uso,condicoes,
+ * base_legal; o campo `condicoes` é uma lista de itens separados por ';',
+ * gravados como JSON array de strings (ou null quando vazio).
  *
- * ESCOPO HONESTO: dado MODELADO derivado da Lei nº 9.148/2016 (o atributo de
- * classificação viária real e a correspondência "Quadro 11"↔11B pendem
- * confirmação SEDUR). SUBSTITUÍVEL pela carga oficial sem mudar a lógica.
- *
- * Idempotente: upsert por (rule_version_id, classe_via, grupo_uso) — o grupo_uso
- * ausente é gravado como '' para o ON CONFLICT casar no re-import; o upsert NÃO
- * toca 'observacao'. `condicoes` é JSON validado na carga; JSON inválido é
- * rejeitado (relatório), nunca inserido.
+ * Idempotente: upsert por (rule_version_id, classe_via, grupo_uso) — o
+ * grupo_uso ausente é gravado como '' para o ON CONFLICT casar no re-import;
+ * o upsert NÃO toca 'observacao'. JSON inválido nunca é inserido.
  */
 class LouosQuadro11ImportService
 {
     private const EXPECTED_HEADER = [
-        'quadro',
         'classe_via',
         'grupo_uso',
         'condicoes',
@@ -37,10 +31,8 @@ class LouosQuadro11ImportService
     /**
      * @return array{lidos: int, importados: int, atualizados: int, rejeitados: array<int, string>, total: int}
      */
-    public function import(RuleVersion $version, string $csvPath, string $quadro): array
+    public function import(RuleVersion $version, string $csvPath): array
     {
-        $quadroAlvo = mb_strtolower(trim($quadro));
-
         $file = new SplFileObject($csvPath, 'r');
         $file->setFlags(SplFileObject::READ_CSV | SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY);
 
@@ -59,7 +51,7 @@ class LouosQuadro11ImportService
 
                 if ($header !== self::EXPECTED_HEADER) {
                     throw new RuntimeException(
-                        "Cabeçalho inesperado em {$csvPath}: esperado quadro,classe_via,grupo_uso,condicoes,base_legal (Quadros 11/11A da Lei 9.148/2016).",
+                        "Cabeçalho inesperado em {$csvPath}: esperado classe_via,grupo_uso,condicoes,base_legal (Quadro 11A da Lei 9.148/2016).",
                     );
                 }
 
@@ -75,11 +67,6 @@ class LouosQuadro11ImportService
                 array_map(fn ($value) => trim((string) $value), $line),
             );
 
-            // Só as linhas do quadro informado (11 ou 11a) entram nesta versão.
-            if (mb_strtolower($data['quadro']) !== $quadroAlvo) {
-                continue;
-            }
-
             $read++;
 
             if ($data['classe_via'] === '') {
@@ -91,20 +78,12 @@ class LouosQuadro11ImportService
             $condicoes = null;
 
             if ($data['condicoes'] !== '') {
-                try {
-                    $decoded = json_decode($data['condicoes'], true, 512, JSON_THROW_ON_ERROR);
-                } catch (JsonException $e) {
-                    $rejected[] = sprintf(
-                        "classe '%s' / grupo '%s': condições com JSON inválido (%s)",
-                        $data['classe_via'],
-                        $data['grupo_uso'],
-                        $e->getMessage(),
-                    );
+                $itens = array_values(array_filter(array_map(
+                    fn (string $item) => trim($item),
+                    explode(';', $data['condicoes']),
+                ), fn (string $item) => $item !== ''));
 
-                    continue;
-                }
-
-                $condicoes = json_encode($decoded, JSON_UNESCAPED_UNICODE);
+                $condicoes = $itens === [] ? null : json_encode($itens, JSON_UNESCAPED_UNICODE);
             }
 
             $rows[] = [

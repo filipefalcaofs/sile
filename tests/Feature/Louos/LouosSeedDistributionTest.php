@@ -10,7 +10,7 @@ use App\Models\RuleVersion;
 use Database\Seeders\LouosQuadro10Seeder;
 use Database\Seeders\LouosQuadro11Seeder;
 use Database\Seeders\LouosQuadro7Seeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class LouosSeedDistributionTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -85,22 +85,17 @@ class LouosSeedDistributionTest extends TestCase
         }
     }
 
-    public function test_quadro10_e_quadro11_e_11a_tem_versao_vigente(): void
+    public function test_quadro10_e_quadro11a_tem_versao_vigente(): void
     {
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
-        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11)->count());
+        $this->assertNull(RuleVersion::vigente(RuleDomain::LouosQuadro11)->first());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
 
         // Âncoras do dado modelado da Lei 9.148/2016.
         $this->assertSame(18, LouosQuadro10Permissao::query()->count());
 
-        $version11 = RuleVersion::vigente(RuleDomain::LouosQuadro11)->firstOrFail();
         $version11a = RuleVersion::vigente(RuleDomain::LouosQuadro11a)->firstOrFail();
 
-        $this->assertSame(
-            4,
-            LouosQuadro11CondicaoVia::query()->where('rule_version_id', $version11->getKey())->count(),
-        );
         $this->assertSame(
             4,
             LouosQuadro11CondicaoVia::query()->where('rule_version_id', $version11a->getKey())->count(),

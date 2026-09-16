@@ -10,65 +10,45 @@ use App\Support\Audit\AuditService;
 use Illuminate\Database\Seeder;
 
 /**
- * Carga dos Quadros 11 e 11A da LOUOS (condições de instalação pela via —
- * HU-017/HU-018/HU-040/HU-041): publica DUAS versões vigentes (domínios
- * louos_quadro11 e louos_quadro11a) a partir do MESMO CSV, filtrando pela coluna
- * `quadro`. Dado MODELADO da Lei nº 9.148/2016 (atributo viário real pendente
- * confirmação SEDUR). SUBSTITUÍVEL pela carga oficial sem mudar a lógica.
+ * Carga do Quadro 11A da LOUOS (condições de instalação pela via —
+ * HU-017/HU-018/HU-040/HU-041): publica UMA versão vigente (domínio
+ * louos_quadro11a) a partir do CSV quadro11a-condicoes-via.csv. O "Quadro 11"
+ * não existe na publicação oficial da SEDUR — apenas 11A e 11B. Dado
+ * MODELADO da Lei nº 9.148/2016 (atributo viário real pendente confirmação
+ * SEDUR). SUBSTITUÍVEL pela carga oficial sem mudar a lógica.
  *
- * Publicação sem quatro olhos no seed (publishedBy null). Idempotente: reusa as
- * versões vigentes se já existirem e o import faz upsert — re-seed não duplica.
+ * Publicação sem quatro olhos no seed (publishedBy null). Idempotente: reusa a
+ * versão vigente se já existir e o import faz upsert — re-seed não duplica.
  */
 class LouosQuadro11Seeder extends Seeder
 {
     public function run(): void
     {
-        $this->publicarQuadro(
-            RuleDomain::LouosQuadro11,
-            'lei-9148-2016-quadro11',
-            '11',
-            'importacao-quadro11',
-            'Quadro 11 da LOUOS (condições pela via — modelado da Lei 9.148/2016)',
-        );
-
-        $this->publicarQuadro(
-            RuleDomain::LouosQuadro11a,
-            'lei-9148-2016-quadro11a',
-            '11a',
-            'importacao-quadro11a',
-            'Quadro 11A da LOUOS (condições complementares pela via — modelado da Lei 9.148/2016)',
-        );
-    }
-
-    private function publicarQuadro(
-        RuleDomain $domain,
-        string $versionId,
-        string $quadro,
-        string $event,
-        string $descricao,
-    ): void {
         $rules = app(RuleVersionService::class);
 
-        $version = RuleVersion::vigente($domain)->first();
+        $version = RuleVersion::vigente(RuleDomain::LouosQuadro11a)->first();
 
         if ($version === null) {
-            $draft = $rules->openDraft($domain, $versionId, 'Lei nº 9.148/2016 — '.$descricao);
+            $draft = $rules->openDraft(
+                RuleDomain::LouosQuadro11a,
+                'lei-9148-2016-quadro11a',
+                'Lei nº 9.148/2016 — Quadro 11A da LOUOS (condições complementares pela via — modelado)',
+            );
 
             $version = $rules->publish($draft);
         }
 
         $report = app(LouosQuadro11ImportService::class)->import(
             $version,
-            database_path('data/louos/quadro11-condicoes-via.csv'),
-            $quadro,
+            database_path('data/louos/quadro11a-condicoes-via.csv'),
         );
 
         app(AuditService::class)->log(
             logName: 'louos',
-            event: $event,
-            description: 'Importação do '.$descricao,
+            event: 'importacao-quadro11a',
+            description: 'Importação do Quadro 11A da LOUOS (condições complementares pela via — modelado da Lei 9.148/2016)',
             properties: $report,
-            rulesVersion: $versionId,
+            rulesVersion: 'lei-9148-2016-quadro11a',
         );
     }
 }

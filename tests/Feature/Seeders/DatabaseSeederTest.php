@@ -80,7 +80,7 @@ class DatabaseSeederTest extends TestCase
         // + 1 da pergunta vinculada de intenção de sede no passo de
         // atividades do portal (SDD escritorio-virtual-telas-portal, Tarefa 3:
         // analise.escritorio_virtual.pergunta_vinculada).
-        $this->assertSame(103, Parameter::query()->count());
+        $this->assertSame(109, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -117,7 +117,7 @@ class DatabaseSeederTest extends TestCase
         // pendente SEDUR), mas já versionados.
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro7)->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
-        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11)->count());
+        $this->assertNull(RuleVersion::vigente(RuleDomain::LouosQuadro11)->first());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
         $this->assertSame(40, LouosQuadro7Faixa::query()->count());
         $this->assertGreaterThan(0, LouosQuadro10Permissao::query()->count());
@@ -340,7 +340,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(103, Parameter::query()->count());
+        $this->assertSame(109, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
@@ -348,7 +348,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(67, RiskCondicionante::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro7)->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
-        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11)->count());
+        $this->assertNull(RuleVersion::vigente(RuleDomain::LouosQuadro11)->first());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
         $this->assertSame(40, LouosQuadro7Faixa::query()->count());
         // 3 empresas do cidadão (CompanySeeder) + 2 dedicadas do EP12
