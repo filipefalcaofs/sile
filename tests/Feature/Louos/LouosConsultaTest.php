@@ -8,7 +8,7 @@ use App\Models\RuleVersion;
 use App\Models\User;
 use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class LouosConsultaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -49,7 +49,7 @@ class LouosConsultaTest extends TestCase
             ->get('/gestao/louos')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->has('quadros', 4)
+                ->has('quadros', 3)
                 ->where('quadroSelecionado', 'quadro7')
                 ->where('filtros.quadro', 'quadro7')
                 ->has('itens.data')

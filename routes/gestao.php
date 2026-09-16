@@ -24,6 +24,7 @@ use App\Http\Controllers\Gestao\HolidayController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
 use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\LouosController;
+use App\Http\Controllers\Gestao\LouosDraftController;
 use App\Http\Controllers\Gestao\LouosSandboxController;
 use App\Http\Controllers\Gestao\MalhaFinaController;
 use App\Http\Controllers\Gestao\ParameterController;
@@ -252,6 +253,19 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
 
         Route::middleware('permission:manter-louos')->prefix('louos')->name('louos.')->group(function () {
             Route::put('publicar', [LouosController::class, 'publish'])->name('publicar');
+
+            // CRUD do rascunho editável dos Quadros da LOUOS (HU-046): abrir/retomar,
+            // inserir/alterar/excluir linha, importar CSV, publicar por quatro olhos,
+            // descartar e download do modelo CSV por Quadro.
+            Route::get('rascunho', [LouosDraftController::class, 'show'])->name('rascunho.show');
+            Route::post('rascunho', [LouosDraftController::class, 'open'])->name('rascunho.abrir');
+            Route::post('rascunho/linhas', [LouosDraftController::class, 'storeLinha'])->name('rascunho.linhas.store');
+            Route::put('rascunho/linhas/{linha}', [LouosDraftController::class, 'updateLinha'])->name('rascunho.linhas.update');
+            Route::delete('rascunho/linhas/{linha}', [LouosDraftController::class, 'destroyLinha'])->name('rascunho.linhas.destroy');
+            Route::post('rascunho/importar', [LouosDraftController::class, 'importar'])->name('rascunho.importar');
+            Route::put('rascunho/publicar', [LouosDraftController::class, 'publish'])->name('rascunho.publicar');
+            Route::delete('rascunho', [LouosDraftController::class, 'discard'])->name('rascunho.descartar');
+            Route::get('modelo-csv', [LouosDraftController::class, 'modeloCsv'])->name('modelo-csv');
 
             // Sandbox de parametrização (HU-143): simular o impacto de um rascunho
             // contra cenários reais antes de publicar por quatro olhos. Simular e
