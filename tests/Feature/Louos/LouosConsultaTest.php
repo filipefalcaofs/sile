@@ -8,7 +8,7 @@ use App\Models\RuleVersion;
 use App\Models\User;
 use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class LouosConsultaTest extends TestCase
 {
-    use LazilyRefreshDatabase;
+    use RefreshDatabase;
 
     protected function setUp(): void
     {
