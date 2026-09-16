@@ -273,7 +273,7 @@ final class LouosDraftService
      *
      * @return array<string, mixed> relatório do import service
      */
-    public function importarCsv(RuleVersion $draft, string $csvPath): array
+    public function importarCsv(RuleVersion $draft, string $csvPath, ?string $nomeOriginal = null): array
     {
         $this->assertDraft($draft);
 
@@ -292,7 +292,7 @@ final class LouosDraftService
             logName: 'louos',
             event: 'rascunho-importacao',
             description: "Importação CSV no rascunho do domínio {$domain->label()}",
-            properties: array_merge($relatorio, ['arquivo' => basename($csvPath)]),
+            properties: array_merge($relatorio, ['arquivo' => $nomeOriginal ?? basename($csvPath)]),
             subject: $draft,
         );
 

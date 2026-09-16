@@ -189,7 +189,7 @@ class LouosDraftController extends Controller
         $pathAbsoluto = Storage::disk('local')->path((string) $caminho);
 
         try {
-            $relatorio = $this->service->importarCsv($draft, $pathAbsoluto);
+            $relatorio = $this->service->importarCsv($draft, $pathAbsoluto, $nomeOriginal);
         } finally {
             Storage::disk('local')->delete((string) $caminho);
         }
