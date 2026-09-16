@@ -15,6 +15,7 @@ use App\Services\Louos\LouosDraftService;
 use Database\Seeders\LouosQuadro7Seeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 /**
@@ -295,6 +296,9 @@ class LouosDraftServiceTest extends TestCase
             LouosQuadro7Faixa::query()->where('rule_version_id', $novaVigente->id)->count(),
         );
         $this->assertDatabaseMissing('louos_quadro7_faixas', ['id' => $faixaExcluida->id]);
+
+        // Auditoria registra o evento de publicação
+        $this->assertDatabaseHas('activity_log', ['log_name' => 'louos', 'event' => 'rascunho-publicado']);
     }
 
     public function test_descartar_remove_rascunho_e_preserva_vigente(): void
@@ -340,7 +344,7 @@ class LouosDraftServiceTest extends TestCase
         file_put_contents($tmpFile, $csv);
 
         try {
-            $relatorio = $this->service()->importarCsv($draft, $tmpFile);
+            $relatorio = $this->service()->importarCsv($draft, $tmpFile, 'planilha-quadro7.csv');
 
             $this->assertSame(2, $relatorio['importados']);
             $this->assertCount(1, $relatorio['rejeitados']);
@@ -354,6 +358,16 @@ class LouosDraftServiceTest extends TestCase
             // Vigente intacta: não tem CNAE 9999999 (CNAE sintético)
             $this->assertDatabaseMissing('louos_quadro7_faixas', ['rule_version_id' => $vigente->id, 'cnae_code' => '9999999']);
             $this->assertSame($contagemVigente, LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count());
+
+            // Auditoria registra o evento com o nome original do arquivo
+            $this->assertDatabaseHas('activity_log', ['log_name' => 'louos', 'event' => 'rascunho-importacao']);
+
+            $activity = Activity::query()
+                ->where('log_name', 'louos')
+                ->where('event', 'rascunho-importacao')
+                ->latest()
+                ->first();
+            $this->assertSame('planilha-quadro7.csv', $activity->properties['arquivo']);
         } finally {
             @unlink($tmpFile);
         }
