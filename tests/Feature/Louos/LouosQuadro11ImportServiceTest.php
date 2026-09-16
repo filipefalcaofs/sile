@@ -136,11 +136,14 @@ class LouosQuadro11ImportServiceTest extends TestCase
             'version' => 'teste-cabecalho-antigo',
         ]);
 
-        $this->expectException(RuntimeException::class);
-
-        app(LouosQuadro11ImportService::class)->import($version, $path);
-
-        File::delete($path);
+        try {
+            app(LouosQuadro11ImportService::class)->import($version, $path);
+            $this->fail('Esperava RuntimeException para o cabeçalho antigo.');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('Cabeçalho inesperado', $e->getMessage());
+        } finally {
+            File::delete($path);
+        }
     }
 
     public function test_seeder_publica_apenas_versao_do_11a(): void
