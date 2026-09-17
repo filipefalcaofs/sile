@@ -384,7 +384,7 @@ function valorOuTraco(valor: string | null | undefined): string {
     return valor && valor.trim() !== '' ? valor : '—';
 }
 
-/** Campos da certidão IPTU que o usuário marcou como destaque (design 2026-07-22, seção 4.1). */
+/** Campos da certidão cadastral que o usuário marcou como destaque (design 2026-07-22, seção 4.1). */
 const CAMPOS_IPTU_MARCADOS = [
     'inscricao',
     'endereco',
@@ -437,14 +437,14 @@ const LABELS_CADASTRO_IMOBILIARIO: Record<string, string> = {
     cpf_cnpj: 'CPF/CNPJ',
     numero_porta: 'Nº de Porta',
     area_terreno_m2: 'Área Terreno (m²)',
-    valor_venal_iptu: 'Valor Venal IPTU',
+    valor_venal_iptu: 'Valor Venal',
     logradouro_tributario: 'Logradouro Tributário',
-    situacao_fiscal: 'Situação Fiscal (IPTU)',
+    situacao_fiscal: 'Situação Fiscal',
     data_emissao_certidao: 'Data de Emissão da Certidão',
 };
 
 /**
- * Campo da certidão IPTU: só leitura, com destaque acessível (fundo âmbar +
+ * Campo da certidão cadastral: só leitura, com destaque acessível (fundo âmbar +
  * selo textual "Destacado" — nunca só cor) para os campos marcados pelo
  * usuário (design 2026-07-22, seção 4.1).
  */
@@ -471,7 +471,7 @@ function CampoCadastroImobiliario({ chave, valor, marcado }: { chave: string; va
 }
 
 /**
- * Bloco Cadastro Imobiliário (IPTU) — preenche o espaço em branco do legado ao
+ * Bloco Cadastro Imobiliário — preenche o espaço em branco do legado ao
  * lado da Localização (design 2026-07-22). Só leitura; degrada honestamente
  * quando a integração (HU-106) está indisponível, a inscrição não é
  * encontrada ou o processo não informa inscrição — nunca certidão simulada.
@@ -479,7 +479,7 @@ function CampoCadastroImobiliario({ chave, valor, marcado }: { chave: string; va
 function CadastroImobiliarioPanel({ cadastro }: { cadastro: CadastroImobiliario }) {
     return (
         <div className="mt-6 border-t border-gray-100 pt-6 dark:border-gray-800">
-            <h4 className="text-theme-sm font-medium text-gray-800 dark:text-white/90">Cadastro Imobiliário (IPTU)</h4>
+            <h4 className="text-theme-sm font-medium text-gray-800 dark:text-white/90">Cadastro Imobiliário</h4>
             <p className="mt-1 text-theme-xs text-gray-400 dark:text-gray-500">
                 Certidão de Dados Cadastrais (SEFAZ) — inscrição {valorOuTraco(cadastro.inscricao)}
                 {cadastro.source && ` · fonte: ${cadastro.source}`}
@@ -1212,7 +1212,7 @@ export default function FichaAnaliseShow({
                 )}
 
                 {/* Topo no padrão legado SAPS (design 2026-07-22): Localização + Cadastro
-                    Imobiliário (IPTU) à esquerda, Polígono à direita, e a faixa Dados
+                    Imobiliário à esquerda, Polígono à direita, e a faixa Dados
                     do TVL abaixo, antes das demais seções da ficha. */}
                 <div className="grid gap-6 lg:grid-cols-2">
                     <Card>

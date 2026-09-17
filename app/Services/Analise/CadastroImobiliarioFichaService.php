@@ -53,7 +53,7 @@ class CadastroImobiliarioFichaService
         $campos = $result->cadastro ?? PropertyCadastroCampos::vazios();
 
         // Se o provider devolveu coordenada sem campos tipados, ainda é "disponivel"
-        // geograficamente, mas a certidão fica vazia (honesto — não inventa IPTU).
+        // geograficamente, mas a certidão fica vazia (honesto — não inventa cadastro).
         return [
             'status' => 'disponivel',
             'mensagem' => null,

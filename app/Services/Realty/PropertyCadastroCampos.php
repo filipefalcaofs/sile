@@ -2,7 +2,7 @@
 
 namespace App\Services\Realty;
 
-/** Campos tipados da certidão / Cadastro Imobiliário (IPTU) — só leitura na ficha. */
+/** Campos tipados da certidão / Cadastro Imobiliário — só leitura na ficha. */
 final readonly class PropertyCadastroCampos
 {
     public function __construct(
