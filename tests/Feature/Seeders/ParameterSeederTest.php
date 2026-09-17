@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(113, Parameter::query()->count());
+        $this->assertSame(116, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -219,6 +219,30 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('features', $cadastroToggle->group);
         $this->assertSame('boolean', $cadastroToggle->type);
         $this->assertSame('1', $cadastroToggle->default_value);
+
+        $cadastroToggleAmbiente = Parameter::query()->where('key', 'integrations.inscricao_imobiliaria.em_producao')->first();
+
+        $this->assertNotNull($cadastroToggleAmbiente);
+        $this->assertSame('integracoes', $cadastroToggleAmbiente->group);
+        $this->assertSame('boolean', $cadastroToggleAmbiente->type);
+        $this->assertSame('1', $cadastroToggleAmbiente->default_value);
+        $this->assertTrue((bool) $cadastroToggleAmbiente->typedValue());
+
+        $cadastroHomolog = Parameter::query()->where('key', 'integrations.inscricao_imobiliaria.url_homologacao')->first();
+
+        $this->assertNotNull($cadastroHomolog);
+        $this->assertSame(
+            'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+            $cadastroHomolog->default_value,
+        );
+
+        $cadastroProducao = Parameter::query()->where('key', 'integrations.inscricao_imobiliaria.url_producao')->first();
+
+        $this->assertNotNull($cadastroProducao);
+        $this->assertSame(
+            'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+            $cadastroProducao->default_value,
+        );
 
         $cadastroUrl = Parameter::query()->where('key', 'integrations.inscricao_imobiliaria.base_url')->first();
 
@@ -905,6 +929,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(113, Parameter::query()->count());
+        $this->assertSame(116, Parameter::query()->count());
     }
 }

@@ -223,6 +223,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('manter-parametros'),
                 },
                 {
+                    name: 'API de inscrição imobiliária',
+                    href: '/gestao/config-inscricao-imobiliaria',
+                    icon: <PlugInIcon />,
+                    visible: auth.permissions.includes('manter-parametros'),
+                },
+                {
                     name: 'Servidores de e-mail',
                     href: '/gestao/config-email',
                     icon: <MailIcon />,

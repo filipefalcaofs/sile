@@ -24,6 +24,7 @@ use App\Http\Controllers\Gestao\ExportacaoController;
 use App\Http\Controllers\Gestao\ForgotPasswordController;
 use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\HolidayController;
+use App\Http\Controllers\Gestao\InscricaoImobiliariaIntegrationController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
 use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\LouosController;
@@ -265,6 +266,9 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('config-regin', [ReginIntegrationController::class, 'edit'])->name('config-regin.edit');
             Route::put('config-regin', [ReginIntegrationController::class, 'update'])->name('config-regin.update');
             Route::post('config-regin/testar', [ReginIntegrationController::class, 'test'])->name('config-regin.testar');
+            Route::get('config-inscricao-imobiliaria', [InscricaoImobiliariaIntegrationController::class, 'edit'])->name('config-inscricao-imobiliaria.edit');
+            Route::put('config-inscricao-imobiliaria', [InscricaoImobiliariaIntegrationController::class, 'update'])->name('config-inscricao-imobiliaria.update');
+            Route::post('config-inscricao-imobiliaria/testar', [InscricaoImobiliariaIntegrationController::class, 'test'])->name('config-inscricao-imobiliaria.testar');
         });
 
         // Território (HU-029+): consulta territorial, geocodificação e validação

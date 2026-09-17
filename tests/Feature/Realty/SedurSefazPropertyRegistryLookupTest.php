@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Realty;
 
+use App\Models\Parameter;
 use App\Services\Realty\PropertyNotFoundException;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryUnavailableException;
@@ -106,6 +107,33 @@ class SedurSefazPropertyRegistryLookupTest extends TestCase
         }
 
         Http::assertSentCount(3);
+    }
+
+    public function test_interruptor_de_homologacao_consulta_a_url_ativa(): void
+    {
+        Parameter::factory()->create([
+            'key' => 'integrations.inscricao_imobiliaria.em_producao',
+            'group' => 'integracoes',
+            'type' => 'boolean',
+            'value' => '0',
+            'default_value' => '0',
+        ]);
+        Parameter::factory()->create([
+            'key' => 'integrations.inscricao_imobiliaria.url_homologacao',
+            'group' => 'integracoes',
+            'type' => 'string',
+            'value' => 'https://api.sedur.local/hml/inscricao-imobiliaria',
+            'default_value' => 'https://api.sedur.local/hml/inscricao-imobiliaria',
+        ]);
+
+        Http::fake([
+            'https://api.sedur.local/hml/inscricao-imobiliaria/0010010010' => Http::response($this->fixtureSucesso(), 200),
+        ]);
+
+        $result = app(PropertyRegistryLookup::class)->resolve('0010010010');
+
+        $this->assertSame('0010010010', $result->inscricao);
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.sedur.local/hml/inscricao-imobiliaria/0010010010');
     }
 
     public function test_toggle_desligado_nao_chama_a_api(): void

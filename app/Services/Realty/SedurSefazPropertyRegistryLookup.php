@@ -15,6 +15,8 @@ use Throwable;
  */
 class SedurSefazPropertyRegistryLookup implements PropertyRegistryLookup
 {
+    public function __construct(private InscricaoImobiliariaIntegrationSettings $settings) {}
+
     public function resolve(string $inscricao): PropertyRegistryResult
     {
         if (! Settings::enabled('cadastro_imobiliario')) {
@@ -27,10 +29,7 @@ class SedurSefazPropertyRegistryLookup implements PropertyRegistryLookup
             throw new PropertyNotFoundException($inscricao);
         }
 
-        $baseUrl = rtrim((string) Settings::get(
-            'integrations.inscricao_imobiliaria.base_url',
-            config('sile.integrations.inscricao_imobiliaria.base_url'),
-        ), '/');
+        $baseUrl = $this->settings->baseUrl();
 
         $timeout = (int) config('sile.integrations.inscricao_imobiliaria.timeout', 12);
         $retries = (int) config('sile.integrations.inscricao_imobiliaria.retries', 3);

@@ -261,7 +261,11 @@ return [
             'cache_ttl' => 86400,
         ],
         'inscricao_imobiliaria' => [
+            'em_producao' => true,
+            'url_homologacao' => 'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+            'url_producao' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
             'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+            'inscricao_teste' => '0000000000',
             'timeout' => 12,
             'retries' => 3,
             'backoff_ms' => 500,

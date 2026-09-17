@@ -36,6 +36,7 @@ const DESTINOS: DestinoComando[] = [
     { label: 'Saturação locacional', grupo: 'Relatórios', href: '/gestao/relatorios/saturacao', permissao: 'consultar-relatorios' },
     { label: 'Feriados', grupo: 'Relatórios', href: '/gestao/feriados', permissao: 'manter-parametros' },
     { label: 'API REGIN', grupo: 'Administração', href: '/gestao/config-regin', permissao: 'manter-parametros' },
+    { label: 'API de inscrição imobiliária', grupo: 'Administração', href: '/gestao/config-inscricao-imobiliaria', permissao: 'manter-parametros' },
     { label: 'Servidores de e-mail', grupo: 'Administração', href: '/gestao/config-email', permissao: 'manter-config-email' },
     { label: 'Configuração de IA', grupo: 'Administração', href: '/gestao/config-ia', permissao: 'manter-config-ia' },
 ];
