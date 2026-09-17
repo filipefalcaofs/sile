@@ -32,6 +32,12 @@ class RiscoSimularProtocoloCommand extends Command
         $this->line($relatorio['aviso']);
         $this->newLine();
         $this->line("Protocolo: {$relatorio['rotulo']} ({$relatorio['processo']})");
+        if (! empty($relatorio['protocol_number'])) {
+            $this->line("Processo criado: {$relatorio['protocol_number']} · {$relatorio['status']}");
+            if (! empty($relatorio['tvl'])) {
+                $this->line("TVL: {$relatorio['tvl']}");
+            }
+        }
         $this->line('Tipo de imóvel: '.($relatorio['tipo_imovel'] ?? 'ausente'));
         $this->line('Código normalizado: '.($relatorio['tipo_imovel_normalized'] ?? 'sem código'));
         $this->line('Reconhecimento: '.$relatorio['tipo_imovel_reconhecimento']);

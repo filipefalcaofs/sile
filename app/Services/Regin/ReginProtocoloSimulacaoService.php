@@ -4,26 +4,58 @@ namespace App\Services\Regin;
 
 use App\Enums\Fluxo;
 use App\Enums\RiscoMunicipal;
+use App\Enums\ViabilityRequestOrigin;
+use App\Models\Cnae;
+use App\Models\Company;
 use App\Models\ReginSimulacaoExecucao;
+use App\Models\User;
+use App\Models\ViabilityRequest;
+use App\Models\ViabilityServiceType;
+use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Risco\RiscoClassificationService;
 use App\Services\Risco\RiscoInput;
 use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
+use App\Services\Solicitacao\DocumentRequirementResolver;
+use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Support\Audit\AuditService;
 
 /**
  * Aplica o motor REAL sobre um protocolo SEDUR, com tipo de imóvel e área
- * tratados como se tivessem chegado do REGIN. Não chama o REGIN — a origem
- * no relatório é sempre simulacao_protocolo.
+ * tratados como se tivessem chegado do REGIN. Cria o processo real e segue
+ * o motor: Alto → análise; Baixo/Médio → expresso (TVL). Não chama o REGIN.
  */
 class ReginProtocoloSimulacaoService
 {
-    public const AVISO = 'Dado aplicado como simulação: tipo de imóvel e área como se tivessem chegado do REGIN. A integração REGIN continua indisponível.';
+    public const AVISO = 'Dado aplicado como simulação: tipo de imóvel e área como se tivessem chegado do REGIN. O processo é criado de verdade. A integração REGIN continua indisponível.';
+
+    public const CONTINGENCIA = 'simulacao_protocolo';
+
+    /**
+     * Polígono de homologação em Salvador — a base GIS oficial ainda não
+     * participa desta simulação; o motor de risco é que decide o encaminhamento.
+     *
+     * @var array{type: string, coordinates: list<list<list<float>>>}
+     */
+    private const POLIGONO_HOMOLOGACAO = [
+        'type' => 'Polygon',
+        'coordinates' => [[
+            [-38.5108, -12.9711],
+            [-38.5108, -12.9709],
+            [-38.5106, -12.9709],
+            [-38.5106, -12.9711],
+            [-38.5108, -12.9711],
+        ]],
+    ];
 
     public function __construct(
         private ReginProtocoloCatalog $catalogo,
         private RiscoClassificationService $risco,
         private AuditService $audit,
+        private ProtocolarSolicitacaoService $protocolar,
+        private FluxoExpressoService $expresso,
+        private ReginTipoImovelApplier $tipoImovel,
+        private DocumentRequirementResolver $documentos,
     ) {}
 
     /**
@@ -95,7 +127,12 @@ class ReginProtocoloSimulacaoService
             'consolidado' => $this->consolidar($porCnae),
         ];
 
-        $this->persistir($relatorio);
+        $processo = $this->processoExistente($relatorio['codigo'], (string) $protocolo['processo'])
+            ?? $this->criarProcesso($protocolo, $relatorio);
+
+        $relatorio = $this->anexarProcesso($relatorio, $processo);
+
+        $this->persistir($relatorio, $processo->id);
 
         return $relatorio;
     }
@@ -107,14 +144,12 @@ class ReginProtocoloSimulacaoService
      */
     public function ultima(): ?array
     {
-        $execucao = ReginSimulacaoExecucao::query()->latest('updated_at')->first();
+        $execucao = ReginSimulacaoExecucao::query()->latest('id')->first();
 
         return is_array($execucao?->relatorio) ? $execucao->relatorio : null;
     }
 
     /**
-     * Só o que foi simulado — nunca processo real.
-     *
      * @return list<array<string, mixed>>
      */
     public function execucoes(): array
@@ -129,6 +164,10 @@ class ReginProtocoloSimulacaoService
                     'codigo' => $execucao->codigo,
                     'rotulo' => $relatorio['rotulo'] ?? $execucao->codigo,
                     'processo' => $relatorio['processo'] ?? null,
+                    'processo_id' => $relatorio['processo_id'] ?? $execucao->viability_request_id,
+                    'protocol_number' => $relatorio['protocol_number'] ?? null,
+                    'status' => $relatorio['status'] ?? null,
+                    'tvl' => $relatorio['tvl'] ?? null,
                     'consolidado' => $relatorio['consolidado'] ?? null,
                     'atualizado_em' => $execucao->updated_at?->toIso8601String(),
                 ];
@@ -138,12 +177,18 @@ class ReginProtocoloSimulacaoService
 
     public function apagar(string $codigo): void
     {
-        ReginSimulacaoExecucao::query()->where('codigo', $codigo)->delete();
+        $execucao = ReginSimulacaoExecucao::query()->where('codigo', $codigo)->first();
+
+        if ($execucao?->viability_request_id) {
+            $this->apagarProcesso((int) $execucao->viability_request_id);
+        }
+
+        $execucao?->delete();
 
         $this->audit->log(
             'risco',
             'simulacao-apagada',
-            'Resultado da simulação REGIN apagado para refazer',
+            'Resultado da simulação REGIN e o processo criado foram apagados para refazer',
             ['codigo' => $codigo],
         );
     }
@@ -151,15 +196,210 @@ class ReginProtocoloSimulacaoService
     /**
      * @param  array<string, mixed>  $relatorio
      */
-    private function persistir(array $relatorio): void
+    private function persistir(array $relatorio, int $processoId): void
     {
-        ReginSimulacaoExecucao::query()->updateOrCreate(
-            ['codigo' => $relatorio['codigo']],
+        ReginSimulacaoExecucao::query()->where('codigo', $relatorio['codigo'])->delete();
+
+        ReginSimulacaoExecucao::query()->create([
+            'codigo' => $relatorio['codigo'],
+            'relatorio' => $relatorio,
+            'user_id' => auth('gestao')->id(),
+            'viability_request_id' => $processoId,
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $protocolo
+     * @param  array<string, mixed>  $relatorio
+     */
+    private function criarProcesso(array $protocolo, array $relatorio): ViabilityRequest
+    {
+        $ator = $this->ator();
+        $sedeVirtual = $this->querSedeVirtual($protocolo);
+
+        $solicitacao = ViabilityRequest::query()->create([
+            'origin' => ViabilityRequestOrigin::Regin,
+            'service_type_id' => $this->tipoServico()->id,
+            'company_id' => $this->empresaPlaceholder($protocolo)->id,
+            'requester_user_id' => $ator->id,
+            'created_by_user_id' => $ator->id,
+            'used_area_m2' => $relatorio['area_utilizada'] ?? 1.0,
+            'address_street' => 'Simulação REGIN',
+            'address_number' => 's/n',
+            'address_neighborhood' => (string) ($protocolo['zona'] ?? 'Salvador'),
+            'address_zip' => '40000000',
+            'property_polygon_geojson' => self::POLIGONO_HOMOLOGACAO,
+            'is_virtual_office' => $sedeVirtual,
+            'wants_virtual_office_hq' => $sedeVirtual,
+            'simulation_snapshot' => $relatorio,
+            'simulation_resultado' => $relatorio['consolidado']['fluxo'] ?? null,
+            'simulated_at' => now(),
+            'contingency_reason' => self::CONTINGENCIA,
+            'external_reference' => (string) $protocolo['processo'],
+        ]);
+
+        foreach (array_values($protocolo['atividades'] ?? []) as $indice => $atividade) {
+            $cnae = $this->cnaeDoCatalogo((string) ($atividade['cnae'] ?? ''));
+            $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => $indice === 0]);
+        }
+
+        $this->tipoImovel->apply(
+            $solicitacao,
+            isset($protocolo['tipo_imovel']) ? (string) $protocolo['tipo_imovel'] : null,
+        );
+
+        $this->anexarDocumentosObrigatorios($solicitacao, $ator);
+        $this->protocolar->protocol($solicitacao->fresh() ?? $solicitacao, $ator);
+        $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $ator);
+
+        return $solicitacao->fresh() ?? $solicitacao;
+    }
+
+    private function processoExistente(string $codigo, string $referencia): ?ViabilityRequest
+    {
+        $execucao = ReginSimulacaoExecucao::query()->where('codigo', $codigo)->first();
+
+        if ($execucao?->viability_request_id) {
+            $ligado = ViabilityRequest::query()->find($execucao->viability_request_id);
+
+            if ($ligado !== null) {
+                return $ligado;
+            }
+        }
+
+        return ViabilityRequest::query()
+            ->where('origin', ViabilityRequestOrigin::Regin)
+            ->where('contingency_reason', self::CONTINGENCIA)
+            ->where('external_reference', $referencia)
+            ->first();
+    }
+
+    /**
+     * @param  array<string, mixed>  $relatorio
+     * @return array<string, mixed>
+     */
+    private function anexarProcesso(array $relatorio, ViabilityRequest $processo): array
+    {
+        $processo->loadMissing('decision');
+
+        $relatorio['processo_id'] = $processo->id;
+        $relatorio['protocol_number'] = $processo->protocol_number;
+        $relatorio['status'] = $processo->status->value;
+        $relatorio['tvl'] = $processo->decision?->tvl_product_number;
+        $relatorio['processo_url'] = route('gestao.processos.show', $processo, absolute: false);
+
+        return $relatorio;
+    }
+
+    /**
+     * @param  array<string, mixed>  $protocolo
+     */
+    private function empresaPlaceholder(array $protocolo): Company
+    {
+        return Company::factory()->create([
+            'legal_name' => $protocolo['rotulo'].' (simulação REGIN)',
+            'trade_name' => (string) $protocolo['processo'],
+        ]);
+    }
+
+    private function tipoServico(): ViabilityServiceType
+    {
+        return ViabilityServiceType::query()->firstOrCreate(
+            ['code' => 'tvl'],
             [
-                'relatorio' => $relatorio,
-                'user_id' => auth('gestao')->id(),
+                'name' => 'Termo de Viabilidade de Localização',
+                'flow_hint' => 'expresso',
+                'active' => true,
             ],
         );
+    }
+
+    private function cnaeDoCatalogo(string $formatado): Cnae
+    {
+        $code = (string) preg_replace('/\D/', '', $formatado);
+
+        return Cnae::query()->firstOrCreate(
+            ['code' => $code],
+            [
+                'description' => "CNAE {$formatado} (simulação REGIN)",
+                'section_code' => 'S',
+                'section_description' => 'Simulação REGIN',
+                'division_code' => substr($code, 0, 2) ?: '00',
+                'division_description' => 'Simulação REGIN',
+                'group_code' => substr($code, 0, 3) ?: '000',
+                'group_description' => 'Simulação REGIN',
+                'class_code' => substr($code, 0, 5) ?: '00000',
+                'class_description' => 'Simulação REGIN',
+                'active' => true,
+            ],
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $protocolo
+     */
+    private function querSedeVirtual(array $protocolo): bool
+    {
+        foreach ($protocolo['atividades'] ?? [] as $atividade) {
+            foreach ($atividade['perguntas'] ?? [] as $pergunta) {
+                if (($pergunta['codigo'] ?? '') === 'P4' && ($pergunta['valor'] ?? false) === true) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function anexarDocumentosObrigatorios(ViabilityRequest $solicitacao, User $ator): void
+    {
+        foreach ($this->documentos->missing($solicitacao) as $requisito) {
+            $solicitacao->documents()->create([
+                'requirement_id' => $requisito->id,
+                'disk' => 'local',
+                'path' => "simulacao-regin/{$solicitacao->id}/{$requisito->code}.pdf",
+                'original_name' => $requisito->code.'.pdf',
+                'mime_type' => 'application/pdf',
+                'size' => 128,
+                'sha256' => hash('sha256', "simulacao-regin-{$solicitacao->id}-{$requisito->id}"),
+                'uploaded_by_user_id' => $ator->id,
+            ]);
+        }
+    }
+
+    private function ator(): User
+    {
+        $autenticado = auth('gestao')->user();
+
+        if ($autenticado instanceof User) {
+            return $autenticado;
+        }
+
+        $existente = User::query()->orderBy('id')->first();
+
+        if ($existente !== null) {
+            return $existente;
+        }
+
+        return User::factory()->administrador()->create();
+    }
+
+    private function apagarProcesso(int $id): void
+    {
+        $processo = ViabilityRequest::query()->find($id);
+
+        if ($processo === null) {
+            return;
+        }
+
+        $processo->expressoQuedas()->delete();
+        $processo->analysisRecords()->delete();
+        $processo->decision()->delete();
+        $processo->documents()->delete();
+        $processo->analysisStatusTransitions()->delete();
+        $processo->transitions()->delete();
+        $processo->cnaes()->detach();
+        $processo->delete();
     }
 
     /**

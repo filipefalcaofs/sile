@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import { InfoIcon } from '@/components/icons';
@@ -94,12 +94,21 @@ interface Relatorio {
         fluxo: string;
         motivo: string;
     };
+    processo_id?: number | null;
+    protocol_number?: string | null;
+    status?: string | null;
+    tvl?: string | null;
+    processo_url?: string | null;
 }
 
 interface ExecucaoSalva {
     codigo: string;
     rotulo: string;
     processo: string | null;
+    processo_id?: number | null;
+    protocol_number?: string | null;
+    status?: string | null;
+    tvl?: string | null;
     consolidado: Relatorio['consolidado'] | null;
     atualizado_em: string | null;
 }
@@ -123,6 +132,23 @@ function reconhecimentoLabel(valor: string): string {
     }
 
     return 'Desconhecido — iria à análise';
+}
+
+function statusLabel(status?: string | null): string {
+    if (status === 'deferida') {
+        return 'Deferida';
+    }
+    if (status === 'em_analise') {
+        return 'Em análise';
+    }
+    if (status === 'indeferida') {
+        return 'Indeferida';
+    }
+    if (status === 'protocolada') {
+        return 'Protocolada';
+    }
+
+    return status ?? '—';
 }
 
 function sanitarioLabel(nivel?: string | null): string {
@@ -234,7 +260,7 @@ export default function SimulacaoRegin({ protocolos, aviso, relatorio = null, ex
                 <Card>
                     <CardHeader
                         title="Protocolos de validação"
-                        description="O motor classifica com tipo de imóvel e área como se tivessem chegado do REGIN."
+                        description="O motor classifica e cria o processo: Alto vai para análise; Baixo e Médio seguem o expresso."
                     />
                     <CardContent>
                         <div className="mb-5 flex items-start gap-3 rounded-xl border border-blue-light-200 bg-blue-light-50 p-4 dark:border-blue-light-500/30 dark:bg-blue-light-500/15">
@@ -256,7 +282,7 @@ export default function SimulacaoRegin({ protocolos, aviso, relatorio = null, ex
                         <Card>
                             <CardHeader
                                 title={`O que o motor rodou — ${relatorio.rotulo}`}
-                                description={`${relatorio.processo}${relatorio.servico ? ` · ${relatorio.servico}` : ''}. Só esta simulação — não é processo real nem TVL.`}
+                                description={`${relatorio.processo}${relatorio.servico ? ` · ${relatorio.servico}` : ''}. O processo abaixo é real.`}
                                 actions={
                                     <Button
                                         type="button"
@@ -332,6 +358,28 @@ export default function SimulacaoRegin({ protocolos, aviso, relatorio = null, ex
                                             {relatorio.consolidado.motivo}
                                         </p>
                                     </PassoMotor>
+
+                                    <PassoMotor
+                                        numero={4 + relatorio.por_cnae.length}
+                                        titulo="Processo criado"
+                                    >
+                                        <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                                            <Dado label="Protocolo">{relatorio.protocol_number ?? '—'}</Dado>
+                                            <Dado label="Situação">{statusLabel(relatorio.status)}</Dado>
+                                            <Dado label="TVL">{relatorio.tvl ?? '—'}</Dado>
+                                            <Dado label="Número SEDUR">{relatorio.processo}</Dado>
+                                        </dl>
+                                        {relatorio.processo_url && (
+                                            <p className="mt-3">
+                                                <Link
+                                                    href={relatorio.processo_url}
+                                                    className="text-theme-sm font-medium text-brand-500 hover:underline"
+                                                >
+                                                    Abrir o processo
+                                                </Link>
+                                            </p>
+                                        )}
+                                    </PassoMotor>
                                 </ol>
                             </CardContent>
                         </Card>
@@ -342,7 +390,7 @@ export default function SimulacaoRegin({ protocolos, aviso, relatorio = null, ex
                     <Card>
                         <CardHeader
                             title="Simulações feitas"
-                            description="Apenas o que você rodou nesta tela. Apague para refazer o mesmo protocolo."
+                            description="Cada item é um processo real. Apague para excluir o processo e poder simular de novo."
                         />
                         <CardContent>
                             <ul className="space-y-3">
@@ -354,7 +402,9 @@ export default function SimulacaoRegin({ protocolos, aviso, relatorio = null, ex
                                         <div>
                                             <p className="font-medium text-gray-800 dark:text-white/90">{execucao.rotulo}</p>
                                             <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                                                {execucao.processo ?? execucao.codigo}
+                                                {execucao.protocol_number ?? execucao.processo ?? execucao.codigo}
+                                                {execucao.status ? ` · ${statusLabel(execucao.status)}` : ''}
+                                                {execucao.tvl ? ` · ${execucao.tvl}` : ''}
                                                 {execucao.consolidado?.nivel_label
                                                     ? ` · ${execucao.consolidado.nivel_label} → ${execucao.consolidado.fluxo}`
                                                     : ''}
@@ -396,8 +446,8 @@ export default function SimulacaoRegin({ protocolos, aviso, relatorio = null, ex
                         });
                     }
                 }}
-                title="Apagar resultado da simulação?"
-                description="O relatório some. O motor não muda — você pode simular de novo o mesmo protocolo."
+                title="Apagar resultado e o processo?"
+                description="O relatório e o processo criado somem. O motor não muda — você pode simular de novo o mesmo protocolo."
                 confirmLabel="Apagar"
                 variant="danger"
             />

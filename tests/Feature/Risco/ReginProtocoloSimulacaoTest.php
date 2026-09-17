@@ -3,7 +3,10 @@
 namespace Tests\Feature\Risco;
 
 use App\Enums\TipoImovelReconhecimento;
+use App\Enums\ViabilityRequestOrigin;
+use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
+use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginProtocoloCatalog;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
 use Database\Seeders\RiscoMunicipalSeeder;
@@ -16,8 +19,10 @@ use Tests\TestCase;
 
 /**
  * Simulação de homologação: os protocolos SEDUR entram no motor REAL como se
- * o tipo de imóvel e a área tivessem chegado do REGIN. A origem é rotulada
- * como simulação — a integração REGIN continua stub.
+ * o tipo de imóvel e a área tivessem chegado do REGIN. Cada simulação cria
+ * um processo real (Alto → análise; Baixo/Médio → expresso com TVL). A
+ * origem no relatório continua rotulada como simulação — a integração REGIN
+ * segue indisponível.
  */
 class ReginProtocoloSimulacaoTest extends TestCase
 {
@@ -33,6 +38,11 @@ class ReginProtocoloSimulacaoTest extends TestCase
             RiscoSanitarioSeeder::class,
             RiskTriggerSeeder::class,
         ]);
+
+        $this->actingAs(
+            User::factory()->administrador()->withAcceptedLgpdTerm()->create(),
+            'gestao',
+        );
     }
 
     public function test_catalogo_traz_os_dez_protocolos_da_pasta_de_validacao(): void
@@ -129,12 +139,20 @@ class ReginProtocoloSimulacaoTest extends TestCase
                 ->has('relatorio.por_cnae', 1)
                 ->where('relatorio.consolidado.cnae', '6202-3/00')
                 ->where('relatorio.consolidado.fluxo', 'expresso')
+                ->where('relatorio.status', 'deferida')
+                ->has('relatorio.protocol_number')
+                ->has('relatorio.processo_id')
+                ->has('relatorio.tvl')
                 ->has('relatorio.por_cnae.0.risco.municipal.nivel_label')
                 ->has('relatorio.por_cnae.0.risco.sanitario.status')
                 ->has('relatorio.por_cnae.0.risco.encaminhamento.motivo')
                 ->has('relatorio.por_cnae.0.risco.encaminhamento.dimensao_decisiva')
                 ->has('relatorio.por_cnae.0.risco.fundamentacao')
-                ->has('relatorio.por_cnae.0.risco.versoes'));
+                ->has('relatorio.por_cnae.0.risco.versoes')
+                ->where('relatorio.status', ViabilityRequestStatus::Deferida->value)
+                ->has('relatorio.processo_id')
+                ->has('relatorio.protocol_number')
+                ->has('relatorio.tvl'));
     }
 
     public function test_resultado_persiste_e_reaparece_depois_do_get(): void
@@ -176,9 +194,13 @@ class ReginProtocoloSimulacaoTest extends TestCase
 
         $this->actingAs($gestor, 'gestao')->post('/gestao/risco/simulacao-regin', ['codigo' => '43747']);
 
+        $processoId = ViabilityRequest::query()->value('id');
+
         $this->actingAs($gestor, 'gestao')
             ->delete('/gestao/risco/simulacao-regin/43747')
             ->assertRedirect(route('gestao.risco.simulacao-regin'));
+
+        $this->assertNull(ViabilityRequest::query()->find($processoId));
 
         $this->actingAs($gestor, 'gestao')
             ->get('/gestao/risco/simulacao-regin')
@@ -198,5 +220,65 @@ class ReginProtocoloSimulacaoTest extends TestCase
             ->expectsOutputToContain('simulação')
             ->expectsOutputToContain('conjunto')
             ->assertSuccessful();
+    }
+
+    public function test_simulacao_baixo_cria_processo_expresso_com_tvl(): void
+    {
+        $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('43747');
+
+        $this->assertNotNull($relatorio['processo_id']);
+        $this->assertMatchesRegularExpression('/^VIA-\d{4}-\d{6}$/', (string) $relatorio['protocol_number']);
+        $this->assertSame(ViabilityRequestStatus::Deferida->value, $relatorio['status']);
+        $this->assertNotEmpty($relatorio['tvl']);
+        $this->assertStringContainsString('/gestao/processos/', (string) $relatorio['processo_url']);
+
+        $processo = ViabilityRequest::query()->find($relatorio['processo_id']);
+
+        $this->assertNotNull($processo);
+        $this->assertSame(ViabilityRequestOrigin::Regin, $processo->origin);
+        $this->assertSame('5921000030-00043747/2026', $processo->external_reference);
+        $this->assertSame(ViabilityRequestStatus::Deferida, $processo->status);
+        $this->assertSame('simulacao_protocolo', $processo->contingency_reason);
+        $this->assertSame('expresso', $processo->simulation_resultado);
+        $this->assertSame($relatorio['tvl'], $processo->decision?->tvl_product_number);
+        $this->assertSame('6202300', $processo->primaryCnae()->value('code'));
+    }
+
+    public function test_simulacao_alto_encaminha_para_analise_sem_tvl(): void
+    {
+        $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('53514');
+
+        $this->assertNotNull($relatorio['processo_id']);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise->value, $relatorio['status']);
+        $this->assertNull($relatorio['tvl']);
+
+        $processo = ViabilityRequest::query()->find($relatorio['processo_id']);
+
+        $this->assertNotNull($processo);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->status);
+        $this->assertNull($processo->decision);
+        $this->assertTrue($processo->expressoQuedas()->exists());
+        $this->assertTrue($processo->analysisRecords()->exists());
+        $this->assertSame(5, $processo->cnaes()->count());
+    }
+
+    public function test_ressimular_nao_duplica_o_processo(): void
+    {
+        $primeiro = app(ReginProtocoloSimulacaoService::class)->simular('43747');
+        $segundo = app(ReginProtocoloSimulacaoService::class)->simular('43747');
+
+        $this->assertSame($primeiro['processo_id'], $segundo['processo_id']);
+        $this->assertSame($primeiro['protocol_number'], $segundo['protocol_number']);
+        $this->assertSame(1, ViabilityRequest::query()->where('external_reference', '5921000030-00043747/2026')->count());
+    }
+
+    public function test_apagar_remove_o_processo_criado_pela_simulacao(): void
+    {
+        $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('43747');
+        $processoId = $relatorio['processo_id'];
+
+        app(ReginProtocoloSimulacaoService::class)->apagar('43747');
+
+        $this->assertNull(ViabilityRequest::query()->find($processoId));
     }
 }
