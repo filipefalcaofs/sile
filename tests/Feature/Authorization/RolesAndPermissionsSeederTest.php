@@ -312,6 +312,32 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
     }
 
+    public function test_papeis_recebem_permissao_manter_tipos_imovel(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertSame(
+            'manter-tipos-imovel',
+            Permission::findByName('manter-tipos-imovel', 'web')->name,
+        );
+
+        // Administrador e gestor parametrizam os tipos de imóvel (espelha manter-tipos-servico).
+        foreach (['administrador', 'gestor'] as $role) {
+            $this->assertTrue(
+                Role::findByName($role, 'web')->hasPermissionTo('manter-tipos-imovel'),
+                "O papel {$role} deve ter manter-tipos-imovel.",
+            );
+        }
+
+        // Analista e cidadão NÃO recebem a permissão.
+        foreach (['analista', 'cidadao'] as $role) {
+            $this->assertFalse(
+                Role::findByName($role, 'web')->hasPermissionTo('manter-tipos-imovel'),
+                "O papel {$role} não deve ter manter-tipos-imovel.",
+            );
+        }
+    }
+
     public function test_papel_administrador_recebe_permissao_de_config_ia(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
@@ -340,7 +366,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(30, Permission::query()->count());
+        $this->assertSame(31, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void

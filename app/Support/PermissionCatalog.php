@@ -80,6 +80,12 @@ final class PermissionCatalog
                 'group' => 'Atendimento',
             ],
             [
+                'name' => 'manter-tipos-imovel',
+                'label' => 'Cadastrar tipos de imóvel',
+                'description' => 'Cria e edita os tipos de imóvel que dirigem a regra de roteamento do expresso.',
+                'group' => 'Atendimento',
+            ],
+            [
                 'name' => 'manter-requisitos-documentais',
                 'label' => 'Cadastrar requisitos documentais',
                 'description' => 'Define quais documentos cada tipo de serviço exige.',

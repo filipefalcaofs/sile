@@ -45,7 +45,7 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
 
         $this->assertSame(4, Role::query()->count());
-        // 30 permissões (HU-013): as 17 base (sem consultar-risco/manter-risco,
+        // 31 permissões (HU-013): as 17 base (sem consultar-risco/manter-risco,
         // consolidadas em consultar-cnaes/manter-cnaes) + as 5 da análise técnica
         // (analisar-processos, distribuir-processos, emitir-tvl,
         // encaminhar-malha-fina, manter-setores) + as 3 de auditoria e
@@ -53,8 +53,9 @@ class DatabaseSeederTest extends TestCase
         // + as 2 de relatórios (consultar-relatorios, relatorios.produtividade.nominal)
         // + a de configuração de e-mail (manter-config-email) + a de
         // configuração de IA (manter-config-ia — Fase 14 Onda 0) + a de envio
-        // manual à análise (enviar-tvl-analise — tela T06 EV).
-        $this->assertSame(30, Permission::query()->count());
+        // manual à análise (enviar-tvl-analise — tela T06 EV) + a de tipos de
+        // imóvel (manter-tipos-imovel — parametrização do motor REGIN).
+        $this->assertSame(31, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
         // 100 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
@@ -111,15 +112,15 @@ class DatabaseSeederTest extends TestCase
                 ->exists()
         );
 
-        // Quadros da LOUOS (Lei 9.148/2016): cada Quadro publica uma versão
-        // vigente própria; o Quadro 7 carrega as 40 faixas reais e a importação
-        // é auditada (RN-002). Quadros 10/11A modelados (carga oficial
-        // pendente SEDUR), mas já versionados. Quadro 11 não existe na lei.
+        // Quadros da LOUOS: cada Quadro publica uma versão vigente própria; o
+        // Quadro 7 cobre as 1.331 subclasses (planilha 20.08.26) e a importação
+        // é auditada (RN-002). Quadros 10/11A modelados no seed (carga oficial
+        // via CSV em database/data/louos/oficial/). Quadro 11 não existe na lei.
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro7)->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
         $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro11']);
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
-        $this->assertSame(40, LouosQuadro7Faixa::query()->count());
+        $this->assertSame(1971, LouosQuadro7Faixa::query()->count());
         $this->assertGreaterThan(0, LouosQuadro10Permissao::query()->count());
         $this->assertGreaterThan(0, LouosQuadro11CondicaoVia::query()->count());
         $this->assertTrue(
@@ -350,7 +351,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
         $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro11']);
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
-        $this->assertSame(40, LouosQuadro7Faixa::query()->count());
+        $this->assertSame(1971, LouosQuadro7Faixa::query()->count());
         // 3 empresas do cidadão (CompanySeeder) + 2 dedicadas do EP12
         // (AuditoriaDevSeeder: padrão de abuso e exemplos de decisão) = 5,
         // estáveis no re-seed (firstOrCreate por CNPJ).

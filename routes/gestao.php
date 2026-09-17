@@ -36,6 +36,7 @@ use App\Http\Controllers\Gestao\ProcessoBuscaController;
 use App\Http\Controllers\Gestao\ProcessoController;
 use App\Http\Controllers\Gestao\ProcessoDecisaoController;
 use App\Http\Controllers\Gestao\ProcessoPendenciaController;
+use App\Http\Controllers\Gestao\PropertyTypeController;
 use App\Http\Controllers\Gestao\ReginIntegrationController;
 use App\Http\Controllers\Gestao\ReginProtocoloSimulacaoController;
 use App\Http\Controllers\Gestao\RelatorioController;
@@ -287,6 +288,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
 
         Route::middleware('permission:manter-louos')->prefix('louos')->name('louos.')->group(function () {
             Route::put('publicar', [LouosController::class, 'publish'])->name('publicar');
+            Route::put('versoes/{versao}/ativar', [LouosController::class, 'activate'])->name('versoes.ativar');
 
             // CRUD do rascunho editável dos Quadros da LOUOS (HU-046): abrir/retomar,
             // inserir/alterar/excluir linha, importar CSV, publicar por quatro olhos,
@@ -333,6 +335,15 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [ViabilityServiceTypeController::class, 'store'])->name('store');
             Route::put('{serviceType}', [ViabilityServiceTypeController::class, 'update'])->name('update');
             Route::put('{serviceType}/ativacao', [ViabilityServiceTypeController::class, 'toggleActivation'])->name('ativacao.update');
+        });
+
+        // Tipos de imóvel reconhecidos do REGIN: drives_rule derruba o processo
+        // do expresso para análise — CRUD auditado atrás de permissão própria.
+        Route::middleware('permission:manter-tipos-imovel')->prefix('tipos-imovel')->name('tipos-imovel.')->group(function () {
+            Route::get('/', [PropertyTypeController::class, 'index'])->name('index');
+            Route::post('/', [PropertyTypeController::class, 'store'])->name('store');
+            Route::put('{propertyType}', [PropertyTypeController::class, 'update'])->name('update');
+            Route::put('{propertyType}/ativacao', [PropertyTypeController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
         // Servidores de e-mail administráveis (HU-014 / ConfigEmail): CRUD sob
