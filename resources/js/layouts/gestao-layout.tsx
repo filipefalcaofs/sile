@@ -100,6 +100,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('manter-tipos-servico'),
                 },
                 {
+                    name: 'Tipos de imóvel',
+                    href: '/gestao/tipos-imovel',
+                    icon: <TagIcon />,
+                    visible: auth.permissions.includes('manter-tipos-imovel'),
+                },
+                {
                     name: 'Quadros LOUOS',
                     href: '/gestao/louos',
                     icon: <FileIcon />,
