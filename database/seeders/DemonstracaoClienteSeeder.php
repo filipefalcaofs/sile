@@ -96,23 +96,13 @@ class DemonstracaoClienteSeeder extends Seeder
     ];
 
     /**
-     * Massa de demonstração em DIVERSAS SITUAÇÕES (dados fictícios, lógica REAL):
-     * rascunho, protocolada, cancelada, contingência, fluxo expresso (deferida
-     * com TVL sobre a zona fictícia), análise técnica (em análise, deferida com
-     * malha fina, em pendência), comunicação multicanal, auditoria/explicabilidade
-     * e massa de indicadores para os relatórios. Mesma ordem do DatabaseSeeder.
-     * Todos idempotentes e com gates internos (DemoMode / driver pgsql).
+     * Usuários e empresas de demonstração. Processos NÃO entram aqui: o
+     * container sile-seed roda a cada redeploy do Portainer e replantava a
+     * massa (Solicitacao/Expresso/Analise/…) depois de o analista apagar.
      */
-    private const SEEDERS_MASSA_DEMO = [
+    private const SEEDERS_USUARIOS_DEMO = [
         DevAdminSeeder::class,
         CompanySeeder::class,
-        SolicitacaoDevSeeder::class,
-        ZonaFicticiaDevSeeder::class,
-        ExpressoDevSeeder::class,
-        AnaliseDevSeeder::class,
-        ComunicacaoDevSeeder::class,
-        AuditoriaDevSeeder::class,
-        RelatoriosDevSeeder::class,
     ];
 
     public function run(): void
@@ -126,7 +116,7 @@ class DemonstracaoClienteSeeder extends Seeder
         $this->call(self::SEEDERS_HOMOLOGACAO);
         $this->seedPerfisValidacao();
         $this->seedUsuariosCliente();
-        $this->call(self::SEEDERS_MASSA_DEMO);
+        $this->call(self::SEEDERS_USUARIOS_DEMO);
         $this->rotacionarSenhasDev();
     }
 
@@ -146,7 +136,7 @@ class DemonstracaoClienteSeeder extends Seeder
             self::CLIENTE_GESTAO_EMAIL,
             'Validação SEDUR',
             '70698543032',
-            'validacao-fase-completa',
+            'administrador',
         );
 
         $this->seedUsuario(
@@ -158,7 +148,7 @@ class DemonstracaoClienteSeeder extends Seeder
 
         $this->command?->info('Gestão (validação): '.self::CLIENTE_GESTAO_EMAIL.' / '.self::DEMO_PASSWORD);
         $this->command?->info('Portal (requerente): '.self::CLIENTE_PORTAL_EMAIL.' / '.self::DEMO_PASSWORD);
-        $this->command?->info('Perfil atual da validadora: validacao-fase-completa (ajuste em Gestão > Perfis).');
+        $this->command?->info('Perfil atual da validadora: administrador.');
     }
 
     /**
