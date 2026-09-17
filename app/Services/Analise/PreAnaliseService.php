@@ -480,7 +480,7 @@ class PreAnaliseService
     /**
      * Versão de regra representativa (RN-005) para a coluna rules_version da
      * auditoria: a primeira versão real aplicada, na ordem em que governa o
-     * veredito (Quadro 10 → 7 → 11/11A → risco → território) — mesma ordem do
+     * veredito (Quadro 10 → 7 → 11A → risco → território) — mesma ordem do
      * FluxoExpressoService. O mapa completo vai em engine_rules_versions.
      *
      * @param  array<string, array<string, ?string>>  $rulesVersions
@@ -490,7 +490,6 @@ class PreAnaliseService
         $ordem = [
             ['louos', 'quadro10'],
             ['louos', 'quadro7'],
-            ['louos', 'quadro11'],
             ['louos', 'quadro11a'],
             ['risco', 'municipal'],
             ['risco', 'sanitario'],

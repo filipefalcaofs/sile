@@ -187,12 +187,6 @@ class ConsultaViabilidadeResultTest extends TestCase
                 'motivo' => 'Zona urbanística indisponível (pendente SEDUR)',
                 'versao_regra' => null,
             ],
-            quadro11: [
-                'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
-                'condicoes' => [],
-                'motivo' => null,
-                'versao_regra' => null,
-            ],
             quadro11a: [
                 'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
                 'condicoes' => [],
@@ -211,7 +205,6 @@ class ConsultaViabilidadeResultTest extends TestCase
             versoes: [
                 'quadro7' => 'louos-q7-v1',
                 'quadro10' => null,
-                'quadro11' => null,
                 'quadro11a' => null,
             ],
         );

@@ -27,7 +27,6 @@ class SimulateLouosRequest extends FormRequest
     public const QUADRO_DOMAINS = [
         'quadro7' => RuleDomain::LouosQuadro7,
         'quadro10' => RuleDomain::LouosQuadro10,
-        'quadro11' => RuleDomain::LouosQuadro11,
         'quadro11a' => RuleDomain::LouosQuadro11a,
     ];
 
@@ -45,7 +44,7 @@ class SimulateLouosRequest extends FormRequest
         $dominio = (self::QUADRO_DOMAINS[$quadro] ?? null)?->value ?? '';
 
         return [
-            'quadro' => ['required', 'string', 'in:quadro7,quadro10,quadro11,quadro11a'],
+            'quadro' => ['required', 'string', 'in:quadro7,quadro10,quadro11a'],
             'versao_rascunho' => [
                 'required',
                 'string',

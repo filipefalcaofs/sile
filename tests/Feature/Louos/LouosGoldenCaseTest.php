@@ -190,7 +190,6 @@ class LouosGoldenCaseTest extends TestCase
             'quadro7_subgrupo' => $result->quadro7['subgrupo'] ?? null,
             'quadro10_status' => $result->quadro10['status'] ?? null,
             'quadro10_permissao' => $result->quadro10['permissao'] ?? null,
-            'quadro11_status' => $result->quadro11['status'] ?? null,
             'quadro11a_status' => $result->quadro11a['status'] ?? null,
             'resultado' => $result->resultado(),
             'motivo' => $result->consolidado['motivo'] ?? null,

@@ -150,7 +150,7 @@ class LouosQuadro11ImportServiceTest extends TestCase
     {
         $this->seed(LouosQuadro11Seeder::class);
 
-        $this->assertSame(0, RuleVersion::vigente(RuleDomain::LouosQuadro11)->count());
+        $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro11']);
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
 
         $version11a = RuleVersion::vigente(RuleDomain::LouosQuadro11a)->first();
@@ -170,7 +170,7 @@ class LouosQuadro11ImportServiceTest extends TestCase
 
         $this->assertGreaterThan(0, $contagem);
         $this->assertSame($contagem, LouosQuadro11CondicaoVia::query()->count());
-        $this->assertSame(0, RuleVersion::vigente(RuleDomain::LouosQuadro11)->count());
+        $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro11']);
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
     }
 }

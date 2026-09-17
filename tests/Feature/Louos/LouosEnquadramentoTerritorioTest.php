@@ -155,8 +155,7 @@ class LouosEnquadramentoTerritorioTest extends TestCase
     }
 
     /**
-     * Versão vigente do Quadro 11 ou 11A (distinção pelo domínio) + uma condição
-     * por (classe viária, grupo de uso).
+     * Versão vigente do Quadro 11A + uma condição por (classe viária, grupo de uso).
      *
      * @param  array<string, mixed>  $condicoes
      */
@@ -278,6 +277,10 @@ class LouosEnquadramentoTerritorioTest extends TestCase
         $this->assertSame(EnquadramentoResult::STATUS_IDENTIFICADO, $quadro10['status']);
         $this->assertSame(Quadro10Permissao::Permitido->value, $quadro10['permissao']);
         $this->assertSame('lei-9148-2016-quadro10', $quadro10['versao_regra']);
+        $this->assertStringContainsString('nR1', (string) $quadro10['motivo']);
+        $this->assertStringContainsString('ZR-1', (string) $quadro10['motivo']);
+        $this->assertStringContainsString('Quadro 10', (string) $quadro10['motivo']);
+        $this->assertStringContainsStringIgnoringCase('permitido', (string) $quadro10['motivo']);
     }
 
     public function test_zona_identificada_retorna_proibido(): void
@@ -333,27 +336,27 @@ class LouosEnquadramentoTerritorioTest extends TestCase
         $this->assertSame('Sem enquadramento (Quadro 7) não há permissão a verificar', $quadro10['motivo']);
     }
 
-    public function test_via_sem_atributo_louos_degrada_quadro11(): void
+    public function test_via_sem_atributo_louos_degrada_quadro11a(): void
     {
         // Cenário atual (anti-fachada): a geometria viária existe (Fase 4), mas a
         // via NÃO traz o atributo de classificação viária LOUOS (pendente SEDUR).
         // Mesmo com condição cadastrada que casaria, o motor não inventa a classe.
         $this->quadro7Faixa('4712100', 'nR2', 'nR2-01');
-        $this->quadro11Condicao(RuleDomain::LouosQuadro11, 'lei-9148-2016-quadro11', 'via_local', 'nR2', ['recuo_frontal_m' => 5]);
+        $this->quadro11Condicao(RuleDomain::LouosQuadro11a, 'lei-9148-2016-quadro11a', 'via_local', 'nR2', ['recuo_frontal_m' => 5]);
 
         $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComVia(
             $this->viaIdentificada(['NOME_LOGRADOURO' => 'Rua das Laranjeiras']),
         ));
 
-        $quadro11 = $this->service()->enquadrar($input)->quadro11;
+        $quadro11a = $this->service()->enquadrar($input)->quadro11a;
 
-        $this->assertSame(EnquadramentoResult::STATUS_INDISPONIVEL, $quadro11['status']);
-        $this->assertSame([], $quadro11['condicoes']);
-        $this->assertSame('Via identificada, porém sem o atributo de classificação viária LOUOS (pendente SEDUR)', $quadro11['motivo']);
-        $this->assertNull($quadro11['classe_via']);
+        $this->assertSame(EnquadramentoResult::STATUS_INDISPONIVEL, $quadro11a['status']);
+        $this->assertSame([], $quadro11a['condicoes']);
+        $this->assertSame('Via identificada, porém sem o atributo de classificação viária LOUOS (pendente SEDUR)', $quadro11a['motivo']);
+        $this->assertNull($quadro11a['classe_via']);
     }
 
-    public function test_via_indisponivel_degrada_quadro11_e_11a(): void
+    public function test_via_indisponivel_degrada_quadro11a(): void
     {
         $this->quadro7Faixa('4712100', 'nR2', 'nR2-01');
 
@@ -363,20 +366,16 @@ class LouosEnquadramentoTerritorioTest extends TestCase
 
         $result = $this->service()->enquadrar($input);
 
-        $this->assertSame(EnquadramentoResult::STATUS_INDISPONIVEL, $result->quadro11['status']);
         $this->assertSame(EnquadramentoResult::STATUS_INDISPONIVEL, $result->quadro11a['status']);
-        $this->assertSame('Eixo viário sem classificação LOUOS (pendente SEDUR)', $result->quadro11['motivo']);
         $this->assertSame('Eixo viário sem classificação LOUOS (pendente SEDUR)', $result->quadro11a['motivo']);
-        $this->assertSame([], $result->quadro11['condicoes']);
+        $this->assertSame([], $result->quadro11a['condicoes']);
     }
 
-    public function test_classe_via_presente_retorna_condicoes_quadro11_e_11a(): void
+    public function test_classe_via_presente_retorna_condicoes_quadro11a(): void
     {
-        // Cenário futuro (quando a SEDUR entregar o atributo viário): a via traz a
-        // classe viária LOUOS e o motor aplica as condições reais dos Quadros 11
-        // e 11A — a MESMA lógica, mudando só a carga.
+        // Quando a via traz a classe viária LOUOS, o motor aplica as condições
+        // reais do Quadro 11A — não existe Quadro 11 na lei publicada.
         $this->quadro7Faixa('4712100', 'nR2', 'nR2-01');
-        $this->quadro11Condicao(RuleDomain::LouosQuadro11, 'lei-9148-2016-quadro11', 'via_local', 'nR2', ['recuo_frontal_m' => 5, 'vagas_carga_descarga' => 1]);
         $this->quadro11Condicao(RuleDomain::LouosQuadro11a, 'lei-9148-2016-quadro11a', 'via_local', 'nR2', ['recuo_frontal_m' => 3]);
 
         $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComVia(
@@ -385,15 +384,11 @@ class LouosEnquadramentoTerritorioTest extends TestCase
 
         $result = $this->service()->enquadrar($input);
 
-        $this->assertSame(EnquadramentoResult::STATUS_IDENTIFICADO, $result->quadro11['status']);
-        $this->assertSame('via_local', $result->quadro11['classe_via']);
-        $this->assertSame('lei-9148-2016-quadro11', $result->versoes()['quadro11']);
-        $this->assertIsArray($result->quadro11['condicoes']);
-        $this->assertSame(5, $result->quadro11['condicoes']['recuo_frontal_m']);
-
         $this->assertSame(EnquadramentoResult::STATUS_IDENTIFICADO, $result->quadro11a['status']);
         $this->assertSame('via_local', $result->quadro11a['classe_via']);
         $this->assertSame('lei-9148-2016-quadro11a', $result->versoes()['quadro11a']);
         $this->assertSame(3, $result->quadro11a['condicoes']['recuo_frontal_m']);
+        $this->assertStringContainsString('Quadro 11-A', (string) $result->quadro11a['motivo']);
+        $this->assertArrayNotHasKey('quadro11', $result->versoes());
     }
 }

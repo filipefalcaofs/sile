@@ -88,7 +88,7 @@ class LouosSeedDistributionTest extends TestCase
     public function test_quadro10_e_quadro11a_tem_versao_vigente(): void
     {
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
-        $this->assertNull(RuleVersion::vigente(RuleDomain::LouosQuadro11)->first());
+        $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro11']);
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
 
         // Âncoras do dado modelado da Lei 9.148/2016.

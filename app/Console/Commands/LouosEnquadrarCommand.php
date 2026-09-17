@@ -253,9 +253,9 @@ class LouosEnquadrarCommand extends Command
 
     private function renderCondicoesVia(EnquadramentoResult $result): void
     {
-        $this->line('Condições de instalação pela via (Quadros 11 / 11A):');
+        $this->line('Condições de instalação pela via (Quadro 11A):');
 
-        foreach ([['Quadro 11', $result->quadro11], ['Quadro 11A', $result->quadro11a]] as [$rotulo, $via]) {
+        foreach ([['Quadro 11A', $result->quadro11a]] as [$rotulo, $via]) {
             if (($via['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
                 $condicoes = $via['condicoes'] ?? [];
                 $this->line("  {$rotulo}: ".($condicoes === [] ? 'sem condições adicionais' : json_encode($condicoes, JSON_UNESCAPED_UNICODE)));
@@ -329,7 +329,6 @@ class LouosEnquadrarCommand extends Command
         $this->line('Versões de regras aplicadas:');
         $this->line('  Quadro 7: '.($versoes['quadro7'] ?? '—')
             .' | Quadro 10: '.($versoes['quadro10'] ?? '—')
-            .' | Quadro 11: '.($versoes['quadro11'] ?? '—')
             .' | Quadro 11A: '.($versoes['quadro11a'] ?? '—'));
     }
 

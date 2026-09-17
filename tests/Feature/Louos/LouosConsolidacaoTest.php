@@ -173,7 +173,11 @@ class LouosConsolidacaoTest extends TestCase
         ));
 
         $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
-        $this->assertStringContainsStringIgnoringCase('proibida', (string) $result->consolidado['motivo']);
+        $this->assertStringContainsStringIgnoringCase('proibid', (string) $result->consolidado['motivo']);
+        $this->assertStringContainsString('nR3', (string) $result->consolidado['motivo']);
+        $this->assertStringContainsString('Quadro 7', (string) $result->consolidado['motivo']);
+        $this->assertStringContainsString('Quadro 10', (string) $result->consolidado['motivo']);
+        $this->assertStringContainsString('ZPAM', (string) $result->consolidado['motivo']);
     }
 
     public function test_permitido_sem_condicoes_consolida_permitido(): void
@@ -190,6 +194,10 @@ class LouosConsolidacaoTest extends TestCase
         ));
 
         $this->assertSame(ResultadoViabilidade::Permitido->value, $result->resultado());
+        $this->assertStringContainsString('nR1', (string) $result->consolidado['motivo']);
+        $this->assertStringContainsString('Quadro 7', (string) $result->consolidado['motivo']);
+        $this->assertStringContainsString('Quadro 10', (string) $result->consolidado['motivo']);
+        $this->assertStringContainsString('ZR-1', (string) $result->consolidado['motivo']);
     }
 
     public function test_permitido_condicionado_consolida_com_condicoes(): void

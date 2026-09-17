@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
  * de shape estável, auditando a execução com a versão aplicada (RN-002).
  *
  * O motor entrega o Quadro 7 (enquadramento por área), as dimensões
- * territoriais (Quadro 10 por zona; Quadros 11/11A pela via) e a CONSOLIDAÇÃO
+ * territoriais (Quadro 10 por zona; Quadro 11A pela via) e a CONSOLIDAÇÃO
  * final (HU-044): combina as dimensões num parecer único — permitido /
  * permitido_com_condicoes / nao_permitido / pendente — com fundamentação legal
  * real (HU-045), condicionantes de vagas parametrizadas (HU-042) e restrições
@@ -76,22 +76,19 @@ class LouosEnquadramentoService
 
         $quadro7 = $this->enquadrarQuadro7($cnae, $input->area, $input);
         $quadro10 = $this->enquadrarQuadro10($quadro7, $input);
-        $quadro11 = $this->enquadrarCondicoesVia(RuleDomain::LouosQuadro11, $quadro7, $input);
         $quadro11a = $this->enquadrarCondicoesVia(RuleDomain::LouosQuadro11a, $quadro7, $input);
 
         $versoes = [
             'quadro7' => $quadro7['versao_regra'] ?? null,
             'quadro10' => $quadro10['versao_regra'] ?? null,
-            'quadro11' => $quadro11['versao_regra'] ?? null,
             'quadro11a' => $quadro11a['versao_regra'] ?? null,
         ];
 
-        $consolidado = $this->consolidar($quadro7, $quadro10, $quadro11, $quadro11a, $input);
+        $consolidado = $this->consolidar($quadro7, $quadro10, $quadro11a, $input);
 
         $result = new EnquadramentoResult(
             quadro7: $quadro7,
             quadro10: $quadro10,
-            quadro11: $quadro11,
             quadro11a: $quadro11a,
             consolidado: $consolidado,
             versoes: $versoes,
@@ -153,7 +150,7 @@ class LouosEnquadramentoService
             );
         }
 
-        return $this->dimIdentificado($version->version, [
+        $identificado = $this->dimIdentificado($version->version, [
             'grupo' => $faixa->grupo,
             'subgrupo' => $faixa->subgrupo,
             'faixa' => [
@@ -161,6 +158,12 @@ class LouosEnquadramentoService
                 'area_max' => $faixa->area_max,
             ],
         ]);
+
+        // dimIdentificado preserva motivo=null (union à esquerda). O Quadro 7
+        // classifica o uso; a permissão na zona é do Quadro 10.
+        $identificado['motivo'] = $this->motivoQuadro7($cnae, $area, $faixa);
+
+        return $identificado;
     }
 
     /**
@@ -202,18 +205,17 @@ class LouosEnquadramentoService
      *
      * @param  array<string, mixed>  $quadro7
      * @param  array<string, mixed>  $quadro10
-     * @param  array<string, mixed>  $quadro11
      * @param  array<string, mixed>  $quadro11a
      * @return array<string, mixed>
      */
-    private function consolidar(array $quadro7, array $quadro10, array $quadro11, array $quadro11a, EnquadramentoInput $input): array
+    private function consolidar(array $quadro7, array $quadro10, array $quadro11a, EnquadramentoInput $input): array
     {
         // Precedência 1 — anti-fachada: sem enquadramento (Quadro 7) não há grupo
         // de uso para verificar permissão; o consolidado é honestamente pendente.
         if (($quadro7['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
             return $this->consolidadoPendente(
                 self::MOTIVO_SEM_ENQUADRAMENTO_CONSOLIDADO,
-                $this->buildFundamentacao($quadro7, $quadro10, $quadro11, $quadro11a, self::MOTIVO_SEM_ENQUADRAMENTO_CONSOLIDADO),
+                $this->buildFundamentacao($quadro7, $quadro10, $quadro11a, self::MOTIVO_SEM_ENQUADRAMENTO_CONSOLIDADO),
             );
         }
 
@@ -225,7 +227,7 @@ class LouosEnquadramentoService
 
             return $this->consolidadoPendente(
                 $motivo,
-                $this->buildFundamentacao($quadro7, $quadro10, $quadro11, $quadro11a, $motivo),
+                $this->buildFundamentacao($quadro7, $quadro10, $quadro11a, $motivo),
             );
         }
 
@@ -233,13 +235,13 @@ class LouosEnquadramentoService
         if (($quadro10['permissao'] ?? null) === Quadro10Permissao::Proibido->value) {
             return [
                 'resultado' => ResultadoViabilidade::NaoPermitido->value,
-                'fundamentacao' => $this->buildFundamentacao($quadro7, $quadro10, $quadro11, $quadro11a),
+                'fundamentacao' => $this->buildFundamentacao($quadro7, $quadro10, $quadro11a),
                 'condicionantes' => [],
-                'motivo' => self::MOTIVO_PROIBIDO,
+                'motivo' => $this->motivoNaoPermitido($quadro7, $input),
             ];
         }
 
-        $condicionantes = $this->coletarCondicionantes($quadro7, $quadro10, $quadro11, $quadro11a, $input);
+        $condicionantes = $this->coletarCondicionantes($quadro7, $quadro10, $quadro11a, $input);
 
         $resultado = $this->temCondicionanteIncidente($condicionantes)
             ? ResultadoViabilidade::PermitidoComCondicoes
@@ -247,11 +249,13 @@ class LouosEnquadramentoService
 
         return [
             'resultado' => $resultado->value,
-            'fundamentacao' => $this->buildFundamentacao($quadro7, $quadro10, $quadro11, $quadro11a),
+            'fundamentacao' => $this->buildFundamentacao($quadro7, $quadro10, $quadro11a),
             'condicionantes' => $condicionantes,
-            'motivo' => $resultado === ResultadoViabilidade::PermitidoComCondicoes
-                ? self::MOTIVO_PERMITIDO_COM_CONDICOES
-                : self::MOTIVO_PERMITIDO,
+            'motivo' => $this->motivoPermitido(
+                $quadro7,
+                $input,
+                $resultado === ResultadoViabilidade::PermitidoComCondicoes,
+            ),
         ];
     }
 
@@ -283,11 +287,10 @@ class LouosEnquadramentoService
      *
      * @param  array<string, mixed>  $quadro7
      * @param  array<string, mixed>  $quadro10
-     * @param  array<string, mixed>  $quadro11
      * @param  array<string, mixed>  $quadro11a
      * @return list<string>
      */
-    private function buildFundamentacao(array $quadro7, array $quadro10, array $quadro11, array $quadro11a, ?string $motivoPendencia = null): array
+    private function buildFundamentacao(array $quadro7, array $quadro10, array $quadro11a, ?string $motivoPendencia = null): array
     {
         $referencias = [];
 
@@ -300,11 +303,9 @@ class LouosEnquadramentoService
             $referencias[] = self::FUNDAMENTO_LOUOS.' — Quadro 10';
         }
 
-        foreach ([[$quadro11, 'Quadro 11'], [$quadro11a, 'Quadro 11A']] as [$via, $rotulo]) {
-            if (($via['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
-                $referencias = [...$referencias, ...$this->baseLegal($via)];
-                $referencias[] = self::FUNDAMENTO_LOUOS.' — '.$rotulo;
-            }
+        if (($quadro11a['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
+            $referencias = [...$referencias, ...$this->baseLegal($quadro11a)];
+            $referencias[] = self::FUNDAMENTO_LOUOS.' — Quadro 11A';
         }
 
         if ($motivoPendencia !== null) {
@@ -332,16 +333,15 @@ class LouosEnquadramentoService
      * Coleta as condicionantes que alimentam a ficha do parecer (HU-135) e podem
      * rebaixar o veredito para permitido_com_condicoes: a condicionante
      * urbanística do Quadro 10 (permitido_condicionado), as condições de
-     * instalação pela via (Quadros 11/11A), as vagas parametrizadas (HU-042) e as
+     * instalação pela via (Quadro 11A), as vagas parametrizadas (HU-042) e as
      * restrições especiais incidentes — ZEIS (HU-043). Nenhuma bloqueia sozinha.
      *
      * @param  array<string, mixed>  $quadro7
      * @param  array<string, mixed>  $quadro10
-     * @param  array<string, mixed>  $quadro11
      * @param  array<string, mixed>  $quadro11a
      * @return list<array<string, mixed>>
      */
-    private function coletarCondicionantes(array $quadro7, array $quadro10, array $quadro11, array $quadro11a, EnquadramentoInput $input): array
+    private function coletarCondicionantes(array $quadro7, array $quadro10, array $quadro11a, EnquadramentoInput $input): array
     {
         $condicionantes = [];
 
@@ -353,15 +353,13 @@ class LouosEnquadramentoService
             ];
         }
 
-        foreach ([[$quadro11, 'Quadro 11'], [$quadro11a, 'Quadro 11A']] as [$via, $rotulo]) {
-            if (($via['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO && ! empty($via['condicoes'])) {
-                $condicionantes[] = [
-                    'tipo' => 'via',
-                    'quadro' => $rotulo,
-                    'condicoes' => $via['condicoes'],
-                    'motivo' => "Condições de instalação pela via ({$rotulo})",
-                ];
-            }
+        if (($quadro11a['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO && ! empty($quadro11a['condicoes'])) {
+            $condicionantes[] = [
+                'tipo' => 'via',
+                'quadro' => 'Quadro 11A',
+                'condicoes' => $quadro11a['condicoes'],
+                'motivo' => 'Condições de instalação pela via (Quadro 11A)',
+            ];
         }
 
         $vagas = $this->avaliarVagas($quadro7, $input);
@@ -564,11 +562,19 @@ class LouosEnquadramentoService
             );
         }
 
-        return $this->dimIdentificado($version->version, [
+        $identificado = $this->dimIdentificado($version->version, [
             'permissao' => $permissao->permissao->value,
             'condicionante_ref' => $permissao->condicionante_ref,
             'base_legal' => $permissao->base_legal,
         ]);
+
+        $identificado['motivo'] = $this->motivoQuadro10(
+            $quadro7,
+            $zona,
+            $permissao->permissao,
+        );
+
+        return $identificado;
     }
 
     /**
@@ -599,6 +605,135 @@ class LouosEnquadramentoService
         }
 
         return null;
+    }
+
+    /**
+     * Quadro 7 só classifica CNAE × área → grupo. Nunca afirma permissão.
+     */
+    private function motivoQuadro7(string $cnae, float $area, LouosQuadro7Faixa $faixa): string
+    {
+        $subgrupo = is_string($faixa->subgrupo) && $faixa->subgrupo !== ''
+            ? " ({$faixa->subgrupo})"
+            : '';
+
+        return sprintf(
+            'O CNAE %s com área %s m² classifica-se no grupo %s%s do Quadro 7 da LOUOS%s. O Quadro 7 não autoriza o uso na zona — só define o grupo.',
+            $this->formatarCnae($cnae),
+            $this->formatarArea($area),
+            $faixa->grupo,
+            $subgrupo,
+            $this->rotuloFaixaQuadro7($faixa),
+        );
+    }
+
+    /**
+     * Quadro 10 é quem permite ou proíbe o grupo na zona.
+     *
+     * @param  array<string, mixed>  $quadro7
+     * @param  array<string, mixed>  $zona
+     */
+    private function motivoQuadro10(array $quadro7, array $zona, Quadro10Permissao $permissao): string
+    {
+        $grupo = is_string($quadro7['grupo'] ?? null) ? (string) $quadro7['grupo'] : 'o grupo enquadrado';
+        $zonaNome = $this->zonaNome($zona) ?? 'a zona identificada';
+
+        return sprintf(
+            'O grupo %s é %s na zona %s segundo o Quadro 10 da LOUOS — é este quadro que permite ou proíbe o uso no território.',
+            $grupo,
+            mb_strtolower($permissao->label()),
+            $zonaNome,
+        );
+    }
+
+    /**
+     * Encadeia classificação (Quadro 7) e permissão (Quadro 10) no veredito.
+     *
+     * @param  array<string, mixed>  $quadro7
+     */
+    private function motivoPermitido(array $quadro7, EnquadramentoInput $input, bool $comCondicoes): string
+    {
+        $cnae = $this->formatarCnae((string) preg_replace('/\D/', '', $input->cnaePrincipal));
+        $grupo = is_string($quadro7['grupo'] ?? null) ? (string) $quadro7['grupo'] : 'o grupo enquadrado';
+        $zona = $this->zonaNome($input->territory?->zona ?? []) ?? 'a zona identificada';
+        $condicao = $comCondicoes
+            ? self::MOTIVO_PERMITIDO_COM_CONDICOES
+            : self::MOTIVO_PERMITIDO;
+
+        return sprintf(
+            'Permitido: o CNAE %s (área %s m²) classificou-se no grupo %s pelo Quadro 7 e esse grupo é permitido na zona %s pelo Quadro 10. %s.',
+            $cnae,
+            $this->formatarArea($input->area),
+            $grupo,
+            $zona,
+            rtrim($condicao, '.'),
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $quadro7
+     */
+    private function motivoNaoPermitido(array $quadro7, EnquadramentoInput $input): string
+    {
+        $cnae = $this->formatarCnae((string) preg_replace('/\D/', '', $input->cnaePrincipal));
+        $grupo = is_string($quadro7['grupo'] ?? null) ? (string) $quadro7['grupo'] : 'o grupo enquadrado';
+        $zona = $this->zonaNome($input->territory?->zona ?? []) ?? 'a zona identificada';
+
+        return sprintf(
+            'Não permitido: o CNAE %s (área %s m²) classificou-se no grupo %s pelo Quadro 7 e esse grupo é proibido na zona %s pelo Quadro 10. %s.',
+            $cnae,
+            $this->formatarArea($input->area),
+            $grupo,
+            $zona,
+            rtrim(self::MOTIVO_PROIBIDO, '.'),
+        );
+    }
+
+    /**
+     * Quadros 11/11-A condicionam a instalação pela via; não autorizam o uso.
+     *
+     * @param  array<string, mixed>  $quadro7
+     */
+    private function motivoQuadroVia(RuleDomain $domain, array $quadro7, string $classeVia): string
+    {
+        $grupo = is_string($quadro7['grupo'] ?? null) ? (string) $quadro7['grupo'] : 'o grupo enquadrado';
+
+        return sprintf(
+            'O grupo %s na classe viária %s tem condições de instalação pelo Quadro 11-A da LOUOS. O Quadro 11-A não permite nem proíbe o uso — só condiciona a instalação pela via.',
+            $grupo,
+            $classeVia,
+        );
+    }
+
+    private function formatarCnae(string $digitos): string
+    {
+        if (strlen($digitos) !== 7) {
+            return $digitos;
+        }
+
+        return substr($digitos, 0, 4).'-'.substr($digitos, 4, 1).'/'.substr($digitos, 5, 2);
+    }
+
+    private function formatarArea(float $area): string
+    {
+        $inteiro = (int) $area;
+
+        if ($area == $inteiro) {
+            return (string) $inteiro;
+        }
+
+        return number_format($area, 2, ',', '.');
+    }
+
+    private function rotuloFaixaQuadro7(LouosQuadro7Faixa $faixa): string
+    {
+        $min = is_numeric($faixa->area_min) ? (float) $faixa->area_min : 0.0;
+        $max = is_numeric($faixa->area_max) ? (float) $faixa->area_max : null;
+
+        if ($max === null) {
+            return sprintf(' (faixa a partir de %s m²)', $this->formatarArea($min));
+        }
+
+        return sprintf(' (faixa %s a %s m²)', $this->formatarArea($min), $this->formatarArea($max));
     }
 
     /**
@@ -692,11 +827,19 @@ class LouosEnquadramentoService
             );
         }
 
-        return $this->dimIdentificado($version->version, [
+        $identificado = $this->dimIdentificado($version->version, [
             'classe_via' => $classeVia,
             'condicoes' => $condicao->condicoes ?? [],
             'base_legal' => $condicao->base_legal,
         ]);
+
+        $identificado['motivo'] = $this->motivoQuadroVia(
+            $domain,
+            $quadro7,
+            $classeVia,
+        );
+
+        return $identificado;
     }
 
     /**

@@ -55,7 +55,7 @@ class EnquadramentoResultTest extends TestCase
         $array = $this->resultExemplo()->toArray();
 
         $this->assertSame(
-            ['quadro7', 'quadro10', 'quadro11', 'quadro11a', 'consolidado', 'versoes'],
+            ['quadro7', 'quadro10', 'quadro11a', 'consolidado', 'versoes'],
             array_keys($array),
         );
 
@@ -66,7 +66,7 @@ class EnquadramentoResultTest extends TestCase
         $this->assertArrayHasKey('condicionantes', $array['consolidado']);
 
         $this->assertSame(
-            ['quadro7' => 'louos-quadro7-v1', 'quadro10' => null, 'quadro11' => 'louos-quadro11-v1', 'quadro11a' => null],
+            ['quadro7' => 'louos-quadro7-v1', 'quadro10' => null, 'quadro11a' => 'louos-quadro11a-v1'],
             $this->resultExemplo()->versoes(),
         );
     }
@@ -104,17 +104,11 @@ class EnquadramentoResultTest extends TestCase
                 'motivo' => 'Zona urbanística indisponível (pendente SEDUR)',
                 'versao_regra' => null,
             ],
-            quadro11: [
-                'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
-                'condicoes' => [],
-                'motivo' => 'Classe de via não informada',
-                'versao_regra' => 'louos-quadro11-v1',
-            ],
             quadro11a: [
                 'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
                 'condicoes' => [],
                 'motivo' => null,
-                'versao_regra' => null,
+                'versao_regra' => 'louos-quadro11a-v1',
             ],
             consolidado: [
                 'resultado' => $resultado,
@@ -125,8 +119,7 @@ class EnquadramentoResultTest extends TestCase
             versoes: [
                 'quadro7' => 'louos-quadro7-v1',
                 'quadro10' => null,
-                'quadro11' => 'louos-quadro11-v1',
-                'quadro11a' => null,
+                'quadro11a' => 'louos-quadro11a-v1',
             ],
         );
     }

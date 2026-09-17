@@ -36,7 +36,6 @@ export interface ConsolidadoEnquadramento {
 export interface Enquadramento {
     quadro7: Quadro7;
     quadro10: Record<string, unknown>;
-    quadro11: Record<string, unknown>;
     quadro11a: Record<string, unknown>;
     consolidado: ConsolidadoEnquadramento;
     versoes: Record<string, string | null>;

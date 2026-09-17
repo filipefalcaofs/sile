@@ -22,7 +22,7 @@ class LouosQuadroCopier
     /**
      * Copia as linhas do Quadro indicado da versão `$from` para `$to`,
      * sobrepondo com as alterações fornecidas (mesma chave natural substitui).
-     * Suporta Quadro 7, 10, 11 e 11A; lança InvalidArgumentException para
+     * Suporta Quadro 7, 10 e 11A; lança InvalidArgumentException para
      * domínios fora deste escopo.
      *
      * @param  list<array<string, mixed>>  $alteracoes
@@ -32,7 +32,7 @@ class LouosQuadroCopier
         match ($domain) {
             RuleDomain::LouosQuadro7 => $this->copyQuadro7($from, $to, $alteracoes),
             RuleDomain::LouosQuadro10 => $this->copyQuadro10($from, $to, $alteracoes),
-            RuleDomain::LouosQuadro11, RuleDomain::LouosQuadro11a => $this->copyQuadro11($from, $to, $alteracoes),
+            RuleDomain::LouosQuadro11a => $this->copyQuadro11($from, $to, $alteracoes),
             default => throw new InvalidArgumentException(
                 "Domínio {$domain->value} não é um Quadro da LOUOS suportado pelo copier.",
             ),

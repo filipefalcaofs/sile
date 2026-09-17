@@ -64,19 +64,25 @@ class DecisionExplanationTest extends TestCase
         $this->assertLessThan($this->posicao($ids, 'risco'), $this->posicao($ids, 'entrada'));
         $this->assertLessThan($this->posicao($ids, 'louos.quadro7'), $this->posicao($ids, 'risco'));
         $this->assertLessThan($this->posicao($ids, 'louos.quadro10'), $this->posicao($ids, 'louos.quadro7'));
-        $this->assertLessThan($this->posicao($ids, 'louos.quadro11'), $this->posicao($ids, 'louos.quadro10'));
-        $this->assertLessThan($this->posicao($ids, 'louos.quadro11a'), $this->posicao($ids, 'louos.quadro11'));
+        $this->assertLessThan($this->posicao($ids, 'louos.quadro11a'), $this->posicao($ids, 'louos.quadro10'));
         $this->assertLessThan($this->posicao($ids, 'consolidacao'), $this->posicao($ids, 'louos.quadro11a'));
+        $this->assertNotContains('louos.quadro11', $ids);
         $this->assertLessThan($this->posicao($ids, 'desfecho'), $this->posicao($ids, 'consolidacao'));
 
         // Passos LOUOS refletem versao_regra/motivo do trace, jamais inventados.
+        $quadro7 = $this->passo($explicacao['por_cnae'][0]['passos'], 'louos.quadro7');
+        $this->assertTrue($quadro7['registrado']);
+        $this->assertStringContainsString('nR1', (string) $quadro7['motivo']);
+        $this->assertStringContainsString('Quadro 7', (string) $quadro7['motivo']);
+
         $quadro10 = $this->passo($explicacao['por_cnae'][0]['passos'], 'louos.quadro10');
         $this->assertTrue($quadro10['registrado']);
         $this->assertSame('lei-9148-2016-quadro10', $quadro10['versao_regra']);
+        $this->assertStringContainsString('Quadro 10', (string) $quadro10['motivo']);
 
-        $quadro11 = $this->passo($explicacao['por_cnae'][0]['passos'], 'louos.quadro11');
-        $this->assertSame('sem condicionante de uso aplicável', $quadro11['motivo']);
-        $this->assertSame('lei-9148-2016-quadro11', $quadro11['versao_regra']);
+        $quadro11a = $this->passo($explicacao['por_cnae'][0]['passos'], 'louos.quadro11a');
+        $this->assertSame('sem porte especial aplicável', $quadro11a['motivo']);
+        $this->assertSame('lei-9148-2016-quadro11a', $quadro11a['versao_regra']);
 
         // Fundamentação consolidada e versões das regras GRAVADAS são projetadas.
         $this->assertNotEmpty($explicacao['fundamentacao']);
@@ -127,15 +133,40 @@ class DecisionExplanationTest extends TestCase
         // A entrada do CNAE é conhecida (per_cnae) — registrada.
         $this->assertTrue($this->passo($passos, 'entrada')['registrado']);
 
-        // Os passos do motor não foram snapshotados: marcados honestamente.
+        // Os passos do motor não foram snapshotados: marcados honestamente,
+        // com o papel de cada quadro/risco — sem inventar grupo, zona ou nível.
         $risco = $this->passo($passos, 'risco');
         $this->assertFalse($risco['registrado']);
-        $this->assertSame('não registrado nesta decisão', $risco['motivo']);
+        $this->assertStringContainsString('risco', mb_strtolower((string) $risco['motivo']));
+        $this->assertStringContainsString('Decreto', (string) $risco['motivo']);
         $this->assertNull($risco['versao_regra'], 'Nada inventado no passo não registrado.');
 
         $quadro10 = $this->passo($passos, 'louos.quadro10');
         $this->assertFalse($quadro10['registrado']);
         $this->assertNull($quadro10['versao_regra']);
+
+        $consolidacao = $this->passo($passos, 'consolidacao');
+        $this->assertTrue($consolidacao['registrado']);
+        $this->assertSame('permitido', $consolidacao['resultado_parcial']['resultado']);
+        $this->assertStringContainsString('Quadro 7', (string) $consolidacao['motivo']);
+        $this->assertStringContainsString('Quadro 10', (string) $consolidacao['motivo']);
+        $this->assertStringContainsString('classifica', mb_strtolower((string) $consolidacao['motivo']));
+        $this->assertStringNotContainsString('nR1', (string) $consolidacao['motivo'], 'Não inventa grupo no legado.');
+
+        $quadro7 = $this->passo($passos, 'louos.quadro7');
+        $this->assertFalse($quadro7['registrado']);
+        $this->assertStringContainsString('classifica', mb_strtolower((string) $quadro7['motivo']));
+        $this->assertNull($quadro7['versao_regra']);
+
+        $quadro11a = $this->passo($passos, 'louos.quadro11a');
+        $this->assertFalse($quadro11a['registrado']);
+        $this->assertStringContainsString('11-A', (string) $quadro11a['motivo']);
+        $this->assertNotContains('louos.quadro11', $this->idsDosPassos($passos));
+
+        $desfecho = $this->passo($passos, 'desfecho');
+        $this->assertTrue($desfecho['registrado']);
+        $this->assertStringContainsString('Permitido', (string) $desfecho['motivo']);
+        $this->assertStringNotContainsString('nR1', (string) $desfecho['motivo']);
     }
 
     /**
@@ -316,9 +347,8 @@ class DecisionExplanationTest extends TestCase
         return [
             'entrada' => ['tipo' => 'ponto_conhecido', 'cnae' => $cnae, 'cnae_formatado' => $formatado, 'area' => 120.0],
             'enquadramento' => [
-                'quadro7' => ['status' => 'identificado', 'grupo' => 'nR1', 'subgrupo' => 'nR1-01', 'motivo' => null, 'versao_regra' => 'lei-9148-2016-quadro7'],
-                'quadro10' => ['status' => 'identificado', 'permissao' => 'permitido', 'condicionante_ref' => null, 'motivo' => null, 'versao_regra' => 'lei-9148-2016-quadro10'],
-                'quadro11' => ['status' => 'nao_encontrado', 'condicoes' => [], 'motivo' => 'sem condicionante de uso aplicável', 'versao_regra' => 'lei-9148-2016-quadro11'],
+                'quadro7' => ['status' => 'identificado', 'grupo' => 'nR1', 'subgrupo' => 'nR1-01', 'motivo' => 'O CNAE 8888-8/81 com área 120 m² classifica-se no grupo nR1 (nR1-01) do Quadro 7 da LOUOS.', 'versao_regra' => 'lei-9148-2016-quadro7'],
+                'quadro10' => ['status' => 'identificado', 'permissao' => 'permitido', 'condicionante_ref' => null, 'motivo' => 'O grupo nR1 é permitido na zona ZR-1 segundo o Quadro 10 da LOUOS.', 'versao_regra' => 'lei-9148-2016-quadro10'],
                 'quadro11a' => ['status' => 'nao_encontrado', 'condicoes' => [], 'motivo' => 'sem porte especial aplicável', 'versao_regra' => 'lei-9148-2016-quadro11a'],
             ],
             'risco' => [

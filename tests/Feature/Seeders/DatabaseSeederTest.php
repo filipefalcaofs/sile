@@ -113,11 +113,11 @@ class DatabaseSeederTest extends TestCase
 
         // Quadros da LOUOS (Lei 9.148/2016): cada Quadro publica uma versão
         // vigente própria; o Quadro 7 carrega as 40 faixas reais e a importação
-        // é auditada (RN-002). Quadros 10/11/11A modelados (carga oficial
-        // pendente SEDUR), mas já versionados.
+        // é auditada (RN-002). Quadros 10/11A modelados (carga oficial
+        // pendente SEDUR), mas já versionados. Quadro 11 não existe na lei.
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro7)->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
-        $this->assertNull(RuleVersion::vigente(RuleDomain::LouosQuadro11)->first());
+        $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro11']);
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
         $this->assertSame(40, LouosQuadro7Faixa::query()->count());
         $this->assertGreaterThan(0, LouosQuadro10Permissao::query()->count());
@@ -348,7 +348,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(67, RiskCondicionante::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro7)->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
-        $this->assertNull(RuleVersion::vigente(RuleDomain::LouosQuadro11)->first());
+        $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro11']);
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
         $this->assertSame(40, LouosQuadro7Faixa::query()->count());
         // 3 empresas do cidadão (CompanySeeder) + 2 dedicadas do EP12

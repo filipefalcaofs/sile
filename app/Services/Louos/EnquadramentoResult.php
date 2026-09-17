@@ -12,7 +12,7 @@ use App\Enums\ResultadoViabilidade;
  *
  * - quadro7:  {status, grupo, subgrupo, motivo, versao_regra}
  * - quadro10: {status, permissao, condicionante_ref, motivo, versao_regra}
- * - quadro11/quadro11a: {status, condicoes, motivo, versao_regra}
+ * - quadro11a: {status, condicoes, motivo, versao_regra}
  * - consolidado: {resultado, fundamentacao[], condicionantes[], motivo}
  * - versoes: versão de regra consultada por quadro (RN-002 — reprodução por época)
  *
@@ -32,7 +32,6 @@ final readonly class EnquadramentoResult
     /**
      * @param  array<string, mixed>  $quadro7
      * @param  array<string, mixed>  $quadro10
-     * @param  array<string, mixed>  $quadro11
      * @param  array<string, mixed>  $quadro11a
      * @param  array<string, mixed>  $consolidado
      * @param  array<string, ?string>  $versoes
@@ -40,7 +39,6 @@ final readonly class EnquadramentoResult
     public function __construct(
         public array $quadro7,
         public array $quadro10,
-        public array $quadro11,
         public array $quadro11a,
         public array $consolidado,
         private array $versoes,
@@ -86,7 +84,6 @@ final readonly class EnquadramentoResult
         return [
             'quadro7' => $this->quadro7,
             'quadro10' => $this->quadro10,
-            'quadro11' => $this->quadro11,
             'quadro11a' => $this->quadro11a,
             'consolidado' => $this->consolidado,
             'versoes' => $this->versoes,

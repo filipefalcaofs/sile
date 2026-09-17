@@ -310,6 +310,10 @@ function PassoView({ passo }: { passo: Passo }) {
                 <p className="mt-1 text-theme-xs text-gray-400 italic dark:text-gray-500">{passo.motivo}</p>
             )}
 
+            {registrado && passo.motivo && (
+                <p className="mt-1 text-theme-sm text-gray-600 dark:text-gray-300">{passo.motivo}</p>
+            )}
+
             {registrado && (
                 <div className="mt-2 space-y-2">
                     {entrada && <ParesChaveValor titulo="Entrada" dados={entrada} />}

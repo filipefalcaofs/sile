@@ -31,15 +31,25 @@ final class DecisionExplanationService
 
     private const TITULO_QUADRO10 = 'LOUOS — Quadro 10 (permissão na zona)';
 
-    private const TITULO_QUADRO11 = 'LOUOS — Quadro 11 (condicionantes de uso)';
-
-    private const TITULO_QUADRO11A = 'LOUOS — Quadro 11-A (porte especial)';
+    private const TITULO_QUADRO11A = 'LOUOS — Quadro 11-A (condições pela via)';
 
     private const TITULO_CONSOLIDACAO = 'Consolidação do veredito locacional';
 
     private const TITULO_DESFECHO = 'Desfecho';
 
     private const MOTIVO_NAO_REGISTRADO = 'não registrado nesta decisão';
+
+    private const MOTIVO_RISCO_NAO_REGISTRADO = 'O Decreto nº 32.636/2020 classifica o risco do CNAE e define se o processo vai ao fluxo expresso ou à análise técnica. O nível e o encaminhamento desta decisão não foram gravados.';
+
+    private const MOTIVO_QUADRO7_NAO_REGISTRADO = 'O Quadro 7 classifica o uso (CNAE × área → grupo). O grupo e a faixa desta decisão não foram gravados.';
+
+    private const MOTIVO_QUADRO10_NAO_REGISTRADO = 'O Quadro 10 permite ou proíbe o grupo na zona. A permissão e a zona desta decisão não foram gravadas.';
+
+    private const MOTIVO_QUADRO11A_NAO_REGISTRADO = 'O Quadro 11-A condiciona a instalação pela via (classe viária × grupo). Não permite nem proíbe o uso. As condições desta decisão não foram gravadas.';
+
+    private const MOTIVO_PERMITIDO_SO_QUADRO7 = 'O registro cita o Quadro 7 da LOUOS como fundamento do veredito permitido. O Quadro 7 só classifica o uso (grupo por CNAE e área). Quem permite ou proíbe na zona é o Quadro 10. Grupo, faixa de área e zona não foram gravados nesta decisão.';
+
+    private const MOTIVO_PERMITIDO_COM_QUADRO10 = 'O registro cita o Quadro 10 da LOUOS (permissão do grupo na zona). Os detalhes (grupo, faixa e zona) não foram gravados nesta decisão.';
 
     /**
      * Projeta a explicação passo a passo da decisão a partir do que foi GRAVADO.
@@ -110,6 +120,10 @@ final class DecisionExplanationService
     private function cnaeProjetado(array $item): array
     {
         $passos = is_array($item['passos'] ?? null) ? $item['passos'] : [];
+        $passos = array_values(array_filter(
+            $passos,
+            fn (mixed $passo): bool => ! is_array($passo) || ($passo['passo'] ?? null) !== 'louos.quadro11',
+        ));
 
         return [
             'cnae' => $item['cnae'] ?? null,
@@ -177,11 +191,10 @@ final class DecisionExplanationService
 
         $passos = [
             $this->passoEntradaLegado($item),
-            $this->passoNaoRegistrado('risco', self::TITULO_RISCO),
-            $this->passoNaoRegistrado('louos.quadro7', self::TITULO_QUADRO7),
-            $this->passoNaoRegistrado('louos.quadro10', self::TITULO_QUADRO10),
-            $this->passoNaoRegistrado('louos.quadro11', self::TITULO_QUADRO11),
-            $this->passoNaoRegistrado('louos.quadro11a', self::TITULO_QUADRO11A),
+            $this->passoNaoRegistrado('risco', self::TITULO_RISCO, self::MOTIVO_RISCO_NAO_REGISTRADO),
+            $this->passoNaoRegistrado('louos.quadro7', self::TITULO_QUADRO7, self::MOTIVO_QUADRO7_NAO_REGISTRADO),
+            $this->passoNaoRegistrado('louos.quadro10', self::TITULO_QUADRO10, self::MOTIVO_QUADRO10_NAO_REGISTRADO),
+            $this->passoNaoRegistrado('louos.quadro11a', self::TITULO_QUADRO11A, self::MOTIVO_QUADRO11A_NAO_REGISTRADO),
             $temVeredito
                 ? $this->passoConsolidacaoLegado($item, $fundamentacao)
                 : $this->passoNaoRegistrado('consolidacao', self::TITULO_CONSOLIDACAO),
@@ -236,7 +249,7 @@ final class DecisionExplanationService
                 'resultado' => $item['tendencia'] ?? null,
                 'label' => $item['tendencia_label'] ?? null,
             ],
-            'motivo' => null,
+            'motivo' => $this->motivoConsolidacaoLegado($item, $fundamentacao),
             'versao_regra' => null,
             'fundamentacao' => $fundamentacao,
         ];
@@ -258,7 +271,7 @@ final class DecisionExplanationService
                 'tendencia_label' => $item['tendencia_label'] ?? null,
                 'fluxo' => $item['fluxo'] ?? null,
             ],
-            'motivo' => null,
+            'motivo' => $this->motivoDesfechoLegado($item),
             'versao_regra' => null,
         ];
     }
@@ -269,7 +282,7 @@ final class DecisionExplanationService
      *
      * @return array<string, mixed>
      */
-    private function passoNaoRegistrado(string $passo, string $titulo): array
+    private function passoNaoRegistrado(string $passo, string $titulo, ?string $motivo = null): array
     {
         return [
             'passo' => $passo,
@@ -277,9 +290,54 @@ final class DecisionExplanationService
             'registrado' => false,
             'entrada' => null,
             'resultado_parcial' => null,
-            'motivo' => self::MOTIVO_NAO_REGISTRADO,
+            'motivo' => $motivo ?? self::MOTIVO_NAO_REGISTRADO,
             'versao_regra' => null,
         ];
+    }
+
+    /**
+     * Explica o papel dos Quadros sem inventar grupo, faixa ou zona.
+     *
+     * @param  array<string, mixed>  $item
+     * @param  list<mixed>  $fundamentacao
+     */
+    private function motivoConsolidacaoLegado(array $item, array $fundamentacao): ?string
+    {
+        $texto = implode(' ', array_map(strval(...), $fundamentacao));
+        $citaQuadro7 = str_contains($texto, 'Quadro 7');
+        $citaQuadro10 = str_contains($texto, 'Quadro 10');
+        $tendencia = is_string($item['tendencia'] ?? null) ? $item['tendencia'] : '';
+
+        $permitido = in_array($tendencia, [
+            ResultadoViabilidade::Permitido->value,
+            ResultadoViabilidade::PermitidoComCondicoes->value,
+        ], true);
+
+        if ($permitido && $citaQuadro7 && ! $citaQuadro10) {
+            return self::MOTIVO_PERMITIDO_SO_QUADRO7;
+        }
+
+        if ($permitido && $citaQuadro10) {
+            return self::MOTIVO_PERMITIDO_COM_QUADRO10;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     */
+    private function motivoDesfechoLegado(array $item): string
+    {
+        $label = is_string($item['tendencia_label'] ?? null)
+            ? $item['tendencia_label']
+            : (is_string($item['tendencia'] ?? null) ? $item['tendencia'] : 'o veredito gravado');
+        $fluxo = is_string($item['fluxo'] ?? null) ? $item['fluxo'] : null;
+        $fluxoTxt = $fluxo === 'expresso'
+            ? ' no fluxo expresso'
+            : ($fluxo === 'analise' ? ' em análise técnica' : '');
+
+        return "O desfecho {$label}{$fluxoTxt} foi gravado. Os passos do motor que o fundamentam não foram snapshotados.";
     }
 
     /**

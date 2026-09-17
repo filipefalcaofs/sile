@@ -68,25 +68,25 @@ class DecisionTraceEnrichmentTest extends TestCase
         $this->assertSame('motor', $trace[0]['origem']);
 
         // Ordem dos passos do CNAE principal: entrada → risco → LOUOS
-        // (7→10→11→11A) → consolidação → desfecho.
+        // (7→10→11A) → consolidação → desfecho.
         $ids = $this->idsDosPassos($trace[0]['passos']);
 
         $this->assertLessThan($this->posicao($ids, 'risco'), $this->posicao($ids, 'entrada'));
         $this->assertLessThan($this->posicao($ids, 'louos.quadro7'), $this->posicao($ids, 'risco'));
         $this->assertLessThan($this->posicao($ids, 'louos.quadro10'), $this->posicao($ids, 'louos.quadro7'));
-        $this->assertLessThan($this->posicao($ids, 'louos.quadro11'), $this->posicao($ids, 'louos.quadro10'));
-        $this->assertLessThan($this->posicao($ids, 'louos.quadro11a'), $this->posicao($ids, 'louos.quadro11'));
+        $this->assertLessThan($this->posicao($ids, 'louos.quadro11a'), $this->posicao($ids, 'louos.quadro10'));
         $this->assertLessThan($this->posicao($ids, 'consolidacao'), $this->posicao($ids, 'louos.quadro11a'));
         $this->assertLessThan($this->posicao($ids, 'desfecho'), $this->posicao($ids, 'consolidacao'));
+        $this->assertNotContains('louos.quadro11', $ids);
 
         // Passos LOUOS refletem versao_regra/motivo do consulta_array (nunca inventados).
         $quadro10 = $this->passo($trace[0]['passos'], 'louos.quadro10');
         $this->assertSame('lei-9148-2016-quadro10', $quadro10['versao_regra']);
         $this->assertTrue($quadro10['registrado']);
 
-        $quadro11 = $this->passo($trace[0]['passos'], 'louos.quadro11');
-        $this->assertSame('sem condicionante de uso aplicável', $quadro11['motivo']);
-        $this->assertSame('lei-9148-2016-quadro11', $quadro11['versao_regra']);
+        $quadro11a = $this->passo($trace[0]['passos'], 'louos.quadro11a');
+        $this->assertSame('sem porte especial aplicável', $quadro11a['motivo']);
+        $this->assertSame('lei-9148-2016-quadro11a', $quadro11a['versao_regra']);
 
         // Passo de risco carrega o encaminhamento e a versão da dimensão decisiva.
         $risco = $this->passo($trace[0]['passos'], 'risco');
@@ -300,12 +300,6 @@ class DecisionTraceEnrichmentTest extends TestCase
                 'motivo' => null,
                 'versao_regra' => 'lei-9148-2016-quadro10',
             ],
-            quadro11: [
-                'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
-                'condicoes' => [],
-                'motivo' => 'sem condicionante de uso aplicável',
-                'versao_regra' => 'lei-9148-2016-quadro11',
-            ],
             quadro11a: [
                 'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
                 'condicoes' => [],
@@ -321,7 +315,6 @@ class DecisionTraceEnrichmentTest extends TestCase
             versoes: [
                 'quadro7' => 'lei-9148-2016-quadro7',
                 'quadro10' => 'lei-9148-2016-quadro10',
-                'quadro11' => 'lei-9148-2016-quadro11',
                 'quadro11a' => 'lei-9148-2016-quadro11a',
             ],
         );

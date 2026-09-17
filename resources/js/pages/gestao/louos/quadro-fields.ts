@@ -54,7 +54,6 @@ export const PERMISSAO_OPTIONS = [
 /**
  * Campos editáveis por Quadro numa linha do rascunho. Espelham a chave
  * natural e o esquema da tabela tipada validados no StoreLouosLinhaRequest.
- * A chave `quadro11` foi removida — o backend só expõe `quadro11a`.
  */
 export const ALTERACAO_FIELDS: Record<string, AlteracaoField[]> = {
     quadro7: [
@@ -79,8 +78,6 @@ export const ALTERACAO_FIELDS: Record<string, AlteracaoField[]> = {
         { key: 'base_legal', label: 'Base legal', kind: 'text', full: true },
     ],
 };
-
-ALTERACAO_FIELDS.quadro11 = ALTERACAO_FIELDS.quadro11a;
 
 export function fieldsFor(quadro: string): AlteracaoField[] {
     return ALTERACAO_FIELDS[quadro] ?? ALTERACAO_FIELDS.quadro7;

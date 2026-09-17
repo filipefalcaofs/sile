@@ -54,6 +54,11 @@ class LouosEnquadramentoQuadro7Test extends TestCase
         $this->assertSame('nR1', $result->quadro7['grupo']);
         $this->assertSame('nR1-01', $result->quadro7['subgrupo']);
         $this->assertSame('lei-9148-2016-quadro7', $result->versoes()['quadro7']);
+        $this->assertStringContainsString('4712-1/00', (string) $result->quadro7['motivo']);
+        $this->assertStringContainsString('100', (string) $result->quadro7['motivo']);
+        $this->assertStringContainsString('nR1', (string) $result->quadro7['motivo']);
+        $this->assertStringContainsString('Quadro 7', (string) $result->quadro7['motivo']);
+        $this->assertStringContainsString('classifica', mb_strtolower((string) $result->quadro7['motivo']));
     }
 
     public function test_area_acima_do_limite_cai_na_faixa_superior(): void
@@ -136,7 +141,7 @@ class LouosEnquadramentoQuadro7Test extends TestCase
     public function test_consolidado_fica_pendente_enquanto_motor_incompleto(): void
     {
         // Mesmo com o Quadro 7 identificado, sem zona (Quadro 10) e via (Quadro
-        // 11/11A) o veredito não pode ser permitido/não permitido: fica pendente.
+        // 11A) o veredito não pode ser permitido/não permitido: fica pendente.
         $this->seed(LouosQuadro7Seeder::class);
 
         $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(100, '4712-1/00'));
@@ -144,7 +149,6 @@ class LouosEnquadramentoQuadro7Test extends TestCase
         $this->assertSame(ResultadoViabilidade::Pendente->value, $result->resultado());
         $this->assertTrue($result->pendente());
         $this->assertSame(EnquadramentoResult::STATUS_INDISPONIVEL, $result->quadro10['status']);
-        $this->assertSame(EnquadramentoResult::STATUS_INDISPONIVEL, $result->quadro11['status']);
         $this->assertSame(EnquadramentoResult::STATUS_INDISPONIVEL, $result->quadro11a['status']);
     }
 

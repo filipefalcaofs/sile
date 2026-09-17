@@ -23,8 +23,8 @@ use Inertia\Response;
  * HU-046). A consulta lista a versão vigente de cada Quadro (resumo dos 4 +
  * listagem paginada do selecionado, com busca/auditoria); a publicação gera uma
  * NOVA versão por quatro olhos (LouosMaintenanceService), preservando a anterior
- * — nunca edição destrutiva. Espelha o RiscoController (server-driven). Gate
- * cross-guard via permission: nas rotas.
+ * — nunca edição destrutiva. Os Quadros vigentes são 7, 10 e 11A. Espelha o
+ * RiscoController (server-driven). Gate cross-guard via permission: nas rotas.
  */
 class LouosController extends Controller
 {
