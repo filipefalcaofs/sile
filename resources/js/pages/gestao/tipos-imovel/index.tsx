@@ -128,18 +128,17 @@ function DrivesRuleField({
  * em `aliases` — renderizar só a chave-mãe esconderia o erro mais provável.
  */
 function AliasErrors({ errors }: { errors: Record<string, string | undefined> }) {
-    const messages = Object.entries(errors)
-        .filter(([key, message]) => message && (key === 'aliases' || key.startsWith('aliases.')))
-        .map(([, message]) => message as string);
+    const entries = Object.entries(errors)
+        .filter(([key, message]) => message && (key === 'aliases' || key.startsWith('aliases.')));
 
-    if (messages.length === 0) {
+    if (entries.length === 0) {
         return null;
     }
 
     return (
         <div className="mt-1.5 space-y-0.5">
-            {messages.map((message) => (
-                <p key={message} className="text-xs text-error-500">
+            {entries.map(([key, message]) => (
+                <p key={key} className="text-xs text-error-500">
                     {message}
                 </p>
             ))}
