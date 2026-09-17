@@ -55,7 +55,7 @@ export default function AccessibilityBar() {
 
     return (
         <div className="border-b border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-gray-950">
-            <div className="mx-auto flex w-full max-w-(--breakpoint-2xl) flex-wrap items-center gap-x-3 gap-y-2 px-4 py-1.5 sm:px-6">
+            <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-4 py-1.5 sm:px-6">
                 <nav aria-label="Atalhos de acessibilidade" className="flex flex-wrap items-center gap-2">
                     {SKIP_LINKS.map((link) => (
                         <a key={link.href} href={link.href} accessKey={link.accessKey} className={skipLinkClasses}>

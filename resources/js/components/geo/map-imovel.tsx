@@ -52,6 +52,23 @@ function ClickToMove({ onMove }: { onMove: (latlng: { lat: number; lng: number }
     return null;
 }
 
+/** Recalcula o tamanho do Leaflet quando o container muda de largura. */
+function InvalidateOnResize() {
+    const map = useMap();
+
+    useEffect(() => {
+        const container = map.getContainer();
+        const observer = new ResizeObserver(() => {
+            map.invalidateSize();
+        });
+        observer.observe(container);
+
+        return () => observer.disconnect();
+    }, [map]);
+
+    return null;
+}
+
 /**
  * Mapa Leaflet reutilizável do imóvel (HU-030): tiles OSM, marcador arrastável
  * (ajuste HU-037), overlay de camadas GeoJSON (HU-036) e popup. Construído para
@@ -72,6 +89,7 @@ export function MapImovel({ lat, lng, zoom = 17, draggable = true, camadas, onMo
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <Recenter lat={lat} lng={lng} />
+            <InvalidateOnResize />
             {draggable && onMove && <ClickToMove onMove={onMove} />}
             <Marker
                 draggable={draggable}
