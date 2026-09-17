@@ -20,7 +20,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
 use App\Support\Audit\AuditService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Mockery;
@@ -41,7 +41,7 @@ use Tests\TestCase;
  */
 class DecidirFluxoExpressoJobTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * @param  list<string>  $cnaeCodes

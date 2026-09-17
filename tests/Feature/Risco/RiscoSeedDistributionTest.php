@@ -7,7 +7,7 @@ use App\Enums\RuleDomain;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use Database\Seeders\RiscoMunicipalSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -20,7 +20,7 @@ use Tests\TestCase;
  */
 class RiscoSeedDistributionTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

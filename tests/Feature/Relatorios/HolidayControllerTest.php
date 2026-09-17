@@ -5,7 +5,7 @@ namespace Tests\Feature\Relatorios;
 use App\Models\Holiday;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
@@ -19,7 +19,7 @@ use Tests\TestCase;
  */
 class HolidayControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

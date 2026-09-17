@@ -16,7 +16,7 @@ use App\Services\Risco\RiscoResult;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
@@ -30,7 +30,7 @@ use Tests\TestCase;
  */
 class DecisionTraceEnrichmentTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Caso EXPRESSO (Fase 9, SQLite sem PostGIS): com um resolver FAKE devolvendo

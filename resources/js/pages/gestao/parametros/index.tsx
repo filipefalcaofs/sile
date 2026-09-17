@@ -30,6 +30,7 @@ const GROUP_LABELS: Record<string, string> = {
     seguranca: 'Segurança',
     ui: 'Interface',
     features: 'Funcionalidades',
+    integracoes: 'Integrações',
 };
 
 function groupLabel(group: string): string {

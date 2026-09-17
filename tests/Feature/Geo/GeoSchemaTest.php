@@ -4,7 +4,7 @@ namespace Tests\Feature\Geo;
 
 use App\Models\GeoFeature;
 use App\Models\GeoLayer;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -17,7 +17,7 @@ use Tests\TestCase;
  */
 class GeoSchemaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_tabela_geo_features_existe_com_colunas(): void
     {

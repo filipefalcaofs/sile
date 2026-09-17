@@ -96,4 +96,37 @@ class AnalysisRecord extends Model
     {
         return $this->hasMany(AnalysisDivergence::class);
     }
+
+    /**
+     * Motivos que o sistema registrou para exigir análise humana (queda do
+     * expresso / motor). Não são anotação livre do analista.
+     *
+     * @return list<string>
+     */
+    public function motivosSistema(): array
+    {
+        $gravados = self::normalizarMotivos($this->analysis_reasons);
+
+        if ($gravados !== []) {
+            return $gravados;
+        }
+
+        $this->loadMissing('viabilityRequest.expressoQuedas');
+
+        return self::normalizarMotivos(
+            $this->viabilityRequest?->expressoQuedas->pluck('motivo')->all() ?? [],
+        );
+    }
+
+    /**
+     * @param  list<mixed>|null  $motivos
+     * @return list<string>
+     */
+    public static function normalizarMotivos(?array $motivos): array
+    {
+        return array_values(array_unique(array_filter(
+            array_map(static fn (mixed $motivo): string => trim((string) $motivo), $motivos ?? []),
+            static fn (string $motivo): bool => $motivo !== '',
+        )));
+    }
 }

@@ -6,13 +6,13 @@ use App\Jobs\ImportCnaeJob;
 use App\Models\Cnae;
 use App\Services\CnaeImportService;
 use App\Support\Audit\AuditService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class ImportCnaeJobTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_job_importa_e_audita_o_relatorio(): void
     {

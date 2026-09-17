@@ -8,7 +8,7 @@ use App\Enums\CommunicationType;
 use App\Models\Communication;
 use App\Models\User;
 use App\Models\ViabilityRequest;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class CommunicationModelTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_factory_cria_com_casts_tipados(): void
     {

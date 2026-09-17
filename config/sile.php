@@ -231,6 +231,7 @@ return [
             // (manter-config-ia). Teto técnico/de segurança fora do catálogo
             // HU-014 (precedente [02-02]) — ajustável sem deploy via Settings.
             'ai_test' => ['por_minuto' => 10],
+            'regin_recebe' => ['por_minuto' => 60],
         ],
     ],
     'integrations' => [
@@ -269,6 +270,14 @@ return [
             'timeout' => 8,
             'tries' => 3,
             'backoff_ms' => 1000,
+        ],
+        'regin' => [
+            'em_producao' => false,
+            'url_homologacao' => 'http://10.57.247.9:8080/api_integracao',
+            'url_producao' => 'http://regin.prefeitura.juceb.ba.gov.br:8080/api_integracao',
+            'usuario' => 'sedur_integracao',
+            'senha' => '',
+            'timeout' => 8,
         ],
     ],
     // Espelha os parâmetros HU-014 relatorios.* (EP15). Settings::get lê

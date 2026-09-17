@@ -13,7 +13,7 @@ use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Louos\LouosEnquadramentoService;
 use App\Support\Audit\AuditService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -29,7 +29,7 @@ use Tests\TestCase;
  */
 class LouosEnquadramentoTerritorioTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): LouosEnquadramentoService
     {

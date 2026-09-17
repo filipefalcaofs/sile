@@ -5,7 +5,7 @@ namespace Tests\Feature\Geo;
 use App\Models\GeoFeature;
 use App\Models\GeoLayer;
 use Database\Seeders\GeoLayerSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -16,7 +16,7 @@ use Tests\TestCase;
  */
 class GeoLayerSeederTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_seed_em_sqlite_cria_camadas_pendentes_de_zona_e_lote_sem_quebrar(): void
     {

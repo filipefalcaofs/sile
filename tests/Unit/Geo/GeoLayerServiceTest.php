@@ -7,7 +7,7 @@ use App\Enums\GeoLayerType;
 use App\Models\Activity;
 use App\Models\GeoLayer;
 use App\Services\Geo\GeoLayerService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -19,7 +19,7 @@ use Tests\TestCase;
  */
 class GeoLayerServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): GeoLayerService
     {

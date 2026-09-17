@@ -6,12 +6,12 @@ use App\Events\ResultadoEmitido;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 /**
- * ResultadoEmitido — o SEGUNDO evento de domínio do SILE (HU-076): a decisão do
+ * ResultadoEmitido — o SEGUNDO evento de domínio do Viabiliza (HU-076): a decisão do
  * fluxo expresso foi emitida. Espelha SolicitacaoProtocolada: é after-commit
  * (ShouldDispatchAfterCommit, só efetiva efeitos após o commit da transação da
  * decisão) e carrega a solicitação + a decisão imutável. Os efeitos (notificar
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class ResultadoEmitidoEventTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Solicitação protocolada + sua decisão imutável — o payload do evento.

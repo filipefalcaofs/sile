@@ -5,7 +5,7 @@ namespace Tests\Unit\Rules;
 use App\Enums\RuleDomain;
 use App\Enums\RuleVersionStatus;
 use App\Models\RuleVersion;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -18,7 +18,7 @@ use Tests\TestCase;
  */
 class RuleVersionTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_enums_expoem_label_e_sensibilidade(): void
     {

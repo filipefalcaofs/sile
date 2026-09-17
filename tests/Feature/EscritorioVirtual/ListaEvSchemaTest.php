@@ -6,12 +6,12 @@ use App\Enums\RuleDomain;
 use App\Models\RuleVersion;
 use App\Models\VirtualOfficeActivityCnae;
 use App\Services\Rules\RuleVersionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class ListaEvSchemaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_permitido_consulta_a_versao_vigente_normalizando_digitos(): void
     {

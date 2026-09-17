@@ -39,6 +39,11 @@ class RiscoSimularProtocoloCommand extends Command
         $this->line('Zona: '.($relatorio['zona'] ?? '—').' · Via: '.($relatorio['via'] ?? '—'));
         $this->newLine();
 
+        $conjunto = $relatorio['consolidado'];
+        $this->info('Viabilidade do conjunto (CNAE mais gravoso): '.($conjunto['nivel_label'] ?? '—').' → '.$conjunto['fluxo']);
+        $this->line($conjunto['motivo']);
+        $this->newLine();
+
         foreach ($relatorio['por_cnae'] as $item) {
             $risco = $item['risco'];
             $fluxo = $risco['encaminhamento']['fluxo'] ?? '—';

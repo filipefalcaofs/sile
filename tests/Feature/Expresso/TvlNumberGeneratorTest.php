@@ -4,7 +4,7 @@ namespace Tests\Feature\Expresso;
 
 use App\Models\Parameter;
 use App\Services\Expresso\TvlNumberGenerator;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -16,7 +16,7 @@ use Tests\TestCase;
  */
 class TvlNumberGeneratorTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function generator(): TvlNumberGenerator
     {

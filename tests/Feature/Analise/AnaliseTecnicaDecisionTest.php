@@ -11,7 +11,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnaliseTecnicaDecisionService;
 use DomainException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
@@ -28,7 +28,7 @@ use Tests\TestCase;
  */
 class AnaliseTecnicaDecisionTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): AnaliseTecnicaDecisionService
     {

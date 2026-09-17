@@ -5,13 +5,13 @@ namespace Tests\Feature\Companies;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Services\RedesimImportService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class RedesimImportTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Escreve os itens num arquivo JSON temporário e retorna o caminho.

@@ -8,7 +8,7 @@ use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Services\Louos\LouosQuadro7ImportService;
 use Database\Seeders\LouosQuadro7Seeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -20,7 +20,7 @@ use Tests\TestCase;
  */
 class LouosQuadro7ImportServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private const HEADER = 'cnae,grupo,subgrupo,area_min,area_max,observacao';
 

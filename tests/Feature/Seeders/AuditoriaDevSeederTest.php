@@ -11,7 +11,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Support\Settings;
 use Database\Seeders\AuditoriaDevSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -32,7 +32,7 @@ use Tests\TestCase;
  */
 class AuditoriaDevSeederTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function empresaAbuso(): ?Company
     {

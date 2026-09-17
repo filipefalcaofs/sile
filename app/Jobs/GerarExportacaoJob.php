@@ -131,7 +131,7 @@ class GerarExportacaoJob implements ShouldQueue
         $disk = (string) config('sile.relatorios.export.disk', 'local');
 
         if ($disk === 'public') {
-            throw new RuntimeException('O disco de exportação não pode ser público (relatorios.export.disk) — o arquivo pode conter dados pessoais (HU-131/LGPD).');
+            throw new RuntimeException('O disco de exportação não pode ser público (relatorios.export.disk) — o arquivo pode conter dados pessoais (LGPD).');
         }
 
         return $disk;

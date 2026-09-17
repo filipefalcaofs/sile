@@ -9,7 +9,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\InvalidStatusTransitionException;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -21,7 +21,7 @@ use Tests\TestCase;
  */
 class ViabilityRequestStateMachineTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function machine(): ViabilityRequestStateMachine
     {

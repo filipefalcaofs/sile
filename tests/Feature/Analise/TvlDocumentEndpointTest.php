@@ -8,7 +8,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\TvlPdfService;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class TvlDocumentEndpointTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private int $seq = 0;
 

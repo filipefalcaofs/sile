@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(103, Parameter::query()->count());
+        $this->assertSame(109, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -117,6 +117,47 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('seguranca', $minimumLevel->group);
         $this->assertSame('bronze', $minimumLevel->default_value);
         $this->assertSame(['required', 'in:bronze,prata,ouro'], $minimumLevel->validation_rules);
+    }
+
+    public function test_seeder_registra_parametros_da_api_regin(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $toggle = Parameter::query()->where('key', 'integrations.regin.em_producao')->first();
+
+        $this->assertNotNull($toggle);
+        $this->assertSame('integracoes', $toggle->group);
+        $this->assertSame('boolean', $toggle->type);
+        $this->assertSame('0', $toggle->default_value);
+        $this->assertFalse($toggle->typedValue());
+
+        $homolog = Parameter::query()->where('key', 'integrations.regin.url_homologacao')->first();
+
+        $this->assertNotNull($homolog);
+        $this->assertSame('http://10.57.247.9:8080/api_integracao', $homolog->default_value);
+        $this->assertSame(['required', 'url'], $homolog->validation_rules);
+
+        $producao = Parameter::query()->where('key', 'integrations.regin.url_producao')->first();
+
+        $this->assertNotNull($producao);
+        $this->assertSame(
+            'http://regin.prefeitura.juceb.ba.gov.br:8080/api_integracao',
+            $producao->default_value,
+        );
+        $this->assertSame(['required', 'url'], $producao->validation_rules);
+
+        $usuario = Parameter::query()->where('key', 'integrations.regin.usuario')->first();
+
+        $this->assertNotNull($usuario);
+        $this->assertFalse($usuario->sensitive);
+        $this->assertSame('sedur_integracao', $usuario->default_value);
+
+        $senha = Parameter::query()->where('key', 'integrations.regin.senha')->first();
+
+        $this->assertNotNull($senha);
+        $this->assertTrue($senha->sensitive);
+        $this->assertNull($senha->default_value);
+        $this->assertTrue($senha->requires_connection_test);
     }
 
     public function test_seeder_registra_parametros_do_georreferenciamento(): void
@@ -325,6 +366,13 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('30', $throttle->default_value);
         $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $throttle->validation_rules);
         $this->assertNull($throttle->value);
+
+        $reginRecebe = Parameter::query()->where('key', 'seguranca.throttle.regin_recebe.por_minuto')->first();
+        $this->assertNotNull($reginRecebe);
+        $this->assertSame('seguranca', $reginRecebe->group);
+        $this->assertSame('integer', $reginRecebe->type);
+        $this->assertSame('60', $reginRecebe->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $reginRecebe->validation_rules);
     }
 
     public function test_seeder_registra_parametro_de_estados_cancelaveis(): void
@@ -829,6 +877,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(103, Parameter::query()->count());
+        $this->assertSame(109, Parameter::query()->count());
     }
 }

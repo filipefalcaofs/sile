@@ -1,0 +1,1136 @@
+numero,tratamento,referencia
+1,"Fluxo Expresso 
+
+- Se a resposta for “NÃO” na pergunta 11 com área menor ou igual a 1.250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) BAIXO RISCO
+
+- Se a resposta for ""NÃO"" na pergunta 11 for com área superior a 1.250m², enquadrar como  “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13)  MÉDIO RISCO
+
+
+Fluxo Semiexpresso
+
+-Se a resposta for ""SIM"" na pergunta 11 e tipo de espaço “GALPÃO”, “CONTAINER”, ""EDIFICAÇÃO RESIDENCIAL"", registrar a resposta do requerente e remeter para crítica do analista. MÉDIO RISCO / ALTO RISCO SE ENQUADRADO COMO ID
+
+- Se a resposta for ""SIM"" na pergunta 11 com área menor ou igual a 1.250 m², registrar a resposta do requerente e remeter para crítica do analista. MÉDIO RISCO / ALTO RISCO SE ENQUADRADO COMO ID
+
+- Se a resposta for ""SIM"" na pergunta 11 com área superior a 1.250 m², registrar a resposta do requerente e remeter para crítica do analista. MÉDIO RISCO / ALTO RISCO SE ENQUADRADO COMO ID
+
+-Se a resposta for ""NÃO"" na pergunta 11 e tipo de espaço “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como  “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e registrar a resposta do requerente e remeter para crítica do analista.  MÉDIO RISCO","Atualizada em 21/07/2026
+
+
+Atualização recente em 18/03/2024: inculsão da informação ""(Sem classificação de risco definida)"" no fluxo semiexpresso.
+
+Quando respondido ""SIM"", e o enquadramento/ subcategoria de uso for ID, a atividade é classificado como de Alto Risco."
+2,"Se a resposta for ""NÃO"" na pergunta 2, seguir os fluxos descritos abaixo:
+
+
+Fluxo Expresso 
+
+- Se a resposta for “NÃO” na pergunta 2 com área menor ou igual a 1.250m² , enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). BAIXO RISCO
+
+- Se a resposta for ""NÃO"" na pergunta 2 com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).  MÉDIO RISCO
+
+Fluxo Semiexpresso 
+
+-Se a resposta for “NÃO” na pergunta 2 e tipo de espaço “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista. MÉDIO RISCO","Em 02/04/2024: RECRIAÇÃO DA REGRA 3 COMO DESMEMBRAMENTO DA REGRA 2
+
+Atualização recente em 18/03/2024: inculsão da informação ""(Sem classificação de risco definida)"" no fluxo semiexpresso.
+
+Atualizada em 21/07/2026: revisão da classificação de risco para cada fluxo"
+3,"Se a resposta for ""SIM"" na pergunta 2, exibir a pergunta 3 e seguir os fluxos descritos abaixo:
+
+Fluxo Expresso 
+
+- Se a resposta for “SIM” na pergunta 3 e com área menor ou igual a 1.250 m², enquadrar como 07.09.05 (Serviço de confecção sob medida e reparação de artigos de vestuário e similares: costureiro, alfaiate, bordadeiro, camiseiro, sapateiro etc) ou  07.09.09 (Confecção e pintura de faixas, placas, cartazes, confecção de artefatos de couro e pele) ou 07.09.17 (Outros serviços técnicos de confecção, manutenção e reparação não classificados) a depender da CNAE solicitada.  BAIXO RISCO
+
+- Se a resposta for ""SIM"" na pergunta 3 e com área superior a 1.250m², registrar a resposta do requerente e remeter para crítica do analista e enquadrar como 07.09.05 (Serviço de confecção sob medida e reparação de artigos de vestuário e similares: costureiro, alfaiate, bordadeiro, camiseiro, sapateiro etc) ou  07.09.09 (Confecção e pintura de faixas, placas, cartazes, confecção de artefatos de couro e pele) ou 07.09.17 (Outros serviços técnicos de confecção, manutenção e reparação não classificados) a depender da CNAE solicitada. MÉDIO RISCO
+
+
+
+Fluxo Semiexpresso
+
+-Se a resposta for ""NÃO""  na pergunta 3 e tipo de espaço  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.05.01 ou  09.11.01  ou 09.11.02 ou 09.11.04 ou 09.11.05 ou 09.11.06 ou 09.11.07 ou 09.11.10 ou 09.11.11 ou 09.11.17 ou 09.11.19 ou 09.11.20 a depender da CNAE solicitada. ALTO RISCO
+
+- Se a resposta for ""SIM"" na pergunta 3 e tipo de espaço  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e e enquadrar como 07.09.05 (Serviço de confecção sob medida e reparação de artigos de vestuário e similares: costureiro, alfaiate, bordadeiro, camiseiro, sapateiro etc) ou  07.09.09 (Confecção e pintura de faixas, placas, cartazes, confecção de artefatos de couro e pele) ou 07.09.17 (Outros serviços técnicos de confecção, manutenção e reparação não classificados) a depender da CNAE solicitada. MÉDIO RISCO
+
+- Se a resposta for “NÃO” na pergunta 3 e com área menor ou igual a 1.250 m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.05.01 ou  09.11.01  ou 09.11.02 ou 09.11.04 ou 09.11.05 ou 09.11.06 ou 09.11.07 ou 09.11.10 ou 09.11.11 ou 09.11.17 ou 09.11.19 ou 09.11.20 a depender da CNAE solicitada.  ALTO RISCO
+
+- Se a resposta for ""NÃO"" na pergunta 3 e com área superior a 1.250m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.05.01 ou  09.11.01  ou 09.11.02 ou 09.11.04 ou 09.11.05 ou 09.11.06 ou 09.11.07 ou 09.11.10 ou 09.11.11 ou 09.11.17 ou 09.11.19 ou 09.11.20 a depender da CNAE solicitada. ALTO RISCO","ATUALIZADA EM 21/07/2026: DESMEMBRAMENTO DA REGRA 2
+
+Regra para atividades que podem ser artesanal ou industrial 
+Resposta ""SIM"" significa artesanal 
+Resposta ""NÃO"" significa produção em série (industrial)"
+4,"FLUXO EXPRESSO (BAIXO RISCO)
+
+- Se a resposta for “NÃO"" e  área menor ou igual a 1250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se a resposta for “SIM” e área menor ou igual a 1250 m², enquadrar com o segundo enquadramento disponível.
+
+
+FLUXO EXPRESSO (MÉDIO RISCO)
+
+- Se a resposta for “NÃO"" e área superior a 1250 m²  enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se a resposta for “SIM” e área superior a 1250 m² ,  enquadrar com o segundo enquadramento disponível.
+
+
+FLUXO SEMIEXPRESSO (MÉDIO RISCO)
+
+-Se a resposta for “SIM” e o tipo de espaço for “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar com o segundo enquadramento disponível.
+
+- Se a resposta for “NÃO"" e o tipo de espaço “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).",ATUALIZADA EM 21/07/2026
+5,"Fluxo Expresso 
+
+- Se a resposta for “NÃO” na pergunta 11 e com área menor ou igual a 1250 m² enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). (BAIXO RISCO)
+
+- Se a resposta for ""NÃO"" na pergunta 11 e com área superior a 1.250m², registrar a resposta do requerente, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). (MÉDIO RISCO)
+
+Fluxo Semiexpresso
+
+-  Se a resposta for “SIM”  na pergunta 11, enquadrar com  o segundo enquadramento disponível e remeter para crítica do analista. (MÉDIO RISCO)/ ALTO RISCO SE ENQUADRADO COMO ID
+
+- Se a resposta for “SIM” na pergunta 11 e   o tipo de espaço  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL""“CONTAINER”, enquadrar com  o segundo enquadramento disponível e remeter para crítica do analista. (MÉDIO RISCO)/ ALTO RISCO SE ENQUADRADO COMO ID
+
+-  Se a resposta for ""NÃO"" na pergunta 11  e  tipo de espaço  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista. (MÉDIO RISCO)","Os fluxos da antiga REGRA 62 passaram para a REGRA 05 em 12/04/2024
+
+Quando respondido ""SIM"", e o enquadramento/ subcategoria de uso for ID, a atividade é classificado como de Alto Risco. 
+
+
+ATUALIZADA EM 21/07/2026"
+6,"Se a resposta for ""NÃO"" na pergunta 2, seguir o fluxo descrito abaixo:
+
+Fluxo Expresso
+
+- Se a resposta for “NÃO” na pergunta 2 e com área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). (BAIXO RISCO)
+
+- Se a resposta for ""NÃO"" na pergunta 2  e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).  (MÉDIO RISCO)
+
+
+Fluxo Semiexpresso 
+
+- Se a resposta for ""NÃO"" na pergunta 2 e o tipo de espaço “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). (MÉDIO RISCO)",ATUALIZADA EM 21/07/2026: DESMEMBRAMENTO DA ANTIGA REGRA 73
+7,"Se a resposta for ""SIM"" na pergunta 2, exibir a pergunta 3 e seguir o fluxo descrito abaixo:
+
+
+Fluxo Expresso
+
+- Se a resposta for “SIM” na pergunta 3 e com área menor ou igual a 1.250 m², enquadrar como “Confecção artesanal de bebidas e comidas” (código LOUOS –07.09.02). (BAIXO RISCO)
+
+- Se a resposta for ""SIM"" na pergunta 3  com área superior a 1.250m² e enquadrar como “Confecção artesanal de bebidas e comidas” (código LOUOS –07.09.02). (MÉDIO RISCO)
+
+
+
+Fluxo Semiexpresso
+
+- Se a resposta for ""SIM"" na pergunta 3 e tipo de espaço  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Confecção artesanal de bebidas e comidas” (código LOUOS –07.09.02). (MÉDIO RISCO)
+
+- Se a resposta for ""NÃO na pergunta 3 e tipo de espaço  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.02.02 ou 09.02.03 ou 09.02.04 ou 09.02.24 ou 09.02.30 ou 09.02.31 ou 09.02.32 ou 09.02.34 a depender da CNAE solicitada. (ALTO RISCO)
+
+- Se a resposta for “NÃO” na pergunta 3 com área menor ou igual a 1.250 m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.02.02 ou 09.02.03 ou 09.02.04 ou 09.02.24 ou 09.02.30 ou 09.02.31 ou 09.02.32 ou 09.02.34 a depender da CNAE solicitada.(ALTO RISCO)
+
+- Se a resposta for ""NÃO"" na pergunta 3 com área superior a 1.250m²  e registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.02.02 ou 09.02.03 ou 09.02.04 ou 09.02.24 ou 09.02.30 ou 09.02.31 ou 09.02.32 ou 09.02.34 a depender da CNAE solicitada. (ALTO RISCO)","ATUALIZADA EM 21/07/2026: DESMEMBRAMENTO DA ANTIGA REGRA 73
+
+Regra para atividades que podem ser artesanal ou industrial 
+Resposta ""SIM"" significa artesanal 
+Resposta ""NÃO"" significa produção em série (industrial)"
+8,"- Se for Edificação residencial (casa/apartamento) e solicitadas as atividades CNAEs 4713-0/05, 4713-0/05, 4754-7/01, 4785-7/99, 5320-2/01, 5611-2/03, 5611-2/04, 6619-3/05 ou 8020-0/02, exibir a mensagem a seguir e não permitir o prosseguimento do cadastro do processo:
+
+""A (s) atividade (s) solicitada (s) não é (são) permitida(s) em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares"". 
+
+
+Fluxo Expresso (BAIXO RISCO)
+
+- Se a resposta for “NÃO” e área menor ou igual a 1.250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+Fluxo Expresso (MÉDIO RISCO)
+
+- Se a resposta for “SIM” e área menor ou igual a 1.250 m², enquadrar com o segundo enquadramento disponível.
+
+- Se a resposta for ""NÃO"" e área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se a resposta for ""SIM"" e área superior a 1.250m²,  enquadrar com o segundo enquadramento disponível. 
+
+
+Fluxo Semiexpresso  (MÉDIO RISCO)
+
+- Se a resposta for ""NÃO"" e o imóvel for “EDIFICAÇÃO RESIDENCIAL""e solicitadas as atividades CNAEs 5620-1/04 e 9002-7/02, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se a resposta for ""SIM"" e o imóvel for “EDIFICAÇÃO RESIDENCIAL"" e solicitadas as atividades CNAEs 5620-1/04 e 9002-7/02, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+-Se a resposta for ""NÃO"" e tipo de espaço “GALPÃO"", “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+-Se a resposta for ""SIM"" e  tipo de espaço “GALPÃO"", “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar com o segundo enquadramento disponível.",ATUALIZADA EM 21/07/2026
+9,"* Se a solicitação for em Edificação Residencial  exibir a mensagem a seguir e não permitir o prosseguimento do cadastro do processo:
+
+""A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares"". 
+
+Se na pergunta 1 for selecionada a opção 1, exibir a notificação a seguir e não permitir o prosseguimento do cadastro do processo: 
+
+“A SEDUR não licencia serviços ambulantes de alimentação, o requerente deverá solicitar licença junto a SEMOP (Secretaria Municipal de Ordem Pública).”
+
+
+Se na pergunta 1 for selecionada a opção 2 e na pergunta 11 for respondido “SIM”, exibir a informação abaixo e não permitir o prosseguimento do cadastro do processo:
+
+ ""A SEDUR licencia apenas o escritório para a atividade de Food Truck. Deverá solicitar licença específica no órgão competente para o local do funcionamento"".
+
+
+Fluxo Expresso
+
+Se na pergunta 1 for selecionada a opção 3 e a resposta for “NÃO” na pergunta 11 e  com área igual ou menor a 1250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).  (BAIXO RISCO)
+
+- Se na pergunta 1 for selecionada a opção 3 e a resposta for “NÃO” na pergunta 11 e com área superior a 1250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).  (MÉDIO RISCO)
+
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+Se na pergunta 1 selecionada a opção 2 e na pergunta 11 for respondido “NÃO”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e remeter para crítica do analista.
+
+
+- Se na pergunta 1 for selecionada a opção 3 e a resposta for “SIM” na pergunta 11 e com área menor ou igual 1250m² , enquadrar com o segundo enquadramento disponível. 
+
+- Se na pergunta 1 for selecionada a opção 3 e a resposta for “SIM” na pergunta 11 e com área superior a 1250m² , enquadrar com o segundo enquadramento disponível. 
+
+
+- Se na pergunta 1 for selecionada a opção 3 e a resposta for “NÃO” na pergunta 11 e  tipo de espaço “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “NÃO” enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se na pergunta 1 for selecionada a opção 3 e a resposta for “SIM” na pergunta 11 e  tipo de espaço “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “NÃO” enquadrar com o segundo enquadramento disponível.",ATUALIZADA EM 21/07/2026
+10,"Atividades com um único enquadramento independente da resposta a pergunta 11, enquadrar com o enquadramento disponível para cada uma delas.
+
+Fluxo Expresso (BAIXO RISCO) 
+
+- Se a resposta for “SIM” e área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+-  Se a resposta for “NÃO” e a área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+
+Fluxo Expresso (MÉDIO RISCO)
+
+- Se a resposta for “SIM” e área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+-  Se a resposta for “NÃO” e  área superior a 1.250m² , enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Se a resposta for “SIM”  e tipo de espaço “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.
+
+-  Se a resposta for “NÃO” e tipo de espaço “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.","ANTIGA REGRA 68 
+
+
+ATUALIZADA EM 21/07/2026"
+11,"* Se a solicitação for em Edificação Residencial exibir a mensagem a seguir e não permitir o prosseguimento do cadastro do processo:
+
+""A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares"". 
+
+Se a resposta for ""NÃO"" na pergunta 15, seguir o fluxo descrito abaixo:
+
+FLUXO EXPRESSO (BAIXO RISCO)
+
+- Se a resposta for ""NÃO"" na pergunta 15 e com área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).   
+
+
+- Se a resposta for ""NÃO"" na pergunta 15 com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).   
+
+
+FLUXO SEMI EXPRESSO (MÉDIO RISCO)
+
+-  Se a resposta for “NÃO” na pergunta 15 e tipo de espaço “GALPÃO"", “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.",ATUALIZADA EM 21/07/2026
+12,"* Se a solicitação for em Edificação Residencial  exibir a mensagem a seguir e não permitir o prosseguimento do cadastro do processo:
+
+""A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares"". 
+
+Se a resposta for ""SIM"" na pergunta 15, exibir a pergunta 16 e seguir o fluxo descrito abaixo:
+
+FLUXO EXPRESSO
+
+- Se a resposta for ""SIM"" na pergunta 15, selecionada as opções 1,2,10 ou 13 na pergunta 16 e  com área menor ou igual a 1.250m², enquadrar como “Associações beneficentes, comunitárias e de bairro” (código LOUOS –  07.10.01)  (BAIXO RISCO)
+
+-Se a resposta for ""SIM"" na pergunta 15, selecionada as demais opções na pergunta 16 e com área menor ou igual a 1.250m², enquadrar como “Outras associações e organizações não classificadas” (código LOUOS –  07.10.07)   (BAIXO RISCO)
+
+- Se a resposta for ""SIM"" na pergunta 15, selecionada as opções 1,2,10 ou 13 na pergunta 16 e com área superior a 1.250m², enquadrar como “Associações beneficentes, comunitárias e de bairro” (código LOUOS –  07.10.01) (MÉDIO RISCO)
+
+-Se a resposta for ""SIM"" na pergunta 15, selecionada as demais opções na pergunta 16 e com área superior a 1.250m², enquadrar como “Outras associações e organizações não classificadas” (código LOUOS –  07.10.07)  (MÉDIO RISCO)
+
+
+FLUXO SEMIEXPRESSO (MÉDIO RISCO)
+
+- Se a resposta for ""SIM"" na pergunta 15, selecionada as opções 1,2,10 ou 13 na pergunta 16 e  tipo de espaço “GALPÃO"", “CONTAINER”, enquadrar como “Associações beneficentes, comunitárias e de bairro” (código LOUOS –  07.10.01)
+
+-Se a resposta for ""SIM"" na pergunta 15, selecionada as demais opções na pergunta 16 e tipo de espaço “GALPÃO"", “CONTAINER”, enquadrar como “Outras associações e organizações não classificadas” (código LOUOS –  07.10.07)",ATUALIZADA EM 21/07/2026
+13,"* Se a solicitação for em Edificação Residencial  exibir a mensagem a seguir e não permitir o prosseguimento do cadastro do processo:
+
+""A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares"". 
+
+Se a resposta for ""NÃO"" na pergunta 17, seguir o fluxo descrito abaixo: 
+
+Fluxo Expresso (BAIXO RISCO)
+
+- Se a resposta for “NÃO” e com área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se a resposta for ""NÃO"" e  com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Se a resposta for “NÃO” e  tipo de espaço “GALPÃO"", “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.",ATUALIZADA EM 21/07/2026
+14,"* Se a solicitação for em Edificação Residencial  exibir a mensagem a seguir e não permitir o prosseguimento do cadastro do processo:
+
+""A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares"". 
+
+Se a resposta for ""SIM"" na pergunta 17, exibir a pergunta 18 e seguir o fluxo descrito abaixo:
+
+* Se selecionado a opção 1 na pergunta 18:
+
+FLUXO EXPRESSO (MÉDIO RISCO):
+
+- Se respondido ""SIM"" na pergunta 17 e selecionado a opção 1 na pergunta 18 e com área menor ou igual a 1.250 m², enquadrar como “Outros comércios diversificados não classificados” (código LOUOS – 07.03.11) 
+
+
+FLUXO SEMIEXPRESSO (MÉDIO RISCO):
+
+- Se respondido ""SIM"" na pergunta 17 e selecionado a opção 1 na pergunta 18 e o tipo de espaço “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”com área superior a 1.250 m² em , enquadrar como “Outros comércios diversificados não classificados” (código LOUOS – 07.03.11) 
+
+- Se respondido ""SIM"" na pergunta 17 e selecionado a opção 1 na pergunta 18 e tipo de espaço “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER” registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Outros comércios diversificados não classificados” (código LOUOS – 07.03.11).
+
+
+* Se selecionada a opção 2 da pergunta 18: 
+
+FLUXO Semiexpresso (MÉDIO RISCO):
+
+- Se respondido ""SIM' na pergunta 17 e selecionado a opção 2 na pergunta 18 e com área menor ou igual a 1.250 m² , enquadrar como “Central de armazenamento e distribuição de mercadoria e cargas em geral” (código LOUOS – 07.08.02) 
+
+- Se respondido ""SIM"" na pergunta 17 e selecionado a opção 2 na pergunta 18 e com área superior a 1.250 m², enquadrar como “Central de armazenamento e distribuição de mercadoria e cargas em geral” (código LOUOS – 07.08.02) 
+
+- Se respondido ""SIM"" na pergunta 17 e selecionado a opção 2 na pergunta 18 e tipo de espaço “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “SIM” enquadrar como “Central de armazenamento e distribuição de mercadoria e cargas em geral” (código LOUOS – 07.08.02).",ATUALIZADA EM 21/07/2026
+15,"Fluxo Expresso (BAIXO RISCO)
+
+- Se a resposta for “NÃO” na pergunta 11 e com área menor ou igual a 1.250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+Fluxo Expresso (MÉDIO RISCO)
+
+- Se a resposta for “SIM” na pergunta 11 e com área menor ou igual a 1250 m² ,enquadrar com o segundo enquadramento disponível.
+
+- Se a resposta for ""NÃO"" na pergunta 11 e  com área superior a 1.250m², registrar a resposta do requerente, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) 
+ 
+
+Fluxo Semiexpresso  (MÉDIO RISCO)
+
+-Imóvel “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “NÃO” enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+-Imóvel “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “SIM”  enquadrar com o segundo enquadramento disponível.
+
+
+- Se a resposta for ""SIM"" na pergunta 11 e com área superior a 1250m² , registrar a resposta do requerente, enquadrar com o segundo enquadramento disponível e remeter para crítica do analista.",ATUALIZADA EM 21/07/2026
+16,"Se na pergunta 1 for selecionada as opções  2, 3, 4 e 5, exibir a notificação a seguir e não permitir o prosseguimento do cadastro do processo: 
+
+""Não está autorizada a prestação de serviços de publicidade em carro de som, alto-falantes os quais não são permitidos conforme artigo 13 da Legislação Municipal nº 5.354/98"".
+
+
+
+Fluxo Expresso (BAIXO RISCO)
+
+- Se na pergunta 1 for selecionada a opção 1 e a resposta for “NÃO” na pergunta 11 e com área igual ou menor a 1250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+
+Fluxo Expresso (MÉDIO RISCO)
+
+- Se na pergunta 1 for selecionada as opções 6, 7 ou 8 e a resposta for “NÃO” na pergunta 11 e  com área igual ou menor a 1250m² , enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se na pergunta 1 for selecionada a opção 1 e a resposta for “SIM” na pergunta 11 e com área igual ou menor a 1250m², enquadrar com o segundo enquadramento disponível.
+
+- Se na pergunta 1 for selecionada as opções 6, 7 ou 8  e a resposta for “SIM” na pergunta 11 e com área igual ou menor a 1250m², enquadrar com o segundo enquadramento disponível.
+
+- Se na pergunta 1 for selecionada a opção 1 e a resposta for “NÃO” na pergunta 11 e  com área superior a 1250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se na pergunta 1 for selecionada a opção 1 e a resposta for “SIM” na pergunta 11 e com área superior a 1250m², enquadrar com o segundo enquadramento disponível.
+
+- Se na pergunta 1 for selecionada as opções 6, 7 ou 8  e a resposta for “SIM” na pergunta 11 e com área superior a 1250m², enquadrar com o segundo enquadramento disponível.
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+-Imóvel  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “NÃO” enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+-Imóvel “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “SIM”  enquadrar com o segundo enquadramento disponível.",ATUALIZADA EM 21/07/2026
+17,"Fluxo Expresso (BAIXO RISCO)
+
+ - Se na pergunta 1 for selecionada a opção 1 e a resposta for “NÃO” na pergunta 11 e com área igual ou menor a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+ - Se na pergunta 1 for selecionada as opções 2, 3, 4, 5,6,7, 13, 14, 15, 16, 17, 18, 19 e a resposta for “NÃO” na pergunta 11 e com área igual ou menor a 1.250m² , enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+- Se na pergunta 1 for selecionada as opções 8, 9,10, 11,12, 20 e a resposta for “NÃO” na pergunta 11 e com área igual ou menor a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+Fluxo Expresso (MÉDIO RISCO)
+
+
+ - Se na pergunta 1 for selecionada a opção 1 e a resposta for “SIM” na pergunta 11 e com área igual ou menor a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+ - Se na pergunta 1 for selecionada a opção 1 e a resposta for “NÃO” na pergunta 11 e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+- Se na pergunta 1 for selecionada a opção 1 e a resposta for “SIM” na pergunta 11 e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+  
+
+- Se na pergunta 1 for selecionada as opções 8, 9,10, 11,12, 20 e a resposta for “NÃO” na pergunta 11 e  com área superior a 1.250m² , enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+- Se na pergunta 1 for selecionada as opções 2, 3, 4, 5, 6, 7,13, 14, 15, 16, 17, 18, 19 e a resposta for “NÃO” na pergunta 11 e com área superior a 1.250m² , enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+
+- Se na pergunta 1 for selecionada as opções 8, 9,10,11,12, 20 e a resposta for “SIM” na pergunta 11 e com área igual ou menor a 1.250m², enquadrar como “Outros serviços de armazenamento e locação não classificados, inclusive infláveis” (código LOUOS 07.08.08).
+
+
+- Se na pergunta 1 for selecionada as opções 8, 9,10,11,12, 20 e a resposta for “SIM” na pergunta 11 e com área superior a 1.250m², enquadrar como “Outros serviços de armazenamento e locação não classificados, inclusive infláveis” (código LOUOS 07.08.08).
+
+ 
+- Se na pergunta 1 for selecionada as opções 2, 3, 4, 7, 14, 15, 17, 19 e a resposta for “SIM” na pergunta 11 e com área igual ou menor a 1.250m², enquadrar como “Outras atividades de afluência pública não classificadas” (código LOUOS 07.07.08).
+
+
+- Se na pergunta 1 for selecionada as opções 2, 3, 4, 7, 14, 15, 17, 19 e a resposta for “SIM” na pergunta 11 e com área superior a 1.250m², enquadrar como “Outras atividades de afluência pública não classificadas” (código LOUOS 07.07.08).
+
+
+- Se na pergunta 1 for selecionada as opções 5, 6, 13, 16, 18 e a resposta for “SIM” na pergunta 11 e com área igual ou menor a 1.250m² , enquadrar como “Outros serviços de armazenamento e locação não classificados, inclusive infláveis” (código LOUOS 07.08.08).
+
+
+- Se na pergunta 1 for selecionada as opções 5, 6, 13, 16, 18 e a resposta for “SIM” na pergunta 11 e com área superior a 1.250m², enquadrar como “Outros serviços de armazenamento e locação não classificados, inclusive infláveis” (código LOUOS 07.08.08).
+
+
+-Imóvel “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “NÃO” na pergunta 11, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+-Imóvel “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se na pergunta 1 for selecionada a opção 1 e  a resposta for “SIM” na pergunta 11, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+-Imóvel  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se na pergunta 1 for selecionada as opções 8, 9,10,11,12, 20 e  a resposta for “SIM” na pergunta 11, enquadrar como “Outros serviços de armazenamento e locação não classificados, inclusive infláveis” (código LOUOS 07.08.08).
+
+-Imóvel  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se na pergunta 1 for selecionada as opções 2, 3, 4, 7, 14, 15, 17, 19 e  a resposta for “SIM” na pergunta 11, enquadrar como “Outras atividades de afluência pública não classificadas” (código LOUOS 07.07.08).
+
+-Imóvel  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”egistrar a resposta do requerente e remeter para crítica do analista e se na pergunta 1 for selecionada as opções 5, 6, 13, 16, 18 e  a resposta for “SIM” na pergunta 11, enquadrar como “Outros serviços de armazenamento e locação não classificados, inclusive infláveis” (código LOUOS 07.08.08).",
+18,"Se a resposta for ""NÃO"" na pergunta 2, seguir os fluxos descritos abaixo:
+
+
+Fluxo Expresso (BAIXO RISCO)
+
+- Se a resposta for “NÃO” na pergunta 2 e com área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se a resposta for ""NÃO"" na pergunta 2 e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+-Se a resposta for “NÃO” na pergunta 2 e  tipo de imóvel “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.",ATUALIZADA EM 21/07/2026
+19,"Se a resposta for ""SIM"" na pergunta 2, exibir a pergunta 3 e seguir os fluxos descritos abaixo:
+
+Fluxo Expresso
+
+- Se a resposta for “SIM” na pergunta 3 e com área menor ou igual a 1250 m², enquadrar como 07.09.08 (Cantaria, marmoaria, carpintaria, marcenaria, vidraçaria e serraria) ou 07.09.17 (Outros serviços técnicos de confecção, manutenção e reparação não classificados) a depender da CNAE solicitada.   (BAIXO RISCO)
+
+- Se a resposta for ""SIM"" na pergunta 3 e com área superior a 1250m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 07.09.08 (Cantaria, marmoaria, carpintaria, marcenaria, vidraçaria e serraria) ou 07.09.17 (Outros serviços técnicos de confecção, manutenção e reparação não classificados) a depender da CNAE solicitada. (MÉDIO RISCO)
+
+
+Fluxo Semiexpresso  
+
+- Se a resposta for ""SIM"" na pergunta 3 e tipo de imóvel “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 07.09.08 (Cantaria, marmoaria, carpintaria, marcenaria, vidraçaria e serraria) ou 07.09.17 (Outros serviços técnicos de confecção, manutenção e reparação não classificados) a depender da CNAE solicitada. (MÉDIO RISCO)
+
+- Se resposta for ""NÃO"" na pergunta 3 e tipo de imóvel  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.09.02 (Fabricação de produtos de madeira) ou 09.09.04 (Fabricação de artefatos de tanoaria e de embalagens de madeira) ou 09.12.18 (Fabricação de outras máquinas e equipamentos de uso específico) 09.13.02 (Fabricação de produtos de metal, exceto máquinas e equipamentos) ou 09.14.09 (Beneficiamento e preparação de minerais não metálicos, não associados, em sua localização, à extração) ou 09.15.05 (Fabricação e acabamento de artigos diversos do mobiliário)  a depender da CNAE solicitada. (ALTO RISCO)
+
+
+- Se a resposta for “NÃO” na pergunta 3 e com área menor ou igual a 1250 m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.09.02 (Fabricação de produtos de madeira) ou 09.09.04 (Fabricação de artefatos de tanoaria e de embalagens de madeira) ou 09.12.18 (Fabricação de outras máquinas e equipamentos de uso específico) 09.13.02 (Fabricação de produtos de metal, exceto máquinas e equipamentos) ou 09.14.09 (Beneficiamento e preparação de minerais não metálicos, não associados, em sua localização, à extração) ou 09.15.05 (Fabricação e acabamento de artigos diversos do mobiliário)  a depender da CNAE solicitada. (ALTO RISCO)
+
+- Se a resposta for ""NÃO"" na pergunta 3 e com área superior a 1250m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.09.02 (Fabricação de produtos de madeira) ou 09.09.04 (Fabricação de artefatos de tanoaria e de embalagens de madeira) ou 09.12.18 (Fabricação de outras máquinas e equipamentos de uso específico) 09.13.02 (Fabricação de produtos de metal, exceto máquinas e equipamentos) ou 09.14.09 (Beneficiamento e preparação de minerais não metálicos, não associados, em sua localização, à extração) ou 09.15.05 (Fabricação e acabamento de artigos diversos do mobiliário)  a depender da CNAE solicitada. (ALTO RISCO)","Regra para atividades que podem ser artesanal ou industrial 
+Resposta ""SIM"" significa artesanal 
+Resposta ""NÃO"" significa produção em série (industrial)
+
+ATUALIZADA EM 21/07/2026"
+20,"Fluxo Expresso (MÉDIO RISCO)
+
+- Se a resposta for “NÃO” e com área menor ou igual a 1.250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se a resposta for “SIM” e  com área menor ou igual a 1250 m², enquadrar com o segundo enquadramento disponível. 
+
+- Se a resposta for ""SIM"" com área superior a 1250m² , registrar a resposta do requerente , remeter para crítica do analista e enquadrar com o segundo enquadramento disponível.  
+
+- Se a resposta for ""NÃO"" e com área superior a 1.250m², registrar a resposta do requerente, remeter para crítica do analista e enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+Fluxo Semiexpresso (ALTO RISCO)
+
+- Se a resposta for ""SIM"" , registrar a resposta do requerente, remeter para crítica do analista e enquadrar com o segundo enquadramento disponível.  
+
+-  Se a resposta for ""NÃO"" e o imóvel for  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente, remeter para crítica do analista e enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).",Atualizada em 21/08/2026
+21,"Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Se a resposta for “NÃO”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se a resposta for “SIM, enquadrar com o segundo enquadramento disponível.",Atualizada em 21/08/2026
+22,"Fluxo Expresso  (MÉDIO RISCO)
+
+- Se a resposta for “NÃO” e com área menor ou igual a 1.250 m² , enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+
+
+Fluxo Semiexpresso  (MÉDIO RISCO)
+
+- Se a resposta for ""NÃO"" e o imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER, registrar a resposta do requerente e remeter para crítica do analista.
+
+- Se a resposta for ""SIM"" e o imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”/, registrar a resposta do requerente e remeter para crítica do analista.
+
+- Se a resposta for ""SIM"" e com área menor ou igual a 1250 m², registrar a resposta do requerente e remeter para crítica do analista.
+
+- Se a resposta for ""NÃO"" e com área superior a 1.250m², registrar a resposta do requerente e remeter para crítica do analista.
+
+- Se a resposta for ""SIM"" e com área superior a 1250m² , registrar a resposta do requerente e remeter para crítica do analista.",Atualizada em 21/08/2026
+23,"Fluxo Expresso  (MÉDIO RISCO)
+
+- Se a resposta for “NÃO” e com área menor ou igual a 1.250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se a resposta for ""SIM"", enquadrar com o segundo enquadramento disponível.
+
+- Se a resposta for ""NÃO"" e com área superior a 1.250m², registrar a resposta do requerente, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se a resposta for ""SIM"" e com área menor ou igual a 1250 m² registrar a resposta do requerente, enquadrar com o segundo enquadramento disponível.
+
+- Se a resposta for ""SIM"" e com área superior a 1250m² , registrar a resposta do requerente, enquadrar com o segundo enquadramento disponível.
+
+Fluxo Semiexpresso  (MÉDIO RISCO)
+
+
+- Se a resposta for ""NÃO"" e o imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e remeter para crítica do analista. 
+
+- Se a resposta for ""SIM"" e o imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente, enquadrar com o segundo enquadramento disponível e remeter para crítica do analista.",Atualizada em 21/08/2026
+24,"Se a resposta for ""NÃO"" na pergunta 2, seguir o fluxo descrito abaixo:
+
+Fluxo Expresso (MÉDIO RISCO)
+
+- Se a resposta for “NÃO” na pergunta 2 e  com área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+
+- Se a resposta for ""NÃO"" na pergunta 2 e com área superior a 1.250m², registrar a resposta do requerente, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e remeter para crítica do analista.
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”e a resposta for ""NÃO"" na pergunta 2, registrar a resposta do requerente, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e remeter para crítica do analista.",Atualizada em 21/08/2026
+25,"Se a resposta for ""SIM"" na pergunta 2, exibir a pergunta 3 e seguir o fluxo descrito abaixo:
+
+
+Fluxo Expresso (MÉDIO RISCO)
+
+- Se a resposta for “SIM” na pergunta 3 e com área menor ou igual a 1250 m² , enquadrar como “Confecção artesanal de bebidas e comidas” (código LOUOS –07.09.02).
+
+- Se a resposta for ""SIM"" na pergunta 3 e  com área superior a 1250m² , registrar a resposta do requerente e enquadrar como “Confecção artesanal de bebidas e comidas” (código LOUOS –07.09.02). (MÉDIO RISCO)
+
+
+Fluxo Semiexpresso 
+
+ - Se a resposta for ""SIM"" na pergunta 3  e o imóvel  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Confecção artesanal de bebidas e comidas” (código LOUOS –07.09.02). (MÉDIO RISCO)
+
+- Se a resposta for “NÃO” na pergunta 3 e o imóvel   “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista. (ALTO RISCO)
+
+- Se a resposta for “NÃO” na pergunta 3 e com área menor ou igual a 1250 m², registrar a resposta do requerente e remeter para crítica do analista.  (ALTO RISCO)
+
+- Se a resposta for ""NÃO"" na pergunta 3 e  com área superior a 1250m² , registrar a resposta do requerente e remeter para crítica do analista. (ALTO RISCO)","Regra para atividades que podem ser artesanal ou industrial 
+Resposta ""SIM"" significa artesanal 
+Resposta ""NÃO"" significa produção em série (industrial)
+Atualizada em 21/08/2026"
+26,"Se a resposta for ""NÃO"" na pergunta 19, seguir o fluxo descrito abaixo: 
+
+Fluxo Expresso
+
+- Se a resposta for “NÃO” e com área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).  (MÉDIO RISCO)
+
+- Se a resposta for ""NÃO"" e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). (ALTO RISCO)
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+-Se a resposta for “NÃO” e  Imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.",Atualizada em 21/08/2026
+27,"Se a resposta for ""SIM"" na pergunta 19, exibir a pergunta 20 e seguir o fluxo descrito abaixo:
+
+* Se selecionado as opções 1, 2  e 4 na pergunta 20:
+
+FLUXO EXPRESSO  (MÉDIO RISCO)
+
+
+- Área menor ou igual a 1250 m², enquadrar como “Comércio de produtos veterinários, rações e sementes” (código LOUOS – 07.04.06). 
+
+- Área superior a 1250 m², enquadrar como  “Comércio de produtos veterinários, rações e sementes” (código LOUOS – 07.04.06). 
+ 
+
+
+FLUXO SEMIEXPRESSO (MÉDIO RISCO)
+
+
+- Imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “SIM” enquadrar como  “Comércio de produtos veterinários, rações e sementes” (código LOUOS – 07.04.06). 
+
+
+* Se selecionada a opção 3 na pergunta 20: 
+
+FLUXO EXPRESSO (Risco BAIXO B):
+
+- Área menor ou igual a 1250 m², enquadrar como “Comércio de animais de estimação e peixes ornamentais” (código LOUOS – 07.04.07). 
+
+ 
+FLUXO SEMIEXPRESSO (Risco BAIXO B):
+
+- Área superior a 1250 m², enquadrar como “Comércio de animais de estimação e peixes ornamentais” (código LOUOS – 07.04.07).
+
+
+- Imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL""“CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “SIM” enquadrar como “Comércio de animais de estimação e peixes ornamentais” (código LOUOS – 07.04.07).",Atualizada em 21/08/2026
+28,"Se a resposta for ""NÃO"" na pergunta 21, seguir o fluxo descrito abaixo: 
+
+Fluxo  Semiexpresso (MÉDIO RISCO)
+
+- Se a resposta for “NÃO”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).",Atualizada em 21/08/2026
+29,"Se a resposta for ""SIM"" na pergunta 21, exibir a pergunta 22 e seguir o fluxo descrito abaixo:
+
+Fluxo Semiexpresso (MÉDIO RISCO):
+
+- Se selecionado as opções 1 e 2 na pergunta 22, enquadrar como ""Estacionamento, Edifício garagem, locação de veículos"" (código LOUOS – 07.08.01). 
+
+- Se selecionado a opção 3 na pergunta 22, enquadrar como ""Estacionamento e garagens de veículos pesados, máquinas, ônibus, veículos de socorro, de reboque, ambulância, táxis"" (código LOUOS – 07.08.05).",Atualizada em 21/08/2026
+30,"Fluxo Expresso (MÉDIO RISCO) 
+
+- Atividades com um único enquadramento independente da resposta a pergunta 11, enquadrar com o enquadramento disponível para cada uma delas.
+
+- Desde que não ultrapasse a área de 1250m²
+
+- Desde que NÃO ESTEJA em ""GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"", “CONTAINER”.",Atualizada em 21/08/2026
+31,"Fluxo Expresso (MÉDIO RISCO)
+ 
+- Se for respondido ""NÃO"" na pergunta 11 e com área menor ou igual a 1250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se selecionado as opções  1;2,3;4;5;6;7;8; 9;11; 12;13;14; 15 ou 16 na pergunta 10 e ""SIM"" na pergunta 11  e com área menor ou  igual a 1250m² , enquadrar como “Outros comércios diversificados não classificados” (código LOUOS – 07.03.11). 
+
+- Se selecionado a opção 10 na pergunta 10 e ""SIM"" na pergunta 11 e com área menor ou igual a 1250m², enquadrar como “Outros comércios especializados não classificados"" (código LOUOS – 07.04.17).
+
+- Se for respondido ""NÃO"" na pergunta 11 e com área superior a 1250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se selecionado as opções  1;2,3;4;5;6;7;8; 9;11; 12;13;14; 15 ou 16 na pergunta 10 e ""SIM"" na pergunta 11  e com área superior a 1250m², enquadrar como “Outros comércios diversificados não classificados” (código LOUOS – 07.03.11). 
+
+- Se selecionado a opção 10 na pergunta 10 e ""SIM"" na pergunta 11  e com área superior a 1250m² , enquadrar como “Outros comércios especializados não classificados"" (código LOUOS – 07.04.17).
+
+- Se selecionado a opção 10 na pergunta 10 e ""SIM"" na pergunta 11 e o  imóvel com  área superior a 350 m², enquadrar como “Outros comércios especializados não classificados"" (código LOUOS – 07.04.17).
+
+- Se selecionado as opções  1;2,3;4;5;6;7;8; 9;11; 12;13;14; 15 ou 16 na pergunta 10 e ""SIM"" na pergunta 11 e o  imóvel com  área superior a 1250 m², enquadrar como “Outros comércios diversificados não classificados” (código LOUOS –07.03.11). 
+
+
+
+Fluxo Semiexpresso  (MÉDIO RISCO)
+
+
+- Se for respondido ""NÃO"" na pergunta 11 e imóvel com  área superior a 1250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se for respondido ""NÃO"" na pergunta 11 e o imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e registrar a resposta do requerente , remeter para crítica do analista. 
+
+- Se selecionado as opções  1;2,3;4;5;6;7;8; 9;11; 12;13;14; 15 ou 16 na pergunta 10 e ""SIM"" na pergunta 11 e o imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL""“CONTAINER”, enquadrar como “Outros comércios diversificados não classificados” (código LOUOS –07.03.11) e registrar a resposta do requerente , remeter para crítica do analista. 
+
+- Se selecionado a opção 10 na pergunta 10 e ""SIM"" na pergunta 11  e o imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Outros comércios especializados não classificados"" (código LOUOS – 07.04.17) e registrar a resposta do requerente , remeter para crítica do analista.",Atualizada em 21/08/2026
+32,"Fluxo Expressso  (MÉDIO RISCO)
+
+- Se a resposta for “NÃO” na pergunta 11, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+Fluxo  Semiexpresso (MÉDIO RISCO)
+
+- Se a resposta for ""SIM"" na pergunta 11 e selecionado a opção 1 na pergunta 12, enquadrar como ""Depósito de inflamáveis, combustíveis, álcool, inseticidas, lubrificantes, resinas, gomas, tintas e vernizes ou outros produtos químicos perigosos"" (código LOUOS – 07.08.04). 
+
+- Se a resposta for ""SIM"" na pergunta 11 e selecionado a opção 2 na pergunta 12, enquadrar como ""Depósito de material em geral, de cargas e encomendas, de madeireira, ""self storage"" (guarda volumes)"" (código LOUOS – 07.08.03). 
+
+-Se a resposta for ""NÃO"" na pergunta 11 e tipo de espaço “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como  “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).",Atualizada em 21/08/2026
+33,"Fluxo Expresso (MÉDIO RISCO)
+
+- Se a resposta for “NÃO” e com área menor ou igual a 1.250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se a resposta for “NÃO” e com área superior a 1.250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Se selecionado as opções 1, 2 e 3 na pergunta 1 e respondido “SIM” na pergunta 11, enquadrar como “Adestramento e serviço de hospedagem de animais de estimação” (código LOUOS - 07.12.02). 
+
+- Se respondido “NÃO” na pergunta 11 e imóvel  “GALPÃO”,  ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e registrar a resposta do requerente e remeter para crítica do analista. 
+
+- Se respondido “SIM” na pergunta 11 e imóvel  “GALPÃO”,  ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”,  enquadrar como “Adestramento e serviço de hospedagem de animais de estimação” (código LOUOS - 07.12.02) e registrar a resposta do requerente e remeter para crítica do analista.","CNAE 9609-2/07
+Atualizada em 21/08/2026"
+34,"Se a resposta for ""NÃO"" na pergunta 8, seguir o fluxo descrito abaixo: 
+
+Fluxo Expresso (MÉDIO RISCO)
+
+- Se a resposta for “NÃO” e com área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se a resposta for ""NÃO"" e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+ 
+-Se a resposta for “NÃO” e  Imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.",Atualizada em 21/08/2026
+35,"Se a resposta for ""SIM"" na pergunta 8, exibir a pergunta 9 e seguir o fluxo descrito abaixo:
+
+Fluxo Expresso  (MÉDIO RISCO)
+
+- Se selecionada as opções 1,2,3 e 4 na pergunta 9 e com área menor ou igual a 1250 m² , enquadrar como “Outros serviços profissionais não classificados” (código LOUOS – 07.12.14). 
+
+- Se selecionada as opções 5 e 6 na pergunta 9 e com área menor ou igual a 1250 m² , enquadrar como “Clube recreativo, associativo e/ou desportivo, quadra de escola de samba ou salão de esporte para locação” (código LOUOS – 07.07.06). 
+
+- Se selecionada as opções 5 e 6 na pergunta 9 e com área superior a 1250 m², enquadrar como “Clube recreativo, associativo e/ou desportivo, quadra de escola de samba ou salão de esporte para locação” (código LOUOS – 07.07.06).
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Se selecionada as opções 1,2,3 e 4 na pergunta 9 e  com área superior a 1250 m², enquadrar como  “Outros serviços profissionais não classificados” (código LOUOS – 07.12.14).
+
+- Se selecionada as opções 1,2,3 e 4 na pergunta 9  e imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “SIM”enquadrar como  “Outros serviços profissionais não classificados” (código LOUOS – 07.12.14).
+
+- Se selecionada as opções 5 e 6 na pergunta 9 imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL""“CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e se a resposta for “SIM”enquadrar como “Clube recreativo, associativo e/ou desportivo, quadra de escola de samba ou salão de esporte para locação” (código LOUOS – 07.07.06).",Atualizada em 21/08/2026
+36,"Se a resposta for ""NÃO"" nas perguntas 21 e 23, seguir o fluxo descrito abaixo: 
+
+Fluxo Expresso (MÉDIO RISCO)
+
+- Se a resposta for “NÃO” e com área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se a resposta for ""NÃO"" e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+-Se a resposta for “NÃO” e  Imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.",Atualizada em 21/08/2026
+37,"Se a resposta for ""SIM"" na perguntas 21 e 23, exibir as perguntas 22 e 24 para atividades relacionadas cada uma delas e seguir o fluxo descrito abaixo:
+
+
+FLUXO EXPRESSO (MÉDIO RISCO):
+
+- Se selecionada a opção 1 nas perguntas 22 e 24 e com área menor ou igual a 1.250 m² , enquadrar como “Lavanderia, tinturaria, toalheria (industrial)” (código LOUOS – 07.09.15).
+
+- Se selecionada a opção 2 nas perguntas 22 e 24 e com área menor ou igual a 1250 m², enquadrar como “Lavanderia, tinturaria, toalheria e similares (exceto industrial)” (código LOUOS – 07.09.03). 
+
+- Se selecionada a opção 2 nas perguntas 22 e 24 e com área superior a 1250 m² , enquadrar como  “Lavanderia, tinturaria, toalheria e similares (exceto industrial)” (código LOUOS – 07.09.03).
+
+
+
+FLUXO SEMIEXPRESSO (MÉDIO RISCO):
+
+- Se selecionada a opção 1 nas perguntas 22 e 24 e imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL""“CONTAINER”, enquadrar como  “Lavanderia, tinturaria, toalheria (industrial)” (código LOUOS – 07.09.15) e registrar a resposta do requerente e remeter para crítica do analista.
+
+- Se selecionada a opção 1 nas perguntas 22 e 24 e  com área superior a 1250 m², enquadrar como  “Lavanderia, tinturaria, toalheria (industrial)” (código LOUOS – 07.09.15).
+
+- Se selecionada a opção 2 nas perguntas 22 e 24 e o imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Lavanderia, tinturaria, toalheria e similares (exceto industrial)” (código LOUOS – 07.09.03) e registrar a resposta do requerente e remeter para crítica do analista.",Atualizada em 21/08/2026
+38,"* Se a  categoria da empresa for diferente de órgão público, exibir a mensagem seguinte e não permitir o prosseguimento do cadastro do processo:  
+
+""Esta atividade só é permitida para órgãos da Administração Pública"".
+
+* Se for declarado que  a categoria da empresa é Órgão Público e respondido ""NÃO"" na pergunta 7, exibir a mensagem seguinte e não permitir o prosseguimento do cadastro do processo:  
+
+""Esta atividade só é permitida para órgãos da Administração Pública"". 
+
+* Se a solicitação for em Edificação Residencial (casa/apartamento) exibir a mensagem a seguir e não permitir o prosseguimento do cadastro do processo:
+
+""A (s) atividade (s) solicitada (s) não é (são) permitida(s) em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares"". 
+
+
+Fluxo expresso (BAIXO RISCO)
+
+- Se for declarado que a categoria da empresa é Órgão Público e respondido ""SIM"" na pergunta 7 e enquadrar a atividade solicitada como “Órgãos dos poderes executivo, legislativo e judiciário” (código LOUOS – 07.11.03).
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Se for declarado que a categoria da empresa é Órgão Público e respondido ""SIM"" na pergunta 7 etipo de imóvel “GALPÃO"", “CONTAINER”, enquadrar como “Órgãos dos poderes executivo, legislativo e judiciário” (código LOUOS – 07.11.03).","8411-6/00 / 8412-4/00 / 8413-2/00 / 8421-3/00 / 8422-1/00 / 8423-0/00 / 8424-8/00 / 8425-6/00 / 8430-2/00
+
+ATUALIZADA EM 21/07/2026"
+39,"- Se a solicitação for em Edificação Residencial (casa/apartamento) exibir a mensagem a seguir e não permitir o prosseguimento do cadastro do processo:
+
+""A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares"". 
+
+
+-Se a categoria da empresa for Órgão Público e for selecionado ""SIM"" na pergunta 6, não permitir prosseguir com o cadastro exibindo a seguinte mensagem:  
+
+Resposta selecionada para a CNAE 8423-0/00 não é compatível com a categoria da empresa indicada nesta etapa. Revise as informações para continuar.
+
+- Se a categoria da empresa for diferente de Órgão Público e for respondido ""NÃO"" na pergunta 6, não permitir prosseguir com o cadastro exibindo a seguinte mensagem:  
+
+
+Resposta selecionada para a CNAE 8423-0/00 não é compatível com a categoria da empresa indicada nesta etapa. Revise as informações para continuar.
+
+
+Fluxo Expresso (BAIXO RISCO)
+
+- Se a categoria da empresa for Órgão Público e for respondido ""NÃO"" na pergunta 6, enquadrar como “Órgãos dos poderes executivo, legislativo e judiciário” (código LOUOS – 07.11.03).
+
+   
+- Se a categoria da empresa for diferente de Órgão Público e for respondido ""SIM"" na pergunta 6, enquadradar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Se a categoria da empresa for Órgão Público e for respondido ""NÃO"" na pergunta 6 e imóvel “GALPÃO"", “CONTAINER”, enquadrar como “Órgãos dos poderes executivo, legislativo e judiciário” (código LOUOS – 07.11.03).
+
+- Se a categoria da empresa for diferente de Órgão Público e for respondido ""SIM"" na pergunta 6 e tipo de imóvel “GALPÃO"", “CONTAINER” enquadradar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).",ATUALIZADA EM 21/07/2026
+40,"Fluxo Expresso (MÉDIO RISCO)
+
+- Se selecionadas as opções 1,2,3,5,6,7,10,11,12,13,14,15,16,17 na pergunta 1 e  a resposta for “NÃO” na pergunta 11 e com área menor ou igual a 1.250m² , enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+
+- Se selecionadas as opções 1,2,3,5,6,7,10,11,12,13,14,15,16,17 na pergunta 1 e a resposta for “SIM”  na pergunta 11 e com área menor ou igual a 1250 m², enquadrar com o segundo enquadramento disponível.   
+
+- Se selecionadas as opções 1,2,3,5,6,7,10,11,12,13,14,15,16,17 na pergunta 1 e  a resposta for “NÃO” na pergunta 11 e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+ - Se selecionadas as opções 1,2,3,5,6,7,10,11,12,13,14,15,16,17 na pergunta 1 e a resposta for “SIM”  na pergunta 11 e com área superior a 1.250 m² , enquadrar com o segundo enquadramento disponível.   
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Se selecionada as opções 4 ,8,9 na pergunta 1 e a resposta for ""SIM"" na pergunta 11 e com área menor ou igual a 1.250m², enquadrar com o segundo enquadramento disponível.
+
+- Se selecionada as opções 4 ,8,9 na pergunta 1 e a resposta for ""SIM"" na pergunta 11 e com área  superior a 1.250m², enquadrar com o segundo enquadramento disponível.
+
+- Se selecionada as opções 4 ,8,9 na pergunta 1 e a resposta for ""NÃO"" na pergunta 11 e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se selecionada as opções 4 ,8,9 na pergunta 1 e a resposta for ""NÃO"" na pergunta 11 e com área  menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se selecionadas as opções 1,2,3,5,6,7, 10,11,12,13,14,15,16,17 na pergunta 1 e  a resposta for ""NÃO"" na pergunta 11 e o imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente, e remeter para crítica do analista. 
+
+- Se selecionadas as opções 1,2,3,5,6,7, 10,11,12,13,14,15,16,17 na pergunta 1 e  a resposta for ""SIM"" na pergunta 11 e o imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" CONTAINER”, registrar a resposta do requerente, enquadrar com o segundo enquadramento disponível e remeter para crítica do analista. 
+
+- Se selecionada as opções 4 ,8,9  na pergunta 1 e a resposta for ""SIM"" na pergunta 11 e o imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente, enquadrar com o segundo enquadramento disponível e remeter para crítica do analista.
+
+- Se selecionada as opções 4,8,9 na pergunta 1 e a resposta for ""NÃO"" na pergunta 11 e o imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e remeter para crítica do analista.",Atualizada em 21/08/2026
+41,"Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Respondido “SIM” na pergunta 4 e pedido de viabilidade contendo apenas a CNAE 8211-3/00:
+
+       -  Verificar se no endereço em questão (mesma inscrição imobiliária e complemento) já existe uma sede de escritório virtual cadastrada e adotar os procedimentos abaixo a depender do resultado do cruzamento:
+
+               - Havendo uma sede de escritório virtual já cadastrada para o local, não prosseguir com o cadastro do processo e exibir a mensagem a seguir: 
+
+                           Endereço já cadastrado como sede de escritório virtual. Entrar em contato com a SEDUR no caso da empresa já licenciada não se encontrar mais em atividade.  
+
+              - Não havendo uma sede de escritório virtual já cadastrado no endereço, prosseguir com o cadastro do processo, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e registrar a resposta do requerente e remeter para crítica do analista. No campo de condicionantes inserir a informação: Prestação de Serviço de Escritório Virtual. 
+
+- Respondido “SIM” na pergunta 4 e pedido de viabilidade contemplar além da CNAE 8211-3/00, as atividades 6920-6/01, 6920-6/02, 7020-4/00, 8219-9/99, 8291-1/00 e 8599-6/04: 
+ 
+      -  Verificar se no endereço em questão (mesma inscrição imobiliária e complemento) já existe uma sede de escritório virtual cadastrada e adotar os procedimentos abaixo a depender do resultado do cruzamento:
+
+                  - Havendo uma sede de escritório virtual já cadastrada para o local, não prosseguir com o cadastro do processo e exibir a mensagem a seguir: 
+
+                         Endereço já cadastrado como sede de escritório virtual. Entrar em contato com a SEDUR no caso da empresa já licenciada não se encontrar mais em atividade. 
+ 
+                 - Não havendo uma sede de escritório virtual já cadastrado no endereço, prosseguir com o cadastro do processo, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e registrar a resposta do requerente e remeter para crítica do analista. No campo de condicionantes inserir a informação: Prestação de Serviço de Escritório Virtual.
+
+- Respondido “SIM” na pergunta 4 e pedido de viabilidade contemplar além da CNAE 8211-3/00, atividades diferentes das CNAEs 6920-6/01, 6920-6/02, 7020-4/00, 8219-9/99, 8291-1/00 e 8599-6/04, não permitir prosseguir com o cadastro exibindo a seguinte mensagem:
+
+                    Atividades solicitadas não são permitidas junto com a prestação de serviço de escritório virtual conforme Anexo A do Decreto Municipal nº 35.062 de 29 dezembro de 2021 que estabelece diretrizes para Viabilidade Locacional para Sede de escritório virtual e Coworking e dá outras providências.",Atualizada em 21/08/2026
+42,"Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Se respondido “NÃO” na pergunta 4 e se selecionada as opções 1,2, 3 ou 4 na pergunta 5:
+
+          - Verificar se no endereço em questão (mesma inscrição imobiliária e complemento) já existe uma sede de escritório virtual cadastrada e adotar os procedimentos abaixo a depender do resultado do cruzamento:
+
+                   - Havendo uma sede de escritório virtual já cadastrada para o local, não prosseguir com o cadastro do processo e exibir a mensagem a seguir: 
+
+                       A atividade não permitida em escritório virtual conforme Anexo B do Decreto Municipal nº 35.062 de 29 dezembro de 2021 que estabelece diretrizes para Viabilidade Locacional para Sede de escritório virtual e Coworking e dá outras providências.
+
+                   - Não havendo uma sede de escritório virtual já cadastrado no endereço, prosseguir com o cadastro do processo, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e registrar a resposta do requerente e remeter para crítica do analista. No campo de condicionantes inserir a informação: Os serviços constantes na CNAE 8211-3/00 referem-se aos serviços de apoio administrativo, não estando autorizada a prestação de serviço de escritório virtual.
+
+- Se respondido “NÃO” na pergunta 4, selecionada a opção 5 na pergunta 5 e pedido de viabilidade contendo apenas a CNAE 8211-3/00:
+
+        - Verificar se no endereço em questão (mesma inscrição imobiliária e complemento) já existe uma sede de escritório virtual cadastrada e adotar os procedimentos abaixo a depender do resultado do cruzamento:
+
+              - Havendo uma sede de escritório virtual já cadastrada para o local, não prosseguir com o cadastro do processo e exibir a mensagem a seguir: 
+
+                              A atividade não permitida em escritório virtual conforme Anexo B do Decreto Municipal nº 35.062 de 29 dezembro de 2021 que estabelece diretrizes para Viabilidade Locacional para Sede de escritório virtual e Coworking e dá outras providências.
+
+               - Não havendo uma sede de escritório virtual já cadastrado no endereço, prosseguir com o cadastro do processo, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e registrar a resposta do requerente e remeter para crítica do analista. No campo de condicionantes inserir a informação: Trata-se de Coworking, não estando autorizada a prestação de serviço de escritório virtual.
+
+
+- Se respondido “NÃO” na pergunta 4, selecionada a opção 5 na pergunta 5 e pedido de viabilidade contendo outras atividades além da CNAE 8211-3/00:
+
+         - Verificar se no endereço em questão (mesma inscrição imobiliária e complemento) já existe uma sede de escritório virtual cadastrada e adotar os procedimentos abaixo a depender do resultado do cruzamento:
+
+                   - Havendo uma sede de escritório virtual já cadastrada para o local, não prosseguir com o cadastro do processo e exibir a mensagem a seguir: 
+
+                         A atividade não permitida em escritório virtual conforme Anexo B do Decreto Municipal nº 35.062 de 29 dezembro de 2021 que estabelece diretrizes para Viabilidade Locacional para Sede de escritório virtual e Coworking e dá outras providências.
+
+                  - Não havendo uma sede de escritório virtual já cadastrado no endereço, prosseguir com o cadastro do processo, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) e registrar a resposta do requerente e remeter para crítica do analista com o gatilho: Verificar se atende ao §2º do artigo 6º do Decreto Municipal nº 35.062 de 29 dezembro de 2021. No campo de condicionantes inserir a informação: Trata-se de Coworking, não estando autorizada a prestação de serviço de escritório virtual.",Atualizada em 21/08/2026
+43,"Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Se na pergunta 1 for selecionada a opção 1, enquadrar como ""Templo (igrejas, terreiros, e demais locais de culto)"" - Código LOUOS - 07.07.02
+
+- Se na pergunta 1 for selecionada a opção 2 ou a opção 4, enquadrar como ""Outras associações e organizações não classificadas"" (Código LOUOS - 07.10.07)
+
+- Se na pergunta 1 for selecionada a opção 3, enquadrar como ""Casa de geriatria, asilo, casa de repouso, convento, mosteiro, seminário, casa de retiro"" (Código LOUOS - 07.13.02)",Atualizada em 21/08/2026
+44,"Fluxo Semiexpresso (MÉDIO RISCO) 
+
+- Se a resposta for ""NÃO"" na pergunta 30, não permitir prosseguir com o cadastro exibindo a seguinte mensagem:  
+
+  ""Esta atividade só é permitida para unidades executoras relacionadas as escolas públicas para administração de recursos financeiros originários das esferas federal, estadual e municipal"".
+
+
+- Se a resposta for ""SIM"" na pergunta 30, registrar a resposta do requerente, remeter para crítica do analista e enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).",Atualizada em 21/08/2026
+46,"Fluxo Semiexpresso (ALTO)
+- Se a resposta for “NÃO”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se a resposta for “SIM, enquadrar com o segundo enquadramento disponível.",Atualizada em 21/08/2026
+47,"Fluxo Expresso  (ALTO)
+
+- Se a resposta for “NÃO” e  com área menor ou igual a 1.250 m² , enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+Fluxo Semiexpresso  (ALTO)
+
+- Se a resposta for ""NÃO"" e o imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se a resposta for ""SIM"" e o imóvel “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL""“CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista
+
+- Se a resposta for ""NÃO"" e com área superior a 1.250m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se a resposta for ""SIM"" e com área menor ou igual a 1250 m², registrar a resposta do requerente e remeter para crítica do analista.
+
+- Se a resposta for ""SIM"" e com área superior a 1250m² , registrar a resposta do requerente e remeter para crítica do analista.",Atualizada em 21/08/2026
+48,"Fluxo Expresso (ALTO)
+
+- Se a resposta for “NÃO” e com área menor ou igual a 1.250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se a resposta for ""SIM"" e com área menor ou igual a 1.250 m², enquadrar com o segundo enquadramento disponível.  
+
+- Se a resposta for ""NÃO"" e com área superior a 1.250m² , e enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+
+
+Fluxo Semiexpresso (ALTO)
+
+- Se a resposta for ""NÃO"" e o imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se a resposta for ""SIM"" e o Imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL""  “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar com o segundo enquadramento disponível. 
+
+- Se a resposta for ""SIM"" e com área superior a 1.250m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar com o segundo enquadramento disponível.",Atualizada em 21/08/2026
+49,"Fluxo Expresso (ALTO)
+ 
+- Se a resposta for “NÃO” e com área menor ou igual a 1250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).  
+
+
+Fluxo Semiexpresso (ALTO)
+
+- Se a resposta for “SIM” e com área menor ou igual a 1250 m²,  enquadrar com  o segundo enquadramento disponível e remeter para crítica do analista. 
+
+- Se a resposta for “SIM” e com área superior a 1250m², enquadrar com  o segundo enquadramento disponível e remeter para crítica do analista. 
+
+- Se a resposta for “SIM” e o imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista,  enquadrar com  o segundo enquadramento disponível.
+
+- Se a resposta for ""NÃO"" e o imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+- Se a resposta for ""NÃO"" ecom área superior a 1250m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13) .",Atualizada em 21/08/2026
+50,"Fluxo Expresso (RISCO ALTO)
+
+- Se a resposta for “SIM” e com área menor ou igual a 1250 m², enquadrar como “Clínica médica, clínica odontológica, clínica veterinária, centro de diagnósticos, laboratório de análises clínicas” (código LOUOS –07.05.03).
+
+- Se a resposta for “NÃO” e com área menor ou igual a 1250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). 
+
+
+Fluxo Semiexpresso (RISCO ALTO)
+
+- Se a resposta for ""NÃO"" e o imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se a resposta for ""SIM"" e o Imóvel  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL""“CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista.
+
+- Se a resposta for ""NÃO"" e  com área superior a 1250m², registrar a resposta do requerente e remeter para crítica do analista,enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). . 
+
+- Se a resposta for ""SIM"" e com área superior a 1250m², registrar a resposta do requerente e remeter para crítica do analista.",Atualizada em 21/08/2026
+51,"Se a resposta for ""NÃO"" na pergunta 2, seguir o fluxo descrito abaixo:
+
+Fluxo Expresso (ALTO RISCO)
+
+- Se a resposta for “NÃO” na pergunta 2 e com área menor ou igual a 1250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).  
+
+Fluxo Semi Expresso (ALTO RISCO)
+
+-Se a resposta for “NÃO” na pergunta 2 e o imóvel for “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista. 
+
+- Se a resposta for ""NÃO"" na pergunta 2 e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista.",Atualizada em 21/08/2026
+52,"Se a resposta for ""SIM"" na pergunta 2 , exibir a pergunta 3 e seguir o fluxo descrito abaixo:
+
+Fluxo Semi Expresso (ALTO RISCO)
+
+-  Se a resposta for ""SIM"" na pergunta 3 e com área menor ou igual a 1250 m², registrar a resposta do requerente e remeter para crítica do analista e enquadrar como ""Confecção artesanal de bebidas e comidas"" (código LOUOS - 07.09.02).
+
+-Se a resposta for ""SIM"" na pergunta 3 e imóvel “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista e enquadrar como ""Confecção artesanal de bebidas e comidas"" (código LOUOS - 07.09.02)..
+
+- Se a resposta for ""NÃO""  na pergunta 3 e imóvel “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista.
+
+
+- Se a resposta for “NÃO” na pergunta 3 e  com área menor ou igual a 1250 m², registrar a resposta do requerente e remeter para crítica do analista.
+
+- Se a resposta for ""NÃO"" na pergunta 3 e com área superior a 1250m², registrar a resposta do requerente e remeter para crítica do analista.
+
+- Se a resposta for ""SIM"" na pergunta 3 e com área superior a 1250m², registrar a resposta do requerente e remeter para crítica do analista e enquadrar como ""Confecção artesanal de bebidas e comidas"" (código LOUOS - 07.09.02).",Atualizada em 21/08/2026
+53,"Fluxo Semiexpresso (RISCO ALTO)
+
+- Se respondido ""SIM"" na pergunta 25, exibir a pergunta 26. 
+
+- Se respondido ""NÃO"" na pergunta 25, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).
+
+- Se respondido ""NÃO"" na pergunta 26, exibir a pergunta 29.
+
+- Se selecionada a opção 1 e/ou a opção 2 na pergunta 29, enquadrar como Comércio de GL P (07.04.16) e grupo de uso nR1-04 e remeter para crítica do analista.
+
+- Se selecionada as demais opções na pergunta 29, enquadrar como Comércio de GLP (07.04.16) e grupo de uso nR2-04 e remeter para crítica do analista.
+
+- Se respondido ""SIM"" na pergunta 26, exibir as perguntas  27 e 28.
+utilizar a fórmula abaixo para definir o enquadramento:
+
+Quantidade de plataforma indicada pelo requerente na pergunta 27 multiplicado (x) pela capacidade de armazenamento (kg) indicada pelo requerente na pergunta 28
+
+Exemplo: 2 x 1560= 3.120
+
+- Se o produto da equação for igual ou menor a 1560, enquadrar como Comércio de GL P (07.04.16) e grupo de uso nR1-04 e remeter para crítica do analista.
+
+- Se  o produto da equação for superior a 1560, enquadrar como Comércio de GLP (07.04.16) e grupo de uso nR2-04 e remeter para crítica do analista.","4682-6/00 - Comércio atacadista de gás liqüefeito de petróleo (GLP)
+ 4784-9/00 - Comércio varejista de gás liquefeito de petróleo (GLP)
+
+
+Atualizada em 21/08/2026"
+54,"* Se a solicitação for em Edificação Residencial (casa/apartamento) exibir a mensagem a seguir e não permitir o prosseguimento do cadastro do processo:
+
+""A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares"". 
+
+Se a resposta for ""NÃO"" na pergunta 31, seguir os fluxos descritos abaixo:
+
+
+Fluxo Expresso (BAIXO RISCO)
+
+- Se respondido ""NÃO""  na pergunta  31 e com área menor ou igual a 1.250 m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).  
+
+
+- Se respondido ""NÃO"" na pergunta 31 e com área superior a 1.250 m² , enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).  
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+-Se a resposta for “NÃO” na pergunta 31 e tipo de imóvel “GALPÃO"", “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).","CNAE 3514-0/00
+
+ATUALIZADA EM 21/07/2026"
+55,"* Se a solicitação for em Edificação Residencial (casa/apartamento) exibir a mensagem a seguir e não permitir o prosseguimento do cadastro do processo:
+
+""A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares"". 
+
+
+Se a resposta for ""SIM"" na pergunta 31, exibir a pergunta 32 e seguir os fluxos descritos abaixo:
+
+Fluxo Expresso (MÉDIO RISCO)
+
+- Se respondido ""SIM"" na pergunta 31 e selecionada a opção  01 na pergunta 32 com área menor ou igual a 1.250 m², enquadrar como ""Gestão e administração de serviços públicos, concessionárias de serviços públicos, cartórios""  (código LOUOS - 07.11.01)
+
+- Se respondido ""SIM"" na pergunta 31 e selecionada a opção  01 na pergunta 32  e com área superior a 1.250 m² , enquadrar como ""Gestão e administração de serviços públicos, concessionárias de serviços públicos, cartórios""  (código LOUOS - 07.11.01)
+
+
+Fluxo Semiexpresso (MÉDIO RISCO)
+
+- Se respondido ""SIM"" na pergunta 31 e selecionada as opções 02, 03 ou 04  na pergunta 32  e com área menor ou igual a 1.250 m², enquadrar como ""Central Elétrica""  (código LOUOS - 08.01.11).
+
+- Se respondido ""SIM"" na pergunta 31 e selecionada as opções 02, 03 ou 04 na pergunta 32  e com área superior a 1.250 m² , enquadrar como ""Central Elétrica""  (código LOUOS - 08.01.11).
+
+- Se respondido ""SIM"" na pergunta 31 e selecionada a opção  01 na pergunta 32 e  tipo de imóvel “GALPÃO"","" “CONTAINER”, enquadrar como ""Gestão e administração de serviços públicos, concessionárias de serviços públicos, cartórios""  (código LOUOS - 07.11.01).
+
+- Se respondido ""SIM"" na pergunta 31 e selecionada as opções 02, 03 ou 04 na pergunta 32 e tipo de imóvel “GALPÃO"", “CONTAINER”, enquadrar como ""Central Elétrica""  (código LOUOS - 08.01.11).","CNAE 3514-0/00
+
+ATUALIZADA EM 21/07/2026"
+56,"Se a resposta for ""NÃO"" na pergunta 2, seguir o fluxo descrito abaixo:
+
+Fluxo Expresso
+
+- Se a resposta for “NÃO” na pergunta 2 e com área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). (BAIXO RISCO)
+
+
+- Se a resposta for ""NÃO"" na pergunta 2  e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).  (MÉDIO RISCO)
+
+
+Fluxo Semiexpresso 
+
+- Se a resposta for ""NÃO"" na pergunta 2 e o tipo de espaço “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). (MÉDIO RISCO)","Criada em 22/07/2026: para as CNAEs 1066-0/00, 1094-5/00, 1096-1/00"
+57,"Se a resposta for ""SIM"" na pergunta 2, exibir a pergunta 3 e seguir o fluxo descrito abaixo:
+
+Fluxo Expresso
+
+- Se a resposta for “SIM” na pergunta 3 e com área menor ou igual a 1.250 m², enquadrar como “Confecção artesanal de bebidas e comidas” (código LOUOS –07.09.02). (BAIXO RISCO)
+
+- Se a resposta for ""SIM"" na pergunta 3  com área superior a 1.250m² e enquadrar como “Confecção artesanal de bebidas e comidas” (código LOUOS –07.09.02). (MÉDIO RISCO)
+
+Fluxo Semiexpresso
+
+- Se a resposta for ""SIM"" na pergunta 3 e tipo de espaço  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Confecção artesanal de bebidas e comidas” (código LOUOS –07.09.02). (MÉDIO RISCO)
+
+- Se a resposta for ""NÃO na pergunta 3 e tipo de espaço  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”com área menor ou igual a 1.000m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.02.01 ou 09.02.09  a depender da CNAE solicitada. (ALTO RISCO)
+
+- Se a resposta for ""NÃO na pergunta 3 e tipo de espaço  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER” com área superior a 1.000m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.02.44 ou 09.02.11 ou 09.02.25  a depender da CNAE solicitada. (ALTO RISCO)
+
+- Se a resposta for “NÃO” na pergunta 3 com área menor ou igual a 1.000 m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.02.01 ou 09.02.09  a depender da CNAE solicitada. (ALTO RISCO)
+
+- Se a resposta for ""NÃO"" na pergunta 3 com área superior a 1.000m²  e registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.02.44 ou 09.02.11 ou 09.02.25  a depender da CNAE solicitada. (ALTO RISCO)","Criada em 22/07/2026: para as CNAEs 1066-0/00, 1094-5/00, 1096-1/00
+
+Regra para atividades que podem ser artesanal ou industrial 
+Resposta ""SIM"" significa artesanal 
+Resposta ""NÃO"" significa produção em série (industrial)"
+58,"""Se a resposta for ""NÃO"" na pergunta 2, seguir o fluxo descrito abaixo:
+
+Fluxo Expresso
+
+- Se a resposta for “NÃO” na pergunta 2 e com área menor ou igual a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). (BAIXO RISCO)
+
+- Se a resposta for ""NÃO"" na pergunta 2  e com área superior a 1.250m², enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13).  (MÉDIO RISCO)
+
+Fluxo Semiexpresso 
+
+- Se a resposta for ""NÃO"" na pergunta 2 e o tipo de espaço “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"", “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). (MÉDIO RISCO)","Criada em 23/07/2026: para as CNAEs 3101-2/00, 3102-1/00, 3291-4/00, 3292-2/01, 3299-0/02
+
+Regra para atividades que podem ser artesanal ou industrial 
+Resposta ""SIM"" significa artesanal 
+Resposta ""NÃO"" significa produção em série (industrial)"
+59,"Se a resposta for ""SIM"" na pergunta 2, exibir a pergunta 3 e seguir o fluxo descrito abaixo: 
+
+Fluxo Expresso
+
+- Se a resposta for “SIM” na pergunta 3 e com área menor ou igual a 1.250 m², enquadrar como 07.09.08  ou 07.09.14 ou 07.09.17 ou  07.09.05 ou 07.09.02 ou 07.09.01 a depender da CNAE solicitada. (MÉDIO RISCO)
+
+- Se a resposta for ""SIM"" na pergunta 3  com área superior a 1.250m² e enquadrar como 07.09.08  ou 07.09.14 ou 07.09.17 ou  07.09.05 ou 07.09.02 ou 07.09.01 a depender da CNAE solicitada. (MÉDIO RISCO)
+
+Fluxo Semiexpresso
+
+- Se a resposta for ""SIM"" na pergunta 3 e tipo de espaço  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista,  enquadrar como 07.09.08  ou 07.09.14 ou 07.09.17 ou  07.09.05 ou 07.09.02 ou 07.09.01 a depender da CNAE solicitada. (MÉDIO RISCO)
+
+- Se a resposta for ""NÃO na pergunta 3 e tipo de espaço  “GALPÃO"", ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.15.01 ou 09.15.02 ou 09.09.03 ou 09.11.02 ou 09.18.01 ou 09.02.47 ou 09.02.07 ou 09.13.02 ou 09.16.01  a depender da CNAE solicitada. (ALTO RISCO)
+
+- Se a resposta for “NÃO” na pergunta 3 com área menor ou igual a 1.250 m², registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.15.01 ou 09.15.02 ou 09.09.03 ou 09.11.02 ou 09.18.01 ou 09.02.47 ou 09.02.07 ou 09.13.02 ou 09.16.01  a depender da CNAE solicitada.(ALTO RISCO)
+
+- Se a resposta for ""NÃO"" na pergunta 3 com área superior a 1.250m²  e registrar a resposta do requerente e remeter para crítica do analista, enquadrar como 09.15.01 ou 09.15.02 ou 09.09.03 ou 09.11.02 ou 09.18.01 ou 09.02.47 ou 09.02.07 ou 09.13.02 ou 09.16.01  a depender da CNAE solicitada. (ALTO RISCO)","Criada em 23/07/2026: para as CNAEs 3101-2/00, 3102-1/00, 3291-4/00, 3292-2/01, 3299-0/02, 2512-8/00, 1013-9/02, 1099-6/04
+
+Regra para atividades que podem ser artesanal ou industrial 
+Resposta ""SIM"" significa artesanal 
+Resposta ""NÃO"" significa produção em série (industrial)
+
+Atualizada em 21/08/2026"
+60,"Fluxo Expresso 
+
+- Se a resposta for “NÃO” na pergunta 11 e com área menor ou igual a 1250 m² enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). (BAIXO RISCO)
+
+- Se a resposta for ""NÃO"" na pergunta 11 e com área superior a 1.250m², registrar a resposta do requerente, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13). (MÉDIO RISCO)
+
+Fluxo Semiexpresso
+
+- Se a resposta for ""SIM"" na pergunta 11 e imóvel com área menor ou igual a 1.000m², enquadrar como ""Copiadora, gráfica, “lan house”  (código LOUOS - 07.12.09). (MÉDIO RISCO) 
+
+- Se a resposta for ""SIM"" na pergunta 11 e imóvel com área superior a 1.000m², enquadrar como ""Edição e impressão em geral”  (código LOUOS - 09.06.02). (ALTO RISCO)
+
+- Se a resposta for “SIM” na pergunta 11 e   o tipo de espaço  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”e com área igual ou menor 1.000 m²,  enquadrar como ""Copiadora, gráfica, “lan house”  (código LOUOS - 07.12.09). (MÉDIO RISCO)
+
+-Se a resposta for “SIM” na pergunta 11 e   o tipo de espaço  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER” e com área  superior a 1.000 m²,  enquadrar como ""Edição e impressão em geral”  (código LOUOS - 09.06.02).  (ALTO RISCO)
+
+-  Se a resposta for ""NÃO"" na pergunta 11  e  tipo de espaço  “GALPÃO”, ""EDIFICAÇÃO RESIDENCIAL"" “CONTAINER”, enquadrar como “Escritório (inclusive virtual), sede de empresa, grupo de salas, centro empresarial” (código LOUOS – 07.12.13), registrar a resposta do requerente e remeter para crítica do analista. (MÉDIO RISCO)",Atualizada em 21/08/2026

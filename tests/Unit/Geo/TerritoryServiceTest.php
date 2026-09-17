@@ -7,7 +7,7 @@ use App\Models\Activity;
 use App\Models\GeoLayer;
 use App\Services\Geo\TerritoryService;
 use App\Support\Audit\AuditService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
@@ -21,7 +21,7 @@ use Tests\TestCase;
  */
 class TerritoryServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private FakeSpatialRepository $fake;
 

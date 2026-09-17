@@ -12,7 +12,7 @@ use App\Services\Viabilidade\ConsultaViabilidadeService;
 use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
@@ -35,7 +35,7 @@ use Tests\TestCase;
  */
 class ConsultaViabilidadeGoldenCaseTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

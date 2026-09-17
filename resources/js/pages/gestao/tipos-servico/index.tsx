@@ -310,7 +310,7 @@ export default function ServiceTypesIndex({ serviceTypes, filters, perPageOption
             <Card>
                 <CardHeader
                     title="Tipos de serviço"
-                    description="Definem o fluxo, os documentos e os relatórios de cada solicitação de viabilidade (HU-061)."
+                    description="Definem o fluxo, os documentos e os relatórios de cada solicitação de viabilidade."
                     actions={
                         canMaintain ? (
                             <Button size="sm" onClick={() => setShowCreate(true)}>

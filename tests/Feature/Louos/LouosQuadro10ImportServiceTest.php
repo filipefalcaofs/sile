@@ -8,7 +8,7 @@ use App\Models\LouosQuadro10Permissao;
 use App\Models\RuleVersion;
 use App\Services\Louos\LouosQuadro10ImportService;
 use Database\Seeders\LouosQuadro10Seeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -20,7 +20,7 @@ use Tests\TestCase;
  */
 class LouosQuadro10ImportServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private const HEADER = 'zona,grupo_uso,subgrupo,permissao,condicionante_ref,base_legal';
 

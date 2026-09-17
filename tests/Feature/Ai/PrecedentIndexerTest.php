@@ -9,7 +9,7 @@ use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Ai\Embeddings\PrecedentIndexer;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Laravel\Ai\Embeddings;
 use PHPUnit\Framework\Attributes\Group;
@@ -34,7 +34,7 @@ use Tests\TestCase;
 #[Group('ia')]
 class PrecedentIndexerTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function provedorEmbeddingsAtivo(): void
     {

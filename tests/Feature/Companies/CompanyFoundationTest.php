@@ -10,13 +10,13 @@ use App\Models\CompanyUser;
 use App\Models\User;
 use App\Rules\ValidCnpj;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 
 class CompanyFoundationTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_factory_cria_empresa_com_cnpj_valido(): void
     {

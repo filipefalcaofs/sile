@@ -12,7 +12,7 @@ use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\XlsxExporter;
 use App\Services\Relatorios\ReportFilters;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -29,7 +29,7 @@ use Tests\TestCase;
  */
 class XlsxExporterTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Definition de teste sobre ViabilityRequest com 2 colunas (Bairro, Status) e

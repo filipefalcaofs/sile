@@ -7,6 +7,8 @@ use App\Enums\RiscoMunicipal;
 use App\Enums\RiscoSanitario;
 use App\Services\Risco\RiscoInput;
 use App\Services\Risco\RiscoResult;
+use App\Services\Risco\TipoImovel;
+use App\Services\Risco\TipoImovelCatalog;
 use Tests\TestCase;
 
 /**
@@ -25,6 +27,24 @@ class RiscoDtoTest extends TestCase
         $this->assertSame([], $input->respostasCondicionantes);
         $this->assertSame([], $input->gatilhosContexto);
         $this->assertNull($input->data);
+        $this->assertNull($input->areaUtilizada);
+        $this->assertNull($input->tipoImovel);
+        $this->assertNull($input->subcategoriaUso);
+    }
+
+    public function test_risco_input_aceita_area_tipo_imovel_e_subcategoria(): void
+    {
+        $tipo = TipoImovel::fromRegin('GALPÃO', TipoImovelCatalog::sedur200826());
+        $input = new RiscoInput(
+            cnaeCode: '0111301',
+            areaUtilizada: 800.0,
+            tipoImovel: $tipo,
+            subcategoriaUso: 'nR1-12',
+        );
+
+        $this->assertSame(800.0, $input->areaUtilizada);
+        $this->assertTrue($input->tipoImovel?->dirigeRegra());
+        $this->assertSame('nR1-12', $input->subcategoriaUso);
     }
 
     public function test_risco_result_to_array_em_snake_case(): void

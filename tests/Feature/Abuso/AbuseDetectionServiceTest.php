@@ -18,7 +18,7 @@ use App\Services\Analise\MalhaFinaService;
 use App\Support\Audit\AuditService;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -29,7 +29,7 @@ use Tests\TestCase;
  */
 class AbuseDetectionServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function ligarDeteccao(): void
     {

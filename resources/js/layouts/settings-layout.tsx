@@ -10,15 +10,15 @@ interface SettingsLayoutProps {
 }
 
 const navItems = [
-    { label: 'Perfil', href: '/settings/profile', icon: <UserCircleIcon /> },
-    { label: 'Senha', href: '/settings/password', icon: <LockIcon /> },
+    { label: 'Perfil', href: '/portal/conta/perfil', icon: <UserCircleIcon /> },
+    { label: 'Senha', href: '/portal/conta/senha', icon: <LockIcon /> },
 ];
 
 export default function SettingsLayout({ children }: SettingsLayoutProps) {
     const { auth, flash } = usePage<SharedProps>().props;
     const { url } = usePage();
 
-    const dashboardHref = auth.permissions.includes('acessar-gestao') ? '/gestao' : '/portal/painel';
+    const dashboardHref = '/portal/painel';
     const currentPath = url.split('?')[0] ?? '';
 
     return (

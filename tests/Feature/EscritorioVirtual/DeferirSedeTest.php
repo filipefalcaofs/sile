@@ -12,7 +12,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Analise\AnaliseTecnicaDecisionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
@@ -24,7 +24,7 @@ use Tests\TestCase;
  */
 class DeferirSedeTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function fichaSedeDeferivel(bool $flagSede): AnalysisRecord
     {

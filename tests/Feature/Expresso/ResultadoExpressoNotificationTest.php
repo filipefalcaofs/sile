@@ -10,7 +10,7 @@ use App\Models\User;
 use App\Notifications\Contracts\ProcessNotification;
 use App\Notifications\ResultadoExpressoNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -26,7 +26,7 @@ use Tests\TestCase;
  */
 class ResultadoExpressoNotificationTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function notifiable(): User
     {

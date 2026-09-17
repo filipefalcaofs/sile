@@ -5,7 +5,7 @@ namespace Tests\Feature\Relatorios;
 use App\Models\ExportFile;
 use App\Models\Parameter;
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -19,7 +19,7 @@ use Tests\TestCase;
  */
 class ExportRetencaoPruningTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     #[Test]
     public function pruning_remove_exports_alem_da_retencao_com_registro_e_arquivo(): void

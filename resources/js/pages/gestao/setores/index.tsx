@@ -202,7 +202,7 @@ function ManageAnalystsModal({
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Analistas do setor {sector.name}</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Marque os analistas responsáveis por esta caixa. Um analista pode cobrir vários setores (RN-005).
+                Marque os analistas responsáveis por esta caixa. Um analista pode cobrir vários setores.
             </p>
 
             <div className="mt-5 space-y-3">
@@ -344,7 +344,7 @@ export default function SectorsIndex({ sectors, analistasDisponiveis, filters, p
             ? {
                   variant: 'warning' as const,
                   title: 'Inativar setor',
-                  description: `Confirma a inativação de "${pendingToggle.name}"? Ele deixa de receber novas distribuições, mas o histórico e os vínculos são preservados (RN-004).`,
+                  description: `Confirma a inativação de "${pendingToggle.name}"? Ele deixa de receber novas distribuições, mas o histórico e os vínculos são preservados.`,
                   confirmLabel: 'Inativar',
               }
             : {
@@ -363,7 +363,7 @@ export default function SectorsIndex({ sectors, analistasDisponiveis, filters, p
             <Card>
                 <CardHeader
                     title="Setores de análise"
-                    description="A caixa de distribuição da análise técnica (HU-138). Vincule os analistas responsáveis por cada setor."
+                    description="A caixa de distribuição da análise técnica. Vincule os analistas responsáveis por cada setor."
                     actions={
                         canMaintain ? (
                             <Button size="sm" onClick={() => setShowCreate(true)}>

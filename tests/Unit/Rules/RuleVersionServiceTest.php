@@ -9,7 +9,7 @@ use App\Models\Activity;
 use App\Models\RuleVersion;
 use App\Models\User;
 use App\Services\Rules\RuleVersionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class RuleVersionServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): RuleVersionService
     {

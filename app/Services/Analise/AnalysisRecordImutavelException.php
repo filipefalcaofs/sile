@@ -14,6 +14,6 @@ class AnalysisRecordImutavelException extends RuntimeException
 {
     public static function finalizada(AnalysisRecord $record): self
     {
-        return new self("A revisão {$record->revision} da ficha está finalizada e é imutável (RN-003).");
+        return new self("A revisão {$record->revision} da ficha está finalizada e é imutável.");
     }
 }

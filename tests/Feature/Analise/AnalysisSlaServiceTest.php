@@ -7,7 +7,7 @@ use App\Models\Parameter;
 use App\Services\Analise\AnalysisSlaService;
 use App\Services\Analise\SlaStatus;
 use App\Services\Expresso\BusinessDeadlineCalculator;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -21,7 +21,7 @@ use Tests\TestCase;
  */
 class AnalysisSlaServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): AnalysisSlaService
     {

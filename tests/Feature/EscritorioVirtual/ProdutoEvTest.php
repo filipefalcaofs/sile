@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -19,12 +19,12 @@ use Tests\TestCase;
  * (virtual_office_hq_tvl_number — RN-EV-05, CA-P-01).
  *
  * CA-P-02: o requerente EXTERNO (portal, guard `web`) NÃO alcança o PDF do
- * produto (TVL) pelo SILE — as rotas do produto vivem sob o guard `gestao`
+ * produto (TVL) pelo Viabiliza — as rotas do produto vivem sob o guard `gestao`
  * (+ emitir-tvl + signed); o cidadão é redirecionado ao login da gestão.
  */
 class ProdutoEvTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

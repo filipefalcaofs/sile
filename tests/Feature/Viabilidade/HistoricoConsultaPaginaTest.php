@@ -5,7 +5,7 @@ namespace Tests\Feature\Viabilidade;
 use App\Models\User;
 use App\Models\ViabilityQuery;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -18,7 +18,7 @@ use Tests\TestCase;
  */
 class HistoricoConsultaPaginaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

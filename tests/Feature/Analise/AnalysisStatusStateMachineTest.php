@@ -7,12 +7,12 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnalysisStatusStateMachine;
 use App\Services\Analise\InvalidAnalysisStatusTransitionException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class AnalysisStatusStateMachineTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function machine(): AnalysisStatusStateMachine
     {

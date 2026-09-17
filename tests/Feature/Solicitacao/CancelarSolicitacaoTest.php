@@ -8,7 +8,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\CancelamentoNaoPermitidoException;
 use App\Services\Solicitacao\CancelarSolicitacaoService;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -23,7 +23,7 @@ use Tests\TestCase;
  */
 class CancelarSolicitacaoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

@@ -9,7 +9,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Relatorios\Export\PdfExporter;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\ReportFilters;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -26,7 +26,7 @@ use Tests\TestCase;
  */
 class ReportExporterTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function exporter(): ReportExporter
     {

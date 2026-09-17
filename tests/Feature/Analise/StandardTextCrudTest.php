@@ -5,7 +5,7 @@ namespace Tests\Feature\Analise;
 use App\Models\StandardText;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -21,7 +21,7 @@ use Tests\TestCase;
  */
 class StandardTextCrudTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

@@ -53,6 +53,8 @@ class AnalysisRecordController extends Controller
     {
         $record = $this->records->current($viabilityRequest);
         $record->loadMissing('analyst');
+        $viabilityRequest->loadMissing('expressoQuedas');
+        $record->setRelation('viabilityRequest', $viabilityRequest);
 
         $this->audit->log(
             logName: 'analise',

@@ -20,13 +20,13 @@ class PasswordController extends Controller
     }
 
     /**
-     * Endpoint próprio (multi-guard) — a rota do Fortify exige o guard web
-     * e não atende quem está autenticado apenas no console.
+     * Endpoint do portal (guard web). A rota do Fortify também atende, mas
+     * a tela usa este endpoint sob /portal/conta para manter o ambiente.
      */
     public function update(Request $request, UpdateUserPassword $updater): RedirectResponse
     {
         $updater->update(
-            $request->user(),
+            $request->user('web'),
             $request->only('current_password', 'password', 'password_confirmation'),
         );
 

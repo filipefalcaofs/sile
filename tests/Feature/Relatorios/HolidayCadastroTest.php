@@ -5,7 +5,7 @@ namespace Tests\Feature\Relatorios;
 use App\Models\Holiday;
 use Database\Seeders\HolidaySeeder;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -16,7 +16,7 @@ use Tests\TestCase;
  */
 class HolidayCadastroTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_seeder_de_feriados_e_idempotente(): void
     {

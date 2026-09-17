@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Expresso;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -15,7 +15,7 @@ use Tests\TestCase;
  */
 class ExpressoSchemaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_tabela_viability_decisions_existe_com_colunas_da_decisao(): void
     {

@@ -12,7 +12,7 @@ use App\Models\ViabilityServiceType;
 use App\Services\Relatorios\RelatorioTempoEmissaoTvlService;
 use App\Services\Relatorios\ReportFilters;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -29,7 +29,7 @@ use Tests\TestCase;
  */
 class TempoEmissaoTvlTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private ViabilityServiceType $servico;
 

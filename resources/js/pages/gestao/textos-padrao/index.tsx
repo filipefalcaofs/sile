@@ -137,7 +137,7 @@ function EditStandardTextModal({ text, onClose }: { text: StandardTextItem; onCl
                 <InfoIcon className="size-5 shrink-0 fill-current text-blue-light-500" />
                 <p className="text-theme-sm text-gray-600 dark:text-gray-300">
                     Alterar o <strong>conteúdo</strong> publica uma nova versão (atual: v{text.version}) e preserva o
-                    histórico. Editar só a categoria ou a situação mantém a versão vigente (RN-005).
+                    histórico. Editar só a categoria ou a situação mantém a versão vigente.
                 </p>
             </div>
 
@@ -328,7 +328,7 @@ export default function StandardTextsIndex({ standardTexts, filters, perPageOpti
             <Card>
                 <CardHeader
                     title="Biblioteca de textos-padrão"
-                    description="Trechos pré-aprovados e versionados para o parecer da análise (HU-085)."
+                    description="Trechos pré-aprovados e versionados para o parecer da análise."
                     actions={
                         canMaintain ? (
                             <Button size="sm" onClick={() => setShowCreate(true)}>

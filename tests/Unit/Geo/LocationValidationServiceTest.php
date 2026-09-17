@@ -6,7 +6,7 @@ use App\Enums\GeoLayerType;
 use App\Models\GeoLayer;
 use App\Models\Parameter;
 use App\Services\Geo\LocationValidationService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -20,7 +20,7 @@ use Tests\TestCase;
  */
 class LocationValidationServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): LocationValidationService
     {

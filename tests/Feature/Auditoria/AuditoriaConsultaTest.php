@@ -8,7 +8,7 @@ use App\Models\Activity;
 use App\Models\Cnae;
 use App\Models\User;
 use App\Services\Auditoria\AuditTrailQueryService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -23,7 +23,7 @@ use Tests\TestCase;
  */
 class AuditoriaConsultaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): AuditTrailQueryService
     {

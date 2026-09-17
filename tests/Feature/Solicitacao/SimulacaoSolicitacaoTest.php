@@ -15,7 +15,7 @@ use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
@@ -35,7 +35,7 @@ use Tests\TestCase;
  */
 class SimulacaoSolicitacaoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private const CNAE_MINIMERCADO = '4712-1/00';
 

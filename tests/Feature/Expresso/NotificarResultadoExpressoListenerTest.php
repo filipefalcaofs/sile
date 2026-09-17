@@ -12,7 +12,7 @@ use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Notifications\ResultadoExpressoNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -28,7 +28,7 @@ use Tests\TestCase;
  */
 class NotificarResultadoExpressoListenerTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * @return array{0: ViabilityRequest, 1: ViabilityDecision}

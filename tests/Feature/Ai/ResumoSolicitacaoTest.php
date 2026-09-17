@@ -14,7 +14,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Ai\ResumoSolicitacaoService;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
@@ -31,7 +31,7 @@ use Tests\TestCase;
 #[Group('ia')]
 class ResumoSolicitacaoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function provedorTextoAtivo(): void
     {

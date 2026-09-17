@@ -86,7 +86,7 @@ function CreateHolidayModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
         <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Novo feriado</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                O feriado entra no cálculo de dias úteis (HU-129). A data é única — não há feriado duplicado.
+                O feriado entra no cálculo de dias úteis. A data é única — não há feriado duplicado.
             </p>
 
             <Form action={URL_FERIADOS} method="post" resetOnSuccess onSuccess={onClose} className="mt-6">
@@ -307,7 +307,7 @@ export default function HolidaysIndex({ holidays, filters, perPageOptions }: Hol
             ? {
                   variant: 'warning' as const,
                   title: 'Inativar feriado',
-                  description: `Confirma a inativação de "${pendingToggle.name}"? Ele deixa de ser descontado no cálculo de dias úteis, mas o histórico é preservado (RN-004).`,
+                  description: `Confirma a inativação de "${pendingToggle.name}"? Ele deixa de ser descontado no cálculo de dias úteis, mas o histórico é preservado.`,
                   confirmLabel: 'Inativar',
               }
             : {
@@ -329,7 +329,7 @@ export default function HolidaysIndex({ holidays, filters, perPageOptions }: Hol
                 <Card>
                     <CardHeader
                         title="Calendário de feriados"
-                        description="Dado administrável que o cálculo de tempo de análise desconta como dia não útil (HU-129). A data é única; feriados não são excluídos, apenas inativados (RN-004)."
+                        description="Dado administrável que o cálculo de tempo de análise desconta como dia não útil. A data é única; feriados não são excluídos, apenas inativados."
                         actions={
                             canMaintain ? (
                                 <Button size="sm" onClick={() => setShowCreate(true)}>

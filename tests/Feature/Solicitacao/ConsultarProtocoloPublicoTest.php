@@ -9,7 +9,7 @@ use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\ParameterSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia;
@@ -24,7 +24,7 @@ use Tests\TestCase;
  */
 class ConsultarProtocoloPublicoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Solicitação PROTOCOLADA com uma transição real (fonte da timeline). Não

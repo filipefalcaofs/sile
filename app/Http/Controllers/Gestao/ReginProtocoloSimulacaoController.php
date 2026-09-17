@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Gestao;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\SimularProtocoloReginRequest;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,15 +31,25 @@ class ReginProtocoloSimulacaoController extends Controller
         ]);
     }
 
+    public function destroy(string $codigo): RedirectResponse
+    {
+        $this->simulacao->apagar($codigo);
+
+        return redirect()
+            ->route('gestao.risco.simulacao-regin')
+            ->with('status', 'Resultado da simulação apagado. Pode rodar de novo.');
+    }
+
     /**
-     * @return array{protocolos: list<array<string, mixed>>, aviso: string, relatorio: null}
+     * @return array{protocolos: list<array<string, mixed>>, aviso: string, relatorio: ?array<string, mixed>, execucoes: list<array<string, mixed>>}
      */
     private function baseProps(): array
     {
         return [
             'protocolos' => $this->simulacao->listar(),
             'aviso' => ReginProtocoloSimulacaoService::AVISO,
-            'relatorio' => null,
+            'relatorio' => $this->simulacao->ultima(),
+            'execucoes' => $this->simulacao->execucoes(),
         ];
     }
 }

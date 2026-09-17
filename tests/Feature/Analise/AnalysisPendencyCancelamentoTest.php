@@ -6,12 +6,12 @@ use App\Enums\AnalysisPendencyStatus;
 use App\Models\AnalysisPendency;
 use App\Models\User;
 use App\Models\ViabilityRequest;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class AnalysisPendencyCancelamentoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_campos_de_cancelamento_persistem(): void
     {

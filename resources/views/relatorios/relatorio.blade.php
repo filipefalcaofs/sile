@@ -20,6 +20,7 @@
 </head>
 <body>
     <div class="cabecalho">
+        <div class="orgao">Viabiliza &mdash; Sistema de Licenciamento Eletrônico</div>
         <div class="orgao">Prefeitura Municipal de Salvador &mdash; SEDUR</div>
         <h1>{{ $titulo }}</h1>
     </div>

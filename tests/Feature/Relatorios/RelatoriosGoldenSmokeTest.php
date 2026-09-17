@@ -9,7 +9,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Relatorios\Export\PdfExporter;
 use App\Services\Relatorios\Export\Sources\SolicitacoesReportSource;
 use App\Services\Relatorios\ReportFilters;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use OpenSpout\Reader\XLSX\Reader;
 use PHPUnit\Framework\Attributes\Test;
@@ -27,7 +27,7 @@ use Tests\TestCase;
  */
 class RelatoriosGoldenSmokeTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Semeia uma massa conhecida pelo FLUXO REAL (solicitações em estados variados

@@ -6,7 +6,7 @@ use App\Enums\AnalysisStatus;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -18,7 +18,7 @@ use Tests\TestCase;
  */
 class AnalysisStatusEndpointTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_analista_seta_transicao_valida(): void
     {

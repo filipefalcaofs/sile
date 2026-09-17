@@ -8,12 +8,12 @@ use App\Models\Parameter;
 use App\Support\Audit\AuditService;
 use Database\Seeders\ParameterSeeder;
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class PruneAccessLogsTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_pruning_remove_acessos_alem_da_retencao_e_preserva_recentes(): void
     {

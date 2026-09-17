@@ -8,7 +8,7 @@ use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -20,7 +20,7 @@ use Tests\TestCase;
  */
 class RelatorioSedeQueryTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private ViabilityRequest $sede;
 

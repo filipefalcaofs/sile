@@ -5,7 +5,7 @@ namespace Tests\Feature\Solicitacao;
 use App\Models\Company;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\DuplicateRequestDetector;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -17,7 +17,7 @@ use Tests\TestCase;
  */
 class DuplicateRequestDetectorTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function detector(): DuplicateRequestDetector
     {

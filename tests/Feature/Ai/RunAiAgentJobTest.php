@@ -5,7 +5,7 @@ namespace Tests\Feature\Ai;
 use App\Enums\AiSuggestionStatus;
 use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use RuntimeException;
 use Tests\Fixtures\Ai\ProbeAiJob;
 use Tests\Fixtures\Ai\ProbeStructuredAgent;
@@ -20,7 +20,7 @@ use Throwable;
  */
 class RunAiAgentJobTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function provedorAtivoDeTexto(): void
     {

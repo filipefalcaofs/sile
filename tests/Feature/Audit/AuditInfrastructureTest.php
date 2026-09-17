@@ -6,14 +6,14 @@ use App\Models\Activity;
 use App\Models\User;
 use App\Support\Audit\AuditService;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class AuditInfrastructureTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_activity_persiste_colunas_sile_de_origem_e_resultado(): void
     {

@@ -13,7 +13,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\IndicadoresViabilidadeService;
 use App\Services\Relatorios\ReportFilters;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -27,7 +27,7 @@ use Tests\TestCase;
  */
 class IndicadoresViabilidadeServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): IndicadoresViabilidadeService
     {

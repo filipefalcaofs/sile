@@ -31,6 +31,19 @@ enum RiscoMunicipal: string
     }
 
     /**
+     * Severidade relativa (Baixo A < Baixo B < Alto). A viabilidade do
+     * estabelecimento é a do CNAE mais gravoso do conjunto.
+     */
+    public function severity(): int
+    {
+        return match ($this) {
+            self::BaixoA => 1,
+            self::BaixoB => 2,
+            self::Alto => 3,
+        };
+    }
+
+    /**
      * Mapeia o rótulo cru do Decreto ('BAIXO A' / 'BAIXO B' / 'ALTO') para o
      * nível tipado. Tolera ruído de formatação da planilha oficial (espaços e
      * caixa). Nível desconhecido lança InvalidArgumentException com a string

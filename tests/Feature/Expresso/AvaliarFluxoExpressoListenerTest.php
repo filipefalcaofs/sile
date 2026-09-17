@@ -8,7 +8,7 @@ use App\Models\Cnae;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
@@ -25,7 +25,7 @@ use Tests\TestCase;
  */
 class AvaliarFluxoExpressoListenerTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Protocola DE VERDADE um rascunho completo pelo serviço real — o caminho que

@@ -39,7 +39,7 @@ class AnalysisRecordResource extends JsonResource
             'parking' => $this->parking ?? [],
             'parecer' => $this->parecer,
             'is_virtual_office_hq' => $this->is_virtual_office_hq,
-            'analysis_reasons' => $this->analysis_reasons ?? [],
+            'analysis_reasons' => $this->motivosSistema(),
             'address_confirmed' => $this->address_confirmed,
             'analyst' => $this->analyst?->name,
             'finalized_at' => $this->finalized_at?->toIso8601String(),

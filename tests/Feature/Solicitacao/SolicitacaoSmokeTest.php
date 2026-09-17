@@ -21,7 +21,7 @@ use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\ViabilityServiceTypeSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -45,7 +45,7 @@ use Tests\TestCase;
  */
 class SolicitacaoSmokeTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private const CNAE_MINIMERCADO = '4712100';
 

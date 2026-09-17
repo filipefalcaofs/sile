@@ -5,7 +5,7 @@ namespace Tests\Feature\Louos;
 use App\Models\User;
 use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -19,7 +19,7 @@ use Tests\TestCase;
  */
 class LouosUiTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

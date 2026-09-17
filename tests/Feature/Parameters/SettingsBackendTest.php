@@ -4,14 +4,14 @@ namespace Tests\Feature\Parameters;
 
 use App\Models\Parameter;
 use App\Support\Settings;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use Tests\TestCase;
 
 class SettingsBackendTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_le_valor_administrado_do_banco(): void
     {

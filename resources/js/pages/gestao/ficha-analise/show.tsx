@@ -641,9 +641,8 @@ export default function FichaAnaliseShow({
     const [parking, setParking] = useState<Parking>(() => ficha.parking ?? {});
     const [sedeEscritorioVirtual, setSedeEscritorioVirtual] = useState<boolean>(() => ficha.is_virtual_office_hq ?? false);
     const [novaCondicao, setNovaCondicao] = useState('');
-    const [analysisReasons, setAnalysisReasons] = useState<string[]>(() => ficha.analysis_reasons ?? []);
+    const analysisReasons = ficha.analysis_reasons ?? [];
     const [addressConfirmed, setAddressConfirmed] = useState<boolean | null>(() => ficha.address_confirmed ?? null);
-    const [novoMotivoAnalise, setNovoMotivoAnalise] = useState('');
     const [saveState, setSaveState] = useState<'idle' | 'salvando' | 'salvo' | 'erro'>('idle');
 
     const autosave = useHttp<{
@@ -652,7 +651,6 @@ export default function FichaAnaliseShow({
         parking: Parking;
         parecer: string | null;
         is_virtual_office_hq: boolean;
-        analysis_reasons: string[];
         address_confirmed: boolean | null;
     }>({
         per_cnae: [],
@@ -660,7 +658,6 @@ export default function FichaAnaliseShow({
         parking: {},
         parecer: null,
         is_virtual_office_hq: false,
-        analysis_reasons: [],
         address_confirmed: null,
     });
 
@@ -718,10 +715,9 @@ export default function FichaAnaliseShow({
             parking,
             parecer: parecer.trim() === '' ? null : parecer,
             is_virtual_office_hq: sedeEscritorioVirtual,
-            analysis_reasons: analysisReasons,
             address_confirmed: addressConfirmed,
         }),
-        [perCnae, conditions, parking, parecer, sedeEscritorioVirtual, analysisReasons, addressConfirmed],
+        [perCnae, conditions, parking, parecer, sedeEscritorioVirtual, addressConfirmed],
     );
 
     const salvarRascunho = useCallback(() => {
@@ -760,7 +756,7 @@ export default function FichaAnaliseShow({
 
         return () => window.clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [perCnae, conditions, parecer, parking, sedeEscritorioVirtual, analysisReasons, addressConfirmed]);
+    }, [perCnae, conditions, parecer, parking, sedeEscritorioVirtual, addressConfirmed]);
 
     useEffect(() => {
         precedentes.get(`/gestao/processos/${processo.id}/precedentes`, {
@@ -791,20 +787,6 @@ export default function FichaAnaliseShow({
 
     function removerCondicao(indice: number) {
         setConditions((atual) => atual.filter((_, i) => i !== indice));
-    }
-
-    function adicionarMotivoAnalise(texto: string) {
-        const limpo = texto.trim();
-
-        if (limpo === '') {
-            return;
-        }
-
-        setAnalysisReasons((atual) => [...atual, limpo]);
-    }
-
-    function removerMotivoAnalise(indice: number) {
-        setAnalysisReasons((atual) => atual.filter((_, i) => i !== indice));
     }
 
     function inserirTextoPadrao(conteudo: string) {
@@ -1669,11 +1651,11 @@ export default function FichaAnaliseShow({
                             </CardContent>
                         </Card>
 
-                        {/* Motivo de Análise (paridade com o legado, spec 2026-07-24) */}
+                        {/* Motivo de Análise — preenchido pelo sistema (queda do motor / expresso) */}
                         <Card>
                             <CardHeader
                                 title="Motivo de Análise"
-                                description="Anotações do analista sobre o que exigiu análise humana neste processo."
+                                description="Registrado automaticamente pelo sistema quando o processo exige análise humana. O analista não edita este campo."
                             />
                             <CardContent>
                                 {analysisReasons.length > 0 ? (
@@ -1684,55 +1666,16 @@ export default function FichaAnaliseShow({
                                                 className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-800"
                                             >
                                                 <span className="text-theme-sm text-gray-700 dark:text-gray-300">{motivo}</span>
-                                                {editavel && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removerMotivoAnalise(indice)}
-                                                        aria-label={`Remover motivo ${indice + 1}`}
-                                                        className="shrink-0 text-error-500 transition hover:text-error-600"
-                                                    >
-                                                        <TrashIcon className="size-4.5" />
-                                                    </button>
-                                                )}
+                                                <Badge color="light" size="sm">
+                                                    Sistema
+                                                </Badge>
                                             </li>
                                         ))}
                                     </ul>
                                 ) : (
                                     <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                                        Nenhum motivo registrado.
+                                        Nenhum motivo registrado pelo sistema.
                                     </p>
-                                )}
-
-                                {editavel && (
-                                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-                                        <div className="flex-1">
-                                            <Label htmlFor="novo-motivo-analise">Adicionar motivo</Label>
-                                            <Input
-                                                id="novo-motivo-analise"
-                                                type="text"
-                                                value={novoMotivoAnalise}
-                                                placeholder="Descreva o motivo…"
-                                                onChange={(event) => setNovoMotivoAnalise(event.target.value)}
-                                                onKeyDown={(event) => {
-                                                    if (event.key === 'Enter') {
-                                                        event.preventDefault();
-                                                        adicionarMotivoAnalise(novoMotivoAnalise);
-                                                        setNovoMotivoAnalise('');
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => {
-                                                adicionarMotivoAnalise(novoMotivoAnalise);
-                                                setNovoMotivoAnalise('');
-                                            }}
-                                        >
-                                            Adicionar
-                                        </Button>
-                                    </div>
                                 )}
                             </CardContent>
                         </Card>

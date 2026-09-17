@@ -9,7 +9,7 @@ use App\Services\Louos\LouosEnquadramentoService;
 use Database\Seeders\LouosQuadro10Seeder;
 use Database\Seeders\LouosQuadro11Seeder;
 use Database\Seeders\LouosQuadro7Seeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -33,7 +33,7 @@ use Tests\TestCase;
  */
 class LouosGoldenCaseTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

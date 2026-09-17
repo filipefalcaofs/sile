@@ -13,7 +13,7 @@ use App\Notifications\ProcessoEscalonadoNotification;
 use App\Services\Analise\AnalysisSlaService;
 use App\Services\Analise\SlaStatus;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Tests\TestCase;
@@ -29,7 +29,7 @@ use Tests\TestCase;
  */
 class EscalonarSlaCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private int $seq = 0;
 

@@ -11,7 +11,7 @@ use App\Services\Solicitacao\TimelineSolicitacao;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
@@ -23,7 +23,7 @@ use Tests\TestCase;
  */
 class ConsultarProtocoloTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -105,7 +105,7 @@ class ConsultarProtocoloTest extends TestCase
         // Prazo estimado parametrizado COM ressalva honesta (RN-005).
         $this->assertSame(30, $timeline['prazo_estimado']['dias']);
         $this->assertStringContainsString('estimativa', mb_strtolower($timeline['prazo_estimado']['ressalva']));
-        $this->assertStringContainsString('HU-129', $timeline['prazo_estimado']['ressalva']);
+        $this->assertStringContainsString('não vinculante', mb_strtolower($timeline['prazo_estimado']['ressalva']));
 
         // Modo público: SÓ data + rótulo amigável (sem motivo, sem rótulo técnico).
         $publica = $this->timeline()->build($solicitacao, publico: true);

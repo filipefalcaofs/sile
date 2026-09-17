@@ -13,7 +13,7 @@ use App\Models\Communication;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Notifications\PendenciaSolicitadaNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -31,7 +31,7 @@ use Tests\TestCase;
  */
 class NotificarPendenciaListenerTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function pendenciaAberta(ViabilityRequest $request): AnalysisPendency
     {

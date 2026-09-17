@@ -3,14 +3,14 @@
 namespace Tests\Feature\Parameters;
 
 use App\Models\Parameter;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ParameterRegistryTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_typed_value_faz_cast_por_tipo(): void
     {

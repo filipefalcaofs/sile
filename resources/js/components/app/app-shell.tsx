@@ -9,13 +9,14 @@ interface AppShellProps {
     groups: SidebarGroup[];
     homeHref: string;
     logoutHref?: string;
+    accountHref?: string;
     subtitle?: string;
     variant?: SidebarVariant;
     collapsibleGroups?: boolean;
     children: ReactNode;
 }
 
-function ShellContent({ groups, homeHref, logoutHref, subtitle, variant, collapsibleGroups, children }: AppShellProps) {
+function ShellContent({ groups, homeHref, logoutHref, accountHref, subtitle, variant, collapsibleGroups, children }: AppShellProps) {
     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
     return (
@@ -33,7 +34,7 @@ function ShellContent({ groups, homeHref, logoutHref, subtitle, variant, collaps
                     isExpanded || isHovered ? 'lg:ml-[290px]' : 'lg:ml-[90px]'
                 } ${isMobileOpen ? 'ml-0' : ''}`}
             >
-                <AppHeader homeHref={homeHref} logoutHref={logoutHref ?? '/portal/logout'} />
+                <AppHeader homeHref={homeHref} logoutHref={logoutHref ?? '/portal/logout'} accountHref={accountHref ?? '/portal/conta/perfil'} />
                 <div id="conteudo" className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">{children}</div>
             </div>
         </div>

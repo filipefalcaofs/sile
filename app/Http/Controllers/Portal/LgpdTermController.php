@@ -19,7 +19,7 @@ class LgpdTermController extends Controller
     {
         $term = LegalTerm::current('lgpd');
 
-        if ($term === null || $request->user()->hasAcceptedTerm($term)) {
+        if ($term === null || $request->user('web')->hasAcceptedTerm($term)) {
             return redirect()->intended(route('portal.dashboard'));
         }
 
@@ -47,7 +47,7 @@ class LgpdTermController extends Controller
 
         LegalTermAcceptance::firstOrCreate(
             [
-                'user_id' => $request->user()->id,
+                'user_id' => $request->user('web')->id,
                 'legal_term_id' => $term->id,
             ],
             [

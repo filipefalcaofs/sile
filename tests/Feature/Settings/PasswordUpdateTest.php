@@ -4,14 +4,14 @@ namespace Tests\Feature\Settings;
 
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class PasswordUpdateTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -25,7 +25,7 @@ class PasswordUpdateTest extends TestCase
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($user)
-            ->get('/settings/password')
+            ->get('/portal/conta/senha')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('settings/password'));
     }
@@ -34,7 +34,7 @@ class PasswordUpdateTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $response = $this->actingAs($user)->put('/portal/user/password', [
+        $response = $this->actingAs($user)->put('/portal/conta/senha', [
             'current_password' => 'password',
             'password' => 'NovaSenhaForte123',
             'password_confirmation' => 'NovaSenhaForte123',
@@ -49,7 +49,7 @@ class PasswordUpdateTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($user)->put('/portal/user/password', [
+        $this->actingAs($user)->put('/portal/conta/senha', [
             'current_password' => 'password',
             'password' => 'NovaSenhaForte123',
             'password_confirmation' => 'NovaSenhaForte123',
@@ -67,7 +67,7 @@ class PasswordUpdateTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $response = $this->actingAs($user)->put('/portal/user/password', [
+        $response = $this->actingAs($user)->put('/portal/conta/senha', [
             'current_password' => 'senha-errada',
             'password' => 'NovaSenhaForte123',
             'password_confirmation' => 'NovaSenhaForte123',
@@ -82,7 +82,7 @@ class PasswordUpdateTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $response = $this->actingAs($user)->put('/portal/user/password', [
+        $response = $this->actingAs($user)->put('/portal/conta/senha', [
             'current_password' => 'password',
             'password' => 'abc',
             'password_confirmation' => 'abc',
@@ -95,9 +95,9 @@ class PasswordUpdateTest extends TestCase
 
     public function test_visitante_nao_altera_senha(): void
     {
-        $this->get('/settings/password')->assertRedirect('/portal/login');
+        $this->get('/portal/conta/senha')->assertRedirect('/portal/login');
 
-        $this->put('/portal/user/password', [
+        $this->put('/portal/conta/senha', [
             'current_password' => 'password',
             'password' => 'NovaSenhaForte123',
             'password_confirmation' => 'NovaSenhaForte123',

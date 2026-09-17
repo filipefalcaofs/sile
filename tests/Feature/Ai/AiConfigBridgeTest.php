@@ -4,7 +4,7 @@ namespace Tests\Feature\Ai;
 
 use App\Models\AiConfiguration;
 use App\Services\Ai\AiConfigResolver;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Fixtures\Ai\BridgeProbeAgent;
 use Tests\TestCase;
 
@@ -19,7 +19,7 @@ use Tests\TestCase;
  */
 class AiConfigBridgeTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function resolver(): AiConfigResolver
     {

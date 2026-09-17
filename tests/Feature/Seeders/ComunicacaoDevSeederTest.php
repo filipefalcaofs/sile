@@ -13,7 +13,7 @@ use App\Models\ViabilityRequest;
 use App\Notifications\PendenciaSolicitadaNotification;
 use App\Notifications\RespostaPendenciaNotification;
 use Database\Seeders\ComunicacaoDevSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -31,7 +31,7 @@ use Tests\TestCase;
  */
 class ComunicacaoDevSeederTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function dedicada(): ?ViabilityRequest
     {

@@ -10,7 +10,7 @@ use App\Models\Parameter;
 use App\Models\User;
 use App\Notifications\Contracts\ProcessNotification;
 use App\Services\Comunicacao\NotificationDispatcher;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
@@ -30,7 +30,7 @@ use Tests\TestCase;
  */
 class NotificationDispatcherTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function dispatcher(): NotificationDispatcher
     {

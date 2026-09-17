@@ -10,7 +10,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\DistribuicaoException;
 use App\Services\Analise\DistribuicaoService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -24,7 +24,7 @@ use Tests\TestCase;
  */
 class DistribuicaoServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): DistribuicaoService
     {

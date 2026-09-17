@@ -10,7 +10,7 @@ use App\Models\RuleVersion;
 use App\Models\SanitaryRiskClassification;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class RiscoSanitarioSeederTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_seeder_publica_versao_sanitaria_e_carrega_a_planilha(): void
     {

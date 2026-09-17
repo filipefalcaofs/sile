@@ -4,12 +4,12 @@ namespace Tests\Feature\EscritorioVirtual;
 
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class InscriptionLockTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_scope_ativo_por_inscricao(): void
     {

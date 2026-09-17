@@ -7,7 +7,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestDocument;
 use App\Models\ViabilityRequestTransition;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class SolicitacaoSchemaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_cadastros_existem_com_colunas(): void
     {
@@ -46,7 +46,7 @@ class SolicitacaoSchemaTest extends TestCase
         $this->assertTrue(Schema::hasColumns('viability_requests', [
             'protocol_number', 'status', 'origin',
             'service_type_id', 'company_id', 'requester_user_id', 'created_by_user_id',
-            'used_area_m2', 'property_registration',
+            'used_area_m2', 'property_registration', 'tipo_imovel', 'tipo_imovel_normalized',
             'address_street', 'address_number', 'address_complement', 'address_neighborhood', 'address_zip', 'address_reference',
             'property_polygon_geojson',
             'is_virtual_office', 'is_public_area', 'has_independent_access',

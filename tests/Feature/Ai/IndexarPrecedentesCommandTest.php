@@ -6,7 +6,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\AiConfiguration;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Laravel\Ai\Embeddings;
 use PHPUnit\Framework\Attributes\Group;
@@ -21,7 +21,7 @@ use Tests\TestCase;
 #[Group('ia')]
 class IndexarPrecedentesCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function provedorEmbeddingsAtivo(): void
     {

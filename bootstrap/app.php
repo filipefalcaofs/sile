@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ConfigureEnvironmentSession;
 use App\Http\Middleware\EnsureLgpdTermAccepted;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -24,6 +25,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Define cookie/path de sessão por ambiente (console x portal) ANTES do
+        // roteamento — base do isolamento de autenticação. Precisa ser GLOBAL:
+        // o Router resolve o controller (e o guard injetado do Fortify) na coleta
+        // de middleware, antes da pilha web, fixando o nome do cookie cedo.
+        $middleware->prepend(ConfigureEnvironmentSession::class);
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
             SecurityHeaders::class,
@@ -48,6 +55,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Autenticado no portal em rota guest volta ao painel do cidadão.
         // (As rotas guest da gestão usam o middleware gestao.guest próprio.)
         $middleware->redirectUsersTo(fn () => route('portal.dashboard'));
+
+        // JUCEB/REGIN não envia token CSRF do Laravel.
+        $middleware->validateCsrfTokens(except: [
+            'api_integracao/recebe',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Endpoints JSON do portal (ex.: consulta de CNPJ — HU-021) precisam de

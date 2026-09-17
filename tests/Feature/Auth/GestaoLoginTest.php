@@ -5,7 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use App\Support\Settings;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -15,7 +15,7 @@ use Tests\TestCase;
  */
 class GestaoLoginTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -130,7 +130,10 @@ class GestaoLoginTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertSessionHasErrors('email');
+        // Mensagem neutra, sem remeter ao portal (separação de ambientes).
+        $response->assertSessionHasErrors([
+            'email' => 'Confirme seu e-mail institucional antes de acessar o console.',
+        ]);
 
         $this->assertGuest('gestao');
     }

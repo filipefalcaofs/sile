@@ -33,7 +33,7 @@ export default function Profile({ user }: ProfileProps) {
                     </p>
                 </div>
 
-                <Form action="/settings/profile" method="patch">
+                <Form action="/portal/conta/perfil" method="patch">
                     {({ errors, processing, recentlySuccessful }) => (
                         <div className="flex flex-col gap-6">
                             <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">

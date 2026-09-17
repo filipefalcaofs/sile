@@ -4,7 +4,7 @@ namespace Tests\Feature\Ai;
 
 use App\Models\AiConfiguration;
 use App\Services\Ai\AiFeatureGate;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -16,7 +16,7 @@ use Tests\TestCase;
  */
 class AiFeatureGateTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function gate(): AiFeatureGate
     {

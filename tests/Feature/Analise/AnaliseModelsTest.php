@@ -14,7 +14,7 @@ use App\Models\TvlDocument;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -26,7 +26,7 @@ use Tests\TestCase;
  */
 class AnaliseModelsTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_setor_tem_analistas_n_n_e_state_inativo(): void
     {

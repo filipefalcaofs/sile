@@ -16,7 +16,7 @@ use App\Models\ViabilityRequest;
 use App\Notifications\RespostaPendenciaNotification;
 use App\Services\Analise\PendenciaService;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -35,7 +35,7 @@ use Tests\TestCase;
  */
 class NotificarRespostaPendenciaListenerTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Processo em em_pendencia com pendência aberta, opcionalmente com analista

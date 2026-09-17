@@ -62,6 +62,21 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertSame('6202-3/00', $relatorio['por_cnae'][0]['cnae']);
         $this->assertArrayHasKey('fluxo', $relatorio['por_cnae'][0]['risco']['encaminhamento']);
         $this->assertContains($relatorio['por_cnae'][0]['risco']['municipal']['status'], ['classificado', 'nao_classificado']);
+        $this->assertSame('6202-3/00', $relatorio['consolidado']['cnae']);
+        $this->assertSame('baixo_a', $relatorio['consolidado']['nivel']);
+        $this->assertSame('expresso', $relatorio['consolidado']['fluxo']);
+    }
+
+    public function test_conjunto_e_classificado_pelo_cnae_de_maior_risco(): void
+    {
+        $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('53514');
+
+        $this->assertCount(5, $relatorio['por_cnae']);
+        $this->assertSame('4771-7/01', $relatorio['consolidado']['cnae']);
+        $this->assertSame('alto', $relatorio['consolidado']['nivel']);
+        $this->assertSame('Alto', $relatorio['consolidado']['nivel_label']);
+        $this->assertSame('analise', $relatorio['consolidado']['fluxo']);
+        $this->assertStringContainsString('conjunto', mb_strtolower((string) $relatorio['consolidado']['motivo']));
     }
 
     public function test_abrigado_sem_tipo_nao_inventa_galpao(): void
@@ -101,6 +116,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/risco/simulacao-regin')
                 ->has('protocolos', 10)
+                ->has('execucoes', 0)
                 ->where('aviso', fn ($aviso) => is_string($aviso) && str_contains($aviso, 'REGIN')));
 
         $this->actingAs($gestor, 'gestao')
@@ -110,7 +126,66 @@ class ReginProtocoloSimulacaoTest extends TestCase
                 ->component('gestao/risco/simulacao-regin')
                 ->where('relatorio.tipo_imovel_normalized', 'galpao')
                 ->where('relatorio.area_utilizada', 834)
-                ->has('relatorio.por_cnae', 1));
+                ->has('relatorio.por_cnae', 1)
+                ->where('relatorio.consolidado.cnae', '6202-3/00')
+                ->where('relatorio.consolidado.fluxo', 'expresso')
+                ->has('relatorio.por_cnae.0.risco.municipal.nivel_label')
+                ->has('relatorio.por_cnae.0.risco.sanitario.status')
+                ->has('relatorio.por_cnae.0.risco.encaminhamento.motivo')
+                ->has('relatorio.por_cnae.0.risco.encaminhamento.dimensao_decisiva')
+                ->has('relatorio.por_cnae.0.risco.fundamentacao')
+                ->has('relatorio.por_cnae.0.risco.versoes'));
+    }
+
+    public function test_resultado_persiste_e_reaparece_depois_do_get(): void
+    {
+        $gestor = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($gestor, 'gestao')
+            ->post('/gestao/risco/simulacao-regin', ['codigo' => '43747'])
+            ->assertOk();
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao/risco/simulacao-regin')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('relatorio.codigo', '43747')
+                ->has('execucoes', 1)
+                ->where('execucoes.0.codigo', '43747'));
+    }
+
+    public function test_nova_simulacao_nao_mistura_processo_real_e_substitui_o_mesmo_codigo(): void
+    {
+        $gestor = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($gestor, 'gestao')->post('/gestao/risco/simulacao-regin', ['codigo' => '43747']);
+        $this->actingAs($gestor, 'gestao')->post('/gestao/risco/simulacao-regin', ['codigo' => '53514']);
+        $this->actingAs($gestor, 'gestao')->post('/gestao/risco/simulacao-regin', ['codigo' => '43747']);
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao/risco/simulacao-regin')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('relatorio.codigo', '43747')
+                ->has('execucoes', 2));
+    }
+
+    public function test_apagar_remove_o_resultado_para_refazer(): void
+    {
+        $gestor = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($gestor, 'gestao')->post('/gestao/risco/simulacao-regin', ['codigo' => '43747']);
+
+        $this->actingAs($gestor, 'gestao')
+            ->delete('/gestao/risco/simulacao-regin/43747')
+            ->assertRedirect(route('gestao.risco.simulacao-regin'));
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao/risco/simulacao-regin')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('relatorio', null)
+                ->has('execucoes', 0));
     }
 
     public function test_comando_simula_protocolo_no_motor_real(): void
@@ -121,6 +196,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
             ->expectsOutputToContain('834')
             ->expectsOutputToContain('6202-3/00')
             ->expectsOutputToContain('simulação')
+            ->expectsOutputToContain('conjunto')
             ->assertSuccessful();
     }
 }

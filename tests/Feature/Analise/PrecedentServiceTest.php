@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\PrecedentRepository;
 use App\Services\Analise\PrecedentService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Analise\FakePrecedentRepository;
 use Tests\TestCase;
 
@@ -26,7 +26,7 @@ use Tests\TestCase;
  */
 class PrecedentServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): PrecedentService
     {

@@ -11,7 +11,7 @@ use App\Models\DocumentRequirement;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestDocument;
 use App\Services\Ai\InconsistenciasService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Ai\Files\StoredImage;
 use PHPUnit\Framework\Attributes\Group;
@@ -31,7 +31,7 @@ use Tests\TestCase;
 #[Group('ia')]
 class InconsistenciasTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function provedorVisaoAtivo(): void
     {

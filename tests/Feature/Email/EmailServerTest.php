@@ -3,14 +3,14 @@
 namespace Tests\Feature\Email;
 
 use App\Models\EmailServer;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class EmailServerTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_a_senha_e_gravada_criptografada_e_lida_em_claro_pelo_model(): void
     {

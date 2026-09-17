@@ -4,12 +4,12 @@ namespace Tests\Feature\Auditoria;
 
 use App\Models\User;
 use App\Support\Audit\AuditService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class AuditServicePersonalDataTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_log_com_personal_data_true_marca_acesso_a_dado_pessoal(): void
     {

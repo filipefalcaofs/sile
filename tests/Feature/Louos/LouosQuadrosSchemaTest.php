@@ -7,7 +7,7 @@ use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -18,7 +18,7 @@ use Tests\TestCase;
  */
 class LouosQuadrosSchemaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_tabelas_louos_migram_em_sqlite(): void
     {

@@ -99,8 +99,8 @@ const CATEGORIA_OPTIONS = [
 ];
 
 const RISCO_LABELS: Record<string, string> = {
-    baixo_a: 'Baixo A',
-    baixo_b: 'Baixo B',
+    baixo_a: 'Baixo',
+    baixo_b: 'Médio',
     medio: 'Médio',
     alto: 'Alto',
     expresso: 'Expresso',

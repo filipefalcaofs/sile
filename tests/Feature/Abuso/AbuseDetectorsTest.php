@@ -11,7 +11,7 @@ use App\Services\Abuso\AbuseFinding;
 use App\Services\Abuso\DetectionWindow;
 use App\Services\Abuso\Detectors\VolumeCnpjDetector;
 use App\Services\Abuso\Detectors\VolumeContadorDetector;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -23,7 +23,7 @@ use Tests\TestCase;
  */
 class AbuseDetectorsTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function janela(int $dias = 30): DetectionWindow
     {

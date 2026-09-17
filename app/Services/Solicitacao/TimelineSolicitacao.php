@@ -128,7 +128,7 @@ class TimelineSolicitacao
                 config('sile.solicitacao.prazo_estimado_dias', 30),
             ),
             'ressalva' => 'Prazo estimado e não vinculante. A medição por etapa com base em '
-                .'processos equivalentes (HU-129) ainda será implementada; até lá este valor é '
+                .'processos equivalentes ainda será implementada; até lá este valor é '
                 .'uma estimativa parametrizada.',
         ];
     }

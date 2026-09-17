@@ -9,7 +9,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\EscritorioVirtual\DesvincularInscricaoService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Tests\TestCase;
 
@@ -19,7 +19,7 @@ use Tests\TestCase;
  */
 class DesvincularInscricaoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private int $seq = 0;
 

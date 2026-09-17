@@ -10,7 +10,7 @@ use App\Models\Communication;
 use App\Models\User;
 use App\Notifications\Contracts\ProcessNotification;
 use App\Notifications\VerifyEmailQueued;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -36,7 +36,7 @@ use Tests\TestCase;
  */
 class RegistrarEnvioComunicacaoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Notification de processo de teste com canais congelados + mapa

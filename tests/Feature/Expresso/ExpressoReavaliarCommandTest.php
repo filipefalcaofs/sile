@@ -5,7 +5,7 @@ namespace Tests\Feature\Expresso;
 use App\Jobs\DecidirFluxoExpressoJob;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
@@ -21,7 +21,7 @@ use Tests\TestCase;
  */
 class ExpressoReavaliarCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_reenfileira_apenas_orfas_protocoladas_sem_decisao(): void
     {

@@ -129,12 +129,6 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('consultar-auditoria'),
                 },
                 {
-                    name: 'Conformidade LGPD',
-                    href: '/gestao/lgpd',
-                    icon: <LockIcon />,
-                    visible: auth.permissions.includes('monitorar-lgpd'),
-                },
-                {
                     name: 'Alertas de abuso',
                     href: '/gestao/abuso',
                     icon: <AlertIcon />,
@@ -217,6 +211,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('manter-parametros'),
                 },
                 {
+                    name: 'API REGIN',
+                    href: '/gestao/config-regin',
+                    icon: <PlugInIcon />,
+                    visible: auth.permissions.includes('manter-parametros'),
+                },
+                {
                     name: 'Servidores de e-mail',
                     href: '/gestao/config-email',
                     icon: <MailIcon />,
@@ -240,7 +240,7 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
 
     return (
         <ThemeProvider>
-            <AppShell groups={groups} homeHref="/gestao" logoutHref="/gestao/logout" subtitle="Gestão SEDUR" variant="console" collapsibleGroups>
+            <AppShell groups={groups} homeHref="/gestao" logoutHref="/gestao/logout" accountHref="/gestao/conta/perfil" subtitle="Gestão SEDUR" variant="console" collapsibleGroups>
                 {flash.status && (
                     <div className="mb-6">
                         <Alert variant="success" title="Sucesso" message={flash.status} />

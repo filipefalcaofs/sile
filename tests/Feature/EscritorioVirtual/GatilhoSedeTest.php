@@ -19,14 +19,14 @@ use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Geo\SpatialRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
 class GatilhoSedeTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_aplica_quando_cnae_8211_e_quer_ser_sede(): void
     {

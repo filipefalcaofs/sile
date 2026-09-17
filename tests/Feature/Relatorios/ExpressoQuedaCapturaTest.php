@@ -20,7 +20,7 @@ use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
@@ -38,7 +38,7 @@ use Tests\TestCase;
  */
 class ExpressoQuedaCapturaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): FluxoExpressoService
     {

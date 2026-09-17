@@ -5,7 +5,7 @@ namespace Tests\Feature\Ai;
 use App\Models\AiConfiguration;
 use App\Services\Ai\AiConfigResolver;
 use Database\Seeders\AiConfigDevSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -16,7 +16,7 @@ use Tests\TestCase;
  */
 class AiConfigDevSeederTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_em_local_cria_o_exemplo_padrao_ativo_que_alimenta_a_ponte(): void
     {

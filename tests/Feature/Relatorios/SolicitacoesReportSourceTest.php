@@ -9,7 +9,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\Export\Sources\SolicitacoesReportSource;
 use App\Services\Relatorios\ReportFilters;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -23,7 +23,7 @@ use Tests\TestCase;
  */
 class SolicitacoesReportSourceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function source(): SolicitacoesReportSource
     {

@@ -306,6 +306,16 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * Quedas do fluxo expresso que originaram o encaminhamento à análise.
+     *
+     * @return HasMany<ExpressoQueda, $this>
+     */
+    public function expressoQuedas(): HasMany
+    {
+        return $this->hasMany(ExpressoQueda::class);
+    }
+
+    /**
      * Ficha vigente = a de MAIOR revisão (RN-003 — versionamento). A finalizada
      * é imutável; recalcular gera nova revisão, que passa a ser a current.
      *

@@ -9,7 +9,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\MalhaFinaException;
 use App\Services\Analise\MalhaFinaService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -23,7 +23,7 @@ use Tests\TestCase;
  */
 class MalhaFinaServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): MalhaFinaService
     {

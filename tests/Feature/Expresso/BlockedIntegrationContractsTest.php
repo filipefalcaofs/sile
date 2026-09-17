@@ -12,7 +12,7 @@ use App\Services\Regin\UnavailableReginParecerNotifier;
 use App\Services\Sefaz\SefazUnavailableException;
 use App\Services\Sefaz\SefazViabilidadeGateway;
 use App\Services\Sefaz\UnavailableSefazViabilidadeGateway;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -27,7 +27,7 @@ use Tests\TestCase;
  */
 class BlockedIntegrationContractsTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Solicitação protocolada + sua decisão imutável — o payload que os contratos

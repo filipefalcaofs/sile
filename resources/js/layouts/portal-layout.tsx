@@ -35,7 +35,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
 
     return (
         <ThemeProvider>
-            <AppShell groups={groups} homeHref="/portal" subtitle="Portal do Cidadão">
+            <AppShell groups={groups} homeHref="/portal" accountHref="/portal/conta/perfil" subtitle="Portal do Cidadão">
                 {actingFor && (
                     <div className="mb-6 rounded-xl border border-warning-500 bg-warning-50 p-4 dark:border-warning-500/30 dark:bg-warning-500/15">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

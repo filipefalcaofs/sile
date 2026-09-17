@@ -20,13 +20,12 @@ interface DestinoComando {
 }
 
 /**
- * Destinos das superfícies de gestão (auditoria/compliance HU-098/100/102/149 e
+ * Destinos das superfícies de gestão (auditoria/compliance HU-098/100/149 e
  * relatórios do EP15) — os mesmos da sidebar. Cada um exige a permissão
  * correspondente: quem não tem, não vê o item (gating espelhando o do layout).
  */
 const DESTINOS: DestinoComando[] = [
     { label: 'Trilha de auditoria', grupo: 'Auditoria e compliance', href: '/gestao/auditoria', permissao: 'consultar-auditoria' },
-    { label: 'Conformidade LGPD', grupo: 'Auditoria e compliance', href: '/gestao/lgpd', permissao: 'monitorar-lgpd' },
     { label: 'Alertas de abuso', grupo: 'Auditoria e compliance', href: '/gestao/abuso', permissao: 'gerenciar-alertas-abuso' },
     { label: 'Auditoria preditiva', grupo: 'Auditoria e compliance', href: '/gestao/auditoria-preditiva', permissao: 'gerenciar-alertas-abuso' },
     { label: 'Indicadores de viabilidade', grupo: 'Relatórios', href: '/gestao/relatorios/indicadores', permissao: 'consultar-relatorios' },
@@ -36,6 +35,7 @@ const DESTINOS: DestinoComando[] = [
     { label: 'Painel por bairro', grupo: 'Relatórios', href: '/gestao/relatorios/geo-bairro', permissao: 'consultar-relatorios' },
     { label: 'Saturação locacional', grupo: 'Relatórios', href: '/gestao/relatorios/saturacao', permissao: 'consultar-relatorios' },
     { label: 'Feriados', grupo: 'Relatórios', href: '/gestao/feriados', permissao: 'manter-parametros' },
+    { label: 'API REGIN', grupo: 'Administração', href: '/gestao/config-regin', permissao: 'manter-parametros' },
     { label: 'Servidores de e-mail', grupo: 'Administração', href: '/gestao/config-email', permissao: 'manter-config-email' },
     { label: 'Configuração de IA', grupo: 'Administração', href: '/gestao/config-ia', permissao: 'manter-config-ia' },
 ];

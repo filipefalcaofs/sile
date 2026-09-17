@@ -4,7 +4,7 @@ namespace Tests\Feature\Viabilidade;
 
 use App\Models\User;
 use App\Models\ViabilityQuery;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -16,7 +16,7 @@ use Tests\TestCase;
  */
 class ViabilityQuerySchemaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_grava_e_recupera_snapshot_com_casts_array(): void
     {

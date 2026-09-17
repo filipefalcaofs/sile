@@ -5,7 +5,7 @@ namespace Tests\Feature\Risco;
 use App\Enums\TipoGatilho;
 use App\Models\RiskTrigger;
 use Database\Seeders\RiskTriggerSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -16,7 +16,7 @@ use Tests\TestCase;
  */
 class RiskTriggerSeederTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_seeder_cria_os_tres_gatilhos_conhecidos(): void
     {

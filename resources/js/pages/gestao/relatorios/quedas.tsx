@@ -332,7 +332,7 @@ export default function QuedasExpresso({ taxa, serie, ranking, filtros }: Quedas
                 </Card>
 
                 <Card>
-                    <CardHeader title="Drill-down dos processos" description="Aprofunde até os processos do período e suas divergências analista × motor (HU-140)." />
+                    <CardHeader title="Drill-down dos processos" description="Aprofunde até os processos do período e suas divergências analista × motor." />
                     <CardContent>
                         <p className="text-theme-sm text-gray-500 dark:text-gray-400">
                             As divergências entre a análise humana e a decisão do motor ficam na ficha de cada processo. Abra a consulta de

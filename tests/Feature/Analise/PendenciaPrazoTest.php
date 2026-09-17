@@ -7,12 +7,12 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\PendenciaService;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class PendenciaPrazoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function tearDown(): void
     {

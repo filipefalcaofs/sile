@@ -16,7 +16,7 @@ use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Geo\FakeSpatialRepository;
@@ -39,7 +39,7 @@ use Tests\TestCase;
  */
 class ExpressoGoldenCaseTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Carrega cada fixture entrada→esperado de

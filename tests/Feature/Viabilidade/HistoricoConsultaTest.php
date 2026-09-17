@@ -11,7 +11,7 @@ use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -28,7 +28,7 @@ use Tests\TestCase;
  */
 class HistoricoConsultaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private const CNAE_MINIMERCADO = '4712-1/00';
 

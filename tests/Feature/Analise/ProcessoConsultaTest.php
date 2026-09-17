@@ -3,12 +3,15 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisCategory;
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Http\Resources\ProcessoResource;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\ProcessoQueryService;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -25,7 +28,7 @@ use Tests\TestCase;
  */
 class ProcessoConsultaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private int $seq = 0;
 
@@ -245,10 +248,10 @@ class ProcessoConsultaTest extends TestCase
 
     public function test_resource_expoe_analysis_status_e_label(): void
     {
-        $request = \App\Models\ViabilityRequest::factory()->create();
-        $request->forceFill(['analysis_status' => \App\Enums\AnalysisStatus::EmAnalise])->save();
+        $request = ViabilityRequest::factory()->create();
+        $request->forceFill(['analysis_status' => AnalysisStatus::EmAnalise])->save();
 
-        $payload = (new \App\Http\Resources\ProcessoResource($request->fresh()))->resolve();
+        $payload = (new ProcessoResource($request->fresh()))->resolve();
 
         $this->assertSame('em_analise', $payload['analysis_status']);
         $this->assertSame('Em análise', $payload['analysis_status_label']);
@@ -256,12 +259,12 @@ class ProcessoConsultaTest extends TestCase
 
     public function test_filtra_por_analysis_status(): void
     {
-        $comStatus = \App\Models\ViabilityRequest::factory()->create();
-        $comStatus->forceFill(['analysis_status' => \App\Enums\AnalysisStatus::EmConvite])->save();
-        $outro = \App\Models\ViabilityRequest::factory()->create();
-        $outro->forceFill(['analysis_status' => \App\Enums\AnalysisStatus::EmAnalise])->save();
+        $comStatus = ViabilityRequest::factory()->create();
+        $comStatus->forceFill(['analysis_status' => AnalysisStatus::EmConvite])->save();
+        $outro = ViabilityRequest::factory()->create();
+        $outro->forceFill(['analysis_status' => AnalysisStatus::EmAnalise])->save();
 
-        $resultado = app(\App\Services\Analise\ProcessoQueryService::class)
+        $resultado = app(ProcessoQueryService::class)
             ->filtered(['analysis_status' => 'em_convite'])
             ->pluck('id');
 

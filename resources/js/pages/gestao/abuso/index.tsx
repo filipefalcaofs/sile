@@ -493,7 +493,7 @@ export default function AbusoIndex({
                     <div className="text-theme-sm text-gray-600 dark:text-gray-300">
                         <p className="font-medium text-gray-800 dark:text-white/90">Revisão humana — nunca punição automática</p>
                         <p className="mt-1">
-                            Confirmar ou descartar é a triagem humana do próprio alerta (HU-149). Não altera, não indefere e
+                            Confirmar ou descartar é a triagem humana do próprio alerta. Não altera, não indefere e
                             não pune o processo, e não mexe no encaminhamento à malha fina — que é ortogonal e decidido pelo
                             motor. A detecção nasce desligada e gera apenas insumo para análise.
                         </p>
@@ -504,7 +504,7 @@ export default function AbusoIndex({
                 <Card>
                     <CardHeader
                         title="Efetividade da detecção"
-                        description="Confirmados ÷ gerados sobre todos os alertas reais — calibração das regras (RN-005). Indicador global: independe dos filtros da lista. Sem alertas, a taxa não é exibida (nunca um número inventado)."
+                        description="Confirmados ÷ gerados sobre todos os alertas reais — calibração das regras. Indicador global: independe dos filtros da lista. Sem alertas, a taxa não é exibida (nunca um número inventado)."
                     />
                     <CardContent>
                         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -557,7 +557,7 @@ export default function AbusoIndex({
                 <Card>
                     <CardHeader
                         title="Alertas para triagem"
-                        description="Ocorrências sinalizadas pelos detectores (HU-149) para revisão humana. Consulta somente leitura, server-driven — a própria consulta é auditada (RN-002)."
+                        description="Ocorrências sinalizadas pelos detectores para revisão humana. Consulta somente leitura, server-driven — a própria consulta é auditada."
                     />
                     <CardContent>
                         <div className="space-y-5">

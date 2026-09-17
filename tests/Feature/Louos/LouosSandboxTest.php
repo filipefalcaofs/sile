@@ -15,7 +15,7 @@ use App\Models\User;
 use App\Services\Louos\LouosSandboxSimulationService;
 use App\Services\Rules\RuleVersionService;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -33,7 +33,7 @@ use Tests\TestCase;
  */
 class LouosSandboxTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

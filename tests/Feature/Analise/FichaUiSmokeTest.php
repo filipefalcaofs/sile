@@ -5,11 +5,12 @@ namespace Tests\Feature\Analise;
 use App\Enums\AnalysisRecordStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisRecord;
+use App\Models\ExpressoQueda;
 use App\Models\StandardText;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -24,7 +25,7 @@ use Tests\TestCase;
  */
 class FichaUiSmokeTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -201,6 +202,36 @@ class FichaUiSmokeTest extends TestCase
 
         $this->assertSame(
             ['Área zoneamento Semi expresso', 'Tipo Espaço - Casa'],
+            $response->viewData('page')['props']['ficha']['analysis_reasons'],
+        );
+    }
+
+    public function test_ficha_expoe_motivo_da_queda_do_motor_quando_a_ficha_ainda_nao_tem_lista(): void
+    {
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocol_number' => 'VIA-'.now()->year.'-000204',
+            'protocoled_at' => now(),
+        ]);
+
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+            'analysis_reasons' => null,
+        ]);
+
+        ExpressoQueda::factory()->create([
+            'viability_request_id' => $processo->id,
+            'motivo' => 'Nível alto (municipal) encaminhado para análise técnica',
+        ]);
+
+        $response = $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk();
+
+        $this->assertSame(
+            ['Nível alto (municipal) encaminhado para análise técnica'],
             $response->viewData('page')['props']['ficha']['analysis_reasons'],
         );
     }

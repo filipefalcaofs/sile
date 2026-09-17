@@ -7,7 +7,7 @@ use App\Models\Activity;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use Database\Seeders\RiscoMunicipalSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -18,7 +18,7 @@ use Tests\TestCase;
  */
 class RiscoMunicipalSeederTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_seeder_publica_versao_vigente_e_carrega_o_decreto(): void
     {

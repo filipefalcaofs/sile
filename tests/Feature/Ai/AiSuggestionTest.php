@@ -7,7 +7,7 @@ use App\Enums\AiSuggestionType;
 use App\Models\AiSuggestion;
 use App\Models\User;
 use App\Models\ViabilityRequest;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -18,7 +18,7 @@ use Tests\TestCase;
  */
 class AiSuggestionTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_o_status_nunca_admite_decidida(): void
     {

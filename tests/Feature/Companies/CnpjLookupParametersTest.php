@@ -4,14 +4,14 @@ namespace Tests\Feature\Companies;
 
 use App\Services\Cnpj\CnpjLookup;
 use App\Services\Cnpj\CnpjLookupException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class CnpjLookupParametersTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

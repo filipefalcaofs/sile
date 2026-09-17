@@ -11,7 +11,7 @@ use App\Models\PredictiveAnomaly;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Ia\PredictiveAuditService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
@@ -25,7 +25,7 @@ use Tests\TestCase;
  */
 class PredictiveAuditServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private int $seq = 0;
 

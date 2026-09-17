@@ -210,7 +210,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
 
                             <dl className="grid shrink-0 grid-cols-1 gap-4 sm:text-right">
                                 {decisao.tvl_product_number && (
-                                    <DescItem label="Número TVL">
+                                    <DescItem label="Viabilidade">
                                         <span className="font-medium">{decisao.tvl_product_number}</span>
                                     </DescItem>
                                 )}
@@ -227,7 +227,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                 <Card>
                     <CardHeader
                         title="Resultado consolidado"
-                        description="Veredito do parecer de viabilidade locacional (consolidação por pior caso — LOUOS RN-009)."
+                        description="Veredito do parecer de viabilidade locacional (consolidação por pior caso)."
                     />
                     <CardContent>
                         <div className="flex flex-wrap items-center gap-2">
@@ -300,7 +300,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                     <Card>
                         <CardHeader
                             title="Versões de regra aplicadas"
-                            description="As versões vigentes na data da decisão (RN-005) — fundam a explicabilidade."
+                            description="As versões vigentes na data da decisão — fundam a explicabilidade."
                         />
                         <CardContent>
                             {regras.length === 0 ? (
@@ -351,7 +351,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                     <Card>
                         <CardHeader
                             title="Explicabilidade da decisão"
-                            description="Passo a passo de como a viabilidade foi decidida (RN-005) — projeção do que foi registrado, sem reexecutar o motor."
+                            description="Passo a passo de como a viabilidade foi decidida — projeção do que foi registrado, sem reexecutar o motor."
                         />
                         <CardContent>
                             <DecisionExplanation explicacao={explicacao} />
@@ -375,7 +375,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                             <InfoIcon className="size-5 shrink-0 fill-current text-blue-light-500" />
                             <p className="text-theme-sm text-gray-600 dark:text-gray-300">
                                 Canal oficial ao cidadão: <strong>Regin/SEFAZ</strong>. A emissão do documento (TVL/PDF)
-                                é função da retaguarda na próxima fase (HU-132); aqui a decisão é apenas consultada.
+                                é função da retaguarda; aqui a decisão é apenas consultada.
                             </p>
                         </div>
                     </CardContent>

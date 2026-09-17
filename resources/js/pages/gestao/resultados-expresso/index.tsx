@@ -139,7 +139,7 @@ export default function ResultadosExpressoIndex({
         },
         {
             id: 'tvl',
-            header: 'Número TVL',
+            header: 'Viabilidade',
             cellClassName: 'whitespace-nowrap',
             cell: (item) =>
                 item.tvl_product_number ?? <span className="text-gray-400 dark:text-gray-500">—</span>,
@@ -179,7 +179,7 @@ export default function ResultadosExpressoIndex({
             <Card>
                 <CardHeader
                     title="Decisões automáticas"
-                    description="Solicitações deferidas e indeferidas pelo fluxo expresso (HU-076/HU-078). Consulta somente leitura — a decisão é imutável e auditável."
+                    description="Solicitações deferidas e indeferidas pelo fluxo expresso. Consulta somente leitura — a decisão é imutável e auditável."
                 />
                 <CardContent>
                     <div className="space-y-5">
@@ -187,7 +187,7 @@ export default function ResultadosExpressoIndex({
                             search={{
                                 value: table.search,
                                 onChange: table.setSearch,
-                                placeholder: 'Buscar por protocolo ou número TVL...',
+                                placeholder: 'Buscar por protocolo ou viabilidade...',
                                 label: 'Buscar resultados do fluxo expresso',
                             }}
                             filters={

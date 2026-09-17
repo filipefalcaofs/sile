@@ -12,7 +12,7 @@ use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Support\Representation\CurrentRepresentation;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -30,7 +30,7 @@ use Tests\TestCase;
  */
 class AtendimentoPresencialTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

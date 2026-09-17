@@ -4,12 +4,12 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class StateMachinePendenciaIndefereTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_em_pendencia_pode_indeferir(): void
     {

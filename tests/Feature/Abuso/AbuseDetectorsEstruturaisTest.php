@@ -15,7 +15,7 @@ use App\Services\Abuso\Detectors\CondicionanteEvasaoDetector;
 use App\Services\Abuso\Detectors\InscricaoAtividadesIncompativeisDetector;
 use App\Services\Abuso\Detectors\PoligonoRepetidoDetector;
 use Carbon\CarbonInterface;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -27,7 +27,7 @@ use Tests\TestCase;
  */
 class AbuseDetectorsEstruturaisTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function janela(int $dias = 30): DetectionWindow
     {

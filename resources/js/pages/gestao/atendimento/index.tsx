@@ -38,7 +38,7 @@ function StartCard() {
         <Card>
             <CardHeader
                 title="Iniciar atendimento"
-                description="Informe o CPF do cidadão presente no balcão para operar o sistema em nome dele, com trilha completa (HU-150)."
+                description="Informe o CPF do cidadão presente no balcão para operar o sistema em nome dele, com trilha completa."
             />
             <CardContent>
                 <Form action="/gestao/atendimento" method="post" resetOnSuccess className="max-w-md">
@@ -100,7 +100,7 @@ function OpenRequestCard({ companies, serviceTypes }: { companies: CompanyOption
     if (companies.length === 0) {
         return (
             <Card>
-                <CardHeader title="Abrir solicitação direta" description="Solicitação de viabilidade em nome do cidadão (HU-061)." />
+                <CardHeader title="Abrir solicitação direta" description="Solicitação de viabilidade em nome do cidadão." />
                 <CardContent>
                     <EmptyState
                         title="O cidadão não possui empresa vinculada"
@@ -115,7 +115,7 @@ function OpenRequestCard({ companies, serviceTypes }: { companies: CompanyOption
         <Card>
             <CardHeader
                 title="Abrir solicitação direta"
-                description="Solicitação de viabilidade em nome do cidadão (HU-061). O processo registra o cidadão como requerente e você como executor."
+                description="Solicitação de viabilidade em nome do cidadão. O processo registra o cidadão como requerente e você como executor."
             />
             <CardContent>
                 <Form action="/gestao/atendimento/solicitacoes" method="post" className="max-w-md">

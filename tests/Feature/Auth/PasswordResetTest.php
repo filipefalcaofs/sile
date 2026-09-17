@@ -5,7 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use App\Notifications\ResetPasswordQueued;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
@@ -15,7 +15,7 @@ use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

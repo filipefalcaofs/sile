@@ -19,7 +19,7 @@ use App\Services\Geo\SpatialRepository;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
@@ -44,7 +44,7 @@ use Tests\TestCase;
  */
 class SolicitacaoViabilityResolverTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function resolver(): SolicitacaoViabilityResolver
     {

@@ -16,7 +16,7 @@ use App\Services\Solicitacao\SolicitacaoIncompletaException;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use RuntimeException;
@@ -36,7 +36,7 @@ use Tests\TestCase;
  */
 class ProtocolarSolicitacaoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

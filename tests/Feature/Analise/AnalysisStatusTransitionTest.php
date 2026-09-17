@@ -4,12 +4,12 @@ namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStatus;
 use App\Models\ViabilityRequest;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class AnalysisStatusTransitionTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_cast_do_analysis_status_e_relation_da_timeline(): void
     {

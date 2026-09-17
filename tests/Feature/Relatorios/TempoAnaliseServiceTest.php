@@ -9,7 +9,7 @@ use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestTransition;
 use App\Services\Relatorios\ReportFilters;
 use App\Services\Relatorios\TempoAnaliseService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use PHPUnit\Framework\Attributes\Test;
@@ -27,7 +27,7 @@ use Tests\TestCase;
  */
 class TempoAnaliseServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): TempoAnaliseService
     {

@@ -11,13 +11,13 @@ use App\Services\Cnpj\CnpjLookupException;
 use App\Services\Cnpj\CnpjNotFoundException;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class CnpjLookupTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

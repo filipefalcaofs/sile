@@ -75,7 +75,7 @@ class LoginController extends Controller
 
         if (! $user->hasVerifiedEmail()) {
             throw ValidationException::withMessages([
-                'email' => __('Confirme seu e-mail pelo portal antes de acessar o console.'),
+                'email' => __('Confirme seu e-mail institucional antes de acessar o console.'),
             ]);
         }
 

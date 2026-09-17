@@ -22,8 +22,13 @@ class EnsureLgpdTermAccepted
     {
         $term = LegalTerm::current('lgpd');
 
-        if ($term !== null && ! $request->user()->hasAcceptedTerm($term)) {
-            return redirect()->route('portal.termo-lgpd.show');
+        $guard = $request->is('gestao', 'gestao/*') ? 'gestao' : 'web';
+        $user = $request->user($guard);
+
+        if ($term !== null && $user !== null && ! $user->hasAcceptedTerm($term)) {
+            $route = $guard === 'gestao' ? 'gestao.termo-lgpd.show' : 'portal.termo-lgpd.show';
+
+            return redirect()->route($route);
         }
 
         return $next($request);

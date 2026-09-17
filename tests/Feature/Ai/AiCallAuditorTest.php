@@ -4,7 +4,7 @@ namespace Tests\Feature\Ai;
 
 use App\Models\AiSuggestion;
 use App\Services\Ai\AiCallAuditor;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -15,7 +15,7 @@ use Tests\TestCase;
  */
 class AiCallAuditorTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function auditor(): AiCallAuditor
     {

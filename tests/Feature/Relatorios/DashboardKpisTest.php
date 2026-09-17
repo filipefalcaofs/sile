@@ -9,7 +9,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestTransition;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\Test;
@@ -26,7 +26,7 @@ use Tests\TestCase;
  */
 class DashboardKpisTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /** Segunda-feira: a janela padrão (últimos 30 dias) fica determinística. */
     private const AGORA = '2026-06-15 12:00:00';

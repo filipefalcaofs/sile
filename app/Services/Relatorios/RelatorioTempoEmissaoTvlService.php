@@ -2,6 +2,7 @@
 
 namespace App\Services\Relatorios;
 
+use App\Enums\DecisionOutcome;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\BusinessDeadlineCalculator;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -15,13 +16,13 @@ use Illuminate\Database\Eloquent\Builder;
  *
  * O período recorta pela EMISSÃO (viability_decisions.decided_at) — "TVL emitido
  * no recorte" (CA-R2-01). Os demais filtros: `servico` (service_type_id),
- * `resultado` (deferida/indeferida — {@see \App\Enums\DecisionOutcome}) e `cnae`
+ * `resultado` (deferida/indeferida — {@see DecisionOutcome}) e `cnae`
  * (código do CNAE da solicitação — restringe o builder, CA-R2-02).
  *
  * A duração Emissão−Abertura é medida em MINUTOS ÚTEIS pelo MESMO cálculo do
  * {@see TempoAnaliseService} ({@see BusinessDeadlineCalculator::businessDurationBetween}
  * — desconta fins de semana e feriados ativos). Degradação HONESTA: os blocos DAM
- * não são modelados no SILE (vêm em branco); a Revisão via REDESIM não é
+ * não são modelados no Viabiliza (vêm em branco); a Revisão via REDESIM não é
  * homologada — o `tipo` é sempre "Viabilidade" e o modo `tipo=revisao` NUNCA
  * simula dados (devolve conjunto vazio, CA-R2-05).
  */
@@ -30,7 +31,7 @@ class RelatorioTempoEmissaoTvlService
     /** Rótulo único do tipo — a Revisão via REDESIM ainda não é homologada. */
     public const TIPO_VIABILIDADE = 'Viabilidade';
 
-    /** Resultados aceitos no filtro (value do {@see \App\Enums\DecisionOutcome}). */
+    /** Resultados aceitos no filtro (value do {@see DecisionOutcome}). */
     private const RESULTADOS = ['deferida', 'indeferida'];
 
     public function __construct(private readonly BusinessDeadlineCalculator $calculator) {}
@@ -104,7 +105,7 @@ class RelatorioTempoEmissaoTvlService
             'servico' => $r->serviceType?->name,
             'tipo' => self::TIPO_VIABILIDADE,
             'abertura' => $abertura?->toIso8601String(),
-            // Blocos DAM não modelados no SILE — sempre em branco (honesto).
+            // Blocos DAM não modelados no Viabiliza — sempre em branco (honesto).
             'dam_numero' => null,
             'dam_emissao' => null,
             'dam_pagamento' => null,

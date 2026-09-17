@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\DB;
  * ou reeditar gera uma nova linha (revision+1). O dado bruto do motor vive no
  * engine_snapshot; o autosave só toca os campos do rascunho preservando a sugestão
  * do motor (status_sugerido), que é o insumo da divergência na finalização.
+ * O Motivo de Análise (`analysis_reasons`) é do sistema (queda do expresso) —
+ * o autosave ignora qualquer valor enviado pelo cliente.
  */
 class AnalysisRecordService
 {
@@ -85,10 +87,6 @@ class AnalysisRecordService
 
         if (array_key_exists('is_virtual_office_hq', $data)) {
             $record->is_virtual_office_hq = $data['is_virtual_office_hq'];
-        }
-
-        if (array_key_exists('analysis_reasons', $data) && is_array($data['analysis_reasons'])) {
-            $record->analysis_reasons = array_values($data['analysis_reasons']);
         }
 
         if (array_key_exists('address_confirmed', $data)) {
@@ -170,7 +168,7 @@ class AnalysisRecordService
                 'engine_rules_versions' => $ultima->engine_rules_versions,
                 'per_cnae' => $ultima->per_cnae,
                 'conditions' => $ultima->conditions,
-                'analysis_reasons' => $ultima->analysis_reasons,
+                'analysis_reasons' => $ultima->motivosSistema() ?: null,
                 'parking' => $ultima->parking,
                 'address_confirmed' => $ultima->address_confirmed,
                 'parecer' => $ultima->parecer,

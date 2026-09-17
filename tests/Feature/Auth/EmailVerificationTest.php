@@ -5,7 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use App\Notifications\VerifyEmailQueued;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 class EmailVerificationTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

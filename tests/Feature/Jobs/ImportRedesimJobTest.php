@@ -5,14 +5,14 @@ namespace Tests\Feature\Jobs;
 use App\Jobs\ImportRedesimJob;
 use App\Models\Cnae;
 use App\Services\RedesimImportService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class ImportRedesimJobTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     // Exercita o worker REAL da fila (queue:work + failed_jobs); o fake padrão
     // do DecidirFluxoExpressoJob impediria o pop do worker.

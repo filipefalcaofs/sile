@@ -9,7 +9,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\ReportFilters;
 use App\Services\Relatorios\SaturacaoService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
@@ -23,7 +23,7 @@ use Tests\TestCase;
  */
 class SaturacaoServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private int $seq = 0;
 

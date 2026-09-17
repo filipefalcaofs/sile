@@ -3,7 +3,7 @@
 namespace Tests;
 
 use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Group;
 use Throwable;
@@ -23,7 +23,7 @@ use Throwable;
 #[Group('postgis')]
 abstract class PostgisTestCase extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * @return Application

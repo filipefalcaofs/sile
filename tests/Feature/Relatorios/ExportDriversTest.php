@@ -7,7 +7,7 @@ use App\Services\Relatorios\Export\CsvExporter;
 use App\Services\Relatorios\Export\PdfExporter;
 use App\Services\Relatorios\Export\ReportDefinition;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class ExportDriversTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Definition de teste sobre ViabilityRequest: 2 linhas (Bairro, Status),

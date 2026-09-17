@@ -5,7 +5,7 @@ namespace Tests\Feature\Analise;
 use App\Events\EncaminhadoParaAnalise;
 use App\Models\ViabilityRequest;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class EncaminhadoParaAnaliseEventTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_e_um_evento_after_commit(): void
     {

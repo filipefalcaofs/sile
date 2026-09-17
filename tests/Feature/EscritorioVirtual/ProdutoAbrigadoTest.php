@@ -21,7 +21,7 @@ use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
 use Database\Seeders\EscritorioVirtualCnaeSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
@@ -35,7 +35,7 @@ use Tests\TestCase;
  */
 class ProdutoAbrigadoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

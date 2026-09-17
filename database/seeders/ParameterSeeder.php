@@ -313,6 +313,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
                 'description' => 'Limite de consultas públicas de protocolo por minuto por IP/assinatura',
             ],
+            'seguranca.throttle.regin_recebe.por_minuto' => [
+                'group' => 'seguranca',
+                'type' => 'integer',
+                'default_value' => '60',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
+                'description' => 'Limite de POSTs do REGIN em /api_integracao/recebe por minuto por IP',
+            ],
             'features.fluxo_expresso' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -605,6 +612,43 @@ class ParameterSeeder extends Seeder
                 'default_value' => null,
                 'validation_rules' => ['nullable', 'string', 'max:255'],
                 'description' => 'Token/credencial da API de WhatsApp (armazenado criptografado, nunca reexibido)',
+            ],
+            'integrations.regin.em_producao' => [
+                'group' => 'integracoes',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Usa a URL de produção da API REGIN/JUCEB; desligado usa a URL de homologação',
+            ],
+            'integrations.regin.url_homologacao' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'http://10.57.247.9:8080/api_integracao',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'URL base da API REGIN em homologação (editável; usada quando produção está desligada)',
+            ],
+            'integrations.regin.url_producao' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'http://regin.prefeitura.juceb.ba.gov.br:8080/api_integracao',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'URL base da API REGIN em produção (editável; usada somente com o interruptor ligado)',
+            ],
+            'integrations.regin.usuario' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'sedur_integracao',
+                'validation_rules' => ['required', 'string', 'max:255'],
+                'description' => 'Usuário da API de integração REGIN/JUCEB',
+            ],
+            'integrations.regin.senha' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'sensitive' => true,
+                'default_value' => null,
+                'validation_rules' => ['nullable', 'string', 'min:8', 'max:255'],
+                'requires_connection_test' => true,
+                'description' => 'Senha da API REGIN/JUCEB (armazenada criptografada, nunca reexibida)',
             ],
             // Auditoria e compliance (EP12). O toggle de detecção de abuso
             // (HU-149) nasce DESLIGADO (nunca pune — só registra alerta e

@@ -10,7 +10,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Relatorios\Export\Sources\ProdutividadeReportSource;
 use App\Services\Relatorios\Export\SyncOnlyReportSource;
 use App\Services\Relatorios\ReportFilters;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -24,7 +24,7 @@ use Tests\TestCase;
  */
 class ProdutividadeReportSourceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function decisaoTecnica(User $analista, DecisionOutcome $outcome): void
     {

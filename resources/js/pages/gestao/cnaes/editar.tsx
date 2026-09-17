@@ -567,8 +567,8 @@ export default function CnaesEditar({
 
                 <Card>
                     <CardHeader
-                        title="Perguntas de classificação de risco"
-                        description={`${condicionantes.length} pergunta(s) — risco sanitário (VISA)`}
+                        title="Risco Urbanístico"
+                        description={`${condicionantes.length} pergunta(s) — Risco Urbanístico`}
                         actions={
                             canMaintain ? (
                                 <Button size="sm" variant="outline" onClick={() => setShowCondicionanteModal(true)}>

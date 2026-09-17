@@ -1,8 +1,8 @@
 # Motor de risco — planilha de regras 20.08.26 — design
 
-**Data:** 2026-08-28 · **Revisão:** 2 (respostas SEDUR 2026-08-31)
-**Origem:** `docs/artefatos/Planilha de regras - versão 20.08.26.xlsx`, aba *Regras de tratamento para as perguntas* (pacote normativo SEDUR 2026-08-28).
-**Status:** RASCUNHO — `[OPEN-MR-1]` fechado pela SEDUR em 2026-08-31: o tipo de imóvel vem do REGIN e só três valores dirigem regra. Nenhuma pendência restante bloqueia o início.
+**Data:** 2026-08-28 · **Revisão:** 3 (PO Lisa, 2026-09-15)
+**Origem:** `docs/artefatos/Planilha de regras - versão 20.08.26.xlsx` (arquivo operacional em `/Users/filipefalcao/Downloads/Planilha de regras - versão 20.08.26.xlsx`).
+**Status:** APROVADO PELA PO — carga da matriz **e** motor por ramo da regra. Tipo de imóvel pressuposto do REGIN.
 **Relacionado:** `2026-06-13-classificacao-de-risco-design.md`, `2026-06-14-motor-louos-design.md`, `2026-06-14-fluxo-expresso-design.md`
 
 ---
@@ -119,8 +119,17 @@ Das 47 regras, 35 têm data de atualização (33 em 21/08/2026, 2 em 21/07/2026)
 ## 6. Questões abertas
 
 - ~~`[OPEN-MR-1]`~~ **FECHADO (SEDUR 2026-08-31):** só galpão, container e edificação residencial dirigem regra, e o dado vem do REGIN — não é campo do requerente. Ver §4.1.
-- `[OPEN-MR-6]` **ABERTO:** quais os valores exatos que o REGIN envia no campo de tipo de imóvel? Precisamos da enumeração para normalizar com segurança. Não bloqueia o início: a §4.1 manda encaminhar valor desconhecido à análise em vez de assumir, então a ausência da lista degrada honesto.
-- `[OPEN-MR-2]` **ABERTO:** o corte de 1.250 m² usa a área **utilizada** declarada (que os protocolos trazem) ou a área construída do imóvel? Nos protocolos os dois conceitos aparecem misturados.
-- `[OPEN-MR-3]` **ABERTO:** "ID" na `Regra 1` é subcategoria de uso do Quadro 7. Confirmar o código exato e se há outras subcategorias com o mesmo efeito de elevação de risco.
-- `[OPEN-MR-4]` **ABERTO:** as 35 regras carimbadas com data de atualização mudaram de comportamento, ou parte é revisão de redação? O diff contra a parametrização vigente responde — mas convém a SEDUR indicar quais são materiais, para dirigir a conferência.
-- `[OPEN-MR-5]` **ABERTO:** a planilha numera regras de 1 a 53 com lacunas (não há 10 a 17, 20 a 23, 45). São regras revogadas ou ausentes desta versão do arquivo?
+- `[OPEN-MR-6]` **ABERTO (não bloqueia):** enumeração completa dos valores que o REGIN envia. Pressuposto de implementação (2026-09-15): o campo chega do REGIN; valor reconhecido decide; valor desconhecido ou ausente, quando a regra depende do tipo, vai à análise com motivo — nunca assume “não é galpão”.
+- ~~`[OPEN-MR-2]`~~ **FECHADO (PO Lisa 2026-09-15):** o corte de 1.250 m² usa a **área utilizada** informada pelo requerente no processo (onde a atividade será exercida). No sistema: `viability_requests.used_area_m2`.
+- ~~`[OPEN-MR-3]`~~ **FECHADO (PO Lisa 2026-09-15 + texto da Regra 1):** “ID” é a **família de subcategoria de uso** (`ID1-*`, `ID2-*`, `ID3-*`) da coluna de enquadramento com letras menores — não o código LOUOS `07.12.13`. Resposta “Sim” + subcategoria ID → alto risco. A aba CNLU (nR3, nRa, nR4 e ID3 do art. 132) é roteamento à comissão, critério distinto.
+- `[OPEN-MR-4]` **ABERTO (não bloqueia):** conferência textual das regras carimbadas vs. comportamento. A PO validou o modelo (risco não é fixo no CNAE).
+- ~~`[OPEN-MR-5]`~~ **FECHADO (PO Lisa 2026-09-15):** a **Regra 45 foi excluída**. O furo 44→46 é proposital para não renumerar a planilha. R46–R60 permanecem. Nenhum CNAE marca a coluna R45.
+
+## 7. Confirmações da PO (2026-09-15)
+
+1. **Modelo:** o cadastro da planilha entra no sistema **e** o risco deixa de ser atributo fixo do CNAE — é o resultado da regra de tratamento (pergunta + área utilizada + tipo de imóvel + subcategoria).
+2. **Exceção:** médio e alto **já classificados sem condicionante** permanecem; não “viram baixo”. Baixo só se mantém se atender as condicionantes/perguntas; senão sobe para médio ou alto conforme a resposta.
+3. **TLL** varia pelo mesmo caminho da regra (não só pelo CNAE).
+4. **Universo oficial:** **1.332** CNAEs (o 1.334 do cabeçalho está errado).
+5. **`9900-8/00` entra** e está ativo — é o CNAE que falta no IBGE 2.3 carregado hoje (1.331 → 1.332).
+6. Tipo de imóvel: **pressuposto REGIN** nesta implementação.

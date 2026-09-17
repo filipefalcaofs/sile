@@ -91,7 +91,7 @@ class SolicitacaoDevSeeder extends Seeder
         // 4) Contingência — operador "em nome de" o cidadão; MESMA máquina/motor.
         $contingencia = $this->exampleDraft($cidadao, $operador, $company, $type, $cnae, $fachada, self::MARK_CONTINGENCIA, [
             'origin' => ViabilityRequestOrigin::Contingencia,
-            'contingency_reason' => 'Integrador Regin indisponível — registro por contingência (HU-148).',
+            'contingency_reason' => 'Integrador Regin indisponível — registro por contingência.',
         ]);
         $this->protocolar($contingencia, $operador);
     }

@@ -11,7 +11,7 @@ use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\Export\Sources\EscritorioVirtualReportSource;
 use App\Services\Relatorios\Export\Sources\TempoAnaliseReportSource;
 use App\Services\Relatorios\ReportFilters;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -25,7 +25,7 @@ use Tests\TestCase;
  */
 class TempoAnaliseReportSourceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function transicao(ViabilityRequest $r, ViabilityRequestStatus $de, ViabilityRequestStatus $para, string $quando): void
     {

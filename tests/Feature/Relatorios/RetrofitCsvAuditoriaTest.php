@@ -12,7 +12,7 @@ use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\AtividadesReportSource;
 use App\Services\Relatorios\ReportFilters;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
@@ -28,7 +28,7 @@ use Tests\TestCase;
  */
 class RetrofitCsvAuditoriaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private const COLUNAS_TRILHA = [
         'Data/hora', 'Fonte', 'Ação', 'Descrição', 'Usuário', 'Em nome de',

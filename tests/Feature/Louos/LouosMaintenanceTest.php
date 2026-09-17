@@ -13,7 +13,7 @@ use App\Models\User;
 use App\Services\Louos\LouosMaintenanceService;
 use Database\Seeders\LouosQuadro10Seeder;
 use Database\Seeders\LouosQuadro7Seeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -26,7 +26,7 @@ use Tests\TestCase;
  */
 class LouosMaintenanceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): LouosMaintenanceService
     {

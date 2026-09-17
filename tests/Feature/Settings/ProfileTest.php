@@ -6,14 +6,14 @@ use App\Models\Activity;
 use App\Models\User;
 use App\Notifications\VerifyEmailQueued;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -27,7 +27,7 @@ class ProfileTest extends TestCase
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($user)
-            ->get('/settings/profile')
+            ->get('/portal/conta/perfil')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('settings/profile')
@@ -41,7 +41,7 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $response = $this->actingAs($user)->patch('/settings/profile', [
+        $response = $this->actingAs($user)->patch('/portal/conta/perfil', [
             'name' => 'Nome Novo',
             'email' => $user->email,
             'phone' => '(71) 98888-7777',
@@ -59,7 +59,7 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($user)->patch('/settings/profile', [
+        $this->actingAs($user)->patch('/portal/conta/perfil', [
             'name' => 'Nome Auditado',
             'email' => $user->email,
             'phone' => $user->phone,
@@ -89,7 +89,7 @@ class ProfileTest extends TestCase
 
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $response = $this->actingAs($user)->patch('/settings/profile', [
+        $response = $this->actingAs($user)->patch('/portal/conta/perfil', [
             'name' => $user->name,
             'email' => 'novo-email@example.com',
             'phone' => $user->phone,
@@ -109,7 +109,7 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create(['cpf' => '11144477735']);
 
-        $this->actingAs($user)->patch('/settings/profile', [
+        $this->actingAs($user)->patch('/portal/conta/perfil', [
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
@@ -124,7 +124,7 @@ class ProfileTest extends TestCase
         $other = User::factory()->create();
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
 
-        $response = $this->actingAs($user)->patch('/settings/profile', [
+        $response = $this->actingAs($user)->patch('/portal/conta/perfil', [
             'name' => $user->name,
             'email' => $other->email,
             'phone' => $user->phone,
@@ -137,6 +137,6 @@ class ProfileTest extends TestCase
 
     public function test_visitante_nao_acessa_perfil(): void
     {
-        $this->get('/settings/profile')->assertRedirect('/portal/login');
+        $this->get('/portal/conta/perfil')->assertRedirect('/portal/login');
     }
 }

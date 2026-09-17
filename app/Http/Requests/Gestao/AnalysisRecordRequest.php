@@ -12,6 +12,8 @@ use Illuminate\Validation\Rule;
  * PARCIAL — só os campos presentes são validados/persistidos (`sometimes`). A
  * autorização é o middleware permission:analisar-processos da rota; a
  * imutabilidade da revisão finalizada (RN-003) é regra do AnalysisRecordService.
+ * `analysis_reasons` ainda é aceito no payload por compatibilidade, mas o
+ * serviço ignora: o motivo é preenchido pelo sistema, não pelo analista.
  *
  * O status escolhido por CNAE usa o MESMO vocabulário da sugestão do motor
  * (DecisionOutcome deferida/indeferida + 'analise' para encaminhar), permitindo

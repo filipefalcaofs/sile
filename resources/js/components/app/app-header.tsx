@@ -33,7 +33,7 @@ function ThemeToggleButton() {
     );
 }
 
-function UserDropdown({ logoutHref }: { logoutHref: string }) {
+function UserDropdown({ logoutHref, accountHref }: { logoutHref: string; accountHref: string }) {
     const { auth } = usePage<SharedProps>().props;
     const [isOpen, setIsOpen] = useState(false);
 
@@ -89,7 +89,7 @@ function UserDropdown({ logoutHref }: { logoutHref: string }) {
                         <DropdownItem
                             onItemClick={closeDropdown}
                             tag="a"
-                            href="/settings/profile"
+                            href={accountHref}
                             className="flex items-center gap-3 px-3 py-2 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
                         >
                             <GearIcon className="text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300" />
@@ -114,13 +114,14 @@ function UserDropdown({ logoutHref }: { logoutHref: string }) {
 interface AppHeaderProps {
     homeHref: string;
     logoutHref: string;
+    accountHref: string;
 }
 
 /**
  * Header do TailAdmin adaptado: mantém o toggle da sidebar, o toggle
  * de tema e o menu do usuário; remove busca e notificações fictícias.
  */
-export default function AppHeader({ homeHref, logoutHref }: AppHeaderProps) {
+export default function AppHeader({ homeHref, logoutHref, accountHref }: AppHeaderProps) {
     const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
     const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
@@ -151,7 +152,7 @@ export default function AppHeader({ homeHref, logoutHref }: AppHeaderProps) {
                     </button>
 
                     <Link href={homeHref} className="lg:hidden">
-                        <span className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">SIMPLIFICA</span>
+                        <span className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">VIABILIZA</span>
                     </Link>
 
                     <button
@@ -172,7 +173,7 @@ export default function AppHeader({ homeHref, logoutHref }: AppHeaderProps) {
                         <ThemeToggleButton />
                         <NotificationBell homeHref={homeHref} />
                     </div>
-                    <UserDropdown logoutHref={logoutHref} />
+                    <UserDropdown logoutHref={logoutHref} accountHref={accountHref} />
                 </div>
             </div>
         </header>

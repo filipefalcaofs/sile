@@ -13,7 +13,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Notifications\PrazoVencendoNotification;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Tests\TestCase;
 
@@ -29,7 +29,7 @@ use Tests\TestCase;
  */
 class AlertarVencimentosCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private int $seq = 0;
 

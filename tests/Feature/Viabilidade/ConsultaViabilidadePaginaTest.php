@@ -4,7 +4,7 @@ namespace Tests\Feature\Viabilidade;
 
 use App\Models\Parameter;
 use Database\Seeders\ParameterSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
@@ -17,7 +17,7 @@ use Tests\TestCase;
  */
 class ConsultaViabilidadePaginaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_pagina_publica_renderiza_componente_de_consulta(): void
     {

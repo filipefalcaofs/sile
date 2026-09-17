@@ -7,7 +7,7 @@ use App\Models\ExportFile;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Notifications\ExportacaoPronta;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
@@ -25,7 +25,7 @@ use Tests\TestCase;
  */
 class GerarExportacaoJobTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     #[Test]
     public function handle_grava_o_arquivo_filtrado_cria_exportfile_e_notifica(): void

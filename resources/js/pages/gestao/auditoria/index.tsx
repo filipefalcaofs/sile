@@ -332,7 +332,7 @@ export default function AuditoriaIndex({
             <Card>
                 <CardHeader
                     title="Consulta da trilha de auditoria"
-                    description="Registros imutáveis de quem fez o quê, quando, de onde e com qual resultado (RN-002). Consulta somente leitura, server-driven — a própria consulta é auditada."
+                    description="Registros imutáveis de quem fez o quê, quando, de onde e com qual resultado. Consulta somente leitura, server-driven — a própria consulta é auditada."
                     actions={
                         <a
                             href={exportHref}

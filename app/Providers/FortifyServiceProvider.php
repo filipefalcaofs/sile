@@ -215,5 +215,12 @@ class FortifyServiceProvider extends ServiceProvider
                 (int) Settings::get('seguranca.throttle.ai_test.por_minuto', 10),
             )->by($request->user()?->id ?: $request->ip());
         });
+
+        // Throttle do webhook municipal /api_integracao/recebe (HU-103 RN-010).
+        RateLimiter::for('regin-recebe', function (Request $request) {
+            return Limit::perMinute(
+                (int) Settings::get('seguranca.throttle.regin_recebe.por_minuto', 60),
+            )->by($request->ip());
+        });
     }
 }

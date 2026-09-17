@@ -8,7 +8,7 @@ use App\Models\StandardText;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class AnalysisRecordAutosaveTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {
@@ -149,20 +149,26 @@ class AnalysisRecordAutosaveTest extends TestCase
         $this->assertSame('Parecer final imutável.', $ficha->fresh()->parecer);
     }
 
-    public function test_autosave_persiste_motivos_de_analise_e_endereco_correto(): void
+    public function test_autosave_nao_altera_motivo_de_analise_do_sistema(): void
     {
         $ficha = $this->fichaRascunho();
+        $ficha->forceFill([
+            'analysis_reasons' => ['Nível alto (municipal) encaminhado para análise técnica'],
+        ])->save();
 
         $this->actingAs($this->analista(), 'gestao')
             ->patchJson("/gestao/processos/{$ficha->viability_request_id}/ficha", [
-                'analysis_reasons' => ['Área zoneamento Semi expresso', 'Áreas - parcelamento'],
+                'analysis_reasons' => ['Texto digitado pelo analista'],
                 'address_confirmed' => false,
             ])
             ->assertOk();
 
         $ficha->refresh();
 
-        $this->assertSame(['Área zoneamento Semi expresso', 'Áreas - parcelamento'], $ficha->analysis_reasons);
+        $this->assertSame(
+            ['Nível alto (municipal) encaminhado para análise técnica'],
+            $ficha->analysis_reasons,
+        );
         $this->assertFalse($ficha->address_confirmed);
     }
 

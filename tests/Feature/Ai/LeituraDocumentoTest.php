@@ -9,7 +9,7 @@ use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
 use App\Models\ViabilityRequestDocument;
 use App\Services\Ai\LeituraDocumentoService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Ai\Files\StoredDocument;
 use Laravel\Ai\Files\StoredImage;
@@ -27,7 +27,7 @@ use Tests\TestCase;
 #[Group('ia')]
 class LeituraDocumentoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function provedorVisaoAtivo(): void
     {

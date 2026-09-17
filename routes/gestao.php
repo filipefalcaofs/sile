@@ -5,12 +5,14 @@ use App\Http\Controllers\Gestao\AbusoController;
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\AiConfigurationController;
 use App\Http\Controllers\Gestao\AnalysisRecordController;
-use App\Http\Controllers\Gestao\CondicionanteAutocompleteController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
 use App\Http\Controllers\Gestao\AuditoriaController;
 use App\Http\Controllers\Gestao\AuditoriaPreditivaController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
+use App\Http\Controllers\Gestao\CondicionanteAutocompleteController;
+use App\Http\Controllers\Gestao\Conta\PasswordController as ContaPasswordController;
+use App\Http\Controllers\Gestao\Conta\ProfileController as ContaProfileController;
 use App\Http\Controllers\Gestao\ContingenciaController;
 use App\Http\Controllers\Gestao\DashboardController;
 use App\Http\Controllers\Gestao\DocumentRequirementController;
@@ -19,6 +21,7 @@ use App\Http\Controllers\Gestao\EmailServerController;
 use App\Http\Controllers\Gestao\EnviarParaAnaliseController;
 use App\Http\Controllers\Gestao\EscritorioVirtualDesvinculacaoController;
 use App\Http\Controllers\Gestao\ExportacaoController;
+use App\Http\Controllers\Gestao\ForgotPasswordController;
 use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\HolidayController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
@@ -33,12 +36,15 @@ use App\Http\Controllers\Gestao\ProcessoBuscaController;
 use App\Http\Controllers\Gestao\ProcessoController;
 use App\Http\Controllers\Gestao\ProcessoDecisaoController;
 use App\Http\Controllers\Gestao\ProcessoPendenciaController;
+use App\Http\Controllers\Gestao\ReginIntegrationController;
 use App\Http\Controllers\Gestao\ReginProtocoloSimulacaoController;
 use App\Http\Controllers\Gestao\RelatorioController;
+use App\Http\Controllers\Gestao\ResetPasswordController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\SectorController;
 use App\Http\Controllers\Gestao\StandardTextController;
+use App\Http\Controllers\Gestao\TermoLgpdController;
 use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\TvlDocumentController;
 use App\Http\Controllers\Gestao\UserManagementController;
@@ -54,11 +60,26 @@ use Inertia\Inertia;
 Route::middleware('gestao.guest')->prefix('gestao')->name('gestao.')->group(function () {
     Route::get('login', fn () => Inertia::render('auth/gestao-login'))->name('login');
     Route::post('login', [LoginController::class, 'store'])->name('login.store');
+
+    // Recuperação de senha própria do console (guard gestao): fluxo isolado
+    // do portal, com link apontando para /gestao/reset-password (HU-002).
+    Route::get('forgot-password', [ForgotPasswordController::class, 'show'])->name('forgot-password');
+    Route::post('forgot-password', [ForgotPasswordController::class, 'store'])->name('forgot-password.store');
+    Route::get('reset-password/{token}', [ResetPasswordController::class, 'show'])->name('reset-password');
+    Route::post('reset-password', [ResetPasswordController::class, 'store'])->name('reset-password.store');
 });
 
 Route::middleware('auth:gestao')
     ->post('gestao/logout', [LoginController::class, 'destroy'])
     ->name('gestao.logout');
+
+// Termo LGPD do console (HU-006): aceite no próprio ambiente (guard gestao),
+// FORA do gate lgpd.accepted para evitar loop de redirecionamento. Sem o
+// middleware verified — o e-mail verificado já é pré-condição do login interno.
+Route::middleware('auth:gestao')->prefix('gestao')->name('gestao.')->group(function () {
+    Route::get('termo-lgpd', [TermoLgpdController::class, 'show'])->name('termo-lgpd.show');
+    Route::post('termo-lgpd', [TermoLgpdController::class, 'accept'])->name('termo-lgpd.accept');
+});
 
 // Sem middleware verified: e-mail verificado é pré-condição do PRÓPRIO login
 // interno (LoginController) — o aviso/reenvio de verificação pertence ao
@@ -68,6 +89,15 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
     ->name('gestao.')
     ->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
+
+        // Conta do servidor isolada no console (HU-007): perfil e senha sob
+        // /gestao/conta, guard gestao — separadas das telas de conta do portal.
+        Route::prefix('conta')->name('conta.')->group(function () {
+            Route::get('perfil', [ContaProfileController::class, 'edit'])->name('perfil.edit');
+            Route::patch('perfil', [ContaProfileController::class, 'update'])->name('perfil.update');
+            Route::get('senha', [ContaPasswordController::class, 'show'])->name('senha.show');
+            Route::put('senha', [ContaPasswordController::class, 'update'])->name('senha.update');
+        });
 
         // Central de notificações in-app (HU-090) — canal database nativo do
         // próprio servidor (escopo do dono). SEM permissão nova: a central é do
@@ -195,6 +225,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // simulação — a integração REGIN continua stub.
             Route::get('risco/simulacao-regin', [ReginProtocoloSimulacaoController::class, 'index'])->name('risco.simulacao-regin');
             Route::post('risco/simulacao-regin', [ReginProtocoloSimulacaoController::class, 'simulate'])->name('risco.simulacao-regin.simular');
+            Route::delete('risco/simulacao-regin/{codigo}', [ReginProtocoloSimulacaoController::class, 'destroy'])->name('risco.simulacao-regin.apagar');
         });
 
         Route::middleware('permission:manter-cnaes')->group(function () {
@@ -230,6 +261,9 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('parametros', [ParameterController::class, 'index'])->name('parametros.index');
             Route::get('parametros/{parameter:key}/historico', [ParameterController::class, 'history'])->name('parametros.historico');
             Route::put('parametros/{parameter:key}', [ParameterController::class, 'update'])->name('parametros.update');
+            Route::get('config-regin', [ReginIntegrationController::class, 'edit'])->name('config-regin.edit');
+            Route::put('config-regin', [ReginIntegrationController::class, 'update'])->name('config-regin.update');
+            Route::post('config-regin/testar', [ReginIntegrationController::class, 'test'])->name('config-regin.testar');
         });
 
         // Território (HU-029+): consulta territorial, geocodificação e validação

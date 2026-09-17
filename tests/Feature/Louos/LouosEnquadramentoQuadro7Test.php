@@ -12,7 +12,7 @@ use App\Services\Louos\EnquadramentoResult;
 use App\Services\Louos\LouosEnquadramentoService;
 use App\Support\Audit\AuditService;
 use Database\Seeders\LouosQuadro7Seeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -26,7 +26,7 @@ use Tests\TestCase;
  */
 class LouosEnquadramentoQuadro7Test extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): LouosEnquadramentoService
     {

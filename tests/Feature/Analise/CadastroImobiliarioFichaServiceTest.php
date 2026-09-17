@@ -9,12 +9,12 @@ use App\Services\Realty\PropertyNotFoundException;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
 use App\Services\Realty\PropertyRegistryUnavailableException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class CadastroImobiliarioFichaServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_sem_inscricao_nao_chama_lookup(): void
     {

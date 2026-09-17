@@ -13,6 +13,6 @@ class MalhaFinaException extends RuntimeException
 {
     public static function motivoObrigatorio(): self
     {
-        return new self('O motivo do encaminhamento à malha fina é obrigatório (RN-002).');
+        return new self('O motivo do encaminhamento à malha fina é obrigatório.');
     }
 }

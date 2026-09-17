@@ -327,7 +327,7 @@ export default function TempoAnalise({ tempoPorEtapa, tempoEmissaoTvl, filtros }
                 <Card>
                     <CardHeader
                         title="Sedes de escritório virtual (SAPS)"
-                        description="A relação das sedes de escritório virtual (RN-006) é servida pelo relatório exportável — empresa, CNPJ, protocolo e resultado — sobre o mesmo recorte de período."
+                        description="A relação das sedes de escritório virtual é servida pelo relatório exportável — empresa, CNPJ, protocolo e resultado — sobre o mesmo recorte de período."
                         actions={
                             <ExportMenu url={URL_TEMPO} params={sedesParams} label="Exportar sedes de escritório virtual" />
                         }

@@ -19,7 +19,7 @@ use App\Models\ViabilityRequest;
 use App\Notifications\ResultadoExpressoNotification;
 use App\Services\Geo\SpatialRepository;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Tests\Support\Geo\FakeSpatialRepository;
@@ -43,7 +43,7 @@ use Tests\TestCase;
  */
 class ExpressoSmokeTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Worker REAL: o fake parcial do DecidirFluxoExpressoJob (TestCase base)

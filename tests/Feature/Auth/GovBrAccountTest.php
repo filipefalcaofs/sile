@@ -5,12 +5,12 @@ namespace Tests\Feature\Auth;
 use App\Models\GovBrAccount;
 use App\Models\User;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class GovBrAccountTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_vinculo_govbr_pertence_ao_usuario_com_metadados_tipados(): void
     {

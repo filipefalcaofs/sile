@@ -10,7 +10,7 @@ use App\Models\AiSuggestion;
 use App\Models\DocumentRequirement;
 use App\Models\ViabilityRequestDocument;
 use App\Services\Ai\ClassificacaoDocumentoService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
@@ -26,7 +26,7 @@ use Tests\TestCase;
 #[Group('ia')]
 class ClassificacaoDocumentoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function provedorVisaoAtivo(): void
     {

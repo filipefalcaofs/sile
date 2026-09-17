@@ -4,7 +4,7 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Models\Parameter;
 use App\Services\Solicitacao\ProtocolNumberGenerator;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -15,7 +15,7 @@ use Tests\TestCase;
  */
 class ProtocolNumberGeneratorTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function generator(): ProtocolNumberGenerator
     {

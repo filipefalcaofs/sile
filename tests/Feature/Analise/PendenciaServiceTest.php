@@ -16,7 +16,7 @@ use App\Services\Analise\PendenciaInvalidaException;
 use App\Services\Analise\PendenciaService;
 use App\Services\Expresso\BusinessDeadlineCalculator;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -33,7 +33,7 @@ use Tests\TestCase;
  */
 class PendenciaServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): PendenciaService
     {
@@ -243,7 +243,7 @@ class PendenciaServiceTest extends TestCase
 
     public function test_notification_e_email_simples_sem_anexo_com_link_do_portal(): void
     {
-        // O e-mail é simples e HONESTO: informa a pendência e leva ao portal SILE.
+        // O e-mail é simples e HONESTO: informa a pendência e leva ao portal Viabiliza.
         // NÃO anexa documento (o canal pleno/multicanal é EP11).
         $mail = (new PendenciaSolicitadaNotification(
             'VIA-2026-000777',

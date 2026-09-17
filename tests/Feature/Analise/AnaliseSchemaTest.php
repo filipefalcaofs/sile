@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Analise;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -16,7 +16,7 @@ use Tests\TestCase;
  */
 class AnaliseSchemaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_tabela_sectors_existe_com_colunas(): void
     {

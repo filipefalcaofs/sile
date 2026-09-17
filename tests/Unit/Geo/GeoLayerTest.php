@@ -5,7 +5,7 @@ namespace Tests\Unit\Geo;
 use App\Enums\GeoLayerStatus;
 use App\Enums\GeoLayerType;
 use App\Models\GeoLayer;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -16,7 +16,7 @@ use Tests\TestCase;
  */
 class GeoLayerTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_enum_type_expoe_label_e_fonte_bloqueada(): void
     {

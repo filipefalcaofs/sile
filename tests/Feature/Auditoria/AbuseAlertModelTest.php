@@ -9,13 +9,13 @@ use App\Models\Company;
 use App\Models\FineMeshReferral;
 use App\Models\User;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class AbuseAlertModelTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_factory_cria_alerta_com_casts_tipados(): void
     {

@@ -48,9 +48,23 @@ const GRUPO_REGRAS: Record<string, string> = {
     risco: 'Risco',
 };
 
+// Origem da decisão do CNAE. Nomenclatura da SEDUR (relatório de teste
+// 09/07/2026): a decisão AUTOMÁTICA do fluxo expresso é o "Enquadramento do
+// Sistema"; a decisão de análise técnica permanece "Decisão de analista"
+// (honesto — nunca rotula uma decisão humana como do sistema).
 const ORIGEM_LABEL: Record<string, string> = {
-    motor: 'Decisão automática (motor)',
+    motor: 'Enquadramento do Sistema',
     analista: 'Decisão de analista',
+};
+
+/**
+ * Rótulos de exibição de chaves do snapshot que fogem da humanização genérica
+ * (rotular). Nomenclatura da SEDUR (relatório de teste 09/07/2026): a escolha
+ * final registrada é apresentada como "Conclusão". O snapshot gravado mantém a
+ * chave crua `status_escolhido` — só a exibição muda (auditoria intacta).
+ */
+const CHAVE_LABEL: Record<string, string> = {
+    status_escolhido: 'Conclusão',
 };
 
 function outcomeColor(outcome: string | null): BadgeColor {
@@ -327,7 +341,9 @@ function ParesChaveValor({ titulo, dados }: { titulo: string; dados: Record<stri
             <dl className="mt-1 grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
                 {entradas.map(([chave, valor]) => (
                     <div key={chave} className="flex gap-1.5 text-theme-xs">
-                        <dt className="font-medium text-gray-500 dark:text-gray-400">{rotular(chave)}:</dt>
+                        <dt className="font-medium text-gray-500 dark:text-gray-400">
+                            {CHAVE_LABEL[chave] ?? rotular(chave)}:
+                        </dt>
                         <dd className="text-gray-700 dark:text-gray-300">{valorLegivel(valor)}</dd>
                     </div>
                 ))}

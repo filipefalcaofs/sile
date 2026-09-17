@@ -67,7 +67,7 @@ class AnaliseTecnicaDecisionService
     {
         if (! $record->isFinalizada()) {
             throw new DomainException(
-                'A ficha de análise precisa estar Finalizada para concluir o processo (HU-086 CA-03 — rascunho não decide).',
+                'A ficha de análise precisa estar Finalizada para concluir o processo (rascunho não decide).',
             );
         }
 

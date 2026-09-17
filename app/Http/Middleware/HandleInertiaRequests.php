@@ -36,12 +36,17 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        // Identidade pelo guard do ambiente: nunca expor a conta do portal no
+        // console nem vice-versa, mesmo com os dois guards na mesma sessão.
+        $guard = $request->is('gestao', 'gestao/*') ? 'gestao' : 'web';
+        $user = $request->user($guard);
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user()?->only('id', 'name', 'email'),
-                'roles' => $request->user()?->getRoleNames() ?? [],
-                'permissions' => $request->user()?->getAllPermissions()->pluck('name') ?? [],
+                'user' => $user?->only('id', 'name', 'email'),
+                'roles' => $user?->getRoleNames() ?? [],
+                'permissions' => $user?->getAllPermissions()->pluck('name') ?? [],
             ],
             // Closure: avaliada na serialização da resposta, depois de o
             // ResolveRepresentation (middleware de rota) resolver o estado.
@@ -54,7 +59,7 @@ class HandleInertiaRequests extends Middleware
             // autenticado. Closure: avaliada na serialização (count barato) e
             // só com usuário logado — guest/visita pública resolve para 0.
             'notificacoes' => [
-                'nao_lidas' => fn (): int => $request->user()?->unreadNotifications()->count() ?? 0,
+                'nao_lidas' => fn (): int => $user?->unreadNotifications()->count() ?? 0,
             ],
             'flash' => [
                 'status' => $request->session()->get('status'),

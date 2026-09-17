@@ -3,7 +3,7 @@
 namespace Tests\Feature\Comunicacao;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Notifications\Notification;
 use Tests\TestCase;
 
@@ -16,7 +16,7 @@ use Tests\TestCase;
  */
 class DatabaseNotificationChannelTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_notificacao_no_canal_database_e_gravada_e_contada_como_nao_lida(): void
     {

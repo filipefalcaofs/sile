@@ -117,6 +117,7 @@ class PreAnaliseService
                 'conditions' => [],
                 'parking' => [],
                 'parecer' => null,
+                'analysis_reasons' => $this->motivosDaQueda($request),
                 'finalized_at' => null,
             ]);
 
@@ -161,6 +162,7 @@ class PreAnaliseService
                 'conditions' => [],
                 'parking' => [],
                 'parecer' => null,
+                'analysis_reasons' => $this->motivosDaQueda($request),
                 'finalized_at' => null,
             ]);
 
@@ -281,5 +283,21 @@ class PreAnaliseService
         }
 
         return null;
+    }
+
+    /**
+     * Motivo da queda do expresso — o sistema preenche a ficha; o analista não
+     * edita. Sem queda gravada, a lista fica vazia (null) até o Resource
+     * resolver no fallback de leitura.
+     *
+     * @return list<string>|null
+     */
+    private function motivosDaQueda(ViabilityRequest $request): ?array
+    {
+        $motivos = AnalysisRecord::normalizarMotivos(
+            $request->expressoQuedas()->orderBy('id')->pluck('motivo')->all(),
+        );
+
+        return $motivos === [] ? null : $motivos;
     }
 }

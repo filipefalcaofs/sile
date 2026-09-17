@@ -178,7 +178,7 @@ export default function Fila({ modo, processos, contadores, visaoSetor }: FilaPr
                     <Card>
                         <CardHeader
                             title="Visão do setor"
-                            description="Carga por analista e processos vencidos nas caixas que você coordena (HU-144 CA-03)."
+                            description="Carga por analista e processos vencidos nas caixas que você coordena."
                         />
                         <CardContent>
                             <div className="grid gap-6 lg:grid-cols-3">

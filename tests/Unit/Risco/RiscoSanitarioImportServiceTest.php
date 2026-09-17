@@ -8,7 +8,7 @@ use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
 use App\Models\SanitaryRiskClassification;
 use App\Services\Risco\RiscoSanitarioImportService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -25,7 +25,7 @@ use Tests\TestCase;
  */
 class RiscoSanitarioImportServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): RiscoSanitarioImportService
     {

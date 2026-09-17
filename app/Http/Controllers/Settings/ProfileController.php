@@ -17,9 +17,11 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user('web');
+
         return Inertia::render('settings/profile', [
-            'user' => $request->user()->only('id', 'name', 'email', 'cpf', 'phone'),
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'user' => $user->only('id', 'name', 'email', 'cpf', 'phone'),
+            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
         ]);
     }
@@ -30,7 +32,7 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $user = $request->user();
+        $user = $request->user('web');
 
         $user->fill($request->validated());
 

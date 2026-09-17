@@ -7,7 +7,7 @@ use App\Models\Activity;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Sefaz\SefazViabilidadeGateway;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -22,7 +22,7 @@ use Tests\TestCase;
  */
 class EnviarViabilidadeSefazListenerTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Solicitação protocolada + decisão DEFERIDA (default da factory) — o payload

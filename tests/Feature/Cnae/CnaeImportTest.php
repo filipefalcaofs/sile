@@ -6,12 +6,12 @@ use App\Models\Activity;
 use App\Models\Cnae;
 use App\Services\CnaeImportService;
 use Database\Seeders\CnaeSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class CnaeImportTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private const OFFICIAL_CSV_HEADER = 'section_code,section_description,division_code,division_description,group_code,group_description,class_code,class_description,subclass_code,subclass_description';
 

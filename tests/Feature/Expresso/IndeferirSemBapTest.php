@@ -9,7 +9,7 @@ use App\Models\Activity;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\BusinessDeadlineCalculator;
 use App\Services\Expresso\IndeferirSemBapService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use InvalidArgumentException;
@@ -29,7 +29,7 @@ use Tests\TestCase;
  */
 class IndeferirSemBapTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_indefere_aguardando_bap_vencida_com_motivo_transicao_e_evento(): void
     {

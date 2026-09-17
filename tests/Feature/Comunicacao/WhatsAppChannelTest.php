@@ -12,7 +12,7 @@ use App\Models\ViabilityRequest;
 use App\Notifications\Contracts\ProcessNotification;
 use App\Services\Whatsapp\WhatsAppGateway;
 use App\Services\Whatsapp\WhatsAppMessage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Notifications\Notification;
 use Tests\TestCase;
 
@@ -27,7 +27,7 @@ use Tests\TestCase;
  */
 class WhatsAppChannelTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_canal_indisponivel_marca_communication_bloqueado_e_audita_sem_enviado(): void
     {

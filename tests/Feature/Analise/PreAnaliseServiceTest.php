@@ -9,6 +9,7 @@ use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
 use App\Models\Cnae;
+use App\Models\ExpressoQueda;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro7Faixa;
@@ -18,7 +19,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Analise\PreAnaliseService;
 use App\Services\Geo\SpatialRepository;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
@@ -40,7 +41,7 @@ use Tests\TestCase;
  */
 class PreAnaliseServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): PreAnaliseService
     {
@@ -322,5 +323,27 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertArrayHasKey('codigo_tll', $record->per_cnae[0]);
         $this->assertNull($record->per_cnae[0]['codigo_louos']);
         $this->assertNull($record->per_cnae[0]['codigo_tll']);
+    }
+
+    public function test_grava_motivo_da_queda_do_expresso_na_ficha(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
+        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $request = $this->emAnaliseComCnaes(['8888881']);
+
+        ExpressoQueda::factory()->create([
+            'viability_request_id' => $request->id,
+            'motivo' => 'Nível alto (municipal) encaminhado para análise técnica',
+        ]);
+
+        $record = $this->service()->preAnalisar($request);
+
+        $this->assertSame(
+            ['Nível alto (municipal) encaminhado para análise técnica'],
+            $record->analysis_reasons,
+        );
     }
 }

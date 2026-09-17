@@ -25,6 +25,8 @@ use App\Http\Controllers\Portal\SolicitacaoController;
 use App\Http\Controllers\Portal\SolicitacaoDocumentoController;
 use App\Http\Controllers\Portal\SolicitacaoImovelController;
 use App\Http\Controllers\Portal\SolicitacaoSimulacaoController;
+use App\Http\Controllers\Settings\PasswordController;
+use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Middleware\ResolveRepresentation;
 use Illuminate\Support\Facades\Route;
 
@@ -63,9 +65,10 @@ Route::prefix('portal')->name('portal.')->group(function () {
         ->name('protocolo.publico');
 });
 
-// Termo LGPD é compartilhado pelos dois ambientes (a gestão também exige o
-// aceite): auth multi-guard, fora do gate lgpd.accepted (evita loop).
-Route::middleware(['auth:web,gestao', 'verified'])
+// Termo LGPD do portal do cidadão (guard web), fora do gate lgpd.accepted
+// (evita loop). O console tem o termo próprio em /gestao/termo-lgpd — sem
+// mais rota multi-guard compartilhada entre os ambientes.
+Route::middleware(['auth:web', 'verified'])
     ->prefix('portal')
     ->name('portal.')
     ->group(function () {
@@ -81,6 +84,16 @@ Route::middleware(['auth:web', 'verified'])
     ->group(function () {
         Route::middleware(['lgpd.accepted', ResolveRepresentation::class])->group(function () {
             Route::get('painel', DashboardController::class)->name('dashboard');
+
+            // Conta do cidadão (HU-007) sob /portal/conta, guard web — migrada
+            // de /settings (que era multi-guard) para ficar sob o path /portal,
+            // coberto pelo cookie de sessão do portal (isolamento por ambiente).
+            Route::prefix('conta')->name('conta.')->group(function () {
+                Route::get('perfil', [ProfileController::class, 'edit'])->name('perfil.edit');
+                Route::patch('perfil', [ProfileController::class, 'update'])->name('perfil.update');
+                Route::get('senha', [PasswordController::class, 'show'])->name('senha.show');
+                Route::put('senha', [PasswordController::class, 'update'])->name('senha.update');
+            });
 
             Route::get('acessos', AccessHistoryController::class)->name('acessos.index');
 

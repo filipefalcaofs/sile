@@ -3,12 +3,12 @@
 namespace Tests\Unit\Analise;
 
 use App\Models\AnalysisRecord;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class AnalysisRecordCastsTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_analysis_reasons_e_address_confirmed_sao_persistidos_e_castados(): void
     {

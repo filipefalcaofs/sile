@@ -27,7 +27,7 @@ use App\Services\Analise\MalhaFinaService;
 use App\Services\Analise\PendenciaService;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
@@ -49,7 +49,7 @@ use Tests\TestCase;
  */
 class AnaliseSmokeTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_fluxo_humano_defere_com_divergencia_e_emite_tvl(): void
     {

@@ -4,12 +4,12 @@ namespace Tests\Feature\Email;
 
 use App\Models\EmailServer;
 use App\Providers\MailConfigServiceProvider;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class MailConfigBridgeTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function applyBridge(): void
     {

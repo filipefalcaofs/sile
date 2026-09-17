@@ -213,6 +213,7 @@ class TvlPdfServiceTest extends TestCase
         $html = view('tvl.documento', $dados)->render();
 
         $this->assertStringContainsString('Termo de Viabilidade de Localização', $html);
+        $this->assertStringContainsString('Viabiliza', $html);
         $this->assertStringContainsString((string) $decision->tvl_product_number, $html);
         $this->assertStringContainsString('4712-1/00', $html);
         $this->assertStringContainsString('Comércio varejista de mercadorias em geral', $html);

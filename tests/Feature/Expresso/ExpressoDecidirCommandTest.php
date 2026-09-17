@@ -17,7 +17,7 @@ use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\SpatialRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
@@ -36,7 +36,7 @@ use Tests\TestCase;
  */
 class ExpressoDecidirCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_deferimento_imprime_status_final_e_numero_tvl(): void
     {

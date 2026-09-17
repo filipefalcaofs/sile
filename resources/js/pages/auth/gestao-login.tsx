@@ -7,7 +7,7 @@ import { ArrowRightIcon, EyeCloseIcon, EyeIcon } from '@/components/icons';
 import type { SharedProps } from '@/types';
 
 /**
- * Login interno da retaguarda (Gestão SEDUR) — design "simplifica-console"
+ * Login interno da retaguarda (Gestão SEDUR) — design do console Viabiliza
  * (2026-06-12): split em duas colunas. Palco de marca à esquerda com foto de
  * Salvador sob gradientes navy, mapa de zoneamento estilizado em hairlines
  * (referência à viabilidade locacional), headline display em Archivo 900 caps
@@ -101,10 +101,10 @@ function BrandStage() {
                     </span>
                     <span>
                         <span className={`${displayFont} block text-[17px] leading-[1.1] font-extrabold tracking-[0.06em]`}>
-                            SIMPLIFICA
+                            VIABILIZA
                         </span>
                         <span className={`${monoFont} block text-[10.5px] leading-normal font-medium tracking-[0.08em] text-[oklch(67%_0.025_250)] uppercase`}>
-                            Gestão SEDUR · Salvador
+                            A viabilidade certa, no lugar certo
                         </span>
                     </span>
                 </span>
@@ -259,7 +259,7 @@ export default function GestaoLogin({ status }: { status?: string }) {
                                             Senha
                                         </label>
                                         <Link
-                                            href="/portal/forgot-password"
+                                            href="/gestao/forgot-password"
                                             className="text-[12.5px] text-[oklch(67%_0.025_250)] underline underline-offset-[3px] hover:text-[oklch(96%_0.008_250)]"
                                         >
                                             Esqueceu?
@@ -338,7 +338,7 @@ export default function GestaoLogin({ status }: { status?: string }) {
                 <div
                     className={`${monoFont} mx-auto flex w-full max-w-[400px] flex-wrap justify-between gap-3 pt-6 text-[10px] leading-[1.7] font-medium tracking-[0.07em] text-[oklch(50%_0.02_250)] uppercase`}
                 >
-                    <span>SEDUR · SIMPLIFICA</span>
+                    <span>SEDUR · VIABILIZA</span>
                     <AppVersion className="normal-case tracking-[0.04em]" />
                 </div>
             </section>

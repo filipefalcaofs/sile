@@ -6,7 +6,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -21,7 +21,7 @@ use Tests\TestCase;
  */
 class ExpressoIndeferirSemBapCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_no_op_dormente_quando_nada_esta_aguardando_bap(): void
     {

@@ -305,7 +305,7 @@ function AvisoAnonimo() {
             <InfoIcon className="mt-0.5 size-5 shrink-0 text-warning-600 dark:text-orange-400" />
             <p className="text-theme-sm text-warning-700 dark:text-orange-300">
                 Visão <strong>anônima</strong>: os analistas são identificados por um rótulo ordinal (Analista #1, #2…), sem nome. A
-                identificação nominal é restrita à permissão própria (RN-007/LGPD) — quando ausente, esta tela mostra apenas o seu próprio
+                identificação nominal é restrita à permissão própria (LGPD) — quando ausente, esta tela mostra apenas o seu próprio
                 recorte, sempre anonimizado.
             </p>
         </div>
@@ -318,7 +318,7 @@ function AvisoNominal() {
         <div className="flex items-start gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10">
             <InfoIcon className="mt-0.5 size-5 shrink-0 text-brand-500 dark:text-brand-400" />
             <p className="text-theme-sm text-brand-700 dark:text-brand-300">
-                Visão <strong>nominal</strong> habilitada pela sua permissão (RN-007). Trate os nomes dos analistas conforme a política de uso
+                Visão <strong>nominal</strong> habilitada pela sua permissão. Trate os nomes dos analistas conforme a política de uso
                 de dados pessoais — a consulta é auditada.
             </p>
         </div>

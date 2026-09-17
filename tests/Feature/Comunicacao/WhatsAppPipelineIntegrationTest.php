@@ -12,7 +12,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Notifications\PendenciaSolicitadaNotification;
 use App\Services\Comunicacao\NotificationDispatcher;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Notifications\Events\NotificationSent;
 use Tests\TestCase;
 
@@ -38,7 +38,7 @@ use Tests\TestCase;
  */
 class WhatsAppPipelineIntegrationTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function dispatcher(): NotificationDispatcher
     {

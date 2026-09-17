@@ -65,8 +65,8 @@ const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 
 
 /** Rótulos pt-BR dos níveis de risco/categoria; código desconhecido fica como veio. */
 const RISCO_LABELS: Record<string, string> = {
-    baixo_a: 'Baixo A',
-    baixo_b: 'Baixo B',
+    baixo_a: 'Baixo',
+    baixo_b: 'Médio',
     medio: 'Médio',
     alto: 'Alto',
     expresso: 'Expresso',

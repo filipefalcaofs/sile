@@ -10,7 +10,7 @@ use App\Models\AnalysisRecord;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnaliseTecnicaDecisionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -29,7 +29,7 @@ use Tests\TestCase;
  */
 class AnaliseGoldenCaseTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Carrega cada fixture entrada→esperado de

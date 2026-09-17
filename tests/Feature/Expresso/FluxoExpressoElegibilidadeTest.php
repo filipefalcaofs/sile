@@ -16,7 +16,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Expresso\DecisionResult;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
@@ -41,7 +41,7 @@ use Tests\TestCase;
  */
 class FluxoExpressoElegibilidadeTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): FluxoExpressoService
     {

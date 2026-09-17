@@ -13,7 +13,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Ai\ExplicacaoCidadaoService;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
@@ -29,7 +29,7 @@ use Tests\TestCase;
 #[Group('ia')]
 class ExplicacaoCidadaoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function provedorTextoAtivo(): void
     {

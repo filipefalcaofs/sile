@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Services\Geo\SpatialRepository;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\Geo\FakeSpatialRepository;
@@ -25,7 +25,7 @@ use Tests\TestCase;
  */
 class TerritoryPageTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

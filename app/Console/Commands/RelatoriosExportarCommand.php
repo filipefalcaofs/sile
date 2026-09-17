@@ -68,7 +68,7 @@ class RelatoriosExportarCommand extends Command
         $disk = (string) config('sile.relatorios.export.disk', 'local');
 
         if ($disk === 'public') {
-            $this->error('O disco de exportação não pode ser público (relatorios.export.disk) — o arquivo pode conter dados pessoais (HU-131/LGPD).');
+            $this->error('O disco de exportação não pode ser público (relatorios.export.disk) — o arquivo pode conter dados pessoais (LGPD).');
 
             return self::FAILURE;
         }

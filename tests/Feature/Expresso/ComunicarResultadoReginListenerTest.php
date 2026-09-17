@@ -8,7 +8,7 @@ use App\Models\Activity;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginParecerNotifier;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -30,7 +30,7 @@ use Tests\TestCase;
  */
 class ComunicarResultadoReginListenerTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Solicitação protocolada + sua decisão imutável — o payload do evento.

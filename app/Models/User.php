@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\HasAuditoria;
+use App\Notifications\GestaoResetPasswordQueued;
 use App\Notifications\ResetPasswordQueued;
 use App\Notifications\VerifyEmailQueued;
 use Database\Factories\UserFactory;
@@ -74,6 +75,26 @@ class User extends Authenticatable implements MustVerifyEmail
         ]);
 
         $notification = new ResetPasswordQueued($token);
+        $notification->emailLogId = $log->id;
+        $notification->freezeUrlFor($this);
+        $this->notify($notification);
+    }
+
+    /**
+     * Recuperação de senha do console (guard gestao): notification própria
+     * com link para /gestao/reset-password, isolada do fluxo do portal.
+     */
+    public function sendGestaoPasswordResetNotification(string $token): void
+    {
+        $log = EmailLog::create([
+            'recipient_email' => $this->email,
+            'recipient_name' => $this->name,
+            'notification_class' => GestaoResetPasswordQueued::class,
+            'status' => 'na_fila',
+            'queued_at' => now(),
+        ]);
+
+        $notification = new GestaoResetPasswordQueued($token);
         $notification->emailLogId = $log->id;
         $notification->freezeUrlFor($this);
         $this->notify($notification);

@@ -7,13 +7,13 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\IndeferirPorPrazoConviteService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use InvalidArgumentException;
 use Tests\TestCase;
 
 class IndeferirPorPrazoConviteTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function emPendencia(): ViabilityRequest
     {

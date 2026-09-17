@@ -3,12 +3,12 @@
 namespace Tests\Feature\EscritorioVirtual;
 
 use App\Models\ViabilityRequest;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class SedeSchemaTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_wants_virtual_office_hq_e_fillable_e_bool(): void
     {

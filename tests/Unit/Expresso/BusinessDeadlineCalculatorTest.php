@@ -7,7 +7,7 @@ use App\Services\Expresso\BusinessDeadlineCalculator;
 use App\Services\Expresso\DatabaseHolidayProvider;
 use App\Services\Expresso\HolidayProvider;
 use DateTimeInterface;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -19,7 +19,7 @@ use Tests\TestCase;
  */
 class BusinessDeadlineCalculatorTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_duracao_util_desconta_fim_de_semana(): void
     {

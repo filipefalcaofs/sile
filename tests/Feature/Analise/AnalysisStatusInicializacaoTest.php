@@ -14,7 +14,7 @@ use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
@@ -28,7 +28,7 @@ use Tests\TestCase;
  */
 class AnalysisStatusInicializacaoTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     private function service(): FluxoExpressoService
     {

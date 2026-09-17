@@ -7,13 +7,13 @@ use App\Models\LegalTermAcceptance;
 use App\Models\User;
 use Database\Seeders\LegalTermSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class TermAcceptanceTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     /**
      * Arranjo dos testes HTTP do fluxo de aceite (os testes de domínio
@@ -155,9 +155,11 @@ class TermAcceptanceTest extends TestCase
         $this->seedRolesAndTerm();
 
         $administrador = User::factory()->administrador()->create();
+        // Separação por ambiente: o servidor aceita o termo no próprio console
+        // (/gestao/termo-lgpd), não na tela do portal do cidadão.
         $this->actingAs($administrador, 'gestao')
             ->get('/gestao')
-            ->assertRedirect(route('portal.termo-lgpd.show'));
+            ->assertRedirect(route('gestao.termo-lgpd.show'));
 
         // Defesa em profundidade: sessão da gestão sem a permissão (ex.:
         // papel rebaixado após o login) é barrada antes do gate do termo.
