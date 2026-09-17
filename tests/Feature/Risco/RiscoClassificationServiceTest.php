@@ -7,6 +7,7 @@ use App\Enums\RiscoSanitario;
 use App\Enums\RuleDomain;
 use App\Enums\RuleVersionStatus;
 use App\Enums\TipoGatilho;
+use App\Enums\TipoImovelReconhecimento;
 use App\Models\Activity;
 use App\Models\Parameter;
 use App\Models\RiskClassification;
@@ -19,6 +20,7 @@ use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
 use App\Support\Audit\AuditService;
 use Carbon\Carbon;
+use Database\Seeders\PropertyTypeSeeder;
 use Database\Seeders\RiskTriggerSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -237,6 +239,89 @@ class RiscoClassificationServiceTest extends TestCase
         $this->assertSame('analise', $result->encaminhamento['fluxo']);
         $codigos = array_column($result->encaminhamento['gatilhos_acionados'], 'codigo');
         $this->assertContains(TipoGatilho::DadosDoProcesso->value, $codigos);
+    }
+
+    public function test_tipo_imovel_desconhecido_derruba_para_analise(): void
+    {
+        $this->seed(RiskTriggerSeeder::class);
+
+        $municipal = $this->versaoMunicipal();
+        RiskClassification::factory()->create([
+            'rule_version_id' => $municipal->id,
+            'cnae_code' => '6666777',
+            'risco_municipal' => RiscoMunicipal::BaixoA,
+        ]);
+
+        // O REGIN enviou um valor que o catálogo NÃO reconhece: o motor não
+        // sabe se o imóvel dirige regra, logo não pode decidir sozinho.
+        $tipo = TipoImovel::fromRegin('Loja de shopping (grafia nova)', TipoImovelCatalog::sedur200826());
+        $this->assertSame(TipoImovelReconhecimento::Desconhecido, $tipo->reconhecimento);
+
+        $result = $this->service()->classify(new RiscoInput(
+            cnaeCode: '6666777',
+            tipoImovel: $tipo,
+        ));
+
+        $this->assertSame('analise', $result->encaminhamento['fluxo']);
+        $codigos = array_column($result->encaminhamento['gatilhos_acionados'], 'codigo');
+        $this->assertContains(TipoGatilho::DadosDoProcesso->value, $codigos);
+    }
+
+    public function test_tipo_imovel_ausente_nao_aciona_gatilho(): void
+    {
+        $this->seed(RiskTriggerSeeder::class);
+
+        $municipal = $this->versaoMunicipal();
+        RiskClassification::factory()->create([
+            'rule_version_id' => $municipal->id,
+            'cnae_code' => '6666888',
+            'risco_municipal' => RiscoMunicipal::BaixoA,
+        ]);
+
+        // Ausente (REGIN não enviou nada) NÃO é o mesmo que desconhecido: não
+        // há dado do processo a analisar, o expresso segue elegível.
+        $ausente = TipoImovel::fromRegin(null, TipoImovelCatalog::sedur200826());
+        $this->assertSame(TipoImovelReconhecimento::Ausente, $ausente->reconhecimento);
+
+        $comAusente = $this->service()->classify(new RiscoInput(
+            cnaeCode: '6666888',
+            tipoImovel: $ausente,
+        ));
+        $semTipo = $this->service()->classify(RiscoInput::paraCnae('6666888'));
+
+        foreach ([$comAusente, $semTipo] as $result) {
+            $this->assertSame('expresso', $result->encaminhamento['fluxo']);
+            $this->assertNotContains(
+                TipoGatilho::DadosDoProcesso->value,
+                array_column($result->encaminhamento['gatilhos_acionados'], 'codigo'),
+            );
+        }
+    }
+
+    public function test_tipo_imovel_de_ramo_comum_nao_aciona_gatilho(): void
+    {
+        $this->seed([RiskTriggerSeeder::class, PropertyTypeSeeder::class]);
+
+        $municipal = $this->versaoMunicipal();
+        RiskClassification::factory()->create([
+            'rule_version_id' => $municipal->id,
+            'cnae_code' => '6666999',
+            'risco_municipal' => RiscoMunicipal::BaixoA,
+        ]);
+
+        $tipo = TipoImovel::fromRegin('Sala', TipoImovelCatalog::vigente());
+        $this->assertSame(TipoImovelReconhecimento::RamoComum, $tipo->reconhecimento);
+
+        $result = $this->service()->classify(new RiscoInput(
+            cnaeCode: '6666999',
+            tipoImovel: $tipo,
+        ));
+
+        $this->assertSame('expresso', $result->encaminhamento['fluxo']);
+        $this->assertNotContains(
+            TipoGatilho::DadosDoProcesso->value,
+            array_column($result->encaminhamento['gatilhos_acionados'], 'codigo'),
+        );
     }
 
     public function test_mapa_de_encaminhamento_parametrizavel_sem_deploy(): void

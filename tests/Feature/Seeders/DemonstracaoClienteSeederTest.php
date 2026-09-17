@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Seeders;
 
+use App\Models\PropertyType;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Support\DemoMode;
@@ -101,6 +102,24 @@ class DemonstracaoClienteSeederTest extends TestCase
 
         $this->assertSame(0, ViabilityRequest::query()->count());
         $this->assertDatabaseHas('users', ['email' => DemonstracaoClienteSeeder::CLIENTE_GESTAO_EMAIL]);
+    }
+
+    /**
+     * O stack do Portainer roda ESTE seeder no deploy: sem o catálogo de tipos
+     * de imóvel carregado, todo valor do REGIN vira desconhecido e o processo
+     * degrada para análise no ambiente de demonstração.
+     */
+    public function test_carrega_o_catalogo_de_tipos_de_imovel(): void
+    {
+        config(['sile.demo_data' => true]);
+
+        $this->seed(DemonstracaoClienteSeeder::class);
+
+        $galpao = PropertyType::query()->where('code', 'galpao')->first();
+
+        $this->assertNotNull($galpao, 'Esperava o catálogo de tipos de imóvel no seed de homologação.');
+        $this->assertTrue($galpao->drives_rule);
+        $this->assertContains('galpao', $galpao->aliases->pluck('alias')->all());
     }
 
     public function test_rotaciona_senhas_dos_usuarios_dev_para_a_senha_demo(): void

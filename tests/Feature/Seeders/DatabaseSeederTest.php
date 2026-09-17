@@ -18,6 +18,8 @@ use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\LouosQuadro7Faixa;
 use App\Models\Parameter;
+use App\Models\PropertyType;
+use App\Models\PropertyTypeAlias;
 use App\Models\RiskClassification;
 use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
@@ -81,7 +83,7 @@ class DatabaseSeederTest extends TestCase
         // + 1 da pergunta vinculada de intenção de sede no passo de
         // atividades do portal (SDD escritorio-virtual-telas-portal, Tarefa 3:
         // analise.escritorio_virtual.pergunta_vinculada).
-        $this->assertSame(113, Parameter::query()->count());
+        $this->assertSame(116, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -129,6 +131,16 @@ class DatabaseSeederTest extends TestCase
                 ->where('event', 'importacao-quadro7')
                 ->exists()
         );
+
+        // Tipos de imóvel do REGIN (catálogo SEDUR 2026-08-26) — dado
+        // administrável que o motor consulta: sem carga, TODO valor do REGIN
+        // vira desconhecido e o processo degrada para análise.
+        $this->assertSame(5, PropertyType::query()->count());
+        $galpao = PropertyType::query()->where('code', 'galpao')->first();
+        $this->assertNotNull($galpao, 'Esperava o tipo de imóvel galpao semeado.');
+        $this->assertTrue($galpao->drives_rule);
+        $this->assertTrue($galpao->active);
+        $this->assertContains('galpao', $galpao->aliases->pluck('alias')->all());
 
         $admin = User::query()->where('email', 'admin@sile.dev')->first();
 
@@ -341,7 +353,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(113, Parameter::query()->count());
+        $this->assertSame(116, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
@@ -352,6 +364,10 @@ class DatabaseSeederTest extends TestCase
         $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro11']);
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
         $this->assertSame(1971, LouosQuadro7Faixa::query()->count());
+        // Tipos de imóvel estáveis no re-seed (updateOrCreate por code,
+        // firstOrCreate por alias) — nem duplica nem perde o catálogo.
+        $this->assertSame(5, PropertyType::query()->count());
+        $this->assertSame(5, PropertyTypeAlias::query()->count());
         // 3 empresas do cidadão (CompanySeeder) + 2 dedicadas do EP12
         // (AuditoriaDevSeeder: padrão de abuso e exemplos de decisão) = 5,
         // estáveis no re-seed (firstOrCreate por CNPJ).

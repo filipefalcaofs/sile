@@ -84,6 +84,7 @@ class DemonstracaoClienteSeeder extends Seeder
         RiscoMunicipalSeeder::class,
         RiscoSanitarioSeeder::class,
         RiskTriggerSeeder::class,
+        PropertyTypeSeeder::class,
         LouosQuadro7Seeder::class,
         LouosQuadro10Seeder::class,
         LouosQuadro11Seeder::class,

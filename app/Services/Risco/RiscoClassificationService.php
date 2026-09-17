@@ -5,6 +5,7 @@ namespace App\Services\Risco;
 use App\Enums\Fluxo;
 use App\Enums\RuleDomain;
 use App\Enums\TipoGatilho;
+use App\Enums\TipoImovelReconhecimento;
 use App\Models\RiskClassification;
 use App\Models\RiskCondicionante;
 use App\Models\RiskTrigger;
@@ -248,13 +249,22 @@ class RiscoClassificationService
      * gatilho acionado carrega o motivo auditável. O motor APLICA a regra sobre
      * o contexto; não consulta o território (sem fachada).
      *
+     * O gatilho dados_do_processo entra em DOIS casos: tipo que dirige regra
+     * (galpão, container, edificação residencial) e tipo DESCONHECIDO — valor
+     * enviado pelo REGIN que o catálogo não reconhece vai à análise, nunca a
+     * decisão automática (o motor não sabe se aquele imóvel dirige regra).
+     * Ausente (o REGIN não enviou nada) NÃO aciona: não há dado a analisar.
+     *
      * @return list<array{codigo: string, motivo: string}>
      */
     private function applyGatilhos(RiscoInput $input): array
     {
         $contexto = $input->gatilhosContexto;
 
-        if ($input->tipoImovel?->dirigeRegra()
+        $tipoExigeAnalise = $input->tipoImovel?->dirigeRegra()
+            || $input->tipoImovel?->reconhecimento === TipoImovelReconhecimento::Desconhecido;
+
+        if ($tipoExigeAnalise
             && ! in_array(TipoGatilho::DadosDoProcesso->value, $contexto, true)) {
             $contexto[] = TipoGatilho::DadosDoProcesso->value;
         }

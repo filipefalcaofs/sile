@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\PropertyType;
+use App\Services\Risco\TipoImovel;
 use Illuminate\Database\Seeder;
 
 /**
@@ -28,7 +29,10 @@ class PropertyTypeSeeder extends Seeder
             );
 
             foreach ($item['aliases'] as $alias) {
-                $tipo->aliases()->firstOrCreate(['alias' => $alias]);
+                // O model normaliza na gravação, mas a BUSCA do firstOrCreate
+                // compara o valor cru: normalizar aqui mantém a idempotência
+                // caso um alias acentuado entre nesta lista.
+                $tipo->aliases()->firstOrCreate(['alias' => TipoImovel::normalize($alias)]);
             }
         }
     }

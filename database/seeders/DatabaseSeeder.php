@@ -27,6 +27,11 @@ class DatabaseSeeder extends Seeder
             // separado, torna VirtualOfficeActivityCnae::permitido() navegável.
             EscritorioVirtualCnaeSeeder::class,
             RiskTriggerSeeder::class,
+            // Tipos de imóvel do REGIN (catálogo SEDUR 2026-08-26) — dado
+            // administrável que o motor lê em TipoImovelCatalog::vigente().
+            // Sem esta carga o banco está alcançável e VAZIO: todo valor do
+            // REGIN vira desconhecido e o processo degrada para análise.
+            PropertyTypeSeeder::class,
             LouosQuadro7Seeder::class,
             LouosQuadro10Seeder::class,
             LouosQuadro11Seeder::class,

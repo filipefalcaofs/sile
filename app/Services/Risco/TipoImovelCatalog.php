@@ -49,7 +49,11 @@ final readonly class TipoImovelCatalog
                     return new self(dirigemRegra: $dirigemRegra, ramoComum: $ramoComum);
                 },
             );
-        } catch (QueryException|\Exception) {
+        } catch (QueryException|\Exception $e) {
+            // O fallback muda o que o motor reconhece (roteamento): precisa
+            // ser observável, nunca silencioso.
+            report($e);
+
             return self::sedur200826();
         }
     }
