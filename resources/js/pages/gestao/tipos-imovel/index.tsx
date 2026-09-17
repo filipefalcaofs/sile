@@ -615,7 +615,7 @@ export default function PropertyTypesIndex({ propertyTypes, filters, perPageOpti
                 </CardContent>
             </Card>
 
-            {canMaintain && <CreatePropertyTypeModal isOpen={showCreate} onClose={() => setShowCreate(false)} />}
+            {canMaintain && showCreate && <CreatePropertyTypeModal isOpen onClose={() => setShowCreate(false)} />}
 
             {editing && <EditPropertyTypeModal propertyType={editing} onClose={() => setEditing(null)} />}
 
