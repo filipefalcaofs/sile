@@ -217,6 +217,15 @@ interface FichaAnaliseShowProps {
     autosaveDebounceMs: number;
     /** Sugestões de IA (HU-115) — prop deferida, carregada sob demanda pelo card. */
     sugestoesIa?: SugestaoIa[];
+    /** Disponibilidade honesta do copiloto (resumo + minuta). Sempre no load inicial. */
+    iaFicha: IaFicha;
+}
+
+interface IaFicha {
+    resumo_disponivel: boolean;
+    resumo_motivo: string | null;
+    parecer_disponivel: boolean;
+    parecer_motivo: string | null;
 }
 
 const STATUS_OPCOES: { value: StatusFicha; label: string }[] = [
@@ -229,6 +238,8 @@ const STATUS_OPCOES: { value: StatusFicha; label: string }[] = [
  *  deferida sugestoesIa por uma janela limitada até a sugestão ser processada. */
 const MINUTA_POLL_INTERVAL_MS = 3000;
 const MINUTA_POLL_MAX = 8;
+const RESUMO_POLL_INTERVAL_MS = 2500;
+const RESUMO_POLL_MAX = 12;
 
 function statusLabel(status: string | null | undefined): string {
     return STATUS_OPCOES.find((opcao) => opcao.value === status)?.label ?? (status ?? '—');
@@ -628,6 +639,7 @@ export default function FichaAnaliseShow({
     textosPadrao,
     autosaveDebounceMs,
     sugestoesIa,
+    iaFicha,
 }: FichaAnaliseShowProps) {
     const { auth } = usePage<SharedProps>().props;
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
@@ -677,6 +689,16 @@ export default function FichaAnaliseShow({
     const minutaBaselineRef = useRef(0);
     const parecerSugeridos = useMemo(
         () => (sugestoesIa ?? []).filter((sugestao) => sugestao.type === 'parecer').length,
+        [sugestoesIa],
+    );
+    const resumoHttp = useHttp<Record<string, never>, { despachou?: boolean; status?: string }>({});
+    const [resumoStatus, setResumoStatus] = useState<
+        'idle' | 'solicitando' | 'aguardando' | 'pronta' | 'indisponivel' | 'timeout'
+    >('idle');
+    const [resumoMensagem, setResumoMensagem] = useState<string | null>(null);
+    const resumoPollRef = useRef<number | null>(null);
+    const resumosSugeridos = useMemo(
+        () => (sugestoesIa ?? []).filter((sugestao) => sugestao.type === 'resumo_processo').length,
         [sugestoesIa],
     );
 
@@ -804,12 +826,35 @@ export default function FichaAnaliseShow({
     }
 
     function finalizarFicha() {
-        acao.post(`${fichaUrl}/finalizar`, {
+        if (!editavel) {
+            acao.post(`${fichaUrl}/concluir-processo`, {
+                onSuccess: () => {
+                    setShowFinalizar(false);
+                    router.reload();
+                },
+                onHttpException: () => false,
+            });
+
+            return;
+        }
+
+        autosave.transform(() => construirPayload());
+        autosave.patch(fichaUrl, {
             onSuccess: () => {
-                setShowFinalizar(false);
-                router.reload();
+                acao.post(`${fichaUrl}/concluir-processo`, {
+                    onSuccess: () => {
+                        setShowFinalizar(false);
+                        router.reload();
+                    },
+                    onHttpException: () => false,
+                });
             },
-            onHttpException: () => false,
+            onError: () => setSaveState('erro'),
+            onHttpException: () => {
+                setSaveState('erro');
+
+                return false;
+            },
         });
     }
 
@@ -909,6 +954,55 @@ export default function FichaAnaliseShow({
         });
     }
 
+    function pararPollResumo() {
+        if (resumoPollRef.current !== null) {
+            window.clearInterval(resumoPollRef.current);
+            resumoPollRef.current = null;
+        }
+    }
+
+    function iniciarPollResumo() {
+        pararPollResumo();
+        let tentativas = 0;
+
+        resumoPollRef.current = window.setInterval(() => {
+            tentativas += 1;
+
+            if (tentativas > RESUMO_POLL_MAX) {
+                pararPollResumo();
+                setResumoStatus((atual) => (atual === 'aguardando' ? 'timeout' : atual));
+
+                return;
+            }
+
+            router.reload({ only: ['sugestoesIa'] });
+        }, RESUMO_POLL_INTERVAL_MS);
+    }
+
+    function gerarResumo() {
+        setResumoMensagem(null);
+        setResumoStatus('solicitando');
+
+        resumoHttp.post(`${fichaUrl}/gerar-resumo`, {
+            onSuccess: (resposta) => {
+                setResumoMensagem(resposta?.status ?? null);
+
+                if (resposta?.despachou) {
+                    setResumoStatus('aguardando');
+                    iniciarPollResumo();
+                } else {
+                    setResumoStatus('indisponivel');
+                }
+            },
+            onHttpException: () => {
+                setResumoStatus('indisponivel');
+                setResumoMensagem('Não foi possível solicitar o resumo agora. Tente novamente.');
+
+                return false;
+            },
+        });
+    }
+
     function pararPollMinuta() {
         if (minutaPollRef.current !== null) {
             window.clearInterval(minutaPollRef.current);
@@ -982,7 +1076,41 @@ export default function FichaAnaliseShow({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [parecerSugeridos, minutaStatus]);
 
-    useEffect(() => () => pararPollMinuta(), []);
+    useEffect(() => {
+        if (resumoStatus === 'aguardando' && resumosSugeridos > 0) {
+            setResumoStatus('pronta');
+            pararPollResumo();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [resumosSugeridos, resumoStatus]);
+
+    // WhenVisible dispara o job no servidor; se a fila ainda não devolveu,
+    // sondamos a prop deferida em vez de deixar o card vazio como se não existisse.
+    useEffect(() => {
+        if (sugestoesIa === undefined) {
+            return;
+        }
+
+        if (!iaFicha.resumo_disponivel || resumosSugeridos > 0) {
+            return;
+        }
+
+        if (resumoStatus !== 'idle') {
+            return;
+        }
+
+        setResumoStatus('aguardando');
+        iniciarPollResumo();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sugestoesIa, iaFicha.resumo_disponivel, resumosSugeridos, resumoStatus]);
+
+    useEffect(
+        () => () => {
+            pararPollMinuta();
+            pararPollResumo();
+        },
+        [],
+    );
 
     const condicionantesSugeridas = useMemo(() => {
         const conjunto = new Set<string>();
@@ -1232,7 +1360,14 @@ export default function FichaAnaliseShow({
                             ficha; os alertas seguem logo abaixo. */}
                         <WhenVisible data="sugestoesIa" buffer={200} fallback={<SugestoesIaSkeleton />}>
                             <div className="space-y-6">
-                                <ResumoProcessoCard sugestoes={sugestoesIa ?? []} />
+                                <ResumoProcessoCard
+                                    sugestoes={sugestoesIa ?? []}
+                                    iaFicha={iaFicha}
+                                    status={resumoStatus}
+                                    mensagem={resumoMensagem}
+                                    gerando={resumoHttp.processing || resumoStatus === 'aguardando'}
+                                    onGerar={gerarResumo}
+                                />
                                 <MinutaParecerCard
                                     sugestoes={sugestoesIa ?? []}
                                     editavel={editavel}
@@ -1246,7 +1381,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Enquadramento por atividade (CNAE)"
-                                description="Sugestão do motor (HU-140) ao lado da decisão do analista. A divergência é destacada e exige justificativa."
+                                description="Pré-preenchido pelo motor (LOUOS e risco). Confirme ou altere. Divergência exige justificativa."
                             />
                             <CardContent>
                                 {perCnae.length === 0 ? (
@@ -1409,7 +1544,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Condicionantes"
-                                description="Marque as sugeridas pelo motor, acrescente em texto livre ou insira da biblioteca de textos-padrão (HU-085 RN-009)."
+                                description="Já marcadas pelo motor. Remova ou acrescente só se for alterar a sugestão."
                             />
                             <CardContent>
                                 {condicionantesSugeridas.length > 0 && (
@@ -1587,7 +1722,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Parecer técnico"
-                                description="Fundamentação da análise. Use a biblioteca de textos-padrão para acelerar (HU-085) ou peça uma minuta de apoio à IA (HU-118)."
+                                description="Rascunho do motor com a fundamentação dos Quadros da LOUOS. Confirme ou altere. Textos-padrão e minuta de IA são opcionais."
                                 actions={
                                     editavel ? (
                                         <div className="flex flex-wrap items-center gap-2">
@@ -1595,6 +1730,7 @@ export default function FichaAnaliseShow({
                                                 size="xs"
                                                 variant="outline"
                                                 onClick={sugerirMinuta}
+                                                disabled={!iaFicha.parecer_disponivel}
                                                 loading={minuta.processing || minutaStatus === 'aguardando'}
                                             >
                                                 Sugerir minuta (IA)
@@ -1624,7 +1760,14 @@ export default function FichaAnaliseShow({
                                     onChange={setParecer}
                                 />
 
-                                {editavel && minutaStatus !== 'idle' && (
+                                {editavel && !iaFicha.parecer_disponivel && (
+                                    <p className="mt-2 text-theme-xs text-warning-600 dark:text-warning-500" role="status">
+                                        {iaFicha.parecer_motivo ??
+                                            'Sugestão de minuta indisponível. Redija o parecer manualmente.'}
+                                    </p>
+                                )}
+
+                                {editavel && iaFicha.parecer_disponivel && minutaStatus !== 'idle' && (
                                     <p
                                         className={`mt-2 text-theme-xs ${
                                             minutaStatus === 'indisponivel'
@@ -1751,7 +1894,7 @@ export default function FichaAnaliseShow({
                                                 Salvar Ficha
                                             </Button>
                                             <Button onClick={() => setShowFinalizar(true)} size="sm">
-                                                Finalizar Ficha
+                                                Finalizar processo
                                             </Button>
                                         </>
                                     ) : (
@@ -1813,9 +1956,9 @@ export default function FichaAnaliseShow({
             <ConfirmDialog
                 isOpen={showFinalizar}
                 variant="info"
-                title="Finalizar ficha?"
-                description="A revisão ficará imutável (RN-003) e as divergências do motor serão registradas. Para reeditar depois, será necessário criar uma nova revisão."
-                confirmLabel="Finalizar"
+                title="Finalizar processo?"
+                description="A ficha fica imutável e o processo é concluído (deferido ou indeferido) conforme o enquadramento desta ficha. Confirme o que o motor preencheu ou o que você alterou."
+                confirmLabel="Finalizar processo"
                 processing={acao.processing}
                 onConfirm={finalizarFicha}
                 onClose={() => setShowFinalizar(false)}
@@ -2012,20 +2155,77 @@ function SugestoesIaSkeleton() {
  * ai_suggestions (prop deferida), filtrando o tipo resumo_processo; mostra a
  * síntese mais recente primeiro (o controller ordena por id desc).
  */
-function ResumoProcessoCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
+function ResumoProcessoCard({
+    sugestoes,
+    iaFicha,
+    status,
+    mensagem,
+    gerando,
+    onGerar,
+}: {
+    sugestoes: SugestaoIa[];
+    iaFicha: IaFicha;
+    status: 'idle' | 'solicitando' | 'aguardando' | 'pronta' | 'indisponivel' | 'timeout';
+    mensagem: string | null;
+    gerando: boolean;
+    onGerar: () => void;
+}) {
     const resumos = sugestoes.filter((sugestao) => sugestao.type === 'resumo_processo');
+    const podeManterIa = usePage<SharedProps>().props.auth.permissions.includes('manter-config-ia');
 
     return (
         <Card>
             <CardHeader
                 title="Resumo do processo (IA — sugestão, revise)"
                 description="Síntese do processo (motor, enquadramento, inconsistências e pendências) gerada pela IA para apoiar a leitura. Não decide nem antecipa o desfecho."
+                actions={
+                    resumos.length === 0 ? (
+                        <Button
+                            size="xs"
+                            variant="outline"
+                            onClick={onGerar}
+                            disabled={!iaFicha.resumo_disponivel}
+                            loading={gerando}
+                        >
+                            Gerar resumo
+                        </Button>
+                    ) : undefined
+                }
             />
             <CardContent>
                 {resumos.length === 0 ? (
-                    <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                        Nenhum resumo de IA para este processo.
-                    </p>
+                    <div className="space-y-2">
+                        {status === 'aguardando' || status === 'solicitando' ? (
+                            <p className="text-theme-sm text-gray-500 dark:text-gray-400" role="status" aria-live="polite">
+                                Gerando resumo com a IA. A síntese aparece aqui para revisão.
+                            </p>
+                        ) : status === 'timeout' ? (
+                            <p className="text-theme-sm text-warning-600 dark:text-warning-500" role="status">
+                                O resumo ainda não chegou da fila. Clique em “Gerar resumo” para tentar de novo.
+                            </p>
+                        ) : iaFicha.resumo_disponivel ? (
+                            <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                Nenhum resumo ainda. Clique em “Gerar resumo” para solicitar à IA.
+                            </p>
+                        ) : (
+                            <p className="text-theme-sm text-warning-600 dark:text-warning-500" role="status">
+                                {iaFicha.resumo_motivo ?? 'Resumo de IA indisponível neste ambiente.'}
+                                {podeManterIa ? (
+                                    <>
+                                        {' '}
+                                        <Link href="/gestao/config-ia" className="underline underline-offset-2">
+                                            Abrir Configuração de IA
+                                        </Link>
+                                    </>
+                                ) : (
+                                    ' Peça a um administrador para ligar a função e cadastrar o provedor.'
+                                )}
+                            </p>
+                        )}
+                        {mensagem && status === 'indisponivel' && (
+                            <p className="text-theme-xs text-gray-500 dark:text-gray-400">{mensagem}</p>
+                        )}
+                    </div>
                 ) : (
                     <ul className="space-y-4" aria-label="Resumo do processo sugerido pela IA">
                         {resumos.map((sugestao) => {

@@ -7,6 +7,7 @@ use App\Enums\AiSuggestionType;
 use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
 use App\Services\Ai\AiCallAuditor;
+use App\Services\Ai\AiConfigResolver;
 use App\Services\Ai\AiCostEstimator;
 use App\Services\Ai\AiFeatureGate;
 use App\Support\Settings;
@@ -63,10 +64,15 @@ abstract class RunAiAgentJob implements ShouldQueue
         return (array) config('sile.ai.job.backoff', [30, 60, 120]);
     }
 
-    public function handle(AiFeatureGate $gate, AiCallAuditor $auditor, AiCostEstimator $costs): void
+    public function handle(AiFeatureGate $gate, AiCallAuditor $auditor, AiCostEstimator $costs, AiConfigResolver $resolver): void
     {
         $function = $this->function();
         $promptVersion = $this->promptVersion();
+
+        // 0. Reaplica a ponte banco → SDK: o worker de fila vive minutos/horas
+        //    e o admin pode cadastrar a chave depois do boot. Sem isso a geração
+        //    usaria os defaults do vendor mesmo com provedor ativo na tela.
+        $resolver->apply();
 
         // 1. Re-check do portão: desligado após o enfileiramento ⇒ no-op auditado.
         //    O portão usa featureName() (o TOGGLE), não function() — uma família

@@ -5,6 +5,7 @@ namespace Tests\Feature\Ai;
 use App\Models\AiConfiguration;
 use App\Services\Ai\AiFeatureGate;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
@@ -68,5 +69,19 @@ class AiFeatureGateTest extends TestCase
         AiConfiguration::factory()->create(['capability' => 'text', 'active' => true]);
 
         $this->assertTrue($this->gate()->available('resumo'));
+        $this->assertNull($this->gate()->unavailableReason('resumo'));
+    }
+
+    public function test_motivo_explica_toggle_desligado_e_falta_de_provedor(): void
+    {
+        config(['sile.features.ia_resumo' => false]);
+        Cache::forget('sile.parameters.features.ia_resumo');
+
+        $this->assertStringContainsString('desligada', (string) $this->gate()->unavailableReason('resumo'));
+
+        config(['sile.features.ia_resumo' => true]);
+        Cache::forget('sile.parameters.features.ia_resumo');
+
+        $this->assertStringContainsString('provedor', (string) $this->gate()->unavailableReason('resumo'));
     }
 }

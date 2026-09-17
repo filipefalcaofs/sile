@@ -8,6 +8,7 @@ use App\Enums\RiscoMunicipal;
 use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
+use App\Models\AnalysisRecord;
 use App\Models\Cnae;
 use App\Models\ExpressoQueda;
 use App\Models\GeoLayer;
@@ -194,6 +195,11 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertSame('8888881', $record->per_cnae[0]['cnae']);
         $this->assertSame('permitido', $record->per_cnae[0]['tendencia']);
         $this->assertSame('deferida', $record->per_cnae[0]['status_sugerido']);
+        $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
+        $this->assertSame('nR1', $record->per_cnae[0]['grupo_uso']);
+        $this->assertNotEmpty($record->parecer);
+        $this->assertStringContainsString('Quadro 10', (string) $record->parecer);
+        $this->assertSame('permitido', $record->engine_snapshot['consolidado']);
 
         // RN-005: a pré-análise é auditada (analise/pre-analise) com a versão das
         // regras aplicadas.
@@ -226,6 +232,8 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertTrue($record->engine_available);
         $this->assertSame('nao_permitido', $record->per_cnae[0]['tendencia']);
         $this->assertSame('indeferida', $record->per_cnae[0]['status_sugerido']);
+        $this->assertSame('indeferida', $record->per_cnae[0]['status_escolhido']);
+        $this->assertStringContainsString('não permitido', mb_strtolower((string) $record->parecer));
     }
 
     public function test_idempotente_nao_cria_duas_revisoes_1(): void
@@ -277,11 +285,11 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertSame('degradado', $activity->result);
     }
 
-    public function test_fa01_veredito_pendente_sem_zona_degrada_sem_sugestao_inventada(): void
+    public function test_veredito_pendente_traz_o_que_o_motor_sabe_sem_inventar_desfecho(): void
     {
-        // HU-140 FA-01 / anti-fachada: sem a zona oficial (Quadro 10 pendente
-        // SEDUR) o veredito é pendente — o motor NÃO inventa sugestão. A revisão 1
-        // nasce em modo manual (engine_available=false), auditada.
+        // Sem zona oficial o Quadro 10 não decide — status fica em análise.
+        // A ficha NÃO nasce vazia: risco, CNAE e o que o motor apurou vêm
+        // preenchidos para o analista só confirmar ou alterar.
         $this->fakeBairroSemZona();
         $this->classificarMunicipal('2222222', RiscoMunicipal::BaixoA);
 
@@ -290,17 +298,61 @@ class PreAnaliseServiceTest extends TestCase
         $record = $this->service()->preAnalisar($request);
 
         $this->assertNotNull($record);
-        $this->assertFalse($record->engine_available);
-        $this->assertNull($record->per_cnae);
+        $this->assertTrue($record->engine_available);
+        $this->assertNotEmpty($record->per_cnae);
+        $this->assertSame('pendente', $record->per_cnae[0]['tendencia']);
+        $this->assertSame('analise', $record->per_cnae[0]['status_sugerido']);
+        $this->assertSame('analise', $record->per_cnae[0]['status_escolhido']);
+        $this->assertSame('pendente', $record->engine_snapshot['consolidado']);
+        $this->assertNotEmpty($record->parecer);
+        $this->assertStringContainsString('pendente', mb_strtolower((string) $record->parecer));
 
         $activity = Activity::query()
             ->where('log_name', 'analise')
             ->where('event', 'pre-analise')
-            ->where('result', 'degradado')
             ->latest('id')
             ->first();
 
         $this->assertNotNull($activity);
+        $this->assertSame('sucesso', $activity->result);
+        $this->assertSame('pendente', $activity->properties['consolidado']);
+    }
+
+    public function test_condicionante_do_quadro_10_ja_vem_marcada_na_ficha(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('8888884', RiscoMunicipal::BaixoA);
+        $this->seedQuadro7('8888884', 'nR1', 'nR1-01');
+
+        $version = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first()
+            ?? RuleVersion::factory()->create([
+                'domain' => RuleDomain::LouosQuadro10,
+                'version' => 'lei-9148-2016-quadro10',
+                'rules_version' => 'lei-9148-2016-quadro10',
+            ]);
+
+        LouosQuadro10Permissao::factory()->create([
+            'rule_version_id' => $version->id,
+            'zona' => 'ZR-1',
+            'grupo_uso' => 'nR1',
+            'subgrupo' => '',
+            'permissao' => Quadro10Permissao::PermitidoCondicionado,
+            'condicionante_ref' => 'C-10',
+            'base_legal' => 'Quadro 10 da Lei nº 9.148/2016',
+        ]);
+
+        $request = $this->emAnaliseComCnaes(['8888884']);
+
+        $record = $this->service()->preAnalisar($request);
+
+        $this->assertNotNull($record);
+        $this->assertSame('permitido_com_condicoes', $record->per_cnae[0]['tendencia']);
+        $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
+        $this->assertNotEmpty($record->conditions);
+        $this->assertNotEmpty($record->per_cnae[0]['condicionantes']);
+        $this->assertTrue(
+            collect($record->conditions)->contains(fn (string $texto): bool => str_contains(mb_strtolower($texto), 'quadro 10')),
+        );
     }
 
     public function test_per_cnae_inclui_codigo_louos_e_codigo_tll_como_pendencia_explicita(): void
@@ -323,6 +375,30 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertArrayHasKey('codigo_tll', $record->per_cnae[0]);
         $this->assertNull($record->per_cnae[0]['codigo_louos']);
         $this->assertNull($record->per_cnae[0]['codigo_tll']);
+    }
+
+    public function test_refaz_rascunho_vazio_degradado_com_o_motor(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
+        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $request = $this->emAnaliseComCnaes(['8888881']);
+
+        AnalysisRecord::factory()->semMotor()->create([
+            'viability_request_id' => $request->id,
+            'revision' => 1,
+            'parecer' => null,
+        ]);
+
+        $record = $this->service()->preAnalisar($request);
+
+        $this->assertNotNull($record);
+        $this->assertTrue($record->engine_available);
+        $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
+        $this->assertNotEmpty($record->parecer);
+        $this->assertSame(1, $request->analysisRecords()->count());
     }
 
     public function test_grava_motivo_da_queda_do_expresso_na_ficha(): void

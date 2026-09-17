@@ -19,11 +19,24 @@ class AiFeatureGate
 {
     public function available(string $function, string $capability = 'text'): bool
     {
+        return $this->unavailableReason($function, $capability) === null;
+    }
+
+    /**
+     * Motivo honesto da indisponibilidade (para a ficha comunicar, nunca
+     * silenciar). Null quando a função pode rodar.
+     */
+    public function unavailableReason(string $function, string $capability = 'text'): ?string
+    {
         if (! Settings::enabled("ia_{$function}")) {
-            return false;
+            return 'A função de IA está desligada nos parâmetros (features.ia_'.$function.').';
         }
 
-        return $this->hasActiveProvider($capability);
+        if (! $this->hasActiveProvider($capability)) {
+            return 'Não há provedor de texto ativo. Cadastre e ative um em Configuração de IA.';
+        }
+
+        return null;
     }
 
     /**

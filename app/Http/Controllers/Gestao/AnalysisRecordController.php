@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\DecisionOutcome;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\AnalysisRecordRequest;
 use App\Http\Resources\AnalysisRecordResource;
 use App\Models\AiSuggestion;
 use App\Models\AnalysisRecord;
 use App\Models\StandardText;
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
+use App\Services\Ai\AiFeatureGate;
 use App\Services\Ai\ResumoProcessoService;
 use App\Services\Ai\SugestaoParecerService;
+use App\Services\Analise\AnaliseTecnicaDecisionService;
 use App\Services\Analise\AnalysisRecordDiff;
 use App\Services\Analise\AnalysisRecordImutavelException;
 use App\Services\Analise\AnalysisRecordService;
@@ -20,6 +24,7 @@ use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
+use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -40,9 +45,11 @@ class AnalysisRecordController extends Controller
         private AnalysisRecordService $records,
         private AuditService $audit,
         private ResumoProcessoService $resumos,
+        private AiFeatureGate $iaGate,
         private SedeEscritorioVirtualGatilho $sedeGatilho,
         private RelatorioSedeEscritorioVirtualService $relatorioSede,
         private CadastroImobiliarioFichaService $cadastroImobiliario,
+        private AnaliseTecnicaDecisionService $decisao,
     ) {}
 
     /**
@@ -55,6 +62,7 @@ class AnalysisRecordController extends Controller
         $record->loadMissing('analyst');
         $viabilityRequest->loadMissing('expressoQuedas');
         $record->setRelation('viabilityRequest', $viabilityRequest);
+        $viabilityRequest->setRelation('currentAnalysisRecord', $record);
 
         $this->audit->log(
             logName: 'analise',
@@ -99,6 +107,7 @@ class AnalysisRecordController extends Controller
             'escritorioVirtual' => $this->escritorioVirtual($viabilityRequest, $record),
             'textosPadrao' => $this->textosPadraoAtivos(),
             'autosaveDebounceMs' => (int) config('sile.analise.autosave.debounce_ms', 1500),
+            'iaFicha' => $this->iaFicha($viabilityRequest),
             // Sugestões de IA (HU-115 alertas + HU-117 resumo do processo) — prop
             // DEFERIDA (carregada sob demanda pelo card, fora do load inicial).
             // Ao resolver, dispara o resumo do processo (HU-117) de forma gated e
@@ -166,6 +175,47 @@ class AnalysisRecordController extends Controller
     }
 
     /**
+     * Encerra o processo a partir da ficha: finaliza a revisão (se ainda for
+     * rascunho) e decide (deferir/indeferir) conforme o status escolhido —
+     * o analista confirma o motor ou o que alterou. Não é fachada: a decisão
+     * real passa pelo AnaliseTecnicaDecisionService.
+     */
+    public function concluirProcesso(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
+    {
+        $record = $this->records->current($viabilityRequest);
+
+        if (! $record->isFinalizada()) {
+            try {
+                $record = $this->records->finalizar($record, $request->user());
+            } catch (AnalysisRecordImutavelException $e) {
+                abort(422, $e->getMessage());
+            }
+        }
+
+        $analista = $request->user();
+
+        abort_if(! $analista instanceof User, 401, 'É preciso estar autenticado para concluir o processo.');
+
+        try {
+            $result = $this->decisao->decide($record->fresh() ?? $record, $analista);
+        } catch (DomainException $e) {
+            abort(422, $e->getMessage());
+        }
+
+        $processo = $viabilityRequest->fresh();
+        $mensagem = $result->outcome === DecisionOutcome::Deferida
+            ? 'Processo deferido e concluído.'
+            : 'Processo indeferido e concluído.';
+
+        return response()->json([
+            'outcome' => $result->outcome->value,
+            'processo_status' => $processo?->status->value,
+            'tvl' => $result->decision->tvl_product_number,
+            'status' => $mensagem,
+        ]);
+    }
+
+    /**
      * Cria a próxima revisão (rascunho) copiando a anterior para reedição/recálculo
      * após a finalização — a revisão finalizada permanece intacta (append-only).
      */
@@ -214,7 +264,37 @@ class AnalysisRecordController extends Controller
             'despachou' => $despachou,
             'status' => $despachou
                 ? 'Minuta solicitada à IA. A sugestão aparecerá nos alertas de IA para revisão.'
-                : 'Sugestão de minuta indisponível (função desativada ou processo sem pré-análise do motor). Redija o parecer manualmente.',
+                : ($this->iaFicha($viabilityRequest)['parecer_motivo']
+                    ?? 'Sugestão de minuta indisponível (função desativada ou processo sem pré-análise do motor). Redija o parecer manualmente.'),
+        ]);
+    }
+
+    /**
+     * Solicita o resumo do processo (HU-117) de forma explícita — o card da
+     * ficha também dispara ao entrar em tela; este endpoint serve o botão
+     * "Gerar resumo" e a retentativa quando a fila ainda não devolveu.
+     */
+    public function gerarResumo(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
+    {
+        $despachou = $this->resumos->processar($viabilityRequest, $request->user()?->id);
+
+        $this->audit->log(
+            logName: 'analise',
+            event: 'ficha-gerar-resumo',
+            description: "Solicitação de resumo do processo por IA do processo #{$viabilityRequest->id}",
+            properties: [
+                'viability_request_id' => $viabilityRequest->id,
+                'despachou' => $despachou,
+            ],
+            subject: $viabilityRequest,
+        );
+
+        return response()->json([
+            'despachou' => $despachou,
+            'status' => $despachou
+                ? 'Resumo solicitado à IA. A síntese aparece neste card para revisão.'
+                : ($this->iaFicha($viabilityRequest)['resumo_motivo']
+                    ?? 'Resumo de IA indisponível. Redija a leitura manualmente.'),
         ]);
     }
 
@@ -431,6 +511,39 @@ class AnalysisRecordController extends Controller
                 config('sile.analise.escritorio_virtual.flag_analise_sede'),
             ),
         ];
+    }
+
+    /**
+     * Disponibilidade honesta do copiloto da ficha (resumo + minuta). Sem
+     * toggle ou sem provedor a tela explica o bloqueio — nunca finge que gerou.
+     *
+     * @return array{resumo_disponivel: bool, resumo_motivo: ?string, parecer_disponivel: bool, parecer_motivo: ?string}
+     */
+    private function iaFicha(ViabilityRequest $request): array
+    {
+        $resumoMotivo = $this->iaGate->unavailableReason('resumo', 'text');
+        $parecerMotivo = $this->iaGate->unavailableReason('parecer', 'text');
+
+        if ($parecerMotivo === null && ! $this->parecerTemMotor($request)) {
+            $parecerMotivo = 'A minuta precisa da pré-análise do motor (zoneamento/enquadramento). Sem isso, redija o parecer manualmente.';
+        }
+
+        return [
+            'resumo_disponivel' => $resumoMotivo === null,
+            'resumo_motivo' => $resumoMotivo,
+            'parecer_disponivel' => $parecerMotivo === null,
+            'parecer_motivo' => $parecerMotivo,
+        ];
+    }
+
+    private function parecerTemMotor(ViabilityRequest $request): bool
+    {
+        $ficha = $request->currentAnalysisRecord;
+
+        return $ficha !== null
+            && $ficha->engine_available === true
+            && is_array($ficha->engine_snapshot)
+            && $ficha->engine_snapshot !== [];
     }
 
     /**

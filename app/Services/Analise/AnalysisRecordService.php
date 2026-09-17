@@ -32,7 +32,10 @@ class AnalysisRecordService
     /** Campo da divergência por CNAE (status sugerido pelo motor × escolhido). */
     private const CAMPO_STATUS = 'status';
 
-    public function __construct(private readonly AuditService $audit) {}
+    public function __construct(
+        private readonly AuditService $audit,
+        private readonly PreAnaliseService $preAnalise,
+    ) {}
 
     /**
      * Revisão vigente da ficha (a de maior revisão). Defensivamente cria a revisão
@@ -40,6 +43,12 @@ class AnalysisRecordService
      */
     public function current(ViabilityRequest $request): AnalysisRecord
     {
+        $preAnalisada = $this->preAnalise->preAnalisar($request);
+
+        if ($preAnalisada !== null) {
+            return $preAnalisada;
+        }
+
         $record = $request->analysisRecords()->orderByDesc('revision')->first();
 
         if ($record !== null) {

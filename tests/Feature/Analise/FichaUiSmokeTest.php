@@ -90,7 +90,9 @@ class FichaUiSmokeTest extends TestCase
                 ->where('localizacao.logradouro', 'Rua das Flores')
                 ->where('localizacao.poligono.type', 'Polygon')
                 ->has('cadastroImobiliario')
-                ->has('dadosTvl'));
+                ->has('dadosTvl')
+                ->has('iaFicha')
+                ->where('iaFicha.resumo_disponivel', false));
     }
 
     public function test_ficha_sem_poligono_entrega_localizacao_nula_sem_inventar(): void

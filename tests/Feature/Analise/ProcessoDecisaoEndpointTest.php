@@ -156,4 +156,47 @@ class ProcessoDecisaoEndpointTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
         Event::assertNotDispatched(ResultadoEmitido::class);
     }
+
+    public function test_concluir_processo_a_partir_do_rascunho_defere_e_encerra(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $processo = $this->processoComFicha(
+            [['cnae' => '4712100', 'status_sugerido' => 'deferida', 'status_escolhido' => 'deferida']],
+            [
+                'status' => AnalysisRecordStatus::Rascunho,
+                'finalized_at' => null,
+                'parecer' => 'Rascunho do motor — revisar antes de finalizar.',
+            ],
+        );
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/ficha/concluir-processo")
+            ->assertOk()
+            ->assertJsonPath('outcome', 'deferida')
+            ->assertJsonPath('processo_status', 'deferida');
+
+        $this->assertSame(AnalysisRecordStatus::Finalizada, $processo->fresh()->currentAnalysisRecord->status);
+        $this->assertSame(ViabilityRequestStatus::Deferida, $processo->fresh()->status);
+        $this->assertNotNull($processo->fresh()->decision?->tvl_product_number);
+        Event::assertDispatched(ResultadoEmitido::class);
+    }
+
+    public function test_concluir_processo_indefere_quando_a_ficha_indefere(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $processo = $this->processoComFicha(
+            [['cnae' => '4712100', 'status_sugerido' => 'indeferida', 'status_escolhido' => 'indeferida']],
+            ['status' => AnalysisRecordStatus::Rascunho, 'finalized_at' => null],
+        );
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/ficha/concluir-processo")
+            ->assertOk()
+            ->assertJsonPath('outcome', 'indeferida');
+
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $processo->fresh()->status);
+        $this->assertNull($processo->fresh()->decision?->tvl_product_number);
+    }
 }

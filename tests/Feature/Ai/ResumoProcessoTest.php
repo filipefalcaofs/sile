@@ -212,4 +212,55 @@ class ResumoProcessoTest extends TestCase
         ResumoProcessoAgent::assertNeverPrompted();
         $this->assertSame(0, AiSuggestion::query()->where('type', AiSuggestionType::ResumoProcesso)->count());
     }
+
+    public function test_endpoint_gera_resumo_quando_disponivel(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        config(['sile.features.ia_resumo' => true]);
+        $this->provedorTextoAtivo();
+        $processo = $this->processoComFicha();
+
+        ResumoProcessoAgent::fake([[
+            'resumo' => 'Síntese fiel do processo no Centro para apoio à leitura do analista.',
+            'pontos_chave' => ['Pré-análise do motor disponível'],
+            'fonte' => 'pré-análise do motor (engine_snapshot) e ficha de análise',
+        ]]);
+
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($analista, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/ficha/gerar-resumo")
+            ->assertOk()
+            ->assertJsonPath('despachou', true);
+
+        $this->assertSame(AiSuggestionType::ResumoProcesso, AiSuggestion::query()->sole()->type);
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'analise',
+            'event' => 'ficha-gerar-resumo',
+        ]);
+    }
+
+    public function test_endpoint_recusa_resumo_quando_indisponivel(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        config(['sile.features.ia_resumo' => false]);
+        $this->provedorTextoAtivo();
+        $processo = $this->processoComFicha();
+
+        ResumoProcessoAgent::fake([[
+            'resumo' => 'não deveria rodar',
+            'fonte' => 'motor',
+        ]]);
+
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+
+        $resposta = $this->actingAs($analista, 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/ficha/gerar-resumo")
+            ->assertOk()
+            ->assertJsonPath('despachou', false);
+
+        $this->assertStringContainsString('desligada', (string) $resposta->json('status'));
+        ResumoProcessoAgent::assertNeverPrompted();
+        $this->assertSame(0, AiSuggestion::query()->count());
+    }
 }

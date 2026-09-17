@@ -22,14 +22,19 @@ use Throwable;
  * pré-preenchida: `engine_snapshot` INTEGRAL (a zona fica aninhada em
  * `por_cnae[i].consulta.territorio.zona`, conforme o PrecedentService lê),
  * `engine_rules_versions` e `per_cnae` com o status sugerido por CNAE
- * (deferida/indeferida/análise mapeado da tendência — SUGESTÃO, nunca decisão).
+ * (deferida/indeferida/análise mapeado da tendência — SUGESTÃO, nunca decisão),
+ * `status_escolhido` igual à sugestão (o analista só altera se divergir),
+ * condicionantes, vagas e parecer-rascunho com a fundamentação dos Quadros
+ * da LOUOS. Mesmo quando o processo NÃO é expresso, a ficha chega completa
+ * para confirmar ou alterar — não para preencher do zero (HU-140 CA-01).
  *
  * Idempotente (RN-004): se a revisão 1 já existe, é no-op (retorna a existente) —
  * reabrir/reprocessar não reexecuta; recalcular é ação explícita (nova revisão,
- * 10-09). Degrada honesto (FA-01/CA-03): exceção do motor OU veredito consolidado
- * pendente (zona urbanística pendente SEDUR) → revisão 1 em modo manual com
- * `engine_available=false` e ficha vazia, NUNCA falha silenciosa nem sugestão
- * inventada. Toda execução é auditada (RN-005).
+ * 10-09). Degrada honesto (FA-01/CA-03): exceção do motor → revisão 1 em modo
+ * manual com `engine_available=false` e ficha vazia. Veredito locacional
+ * pendente (zona SEDUR) NÃO esvazia a ficha: traz o que o motor sabe (risco,
+ * Quadro 7, avisos) com status `analise`, sem inventar deferimento. Toda
+ * execução é auditada (RN-005).
  */
 class PreAnaliseService
 {
@@ -60,7 +65,13 @@ class PreAnaliseService
         $existente = $this->revisaoInicial($request);
 
         if ($existente !== null) {
-            return $existente;
+            if (! $this->eRascunhoVazioDoMotor($existente)) {
+                return $existente;
+            }
+
+            $existente->delete();
+            $request->unsetRelation('analysisRecords');
+            $request->unsetRelation('currentAnalysisRecord');
         }
 
         try {
@@ -85,15 +96,6 @@ class PreAnaliseService
             return $this->criarDegradada($request, 'motor indisponível: '.$e->getMessage());
         }
 
-        // FA-01 / anti-fachada: sem dado confiável (veredito consolidado pendente
-        // — zona urbanística pendente SEDUR) o motor NÃO sugere desfecho.
-        if ($resolved->consolidado === ResultadoViabilidade::Pendente->value) {
-            return $this->criarDegradada(
-                $request,
-                'veredito locacional pendente — zona urbanística pendente SEDUR',
-            );
-        }
-
         return $this->criarPreenchida($request, $resolved);
     }
 
@@ -111,12 +113,15 @@ class PreAnaliseService
                 'status' => AnalysisRecordStatus::Rascunho,
                 'analyst_user_id' => null,
                 'engine_available' => true,
-                'engine_snapshot' => $resolved->toSnapshot(),
+                'engine_snapshot' => [
+                    ...$resolved->toSnapshot(),
+                    'consolidado' => $resolved->consolidado,
+                ],
                 'engine_rules_versions' => $resolved->rules_versions,
                 'per_cnae' => $this->perCnae($resolved),
-                'conditions' => [],
-                'parking' => [],
-                'parecer' => null,
+                'conditions' => $this->conditions($resolved),
+                'parking' => $this->parking($resolved),
+                'parecer' => $this->parecerRascunho($request, $resolved),
                 'analysis_reasons' => $this->motivosDaQueda($request),
                 'finalized_at' => null,
             ]);
@@ -194,22 +199,225 @@ class PreAnaliseService
      */
     private function perCnae(ResolvedViability $resolved): array
     {
-        return array_map(fn (array $item): array => [
-            'cnae' => $item['cnae'],
-            'cnae_formatado' => $item['cnae_formatado'],
-            'is_primary' => $item['is_primary'],
-            'tendencia' => $item['tendencia'],
-            'tendencia_label' => $item['tendencia_label'],
-            'status_sugerido' => $this->statusSugerido((string) $item['tendencia']),
-            'fluxo' => $item['fluxo'],
-            'fundamentacao' => $item['consulta']->fundamentacao(),
-            // Paridade com o legado (spec 2026-07-24): código LOUOS/TLL
-            // estruturado não é entregue pela SEDUR ainda (bloqueio externo
-            // real, docs/ANALISE-HUs-REUNIAO-SEDUR.md:241) — contrato explícito
-            // null, nunca um valor de exemplo do print.
-            'codigo_louos' => null,
-            'codigo_tll' => null,
-        ], $resolved->por_cnae);
+        return array_map(function (array $item): array {
+            $status = $this->statusSugerido((string) $item['tendencia']);
+            $consulta = $item['consulta'];
+            $quadro7 = $consulta->enquadramento->quadro7;
+            $grupo = is_string($quadro7['grupo'] ?? null) && $quadro7['grupo'] !== ''
+                ? $quadro7['grupo']
+                : null;
+
+            return [
+                'cnae' => $item['cnae'],
+                'cnae_formatado' => $item['cnae_formatado'],
+                'is_primary' => $item['is_primary'],
+                'tendencia' => $item['tendencia'],
+                'tendencia_label' => $item['tendencia_label'],
+                'status_sugerido' => $status,
+                'status_escolhido' => $status,
+                'fluxo' => $item['fluxo'],
+                'grupo_uso' => $grupo,
+                'gatilhos' => $this->rotulosGatilhos($consulta->risco->encaminhamento['gatilhos_acionados'] ?? []),
+                'condicionantes' => $this->textosCondicionantes($consulta->enquadramento->consolidado['condicionantes'] ?? []),
+                'fundamentacao' => $consulta->fundamentacao(),
+                'justificativa' => null,
+                // Paridade com o legado (spec 2026-07-24): código LOUOS/TLL
+                // estruturado não é entregue pela SEDUR ainda (bloqueio externo
+                // real) — contrato explícito null, nunca um valor inventado.
+                'codigo_louos' => null,
+                'codigo_tll' => null,
+            ];
+        }, $resolved->por_cnae);
+    }
+
+    /**
+     * Condicionantes do motor já marcadas na ficha (HU-140 CA-01).
+     *
+     * @return list<string>
+     */
+    private function conditions(ResolvedViability $resolved): array
+    {
+        $textos = [];
+
+        foreach ($this->perCnae($resolved) as $item) {
+            foreach ($item['condicionantes'] as $texto) {
+                $textos[] = $texto;
+            }
+        }
+
+        return array_values(array_unique($textos));
+    }
+
+    /**
+     * Vagas calculadas pelo motor (HU-042) — o analista confirma ou altera.
+     *
+     * @return array{vagas_requeridas: int|null, vagas_exigidas: int|null, vistoria: bool}|array{}
+     */
+    private function parking(ResolvedViability $resolved): array
+    {
+        foreach ($resolved->por_cnae as $item) {
+            foreach ($item['consulta']->enquadramento->consolidado['condicionantes'] ?? [] as $condicionante) {
+                if (! is_array($condicionante) || ($condicionante['tipo'] ?? null) !== 'vagas') {
+                    continue;
+                }
+
+                $exigidas = $this->somarQuantidades(is_array($condicionante['exigido'] ?? null) ? $condicionante['exigido'] : []);
+                $requeridas = $this->somarQuantidades(is_array($condicionante['declarado'] ?? null) ? $condicionante['declarado'] : []);
+
+                return [
+                    'vagas_requeridas' => $requeridas > 0 ? $requeridas : null,
+                    'vagas_exigidas' => $exigidas > 0 ? $exigidas : null,
+                    'vistoria' => ($condicionante['conforme'] ?? null) === false,
+                ];
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Parecer-rascunho determinístico: só o que o motor já fundamentou
+     * (Quadros LOUOS + risco). Nunca inventa zona nem desfecho.
+     */
+    private function parecerRascunho(ViabilityRequest $request, ResolvedViability $resolved): string
+    {
+        $linhas = [
+            'Rascunho do motor — revisar antes de finalizar. A decisão continua sendo do analista.',
+            '',
+            'Veredito locacional consolidado: '.ResultadoViabilidade::from($resolved->consolidado)->label().'.',
+        ];
+
+        foreach ($resolved->por_cnae as $item) {
+            $consulta = $item['consulta'];
+            $quadro7 = $consulta->enquadramento->quadro7;
+            $quadro10 = $consulta->enquadramento->quadro10;
+            $rotulo = ($item['is_primary'] ?? false) ? 'principal' : 'secundária';
+            $codigo = $item['cnae_formatado'] ?? $item['cnae'];
+            $tendencia = $item['tendencia_label'] ?? $item['tendencia'];
+
+            $linhas[] = '';
+            $linhas[] = "Atividade {$codigo} ({$rotulo}): {$tendencia}.";
+
+            if (is_string($quadro7['grupo'] ?? null) && $quadro7['grupo'] !== '') {
+                $subgrupo = is_string($quadro7['subgrupo'] ?? null) && $quadro7['subgrupo'] !== ''
+                    ? ' / '.$quadro7['subgrupo']
+                    : '';
+                $linhas[] = 'Quadro 7 da LOUOS: grupo '.$quadro7['grupo'].$subgrupo.'.';
+            }
+
+            if (($quadro10['status'] ?? null) === 'identificado') {
+                $permissao = is_string($quadro10['permissao'] ?? null) ? $quadro10['permissao'] : '';
+                $linhas[] = 'Quadro 10 da LOUOS: permissão '.$permissao.' na zona identificada.';
+            } elseif (is_string($quadro10['motivo'] ?? null) && $quadro10['motivo'] !== '') {
+                $linhas[] = 'Quadro 10 da LOUOS: '.$quadro10['motivo'].'.';
+            }
+
+            $motivo = $consulta->enquadramento->consolidado['motivo'] ?? null;
+
+            if (is_string($motivo) && $motivo !== '') {
+                $linhas[] = $motivo.'.';
+            }
+        }
+
+        $referencias = [];
+
+        foreach ($resolved->por_cnae as $item) {
+            $referencias = [...$referencias, ...$item['consulta']->fundamentacao()];
+        }
+
+        $referencias = array_values(array_unique($referencias));
+
+        if ($referencias !== []) {
+            $linhas[] = '';
+            $linhas[] = 'Fundamentação legal:';
+
+            foreach ($referencias as $referencia) {
+                $linhas[] = '- '.$referencia;
+            }
+        }
+
+        $quedas = $this->motivosDaQueda($request) ?? [];
+
+        if ($quedas !== []) {
+            $linhas[] = '';
+            $linhas[] = 'Motivo do encaminhamento à análise:';
+
+            foreach ($quedas as $queda) {
+                $linhas[] = '- '.$queda;
+            }
+        }
+
+        return implode("\n", $linhas);
+    }
+
+    /**
+     * @param  list<mixed>  $condicionantes
+     * @return list<string>
+     */
+    private function textosCondicionantes(array $condicionantes): array
+    {
+        $textos = [];
+
+        foreach ($condicionantes as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            if (($item['tipo'] ?? null) === 'vagas' && ($item['exigido'] ?? null) === null) {
+                continue;
+            }
+
+            $motivo = trim((string) ($item['motivo'] ?? ''));
+
+            if ($motivo === '') {
+                continue;
+            }
+
+            $textos[] = $motivo;
+        }
+
+        return array_values(array_unique($textos));
+    }
+
+    /**
+     * @param  list<mixed>  $gatilhos
+     * @return list<string>
+     */
+    private function rotulosGatilhos(array $gatilhos): array
+    {
+        $rotulos = [];
+
+        foreach ($gatilhos as $gatilho) {
+            if (! is_array($gatilho)) {
+                continue;
+            }
+
+            $rotulo = trim((string) ($gatilho['motivo'] ?? $gatilho['codigo'] ?? ''));
+
+            if ($rotulo === '') {
+                continue;
+            }
+
+            $rotulos[] = $rotulo;
+        }
+
+        return $rotulos;
+    }
+
+    /**
+     * @param  array<string, mixed>  $quantidades
+     */
+    private function somarQuantidades(array $quantidades): int
+    {
+        $total = 0;
+
+        foreach ($quantidades as $quantidade) {
+            if (is_numeric($quantidade)) {
+                $total += (int) $quantidade;
+            }
+        }
+
+        return $total;
     }
 
     /**
@@ -241,6 +449,23 @@ class PreAnaliseService
             ResultadoViabilidade::NaoPermitido->value => DecisionOutcome::Indeferida->value,
             default => self::SUGESTAO_ANALISE,
         };
+    }
+
+    /**
+     * Revisão 1 vazia de uma pré-análise degradada: não é uma análise humana
+     * iniciada — pode ser refeita para entregar o rascunho do motor. Rascunho
+     * já preenchido (mesmo que o analista ainda não tenha tocado) permanece
+     * idempotente (RN-004).
+     */
+    private function eRascunhoVazioDoMotor(AnalysisRecord $record): bool
+    {
+        $parecer = trim((string) ($record->parecer ?? ''));
+
+        return $record->revision === self::REVISAO_INICIAL
+            && $record->status === AnalysisRecordStatus::Rascunho
+            && $record->engine_available === false
+            && ($record->per_cnae === null || $record->per_cnae === [])
+            && $parecer === '';
     }
 
     /**
