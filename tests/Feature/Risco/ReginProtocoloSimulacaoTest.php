@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginProtocoloCatalog;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
+use Database\Seeders\PropertyTypeSeeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Database\Seeders\RiskTriggerSeeder;
@@ -37,6 +38,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
             RiskTriggerSeeder::class,
+            PropertyTypeSeeder::class,
         ]);
 
         $this->actingAs(

@@ -110,7 +110,7 @@ class SolicitacaoViabilityResolver
 
         return TipoImovel::fromRegin(
             $request->tipo_imovel ?? $request->tipo_imovel_normalized,
-            TipoImovelCatalog::sedur200826(),
+            TipoImovelCatalog::vigente(),
         );
     }
 

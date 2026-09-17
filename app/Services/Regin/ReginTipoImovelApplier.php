@@ -14,7 +14,7 @@ class ReginTipoImovelApplier
 {
     public function apply(ViabilityRequest $request, ?string $rawDoRegin): TipoImovel
     {
-        $tipo = TipoImovel::fromRegin($rawDoRegin, TipoImovelCatalog::sedur200826());
+        $tipo = TipoImovel::fromRegin($rawDoRegin, TipoImovelCatalog::vigente());
 
         $cru = $rawDoRegin === null || trim($rawDoRegin) === '' ? null : $rawDoRegin;
 

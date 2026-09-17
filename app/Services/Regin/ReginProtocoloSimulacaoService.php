@@ -195,7 +195,7 @@ class ReginProtocoloSimulacaoService
     {
         $tipo = TipoImovel::fromRegin(
             isset($protocolo['tipo_imovel']) ? (string) $protocolo['tipo_imovel'] : null,
-            TipoImovelCatalog::sedur200826(),
+            TipoImovelCatalog::vigente(),
         );
         $area = isset($protocolo['area_utilizada']) ? (float) $protocolo['area_utilizada'] : null;
         $porCnae = [];

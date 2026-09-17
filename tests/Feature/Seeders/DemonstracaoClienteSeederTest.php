@@ -2,8 +2,6 @@
 
 namespace Tests\Feature\Seeders;
 
-use App\Enums\ViabilityRequestOrigin;
-use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Support\DemoMode;
@@ -57,8 +55,10 @@ class DemonstracaoClienteSeederTest extends TestCase
             ->where('email', DemonstracaoClienteSeeder::CLIENTE_GESTAO_EMAIL)
             ->firstOrFail();
 
-        $this->assertTrue($validadora->hasRole('validacao-fase-completa'));
+        $this->assertTrue($validadora->hasRole('administrador'));
         $this->assertTrue($validadora->hasPermissionTo('manter-cnaes'));
+        $this->assertTrue($validadora->hasPermissionTo('manter-perfis'));
+        $this->assertTrue($validadora->hasPermissionTo('manter-usuarios'));
 
         foreach ([
             'validacao-fase-02',
@@ -74,34 +74,33 @@ class DemonstracaoClienteSeederTest extends TestCase
         }
     }
 
-    public function test_cria_massa_de_demonstracao_em_diversas_situacoes(): void
+    public function test_reseed_promove_validadora_existente_para_administrador(): void
+    {
+        config(['sile.demo_data' => true]);
+
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $existente = User::factory()->create([
+            'email' => DemonstracaoClienteSeeder::CLIENTE_GESTAO_EMAIL,
+        ]);
+        $existente->syncRoles(['gestor']);
+
+        $this->seed(DemonstracaoClienteSeeder::class);
+
+        $existente->refresh();
+
+        $this->assertTrue($existente->hasRole('administrador'));
+        $this->assertFalse($existente->hasRole('gestor'));
+    }
+
+    public function test_nao_planta_processos_de_demonstracao(): void
     {
         config(['sile.demo_data' => true]);
 
         $this->seed(DemonstracaoClienteSeeder::class);
 
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
-        $this->assertNotNull($cidadao, 'Esperava o cidadão de demonstração (cidadao@sile.dev).');
-
-        $statuses = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
-            ->pluck('status');
-
-        $this->assertTrue($statuses->contains(ViabilityRequestStatus::Rascunho));
-        $this->assertTrue($statuses->contains(ViabilityRequestStatus::Protocolada));
-        $this->assertTrue($statuses->contains(ViabilityRequestStatus::Cancelada));
-
-        $this->assertTrue(
-            ViabilityRequest::query()
-                ->where('requester_user_id', $cidadao->id)
-                ->where('origin', ViabilityRequestOrigin::Contingencia)
-                ->exists(),
-            'Esperava uma solicitação de contingência de demonstração.'
-        );
-
-        $this->assertDatabaseHas('users', ['email' => 'analista@sile.dev']);
-        $this->assertDatabaseHas('users', ['email' => 'gestor@sile.dev']);
-        $this->assertDatabaseHas('users', ['email' => 'admin@sile.dev']);
+        $this->assertSame(0, ViabilityRequest::query()->count());
+        $this->assertDatabaseHas('users', ['email' => DemonstracaoClienteSeeder::CLIENTE_GESTAO_EMAIL]);
     }
 
     public function test_rotaciona_senhas_dos_usuarios_dev_para_a_senha_demo(): void

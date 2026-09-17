@@ -5,6 +5,7 @@ namespace Tests\Feature\Solicitacao;
 use App\Enums\TipoImovelReconhecimento;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginTipoImovelApplier;
+use Database\Seeders\PropertyTypeSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
@@ -16,6 +17,12 @@ use Tests\TestCase;
 class TipoImovelReginTest extends TestCase
 {
     use LazilyRefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(PropertyTypeSeeder::class);
+    }
 
     public function test_aplica_galpao_do_regin_e_grava_codigo_normalizado(): void
     {
