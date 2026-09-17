@@ -59,7 +59,7 @@ function SituationBadge({ active }: { active: boolean }) {
 
 function DrivesRuleBadge({ drivesRule }: { drivesRule: boolean }) {
     return (
-        <Badge size="sm" color={drivesRule ? 'brand' : 'light'}>
+        <Badge size="sm" color={drivesRule ? 'primary' : 'light'}>
             {drivesRule ? 'Dirige regra' : 'Ramo comum'}
         </Badge>
     );
