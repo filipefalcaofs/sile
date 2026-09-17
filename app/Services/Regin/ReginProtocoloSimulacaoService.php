@@ -254,6 +254,7 @@ class ReginProtocoloSimulacaoService
             'address_number' => 's/n',
             'address_neighborhood' => (string) ($protocolo['zona'] ?? 'Salvador'),
             'address_zip' => '40000000',
+            'property_registration' => $this->inscricaoDoCatalogo($protocolo),
             'property_polygon_geojson' => self::POLIGONO_HOMOLOGACAO,
             'is_virtual_office' => $sedeVirtual,
             'wants_virtual_office_hq' => $sedeVirtual,
@@ -480,6 +481,22 @@ class ReginProtocoloSimulacaoService
             'fluxo' => $fluxo,
             'motivo' => $motivo,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $protocolo
+     */
+    private function inscricaoDoCatalogo(array $protocolo): ?string
+    {
+        $bruta = $protocolo['inscricao_imobiliaria'] ?? null;
+
+        if (! is_string($bruta) || trim($bruta) === '') {
+            return null;
+        }
+
+        $digitos = preg_replace('/\D/', '', $bruta) ?? '';
+
+        return $digitos === '' ? null : $digitos;
     }
 
     /**

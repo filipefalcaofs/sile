@@ -25,7 +25,7 @@ use App\Services\Geo\SpatialRepository;
 use App\Services\GovBr\GovBrIdTokenValidator;
 use App\Services\GovBr\GovBrProvider;
 use App\Services\Realty\PropertyRegistryLookup;
-use App\Services\Realty\UnavailablePropertyRegistryLookup;
+use App\Services\Realty\SedurSefazPropertyRegistryLookup;
 use App\Services\Regin\BapRegistry;
 use App\Services\Regin\ReginParecerNotifier;
 use App\Services\Regin\UnavailableBapRegistry;
@@ -80,10 +80,10 @@ class AppServiceProvider extends ServiceProvider
         // produção.
         $this->app->bind(PrecedentRepository::class, PostgisPrecedentRepository::class);
 
-        // Resolução por inscrição imobiliária (HU-055) atrás de contrato. A base
-        // de lotes/Cadastro está PENDENTE SEDUR — o provider degrada honestamente
-        // (nunca inventa ponto). A Fase 13 (HU-106) troca SÓ este binding.
-        $this->app->bind(PropertyRegistryLookup::class, UnavailablePropertyRegistryLookup::class);
+        // Resolução por inscrição imobiliária (HU-055) atrás de contrato: BFF
+        // SEDUR/SEFAZ. Toggle features.cadastro_imobiliario desligado degrada
+        // honesto (nunca inventa ponto).
+        $this->app->bind(PropertyRegistryLookup::class, SedurSefazPropertyRegistryLookup::class);
 
         // Fonte de feriados (HU-137) atrás de contrato: o BusinessDeadlineCalculator
         // (HU-129) desconta os feriados ativos via este provider para medir

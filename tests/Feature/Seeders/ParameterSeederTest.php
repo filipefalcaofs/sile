@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(109, Parameter::query()->count());
+        $this->assertSame(113, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -212,6 +212,20 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('integracoes', $geoUrl->group);
         $this->assertSame('https://geoserver.sedur.salvador.ba.gov.br/geoserver', $geoUrl->default_value);
         $this->assertTrue($geoUrl->requires_connection_test);
+
+        $cadastroToggle = Parameter::query()->where('key', 'features.cadastro_imobiliario')->first();
+
+        $this->assertNotNull($cadastroToggle);
+        $this->assertSame('features', $cadastroToggle->group);
+        $this->assertSame('boolean', $cadastroToggle->type);
+        $this->assertSame('1', $cadastroToggle->default_value);
+
+        $cadastroUrl = Parameter::query()->where('key', 'integrations.inscricao_imobiliaria.base_url')->first();
+
+        $this->assertNotNull($cadastroUrl);
+        $this->assertSame('integracoes', $cadastroUrl->group);
+        $this->assertTrue($cadastroUrl->requires_connection_test);
+        $this->assertStringContainsString('inscricao-imobiliaria', (string) $cadastroUrl->default_value);
     }
 
     public function test_paginacoes_tecnicas_nao_estao_no_catalogo(): void
@@ -891,6 +905,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(109, Parameter::query()->count());
+        $this->assertSame(113, Parameter::query()->count());
     }
 }

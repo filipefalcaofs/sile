@@ -9,6 +9,7 @@ use App\Services\Geo\TerritoryService;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Louos\LouosEnquadramentoService;
+use App\Services\Realty\PropertyNotFoundException;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryUnavailableException;
 use App\Services\Risco\RiscoClassificationService;
@@ -94,9 +95,17 @@ class ConsultaViabilidadeService
         try {
             $ponto = $this->propertyRegistry->resolve($inscricao);
         } catch (PropertyRegistryUnavailableException) {
-            // Degradação honesta: base de lotes pendente SEDUR. NUNCA inventa ponto.
-            // Cai para a análise por CNAE + área (risco + Quadro 7), com aviso claro.
             return $this->consultarPorCnaeComEntrada($input, [self::AVISO_INSCRICAO_INDISPONIVEL]);
+        } catch (PropertyNotFoundException) {
+            return $this->consultarPorCnaeComEntrada($input, [
+                'Inscrição imobiliária não encontrada no Cadastro (SEFAZ/SEDUR). Resultado sem análise territorial; consulte por endereço para o veredito locacional.',
+            ]);
+        }
+
+        if ($ponto->latitude === null || $ponto->longitude === null) {
+            return $this->consultarPorCnaeComEntrada($input, [
+                'Inscrição localizada no Cadastro sem coordenada do lote. Resultado sem análise territorial; consulte por endereço para o veredito locacional.',
+            ]);
         }
 
         return $this->consultarPorPonto($ponto->latitude, $ponto->longitude, $input, null);

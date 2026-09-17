@@ -54,6 +54,7 @@ class PreAnaliseService
         private readonly SolicitacaoViabilityResolver $resolver,
         private readonly AuditService $audit,
         private readonly MotivoAnaliseComposer $motivos,
+        private readonly JustificativaFundamentadaComposer $justificativas,
     ) {}
 
     /**
@@ -221,7 +222,7 @@ class PreAnaliseService
                 'gatilhos' => $this->rotulosGatilhos($consulta->risco->encaminhamento['gatilhos_acionados'] ?? []),
                 'condicionantes' => $this->textosCondicionantes($consulta->enquadramento->consolidado['condicionantes'] ?? []),
                 'fundamentacao' => $consulta->fundamentacao(),
-                'justificativa' => null,
+                'justificativa' => $this->justificativas->paraConsulta($consulta, $item),
                 // Paridade com o legado (spec 2026-07-24): código LOUOS/TLL
                 // estruturado não é entregue pela SEDUR ainda (bloqueio externo
                 // real) — contrato explícito null, nunca um valor inventado.
@@ -277,76 +278,26 @@ class PreAnaliseService
     }
 
     /**
-     * Parecer-rascunho determinístico: só o que o motor já fundamentou
-     * (Quadros LOUOS + risco). Nunca inventa zona nem desfecho.
+     * Parecer-rascunho: a mesma fundamentação por atividade da justificativa,
+     * no tom de um analista. Nunca inventa zona nem desfecho.
      */
     private function parecerRascunho(ViabilityRequest $request, ResolvedViability $resolved): string
     {
-        $linhas = [
-            'Veredito locacional consolidado: '.ResultadoViabilidade::from($resolved->consolidado)->label().'.',
+        $partes = [
+            'Analisa-se o requerimento à luz da Lei nº 9.148/2016 (LOUOS) e das regras de risco aplicáveis. Veredito locacional consolidado: '.ResultadoViabilidade::from($resolved->consolidado)->label().'.',
         ];
 
         foreach ($resolved->por_cnae as $item) {
-            $consulta = $item['consulta'];
-            $quadro7 = $consulta->enquadramento->quadro7;
-            $quadro10 = $consulta->enquadramento->quadro10;
-            $rotulo = ($item['is_primary'] ?? false) ? 'principal' : 'secundária';
-            $codigo = $item['cnae_formatado'] ?? $item['cnae'];
-            $tendencia = $item['tendencia_label'] ?? $item['tendencia'];
-
-            $linhas[] = '';
-            $linhas[] = "Atividade {$codigo} ({$rotulo}): {$tendencia}.";
-
-            if (is_string($quadro7['grupo'] ?? null) && $quadro7['grupo'] !== '') {
-                $subgrupo = is_string($quadro7['subgrupo'] ?? null) && $quadro7['subgrupo'] !== ''
-                    ? ' / '.$quadro7['subgrupo']
-                    : '';
-                $linhas[] = 'Quadro 7 da LOUOS: grupo '.$quadro7['grupo'].$subgrupo.'.';
-            }
-
-            if (($quadro10['status'] ?? null) === 'identificado') {
-                $permissao = is_string($quadro10['permissao'] ?? null) ? $quadro10['permissao'] : '';
-                $linhas[] = 'Quadro 10 da LOUOS: permissão '.$permissao.' na zona identificada.';
-            } elseif (is_string($quadro10['motivo'] ?? null) && $quadro10['motivo'] !== '') {
-                $linhas[] = 'Quadro 10 da LOUOS: '.$quadro10['motivo'].'.';
-            }
-
-            $motivo = $consulta->enquadramento->consolidado['motivo'] ?? null;
-
-            if (is_string($motivo) && $motivo !== '') {
-                $linhas[] = $motivo.'.';
-            }
-        }
-
-        $referencias = [];
-
-        foreach ($resolved->por_cnae as $item) {
-            $referencias = [...$referencias, ...$item['consulta']->fundamentacao()];
-        }
-
-        $referencias = array_values(array_unique($referencias));
-
-        if ($referencias !== []) {
-            $linhas[] = '';
-            $linhas[] = 'Fundamentação legal:';
-
-            foreach ($referencias as $referencia) {
-                $linhas[] = '- '.$referencia;
-            }
+            $partes[] = $this->justificativas->paraConsulta($item['consulta'], $item);
         }
 
         $quedas = $this->motivosDaQueda($request, $resolved) ?? [];
 
         if ($quedas !== []) {
-            $linhas[] = '';
-            $linhas[] = 'Motivo do encaminhamento à análise:';
-
-            foreach ($quedas as $queda) {
-                $linhas[] = '- '.$queda;
-            }
+            $partes[] = "Motivo do encaminhamento à análise:\n- ".implode("\n- ", $quedas);
         }
 
-        return implode("\n", $linhas);
+        return implode("\n\n", $partes);
     }
 
     /**

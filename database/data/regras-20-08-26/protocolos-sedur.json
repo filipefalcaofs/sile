@@ -10,6 +10,7 @@
       "area_utilizada": 43.0,
       "zona": "ZCMe-1/01",
       "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
       "atividades": [
         { "cnae": "8219-9/99", "perguntas": [] }
       ]
@@ -23,6 +24,7 @@
       "area_utilizada": 81.0,
       "zona": "ZCMe-1/01",
       "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
       "atividades": [
         {
           "cnae": "8211-3/00",
@@ -41,6 +43,7 @@
       "area_utilizada": 30.0,
       "zona": "ZEIS 1",
       "via": "VL",
+      "inscricao_imobiliaria": "0010010010",
       "atividades": [
         { "cnae": "6622-3/00", "perguntas": [] }
       ]
@@ -54,6 +57,7 @@
       "area_utilizada": 834.0,
       "zona": "ZPR 3",
       "via": "VL",
+      "inscricao_imobiliaria": "0010010010",
       "atividades": [
         { "cnae": "6202-3/00", "perguntas": [] }
       ]
@@ -67,6 +71,7 @@
       "area_utilizada": 75.0,
       "zona": "ZEIS 1",
       "via": "VL",
+      "inscricao_imobiliaria": "0010010010",
       "atividades": [
         { "cnae": "4721-1/04", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
         { "cnae": "4771-7/01", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
@@ -84,6 +89,7 @@
       "area_utilizada": 156.0,
       "zona": "ZCMe-1/03",
       "via": "VE",
+      "inscricao_imobiliaria": "0010010010",
       "atividades": [
         { "cnae": "4781-4/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
       ]
@@ -97,6 +103,7 @@
       "area_utilizada": 53.0,
       "zona": "ZCMe-1/01",
       "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
       "atividades": [
         { "cnae": "1340-5/01", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
         { "cnae": "1412-6/02", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
@@ -113,6 +120,7 @@
       "area_utilizada": 105.0,
       "zona": "ZCMe-1/01",
       "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
       "atividades": [
         { "cnae": "7210-0/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
       ]
@@ -126,6 +134,7 @@
       "area_utilizada": 100.0,
       "zona": "ZPR 3",
       "via": "VL",
+      "inscricao_imobiliaria": "0010010010",
       "atividades": [
         { "cnae": "4712-1/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
       ]
@@ -139,6 +148,7 @@
       "area_utilizada": 10.0,
       "zona": "ZPR 1",
       "via": "VC-I",
+      "inscricao_imobiliaria": "0010010010",
       "atividades": [
         { "cnae": "3314-7/10", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
         { "cnae": "4751-2/01", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },

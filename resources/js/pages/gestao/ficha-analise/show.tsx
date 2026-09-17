@@ -406,8 +406,6 @@ const CAMPOS_IPTU_MARCADOS = [
 
 /** Demais campos da certidão (seção 4.2 do design), exibidos sem destaque. */
 const CAMPOS_IPTU_DEMAIS = [
-    'contribuinte',
-    'cpf_cnpj',
     'numero_porta',
     'area_terreno_m2',
     'valor_venal_iptu',
@@ -473,7 +471,7 @@ function CampoCadastroImobiliario({ chave, valor, marcado }: { chave: string; va
 /**
  * Bloco Cadastro Imobiliário — preenche o espaço em branco do legado ao
  * lado da Localização (design 2026-07-22). Só leitura; degrada honestamente
- * quando a integração (HU-106) está indisponível, a inscrição não é
+ * quando a consulta SEFAZ/SEDUR está indisponível, a inscrição não é
  * encontrada ou o processo não informa inscrição — nunca certidão simulada.
  */
 function CadastroImobiliarioPanel({ cadastro }: { cadastro: CadastroImobiliario }) {
@@ -1381,7 +1379,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Enquadramento por atividade (CNAE)"
-                                description="Pré-preenchido pelo motor (LOUOS e risco). Confirme ou altere. Divergência exige justificativa."
+                                description="Pré-preenchido pelo motor (LOUOS e risco), inclusive a justificativa. Confirme ou altere. Divergência exige justificativa própria."
                             />
                             <CardContent>
                                 {perCnae.length === 0 ? (
@@ -1523,9 +1521,9 @@ export default function FichaAnaliseShow({
                                                         </Label>
                                                         <Textarea
                                                             id={`justificativa-${indice}`}
-                                                            rows={2}
+                                                            rows={8}
                                                             disabled={!editavel}
-                                                            placeholder="Fundamente a decisão desta atividade…"
+                                                            placeholder="Justificativa fundamentada da atividade — pré-preenchida pelo motor…"
                                                             value={item.justificativa ?? ''}
                                                             onChange={(valor) =>
                                                                 atualizarCnae(indice, { justificativa: valor })

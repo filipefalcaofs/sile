@@ -33,6 +33,7 @@ return [
         'govbr_login' => false,
         'geocoding' => true,
         'geoserver_zona' => true,
+        'cadastro_imobiliario' => env('SILE_CADASTRO_IMOBILIARIO', true),
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,
@@ -258,6 +259,12 @@ return [
             'retries' => 2,
             'backoff_ms' => 1000,
             'cache_ttl' => 86400,
+        ],
+        'inscricao_imobiliaria' => [
+            'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+            'timeout' => 12,
+            'retries' => 3,
+            'backoff_ms' => 500,
         ],
         'geoserver' => [
             'base_url' => 'https://geoserver.sedur.salvador.ba.gov.br/geoserver',

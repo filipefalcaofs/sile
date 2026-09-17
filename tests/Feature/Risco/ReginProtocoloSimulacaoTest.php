@@ -255,6 +255,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertTrue($processo->expressoQuedas()->exists());
         $this->assertTrue($processo->analysisRecords()->exists());
         $this->assertSame(5, $processo->cnaes()->count());
+        $this->assertSame('0010010010', $processo->property_registration);
     }
 
     public function test_ressimular_nao_duplica_o_processo(): void

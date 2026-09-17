@@ -6,27 +6,24 @@ use App\Services\Realty\PropertyNotFoundException;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
 use App\Services\Realty\PropertyRegistryUnavailableException;
-use App\Services\Realty\UnavailablePropertyRegistryLookup;
+use App\Services\Realty\SedurSefazPropertyRegistryLookup;
 use Tests\TestCase;
 
 class PropertyRegistryLookupTest extends TestCase
 {
-    public function test_provider_real_esta_indisponivel_e_nunca_inventa_ponto(): void
+    public function test_provider_real_e_o_bff_sedur_e_nao_inventa_ponto_com_toggle_desligado(): void
     {
         $lookup = app(PropertyRegistryLookup::class);
 
-        // Binding correto: o provider real resolvido é o INDISPONÍVEL — a base
-        // de lotes/Cadastro está pendente SEDUR (HU-033/HU-106).
-        $this->assertInstanceOf(UnavailablePropertyRegistryLookup::class, $lookup);
+        $this->assertInstanceOf(SedurSefazPropertyRegistryLookup::class, $lookup);
 
-        // Degradação honesta (anti-fachada): sem fonte oficial, NUNCA resolve um
-        // ponto — sempre lança unavailable com a inscrição preservada.
+        // A suíte desliga o toggle (phpunit.xml): sem chamada HTTP, degrada
+        // honesto — NUNCA inventa ponto.
         try {
             $lookup->resolve('123456');
             $this->fail('Esperava PropertyRegistryUnavailableException: o provider real nunca inventa ponto.');
         } catch (PropertyRegistryUnavailableException $exception) {
             $this->assertSame('123456', $exception->inscricao);
-            $this->assertStringContainsString('pendente da SEDUR', $exception->getMessage());
         }
     }
 

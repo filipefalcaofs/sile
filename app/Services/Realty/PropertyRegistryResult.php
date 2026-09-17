@@ -19,8 +19,8 @@ final readonly class PropertyRegistryResult
      * @param  array<string, mixed>  $raw
      */
     public function __construct(
-        public float $latitude,
-        public float $longitude,
+        public ?float $latitude,
+        public ?float $longitude,
         public string $inscricao,
         public ?string $source = null,
         public array $raw = [],

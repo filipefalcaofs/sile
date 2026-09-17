@@ -172,6 +172,21 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Consulta zona urbanística no GeoServer SEDUR (WFS) quando a camada local está pendente',
             ],
+            'features.cadastro_imobiliario' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Consulta o Cadastro Imobiliário (SEFAZ via BFF da SEDUR) pela inscrição do processo',
+            ],
+            'integrations.inscricao_imobiliaria.base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+                'validation_rules' => ['required', 'url'],
+                'requires_connection_test' => true,
+                'description' => 'URL base do BFF SEDUR de inscrição imobiliária (sem a inscrição no final)',
+            ],
             'integrations.geoserver.base_url' => [
                 'group' => 'integracoes',
                 'type' => 'string',

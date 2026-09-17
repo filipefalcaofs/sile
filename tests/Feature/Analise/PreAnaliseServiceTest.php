@@ -8,6 +8,7 @@ use App\Enums\RiscoMunicipal;
 use App\Enums\RuleDomain;
 use App\Enums\TipoGatilho;
 use App\Enums\ViabilityRequestStatus;
+use App\Http\Resources\AnalysisRecordResource;
 use App\Models\Activity;
 use App\Models\AnalysisRecord;
 use App\Models\Cnae;
@@ -198,6 +199,11 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertSame('deferida', $record->per_cnae[0]['status_sugerido']);
         $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
         $this->assertSame('nR1', $record->per_cnae[0]['grupo_uso']);
+        $this->assertNotEmpty($record->per_cnae[0]['justificativa']);
+        $this->assertStringContainsString('Lei nº 9.148/2016', (string) $record->per_cnae[0]['justificativa']);
+        $this->assertStringContainsString('Quadro 7', (string) $record->per_cnae[0]['justificativa']);
+        $this->assertStringContainsString('Quadro 10', (string) $record->per_cnae[0]['justificativa']);
+        $this->assertStringContainsString('deferimento', mb_strtolower((string) $record->per_cnae[0]['justificativa']));
         $this->assertNotEmpty($record->parecer);
         $this->assertStringContainsString('Quadro 10', (string) $record->parecer);
         $this->assertStringNotContainsString('Rascunho do motor', (string) $record->parecer);
@@ -236,7 +242,10 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertSame('nao_permitido', $record->per_cnae[0]['tendencia']);
         $this->assertSame('indeferida', $record->per_cnae[0]['status_sugerido']);
         $this->assertSame('indeferida', $record->per_cnae[0]['status_escolhido']);
-        $this->assertStringContainsString('não permitido', mb_strtolower((string) $record->parecer));
+        $this->assertNotEmpty($record->per_cnae[0]['justificativa']);
+        $this->assertStringContainsString('indeferimento', mb_strtolower((string) $record->per_cnae[0]['justificativa']));
+        $this->assertStringContainsString('proibido', mb_strtolower((string) $record->per_cnae[0]['justificativa']));
+        $this->assertStringContainsString('indeferimento', mb_strtolower((string) $record->parecer));
     }
 
     public function test_idempotente_nao_cria_duas_revisoes_1(): void
@@ -434,5 +443,116 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertStringContainsString('ZR-1', $motivos);
         $this->assertStringContainsString('Quadro 10', $motivos);
         $this->assertGreaterThanOrEqual(2, count($record->analysis_reasons ?? []));
+    }
+
+    public function test_resource_preenche_justificativa_vazia_com_motivo_do_snapshot(): void
+    {
+        $ficha = AnalysisRecord::factory()->create([
+            'per_cnae' => [[
+                'cnae' => '4771701',
+                'justificativa' => null,
+                'status_sugerido' => 'deferida',
+                'status_escolhido' => 'deferida',
+            ]],
+            'engine_snapshot' => [
+                'por_cnae' => [[
+                    'cnae' => '4771701',
+                    'consulta' => $this->consultaSnapshotPermitida(),
+                ]],
+            ],
+        ]);
+
+        $payload = (new AnalysisRecordResource($ficha))->resolve();
+
+        $this->assertStringContainsString('Lei nº 9.148/2016', $payload['per_cnae'][0]['justificativa']);
+        $this->assertStringContainsString('Quadro 7', $payload['per_cnae'][0]['justificativa']);
+        $this->assertStringContainsString('Quadro 10', $payload['per_cnae'][0]['justificativa']);
+        $this->assertStringContainsString('deferimento', mb_strtolower($payload['per_cnae'][0]['justificativa']));
+    }
+
+    public function test_resource_nao_sobrescreve_justificativa_do_analista(): void
+    {
+        $ficha = AnalysisRecord::factory()->create([
+            'per_cnae' => [[
+                'cnae' => '4771701',
+                'justificativa' => 'Decisão técnica do analista.',
+                'status_sugerido' => 'deferida',
+                'status_escolhido' => 'indeferida',
+            ]],
+            'engine_snapshot' => [
+                'por_cnae' => [[
+                    'cnae' => '4771701',
+                    'consulta' => [
+                        'enquadramento' => [
+                            'consolidado' => [
+                                'motivo' => 'Permitido pelo Quadro 10.',
+                            ],
+                        ],
+                    ],
+                ]],
+            ],
+        ]);
+
+        $payload = (new AnalysisRecordResource($ficha))->resolve();
+
+        $this->assertSame('Decisão técnica do analista.', $payload['per_cnae'][0]['justificativa']);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function consultaSnapshotPermitida(): array
+    {
+        return [
+            'entrada' => [
+                'cnae' => '4771701',
+                'cnae_formatado' => '4771-7/01',
+                'area' => 75,
+            ],
+            'territorio' => [
+                'bairro' => ['status' => 'identificado', 'nome' => 'Comércio'],
+                'via' => ['status' => 'nao_encontrado'],
+                'zona' => ['status' => 'identificado', 'nome' => 'ZR-1'],
+            ],
+            'enquadramento' => [
+                'quadro7' => [
+                    'status' => 'identificado',
+                    'grupo' => 'nR1',
+                    'subgrupo' => 'nR1-01',
+                ],
+                'quadro10' => [
+                    'status' => 'identificado',
+                    'permissao' => 'permitido',
+                ],
+                'quadro11a' => ['status' => 'nao_encontrado'],
+                'consolidado' => [
+                    'resultado' => 'permitido',
+                    'motivo' => 'Permitido pelo Quadro 10.',
+                    'fundamentacao' => [
+                        'Lei nº 9.148/2016 (LOUOS) — Quadro 7',
+                        'Quadro 10 da Lei nº 9.148/2016',
+                    ],
+                    'condicionantes' => [],
+                ],
+            ],
+            'risco' => [
+                'municipal' => [
+                    'status' => 'classificado',
+                    'nivel' => 'baixo_a',
+                    'nivel_label' => 'Baixo',
+                ],
+                'sanitario' => ['status' => 'nao_classificado'],
+                'encaminhamento' => [
+                    'fluxo' => 'analise',
+                    'motivo' => 'Encaminhado para análise técnica',
+                ],
+                'fundamentacao' => ['Decreto Municipal nº 32.636/2020'],
+            ],
+            'fundamentacao' => [
+                'Lei nº 9.148/2016 (LOUOS) — Quadro 7',
+                'Quadro 10 da Lei nº 9.148/2016',
+                'Decreto Municipal nº 32.636/2020',
+            ],
+        ];
     }
 }

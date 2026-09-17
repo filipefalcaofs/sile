@@ -39,7 +39,7 @@ class CadastroImobiliarioFichaService
         } catch (PropertyRegistryUnavailableException) {
             return $this->payload(
                 status: 'indisponivel',
-                mensagem: 'Cadastro Imobiliário indisponível — pendente SEDUR/SEFAZ.',
+                mensagem: 'Cadastro Imobiliário temporariamente indisponível (SEFAZ/SEDUR).',
                 inscricao: $inscricao,
             );
         } catch (PropertyNotFoundException) {

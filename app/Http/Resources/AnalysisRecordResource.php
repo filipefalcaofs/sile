@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\AnalysisRecord;
+use App\Services\Analise\JustificativaFundamentadaComposer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -34,7 +35,7 @@ class AnalysisRecordResource extends JsonResource
             'status_label' => $this->status->label(),
             'editavel' => ! $this->isFinalizada(),
             'engine_available' => $this->engine_available,
-            'per_cnae' => array_values((array) ($this->per_cnae ?? [])),
+            'per_cnae' => $this->perCnaeComJustificativaDoMotor(),
             'conditions' => array_values((array) ($this->conditions ?? [])),
             'parking' => $this->parking ?? [],
             'parecer' => $this->parecer,
@@ -45,5 +46,58 @@ class AnalysisRecordResource extends JsonResource
             'finalized_at' => $this->finalized_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * Fichas antigas (vazias ou só com o motivo curto do motor) recebem o
+     * parecer fundamentado na leitura — sem recomputar o veredito.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function perCnaeComJustificativaDoMotor(): array
+    {
+        $itens = array_values((array) ($this->per_cnae ?? []));
+        $composer = app(JustificativaFundamentadaComposer::class);
+        $porCnae = is_array($this->engine_snapshot['por_cnae'] ?? null)
+            ? $this->engine_snapshot['por_cnae']
+            : [];
+
+        return array_map(function (array $item) use ($composer, $porCnae): array {
+            $consulta = $this->consultaSnapshotDoCnae($porCnae, (string) ($item['cnae'] ?? ''));
+
+            if ($consulta === null) {
+                return $item;
+            }
+
+            $atual = trim((string) ($item['justificativa'] ?? ''));
+            $motivoCurto = trim((string) ($consulta['enquadramento']['consolidado']['motivo']
+                ?? $consulta['veredito_locacional']['motivo']
+                ?? ''));
+
+            if ($atual !== '' && $atual !== $motivoCurto) {
+                return $item;
+            }
+
+            $item['justificativa'] = $composer->paraSnapshot($consulta, $item);
+
+            return $item;
+        }, $itens);
+    }
+
+    /**
+     * @param  list<mixed>  $porCnae
+     * @return array<string, mixed>|null
+     */
+    private function consultaSnapshotDoCnae(array $porCnae, string $cnae): ?array
+    {
+        foreach ($porCnae as $item) {
+            if (! is_array($item) || (string) ($item['cnae'] ?? '') !== $cnae) {
+                continue;
+            }
+
+            return is_array($item['consulta'] ?? null) ? $item['consulta'] : null;
+        }
+
+        return null;
     }
 }
