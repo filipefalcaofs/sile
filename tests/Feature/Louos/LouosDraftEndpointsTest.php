@@ -225,6 +225,45 @@ class LouosDraftEndpointsTest extends TestCase
         $this->assertArrayHasKey('importados', $flash);
     }
 
+    public function test_ativar_versao_substituida_torna_vigente(): void
+    {
+        $this->seed(LouosQuadro7Seeder::class);
+        $admin = $this->administrador();
+
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro7)->firstOrFail();
+
+        $anterior = RuleVersion::factory()->create([
+            'domain' => RuleDomain::LouosQuadro7,
+            'version' => 'lei-9148-2016-quadro7-anterior',
+            'status' => RuleVersionStatus::Substituida,
+            'valid_from' => now()->subYears(2)->toDateString(),
+            'valid_to' => now()->subYear()->toDateString(),
+        ]);
+
+        $this->actingAs($admin, 'gestao')
+            ->put("/gestao/louos/versoes/{$anterior->id}/ativar", ['quadro' => 'quadro7'])
+            ->assertRedirect(route('gestao.louos.index', ['quadro' => 'quadro7']))
+            ->assertSessionHas('status');
+
+        $this->assertSame(RuleVersionStatus::Vigente, $anterior->fresh()->status);
+        $this->assertSame(RuleVersionStatus::Substituida, $vigente->fresh()->status);
+        $this->assertTrue(RuleVersion::vigente(RuleDomain::LouosQuadro7)->sole()->is($anterior));
+    }
+
+    public function test_consultar_louos_lista_historico_de_versoes(): void
+    {
+        $this->seed(LouosQuadro7Seeder::class);
+        $admin = $this->administrador();
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/louos?quadro=quadro7')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('versoes')
+                ->has('versoes.0.version')
+                ->where('versoes.0.status', RuleVersionStatus::Vigente->value));
+    }
+
     public function test_modelo_csv_baixa_cabecalho_do_quadro(): void
     {
         $admin = $this->administrador();

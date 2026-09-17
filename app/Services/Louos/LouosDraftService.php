@@ -273,11 +273,15 @@ final class LouosDraftService
      *
      * @return array<string, mixed> relatório do import service
      */
-    public function importarCsv(RuleVersion $draft, string $csvPath, ?string $nomeOriginal = null): array
+    public function importarCsv(RuleVersion $draft, string $csvPath, ?string $nomeOriginal = null, bool $substituir = false): array
     {
         $this->assertDraft($draft);
 
         $domain = $draft->domain;
+
+        if ($substituir) {
+            $this->modelClass($domain)::query()->where('rule_version_id', $draft->id)->delete();
+        }
 
         $service = match ($domain) {
             RuleDomain::LouosQuadro7 => $this->quadro7Import,
@@ -292,7 +296,10 @@ final class LouosDraftService
             logName: 'louos',
             event: 'rascunho-importacao',
             description: "Importação CSV no rascunho do domínio {$domain->label()}",
-            properties: array_merge($relatorio, ['arquivo' => $nomeOriginal ?? basename($csvPath)]),
+            properties: array_merge($relatorio, [
+                'arquivo' => $nomeOriginal ?? basename($csvPath),
+                'substituir' => $substituir,
+            ]),
             subject: $draft,
         );
 

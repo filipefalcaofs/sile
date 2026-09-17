@@ -9,6 +9,7 @@ use App\Models\Activity;
 use App\Models\RuleVersion;
 use App\Models\User;
 use App\Services\Rules\RuleVersionService;
+use DomainException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -146,5 +147,67 @@ class RuleVersionServiceTest extends TestCase
 
         $this->assertSame(RuleVersionStatus::Vigente, $publicada->status);
         $this->assertSame($revisor->id, $publicada->published_by);
+    }
+
+    public function test_activate_promove_versao_substituida_e_fecha_vigente_sem_apagar(): void
+    {
+        Carbon::setTestNow('2026-09-17');
+
+        $anterior = RuleVersion::factory()->create([
+            'domain' => RuleDomain::LouosQuadro10,
+            'version' => 'lei-9148-2016-quadro10',
+            'status' => RuleVersionStatus::Substituida,
+            'valid_from' => '2016-01-01',
+            'valid_to' => '2026-01-01',
+        ]);
+
+        $atual = RuleVersion::factory()->create([
+            'domain' => RuleDomain::LouosQuadro10,
+            'version' => 'lei-9148-2016-quadro10-rev2',
+            'status' => RuleVersionStatus::Vigente,
+            'valid_from' => '2026-01-01',
+            'valid_to' => null,
+        ]);
+
+        $ativada = $this->service()->activate($anterior);
+
+        $atual->refresh();
+        $anterior->refresh();
+
+        $this->assertSame(RuleVersionStatus::Substituida, $atual->status);
+        $this->assertTrue($atual->valid_to->equalTo(Carbon::parse('2026-09-17')));
+        $this->assertSame(RuleVersionStatus::Vigente, $ativada->status);
+        $this->assertNull($ativada->valid_to);
+        $this->assertTrue($ativada->valid_from->equalTo(Carbon::parse('2026-09-17')));
+        $this->assertTrue($ativada->is($anterior));
+        $this->assertTrue(RuleVersion::vigente(RuleDomain::LouosQuadro10)->sole()->is($anterior));
+        $this->assertSame(2, RuleVersion::query()->where('domain', 'louos_quadro10')->count());
+    }
+
+    public function test_activate_rejeita_rascunho(): void
+    {
+        $rascunho = $this->service()->openDraft(RuleDomain::LouosQuadro10, 'rascunho-x', 'origem');
+
+        $this->expectException(DomainException::class);
+
+        $this->service()->activate($rascunho);
+    }
+
+    public function test_activate_e_idempotente_quando_ja_e_a_vigente(): void
+    {
+        $vigente = RuleVersion::factory()->create([
+            'domain' => RuleDomain::LouosQuadro10,
+            'version' => 'lei-9148-2016-quadro10',
+            'status' => RuleVersionStatus::Vigente,
+            'valid_from' => '2016-01-01',
+            'valid_to' => null,
+        ]);
+
+        $mesmo = $this->service()->activate($vigente);
+
+        $this->assertTrue($mesmo->is($vigente));
+        $this->assertSame(RuleVersionStatus::Vigente, $mesmo->status);
+        $this->assertNull($mesmo->valid_to);
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
     }
 }

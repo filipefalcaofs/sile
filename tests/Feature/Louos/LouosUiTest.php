@@ -67,7 +67,7 @@ class LouosUiTest extends TestCase
         $this->seed(LouosQuadro7Seeder::class);
 
         // O administrador tem manter-louos: a página renderiza com a permissão
-        // que habilita as ações "Publicar nova versão" e "Editar Quadro" (auth.permissions partilhado).
+        // que habilita as ações de atualização via rascunho (auth.permissions partilhado).
         $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/louos')
             ->assertOk()
@@ -82,6 +82,17 @@ class LouosUiTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/louos/index')
                 ->where('auth.permissions', fn ($permissions) => ! collect($permissions)->contains('manter-louos')));
+    }
+
+    public function test_listagem_aponta_publicacao_para_o_rascunho_nao_para_alteracao_manual(): void
+    {
+        $this->actingAs($this->administrador(), 'gestao')
+            ->get('/gestao/louos?quadro=quadro7')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/louos/index')
+                ->where('urlRascunho', '/gestao/louos/rascunho?quadro=quadro7')
+                ->missing('publishForm'));
     }
 
     public function test_botao_editar_quadro_acessivel_a_mantenedor_e_inacessivel_a_consultor(): void

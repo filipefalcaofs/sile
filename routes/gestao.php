@@ -287,6 +287,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
 
         Route::middleware('permission:manter-louos')->prefix('louos')->name('louos.')->group(function () {
             Route::put('publicar', [LouosController::class, 'publish'])->name('publicar');
+            Route::put('versoes/{versao}/ativar', [LouosController::class, 'activate'])->name('versoes.ativar');
 
             // CRUD do rascunho editável dos Quadros da LOUOS (HU-046): abrir/retomar,
             // inserir/alterar/excluir linha, importar CSV, publicar por quatro olhos,

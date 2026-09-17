@@ -46,8 +46,8 @@ class LouosDraftController extends Controller
 
     private const CSV_EXEMPLOS = [
         'quadro7' => '4712-1/00,nR1,nR1-02,0,350,Minimercado',
-        'quadro10' => 'ZPR 1,nR1,nR1-01,permitido,,',
-        'quadro11a' => 'Arterial I,nR1-01,"Estacionamento nos fundos; acesso único",Art. 92',
+        'quadro10' => 'ZPR 1,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10',
+        'quadro11a' => 'VL,nR1-01,Sim,Lei nº 9.148/2016 — Quadro 11A',
     ];
 
     public function __construct(private LouosDraftService $service) {}
@@ -189,7 +189,12 @@ class LouosDraftController extends Controller
         $pathAbsoluto = Storage::disk('local')->path((string) $caminho);
 
         try {
-            $relatorio = $this->service->importarCsv($draft, $pathAbsoluto, $nomeOriginal);
+            $relatorio = $this->service->importarCsv(
+                $draft,
+                $pathAbsoluto,
+                $nomeOriginal,
+                $request->boolean('substituir'),
+            );
         } finally {
             Storage::disk('local')->delete((string) $caminho);
         }

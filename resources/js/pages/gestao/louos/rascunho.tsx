@@ -249,9 +249,14 @@ function ImportarCsvModal({
     quadro: string;
     onClose: () => void;
 }) {
-    const { data, setData, post, processing, errors } = useForm<{ quadro: string; arquivo: File | null }>({
+    const { data, setData, post, processing, errors } = useForm<{
+        quadro: string;
+        arquivo: File | null;
+        substituir: boolean;
+    }>({
         quadro,
         arquivo: null,
+        substituir: true,
     });
 
     function submit(event: FormEvent) {
@@ -268,7 +273,9 @@ function ImportarCsvModal({
         <Modal isOpen onClose={onClose} className="m-4 max-w-lg p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Importar CSV</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                As linhas do arquivo serão inseridas ou atualizadas no rascunho pela chave natural.
+                O arquivo entra como nova carga do rascunho. Marque substituir para apagar as linhas copiadas da
+                vigente e ficar só com o que veio no CSV — é o caminho para atualizar o Quadro com uma planilha
+                oficial.
             </p>
 
             <form onSubmit={submit} className="mt-5 flex flex-col gap-4">
@@ -285,6 +292,19 @@ function ImportarCsvModal({
                     />
                     {errors.arquivo && <p className="mt-1 text-theme-xs text-error-500">{errors.arquivo}</p>}
                 </div>
+
+                <label className="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300">
+                    <input
+                        type="checkbox"
+                        checked={data.substituir}
+                        onChange={(event) => setData('substituir', event.target.checked)}
+                        className="mt-0.5 size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                    />
+                    <span>
+                        Substituir todas as linhas do rascunho pelo arquivo. Desmarque para apenas inserir ou
+                        atualizar pela chave natural, sem apagar o que já estava no rascunho.
+                    </span>
+                </label>
 
                 <div className="flex items-center justify-end gap-3">
                     <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>
