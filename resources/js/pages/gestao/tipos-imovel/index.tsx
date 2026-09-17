@@ -123,6 +123,30 @@ function DrivesRuleField({
     );
 }
 
+/**
+ * A regra PropertyTypeAliasAvailable falha na chave indexada (aliases.0), não
+ * em `aliases` — renderizar só a chave-mãe esconderia o erro mais provável.
+ */
+function AliasErrors({ errors }: { errors: Record<string, string | undefined> }) {
+    const messages = Object.entries(errors)
+        .filter(([key, message]) => message && (key === 'aliases' || key.startsWith('aliases.')))
+        .map(([, message]) => message as string);
+
+    if (messages.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="mt-1.5 space-y-0.5">
+            {messages.map((message) => (
+                <p key={message} className="text-xs text-error-500">
+                    {message}
+                </p>
+            ))}
+        </div>
+    );
+}
+
 function CreatePropertyTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const [aliasesText, setAliasesText] = useState('');
     const [drivesRule, setDrivesRule] = useState(false);
@@ -191,7 +215,7 @@ function CreatePropertyTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose
                                 type="text"
                                 name="code"
                                 required
-                                placeholder="residencial-unifamiliar"
+                                placeholder="residencial_unifamiliar"
                                 value={form.data.code}
                                 onChange={(e) => form.setData('code', e.target.value)}
                                 error={!!form.errors.code}
@@ -222,9 +246,7 @@ function CreatePropertyTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose
                                 placeholder={'Residencial\nUnifamiliar'}
                                 className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                             />
-                            {form.errors.aliases && (
-                                <p className="mt-1.5 text-xs text-error-500">{form.errors.aliases}</p>
-                            )}
+                            <AliasErrors errors={form.errors} />
                         </div>
                         <div>
                             <DrivesRuleField checked={drivesRule} onChange={handleDrivesRuleChange} />
@@ -354,9 +376,7 @@ function EditPropertyTypeModal({ propertyType, onClose }: { propertyType: Proper
                                 onChange={(e) => setAliasesText(e.target.value)}
                                 className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                             />
-                            {form.errors.aliases && (
-                                <p className="mt-1.5 text-xs text-error-500">{form.errors.aliases}</p>
-                            )}
+                            <AliasErrors errors={form.errors} />
                         </div>
                         <div>
                             <DrivesRuleField checked={drivesRule} onChange={handleDrivesRuleChange} />

@@ -9,6 +9,7 @@ use App\Models\PropertyType;
 use App\Services\Risco\TipoImovel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -94,6 +95,8 @@ class PropertyTypeController extends Controller
             $this->syncAliases($propertyType, $aliases);
         });
 
+        $this->forgetCatalogCache();
+
         return back()->with('status', 'Tipo de imóvel cadastrado com sucesso.');
     }
 
@@ -113,7 +116,20 @@ class PropertyTypeController extends Controller
             $this->syncAliases($propertyType, $aliases);
         });
 
+        $this->forgetCatalogCache();
+
         return back()->with('status', 'Tipo de imóvel atualizado com sucesso.');
+    }
+
+    /**
+     * Os eventos do model invalidam o cache DENTRO da transação: uma leitura
+     * concorrente entre a invalidação e o commit repovoaria a chave com o
+     * catálogo antigo e o motor rodaria com ele por todo o TTL. Invalidar de
+     * novo após o commit fecha essa janela.
+     */
+    private function forgetCatalogCache(): void
+    {
+        Cache::forget(PropertyType::CACHE_KEY);
     }
 
     /**
@@ -139,6 +155,10 @@ class PropertyTypeController extends Controller
      * repetidos pós-normalização são naturalmente deduplicados pelo unique do
      * banco — inserimos apenas os distintos para evitar a exception.
      *
+     * A remoção percorre os models um a um (nunca delete em massa): remover
+     * uma grafia muda o que o motor reconhece, então o evento deleted precisa
+     * disparar para gravar a trilha (RN-002) e invalidar o cache do catálogo.
+     *
      * @param  list<string>  $rawAliases
      */
     private function syncAliases(PropertyType $propertyType, array $rawAliases): void
@@ -149,7 +169,7 @@ class PropertyTypeController extends Controller
             ->values()
             ->all();
 
-        $propertyType->aliases()->whereNotIn('alias', $normalized)->delete();
+        $propertyType->aliases()->whereNotIn('alias', $normalized)->get()->each->delete();
 
         foreach ($normalized as $alias) {
             $propertyType->aliases()->firstOrCreate(['alias' => $alias]);

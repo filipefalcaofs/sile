@@ -91,6 +91,54 @@ class PropertyTypeCrudTest extends TestCase
         ])->assertSessionHasErrors('aliases.0');
     }
 
+    /**
+     * Remover um alias muda o que o motor reconhece: a exclusão passa pelo
+     * model (evento deleted) para render trilha de auditoria e invalidar o
+     * cache do catálogo — nunca um delete em massa silencioso.
+     */
+    public function test_remocao_de_alias_e_auditada(): void
+    {
+        $tipo = PropertyType::factory()->create(['code' => 'galpao', 'label' => 'Galpão']);
+        $removido = $tipo->aliases()->create(['alias' => 'galpao logistico']);
+        $mantido = $tipo->aliases()->create(['alias' => 'galpao']);
+
+        $this->actingAs($this->administrador(), 'gestao')->put("/gestao/tipos-imovel/{$tipo->id}", [
+            'label' => 'Galpão',
+            'drives_rule' => true,
+            'active' => true,
+            'aliases' => ['galpao'],
+        ])->assertRedirect();
+
+        $this->assertSame(['galpao'], $tipo->fresh()->aliases->pluck('alias')->all());
+        $this->assertNotNull($mantido->fresh());
+        $this->assertNull($removido->fresh());
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => PropertyTypeAlias::class,
+            'subject_id' => $removido->id,
+            'event' => 'deleted',
+        ]);
+    }
+
+    /**
+     * Um PUT que não envia `active` PRESERVA a situação atual — não reativa
+     * um tipo desativado (o que recolocaria o valor no catálogo do motor).
+     */
+    public function test_edicao_sem_o_campo_situacao_nao_reativa_o_tipo(): void
+    {
+        $tipo = PropertyType::factory()->create(['active' => false, 'drives_rule' => true]);
+
+        $this->actingAs($this->administrador(), 'gestao')->put("/gestao/tipos-imovel/{$tipo->id}", [
+            'label' => 'Rótulo novo',
+            'aliases' => [],
+        ])->assertRedirect();
+
+        $tipo->refresh();
+
+        $this->assertSame('Rótulo novo', $tipo->label);
+        $this->assertFalse($tipo->active);
+        $this->assertTrue($tipo->drives_rule);
+    }
+
     public function test_toggle_desativa_sem_excluir_e_audita(): void
     {
         $tipo = PropertyType::factory()->create(['active' => true]);
