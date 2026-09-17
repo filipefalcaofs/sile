@@ -103,17 +103,19 @@ class ContingenciaTest extends TestCase
         $company = Company::factory()->create();
         $principal = Cnae::factory()->create();
 
-        $this->actingAs($operador, 'gestao')
+        $resposta = $this->actingAs($operador, 'gestao')
             ->from(route('gestao.contingencia.create'))
-            ->post(route('gestao.contingencia.store'), $this->payload($beneficiario, $company, $principal))
-            ->assertRedirect(route('gestao.contingencia.create'))
-            ->assertSessionHas('status')
-            ->assertSessionHasNoErrors();
+            ->post(route('gestao.contingencia.store'), $this->payload($beneficiario, $company, $principal));
 
         $solicitacao = ViabilityRequest::query()->where('company_id', $company->id)->firstOrFail();
 
+        $resposta
+            ->assertRedirect(route('gestao.processos.show', $solicitacao))
+            ->assertSessionHas('status')
+            ->assertSessionHasNoErrors();
+
         $this->assertSame(ViabilityRequestOrigin::Contingencia, $solicitacao->origin);
-        $this->assertSame(ViabilityRequestStatus::Protocolada, $solicitacao->status);
+        $this->assertNotSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
         $this->assertMatchesRegularExpression('/^VIA-\d{4}-\d{6}$/', (string) $solicitacao->protocol_number);
         $this->assertNotNull($solicitacao->protocoled_at);
         $this->assertSame($beneficiario->id, $solicitacao->requester_user_id);
@@ -129,6 +131,31 @@ class ContingenciaTest extends TestCase
             'subject_id' => $solicitacao->id,
             'causer_id' => $operador->id,
         ]);
+    }
+
+    public function test_grava_tipo_imovel_inscricao_e_submete_ao_motor(): void
+    {
+        $operador = $this->operador();
+        $beneficiario = $this->beneficiario();
+        $company = Company::factory()->create();
+        $principal = Cnae::factory()->create();
+
+        $resposta = $this->actingAs($operador, 'gestao')
+            ->from(route('gestao.contingencia.create'))
+            ->post(route('gestao.contingencia.store'), $this->payload($beneficiario, $company, $principal, [
+                'tipo_imovel' => 'Galpão',
+                'property_registration' => '0010010010',
+                'is_virtual_office' => true,
+            ]));
+
+        $solicitacao = ViabilityRequest::query()->where('company_id', $company->id)->firstOrFail();
+
+        $resposta->assertRedirect(route('gestao.processos.show', $solicitacao));
+        $this->assertSame('Galpão', $solicitacao->tipo_imovel);
+        $this->assertSame('0010010010', $solicitacao->property_registration);
+        $this->assertTrue($solicitacao->wants_virtual_office_hq);
+        $this->assertNotSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
+        $this->assertNotSame(ViabilityRequestStatus::Protocolada, $solicitacao->status);
     }
 
     public function test_motivo_obrigatorio(): void
@@ -281,12 +308,12 @@ class ContingenciaTest extends TestCase
                     $requisito->id => UploadedFile::fake()->create('contrato.pdf', 120, 'application/pdf'),
                 ],
             ]))
-            ->assertRedirect(route('gestao.contingencia.create'))
+            ->assertRedirect()
             ->assertSessionHas('status')
             ->assertSessionHasNoErrors();
 
         $solicitacao = ViabilityRequest::query()->where('company_id', $company->id)->firstOrFail();
-        $this->assertSame(ViabilityRequestStatus::Protocolada, $solicitacao->status);
+        $this->assertNotSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
 
         $documento = $solicitacao->documents()->where('requirement_id', $requisito->id)->firstOrFail();
         $this->assertNotNull($documento->sha256);
@@ -306,6 +333,8 @@ class ContingenciaTest extends TestCase
                 ->component('gestao/contingencia/create')
                 ->has('serviceTypes')
                 ->has('documentRequirements')
+                ->has('tiposImovel')
+                ->has('tiposImovel.0.value')
                 ->has('mapa'));
     }
 }

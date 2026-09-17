@@ -70,6 +70,10 @@ class RegistrarContingenciaRequest extends FormRequest
 
             'used_area_m2' => ['required', 'numeric', 'gt:0'],
 
+            // Mesmos campos que o REGIN grava no processo antes do motor.
+            'tipo_imovel' => ['nullable', 'string', 'max:255'],
+            'property_registration' => ['nullable', 'string', 'max:20'],
+
             'address_street' => ['nullable', 'string', 'max:255'],
             'address_number' => ['nullable', 'string', 'max:50'],
             'address_complement' => ['nullable', 'string', 'max:255'],

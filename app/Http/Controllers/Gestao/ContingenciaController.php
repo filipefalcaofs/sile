@@ -9,6 +9,9 @@ use App\Models\DocumentRequirement;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
+use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Regin\ReginTipoImovelApplier;
+use App\Services\Risco\TipoImovelCatalog;
 use App\Services\Solicitacao\DocumentacaoIncompletaException;
 use App\Services\Solicitacao\DuplicateRequestDetector;
 use App\Services\Solicitacao\PropertyGeometryWriter;
@@ -41,6 +44,8 @@ class ContingenciaController extends Controller
 {
     public function __construct(
         private ProtocolarSolicitacaoService $protocolar,
+        private FluxoExpressoService $expresso,
+        private ReginTipoImovelApplier $tipoImovel,
         private DuplicateRequestDetector $duplicateDetector,
         private PropertyGeometryWriter $geometryWriter,
         private AuditService $audit,
@@ -65,6 +70,7 @@ class ContingenciaController extends Controller
                 ->where('active', true)
                 ->orderBy('name')
                 ->get(['id', 'name', 'required']),
+            'tiposImovel' => $this->tiposImovel(),
             'mapa' => [
                 'centro' => ['lat' => -12.9714, 'lng' => -38.5014],
                 'zoom' => 13,
@@ -124,8 +130,10 @@ class ContingenciaController extends Controller
                     'address_neighborhood' => $request->validated('address_neighborhood'),
                     'address_zip' => $request->validated('address_zip'),
                     'address_reference' => $request->validated('address_reference'),
+                    'property_registration' => $this->inscricao($request),
                     'property_polygon_geojson' => $request->validated('property_polygon_geojson'),
                     'is_virtual_office' => $request->boolean('is_virtual_office'),
+                    'wants_virtual_office_hq' => $request->boolean('is_virtual_office'),
                     'is_public_area' => $request->boolean('is_public_area'),
                     'has_independent_access' => $request->boolean('has_independent_access'),
                 ]);
@@ -135,6 +143,7 @@ class ContingenciaController extends Controller
                 // rascunho→protocolada é a do canal normal — RN-002).
                 $solicitacao->refresh();
 
+                $this->tipoImovel->apply($solicitacao, $request->validated('tipo_imovel'));
                 $this->syncCnaes($solicitacao, $request);
                 $storedPaths = $this->attachDocuments($solicitacao, $request, $operator);
 
@@ -150,8 +159,12 @@ class ContingenciaController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
 
+        // Mesmo tramitação do REGIN: após protocolar, submete ao motor na hora.
+        $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $operator);
+        $solicitacao->refresh();
+
         $redirect = redirect()
-            ->route('gestao.contingencia.create')
+            ->route('gestao.processos.show', $solicitacao)
             ->with('status', "Solicitação registrada em contingência e protocolada sob o número {$solicitacao->protocol_number}.");
 
         if ($alert !== null) {
@@ -250,6 +263,53 @@ class ContingenciaController extends Controller
         $reference = trim((string) $request->validated('external_reference'));
 
         return $reference === '' ? null : $reference;
+    }
+
+    private function inscricao(RegistrarContingenciaRequest $request): ?string
+    {
+        $inscricao = preg_replace('/\D/', '', (string) $request->validated('property_registration'));
+
+        return $inscricao === '' ? null : $inscricao;
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function tiposImovel(): array
+    {
+        $catalogo = TipoImovelCatalog::vigente();
+
+        $codigos = array_unique([
+            ...array_keys($catalogo->dirigemRegra),
+            ...array_keys($catalogo->ramoComum),
+        ]);
+
+        if ($codigos === []) {
+            $catalogo = TipoImovelCatalog::sedur200826();
+            $codigos = array_unique([
+                ...array_keys($catalogo->dirigemRegra),
+                ...array_keys($catalogo->ramoComum),
+            ]);
+        }
+
+        $rotulos = [
+            'galpao' => 'Galpão',
+            'container' => 'Container',
+            'edificacao_residencial' => 'Edificação residencial',
+            'edificacao_comercial' => 'Edificação Comercial',
+            'sala' => 'Sala',
+        ];
+
+        $opcoes = [];
+
+        foreach ($codigos as $codigo) {
+            $opcoes[] = [
+                'value' => $rotulos[$codigo] ?? str_replace('_', ' ', $codigo),
+                'label' => $rotulos[$codigo] ?? str_replace('_', ' ', $codigo),
+            ];
+        }
+
+        return $opcoes;
     }
 
     /**

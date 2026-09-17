@@ -38,9 +38,15 @@ interface CnaeOption {
     description: string;
 }
 
+interface TipoImovelOption {
+    value: string;
+    label: string;
+}
+
 interface ContingenciaProps {
     serviceTypes: ServiceType[];
     documentRequirements: DocumentRequirementOption[];
+    tiposImovel: TipoImovelOption[];
     mapa: MapaConfig;
 }
 
@@ -64,6 +70,8 @@ interface ContingenciaForm {
     address_neighborhood: string;
     address_zip: string;
     address_reference: string;
+    tipo_imovel: string;
+    property_registration: string;
     is_virtual_office: boolean;
     is_public_area: boolean;
     has_independent_access: boolean;
@@ -86,6 +94,8 @@ const EMPTY_FORM: ContingenciaForm = {
     address_neighborhood: '',
     address_zip: '',
     address_reference: '',
+    tipo_imovel: '',
+    property_registration: '',
     is_virtual_office: false,
     is_public_area: false,
     has_independent_access: false,
@@ -240,7 +250,7 @@ function CnaeSearch({
  * protocola pelo MESMO motor do canal normal — muda só a origem (`contingencia`,
  * auditada) e o ator. O processo nasce com origem "contingência" (aviso visível).
  */
-export default function RegistrarContingencia({ serviceTypes, documentRequirements, mapa }: ContingenciaProps) {
+export default function RegistrarContingencia({ serviceTypes, documentRequirements, tiposImovel, mapa }: ContingenciaProps) {
     const { data, setData, post, processing, errors } = useForm<ContingenciaForm>(EMPTY_FORM);
 
     const [ponto, setPonto] = useState<Ponto | null>(null);
@@ -306,7 +316,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                 <Alert
                     variant="warning"
                     title="Registro em contingência"
-                    message="Use apenas quando o canal normal estiver indisponível. O processo nasce com origem “contingência”, auditada com o seu usuário, e segue exatamente o mesmo fluxo decisório — sem atalho. Informe o motivo obrigatório."
+                    message="Use quando o REGIN estiver indisponível. Informe os mesmos dados que o integrador enviaria — tipo de imóvel, inscrição, CNAE e imóvel. O processo nasce com origem “contingência”, é protocolado e submetido ao motor no mesmo tramitação do canal oficial."
                 />
             </div>
 
@@ -402,9 +412,39 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                 </Card>
 
                 <Card>
-                    <CardHeader title="Imóvel" description="Posicione o imóvel no mapa (define o polígono) e informe a área utilizada e o endereço." />
+                    <CardHeader title="Imóvel" description="Os mesmos dados que o REGIN grava no processo: tipo, inscrição, polígono, área e endereço." />
                     <CardContent>
                         <div className="flex flex-col gap-5">
+                            <div className="grid gap-5 sm:grid-cols-2">
+                                <div>
+                                    <Label htmlFor="tipo_imovel">Tipo de imóvel</Label>
+                                    <Select
+                                        id="tipo_imovel"
+                                        name="tipo_imovel"
+                                        value={data.tipo_imovel}
+                                        onChange={(value) => setData('tipo_imovel', value)}
+                                        placeholder="Selecione o tipo de imóvel"
+                                        options={tiposImovel.map((tipo) => ({ value: tipo.value, label: tipo.label }))}
+                                    />
+                                    {errors.tipo_imovel && (
+                                        <p className="mt-1.5 text-theme-xs text-error-500">{errors.tipo_imovel}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <Label htmlFor="property_registration">Inscrição imobiliária</Label>
+                                    <Input
+                                        id="property_registration"
+                                        type="text"
+                                        name="property_registration"
+                                        value={data.property_registration}
+                                        onChange={(event) => setData('property_registration', event.target.value)}
+                                        placeholder="0010010010"
+                                        error={!!errors.property_registration}
+                                        hint={errors.property_registration}
+                                    />
+                                </div>
+                            </div>
+
                             <div>
                                 <MapaSection lat={centro.lat} lng={centro.lng} zoom={mapa.zoom} onMove={moverMarcador} />
                                 <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
@@ -608,7 +648,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
 
                 <div className="flex items-center justify-end gap-3">
                     <Button type="submit" size="sm" disabled={processing} loading={processing}>
-                        {processing ? 'Registrando...' : 'Registrar e protocolar em contingência'}
+                        {processing ? 'Registrando...' : 'Registrar, protocolar e submeter ao motor'}
                     </Button>
                 </div>
             </form>
