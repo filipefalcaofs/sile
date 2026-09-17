@@ -1556,9 +1556,14 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Condicionantes"
-                                description="Já marcadas pelo motor. Remova ou acrescente só se for alterar a sugestão."
+                                description="Obrigações que o requerente precisa cumprir para a atividade ficar permitida neste local. O que estiver nesta lista entra no parecer e no TVL."
                             />
                             <CardContent>
+                                <p className="mb-4 text-theme-sm text-gray-600 dark:text-gray-300">
+                                    O motor marca sozinho quando o enquadramento traz condição (LOUOS, risco ou
+                                    escritório virtual). Confirme as sugeridas ou altere só se discordar. Se não
+                                    houver o que exigir, deixe em branco.
+                                </p>
                                 {condicionantesSugeridas.length > 0 && (
                                     <div className="mb-4 space-y-2">
                                         <p className="text-theme-xs font-medium text-gray-500 dark:text-gray-400">
@@ -1607,7 +1612,9 @@ export default function FichaAnaliseShow({
                                     </ul>
                                 ) : (
                                     <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                                        Nenhuma condicionante registrada.
+                                        Nenhuma condicionante neste processo — o motor não identificou obrigação
+                                        urbanística. A busca, o texto livre e a biblioteca servem só para
+                                        acrescentar uma obrigação que o motor não sugeriu.
                                     </p>
                                 )}
 
