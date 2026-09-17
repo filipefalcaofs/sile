@@ -235,11 +235,10 @@ const STATUS_OPCOES: { value: StatusFicha; label: string }[] = [
 ];
 
 /** A minuta (HU-118) roda em fila (assíncrona): após solicitar, sondamos a prop
- *  deferida sugestoesIa por uma janela limitada até a sugestão ser processada. */
+ *  deferida sugestoesIa por uma janela limitada até a sugestão ser processada.
+ *  O resumo (HU-117) roda no mesmo request — sem polling. */
 const MINUTA_POLL_INTERVAL_MS = 3000;
 const MINUTA_POLL_MAX = 8;
-const RESUMO_POLL_INTERVAL_MS = 2500;
-const RESUMO_POLL_MAX = 12;
 
 function statusLabel(status: string | null | undefined): string {
     return STATUS_OPCOES.find((opcao) => opcao.value === status)?.label ?? (status ?? '—');
@@ -708,7 +707,6 @@ export default function FichaAnaliseShow({
         'idle' | 'solicitando' | 'aguardando' | 'pronta' | 'indisponivel' | 'timeout'
     >('idle');
     const [resumoMensagem, setResumoMensagem] = useState<string | null>(null);
-    const resumoPollRef = useRef<number | null>(null);
     const resumosSugeridos = useMemo(
         () => (sugestoesIa ?? []).filter((sugestao) => sugestao.type === 'resumo_processo').length,
         [sugestoesIa],
@@ -966,31 +964,6 @@ export default function FichaAnaliseShow({
         });
     }
 
-    function pararPollResumo() {
-        if (resumoPollRef.current !== null) {
-            window.clearInterval(resumoPollRef.current);
-            resumoPollRef.current = null;
-        }
-    }
-
-    function iniciarPollResumo() {
-        pararPollResumo();
-        let tentativas = 0;
-
-        resumoPollRef.current = window.setInterval(() => {
-            tentativas += 1;
-
-            if (tentativas > RESUMO_POLL_MAX) {
-                pararPollResumo();
-                setResumoStatus((atual) => (atual === 'aguardando' ? 'timeout' : atual));
-
-                return;
-            }
-
-            router.reload({ only: ['sugestoesIa'] });
-        }, RESUMO_POLL_INTERVAL_MS);
-    }
-
     function gerarResumo() {
         setResumoMensagem(null);
         setResumoStatus('solicitando');
@@ -1001,14 +974,19 @@ export default function FichaAnaliseShow({
 
                 if (resposta?.despachou) {
                     setResumoStatus('aguardando');
-                    iniciarPollResumo();
+                    router.reload({
+                        only: ['sugestoesIa'],
+                        onFinish: () => {
+                            setResumoStatus((atual) => (atual === 'aguardando' ? 'idle' : atual));
+                        },
+                    });
                 } else {
                     setResumoStatus('indisponivel');
                 }
             },
             onHttpException: () => {
                 setResumoStatus('indisponivel');
-                setResumoMensagem('Não foi possível solicitar o resumo agora. Tente novamente.');
+                setResumoMensagem('Não foi possível gerar o resumo agora. Tente novamente.');
 
                 return false;
             },
@@ -1091,35 +1069,13 @@ export default function FichaAnaliseShow({
     useEffect(() => {
         if (resumoStatus === 'aguardando' && resumosSugeridos > 0) {
             setResumoStatus('pronta');
-            pararPollResumo();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [resumosSugeridos, resumoStatus]);
 
-    // WhenVisible dispara o job no servidor; se a fila ainda não devolveu,
-    // sondamos a prop deferida em vez de deixar o card vazio como se não existisse.
-    useEffect(() => {
-        if (sugestoesIa === undefined) {
-            return;
-        }
-
-        if (!iaFicha.resumo_disponivel || resumosSugeridos > 0) {
-            return;
-        }
-
-        if (resumoStatus !== 'idle') {
-            return;
-        }
-
-        setResumoStatus('aguardando');
-        iniciarPollResumo();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [sugestoesIa, iaFicha.resumo_disponivel, resumosSugeridos, resumoStatus]);
-
     useEffect(
         () => () => {
             pararPollMinuta();
-            pararPollResumo();
         },
         [],
     );
@@ -2218,9 +2174,9 @@ function ResumoProcessoCard({
                             <p className="text-theme-sm text-gray-500 dark:text-gray-400" role="status" aria-live="polite">
                                 Gerando resumo com a IA. A síntese aparece aqui para revisão.
                             </p>
-                        ) : status === 'timeout' ? (
+                        ) : status === 'timeout' || status === 'indisponivel' ? (
                             <p className="text-theme-sm text-warning-600 dark:text-warning-500" role="status">
-                                O resumo ainda não chegou da fila. Clique em “Gerar resumo” para tentar de novo.
+                                {mensagem ?? 'A IA não gerou o resumo. Clique em “Gerar resumo” para tentar de novo.'}
                             </p>
                         ) : iaFicha.resumo_disponivel ? (
                             <p className="text-theme-sm text-gray-500 dark:text-gray-400">
@@ -2240,9 +2196,6 @@ function ResumoProcessoCard({
                                     ' Peça a um administrador para ligar a função e cadastrar o provedor.'
                                 )}
                             </p>
-                        )}
-                        {mensagem && status === 'indisponivel' && (
-                            <p className="text-theme-xs text-gray-500 dark:text-gray-400">{mensagem}</p>
                         )}
                     </div>
                 ) : (
