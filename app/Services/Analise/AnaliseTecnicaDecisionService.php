@@ -85,6 +85,8 @@ class AnaliseTecnicaDecisionService
             throw new DomainException('A ficha finalizada não possui atividades (CNAEs) para decidir.');
         }
 
+        $this->recusarSeAindaEmAnalise($perCnae);
+
         $outcome = $this->outcome($perCnae);
 
         try {
@@ -214,6 +216,24 @@ class AnaliseTecnicaDecisionService
      *
      * @param  list<array<string, mixed>>  $perCnae
      */
+    /**
+     * Sem zona o motor deixa status=analise. Concluir isso indefere por omissão.
+     * O analista precisa escolher deferida ou indeferida em cada CNAE.
+     *
+     * @param  list<array<string, mixed>>  $perCnae
+     */
+    public function recusarSeAindaEmAnalise(array $perCnae): void
+    {
+        foreach ($perCnae as $item) {
+            if (($item['status_escolhido'] ?? null) === ViabilityRequestStatus::EmAnalise->value
+                || ($item['status_escolhido'] ?? null) === 'analise') {
+                throw new DomainException(
+                    'Há atividade ainda em análise (zona ou enquadramento pendente). Escolha deferir ou indeferir em cada CNAE antes de concluir.',
+                );
+            }
+        }
+    }
+
     private function outcome(array $perCnae): DecisionOutcome
     {
         foreach ($perCnae as $item) {

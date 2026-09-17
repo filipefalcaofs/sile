@@ -50,6 +50,7 @@ class AnalysisRecordController extends Controller
         private RelatorioSedeEscritorioVirtualService $relatorioSede,
         private CadastroImobiliarioFichaService $cadastroImobiliario,
         private AnaliseTecnicaDecisionService $decisao,
+        private SugestaoParecerService $parecer,
     ) {}
 
     /**
@@ -117,6 +118,7 @@ class AnalysisRecordController extends Controller
             // são sugestões para revisão, jamais decisão (RN-001/004).
             'sugestoesIa' => Inertia::optional(function () use ($request, $viabilityRequest): array {
                 $this->resumos->processar($viabilityRequest, $request->user()?->id);
+                $this->parecer->processar($viabilityRequest, $request->user()?->id);
 
                 return $this->sugestoesIa($viabilityRequest);
             }),
@@ -183,6 +185,12 @@ class AnalysisRecordController extends Controller
     public function concluirProcesso(Request $request, ViabilityRequest $viabilityRequest): JsonResponse
     {
         $record = $this->records->current($viabilityRequest);
+
+        try {
+            $this->decisao->recusarSeAindaEmAnalise($record->per_cnae ?? []);
+        } catch (DomainException $e) {
+            abort(422, $e->getMessage());
+        }
 
         if (! $record->isFinalizada()) {
             try {

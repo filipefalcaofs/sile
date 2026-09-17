@@ -1722,7 +1722,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Parecer técnico"
-                                description="Rascunho do motor com a fundamentação dos Quadros da LOUOS. Confirme ou altere. Textos-padrão e minuta de IA são opcionais."
+                                description="Parecer fundamentado pelo motor da LOUOS e, quando a IA está ligada, complementado pelo agente especialista. Confirme ou altere antes de finalizar."
                                 actions={
                                     editavel ? (
                                         <div className="flex flex-wrap items-center gap-2">

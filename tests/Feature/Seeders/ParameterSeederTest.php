@@ -198,6 +198,20 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('50', $sobreposicao->default_value);
         $this->assertSame(['required', 'integer', 'min:1', 'max:100'], $sobreposicao->validation_rules);
         $this->assertNull($sobreposicao->value);
+
+        $geoToggle = Parameter::query()->where('key', 'features.geoserver_zona')->first();
+
+        $this->assertNotNull($geoToggle);
+        $this->assertSame('features', $geoToggle->group);
+        $this->assertSame('boolean', $geoToggle->type);
+        $this->assertSame('1', $geoToggle->default_value);
+
+        $geoUrl = Parameter::query()->where('key', 'integrations.geoserver.base_url')->first();
+
+        $this->assertNotNull($geoUrl);
+        $this->assertSame('integracoes', $geoUrl->group);
+        $this->assertSame('https://geoserver.sedur.salvador.ba.gov.br/geoserver', $geoUrl->default_value);
+        $this->assertTrue($geoUrl->requires_connection_test);
     }
 
     public function test_paginacoes_tecnicas_nao_estao_no_catalogo(): void

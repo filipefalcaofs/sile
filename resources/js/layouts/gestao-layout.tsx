@@ -71,7 +71,7 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('manter-setores'),
                 },
                 {
-                    name: 'Textos-padrão',
+                    name: 'Minutas e textos-padrão',
                     href: '/gestao/textos-padrao',
                     icon: <TableIcon />,
                     visible: auth.permissions.includes('manter-parametros'),

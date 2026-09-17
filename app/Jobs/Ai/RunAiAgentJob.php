@@ -151,6 +151,8 @@ abstract class RunAiAgentJob implements ShouldQueue
             result: 'sucesso',
             personalData: $this->personalData(),
         );
+
+        $this->afterPersisted($suggestion);
     }
 
     public function failed(Throwable $exception): void
@@ -259,4 +261,9 @@ abstract class RunAiAgentJob implements ShouldQueue
      * @return array<int, File>
      */
     abstract protected function attachments(): array;
+
+    /**
+     * Gancho após persistir a sugestão. Padrão: não grava decisão.
+     */
+    protected function afterPersisted(AiSuggestion $suggestion): void {}
 }

@@ -5,6 +5,8 @@ namespace Tests\Unit\Geo;
 use App\Enums\GeoLayerType;
 use App\Models\Activity;
 use App\Models\GeoLayer;
+use App\Services\Geo\GeoServerWfsZonaClient;
+use App\Services\Geo\GeoServerZonaHit;
 use App\Services\Geo\TerritoryService;
 use App\Support\Audit\AuditService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -123,6 +125,33 @@ class TerritoryServiceTest extends TestCase
         $this->assertStringContainsString('pendente SEDUR', (string) $result->zona['motivo']);
         $this->assertSame('zona-pendente', $result->zona['versao_camada']);
         // Sem fachada: NENHUMA consulta espacial disparada para zona.
+        $this->assertNotContains('zona', $this->fake->containingCalls);
+    }
+
+    public function test_zona_pendente_usa_geoserver_quando_o_wfs_identifica(): void
+    {
+        $this->seedPendente(GeoLayerType::Zona);
+        config(['sile.features.geoserver_zona' => true]);
+
+        $client = $this->createMock(GeoServerWfsZonaClient::class);
+        $client->expects($this->once())
+            ->method('identificar')
+            ->with(-12.97, -38.51)
+            ->willReturn(new GeoServerZonaHit(
+                status: 'identificado',
+                codigo: 'ZPR-3',
+                properties: ['SUBZONA' => 'ZPR 3', 'LOCAL' => 'Nazaré'],
+                typeName: 'louos_zpr3:VM_L_Z_USO_ZPR_3',
+                motivo: null,
+            ));
+
+        $result = (new TerritoryService($this->fake, app(AuditService::class), $client))
+            ->identify(-12.97, -38.51);
+
+        $this->assertSame('identificado', $result->zona['status']);
+        $this->assertSame('ZPR-3', $result->zona['nome']);
+        $this->assertSame('ZPR 3', $result->zona['propriedades']['SUBZONA']);
+        $this->assertSame('geoserver-wfs', $result->zona['versao_camada']);
         $this->assertNotContains('zona', $this->fake->containingCalls);
     }
 

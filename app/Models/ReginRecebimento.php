@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
     'data_geracao',
     'corpo',
     'envelope',
+    'viability_request_id',
 ])]
 class ReginRecebimento extends Model
 {

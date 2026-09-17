@@ -2,8 +2,15 @@
 
 namespace Tests\Feature\Regin;
 
+use App\Enums\ViabilityRequestOrigin;
 use App\Models\Activity;
 use App\Models\ReginRecebimento;
+use App\Models\User;
+use App\Models\ViabilityRequest;
+use Database\Seeders\RiscoMunicipalSeeder;
+use Database\Seeders\RiscoSanitarioSeeder;
+use Database\Seeders\RiskTriggerSeeder;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
@@ -72,6 +79,35 @@ class ReginRecebeEndpointTest extends TestCase
         $this->assertSame('43747', $activity->properties['protocolo'] ?? null);
         $this->assertSame('3', $activity->properties['codigo'] ?? null);
         $this->assertStringNotContainsString('Não deve ir ao log', json_encode($activity->properties, JSON_THROW_ON_ERROR));
+    }
+
+    public function test_post_de_protocolo_conhecido_cria_processo_pelo_motor(): void
+    {
+        $this->seed([
+            RolesAndPermissionsSeeder::class,
+            RiscoMunicipalSeeder::class,
+            RiscoSanitarioSeeder::class,
+            RiskTriggerSeeder::class,
+        ]);
+
+        $this->actingAs(
+            User::factory()->administrador()->withAcceptedLgpdTerm()->create(),
+            'gestao',
+        );
+
+        $response = $this->postJson('/api_integracao/recebe', $this->envioDto('43747'));
+
+        $response->assertOk();
+        $this->assertSame('3', $response->getContent());
+
+        $recebimento = ReginRecebimento::query()->where('protocolo', '43747')->first();
+        $this->assertNotNull($recebimento?->viability_request_id);
+
+        $processo = ViabilityRequest::query()->find($recebimento->viability_request_id);
+        $this->assertNotNull($processo);
+        $this->assertSame(ViabilityRequestOrigin::Regin, $processo->origin);
+        $this->assertSame('5921000030-00043747/2026', $processo->external_reference);
+        $this->assertSame('regin_recebe', $processo->contingency_reason);
     }
 
     /**

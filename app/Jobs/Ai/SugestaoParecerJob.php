@@ -3,10 +3,13 @@
 namespace App\Jobs\Ai;
 
 use App\Ai\Agents\SugestaoParecerAgent;
+use App\Enums\AiSuggestionStatus;
 use App\Enums\AiSuggestionType;
+use App\Models\AiSuggestion;
 use App\Models\AnalysisRecord;
 use App\Models\Cnae;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\StandardTextComposer;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Files\File;
 
@@ -114,7 +117,40 @@ class SugestaoParecerJob extends RunAiAgentJob
                 .($fundamentacao['rules'] ?? 'não informadas'),
         ];
 
+        if ($fundamentacao['textos_padrao'] !== []) {
+            $linhas[] = '';
+            $linhas[] = 'Textos-padrão ativos da coordenação (use-os como esqueleto legal, sem alterar o fundamento):';
+
+            foreach ($fundamentacao['textos_padrao'] as $bloco) {
+                $linhas[] = '- '.$bloco;
+            }
+        }
+
         return implode("\n", $linhas);
+    }
+
+    protected function afterPersisted(AiSuggestion $suggestion): void
+    {
+        if ($suggestion->status !== AiSuggestionStatus::Sugerida) {
+            return;
+        }
+
+        $minuta = trim((string) ($suggestion->output['minuta'] ?? ''));
+
+        if ($minuta === '') {
+            return;
+        }
+
+        $ficha = $this->processo()->currentAnalysisRecord;
+
+        if ($ficha === null || $ficha->isFinalizada() || trim((string) $ficha->parecer) !== '') {
+            return;
+        }
+
+        $esqueleto = app(StandardTextComposer::class)->paraFicha($ficha);
+        $ficha->forceFill([
+            'parecer' => $esqueleto === '' ? $minuta : $esqueleto."\n\n".$minuta,
+        ])->save();
     }
 
     /**
@@ -131,7 +167,7 @@ class SugestaoParecerJob extends RunAiAgentJob
      * já garante que só roda quando há engine_snapshot — aqui o material é lido,
      * nunca fabricado.
      *
-     * @return array{endereco: string|null, area_m2: string|null, consolidado: string|null, rules: string|null, cnaes: list<array{codigo: string, grupo_uso: string|null, status_sugerido: string|null, fundamentos: list<string>}>}
+     * @return array{endereco: string|null, area_m2: string|null, consolidado: string|null, rules: string|null, textos_padrao: list<string>, cnaes: list<array{codigo: string, grupo_uso: string|null, status_sugerido: string|null, fundamentos: list<string>}>}
      */
     private function fundamentacao(): array
     {
@@ -155,6 +191,7 @@ class SugestaoParecerJob extends RunAiAgentJob
             'area_m2' => $processo->used_area_m2 === null ? null : (string) $processo->used_area_m2,
             'consolidado' => is_string($consolidado) ? $consolidado : null,
             'rules' => $this->rules($ficha),
+            'textos_padrao' => $ficha === null ? [] : app(StandardTextComposer::class)->blocosParaFicha($ficha),
             'cnaes' => $this->cnaes($processo, $ficha),
         ];
     }

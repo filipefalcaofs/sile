@@ -10,6 +10,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
 use App\Models\AnalysisRecord;
+use App\Models\StandardText;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -111,12 +112,10 @@ class SugestaoParecerTest extends TestCase
         $this->assertSame('parecer-v1', $sugestao->prompt_version);
         $this->assertSame($processo->id, $sugestao->viability_request_id);
 
-        // NÃO-DECISÃO (crítico): a função NÃO grava parecer na ficha nem decisão
-        // no processo. A minuta fica só no ledger ai_suggestions, para o analista
-        // revisar e, se quiser, aplicar manualmente.
-        $this->assertNull(
-            AnalysisRecord::query()->where('viability_request_id', $processo->id)->value('parecer'),
-        );
+        $parecer = AnalysisRecord::query()->where('viability_request_id', $processo->id)->value('parecer');
+        $this->assertNotNull($parecer);
+        $this->assertStringContainsString('Trata-se de pedido de viabilidade locacional', (string) $parecer);
+        $this->assertSame(AnalysisRecordStatus::Rascunho, $processo->fresh()->currentAnalysisRecord?->status);
         $this->assertSame(0, ViabilityDecision::query()->count());
 
         $this->assertDatabaseHas('activity_log', [
@@ -204,9 +203,7 @@ class SugestaoParecerTest extends TestCase
         $this->assertSame(AiSuggestionType::Parecer, $sugestao->type);
         $this->assertSame(AiSuggestionStatus::Sugerida, $sugestao->status);
 
-        // NÃO-DECISÃO no endpoint (crítico): nem parecer na ficha, nem decisão no
-        // processo — a minuta fica só no ledger, para o analista revisar e aplicar.
-        $this->assertNull(
+        $this->assertNotNull(
             AnalysisRecord::query()->where('viability_request_id', $processo->id)->value('parecer'),
         );
         $this->assertSame(0, ViabilityDecision::query()->count());
@@ -216,5 +213,41 @@ class SugestaoParecerTest extends TestCase
             'log_name' => 'analise',
             'event' => 'ficha-sugerir-parecer',
         ]);
+    }
+
+    public function test_minuta_costura_texto_padrao_e_nao_sobrescreve_parecer_ja_escrito(): void
+    {
+        config(['sile.features.ia_parecer' => true]);
+        $this->provedorTextoAtivo();
+        $processo = $this->processoPreAnalisado();
+
+        StandardText::factory()->create([
+            'category' => 'deferimento',
+            'content' => 'Texto-padrão de deferimento para CNAE {{cnae}} ({{veredito}}).',
+            'active' => true,
+        ]);
+
+        AnalysisRecord::query()
+            ->where('viability_request_id', $processo->id)
+            ->update(['parecer' => 'Parecer já redigido pelo analista.']);
+
+        SugestaoParecerAgent::fake([[
+            'minuta' => 'Minuta nova da IA.',
+            'fundamentacao' => 'Motor.',
+            'confianca' => 'alta',
+            'fonte' => 'pré-análise do motor',
+        ]]);
+
+        $this->service()->processar($processo);
+
+        SugestaoParecerAgent::assertPrompted(
+            fn ($prompt) => str_contains($prompt->prompt, 'Texto-padrão de deferimento'),
+        );
+
+        $this->assertSame(
+            'Parecer já redigido pelo analista.',
+            AnalysisRecord::query()->where('viability_request_id', $processo->id)->value('parecer'),
+        );
+        $this->assertSame(0, ViabilityDecision::query()->count());
     }
 }

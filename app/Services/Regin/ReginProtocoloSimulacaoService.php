@@ -31,6 +31,8 @@ class ReginProtocoloSimulacaoService
 
     public const CONTINGENCIA = 'simulacao_protocolo';
 
+    public const CONTINGENCIA_RECEBE = 'regin_recebe';
+
     /**
      * Polígono de homologação em Salvador — a base GIS oficial ainda não
      * participa desta simulação; o motor de risco é que decide o encaminhamento.
@@ -82,59 +84,36 @@ class ReginProtocoloSimulacaoService
     public function simular(string $codigo): array
     {
         $protocolo = $this->catalogo->porCodigo($codigo);
-        $tipo = TipoImovel::fromRegin(
-            isset($protocolo['tipo_imovel']) ? (string) $protocolo['tipo_imovel'] : null,
-            TipoImovelCatalog::sedur200826(),
-        );
-        $area = isset($protocolo['area_utilizada']) ? (float) $protocolo['area_utilizada'] : null;
-
-        $porCnae = [];
-
-        foreach ($protocolo['atividades'] ?? [] as $atividade) {
-            $cnae = (string) ($atividade['cnae'] ?? '');
-            $respostas = $this->respostas($atividade['perguntas'] ?? []);
-
-            $result = $this->risco->classify(new RiscoInput(
-                cnaeCode: $cnae,
-                respostasCondicionantes: $respostas,
-                areaUtilizada: $area,
-                tipoImovel: $tipo,
-            ));
-
-            $porCnae[] = [
-                'cnae' => $cnae,
-                'perguntas' => $atividade['perguntas'] ?? [],
-                'risco' => $result->toArray(),
-            ];
-        }
-
-        $relatorio = [
-            'origem' => 'simulacao_protocolo',
-            'aviso' => self::AVISO,
-            'codigo' => $protocolo['codigo'],
-            'rotulo' => $protocolo['rotulo'],
-            'processo' => $protocolo['processo'],
-            'servico' => $protocolo['servico'],
-            'zona' => $protocolo['zona'] ?? null,
-            'via' => $protocolo['via'] ?? null,
-            'area_utilizada' => $area,
-            'tipo_imovel' => $protocolo['tipo_imovel'],
-            'tipo_imovel_normalized' => $tipo->normalized,
-            'tipo_imovel_reconhecimento' => $tipo->reconhecimento->value,
-            'tipo_imovel_dirige_regra' => $tipo->dirigeRegra(),
-            'tipo_imovel_permite_decisao_automatica' => $tipo->permiteDecisaoAutomatica(),
-            'por_cnae' => $porCnae,
-            'consolidado' => $this->consolidar($porCnae),
-        ];
+        $relatorio = $this->relatorio($protocolo, origem: self::CONTINGENCIA);
 
         $processo = $this->processoExistente($relatorio['codigo'], (string) $protocolo['processo'])
-            ?? $this->criarProcesso($protocolo, $relatorio);
+            ?? $this->criarProcesso($protocolo, $relatorio, self::CONTINGENCIA);
 
         $relatorio = $this->anexarProcesso($relatorio, $processo);
 
         $this->persistir($relatorio, $processo->id);
 
         return $relatorio;
+    }
+
+    public function materializarDoCatalogo(string $codigo, string $contingencia = self::CONTINGENCIA_RECEBE): ?ViabilityRequest
+    {
+        try {
+            $protocolo = $this->catalogo->porCodigo($codigo);
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
+
+        $existente = ViabilityRequest::query()
+            ->where('origin', ViabilityRequestOrigin::Regin)
+            ->where('external_reference', (string) $protocolo['processo'])
+            ->first();
+
+        if ($existente !== null) {
+            return $existente;
+        }
+
+        return $this->criarProcesso($protocolo, $this->relatorio($protocolo, origem: $contingencia), $contingencia);
     }
 
     /**
@@ -210,9 +189,56 @@ class ReginProtocoloSimulacaoService
 
     /**
      * @param  array<string, mixed>  $protocolo
-     * @param  array<string, mixed>  $relatorio
+     * @return array<string, mixed>
      */
-    private function criarProcesso(array $protocolo, array $relatorio): ViabilityRequest
+    private function relatorio(array $protocolo, string $origem): array
+    {
+        $tipo = TipoImovel::fromRegin(
+            isset($protocolo['tipo_imovel']) ? (string) $protocolo['tipo_imovel'] : null,
+            TipoImovelCatalog::sedur200826(),
+        );
+        $area = isset($protocolo['area_utilizada']) ? (float) $protocolo['area_utilizada'] : null;
+        $porCnae = [];
+
+        foreach ($protocolo['atividades'] ?? [] as $atividade) {
+            $cnae = (string) ($atividade['cnae'] ?? '');
+            $respostas = $this->respostas($atividade['perguntas'] ?? []);
+
+            $result = $this->risco->classify(new RiscoInput(
+                cnaeCode: $cnae,
+                respostasCondicionantes: $respostas,
+                areaUtilizada: $area,
+                tipoImovel: $tipo,
+            ));
+
+            $porCnae[] = [
+                'cnae' => $cnae,
+                'perguntas' => $atividade['perguntas'] ?? [],
+                'risco' => $result->toArray(),
+            ];
+        }
+
+        return [
+            'origem' => $origem,
+            'aviso' => $origem === self::CONTINGENCIA ? self::AVISO : 'Processo ingressado pelo REGIN (/recebe).',
+            'codigo' => $protocolo['codigo'],
+            'rotulo' => $protocolo['rotulo'],
+            'processo' => $protocolo['processo'],
+            'servico' => $protocolo['servico'],
+            'zona' => $protocolo['zona'] ?? null,
+            'via' => $protocolo['via'] ?? null,
+            'area_utilizada' => $area,
+            'tipo_imovel' => $protocolo['tipo_imovel'] ?? null,
+            'tipo_imovel_normalized' => $tipo->normalized,
+            'tipo_imovel_reconhecimento' => $tipo->reconhecimento->value,
+            'tipo_imovel_dirige_regra' => $tipo->dirigeRegra(),
+            'tipo_imovel_permite_decisao_automatica' => $tipo->permiteDecisaoAutomatica(),
+            'por_cnae' => $porCnae,
+            'consolidado' => $this->consolidar($porCnae),
+        ];
+    }
+
+    private function criarProcesso(array $protocolo, array $relatorio, string $contingencia = self::CONTINGENCIA): ViabilityRequest
     {
         $ator = $this->ator();
         $sedeVirtual = $this->querSedeVirtual($protocolo);
@@ -224,7 +250,7 @@ class ReginProtocoloSimulacaoService
             'requester_user_id' => $ator->id,
             'created_by_user_id' => $ator->id,
             'used_area_m2' => $relatorio['area_utilizada'] ?? 1.0,
-            'address_street' => 'Simulação REGIN',
+            'address_street' => $contingencia === self::CONTINGENCIA ? 'Simulação REGIN' : 'REGIN',
             'address_number' => 's/n',
             'address_neighborhood' => (string) ($protocolo['zona'] ?? 'Salvador'),
             'address_zip' => '40000000',
@@ -234,7 +260,7 @@ class ReginProtocoloSimulacaoService
             'simulation_snapshot' => $relatorio,
             'simulation_resultado' => $relatorio['consolidado']['fluxo'] ?? null,
             'simulated_at' => now(),
-            'contingency_reason' => self::CONTINGENCIA,
+            'contingency_reason' => $contingencia,
             'external_reference' => (string) $protocolo['processo'],
         ]);
 

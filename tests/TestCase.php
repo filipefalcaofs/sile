@@ -20,6 +20,10 @@ abstract class TestCase extends BaseTestCase
 
         $this->withoutVite();
 
+        // GeoServer SEDUR é integração HTTP real. A suíte desliga o toggle por
+        // padrão — testes do cliente WFS ligam e usam Http::fake.
+        config(['sile.features.geoserver_zona' => false]);
+
         // O gatilho do fluxo expresso (listener auto-descoberto AvaliarFluxoExpresso)
         // despacha o DecidirFluxoExpressoJob a CADA protocolo (SolicitacaoProtocolada,
         // EP08). Na suíte a fila é sync (phpunit.xml): o job rodaria INLINE e a

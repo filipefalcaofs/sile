@@ -6,6 +6,8 @@ use App\Enums\Fluxo;
 use App\Enums\ResultadoViabilidade;
 use App\Models\Cnae;
 use App\Models\ViabilityRequest;
+use App\Services\Risco\TipoImovel;
+use App\Services\Risco\TipoImovelCatalog;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -55,14 +57,15 @@ class SolicitacaoViabilityResolver
     {
         $ponto = $this->centroid($request->property_polygon_geojson);
         $area = $request->used_area_m2 !== null ? (float) $request->used_area_m2 : null;
+        $tipoImovel = $this->tipoImovel($request);
 
         $porCnae = [];
         $rulesVersions = [];
 
         foreach ($this->orderedCnaes($request) as $cnae) {
             $result = $ponto === null
-                ? $this->consulta->consultarPorCnae($cnae->code, $area)
-                : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area);
+                ? $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel)
+                : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area, $tipoImovel);
 
             $veredito = $result->vereditoLocacional();
 
@@ -99,6 +102,18 @@ class SolicitacaoViabilityResolver
      *
      * @return Collection<int, Cnae>
      */
+    private function tipoImovel(ViabilityRequest $request): ?TipoImovel
+    {
+        if ($request->tipo_imovel === null && $request->tipo_imovel_normalized === null) {
+            return null;
+        }
+
+        return TipoImovel::fromRegin(
+            $request->tipo_imovel ?? $request->tipo_imovel_normalized,
+            TipoImovelCatalog::sedur200826(),
+        );
+    }
+
     private function orderedCnaes(ViabilityRequest $request)
     {
         return $request->cnaes()

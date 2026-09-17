@@ -165,6 +165,21 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita a geocodificação de endereços (Nominatim/OSM)',
             ],
+            'features.geoserver_zona' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Consulta zona urbanística no GeoServer SEDUR (WFS) quando a camada local está pendente',
+            ],
+            'integrations.geoserver.base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://geoserver.sedur.salvador.ba.gov.br/geoserver',
+                'validation_rules' => ['required', 'url'],
+                'requires_connection_test' => true,
+                'description' => 'URL base do GeoServer da SEDUR (WFS/WMS de zoneamento LOUOS)',
+            ],
             'integrations.geocoding.base_url' => [
                 'group' => 'integracoes',
                 'type' => 'string',

@@ -322,13 +322,13 @@ export default function StandardTextsIndex({ standardTexts, filters, perPageOpti
 
     return (
         <>
-            <Head title="Textos-padrão" />
-            <PageHeader title="Textos-padrão" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
+            <Head title="Minutas e textos-padrão" />
+            <PageHeader title="Minutas e textos-padrão" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
             <Card>
                 <CardHeader
-                    title="Biblioteca de textos-padrão"
-                    description="Trechos pré-aprovados e versionados para o parecer da análise."
+                    title="Biblioteca de minutas"
+                    description="Textos-padrão versionados. Use {{cnae}}, {{veredito}} e {{zona}} — a IA costura estes blocos com o motor, sem inventar fundamento."
                     actions={
                         canMaintain ? (
                             <Button size="sm" onClick={() => setShowCreate(true)}>

@@ -2,6 +2,8 @@
 
 namespace App\Services\Viabilidade;
 
+use App\Services\Risco\TipoImovel;
+
 /**
  * Entrada imutável da consulta prévia de viabilidade (HU-054 a HU-056),
  * espelhando o estilo de EnquadramentoInput/RiscoInput (readonly + named
@@ -34,6 +36,7 @@ final readonly class ConsultaViabilidadeInput
         public ?float $area = null,
         public ?string $endereco = null,
         public ?string $inscricao = null,
+        public ?TipoImovel $tipoImovel = null,
     ) {}
 
     /**
@@ -54,12 +57,13 @@ final readonly class ConsultaViabilidadeInput
      * Consulta por CNAE (HU-056): risco real e, quando há `area`, Quadro 7 — sem
      * território (sem ponto, sem zona/via). O veredito locacional fica pendente.
      */
-    public static function paraCnae(string $cnae, ?float $area = null): self
+    public static function paraCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null): self
     {
         return new self(
             tipo: self::TIPO_CNAE,
             cnae: $cnae,
             area: $area,
+            tipoImovel: $tipoImovel,
         );
     }
 
@@ -84,12 +88,13 @@ final readonly class ConsultaViabilidadeInput
      * simulação pré-protocolo NÃO geocodifica de novo — roda a pipeline completa
      * (território → motores) a partir do ponto. `area` alimenta o Quadro 7.
      */
-    public static function paraPonto(string $cnae, ?float $area = null): self
+    public static function paraPonto(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null): self
     {
         return new self(
             tipo: self::TIPO_PONTO,
             cnae: $cnae,
             area: $area,
+            tipoImovel: $tipoImovel,
         );
     }
 }

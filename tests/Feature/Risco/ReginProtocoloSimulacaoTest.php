@@ -74,7 +74,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertContains($relatorio['por_cnae'][0]['risco']['municipal']['status'], ['classificado', 'nao_classificado']);
         $this->assertSame('6202-3/00', $relatorio['consolidado']['cnae']);
         $this->assertSame('baixo_a', $relatorio['consolidado']['nivel']);
-        $this->assertSame('expresso', $relatorio['consolidado']['fluxo']);
+        $this->assertSame('analise', $relatorio['consolidado']['fluxo']);
     }
 
     public function test_conjunto_e_classificado_pelo_cnae_de_maior_risco(): void
@@ -138,21 +138,16 @@ class ReginProtocoloSimulacaoTest extends TestCase
                 ->where('relatorio.area_utilizada', 834)
                 ->has('relatorio.por_cnae', 1)
                 ->where('relatorio.consolidado.cnae', '6202-3/00')
-                ->where('relatorio.consolidado.fluxo', 'expresso')
-                ->where('relatorio.status', 'deferida')
+                ->where('relatorio.consolidado.fluxo', 'analise')
+                ->where('relatorio.status', ViabilityRequestStatus::EmAnalise->value)
                 ->has('relatorio.protocol_number')
                 ->has('relatorio.processo_id')
-                ->has('relatorio.tvl')
                 ->has('relatorio.por_cnae.0.risco.municipal.nivel_label')
                 ->has('relatorio.por_cnae.0.risco.sanitario.status')
                 ->has('relatorio.por_cnae.0.risco.encaminhamento.motivo')
                 ->has('relatorio.por_cnae.0.risco.encaminhamento.dimensao_decisiva')
                 ->has('relatorio.por_cnae.0.risco.fundamentacao')
-                ->has('relatorio.por_cnae.0.risco.versoes')
-                ->where('relatorio.status', ViabilityRequestStatus::Deferida->value)
-                ->has('relatorio.processo_id')
-                ->has('relatorio.protocol_number')
-                ->has('relatorio.tvl'));
+                ->has('relatorio.por_cnae.0.risco.versoes'));
     }
 
     public function test_resultado_persiste_e_reaparece_depois_do_get(): void
@@ -224,7 +219,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
 
     public function test_simulacao_baixo_cria_processo_expresso_com_tvl(): void
     {
-        $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('43747');
+        $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('33072');
 
         $this->assertNotNull($relatorio['processo_id']);
         $this->assertMatchesRegularExpression('/^VIA-\d{4}-\d{6}$/', (string) $relatorio['protocol_number']);
@@ -236,12 +231,12 @@ class ReginProtocoloSimulacaoTest extends TestCase
 
         $this->assertNotNull($processo);
         $this->assertSame(ViabilityRequestOrigin::Regin, $processo->origin);
-        $this->assertSame('5921000030-00043747/2026', $processo->external_reference);
+        $this->assertSame('5921000030-00033072/2026', $processo->external_reference);
         $this->assertSame(ViabilityRequestStatus::Deferida, $processo->status);
         $this->assertSame('simulacao_protocolo', $processo->contingency_reason);
         $this->assertSame('expresso', $processo->simulation_resultado);
         $this->assertSame($relatorio['tvl'], $processo->decision?->tvl_product_number);
-        $this->assertSame('6202300', $processo->primaryCnae()->value('code'));
+        $this->assertSame('6622300', $processo->primaryCnae()->value('code'));
     }
 
     public function test_simulacao_alto_encaminha_para_analise_sem_tvl(): void

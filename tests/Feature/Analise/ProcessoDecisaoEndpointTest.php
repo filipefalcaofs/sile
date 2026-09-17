@@ -199,4 +199,23 @@ class ProcessoDecisaoEndpointTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::Indeferida, $processo->fresh()->status);
         $this->assertNull($processo->fresh()->decision?->tvl_product_number);
     }
+
+    public function test_concluir_processo_recusa_cnae_ainda_em_analise(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $processo = $this->processoComFicha(
+            [['cnae' => '4712100', 'status_sugerido' => 'analise', 'status_escolhido' => 'analise']],
+            ['status' => AnalysisRecordStatus::Rascunho, 'finalized_at' => null],
+        );
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/ficha/concluir-processo")
+            ->assertStatus(422)
+            ->assertSee('ainda em análise', false);
+
+        $this->assertDatabaseCount('viability_decisions', 0);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
+        Event::assertNotDispatched(ResultadoEmitido::class);
+    }
 }

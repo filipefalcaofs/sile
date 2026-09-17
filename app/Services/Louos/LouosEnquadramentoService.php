@@ -590,7 +590,7 @@ class LouosEnquadramentoService
         /** @var array<string, mixed> $propriedades */
         $propriedades = $zona['propriedades'] ?? [];
 
-        foreach (['ZONA', 'zona', 'SIGLA_ZONA'] as $chave) {
+        foreach (['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA'] as $chave) {
             $valor = $propriedades[$chave] ?? null;
 
             if (is_string($valor) && $valor !== '') {

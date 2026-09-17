@@ -4,6 +4,7 @@ namespace App\Services\Risco;
 
 use App\Enums\Fluxo;
 use App\Enums\RuleDomain;
+use App\Enums\TipoGatilho;
 use App\Models\RiskClassification;
 use App\Models\RiskCondicionante;
 use App\Models\RiskTrigger;
@@ -251,7 +252,14 @@ class RiscoClassificationService
      */
     private function applyGatilhos(RiscoInput $input): array
     {
-        if ($input->gatilhosContexto === []) {
+        $contexto = $input->gatilhosContexto;
+
+        if ($input->tipoImovel?->dirigeRegra()
+            && ! in_array(TipoGatilho::DadosDoProcesso->value, $contexto, true)) {
+            $contexto[] = TipoGatilho::DadosDoProcesso->value;
+        }
+
+        if ($contexto === []) {
             return [];
         }
 
@@ -260,7 +268,7 @@ class RiscoClassificationService
         foreach (RiskTrigger::ativos()->get() as $trigger) {
             $codigo = $trigger->codigo->value;
 
-            if (in_array($codigo, $input->gatilhosContexto, true)) {
+            if (in_array($codigo, $contexto, true)) {
                 $acionados[] = [
                     'codigo' => $codigo,
                     'motivo' => (string) $trigger->motivo,

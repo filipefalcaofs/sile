@@ -53,6 +53,7 @@ class PreAnaliseService
     public function __construct(
         private readonly SolicitacaoViabilityResolver $resolver,
         private readonly AuditService $audit,
+        private readonly MotivoAnaliseComposer $motivos,
     ) {}
 
     /**
@@ -122,7 +123,7 @@ class PreAnaliseService
                 'conditions' => $this->conditions($resolved),
                 'parking' => $this->parking($resolved),
                 'parecer' => $this->parecerRascunho($request, $resolved),
-                'analysis_reasons' => $this->motivosDaQueda($request),
+                'analysis_reasons' => $this->motivosDaQueda($request, $resolved),
                 'finalized_at' => null,
             ]);
 
@@ -167,7 +168,7 @@ class PreAnaliseService
                 'conditions' => [],
                 'parking' => [],
                 'parecer' => null,
-                'analysis_reasons' => $this->motivosDaQueda($request),
+                'analysis_reasons' => $this->motivosDaQueda($request, null),
                 'finalized_at' => null,
             ]);
 
@@ -282,8 +283,6 @@ class PreAnaliseService
     private function parecerRascunho(ViabilityRequest $request, ResolvedViability $resolved): string
     {
         $linhas = [
-            'Rascunho do motor — revisar antes de finalizar. A decisão continua sendo do analista.',
-            '',
             'Veredito locacional consolidado: '.ResultadoViabilidade::from($resolved->consolidado)->label().'.',
         ];
 
@@ -336,7 +335,7 @@ class PreAnaliseService
             }
         }
 
-        $quedas = $this->motivosDaQueda($request) ?? [];
+        $quedas = $this->motivosDaQueda($request, $resolved) ?? [];
 
         if ($quedas !== []) {
             $linhas[] = '';
@@ -517,11 +516,9 @@ class PreAnaliseService
      *
      * @return list<string>|null
      */
-    private function motivosDaQueda(ViabilityRequest $request): ?array
+    private function motivosDaQueda(ViabilityRequest $request, ?ResolvedViability $resolved): ?array
     {
-        $motivos = AnalysisRecord::normalizarMotivos(
-            $request->expressoQuedas()->orderBy('id')->pluck('motivo')->all(),
-        );
+        $motivos = $this->motivos->para($request, $resolved);
 
         return $motivos === [] ? null : $motivos;
     }

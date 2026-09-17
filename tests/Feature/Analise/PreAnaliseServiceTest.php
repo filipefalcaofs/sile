@@ -6,6 +6,7 @@ use App\Enums\GeoLayerType;
 use App\Enums\Quadro10Permissao;
 use App\Enums\RiscoMunicipal;
 use App\Enums\RuleDomain;
+use App\Enums\TipoGatilho;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
 use App\Models\AnalysisRecord;
@@ -199,6 +200,8 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertSame('nR1', $record->per_cnae[0]['grupo_uso']);
         $this->assertNotEmpty($record->parecer);
         $this->assertStringContainsString('Quadro 10', (string) $record->parecer);
+        $this->assertStringNotContainsString('Rascunho do motor', (string) $record->parecer);
+        $this->assertStringNotContainsString('A decisão continua sendo do analista', (string) $record->parecer);
         $this->assertSame('permitido', $record->engine_snapshot['consolidado']);
 
         // RN-005: a pré-análise é auditada (analise/pre-analise) com a versão das
@@ -409,17 +412,27 @@ class PreAnaliseServiceTest extends TestCase
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         $request = $this->emAnaliseComCnaes(['8888881']);
+        $request->forceFill([
+            'tipo_imovel' => 'Galpão',
+            'tipo_imovel_normalized' => 'galpao',
+        ])->save();
 
         ExpressoQueda::factory()->create([
             'viability_request_id' => $request->id,
+            'cnae' => '8888881',
+            'tipo_gatilho' => TipoGatilho::DadosDoProcesso->value,
+            'dimensao' => 'municipal',
             'motivo' => 'Nível alto (municipal) encaminhado para análise técnica',
         ]);
 
         $record = $this->service()->preAnalisar($request);
+        $motivos = implode("\n", $record->analysis_reasons ?? []);
 
-        $this->assertSame(
-            ['Nível alto (municipal) encaminhado para análise técnica'],
-            $record->analysis_reasons,
-        );
+        $this->assertStringContainsString('8888-8/81', $motivos);
+        $this->assertStringContainsString('Nível alto (municipal)', $motivos);
+        $this->assertStringContainsString('Galpão', $motivos);
+        $this->assertStringContainsString('ZR-1', $motivos);
+        $this->assertStringContainsString('Quadro 10', $motivos);
+        $this->assertGreaterThanOrEqual(2, count($record->analysis_reasons ?? []));
     }
 }

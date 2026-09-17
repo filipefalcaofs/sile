@@ -7,10 +7,14 @@ use App\Support\Audit\AuditService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Throwable;
 
 class ReginRecebeService
 {
-    public function __construct(private AuditService $audit) {}
+    public function __construct(
+        private AuditService $audit,
+        private ReginProtocoloSimulacaoService $processos,
+    ) {}
 
     /**
      * Persiste o envelope e devolve o código do guia (3 recebido, 5 duplicado).
@@ -50,6 +54,17 @@ class ReginRecebeService
                 'corpo' => is_array($envelope['json'] ?? null) ? $envelope['json'] : null,
                 'envelope' => $envelope,
             ]);
+
+            try {
+                $processo = $this->processos->materializarDoCatalogo($protocolo);
+
+                if ($processo !== null) {
+                    $recebimento->update(['viability_request_id' => $processo->id]);
+                }
+            } catch (Throwable) {
+                // O ack 3 é do envelope. Sem catálogo/motor, o recebimento fica
+                // sem processo — nunca finge que protocolou.
+            }
 
             $this->auditar($recebimento, $protocolo, '3', 'sucesso');
 

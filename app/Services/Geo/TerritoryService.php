@@ -6,6 +6,7 @@ use App\Enums\GeoLayerStatus;
 use App\Enums\GeoLayerType;
 use App\Models\GeoLayer;
 use App\Support\Audit\AuditService;
+use App\Support\Settings;
 use Carbon\CarbonInterface;
 
 /**
@@ -27,6 +28,7 @@ class TerritoryService
     public function __construct(
         private SpatialRepository $spatial,
         private AuditService $audit,
+        private ?GeoServerWfsZonaClient $geoserver = null,
     ) {}
 
     /**
@@ -71,6 +73,14 @@ class TerritoryService
         $layer = $this->resolveLayer($type, $date);
 
         if ($this->isBlocked($layer)) {
+            if ($type === GeoLayerType::Zona) {
+                $remoto = $this->identifyZonaFromGeoServer($lat, $lng);
+
+                if ($remoto !== null) {
+                    return $remoto;
+                }
+            }
+
             return $this->dimIndisponivel($this->motivoFor($type), $layer?->version);
         }
 
@@ -166,7 +176,7 @@ class TerritoryService
      */
     private function nomeFromProperties(array $properties): ?string
     {
-        foreach (['NOME_BAIRRO', 'NOME_LOGRADOURO', 'NOME_VIA', 'NOME', 'nome'] as $key) {
+        foreach (['NOME_BAIRRO', 'NOME_LOGRADOURO', 'NOME_VIA', 'SUBZONA', 'ZONA', 'SIGLA_ZONA', 'NOME', 'nome'] as $key) {
             $value = $properties[$key] ?? null;
 
             if (is_string($value) && $value !== '') {
@@ -205,6 +215,44 @@ class TerritoryService
             'motivo' => null,
             'versao_camada' => $versao,
         ];
+    }
+
+    /**
+     * Zona oficial no GeoServer quando a camada local está pendente.
+     * Null = toggle off / sem cliente — cai no motivo de base pendente.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function identifyZonaFromGeoServer(float $lat, float $lng): ?array
+    {
+        if ($this->geoserver === null || ! Settings::enabled('geoserver_zona')) {
+            return null;
+        }
+
+        $hit = $this->geoserver->identificar($lat, $lng);
+
+        if ($hit->status === 'identificado' && $hit->codigo !== null) {
+            $properties = [
+                ...(is_array($hit->properties) ? $hit->properties : []),
+                'ZONA' => $hit->codigo,
+                'fonte' => 'geoserver-wfs',
+                'typeName' => $hit->typeName,
+            ];
+
+            $dim = $this->dimIdentificado('geoserver-wfs', $properties);
+            $dim['nome'] = $hit->codigo;
+
+            return $dim;
+        }
+
+        if ($hit->status === 'nao_encontrado') {
+            return $this->dimNaoEncontrado('geoserver-wfs');
+        }
+
+        return $this->dimIndisponivel(
+            (string) ($hit->motivo ?? 'GeoServer SEDUR indisponível'),
+            'geoserver-wfs',
+        );
     }
 
     /**

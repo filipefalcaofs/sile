@@ -14,6 +14,7 @@ use App\Services\Realty\PropertyRegistryUnavailableException;
 use App\Services\Risco\RiscoClassificationService;
 use App\Services\Risco\RiscoInput;
 use App\Services\Risco\RiscoResult;
+use App\Services\Risco\TipoImovel;
 use App\Support\Audit\AuditService;
 
 /**
@@ -73,9 +74,9 @@ class ConsultaViabilidadeService
      * território (sem ponto, sem zona/via). O veredito locacional fica pendente
      * (o motor degrada sozinho) e a consulta avisa que não avalia o local.
      */
-    public function consultarPorCnae(string $cnae, ?float $area = null): ConsultaViabilidadeResult
+    public function consultarPorCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null): ConsultaViabilidadeResult
     {
-        $input = ConsultaViabilidadeInput::paraCnae($cnae, $area);
+        $input = ConsultaViabilidadeInput::paraCnae($cnae, $area, $tipoImovel);
 
         return $this->consultarPorCnaeComEntrada($input, [self::AVISO_CNAE_SEM_LOCAL]);
     }
@@ -109,9 +110,9 @@ class ConsultaViabilidadeService
      * veredito do motor LOUOS — sem lógica de decisão paralela (RN-001). Não
      * altera o comportamento das três entradas públicas (endereço/CNAE/inscrição).
      */
-    public function consultarPorPontoConhecido(float $lat, float $lng, string $cnae, ?float $area = null): ConsultaViabilidadeResult
+    public function consultarPorPontoConhecido(float $lat, float $lng, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null): ConsultaViabilidadeResult
     {
-        $input = ConsultaViabilidadeInput::paraPonto($cnae, $area);
+        $input = ConsultaViabilidadeInput::paraPonto($cnae, $area, $tipoImovel);
 
         return $this->consultarPorPonto($lat, $lng, $input, null);
     }
@@ -130,7 +131,7 @@ class ConsultaViabilidadeService
         $enquadramento = $this->louos->enquadrar(
             EnquadramentoInput::paraConsulta((float) ($input->area ?? 0.0), $input->cnae, null),
         );
-        $risco = $this->risco->classify(RiscoInput::paraCnae($input->cnae));
+        $risco = $this->risco->classify($this->riscoInput($input));
 
         return $this->comporEResultar($input, null, null, $enquadramento, $risco, $avisos);
     }
@@ -154,7 +155,7 @@ class ConsultaViabilidadeService
         $enquadramento = $this->louos->enquadrar(
             EnquadramentoInput::paraConsulta((float) ($input->area ?? 0.0), $input->cnae, $territory),
         );
-        $risco = $this->risco->classify(RiscoInput::paraCnae($input->cnae));
+        $risco = $this->risco->classify($this->riscoInput($input));
 
         return $this->comporEResultar($input, $geocode, $territory, $enquadramento, $risco, $avisos);
     }
@@ -218,6 +219,15 @@ class ConsultaViabilidadeService
      * CNAE em dígitos (precedente dos motores do import) — normaliza qualquer
      * máscara recebida para os 7 dígitos da subclasse.
      */
+    private function riscoInput(ConsultaViabilidadeInput $input): RiscoInput
+    {
+        return new RiscoInput(
+            cnaeCode: $input->cnae,
+            areaUtilizada: $input->area,
+            tipoImovel: $input->tipoImovel,
+        );
+    }
+
     private function normalizarCnae(string $cnae): string
     {
         return (string) preg_replace('/\D/', '', $cnae);

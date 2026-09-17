@@ -15,6 +15,8 @@ use App\Models\RuleVersion;
 use App\Models\SanitaryRiskClassification;
 use App\Services\Risco\RiscoClassificationService;
 use App\Services\Risco\RiscoInput;
+use App\Services\Risco\TipoImovel;
+use App\Services\Risco\TipoImovelCatalog;
 use App\Support\Audit\AuditService;
 use Carbon\Carbon;
 use Database\Seeders\RiskTriggerSeeder;
@@ -212,6 +214,29 @@ class RiscoClassificationServiceTest extends TestCase
         $this->assertSame('analise', $result->encaminhamento['fluxo']);
         $codigos = array_column($result->encaminhamento['gatilhos_acionados'], 'codigo');
         $this->assertContains('zeis_especial', $codigos);
+    }
+
+    public function test_tipo_imovel_que_dirige_regra_derruba_para_analise(): void
+    {
+        $this->seed(RiskTriggerSeeder::class);
+
+        $municipal = $this->versaoMunicipal();
+        RiskClassification::factory()->create([
+            'rule_version_id' => $municipal->id,
+            'cnae_code' => '6666666',
+            'risco_municipal' => RiscoMunicipal::BaixoA,
+        ]);
+
+        $tipo = TipoImovel::fromRegin('Galpão', TipoImovelCatalog::sedur200826());
+
+        $result = $this->service()->classify(new RiscoInput(
+            cnaeCode: '6666666',
+            tipoImovel: $tipo,
+        ));
+
+        $this->assertSame('analise', $result->encaminhamento['fluxo']);
+        $codigos = array_column($result->encaminhamento['gatilhos_acionados'], 'codigo');
+        $this->assertContains(TipoGatilho::DadosDoProcesso->value, $codigos);
     }
 
     public function test_mapa_de_encaminhamento_parametrizavel_sem_deploy(): void
