@@ -110,6 +110,70 @@ class ResumoProcessoTest extends TestCase
         ]);
     }
 
+    public function test_resumo_fica_pronto_no_mesmo_request_mesmo_com_fila_assincrona(): void
+    {
+        config([
+            'sile.features.ia_resumo' => true,
+            'queue.default' => 'database',
+        ]);
+        $this->provedorTextoAtivo();
+        $processo = $this->processoComFicha();
+
+        ResumoProcessoAgent::fake([[
+            'resumo' => 'Síntese pronta no mesmo request para o analista revisar.',
+            'pontos_chave' => ['Pré-análise do motor disponível'],
+            'fonte' => 'pré-análise do motor (engine_snapshot) e ficha de análise',
+        ]]);
+
+        $despachou = $this->service()->processar($processo);
+
+        $this->assertTrue($despachou);
+        $this->assertSame(1, AiSuggestion::query()->where('type', AiSuggestionType::ResumoProcesso)->count());
+        $this->assertDatabaseCount('jobs', 0);
+        ResumoProcessoAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Centro'));
+    }
+
+    public function test_processar_nao_chama_provedor_de_novo_quando_resumo_ja_existe(): void
+    {
+        config(['sile.features.ia_resumo' => true]);
+        $this->provedorTextoAtivo();
+        $processo = $this->processoComFicha();
+
+        ResumoProcessoAgent::fake([
+            [
+                'resumo' => 'Primeira síntese do processo no Centro.',
+                'fonte' => 'pré-análise do motor (engine_snapshot) e ficha de análise',
+            ],
+            [
+                'resumo' => 'Não deveria gerar uma segunda síntese.',
+                'fonte' => 'motor',
+            ],
+        ]);
+
+        $this->assertTrue($this->service()->processar($processo));
+        $this->assertTrue($this->service()->processar($processo));
+
+        $this->assertSame(1, AiSuggestion::query()->count());
+        $this->assertSame(
+            'Primeira síntese do processo no Centro.',
+            AiSuggestion::query()->sole()->output['resumo'],
+        );
+    }
+
+    public function test_falha_do_provedor_nao_quebra_a_ficha_nem_cria_sugestao(): void
+    {
+        config(['sile.features.ia_resumo' => true]);
+        $this->provedorTextoAtivo();
+        $processo = $this->processoComFicha();
+
+        ResumoProcessoAgent::fake(fn () => throw new \RuntimeException('provedor indisponível'));
+
+        $despachou = $this->service()->processar($processo);
+
+        $this->assertFalse($despachou);
+        $this->assertSame(0, AiSuggestion::query()->count());
+    }
+
     public function test_resumo_sem_fonte_escala_para_humano(): void
     {
         config(['sile.features.ia_resumo' => true]);

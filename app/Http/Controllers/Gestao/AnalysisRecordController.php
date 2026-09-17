@@ -111,11 +111,10 @@ class AnalysisRecordController extends Controller
             'iaFicha' => $this->iaFicha($viabilityRequest),
             // Sugestões de IA (HU-115 alertas + HU-117 resumo do processo) — prop
             // DEFERIDA (carregada sob demanda pelo card, fora do load inicial).
-            // Ao resolver, dispara o resumo do processo (HU-117) de forma gated e
-            // idempotente (toggle ia_resumo off ou sem provedor ⇒ no-op; dedup por
-            // entrada evita reprocessar) e então LÊ o ledger. APENAS LEITURA do
-            // AnalysisRecord (ficha finalizada é imutável, RN-003) e da decisão:
-            // são sugestões para revisão, jamais decisão (RN-001/004).
+            // Ao resolver, gera o resumo no mesmo request (gated; já existente ⇒
+            // no-op) e então LÊ o ledger. APENAS LEITURA do AnalysisRecord
+            // (ficha finalizada é imutável, RN-003) e da decisão: são sugestões
+            // para revisão, jamais decisão (RN-001/004).
             'sugestoesIa' => Inertia::optional(function () use ($request, $viabilityRequest): array {
                 $this->resumos->processar($viabilityRequest, $request->user()?->id);
                 $this->parecer->processar($viabilityRequest, $request->user()?->id);
@@ -300,9 +299,9 @@ class AnalysisRecordController extends Controller
         return response()->json([
             'despachou' => $despachou,
             'status' => $despachou
-                ? 'Resumo solicitado à IA. A síntese aparece neste card para revisão.'
+                ? 'Resumo gerado pela IA. A síntese aparece neste card para revisão.'
                 : ($this->iaFicha($viabilityRequest)['resumo_motivo']
-                    ?? 'Resumo de IA indisponível. Redija a leitura manualmente.'),
+                    ?? 'A IA não gerou o resumo. Tente novamente.'),
         ]);
     }
 
