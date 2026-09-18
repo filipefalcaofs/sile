@@ -7,8 +7,12 @@ use Illuminate\Database\Seeder;
 
 /**
  * Carga inicial = as 20 FeatureTypes de zona da LOUOS que viviam hardcoded
- * em config/sile.php (integrations.geoserver.type_names). Idempotente:
- * updateOrCreate por workspace+type_name, ordem sequencial estável.
+ * em config/sile.php (integrations.geoserver.type_names). Idempotente por
+ * workspace+type_name via firstOrCreate (padrão RiskTriggerSeeder): o re-seed
+ * em deploy só cria as camadas AUSENTES — NUNCA reativa uma camada que o
+ * administrador desativou pela UI nem sobrescreve ordem/rótulo editados
+ * (HU-014). Na criação, `ativo` usa o default da coluna (true) e `ordem`
+ * recebe a posição sequencial desta lista.
  */
 class GeoServerLayerSeeder extends Seeder
 {
@@ -43,9 +47,9 @@ class GeoServerLayerSeeder extends Seeder
         foreach (self::CAMADAS as $indice => $camada) {
             [$workspace, $typeName] = explode(':', $camada, 2);
 
-            GeoServerLayer::updateOrCreate(
+            GeoServerLayer::firstOrCreate(
                 ['workspace' => $workspace, 'type_name' => $typeName],
-                ['ativo' => true, 'ordem' => $indice + 1],
+                ['ordem' => $indice + 1],
             );
         }
     }
