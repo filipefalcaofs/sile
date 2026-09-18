@@ -1,11 +1,8 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
-import type { ChangeEvent, FormEvent, ReactNode } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
-import Input from '@/components/form/input';
-import Label from '@/components/form/label';
-import Select from '@/components/form/select';
-import { AlertIcon, InfoIcon, TrashIcon } from '@/components/icons';
+import { AlertIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -18,13 +15,7 @@ import { Modal } from '@/components/ui/modal';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
-import {
-    type AlteracaoField,
-    type QuadroItem,
-    buildAlteracaoPayload,
-    fieldsFor,
-    formatarData,
-} from './quadro-fields';
+import { type QuadroItem, formatarData } from './quadro-fields';
 import { getColumns } from './quadro-columns';
 
 interface QuadroResumo {
@@ -33,6 +24,18 @@ interface QuadroResumo {
     version: string | null;
     valid_from: string | null;
     total: number;
+}
+
+interface QuadroVersao {
+    id: number;
+    version: string;
+    status: string;
+    status_label: string;
+    valid_from: string | null;
+    valid_to: string | null;
+    source: string | null;
+    total: number;
+    vigente: boolean;
 }
 
 interface LouosIndexProps {
@@ -45,12 +48,15 @@ interface LouosIndexProps {
         to: number | null;
         total: number;
     };
+    versoes: QuadroVersao[];
     filtros: {
         quadro: string;
         search: string;
         per_page: number;
     };
     perPageOptions: number[];
+    urlRascunho: string;
+    urlManual: string;
 }
 
 /**
@@ -76,238 +82,6 @@ const QUADROS_META: Record<string, { descricao: string; operacional: boolean; no
         nota: 'Modelado a partir da Lei nº 9.148/2016. Aplica plenamente quando a classificação viária oficial (pendente SEDUR) for confirmada.',
     },
 };
-
-/**
- * Publicação versionada de um Quadro da LOUOS (HU-046). Publicar gera uma NOVA
- * versão por quatro olhos — o autor deve ser distinto do publicador. A regra é
- * reforçada no backend (flash.error); aqui é comunicada e verificada no cliente
- * (defesa em profundidade), nunca silenciosa. Sem alterações, a nova versão
- * herda integralmente o Quadro vigente.
- */
-function PublishQuadroVersionModal({
-    quadro,
-    quadroLabel,
-    onClose,
-    authUserId,
-}: {
-    quadro: string;
-    quadroLabel: string;
-    onClose: () => void;
-    authUserId: number | null;
-}) {
-    const fields = fieldsFor(quadro);
-
-    const { data, setData, put, processing, errors, reset, transform } = useForm<{
-        version: string;
-        author_id: string;
-        alteracoes: Record<string, string>[];
-    }>({
-        version: '',
-        author_id: '',
-        alteracoes: [],
-    });
-
-    const authorIsPublisher =
-        authUserId !== null && data.author_id.trim() !== '' && Number(data.author_id) === authUserId;
-
-    function updateAlteracao(index: number, key: string, value: string) {
-        setData(
-            'alteracoes',
-            data.alteracoes.map((alteracao, i) => (i === index ? { ...alteracao, [key]: value } : alteracao)),
-        );
-    }
-
-    const alteracoesError = Object.entries(errors).find(([key]) => key.startsWith('alteracoes'))?.[1];
-
-    function submit(event: FormEvent) {
-        event.preventDefault();
-
-        const requiredKeys = fields.filter((field) => field.required).map((field) => field.key);
-
-        transform((current) => ({
-            quadro,
-            version: current.version.trim(),
-            author_id: current.author_id.trim() === '' ? '' : Number(current.author_id),
-            alteracoes: current.alteracoes
-                .map((row) => buildAlteracaoPayload(fields, row))
-                .filter((payload) => requiredKeys.every((key) => payload[key] !== undefined)),
-        }));
-
-        put('/gestao/louos/publicar', {
-            preserveScroll: true,
-            onSuccess: () => {
-                reset();
-                onClose();
-            },
-        });
-    }
-
-    const submitDisabled =
-        processing || authorIsPublisher || data.version.trim() === '' || data.author_id.trim() === '';
-
-    return (
-        <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[760px] overflow-y-auto p-6 lg:p-8">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                Publicar nova versão do {quadroLabel}
-            </h4>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Publicar gera uma nova versão e preserva a anterior — nunca edição destrutiva.
-            </p>
-
-            <div className="mt-4 flex items-start gap-3 rounded-xl border border-blue-light-200 bg-blue-light-50 p-4 dark:border-blue-light-500/30 dark:bg-blue-light-500/15">
-                <InfoIcon className="size-5 shrink-0 fill-current text-blue-light-500" />
-                <p className="text-theme-sm text-gray-600 dark:text-gray-300">
-                    Publicação por <strong>quatro olhos</strong>: o autor da nova versão deve ser diferente de quem
-                    publica. Informe o ID de outro usuário responsável pela alteração
-                    {authUserId !== null && <> — você (ID {authUserId}) consta como publicador</>}.
-                </p>
-            </div>
-
-            <form onSubmit={submit} className="mt-6 flex flex-col gap-5">
-                <div className="grid gap-5 sm:grid-cols-2">
-                    <div>
-                        <Label htmlFor="publish-version" required>
-                            Identificador da versão
-                        </Label>
-                        <Input
-                            id="publish-version"
-                            type="text"
-                            value={data.version}
-                            onChange={(event) => setData('version', event.target.value)}
-                            placeholder="ex.: lei-9148-2016-quadro7-rev2"
-                            error={!!errors.version}
-                            hint={errors.version}
-                        />
-                    </div>
-                    <div>
-                        <Label htmlFor="publish-author" required>
-                            ID do usuário autor
-                        </Label>
-                        <Input
-                            id="publish-author"
-                            type="number"
-                            min={1}
-                            value={data.author_id}
-                            onChange={(event) => setData('author_id', event.target.value)}
-                            placeholder="ex.: 42"
-                            error={authorIsPublisher || !!errors.author_id}
-                            hint={
-                                authorIsPublisher
-                                    ? 'O autor deve ser diferente do publicador (quatro olhos).'
-                                    : errors.author_id
-                            }
-                        />
-                    </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                        <Label className="mb-0">Alterações do {quadroLabel} (opcional)</Label>
-                        <Button
-                            size="xs"
-                            variant="outline"
-                            onClick={() => setData('alteracoes', [...data.alteracoes, {}])}
-                        >
-                            Adicionar alteração
-                        </Button>
-                    </div>
-                    <p className="mt-1.5 text-theme-xs text-gray-400 dark:text-gray-500">
-                        Sem alterações, a nova versão herda integralmente o Quadro vigente.
-                    </p>
-
-                    {data.alteracoes.length > 0 && (
-                        <div className="mt-4 flex flex-col gap-4">
-                            {data.alteracoes.map((alteracao, index) => (
-                                <div
-                                    key={index}
-                                    className="rounded-lg border border-gray-200 p-4 dark:border-gray-800"
-                                >
-                                    <div className="mb-3 flex items-center justify-between gap-2">
-                                        <span className="text-theme-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Alteração {index + 1}
-                                        </span>
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setData(
-                                                    'alteracoes',
-                                                    data.alteracoes.filter((_, i) => i !== index),
-                                                )
-                                            }
-                                            aria-label={`Remover alteração ${index + 1}`}
-                                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-error-500 ring-1 ring-inset ring-error-200 transition hover:bg-error-50 dark:ring-error-500/30 dark:hover:bg-error-500/10"
-                                        >
-                                            <TrashIcon className="size-4.5" />
-                                        </button>
-                                    </div>
-
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        {fields.map((field) => {
-                                            const fieldId = `alt-${index}-${field.key}`;
-                                            const value = alteracao[field.key] ?? '';
-
-                                            return (
-                                                <div key={field.key} className={field.full ? 'sm:col-span-2' : ''}>
-                                                    <Label htmlFor={fieldId} required={field.required}>
-                                                        {field.label}
-                                                    </Label>
-                                                    {field.kind === 'select' ? (
-                                                        <Select
-                                                            id={fieldId}
-                                                            value={value}
-                                                            onChange={(next) =>
-                                                                updateAlteracao(index, field.key, next)
-                                                            }
-                                                            placeholder="Selecione"
-                                                            options={field.options ?? []}
-                                                        />
-                                                    ) : field.kind === 'textarea' ? (
-                                                        <textarea
-                                                            id={fieldId}
-                                                            value={value}
-                                                            onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-                                                                updateAlteracao(index, field.key, event.target.value)
-                                                            }
-                                                            rows={3}
-                                                            placeholder={field.placeholder}
-                                                            className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                                                        />
-                                                    ) : (
-                                                        <Input
-                                                            id={fieldId}
-                                                            type={field.kind === 'number' ? 'number' : 'text'}
-                                                            min={field.kind === 'number' ? 0 : undefined}
-                                                            value={value}
-                                                            onChange={(event) =>
-                                                                updateAlteracao(index, field.key, event.target.value)
-                                                            }
-                                                            placeholder={field.placeholder}
-                                                        />
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {alteracoesError && <p className="mt-2 text-theme-xs text-error-500">{alteracoesError}</p>}
-                </div>
-
-                <div className="flex items-center justify-end gap-3">
-                    <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>
-                        Cancelar
-                    </Button>
-                    <Button size="sm" type="submit" disabled={submitDisabled}>
-                        {processing ? 'Publicando...' : 'Publicar nova versão'}
-                    </Button>
-                </div>
-            </form>
-        </Modal>
-    );
-}
 
 interface QuadroSelectorCardProps {
     resumo: QuadroResumo;
@@ -369,7 +143,59 @@ function QuadroSelectorCard({ resumo, selected, onSelect }: QuadroSelectorCardPr
     );
 }
 
-export default function LouosIndex({ quadros, quadroSelecionado, itens, filtros, perPageOptions }: LouosIndexProps) {
+function AtivarVersaoModal({
+    versao,
+    quadro,
+    onClose,
+}: {
+    versao: QuadroVersao;
+    quadro: string;
+    onClose: () => void;
+}) {
+    const [processing, setProcessing] = useState(false);
+
+    function confirmar() {
+        setProcessing(true);
+        router.put(
+            `/gestao/louos/versoes/${versao.id}/ativar`,
+            { quadro },
+            {
+                preserveScroll: true,
+                onFinish: () => setProcessing(false),
+                onSuccess: () => onClose(),
+            },
+        );
+    }
+
+    return (
+        <Modal isOpen onClose={onClose} className="m-4 max-w-lg p-6 lg:p-8">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Ativar versão</h4>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                A versão <strong>{versao.version}</strong> ({versao.total} registros) passará a ser a vigente. A
+                versão em uso hoje é fechada e permanece no histórico — nenhuma linha é apagada.
+            </p>
+            <div className="mt-6 flex items-center justify-end gap-3">
+                <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>
+                    Cancelar
+                </Button>
+                <Button size="sm" onClick={confirmar} loading={processing}>
+                    Ativar esta versão
+                </Button>
+            </div>
+        </Modal>
+    );
+}
+
+export default function LouosIndex({
+    quadros,
+    quadroSelecionado,
+    itens,
+    versoes,
+    filtros,
+    perPageOptions,
+    urlRascunho,
+    urlManual,
+}: LouosIndexProps) {
     const { auth } = usePage<SharedProps>().props;
     const canMaintain = auth.permissions.includes('manter-louos');
 
@@ -381,7 +207,7 @@ export default function LouosIndex({ quadros, quadroSelecionado, itens, filtros,
         initialFilters: { quadro: filtros.quadro },
     });
 
-    const [showPublish, setShowPublish] = useState(false);
+    const [versaoParaAtivar, setVersaoParaAtivar] = useState<QuadroVersao | null>(null);
 
     const selecionado = quadros.find((quadro) => quadro.quadro === quadroSelecionado) ?? quadros[0];
     const meta = QUADROS_META[quadroSelecionado] ?? QUADROS_META.quadro7;
@@ -419,13 +245,18 @@ export default function LouosIndex({ quadros, quadroSelecionado, itens, filtros,
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() =>
-                                            router.get(`/gestao/louos/rascunho?quadro=${quadroSelecionado}`)
-                                        }
+                                        onClick={() => router.get(urlManual)}
+                                    >
+                                        Manual de CSV
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => router.get(urlRascunho)}
                                     >
                                         Editar Quadro
                                     </Button>
-                                    <Button size="sm" onClick={() => setShowPublish(true)}>
+                                    <Button size="sm" onClick={() => router.get(urlRascunho)}>
                                         Publicar nova versão
                                     </Button>
                                 </div>
@@ -490,14 +321,81 @@ export default function LouosIndex({ quadros, quadroSelecionado, itens, filtros,
                         </div>
                     </CardContent>
                 </Card>
+
+                <Card>
+                    <CardHeader
+                        title="Histórico de versões"
+                        description="Qualquer versão publicada pode voltar a ser a vigente. A anterior permanece no histórico."
+                    />
+                    <CardContent>
+                        {versoes.length === 0 ? (
+                            <EmptyState
+                                title="Nenhuma versão publicada"
+                                description="Publique ou importe um rascunho para criar a primeira versão deste Quadro."
+                            />
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full text-left text-theme-sm">
+                                    <thead>
+                                        <tr className="border-b border-gray-200 text-theme-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
+                                            <th className="px-3 py-2 font-medium">Versão</th>
+                                            <th className="px-3 py-2 font-medium">Situação</th>
+                                            <th className="px-3 py-2 font-medium">Vigência</th>
+                                            <th className="px-3 py-2 font-medium">Registros</th>
+                                            {canMaintain && <th className="px-3 py-2 font-medium">Ação</th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {versoes.map((versao) => (
+                                            <tr
+                                                key={versao.id}
+                                                className="border-b border-gray-100 last:border-0 dark:border-gray-800"
+                                            >
+                                                <td className="px-3 py-3 font-medium text-gray-800 dark:text-white/90">
+                                                    {versao.version}
+                                                </td>
+                                                <td className="px-3 py-3">
+                                                    <Badge color={versao.vigente ? 'success' : 'light'} size="sm">
+                                                        {versao.status_label}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-3 py-3 text-gray-500 dark:text-gray-400">
+                                                    {formatarData(versao.valid_from) ?? '—'}
+                                                    {versao.valid_to ? ` até ${formatarData(versao.valid_to)}` : ''}
+                                                </td>
+                                                <td className="px-3 py-3 text-gray-700 dark:text-gray-300">
+                                                    {versao.total}
+                                                </td>
+                                                {canMaintain && (
+                                                    <td className="px-3 py-3">
+                                                        {versao.vigente ? (
+                                                            <span className="text-theme-xs text-gray-400">Em uso</span>
+                                                        ) : (
+                                                            <Button
+                                                                size="xs"
+                                                                variant="outline"
+                                                                onClick={() => setVersaoParaAtivar(versao)}
+                                                            >
+                                                                Ativar
+                                                            </Button>
+                                                        )}
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
 
-            {canMaintain && showPublish && selecionado && (
-                <PublishQuadroVersionModal
+            {canMaintain && versaoParaAtivar && (
+                <AtivarVersaoModal
+                    versao={versaoParaAtivar}
                     quadro={quadroSelecionado}
-                    quadroLabel={selecionado.label}
-                    onClose={() => setShowPublish(false)}
-                    authUserId={auth.user?.id ?? null}
+                    onClose={() => setVersaoParaAtivar(null)}
                 />
             )}
         </>

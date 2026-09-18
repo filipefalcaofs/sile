@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Enums\RuleDomain;
+use App\Enums\RuleVersionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\PublishLouosVersionRequest;
 use App\Models\LouosQuadro10Permissao;
@@ -10,8 +11,10 @@ use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Services\Louos\LouosMaintenanceService;
+use App\Services\Rules\RuleVersionService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
+use DomainException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,6 +51,7 @@ class LouosController extends Controller
 
     public function __construct(
         private LouosMaintenanceService $maintenance,
+        private RuleVersionService $ruleVersions,
         private AuditService $audit,
     ) {}
 
@@ -89,12 +93,15 @@ class LouosController extends Controller
             'quadros' => $this->resumoQuadros(),
             'quadroSelecionado' => $quadro,
             'itens' => $itens,
+            'versoes' => $this->historicoVersoes($quadro, $domain),
             'filtros' => [
                 'quadro' => $quadro,
                 'search' => $search,
                 'per_page' => $perPage,
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
+            'urlRascunho' => route('gestao.louos.rascunho.show', ['quadro' => $quadro], false),
+            'urlManual' => route('gestao.louos.manual', ['quadro' => $quadro], false),
         ]);
     }
 
@@ -127,6 +134,64 @@ class LouosController extends Controller
         );
 
         return back()->with('status', "Nova versão {$versao->version} do {$domain->label()} publicada.");
+    }
+
+    /**
+     * Ativa uma versão já publicada do Quadro selecionado, fechando a vigente
+     * sem apagá-la. Rascunho não pode ser ativado (precisa da publicação).
+     */
+    public function activate(Request $request, RuleVersion $versao): RedirectResponse
+    {
+        $quadro = (string) $request->input('quadro', '');
+
+        if (! array_key_exists($quadro, self::QUADRO_DOMAINS)) {
+            abort(422, 'Quadro inválido ou ausente.');
+        }
+
+        $domain = self::QUADRO_DOMAINS[$quadro];
+
+        if ($versao->domain !== $domain) {
+            abort(422, 'A versão não pertence ao Quadro selecionado.');
+        }
+
+        try {
+            $ativada = $this->ruleVersions->activate($versao);
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('gestao.louos.index', ['quadro' => $quadro])
+            ->with('status', "Versão {$ativada->version} ativada e em uso.");
+    }
+
+    /**
+     * Histórico das versões publicadas do Quadro (vigente + substituídas).
+     *
+     * @return list<array{id: int, version: string, status: string, status_label: string, valid_from: string|null, valid_to: string|null, source: string|null, total: int, vigente: bool}>
+     */
+    private function historicoVersoes(string $quadro, RuleDomain $domain): array
+    {
+        return RuleVersion::query()
+            ->where('domain', $domain->value)
+            ->where('status', '!=', RuleVersionStatus::Rascunho->value)
+            ->orderByRaw('case when status = ? then 0 else 1 end', [RuleVersionStatus::Vigente->value])
+            ->orderByDesc('valid_from')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (RuleVersion $versao): array => [
+                'id' => $versao->id,
+                'version' => $versao->version,
+                'status' => $versao->status->value,
+                'status_label' => $versao->status->label(),
+                'valid_from' => $versao->valid_from?->toDateString(),
+                'valid_to' => $versao->valid_to?->toDateString(),
+                'source' => $versao->source,
+                'total' => $this->contarLinhas($quadro, $versao),
+                'vigente' => $versao->status === RuleVersionStatus::Vigente,
+            ])
+            ->values()
+            ->all();
     }
 
     /**

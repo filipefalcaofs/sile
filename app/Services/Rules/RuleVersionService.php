@@ -8,6 +8,7 @@ use App\Exceptions\FourEyesViolationException;
 use App\Models\RuleVersion;
 use App\Support\Audit\AuditService;
 use Carbon\CarbonInterface;
+use DomainException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -120,6 +121,76 @@ class RuleVersionService
             );
 
             return $draft->refresh();
+        });
+    }
+
+    /**
+     * Torna vigente uma versão já publicada (substituída). Fecha a vigente
+     * atual sem apagá-la — o histórico permanece para reprodução. Rascunho
+     * não pode ser ativado (precisa passar pela publicação). Idempotente
+     * quando o alvo já é a vigente.
+     *
+     * @throws DomainException quando o alvo ainda é rascunho
+     */
+    public function activate(RuleVersion $version, ?CarbonInterface $validFrom = null): RuleVersion
+    {
+        if ($version->status === RuleVersionStatus::Rascunho) {
+            throw new DomainException(
+                "A versão '{$version->version}' ainda é rascunho e não pode ser ativada — publique-a antes.",
+            );
+        }
+
+        if ($version->status === RuleVersionStatus::Vigente && $version->valid_to === null) {
+            return $version;
+        }
+
+        return DB::transaction(function () use ($version, $validFrom): RuleVersion {
+            $validFrom ??= Carbon::today();
+
+            $previous = RuleVersion::query()
+                ->where('domain', $version->domain->value)
+                ->where('status', RuleVersionStatus::Vigente->value)
+                ->whereNull('valid_to')
+                ->whereKeyNot($version->getKey())
+                ->get();
+
+            RuleVersion::query()
+                ->where('domain', $version->domain->value)
+                ->where('status', RuleVersionStatus::Vigente->value)
+                ->whereNull('valid_to')
+                ->whereKeyNot($version->getKey())
+                ->update([
+                    'status' => RuleVersionStatus::Substituida->value,
+                    'valid_to' => $validFrom,
+                ]);
+
+            $periodoAnterior = [
+                'valid_from' => $version->valid_from?->toDateString(),
+                'valid_to' => $version->valid_to?->toDateString(),
+            ];
+
+            $version->update([
+                'status' => RuleVersionStatus::Vigente,
+                'valid_from' => $validFrom,
+                'valid_to' => null,
+            ]);
+
+            $this->audit->log(
+                logName: 'regras',
+                event: 'ativacao-versao',
+                description: "Ativação da versão {$version->version} do domínio {$version->domain->label()}",
+                properties: [
+                    'dominio' => $version->domain->value,
+                    'versao' => $version->version,
+                    'substituiu' => $previous->pluck('version')->values()->all(),
+                    'periodo_anterior' => $periodoAnterior,
+                ],
+                subject: $version,
+                result: 'sucesso',
+                rulesVersion: $version->version,
+            );
+
+            return $version->refresh();
         });
     }
 }

@@ -1,4 +1,4 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
@@ -64,6 +64,7 @@ interface RascunhoProps {
     diff: DiffInfo | null;
     canPublish: boolean;
     perPageOptions?: number[];
+    urlManual: string;
 }
 
 type SharedPropsWithImportacao = SharedProps & {
@@ -249,9 +250,14 @@ function ImportarCsvModal({
     quadro: string;
     onClose: () => void;
 }) {
-    const { data, setData, post, processing, errors } = useForm<{ quadro: string; arquivo: File | null }>({
+    const { data, setData, post, processing, errors } = useForm<{
+        quadro: string;
+        arquivo: File | null;
+        substituir: boolean;
+    }>({
         quadro,
         arquivo: null,
+        substituir: true,
     });
 
     function submit(event: FormEvent) {
@@ -268,7 +274,9 @@ function ImportarCsvModal({
         <Modal isOpen onClose={onClose} className="m-4 max-w-lg p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Importar CSV</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                As linhas do arquivo serão inseridas ou atualizadas no rascunho pela chave natural.
+                O arquivo entra como nova carga do rascunho. Marque substituir para apagar as linhas copiadas da
+                vigente e ficar só com o que veio no CSV — é o caminho para atualizar o Quadro com uma planilha
+                oficial.
             </p>
 
             <form onSubmit={submit} className="mt-5 flex flex-col gap-4">
@@ -285,6 +293,19 @@ function ImportarCsvModal({
                     />
                     {errors.arquivo && <p className="mt-1 text-theme-xs text-error-500">{errors.arquivo}</p>}
                 </div>
+
+                <label className="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300">
+                    <input
+                        type="checkbox"
+                        checked={data.substituir}
+                        onChange={(event) => setData('substituir', event.target.checked)}
+                        className="mt-0.5 size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                    />
+                    <span>
+                        Substituir todas as linhas do rascunho pelo arquivo. Desmarque para apenas inserir ou
+                        atualizar pela chave natural, sem apagar o que já estava no rascunho.
+                    </span>
+                </label>
 
                 <div className="flex items-center justify-end gap-3">
                     <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>
@@ -457,7 +478,15 @@ function DescartarModal({
 }
 
 /** Formulário de abertura de rascunho quando nenhum está ativo. */
-function AbrirRascunhoCard({ quadro, quadroLabel }: { quadro: string; quadroLabel: string }) {
+function AbrirRascunhoCard({
+    quadro,
+    quadroLabel,
+    urlManual,
+}: {
+    quadro: string;
+    quadroLabel: string;
+    urlManual: string;
+}) {
     const { data, setData, post, processing, errors } = useForm({ quadro, version: '' });
 
     function submit(event: FormEvent) {
@@ -476,6 +505,14 @@ function AbrirRascunhoCard({ quadro, quadroLabel }: { quadro: string; quadroLabe
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             Abra um rascunho de edição para o {quadroLabel}. A versão vigente permanece intacta até a
                             publicação.
+                        </p>
+                        <p className="mt-3">
+                            <Link
+                                href={urlManual}
+                                className="text-sm text-brand-600 underline-offset-2 hover:underline focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                            >
+                                Como montar o CSV deste Quadro
+                            </Link>
                         </p>
                     </div>
                     <form onSubmit={submit} className="flex w-full items-end gap-3 sm:w-auto">
@@ -511,6 +548,7 @@ export default function LouosRascunho({
     diff,
     canPublish,
     perPageOptions = PER_PAGE_OPTIONS,
+    urlManual,
 }: RascunhoProps) {
     const { auth, flash } = usePage<SharedPropsWithImportacao>().props;
     const canMaintain = auth.permissions.includes('manter-louos');
@@ -574,6 +612,14 @@ export default function LouosRascunho({
                     { label: 'Painel', href: '/gestao' },
                     { label: 'Quadros da LOUOS', href: '/gestao/louos' },
                 ]}
+                actions={
+                    <Link
+                        href={urlManual}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03]"
+                    >
+                        Manual de CSV
+                    </Link>
+                }
             />
 
             <div className="space-y-6">
@@ -595,7 +641,7 @@ export default function LouosRascunho({
 
                 {draft === null ? (
                     canMaintain ? (
-                        <AbrirRascunhoCard quadro={quadro} quadroLabel={quadroLabel} />
+                        <AbrirRascunhoCard quadro={quadro} quadroLabel={quadroLabel} urlManual={urlManual} />
                     ) : (
                         <Card>
                             <CardContent>
@@ -639,6 +685,12 @@ export default function LouosRascunho({
                                             >
                                                 Importar CSV
                                             </Button>
+                                            <Link
+                                                href={urlManual}
+                                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03]"
+                                            >
+                                                Manual de CSV
+                                            </Link>
                                             <a
                                                 href={`/gestao/louos/modelo-csv?quadro=${quadro}`}
                                                 download
