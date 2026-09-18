@@ -126,7 +126,7 @@ O inventário da Fase 4 era baseado em constantes; a revisão final encontrou te
 
 ---
 
-## Fase 6 — Vocabulário único front × back
+## Fase 6 — Vocabulário único front × back — **PARCIAL 2026-09-18** (plano `2026-09-18-fase6-vocabulario.md`; 6.1 e 6.4 feitos; 6.2/6.3 bloqueados na SEDUR)
 
 | Item | Ação | Esforço |
 |---|---|---|
