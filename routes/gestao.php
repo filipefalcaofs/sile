@@ -25,6 +25,7 @@ use App\Http\Controllers\Gestao\ExportacaoController;
 use App\Http\Controllers\Gestao\ForgotPasswordController;
 use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\HolidayController;
+use App\Http\Controllers\Gestao\IndeferimentoDocumentController;
 use App\Http\Controllers\Gestao\InscricaoImobiliariaIntegrationController;
 use App\Http\Controllers\Gestao\LegalTermController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
@@ -605,6 +606,13 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
                 Route::get('tvl/{tvlDocument}/download', [TvlDocumentController::class, 'download'])
                     ->middleware('signed')
                     ->name('tvl.download');
+                // Documento de indeferimento fundamentado (espelho do TVL):
+                // emitir (decisão indeferida) + download assinado do disco NÃO
+                // público — nunca URL pública, nunca ao cidadão.
+                Route::post('{viabilityRequest}/indeferimento', [IndeferimentoDocumentController::class, 'store'])->name('indeferimento.store');
+                Route::get('indeferimento/{indeferimentoDocument}/download', [IndeferimentoDocumentController::class, 'download'])
+                    ->middleware('signed')
+                    ->name('indeferimento.download');
                 // Desvinculação manual da inscrição da sede de escritório virtual
                 // (RN-EV-06) — gatilho de retaguarda até o REDESIM/cassação automatizarem.
                 Route::post('{viabilityRequest}/desvincular-inscricao', EscritorioVirtualDesvinculacaoController::class)->name('desvincular-inscricao');
