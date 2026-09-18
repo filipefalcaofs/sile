@@ -5,6 +5,7 @@ namespace App\Services\Relatorios;
 use App\Enums\AnalysisCategory;
 use App\Enums\DecisionOutcome;
 use App\Enums\RuleDomain;
+use App\Enums\ViabilityRequestStatus;
 use App\Models\RuleVersion;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -54,6 +55,67 @@ class IndicadoresViabilidadeService
                 'total' => (int) $linha->total,
             ])
             ->all();
+    }
+
+    public function volumeProtocolos(ReportFilters $f): int
+    {
+        return $this->baseOperacao($f)->count();
+    }
+
+    /**
+     * @return list<array{dia: string, entrada: int, saida: int}>
+     */
+    public function serieFluxo(ReportFilters $f): array
+    {
+        $entrada = collect($this->baseOperacao($f)
+            ->groupBy('dia')
+            ->orderBy('dia')
+            ->get([
+                DB::raw('date(viability_requests.protocoled_at) as dia'),
+                DB::raw('count(*) as total'),
+            ]))
+            ->keyBy(fn ($linha): string => (string) $linha->dia);
+
+        $saida = collect($this->decisoesBase($f)
+            ->groupBy('dia')
+            ->orderBy('dia')
+            ->get([
+                DB::raw('date(viability_decisions.decided_at) as dia'),
+                DB::raw('count(*) as total'),
+            ]))
+            ->keyBy(fn ($linha): string => (string) $linha->dia);
+
+        return $entrada->keys()
+            ->merge($saida->keys())
+            ->unique()
+            ->sort()
+            ->values()
+            ->map(fn (string $dia): array => [
+                'dia' => $dia,
+                'entrada' => (int) ($entrada->get($dia)?->total ?? 0),
+                'saida' => (int) ($saida->get($dia)?->total ?? 0),
+            ])
+            ->all();
+    }
+
+    /**
+     * @return array{total: int, expresso: int, humano: int}
+     */
+    public function decisoesPorFlow(ReportFilters $f): array
+    {
+        $porFlow = $this->decisoesBase($f)
+            ->groupBy('viability_decisions.flow')
+            ->get([
+                'viability_decisions.flow as flow',
+                DB::raw('count(*) as total'),
+            ])
+            ->keyBy(fn ($linha): string => (string) $linha->flow);
+
+        return [
+            'total' => $this->decisoesBase($f)->count(),
+            'expresso' => (int) ($porFlow->get('expresso')?->total ?? 0),
+            'humano' => (int) ($porFlow->get('analise_tecnica')?->total ?? 0),
+        ];
     }
 
     /**
@@ -194,6 +256,17 @@ class IndicadoresViabilidadeService
             ->when($f->bairro(), fn (Builder $q, string $b): Builder => $q->whereLike('viability_requests.address_neighborhood', "%{$b}%", caseSensitive: false))
             ->when($f->categoria(), fn (Builder $q, string $c): Builder => $this->aplicarCategoria($q, $c))
             ->when($f->cnae(), fn (Builder $q, string $cnae): Builder => $q->whereHas('cnaes', fn (Builder $c) => $c->where('cnaes.code', $cnae)));
+    }
+
+    /**
+     * @return Builder<ViabilityRequest>
+     */
+    private function baseOperacao(ReportFilters $f): Builder
+    {
+        return $this->baseQuery($f)->whereNotIn('viability_requests.status', [
+            ViabilityRequestStatus::Rascunho->value,
+            ViabilityRequestStatus::Cancelada->value,
+        ]);
     }
 
     /**

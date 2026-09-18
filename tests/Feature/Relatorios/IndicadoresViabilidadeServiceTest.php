@@ -229,4 +229,73 @@ class IndicadoresViabilidadeServiceTest extends TestCase
 
         $this->assertNull($this->service()->taxaIndeferimento($filtros)['taxa']);
     }
+
+    #[Test]
+    public function volume_protocolos_ignora_rascunho_e_cancelada(): void
+    {
+        $this->protocolada(['protocoled_at' => Carbon::parse('2026-03-10 09:00:00')]);
+        $this->protocolada([
+            'status' => ViabilityRequestStatus::Cancelada,
+            'protocoled_at' => Carbon::parse('2026-03-10 10:00:00'),
+        ]);
+        ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::Rascunho,
+            'protocoled_at' => null,
+        ]);
+
+        $filtros = ReportFilters::fromArray(['data_de' => '2026-03-01', 'data_ate' => '2026-03-31']);
+
+        $this->assertSame(1, $this->service()->volumeProtocolos($filtros));
+    }
+
+    #[Test]
+    public function serie_fluxo_casa_entrada_e_saida_por_dia(): void
+    {
+        $this->protocolada(['protocoled_at' => Carbon::parse('2026-03-10 09:00:00')]);
+        $this->protocolada(['protocoled_at' => Carbon::parse('2026-03-10 16:00:00')]);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $this->protocolada(['protocoled_at' => Carbon::parse('2020-01-01')])->id,
+            'outcome' => DecisionOutcome::Deferida,
+            'tvl_product_number' => null,
+            'decided_at' => Carbon::parse('2026-03-10 11:00:00'),
+        ]);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $this->protocolada(['protocoled_at' => Carbon::parse('2020-01-01')])->id,
+            'outcome' => DecisionOutcome::Indeferida,
+            'tvl_product_number' => null,
+            'decided_at' => Carbon::parse('2026-03-11 11:00:00'),
+        ]);
+
+        $serie = $this->service()->serieFluxo(ReportFilters::fromArray([
+            'data_de' => '2026-03-01',
+            'data_ate' => '2026-03-31',
+        ]));
+
+        $this->assertSame([
+            ['dia' => '2026-03-10', 'entrada' => 2, 'saida' => 1],
+            ['dia' => '2026-03-11', 'entrada' => 0, 'saida' => 1],
+        ], $serie);
+    }
+
+    #[Test]
+    public function decisoes_por_flow_separa_expresso_e_humano(): void
+    {
+        $this->decisao(DecisionOutcome::Deferida, '2026-03-10 11:00:00');
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $this->protocolada(['protocoled_at' => Carbon::parse('2026-03-08')])->id,
+            'flow' => 'analise_tecnica',
+            'outcome' => DecisionOutcome::Indeferida,
+            'tvl_product_number' => null,
+            'decided_at' => Carbon::parse('2026-03-10 12:00:00'),
+        ]);
+
+        $totais = $this->service()->decisoesPorFlow(ReportFilters::fromArray([
+            'data_de' => '2026-03-01',
+            'data_ate' => '2026-03-31',
+        ]));
+
+        $this->assertSame(2, $totais['total']);
+        $this->assertSame(1, $totais['expresso']);
+        $this->assertSame(1, $totais['humano']);
+    }
 }
