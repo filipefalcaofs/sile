@@ -32,7 +32,9 @@ use Illuminate\Support\Collection;
  * assigned_at, analysis_category, in_fine_mesh, analysis_stage,
  * analysis_stage_started_at, analysis_due_at) também ficam FORA do fillable:
  * são escritas pelos serviços de distribuição (HU-080/081) e de SLA (HU-144),
- * nunca pelo cidadão.
+ * nunca pelo cidadão. O território materializado (zona_codigo, bairro_oficial —
+ * Onda GIS) idem: é escrito pelo TerritorioProcessoService a partir da
+ * identificação espacial, nunca pelo cidadão.
  */
 #[Fillable([
     'origin',

@@ -16,11 +16,13 @@ use Illuminate\Support\Facades\DB;
  * deferimento — insumo de planejamento da SEDUR (onde a atividade econômica
  * concentra e como decide).
  *
- * Degradação HONESTA (entrega funcional sem fachada): a zona urbanística oficial
- * (Quadro LOUOS / GIS GeoServer SEDUR) está pendente; em vez de inventar uma
- * zona, o recorte é por `address_neighborhood` (dado real já carregado). A
- * fidelidade plena por zona/polígono entra quando a base oficial for liberada
- * (PostGIS) — muda a carga, não a lógica.
+ * Território MATERIALIZADO (Onda GIS): a zona urbanística oficial (GeoServer
+ * SEDUR — acesso validado em produção) e o bairro oficial (camada GeoSalvador)
+ * são gravados no processo na identificação do imóvel (zona_codigo /
+ * bairro_oficial). O recorte por bairro usa o canônico com o digitado de
+ * fallback (coalesce); o recorte por zona usa só o materializado — quem não
+ * tem zona identificada entra só no resumo (sem_zona), nunca em bucket
+ * fantasma.
  *
  * Route-free e sem estado: recebe um {@see ReportFilters} e devolve arrays
  * prontos para a UI. Período sem dados → lista vazia; bairro sem decisão → taxa
@@ -61,6 +63,11 @@ class GeoBairroIndicadorService
      * deferidas ÷ (deferidas + indeferidas) — null sem decisões (CA-03). Bairro
      * nulo é excluído (entra só no resumo).
      *
+     * O bairro agregado é o CANÔNICO materializado (bairro_oficial, da camada
+     * GeoSalvador identificada pelo ponto do imóvel — Onda GIS) com o digitado
+     * como fallback (coalesce portável): grafias diferentes do mesmo bairro
+     * deixam de virar chaves distintas quando a identificação oficial existe.
+     *
      * @return array{degradacao: string, rotulo: string, itens: list<array{bairro: string, total: int, deferidas: int, indeferidas: int, taxa_deferimento: float|null}>}
      */
     public function porBairro(ReportFilters $f, int $limite = 100): array
@@ -69,14 +76,14 @@ class GeoBairroIndicadorService
         $indeferida = DecisionOutcome::Indeferida->value;
 
         $itens = $this->baseQuery($f)
-            ->whereNotNull('viability_requests.address_neighborhood')
+            ->whereNotNull(DB::raw('coalesce(viability_requests.bairro_oficial, viability_requests.address_neighborhood)'))
             ->leftJoin('viability_decisions as vd', 'vd.viability_request_id', '=', 'viability_requests.id')
             ->groupBy('bairro')
             ->orderByDesc('total')
             ->orderBy('bairro')
             ->limit($limite)
             ->get([
-                'viability_requests.address_neighborhood as bairro',
+                DB::raw('coalesce(viability_requests.bairro_oficial, viability_requests.address_neighborhood) as bairro'),
                 DB::raw('count(distinct viability_requests.id) as total'),
                 DB::raw("count(distinct case when vd.outcome = '{$deferida}' then viability_requests.id end) as deferidas"),
                 DB::raw("count(distinct case when vd.outcome = '{$indeferida}' then viability_requests.id end) as indeferidas"),
@@ -98,7 +105,58 @@ class GeoBairroIndicadorService
 
         return [
             'degradacao' => 'bairro',
-            'rotulo' => 'Zona urbanística oficial indisponível (pendente SEDUR) — agrupado por bairro',
+            'rotulo' => 'Agrupado pelo bairro oficial (identificação territorial); quando não identificado, pelo bairro do endereço informado',
+            'itens' => $itens,
+        ];
+    }
+
+    /**
+     * Distribuição por ZONA URBANÍSTICA OFICIAL (Onda GIS): agrega pelo
+     * zona_codigo MATERIALIZADO na identificação do imóvel (GeoServer WFS
+     * validado em produção). Zona nula (sem polígono ou base indisponível na
+     * época) não vira bucket fantasma — entra só no resumo (sem_zona). Mesmas
+     * métricas do porBairro; taxa null sem decisões (CA-03).
+     *
+     * @return array{resumo: array{com_zona: int, sem_zona: int}, itens: list<array{zona: string, total: int, deferidas: int, indeferidas: int, taxa_deferimento: float|null}>}
+     */
+    public function porZona(ReportFilters $f, int $limite = 100): array
+    {
+        $deferida = DecisionOutcome::Deferida->value;
+        $indeferida = DecisionOutcome::Indeferida->value;
+
+        $comZona = $this->baseQuery($f)->whereNotNull('viability_requests.zona_codigo')->count();
+        $semZona = $this->baseQuery($f)->whereNull('viability_requests.zona_codigo')->count();
+
+        $itens = $this->baseQuery($f)
+            ->whereNotNull('viability_requests.zona_codigo')
+            ->leftJoin('viability_decisions as vd', 'vd.viability_request_id', '=', 'viability_requests.id')
+            ->groupBy('zona')
+            ->orderByDesc('total')
+            ->orderBy('zona')
+            ->limit($limite)
+            ->get([
+                'viability_requests.zona_codigo as zona',
+                DB::raw('count(distinct viability_requests.id) as total'),
+                DB::raw("count(distinct case when vd.outcome = '{$deferida}' then viability_requests.id end) as deferidas"),
+                DB::raw("count(distinct case when vd.outcome = '{$indeferida}' then viability_requests.id end) as indeferidas"),
+            ])
+            ->map(function ($linha): array {
+                $deferidas = (int) $linha->deferidas;
+                $indeferidas = (int) $linha->indeferidas;
+                $decididas = $deferidas + $indeferidas;
+
+                return [
+                    'zona' => (string) $linha->zona,
+                    'total' => (int) $linha->total,
+                    'deferidas' => $deferidas,
+                    'indeferidas' => $indeferidas,
+                    'taxa_deferimento' => $decididas > 0 ? round($deferidas / $decididas * 100, 1) : null,
+                ];
+            })
+            ->all();
+
+        return [
+            'resumo' => ['com_zona' => $comZona, 'sem_zona' => $semZona],
             'itens' => $itens,
         ];
     }

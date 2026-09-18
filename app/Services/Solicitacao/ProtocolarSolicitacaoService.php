@@ -7,6 +7,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Events\SolicitacaoProtocolada;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Geo\TerritorioProcessoService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -37,6 +38,7 @@ class ProtocolarSolicitacaoService
         private ProtocolNumberGenerator $generator,
         private ViabilityRequestStateMachine $stateMachine,
         private DocumentRequirementResolver $documents,
+        private TerritorioProcessoService $territorioProcesso,
     ) {}
 
     public function protocol(ViabilityRequest $request, User $actor, bool $proceedDespite = false): ViabilityRequest
@@ -63,6 +65,16 @@ class ProtocolarSolicitacaoService
                 publicLabel: ViabilityRequestStatus::Protocolada->publicLabel(),
             );
         });
+
+        // Território MATERIALIZADO (Onda GIS) como rede de segurança: a tela do
+        // imóvel já grava zona/bairro oficiais na identificação; aqui cobre o
+        // que chegou sem passar por ela (ex.: importações). Só quando falta —
+        // nunca sobrescreve (a regra conservadora é do serviço). Fora da
+        // transação e sem bloquear o protocolo: a degradação do GIS já é
+        // comunicada pelo TerritoryService.
+        if ($request->zona_codigo === null || $request->bairro_oficial === null) {
+            $this->territorioProcesso->materializar($request);
+        }
 
         // Disparo APÓS o commit: a transação já fechou aqui. O evento implementa
         // ShouldDispatchAfterCommit como defesa adicional contra disparo precoce.

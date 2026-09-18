@@ -179,13 +179,14 @@ class RelatorioController extends Controller
     }
 
     /**
-     * Painel geoeconômico por bairro (Geo BI interno — Módulo 1): distribuição
-     * das solicitações por bairro com decisões e taxa de deferimento, para
-     * planejamento da SEDUR. Degradação honesta enquanto a zona urbanística
-     * oficial (GIS) está pendente — agrupa por bairro, nunca inventa zona. Com
-     * ?formato=, exporta o conjunto de solicitações filtrado pelo contrato único
-     * (SolicitacoesReportSource — RN-005); senão audita a consulta e renderiza a
-     * tela com a agregação real.
+     * Painel geoeconômico (Geo BI interno — Módulo 1): distribuição das
+     * solicitações por bairro canônico (oficial materializado, com o digitado
+     * de fallback) e por ZONA URBANÍSTICA OFICIAL (zona_codigo materializado na
+     * identificação do imóvel — GeoServer SEDUR validado em produção, Onda
+     * GIS), com decisões e taxa de deferimento. Com ?formato=, exporta o
+     * conjunto de solicitações filtrado pelo contrato único
+     * (SolicitacoesReportSource — RN-005); senão audita a consulta e renderiza
+     * a tela com a agregação real.
      */
     public function geoBairro(RelatorioFiltersRequest $request): InertiaResponse|Response
     {
@@ -200,6 +201,7 @@ class RelatorioController extends Controller
         return Inertia::render('gestao/relatorios/geo-bairro', [
             'resumo' => $this->geoBairro->resumo($filtros),
             'porBairro' => $this->geoBairro->porBairro($filtros),
+            'porZona' => $this->geoBairro->porZona($filtros),
             'filtros' => $filtros->aplicados(),
         ]);
     }

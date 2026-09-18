@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\UpdateSolicitacaoImovelRequest;
 use App\Models\ViabilityRequest;
+use App\Services\Geo\TerritorioProcessoService;
 use App\Services\Geo\TerritoryService;
 use App\Services\Solicitacao\PropertyGeometryWriter;
 use App\Support\Audit\AuditService;
@@ -29,6 +30,7 @@ class SolicitacaoImovelController extends Controller
         private TerritoryService $territory,
         private PropertyGeometryWriter $geometryWriter,
         private AuditService $audit,
+        private TerritorioProcessoService $territorioProcesso,
     ) {}
 
     public function update(UpdateSolicitacaoImovelRequest $request, ViabilityRequest $solicitacao): RedirectResponse
@@ -52,7 +54,7 @@ class SolicitacaoImovelController extends Controller
         $polygonArea = $this->geometryWriter->polygonAreaSquareMeters($geojson);
         $areaAlert = $this->buildAreaAlert($declaredArea, $polygonArea);
 
-        DB::transaction(function () use ($request, $solicitacao, $geojson, $areaAlert): void {
+        DB::transaction(function () use ($request, $solicitacao, $geojson, $areaAlert, $territoryResult): void {
             $solicitacao->update([
                 'property_polygon_geojson' => $geojson,
                 'used_area_m2' => $request->validated('used_area_m2'),
@@ -81,6 +83,11 @@ class SolicitacaoImovelController extends Controller
             // Geometria derivada (property_polygon) — só no pgsql; em SQLite a
             // fonte é o jsonb (no-op).
             $this->geometryWriter->write($solicitacao);
+
+            // Território MATERIALIZADO (Onda GIS): grava zona_codigo/bairro_oficial
+            // reusando o resultado já identificado acima — sem segunda consulta
+            // WFS. Degradação nunca sobrescreve dado bom (regra do serviço).
+            $this->territorioProcesso->materializar($solicitacao, $territoryResult);
 
             // Mudança de imóvel/área invalida a simulação orientativa (RN-005).
             $solicitacao->markSimulationStale();

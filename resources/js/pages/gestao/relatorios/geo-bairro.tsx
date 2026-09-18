@@ -26,11 +26,25 @@ interface BairroItem {
     taxa_deferimento: number | null;
 }
 
-/** Recorte por bairro — a zona urbanística oficial (GIS) está pendente na SEDUR. */
+/** Recorte por bairro — canônico materializado com o digitado de fallback. */
 interface PorBairro {
     degradacao: string;
     rotulo: string;
     itens: BairroItem[];
+}
+
+/** Linha agregada por zona urbanística oficial (Onda GIS — zona materializada). */
+interface ZonaItem {
+    zona: string;
+    total: number;
+    deferidas: number;
+    indeferidas: number;
+    taxa_deferimento: number | null;
+}
+
+interface PorZona {
+    resumo: { com_zona: number; sem_zona: number };
+    itens: ZonaItem[];
 }
 
 interface Resumo {
@@ -51,6 +65,7 @@ interface FiltrosAplicados {
 interface GeoBairroProps {
     resumo: Resumo;
     porBairro: PorBairro;
+    porZona: PorZona;
     filtros: FiltrosAplicados;
 }
 
@@ -107,6 +122,43 @@ function GraficoSemDados() {
     );
 }
 
+const colunasZona: ColumnDef<ZonaItem>[] = [
+    {
+        id: 'zona',
+        header: 'Zona',
+        cellClassName: 'font-medium text-gray-800 dark:text-white/90',
+        cell: (linha) => linha.zona,
+    },
+    {
+        id: 'total',
+        header: 'Solicitações',
+        align: 'end',
+        cellClassName: 'whitespace-nowrap font-medium text-gray-800 dark:text-white/90',
+        cell: (linha) => numberFormat.format(linha.total),
+    },
+    {
+        id: 'deferidas',
+        header: 'Deferidas',
+        align: 'end',
+        cellClassName: 'whitespace-nowrap text-success-600 dark:text-success-400',
+        cell: (linha) => numberFormat.format(linha.deferidas),
+    },
+    {
+        id: 'indeferidas',
+        header: 'Indeferidas',
+        align: 'end',
+        cellClassName: 'whitespace-nowrap text-error-600 dark:text-error-400',
+        cell: (linha) => numberFormat.format(linha.indeferidas),
+    },
+    {
+        id: 'taxa',
+        header: 'Taxa de deferimento',
+        align: 'end',
+        cellClassName: 'whitespace-nowrap font-medium text-gray-800 dark:text-white/90',
+        cell: (linha) => formatarPercentual(linha.taxa_deferimento),
+    },
+];
+
 const colunasBairro: ColumnDef<BairroItem>[] = [
     {
         id: 'bairro',
@@ -144,7 +196,7 @@ const colunasBairro: ColumnDef<BairroItem>[] = [
     },
 ];
 
-export default function GeoBairroPainel({ resumo, porBairro, filtros }: GeoBairroProps) {
+export default function GeoBairroPainel({ resumo, porBairro, porZona, filtros }: GeoBairroProps) {
     const [form, setForm] = useState<FiltrosForm>({
         data_de: filtros.data_de ?? '',
         data_ate: filtros.data_ate ?? '',
@@ -322,7 +374,30 @@ export default function GeoBairroPainel({ resumo, porBairro, filtros }: GeoBairr
                 </Card>
 
                 <Card>
-                    <CardHeader title="Detalhamento por bairro" description="Solicitações, decisões e taxa de deferimento por bairro." />
+                    <CardHeader
+                        title="Por zona urbanística oficial"
+                        description={`Solicitações, decisões e taxa de deferimento pela zona identificada no imóvel (GeoServer SEDUR). ${numberFormat.format(porZona.resumo.sem_zona)} ${porZona.resumo.sem_zona === 1 ? 'processo sem' : 'processos sem'} zona identificada no recorte ficam fora desta tabela.`}
+                    />
+                    <CardContent>
+                        <DataTable<ZonaItem>
+                            columns={colunasZona}
+                            rows={porZona.itens}
+                            rowKey={(linha) => linha.zona}
+                            loading={processing}
+                            skeletonRows={8}
+                            density="compact"
+                            emptyState={
+                                <EmptyState
+                                    title="Nenhuma zona identificada no recorte"
+                                    description="A zona é gravada na identificação do imóvel; processos anteriores ao GIS são cobertos pelo comando de materialização (geo:materializar-territorio)."
+                                />
+                            }
+                        />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader title="Detalhamento por bairro" description="Solicitações, decisões e taxa de deferimento por bairro — oficial (identificação territorial) com o informado no endereço como fallback." />
                     <CardContent>
                         <DataTable<BairroItem>
                             columns={colunasBairro}
@@ -337,7 +412,7 @@ export default function GeoBairroPainel({ resumo, porBairro, filtros }: GeoBairr
                                     description={
                                         filtrando
                                             ? 'Ajuste o período ou os filtros e tente novamente.'
-                                            : 'A zona urbanística oficial (Quadro LOUOS) está pendente da SEDUR; até lá o recorte é por bairro.'
+                                            : 'Sem solicitações protocoladas no recorte.'
                                     }
                                 />
                             }
