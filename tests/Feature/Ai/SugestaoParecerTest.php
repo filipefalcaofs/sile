@@ -90,6 +90,7 @@ class SugestaoParecerTest extends TestCase
         SugestaoParecerAgent::fake([[
             'minuta' => 'Trata-se de pedido de viabilidade locacional para comércio varejista no imóvel indicado.',
             'fundamentacao' => 'Enquadramento permitido conforme a pré-análise do motor (Quadro 7 da LOUOS, versão registrada).',
+            'recomendacao' => 'deferida',
             'confianca' => 'alta',
             'fonte' => 'pré-análise do motor (engine_snapshot) e enquadramento por CNAE da ficha',
         ]]);
@@ -109,7 +110,7 @@ class SugestaoParecerTest extends TestCase
         $this->assertSame(AiSuggestionStatus::Sugerida, $sugestao->status);
         $this->assertNotEmpty($sugestao->output['minuta']);
         $this->assertNotEmpty($sugestao->output['fundamentacao']);
-        $this->assertSame('parecer-v1', $sugestao->prompt_version);
+        $this->assertSame('parecer-v2', $sugestao->prompt_version);
         $this->assertSame($processo->id, $sugestao->viability_request_id);
 
         $parecer = AnalysisRecord::query()->where('viability_request_id', $processo->id)->value('parecer');
@@ -146,6 +147,7 @@ class SugestaoParecerTest extends TestCase
         SugestaoParecerAgent::fake([[
             'minuta' => 'qualquer',
             'fundamentacao' => 'qualquer',
+            'recomendacao' => 'sem_indicacao',
             'confianca' => 'alta',
             'fonte' => 'motor',
         ]]);
@@ -166,6 +168,7 @@ class SugestaoParecerTest extends TestCase
         SugestaoParecerAgent::fake([[
             'minuta' => 'qualquer',
             'fundamentacao' => 'qualquer',
+            'recomendacao' => 'sem_indicacao',
             'confianca' => 'alta',
             'fonte' => 'motor',
         ]]);
@@ -186,6 +189,7 @@ class SugestaoParecerTest extends TestCase
         SugestaoParecerAgent::fake([[
             'minuta' => 'Minuta de apoio fundamentada no enquadramento do motor.',
             'fundamentacao' => 'Permitido conforme a pré-análise do motor (Quadro 7 da LOUOS, versão registrada).',
+            'recomendacao' => 'deferida',
             'confianca' => 'alta',
             'fonte' => 'pré-análise do motor (engine_snapshot)',
         ]]);
@@ -234,6 +238,7 @@ class SugestaoParecerTest extends TestCase
         SugestaoParecerAgent::fake([[
             'minuta' => 'Minuta nova da IA.',
             'fundamentacao' => 'Motor.',
+            'recomendacao' => 'deferida',
             'confianca' => 'alta',
             'fonte' => 'pré-análise do motor',
         ]]);

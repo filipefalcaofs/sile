@@ -20,6 +20,7 @@ use App\Services\Analise\AnalysisRecordDiff;
 use App\Services\Analise\AnalysisRecordImutavelException;
 use App\Services\Analise\AnalysisRecordService;
 use App\Services\Analise\CadastroImobiliarioFichaService;
+use App\Services\Analise\IndicacaoEspecialistaService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Support\Audit\AuditService;
@@ -51,6 +52,7 @@ class AnalysisRecordController extends Controller
         private CadastroImobiliarioFichaService $cadastroImobiliario,
         private AnaliseTecnicaDecisionService $decisao,
         private SugestaoParecerService $parecer,
+        private IndicacaoEspecialistaService $indicacaoEspecialista,
     ) {}
 
     /**
@@ -109,6 +111,7 @@ class AnalysisRecordController extends Controller
             'textosPadrao' => $this->textosPadraoAtivos(),
             'autosaveDebounceMs' => (int) config('sile.analise.autosave.debounce_ms', 1500),
             'iaFicha' => $this->iaFicha($viabilityRequest),
+            'indicacaoEspecialista' => $this->indicacaoEspecialista->paraProcesso($viabilityRequest),
             // Sugestões de IA (HU-115 alertas + HU-117 resumo do processo) — prop
             // DEFERIDA (carregada sob demanda pelo card, fora do load inicial).
             // Ao resolver, gera o resumo no mesmo request (gated; já existente ⇒

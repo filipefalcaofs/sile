@@ -22,30 +22,34 @@ class SugestaoParecerAgent implements Agent, HasStructuredOutput
 {
     use Promptable;
 
-    public const PROMPT_VERSION = 'parecer-v1';
+    public const PROMPT_VERSION = 'parecer-v2';
 
     public function instructions(): Stringable|string
     {
         return <<<'TXT'
-        Você redige uma MINUTA de parecer técnico para apoiar o analista de um
-        licenciamento eletrônico. Sua saída é uma sugestão de rascunho — você NÃO
-        decide o desfecho, NÃO conclui pela viabilidade e NÃO substitui o analista.
+        Você é o agente especialista de apoio ao analista de um licenciamento
+        eletrônico. Sua saída é uma SUGESTÃO revisável — você NÃO decide, NÃO
+        finaliza a ficha e NÃO substitui o analista.
 
         Regras invioláveis:
         - A fundamentacao deve se apoiar EXCLUSIVAMENTE na pré-análise do motor
           fornecida no enunciado (enquadramento por CNAE, resultado consolidado,
           versões dos quadros da LOUOS). NUNCA invente, deduza ou cite artigo,
           quadro, decreto ou fundamento legal que não esteja no material recebido.
-        - NÃO afirme que o processo está deferido ou indeferido. Apresente a minuta
-          como proposta de redação a ser revisada, ajustada e validada pelo humano.
+        - Em recomendacao, sugira o desfecho que o motor sustenta: "deferida"
+          quando o motor indicar deferimento/permitido; "indeferida" quando
+          indicar indeferimento/não permitido; "sem_indicacao" quando o motor
+          estiver pendente ou em análise. NUNCA invente um desfecho sem base
+          no motor.
+        - Apresente a minuta como proposta a ser revisada pelo humano. Deixe
+          claro que a recomendacao é sugestão, não decisão.
         - Quando o material do motor for insuficiente para fundamentar com
-          segurança, ajuste a confianca para baixa e diga, na minuta, o que falta —
-          jamais preencha a lacuna com texto inventado.
+          segurança, use recomendacao=sem_indicacao, ajuste a confianca para
+          baixa e diga, na minuta, o que falta — jamais preencha a lacuna.
         - Ajuste confianca à robustez real do enquadramento (baixa em caso de
           dúvida, alta apenas quando o motor sustenta a redação).
         - fonte deve identificar a origem da fundamentação (a pré-análise do motor
           e a ficha do processo) — toda minuta precisa ser rastreável ao material.
-        - Sua minuta é um apoio revisável, jamais uma decisão.
         TXT;
     }
 
@@ -60,6 +64,7 @@ class SugestaoParecerAgent implements Agent, HasStructuredOutput
         return [
             'minuta' => $schema->string()->required(),
             'fundamentacao' => $schema->string()->required(),
+            'recomendacao' => $schema->string()->enum(['deferida', 'indeferida', 'sem_indicacao'])->required(),
             'confianca' => $schema->string()->enum(['baixa', 'media', 'alta'])->required(),
             'fonte' => $schema->string()->required(),
         ];

@@ -105,9 +105,12 @@ class SugestaoParecerJob extends RunAiAgentJob
         );
 
         $linhas = [
-            'Redija uma MINUTA de parecer técnico, de apoio ao analista, fundamentada '
-                .'EXCLUSIVAMENTE na pré-análise do motor abaixo. Não decida o desfecho '
-                .'nem invente artigo, quadro ou decreto. Apresente como sugestão a revisar.',
+            'Redija uma MINUTA de parecer técnico e uma RECOMENDACAO de desfecho '
+                .'(deferida, indeferida ou sem_indicacao), de apoio ao analista, '
+                .'fundamentadas EXCLUSIVAMENTE na pré-análise do motor abaixo. '
+                .'Não decida o processo nem invente artigo, quadro ou decreto. '
+                .'A recomendacao é sugestão: só indique deferida/indeferida se o '
+                .'motor já sustentá-la; caso contrário use sem_indicacao.',
             '',
             'Endereço declarado: '.($fundamentacao['endereco'] ?? 'não informado'),
             'Área declarada (m²): '.($fundamentacao['area_m2'] ?? 'não informada'),
