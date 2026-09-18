@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Relatorios;
 
+use App\Enums\DecisionOutcome;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Sector;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Relatorios\ReportFilters;
 use App\Services\Relatorios\SlaVencimentosService;
@@ -173,5 +175,143 @@ class SlaVencimentosTest extends TestCase
         $this->actingAs($semPermissao, 'gestao')
             ->get('/gestao/relatorios/sla')
             ->assertForbidden();
+    }
+
+    public function test_aging_classifica_faixas_e_indeterminada(): void
+    {
+        $agora = Carbon::parse('2026-06-15 12:00:00');
+
+        // 25% do prazo (0_50): started 4d atrás, due daqui a 12d.
+        $this->emAndamento('VIA-2026-A0001', $agora->copy()->addDays(12)->toDateTimeString());
+        ViabilityRequest::query()->where('protocol_number', 'VIA-2026-A0001')
+            ->update(['analysis_stage_started_at' => $agora->copy()->subDays(4)]);
+
+        // 60% (50_80)
+        $this->emAndamento('VIA-2026-A0002', $agora->copy()->addDays(4)->toDateTimeString());
+        ViabilityRequest::query()->where('protocol_number', 'VIA-2026-A0002')
+            ->update(['analysis_stage_started_at' => $agora->copy()->subDays(6)]);
+
+        // 90% (80_100)
+        $this->emAndamento('VIA-2026-A0003', $agora->copy()->addDay()->toDateTimeString());
+        ViabilityRequest::query()->where('protocol_number', 'VIA-2026-A0003')
+            ->update(['analysis_stage_started_at' => $agora->copy()->subDays(9)]);
+
+        // >100%
+        $this->emAndamento('VIA-2026-A0004', '2026-06-14 12:00');
+
+        // indeterminada: sem started_at
+        $this->emAndamento('VIA-2026-A0005', $agora->copy()->addDays(5)->toDateTimeString());
+        ViabilityRequest::query()->where('protocol_number', 'VIA-2026-A0005')
+            ->update(['analysis_stage_started_at' => null]);
+
+        $aging = collect(app(SlaVencimentosService::class)->aging(ReportFilters::fromArray([])))
+            ->keyBy('faixa');
+
+        $this->assertSame(1, $aging['0_50']['total']);
+        $this->assertSame(1, $aging['50_80']['total']);
+        $this->assertSame(1, $aging['80_100']['total']);
+        $this->assertSame(1, $aging['acima_100']['total']);
+        $this->assertSame(1, $aging['indeterminada']['total']);
+    }
+
+    public function test_atrasados_por_etapa_separa_distribuicao_e_analise(): void
+    {
+        $this->emAndamento('VIA-2026-E0001', '2026-06-14 12:00'); // analise, vencido
+        $distribuicao = $this->emAndamento('VIA-2026-E0002', '2026-06-14 10:00');
+        $distribuicao->forceFill(['analysis_stage' => 'distribuicao'])->save();
+
+        $noPrazo = $this->emAndamento('VIA-2026-E0003', '2026-06-20 12:00');
+        $noPrazo->forceFill(['analysis_stage' => 'distribuicao'])->save();
+
+        $porEtapa = collect(app(SlaVencimentosService::class)->atrasadosPorEtapa(ReportFilters::fromArray([])))
+            ->keyBy('etapa');
+
+        $this->assertSame(1, $porEtapa['distribuicao']['total']);
+        $this->assertSame(1, $porEtapa['analise']['total']);
+    }
+
+    public function test_cumprimento_exclui_expresso_sem_prazo_e_degrada_taxa(): void
+    {
+        $analista = $this->analista;
+
+        $noPrazo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::Deferida,
+            'protocoled_at' => Carbon::parse('2026-06-01 09:00'),
+            'analysis_due_at' => Carbon::parse('2026-06-12 12:00'),
+        ]);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $noPrazo->id,
+            'flow' => 'analise_tecnica',
+            'decided_by_user_id' => $analista->id,
+            'outcome' => DecisionOutcome::Deferida,
+            'tvl_product_number' => null,
+            'decided_at' => Carbon::parse('2026-06-10 12:00'),
+        ]);
+
+        $atrasada = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::Indeferida,
+            'protocoled_at' => Carbon::parse('2026-06-01 09:00'),
+            'analysis_due_at' => Carbon::parse('2026-06-08 12:00'),
+        ]);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $atrasada->id,
+            'flow' => 'analise_tecnica',
+            'decided_by_user_id' => $analista->id,
+            'outcome' => DecisionOutcome::Indeferida,
+            'tvl_product_number' => null,
+            'decided_at' => Carbon::parse('2026-06-10 12:00'),
+        ]);
+
+        $expressa = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::Deferida,
+            'protocoled_at' => Carbon::parse('2026-06-01 09:00'),
+            'analysis_due_at' => null,
+        ]);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $expressa->id,
+            'flow' => 'expresso',
+            'decided_by_user_id' => null,
+            'outcome' => DecisionOutcome::Deferida,
+            'tvl_product_number' => null,
+            'decided_at' => Carbon::parse('2026-06-10 12:00'),
+        ]);
+
+        $service = app(SlaVencimentosService::class);
+        $ok = $service->cumprimento(ReportFilters::fromArray([
+            'data_de' => '2026-06-01',
+            'data_ate' => '2026-06-30',
+        ]));
+
+        $this->assertSame(2, $ok['com_prazo']);
+        $this->assertSame(1, $ok['dentro_sla']);
+        $this->assertSame(50.0, $ok['taxa']);
+
+        $vazio = $service->cumprimento(ReportFilters::fromArray([
+            'data_de' => '2020-01-01',
+            'data_ate' => '2020-01-31',
+        ]));
+        $this->assertSame(0, $vazio['com_prazo']);
+        $this->assertNull($vazio['taxa']);
+    }
+
+    public function test_periodo_nao_altera_aging_nem_resumo(): void
+    {
+        $this->emAndamento('VIA-2026-P0001', '2026-06-14 12:00');
+
+        $service = app(SlaVencimentosService::class);
+        $agora = $service->resumo(ReportFilters::fromArray([]));
+        $passado = $service->resumo(ReportFilters::fromArray([
+            'data_de' => '2020-01-01',
+            'data_ate' => '2020-01-31',
+        ]));
+
+        $this->assertSame($agora['vencidos'], $passado['vencidos']);
+        $this->assertSame(
+            $service->aging(ReportFilters::fromArray([]))[3]['total'],
+            $service->aging(ReportFilters::fromArray([
+                'data_de' => '2020-01-01',
+                'data_ate' => '2020-01-31',
+            ]))[3]['total'],
+        );
     }
 }
