@@ -11,7 +11,6 @@ use App\Services\Geo\TerritoryResult;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Louos\LouosEnquadramentoService;
-use App\Support\Audit\AuditService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
@@ -26,7 +25,7 @@ class ZonaNomeAtributosTest extends TestCase
 
     private function service(): LouosEnquadramentoService
     {
-        return new LouosEnquadramentoService(app(AuditService::class));
+        return app(LouosEnquadramentoService::class);
     }
 
     private function quadro7Faixa(string $cnae, string $grupo, string $subgrupo): void

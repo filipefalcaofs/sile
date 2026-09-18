@@ -73,12 +73,15 @@ class DecisionTextSeederTest extends TestCase
 
         $catalogo = new DecisionTextCatalog;
 
+        // Os literais das chaves LOUOS são os valores provados corretos pelo
+        // golden de byte-identidade (LouosTextosByteIdenticosTest) — as
+        // constantes foram removidas do service na migração (Fase 4, Task 2).
         $this->assertSame(
-            self::constante(LouosEnquadramentoService::class, 'FUNDAMENTO_LOUOS'),
+            'Lei nº 9.148/2016 (LOUOS)',
             $catalogo->get('base_legal.louos'),
         );
         $this->assertSame(
-            self::constante(LouosEnquadramentoService::class, 'MOTIVO_PROIBIDO'),
+            'Atividade proibida na zona pelo Quadro 10',
             $catalogo->get('louos.motivo.proibido'),
         );
         $this->assertSame(

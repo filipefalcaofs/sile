@@ -10,7 +10,6 @@ use App\Models\RuleVersion;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Louos\LouosEnquadramentoService;
-use App\Support\Audit\AuditService;
 use Database\Seeders\LouosQuadro7Seeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -30,7 +29,7 @@ class LouosEnquadramentoQuadro7Test extends TestCase
 
     private function service(): LouosEnquadramentoService
     {
-        return new LouosEnquadramentoService(app(AuditService::class));
+        return app(LouosEnquadramentoService::class);
     }
 
     private function versaoQuadro7(string $version = 'lei-9148-2016-quadro7'): RuleVersion

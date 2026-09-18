@@ -9,6 +9,7 @@ use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
@@ -35,33 +36,10 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class LouosEnquadramentoService
 {
-    private const FUNDAMENTO_LOUOS = 'Lei nº 9.148/2016 (LOUOS)';
-
-    private const MOTIVO_SEM_ENQUADRAMENTO_CONSOLIDADO = 'Atividade sem enquadramento no Quadro 7 — segue para análise técnica';
-
-    private const MOTIVO_PROIBIDO = 'Atividade proibida na zona pelo Quadro 10';
-
-    private const MOTIVO_PERMITIDO = 'Atividade permitida na zona, sem condicionantes incidentes';
-
-    private const MOTIVO_PERMITIDO_COM_CONDICOES = 'Atividade permitida na zona mediante observância das condicionantes';
-
-    private const MOTIVO_ZONA_PENDENTE = 'Permissão por zona pendente da base oficial (SEDUR)';
-
-    private const MOTIVO_SEM_ENQUADRAMENTO = 'Sem enquadramento (Quadro 7) não há permissão a verificar';
-
-    private const MOTIVO_QUADRO10_SEM_VERSAO = 'Quadro 10 sem versão vigente';
-
-    private const MOTIVO_ZONA_SEM_REGRA = 'Combinação zona × grupo de uso sem regra no Quadro 10 vigente';
-
-    private const MOTIVO_VIA_PENDENTE = 'Condições pela via dependem da classificação viária LOUOS (pendente SEDUR)';
-
-    private const MOTIVO_VIA_SEM_ATRIBUTO = 'Via identificada, porém sem o atributo de classificação viária LOUOS (pendente SEDUR)';
-
-    private const MOTIVO_VIA_SEM_VERSAO = 'Quadro de condições pela via sem versão vigente';
-
-    private const MOTIVO_VIA_SEM_REGRA = 'Classe viária × grupo de uso sem regra no quadro de via vigente';
-
-    public function __construct(private AuditService $audit) {}
+    public function __construct(
+        private AuditService $audit,
+        private DecisionTextCatalog $textos,
+    ) {}
 
     /**
      * Enquadra a atividade pela LOUOS. Use a versão vigente por padrão, a
@@ -213,9 +191,11 @@ class LouosEnquadramentoService
         // Precedência 1 — anti-fachada: sem enquadramento (Quadro 7) não há grupo
         // de uso para verificar permissão; o consolidado é honestamente pendente.
         if (($quadro7['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
+            $motivo = $this->textos->get('louos.motivo.sem_enquadramento_consolidado');
+
             return $this->consolidadoPendente(
-                self::MOTIVO_SEM_ENQUADRAMENTO_CONSOLIDADO,
-                $this->buildFundamentacao($quadro7, $quadro10, $quadro11a, self::MOTIVO_SEM_ENQUADRAMENTO_CONSOLIDADO),
+                $motivo,
+                $this->buildFundamentacao($quadro7, $quadro10, $quadro11a, $motivo),
             );
         }
 
@@ -223,7 +203,7 @@ class LouosEnquadramentoService
         // 10 indisponível por base pendente, ou sem regra) o motor JAMAIS decide;
         // propaga a degradação como pendência com o motivo da própria dimensão.
         if (in_array($quadro10['status'] ?? null, [EnquadramentoResult::STATUS_INDISPONIVEL, EnquadramentoResult::STATUS_NAO_ENCONTRADO], true)) {
-            $motivo = (string) ($quadro10['motivo'] ?? self::MOTIVO_ZONA_PENDENTE);
+            $motivo = (string) ($quadro10['motivo'] ?? $this->textos->get('louos.motivo.zona_pendente'));
 
             return $this->consolidadoPendente(
                 $motivo,
@@ -293,19 +273,20 @@ class LouosEnquadramentoService
     private function buildFundamentacao(array $quadro7, array $quadro10, array $quadro11a, ?string $motivoPendencia = null): array
     {
         $referencias = [];
+        $fundamentoLouos = $this->textos->get('base_legal.louos');
 
         if (($quadro7['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
-            $referencias[] = self::FUNDAMENTO_LOUOS.' — Quadro 7';
+            $referencias[] = $fundamentoLouos.' — Quadro 7';
         }
 
         if (($quadro10['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
             $referencias = [...$referencias, ...$this->baseLegal($quadro10)];
-            $referencias[] = self::FUNDAMENTO_LOUOS.' — Quadro 10';
+            $referencias[] = $fundamentoLouos.' — Quadro 10';
         }
 
         if (($quadro11a['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
             $referencias = [...$referencias, ...$this->baseLegal($quadro11a)];
-            $referencias[] = self::FUNDAMENTO_LOUOS.' — Quadro 11A';
+            $referencias[] = $fundamentoLouos.' — Quadro 11A';
         }
 
         if ($motivoPendencia !== null) {
@@ -522,7 +503,7 @@ class LouosEnquadramentoService
         // consulta louos_quadro10_permissoes nem inventa permissão.
         if ($zona === null || ($zona['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
             return $this->dimIndisponivel(
-                $zona['motivo'] ?? self::MOTIVO_ZONA_PENDENTE,
+                $zona['motivo'] ?? $this->textos->get('louos.motivo.zona_pendente'),
                 null,
                 ['permissao' => null, 'condicionante_ref' => null, 'base_legal' => null],
             );
@@ -531,7 +512,7 @@ class LouosEnquadramentoService
         // Pré-condição: sem grupo de uso (Quadro 7) não há o que permitir.
         if (($quadro7['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
             return $this->dimIndisponivel(
-                self::MOTIVO_SEM_ENQUADRAMENTO,
+                $this->textos->get('louos.motivo.sem_enquadramento'),
                 null,
                 ['permissao' => null, 'condicionante_ref' => null, 'base_legal' => null],
             );
@@ -541,7 +522,7 @@ class LouosEnquadramentoService
 
         if ($version === null) {
             return $this->dimNaoEncontrado(
-                self::MOTIVO_QUADRO10_SEM_VERSAO,
+                $this->textos->get('louos.motivo.quadro10_sem_versao'),
                 null,
                 ['permissao' => null, 'condicionante_ref' => null, 'base_legal' => null],
             );
@@ -556,7 +537,7 @@ class LouosEnquadramentoService
 
         if ($permissao === null) {
             return $this->dimNaoEncontrado(
-                self::MOTIVO_ZONA_SEM_REGRA,
+                $this->textos->get('louos.motivo.zona_sem_regra'),
                 $version->version,
                 ['permissao' => null, 'condicionante_ref' => null, 'base_legal' => null],
             );
@@ -620,14 +601,13 @@ class LouosEnquadramentoService
             ? " ({$faixa->subgrupo})"
             : '';
 
-        return sprintf(
-            'O CNAE %s com área %s m² classifica-se no grupo %s%s do Quadro 7 da LOUOS%s. O Quadro 7 não autoriza o uso na zona — só define o grupo.',
-            $this->formatarCnae($cnae),
-            $this->formatarArea($area),
-            $faixa->grupo,
-            $subgrupo,
-            $this->rotuloFaixaQuadro7($faixa),
-        );
+        return $this->textos->render('louos.template.quadro7', [
+            ':cnae' => $this->formatarCnae($cnae),
+            ':area' => $this->formatarArea($area),
+            ':grupo' => (string) $faixa->grupo,
+            ':subgrupo' => $subgrupo,
+            ':faixa' => $this->rotuloFaixaQuadro7($faixa),
+        ]);
     }
 
     /**
@@ -641,12 +621,11 @@ class LouosEnquadramentoService
         $grupo = is_string($quadro7['grupo'] ?? null) ? (string) $quadro7['grupo'] : 'o grupo enquadrado';
         $zonaNome = $this->zonaNome($zona) ?? 'a zona identificada';
 
-        return sprintf(
-            'O grupo %s é %s na zona %s segundo o Quadro 10 da LOUOS — é este quadro que permite ou proíbe o uso no território.',
-            $grupo,
-            mb_strtolower($permissao->label()),
-            $zonaNome,
-        );
+        return $this->textos->render('louos.template.quadro10', [
+            ':grupo' => $grupo,
+            ':permissao' => mb_strtolower($permissao->label()),
+            ':zona' => $zonaNome,
+        ]);
     }
 
     /**
@@ -660,17 +639,16 @@ class LouosEnquadramentoService
         $grupo = is_string($quadro7['grupo'] ?? null) ? (string) $quadro7['grupo'] : 'o grupo enquadrado';
         $zona = $this->zonaNome($input->territory?->zona ?? []) ?? 'a zona identificada';
         $condicao = $comCondicoes
-            ? self::MOTIVO_PERMITIDO_COM_CONDICOES
-            : self::MOTIVO_PERMITIDO;
+            ? $this->textos->get('louos.motivo.permitido_com_condicoes')
+            : $this->textos->get('louos.motivo.permitido');
 
-        return sprintf(
-            'Permitido: o CNAE %s (área %s m²) classificou-se no grupo %s pelo Quadro 7 e esse grupo é permitido na zona %s pelo Quadro 10. %s.',
-            $cnae,
-            $this->formatarArea($input->area),
-            $grupo,
-            $zona,
-            rtrim($condicao, '.'),
-        );
+        return $this->textos->render('louos.template.permitido', [
+            ':cnae' => $cnae,
+            ':area' => $this->formatarArea($input->area),
+            ':grupo' => $grupo,
+            ':zona' => $zona,
+            ':condicao' => rtrim($condicao, '.'),
+        ]);
     }
 
     /**
@@ -682,14 +660,13 @@ class LouosEnquadramentoService
         $grupo = is_string($quadro7['grupo'] ?? null) ? (string) $quadro7['grupo'] : 'o grupo enquadrado';
         $zona = $this->zonaNome($input->territory?->zona ?? []) ?? 'a zona identificada';
 
-        return sprintf(
-            'Não permitido: o CNAE %s (área %s m²) classificou-se no grupo %s pelo Quadro 7 e esse grupo é proibido na zona %s pelo Quadro 10. %s.',
-            $cnae,
-            $this->formatarArea($input->area),
-            $grupo,
-            $zona,
-            rtrim(self::MOTIVO_PROIBIDO, '.'),
-        );
+        return $this->textos->render('louos.template.nao_permitido', [
+            ':cnae' => $cnae,
+            ':area' => $this->formatarArea($input->area),
+            ':grupo' => $grupo,
+            ':zona' => $zona,
+            ':condicao' => rtrim($this->textos->get('louos.motivo.proibido'), '.'),
+        ]);
     }
 
     /**
@@ -701,11 +678,10 @@ class LouosEnquadramentoService
     {
         $grupo = is_string($quadro7['grupo'] ?? null) ? (string) $quadro7['grupo'] : 'o grupo enquadrado';
 
-        return sprintf(
-            'O grupo %s na classe viária %s tem condições de instalação pelo Quadro 11-A da LOUOS. O Quadro 11-A não permite nem proíbe o uso — só condiciona a instalação pela via.',
-            $grupo,
-            $classeVia,
-        );
+        return $this->textos->render('louos.template.quadro_via', [
+            ':grupo' => $grupo,
+            ':classe_via' => $classeVia,
+        ]);
     }
 
     private function formatarCnae(string $digitos): string
@@ -793,7 +769,7 @@ class LouosEnquadramentoService
         // Degradação honesta: sem via identificada não há o que condicionar.
         if ($via === null || ($via['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
             return $this->dimIndisponivel(
-                $via['motivo'] ?? self::MOTIVO_VIA_PENDENTE,
+                $via['motivo'] ?? $this->textos->get('louos.motivo.via_pendente'),
                 null,
                 ['classe_via' => null, 'condicoes' => [], 'base_legal' => null],
             );
@@ -805,7 +781,7 @@ class LouosEnquadramentoService
 
         if ($classeVia === null) {
             return $this->dimIndisponivel(
-                self::MOTIVO_VIA_SEM_ATRIBUTO,
+                $this->textos->get('louos.motivo.via_sem_atributo'),
                 null,
                 ['classe_via' => null, 'condicoes' => [], 'base_legal' => null],
             );
@@ -815,7 +791,7 @@ class LouosEnquadramentoService
 
         if ($version === null) {
             return $this->dimNaoEncontrado(
-                self::MOTIVO_VIA_SEM_VERSAO,
+                $this->textos->get('louos.motivo.via_sem_versao'),
                 null,
                 ['classe_via' => $classeVia, 'condicoes' => [], 'base_legal' => null],
             );
@@ -825,7 +801,7 @@ class LouosEnquadramentoService
 
         if ($condicao === null) {
             return $this->dimNaoEncontrado(
-                self::MOTIVO_VIA_SEM_REGRA,
+                $this->textos->get('louos.motivo.via_sem_regra'),
                 $version->version,
                 ['classe_via' => $classeVia, 'condicoes' => [], 'base_legal' => null],
             );

@@ -13,7 +13,6 @@ use App\Models\RuleVersion;
 use App\Services\Geo\TerritoryResult;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\LouosEnquadramentoService;
-use App\Support\Audit\AuditService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
@@ -34,7 +33,7 @@ class LouosConsolidacaoTest extends TestCase
 
     private function service(): LouosEnquadramentoService
     {
-        return new LouosEnquadramentoService(app(AuditService::class));
+        return app(LouosEnquadramentoService::class);
     }
 
     /**
