@@ -314,4 +314,43 @@ class SlaVencimentosTest extends TestCase
             ]))[3]['total'],
         );
     }
+
+    public function test_estoque_conta_nao_terminais_e_agrupa_status_operacional(): void
+    {
+        ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::Protocolada,
+            'protocoled_at' => now(),
+            'analysis_status' => null,
+        ]);
+        ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocoled_at' => now(),
+            'analysis_status' => 'em_analise',
+            'analysis_due_at' => Carbon::parse('2026-06-14 12:00'),
+            'analysis_stage_started_at' => Carbon::parse('2026-06-10 12:00'),
+        ]);
+        ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::AguardandoBap,
+            'protocoled_at' => now(),
+            'analysis_status' => null,
+        ]);
+        ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::Deferida,
+            'protocoled_at' => now(),
+        ]);
+        ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::Rascunho,
+            'protocoled_at' => null,
+        ]);
+
+        $service = app(SlaVencimentosService::class);
+
+        $this->assertSame(3, $service->estoqueTotal());
+
+        $porStatus = collect($service->estoquePorStatus())->keyBy(fn (array $i): string => $i['status'] ?? 'null');
+        $this->assertSame(2, $porStatus['null']['total']);
+        $this->assertSame('Sem etapa operacional', $porStatus['null']['label']);
+        $this->assertSame(1, $porStatus['em_analise']['total']);
+        $this->assertSame(1, $service->resumo(ReportFilters::fromArray([]))['vencidos']);
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Services\Relatorios;
 
 use App\Enums\AnalysisStage;
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -38,6 +39,13 @@ class SlaVencimentosService
         '80_100' => '80–100%',
         'acima_100' => '>100%',
         'indeterminada' => 'Indeterminada',
+    ];
+
+    private const STATUS_FORA_ESTOQUE = [
+        ViabilityRequestStatus::Rascunho->value,
+        ViabilityRequestStatus::Cancelada->value,
+        ViabilityRequestStatus::Deferida->value,
+        ViabilityRequestStatus::Indeferida->value,
     ];
 
     public function __construct(private readonly AnalysisSlaService $sla) {}
@@ -181,6 +189,38 @@ class SlaVencimentosService
             ->all();
     }
 
+    public function estoqueTotal(): int
+    {
+        return $this->estoqueBase()->count();
+    }
+
+    /**
+     * @return list<array{status: string|null, label: string, grupo: string|null, total: int}>
+     */
+    public function estoquePorStatus(): array
+    {
+        return $this->estoqueBase()
+            ->groupBy('analysis_status')
+            ->orderByDesc('total')
+            ->get([
+                'analysis_status',
+                DB::raw('count(*) as total'),
+            ])
+            ->map(function ($linha): array {
+                $valor = $linha->analysis_status instanceof AnalysisStatus
+                    ? $linha->analysis_status
+                    : AnalysisStatus::tryFrom((string) $linha->analysis_status);
+
+                return [
+                    'status' => $valor?->value,
+                    'label' => $valor?->label() ?? 'Sem etapa operacional',
+                    'grupo' => $valor?->grupo(),
+                    'total' => (int) $linha->total,
+                ];
+            })
+            ->all();
+    }
+
     /**
      * @return array{dentro_sla: int, com_prazo: int, taxa: float|null, data_de: string|null, data_ate: string|null}
      */
@@ -233,6 +273,14 @@ class SlaVencimentosService
             ->whereNotNull('analysis_due_at')
             ->when($f->setorId(), fn (Builder $q, int $setor): Builder => $q->where('sector_id', $setor))
             ->when($f->analistaId(), fn (Builder $q, int $analista): Builder => $q->where('assigned_user_id', $analista));
+    }
+
+    /**
+     * @return Builder<ViabilityRequest>
+     */
+    private function estoqueBase(): Builder
+    {
+        return ViabilityRequest::query()->whereNotIn('status', self::STATUS_FORA_ESTOQUE);
     }
 
     private function progressoSql(): string
