@@ -37,6 +37,7 @@ use App\Http\Controllers\Gestao\LouosController;
 use App\Http\Controllers\Gestao\LouosDraftController;
 use App\Http\Controllers\Gestao\LouosSandboxController;
 use App\Http\Controllers\Gestao\MalhaFinaController;
+use App\Http\Controllers\Gestao\MetadataController;
 use App\Http\Controllers\Gestao\ParameterController;
 use App\Http\Controllers\Gestao\PrecedenteController;
 use App\Http\Controllers\Gestao\ProcessoBuscaController;
@@ -99,6 +100,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
     ->name('gestao.')
     ->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
+        Route::get('metadados', MetadataController::class)->name('metadados');
 
         // Conta do servidor isolada no console (HU-007): perfil e senha sob
         // /gestao/conta, guard gestao — separadas das telas de conta do portal.
