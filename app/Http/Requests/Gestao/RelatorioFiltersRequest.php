@@ -49,6 +49,8 @@ class RelatorioFiltersRequest extends FormRequest
             // Relatório de pendências/exigências: recorte pelo status da
             // pendência (não confundir com o status do processo).
             'status_pendencia' => ['nullable', 'string', 'in:aberta,respondida,expirada,cancelada'],
+            // Consulta de falhas de comunicação: recorte pelo canal.
+            'canal' => ['nullable', 'string', 'in:email,in_app,whatsapp'],
         ];
     }
 
@@ -71,6 +73,7 @@ class RelatorioFiltersRequest extends FormRequest
             'resultado' => 'resultado',
             'tipo' => 'tipo',
             'status_pendencia' => 'situação da pendência',
+            'canal' => 'canal',
         ];
     }
 

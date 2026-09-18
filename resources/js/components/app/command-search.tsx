@@ -39,6 +39,8 @@ const DESTINOS: DestinoComando[] = [
     { label: 'SLA e vencimentos', grupo: 'Relatórios', href: '/gestao/relatorios/sla', permissao: 'consultar-relatorios' },
     { label: 'Pendências e exigências', grupo: 'Relatórios', href: '/gestao/relatorios/pendencias', permissao: 'consultar-relatorios' },
     { label: 'Trilha por processo', grupo: 'Relatórios', href: '/gestao/relatorios/trilha', permissao: 'consultar-relatorios' },
+    { label: 'Atendimento em contingência', grupo: 'Relatórios', href: '/gestao/relatorios/contingencia', permissao: 'consultar-relatorios' },
+    { label: 'Falhas de comunicação', grupo: 'Relatórios', href: '/gestao/relatorios/comunicacoes-falhas', permissao: 'consultar-relatorios' },
     { label: 'Feriados', grupo: 'Relatórios', href: '/gestao/feriados', permissao: 'manter-parametros' },
     { label: 'API REGIN', grupo: 'Administração', href: '/gestao/config-regin', permissao: 'manter-parametros' },
     { label: 'API de inscrição imobiliária', grupo: 'Administração', href: '/gestao/config-inscricao-imobiliaria', permissao: 'manter-parametros' },

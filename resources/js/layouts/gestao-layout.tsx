@@ -230,6 +230,18 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('consultar-relatorios'),
                 },
                 {
+                    name: 'Atendimento em contingência',
+                    href: '/gestao/relatorios/contingencia',
+                    icon: <UserCircleIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
+                    name: 'Falhas de comunicação',
+                    href: '/gestao/relatorios/comunicacoes-falhas',
+                    icon: <MailIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
                     name: 'Feriados',
                     href: '/gestao/feriados',
                     icon: <TagIcon />,

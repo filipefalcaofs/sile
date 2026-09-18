@@ -5,12 +5,17 @@ namespace App\Http\Controllers\Gestao;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\RelatorioFiltersRequest;
 use App\Models\AnalysisPendency;
+use App\Models\Communication;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
+use App\Services\Relatorios\ComunicacoesFalhaService;
+use App\Services\Relatorios\ContingenciaRelatorioService;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\ReportSource;
+use App\Services\Relatorios\Export\Sources\ComunicacoesFalhaReportSource;
+use App\Services\Relatorios\Export\Sources\ContingenciaReportSource;
 use App\Services\Relatorios\Export\Sources\EscritorioVirtualReportSource;
 use App\Services\Relatorios\Export\Sources\ExpressoQuedaReportSource;
 use App\Services\Relatorios\Export\Sources\PendenciasReportSource;
@@ -71,6 +76,8 @@ class RelatorioController extends Controller
         private SlaVencimentosService $slaVencimentos,
         private PendenciasRelatorioService $pendenciasRelatorio,
         private TrilhaProcessoService $trilhaProcesso,
+        private ContingenciaRelatorioService $contingenciaRelatorio,
+        private ComunicacoesFalhaService $comunicacoesFalha,
         private AuditService $audit,
     ) {}
 
@@ -351,6 +358,64 @@ class RelatorioController extends Controller
                 ->withQueryString()
                 ->through(fn (AnalysisPendency $p): array => $this->pendenciasRelatorio->linha($p)),
             'filtros' => $filtros->only(['data_de', 'data_ate', 'status_pendencia']),
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+        ]);
+    }
+
+    /**
+     * Atendimento em contingência (relatório gerencial — HU-148): quanto do
+     * volume entra pelo canal de operador e por quê, com a participação sobre o
+     * total protocolado no período e o ranking de motivos. Com ?formato=,
+     * exporta o MESMO recorte pelo contrato único (ContingenciaReportSource —
+     * RN-005); senão audita a consulta e renderiza a tela paginada.
+     */
+    public function contingencia(RelatorioFiltersRequest $request): InertiaResponse|Response
+    {
+        $filtros = $request->toReportFilters();
+
+        if ($formato = $this->formato($request)) {
+            return $this->exportar(app(ContingenciaReportSource::class), $filtros, $formato, $request);
+        }
+
+        $this->auditarConsulta('consulta-contingencia', 'Consulta do relatório de atendimento em contingência', $filtros);
+
+        return Inertia::render('gestao/relatorios/contingencia', [
+            'resumo' => $this->contingenciaRelatorio->resumo($filtros),
+            'relatorio' => $this->contingenciaRelatorio
+                ->builder($filtros)
+                ->paginate($this->perPage($request))
+                ->withQueryString()
+                ->through(fn (ViabilityRequest $r): array => $this->contingenciaRelatorio->linha($r)),
+            'filtros' => $filtros->only(['data_de', 'data_ate']),
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+        ]);
+    }
+
+    /**
+     * Falhas de comunicação (consulta operacional — HU-096): notificações que
+     * falharam ou foram bloqueadas, por processo, com a quebra por canal. SEM
+     * dados do destinatário (LGPD). Com ?formato=, exporta o MESMO recorte pelo
+     * contrato único (ComunicacoesFalhaReportSource — RN-005); senão audita a
+     * consulta e renderiza a tela paginada.
+     */
+    public function comunicacoesFalhas(RelatorioFiltersRequest $request): InertiaResponse|Response
+    {
+        $filtros = $request->toReportFilters();
+
+        if ($formato = $this->formato($request)) {
+            return $this->exportar(app(ComunicacoesFalhaReportSource::class), $filtros, $formato, $request);
+        }
+
+        $this->auditarConsulta('consulta-comunicacoes-falhas', 'Consulta das falhas de comunicação', $filtros);
+
+        return Inertia::render('gestao/relatorios/comunicacoes-falhas', [
+            'resumo' => $this->comunicacoesFalha->resumo($filtros),
+            'relatorio' => $this->comunicacoesFalha
+                ->builder($filtros)
+                ->paginate($this->perPage($request))
+                ->withQueryString()
+                ->through(fn (Communication $c): array => $this->comunicacoesFalha->linha($c)),
+            'filtros' => $filtros->only(['data_de', 'data_ate', 'canal']),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);
     }

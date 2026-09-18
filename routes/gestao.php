@@ -225,6 +225,14 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // respondidas/expiradas + tempo médio de resposta do requerente.
             // Export pelo contrato único (?formato=).
             Route::get('pendencias', [RelatorioController::class, 'pendencias'])->name('pendencias');
+            // Atendimento em contingência (relatório gerencial — HU-148): volume
+            // e motivos do canal de operador vs total protocolado. Export pelo
+            // contrato único (?formato=).
+            Route::get('contingencia', [RelatorioController::class, 'contingencia'])->name('contingencia');
+            // Falhas de comunicação (consulta operacional — HU-096): não
+            // entregues (falha/bloqueio) por processo, SEM destinatário (LGPD).
+            // Export pelo contrato único (?formato=).
+            Route::get('comunicacoes-falhas', [RelatorioController::class, 'comunicacoesFalhas'])->name('comunicacoes-falhas');
             // Trilha de auditoria por processo (prestação de contas): busca por
             // protocolo consolidando transições + activity_log + decisão. A
             // impressão é PDF DomPDF auditado (multi-fonte — fora do contrato
