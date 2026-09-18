@@ -126,11 +126,15 @@ class EscritorioVirtualAnexosController extends Controller
                 (int) $request->user()->id,
             );
         } catch (RuntimeException $e) {
-            // A mensagem do import inclui o path absoluto do CSV temporário —
-            // detalhe técnico vai para o log; o mantenedor vê mensagem amigável.
-            Log::warning("Importação dos anexos de escritório virtual rejeitada: {$e->getMessage()}");
+            // A mensagem do import é segura (diz qual anexo falhou, sem path);
+            // os paths dos temporários vão para o log como contexto — nunca
+            // no flash.
+            Log::warning("Importação dos anexos de escritório virtual rejeitada: {$e->getMessage()}", [
+                'anexo_a_tmp' => $caminhoA,
+                'anexo_b_tmp' => $caminhoB,
+            ]);
 
-            return back()->with('error', 'Cabeçalho inesperado no CSV: esperado cnae_code,cnae_description.');
+            return back()->with('error', $e->getMessage());
         } catch (DomainException $e) {
             // Nome de versão já publicado — mensagem segura, vai crua.
             return back()->with('error', $e->getMessage());

@@ -46,7 +46,7 @@ class EscritorioVirtualCnaeImportService
 
                 if ($header !== self::EXPECTED_HEADER) {
                     throw new RuntimeException(
-                        "Cabeçalho inesperado em {$csvPath}: esperado cnae_code,cnae_description.",
+                        "Cabeçalho inesperado no CSV do Anexo {$anexo}: esperado cnae_code,cnae_description.",
                     );
                 }
 

@@ -152,7 +152,7 @@ class EscritorioVirtualAnexosTest extends TestCase
 
         // O autor do rascunho NÃO pode publicar — flash.error, nunca 500.
         $this->actingAs($autor, 'gestao')
-            ->post('/gestao/escritorio-virtual/anexos/'.self::VERSAO_RASCUNHO.'/publicar')
+            ->put('/gestao/escritorio-virtual/anexos/'.self::VERSAO_RASCUNHO.'/publicar')
             ->assertRedirect()
             ->assertSessionHas('error', 'A publicação por quatro olhos exige um publicador diferente do autor do rascunho.');
 
@@ -164,7 +164,7 @@ class EscritorioVirtualAnexosTest extends TestCase
         $revisor = $this->administrador();
 
         $this->actingAs($revisor, 'gestao')
-            ->post('/gestao/escritorio-virtual/anexos/'.self::VERSAO_RASCUNHO.'/publicar')
+            ->put('/gestao/escritorio-virtual/anexos/'.self::VERSAO_RASCUNHO.'/publicar')
             ->assertRedirect();
 
         $publicada = $rascunho->fresh();
@@ -261,7 +261,7 @@ class EscritorioVirtualAnexosTest extends TestCase
 
         // Outro admin publica o rascunho (quatro olhos).
         $this->actingAs($this->administrador(), 'gestao')
-            ->post('/gestao/escritorio-virtual/anexos/'.self::VERSAO_RASCUNHO.'/publicar')
+            ->put('/gestao/escritorio-virtual/anexos/'.self::VERSAO_RASCUNHO.'/publicar')
             ->assertRedirect();
 
         // Novo upload com o MESMO nome de versão: rejeitado, sem 500.
@@ -319,7 +319,7 @@ class EscritorioVirtualAnexosTest extends TestCase
                 'anexo_b' => $this->csv('anexo-b.csv', [['1111-1/00', 'X']]),
             ])
             ->assertRedirect()
-            ->assertSessionHas('error', 'Cabeçalho inesperado no CSV: esperado cnae_code,cnae_description.');
+            ->assertSessionHas('error', 'Cabeçalho inesperado no CSV do Anexo A: esperado cnae_code,cnae_description.');
 
         // Rollback da transação: nem o rascunho nem linhas persistiram.
         $this->assertSame(0, RuleVersion::versao(RuleDomain::AtividadesEscritorioVirtual, self::VERSAO_RASCUNHO)->count());
@@ -332,9 +332,58 @@ class EscritorioVirtualAnexosTest extends TestCase
     public function test_publicar_versao_sem_rascunho_retorna_flash_error(): void
     {
         $this->actingAs($this->administrador(), 'gestao')
-            ->post('/gestao/escritorio-virtual/anexos/ev-anexos-2000-01-01/publicar')
+            ->put('/gestao/escritorio-virtual/anexos/ev-anexos-2000-01-01/publicar')
             ->assertRedirect()
             ->assertSessionHas('error', 'Nenhum rascunho aberto com esta versão para publicação.');
+    }
+
+    /**
+     * Quatro olhos na REIMPORTAÇÃO: quem reimporta o rascunho (apagando e
+     * reescrevendo o conteúdo) é o autor do conteúdo ATUAL — a autoria do
+     * rascunho é transferida para ele. Sem a transferência, a garantia
+     * inverteria: o reimportador publicaria o próprio conteúdo e o autor
+     * original ficaria bloqueado sem ter escrito nada do que vigora.
+     */
+    public function test_reimportacao_por_outro_autor_transfere_a_autoria_do_rascunho(): void
+    {
+        $this->seed(EscritorioVirtualCnaeSeeder::class);
+
+        $autorOriginal = $this->administrador();
+        $this->uploadComoAutor($autorOriginal);
+
+        // Outro mantenedor reimporta o MESMO rascunho com conteúdo novo.
+        $reimportador = $this->administrador();
+
+        $this->actingAs($reimportador, 'gestao')
+            ->post('/gestao/escritorio-virtual/anexos', [
+                'versao' => self::VERSAO_RASCUNHO,
+                'fonte' => 'Anexos A e B do Decreto 35.062/2021 (revisão do reimportador)',
+                'anexo_a' => $this->csv('anexo-a.csv', [['1111-1/00', 'Atividade nova do Anexo A']]),
+                'anexo_b' => $this->csv('anexo-b.csv', [['2222-2/00', 'Atividade nova do Anexo B']]),
+            ])
+            ->assertRedirect();
+
+        $rascunho = RuleVersion::versao(RuleDomain::AtividadesEscritorioVirtual, self::VERSAO_RASCUNHO)->sole();
+        $this->assertSame($reimportador->id, $rascunho->created_by);
+        $this->assertSame('Anexos A e B do Decreto 35.062/2021 (revisão do reimportador)', $rascunho->source);
+
+        // O reimportador (autor do conteúdo atual) NÃO pode publicar.
+        $this->actingAs($reimportador, 'gestao')
+            ->put('/gestao/escritorio-virtual/anexos/'.self::VERSAO_RASCUNHO.'/publicar')
+            ->assertRedirect()
+            ->assertSessionHas('error', 'A publicação por quatro olhos exige um publicador diferente do autor do rascunho.');
+
+        $this->assertSame(RuleVersionStatus::Rascunho, $rascunho->fresh()->status);
+
+        // O autor original (não escreveu o conteúdo atual) PODE publicar.
+        $this->actingAs($autorOriginal, 'gestao')
+            ->put('/gestao/escritorio-virtual/anexos/'.self::VERSAO_RASCUNHO.'/publicar')
+            ->assertRedirect();
+
+        $publicada = $rascunho->fresh();
+        $this->assertSame(RuleVersionStatus::Vigente, $publicada->status);
+        $this->assertSame($autorOriginal->id, $publicada->published_by);
+        $this->assertTrue(VirtualOfficeActivityCnae::permitidoNoAnexo('1111-1/00', VirtualOfficeActivityCnae::ANEXO_A));
     }
 
     public function test_dominio_escritorio_virtual_agora_e_sensivel(): void

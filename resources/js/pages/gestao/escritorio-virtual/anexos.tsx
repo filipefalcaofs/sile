@@ -228,7 +228,7 @@ function PublicarModal({
 
     function confirmar() {
         setProcessing(true);
-        router.post(
+        router.put(
             `/gestao/escritorio-virtual/anexos/${rascunho.version}/publicar`,
             {},
             {

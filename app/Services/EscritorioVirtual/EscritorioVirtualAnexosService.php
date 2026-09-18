@@ -55,6 +55,17 @@ class EscritorioVirtualAnexosService
                 );
             }
 
+            // A reimportação transfere a autoria do rascunho: quem reimporta
+            // é o autor do conteúdo ATUAL (o conteúdo anterior é apagado
+            // abaixo) — sem isso o quatro olhos inverteria (o reimportador
+            // publicaria o próprio conteúdo e o autor original ficaria
+            // bloqueado sem ter escrito nada do que vigora). Update sem
+            // dirty não dispara evento (reimportação pelo mesmo autor).
+            $rascunho->update([
+                'created_by' => $autorId,
+                'source' => $fonte,
+            ]);
+
             // A importação SUBSTITUI o conteúdo do rascunho: linhas ausentes
             // dos CSVs novos são removidas (o rascunho é descartável).
             VirtualOfficeActivityCnae::query()->where('rule_version_id', $rascunho->id)->delete();
