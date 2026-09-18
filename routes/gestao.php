@@ -294,6 +294,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('parametros', [ParameterController::class, 'index'])->name('parametros.index');
             Route::get('parametros/{parameter:key}/historico', [ParameterController::class, 'history'])->name('parametros.historico');
             Route::put('parametros/{parameter:key}', [ParameterController::class, 'update'])->name('parametros.update');
+            Route::post('parametros/{parameter:key}/aprovar', [ParameterController::class, 'approve'])->name('parametros.aprovar');
+            Route::post('parametros/{parameter:key}/rejeitar', [ParameterController::class, 'reject'])->name('parametros.rejeitar');
             Route::get('config-regin', [ReginIntegrationController::class, 'edit'])->name('config-regin.edit');
             Route::put('config-regin', [ReginIntegrationController::class, 'update'])->name('config-regin.update');
             Route::post('config-regin/testar', [ReginIntegrationController::class, 'test'])->name('config-regin.testar');

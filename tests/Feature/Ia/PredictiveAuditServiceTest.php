@@ -7,6 +7,7 @@ use App\Enums\AbuseSeverity;
 use App\Enums\DecisionOutcome;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Company;
+use App\Models\Parameter;
 use App\Models\PredictiveAnomaly;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -140,5 +141,56 @@ class PredictiveAuditServiceTest extends TestCase
         $this->assertSame(0, $resumo['criadas']);
         $this->assertSame(1, $resumo['reaproveitadas']);
         $this->assertSame(1, PredictiveAnomaly::query()->where('viability_request_id', $req1->id)->count());
+    }
+
+    public function test_peso_volume_zero_nao_gera_anomalia(): void
+    {
+        Parameter::query()->create([
+            'key' => 'ia.auditoria_preditiva.pesos',
+            'group' => 'ia',
+            'type' => 'json',
+            'value' => '{"volume":0,"inscricao":30,"prosseguiu":40}',
+            'default_value' => '{"volume":40,"inscricao":30,"prosseguiu":40}',
+            'validation_rules' => ['required', 'json'],
+            'description' => 'Pesos de teste',
+        ]);
+        Cache::flush();
+
+        $company = Company::factory()->create();
+        $this->deferidoExpresso($company, ['applicant_proceeded_despite' => false]);
+        $this->deferidoExpresso($company, ['applicant_proceeded_despite' => false]);
+
+        $resumo = $this->service()->executar();
+
+        $this->assertSame(0, $resumo['criadas']);
+        $this->assertSame(0, PredictiveAnomaly::query()->count());
+    }
+
+    public function test_corte_alta_elevado_nao_encaminha_malha_fina(): void
+    {
+        Parameter::query()->create([
+            'key' => 'ia.auditoria_preditiva.cortes_severidade',
+            'group' => 'ia',
+            'type' => 'json',
+            'value' => '{"alta":100,"media":60}',
+            'default_value' => '{"alta":80,"media":60}',
+            'validation_rules' => ['required', 'json'],
+            'description' => 'Cortes de teste',
+        ]);
+        Cache::flush();
+
+        $company = Company::factory()->create();
+        $req1 = $this->deferidoExpresso($company, ['applicant_proceeded_despite' => true]);
+        $this->deferidoExpresso($company, ['applicant_proceeded_despite' => false]);
+
+        $resumo = $this->service()->executar();
+
+        $this->assertSame(1, $resumo['criadas']);
+        $this->assertSame(0, $resumo['encaminhadas']);
+
+        $anomalia = PredictiveAnomaly::query()->where('viability_request_id', $req1->id)->first();
+        $this->assertNotNull($anomalia);
+        $this->assertSame(AbuseSeverity::Media, $anomalia->severity);
+        $this->assertNull($anomalia->fine_mesh_referral_id);
     }
 }

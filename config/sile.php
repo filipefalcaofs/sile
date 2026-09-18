@@ -132,11 +132,10 @@ return [
         // definição fina é pendência SEDUR. typedValue() do parâmetro json
         // também devolve array, então o serviço sempre recebe array.
         'cancelamento' => ['estados_cancelaveis' => ['rascunho', 'protocolada']],
-        // Janela (em dias) da detecção de reincidência por CNPJ (HU-061 RN-007).
-        // É uma CONSTANTE técnica/de negócio aqui, NÃO um parâmetro do catálogo
-        // HU-014: a definição oficial de "duplicidade/reincidência" é pendência
-        // SEDUR — este é um default honesto e ajustável sem deploy. O detector
-        // só ALERTA (link ao processo anterior), nunca bloqueia.
+        // HU-014: fallback da janela de reincidência por CNPJ. O valor vigente
+        // vive em solicitacao.duplicidade.janela_dias. A definição oficial
+        // continua pendente SEDUR — este é o default honesto. O detector só
+        // ALERTA (link ao processo anterior), nunca bloqueia.
         'duplicidade' => ['janela_dias' => 180],
     ],
     'storage' => [
@@ -429,6 +428,8 @@ return [
         'auditoria_preditiva' => [
             'janela_dias' => 30,
             'limiar_score' => 70,
+            'pesos' => ['volume' => 40, 'inscricao' => 30, 'prosseguiu' => 40],
+            'cortes_severidade' => ['alta' => 80, 'media' => 60],
         ],
     ],
     'parameters' => [

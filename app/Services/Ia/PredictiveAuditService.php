@@ -30,17 +30,54 @@ use Illuminate\Support\Collection;
  *
  * A pontuação é determinística (regras + pesos), sem chamada a provedor de IA: é
  * "preditiva" no sentido de antecipar risco para revisão humana, sem decidir.
- * Limiares/janela são administráveis (HU-014); os pesos são constantes técnicas.
+ * Limiares, janela, pesos e cortes de severidade são administráveis (HU-014).
  */
 class PredictiveAuditService
 {
     private const FLOW_EXPRESSO = 'expresso';
 
-    private const PESO_VOLUME = 40;
+    /**
+     * @return array{volume: int, inscricao: int, prosseguiu: int}
+     */
+    private function pesos(): array
+    {
+        $defaults = ['volume' => 40, 'inscricao' => 30, 'prosseguiu' => 40];
+        $configured = Settings::get(
+            'ia.auditoria_preditiva.pesos',
+            config('sile.ia.auditoria_preditiva.pesos', $defaults),
+        );
 
-    private const PESO_INSCRICAO = 30;
+        if (! is_array($configured)) {
+            return $defaults;
+        }
 
-    private const PESO_PROSSEGUIU = 40;
+        return [
+            'volume' => (int) ($configured['volume'] ?? $defaults['volume']),
+            'inscricao' => (int) ($configured['inscricao'] ?? $defaults['inscricao']),
+            'prosseguiu' => (int) ($configured['prosseguiu'] ?? $defaults['prosseguiu']),
+        ];
+    }
+
+    /**
+     * @return array{alta: int, media: int}
+     */
+    private function cortes(): array
+    {
+        $defaults = ['alta' => 80, 'media' => 60];
+        $configured = Settings::get(
+            'ia.auditoria_preditiva.cortes_severidade',
+            config('sile.ia.auditoria_preditiva.cortes_severidade', $defaults),
+        );
+
+        if (! is_array($configured)) {
+            return $defaults;
+        }
+
+        return [
+            'alta' => (int) ($configured['alta'] ?? $defaults['alta']),
+            'media' => (int) ($configured['media'] ?? $defaults['media']),
+        ];
+    }
 
     public function __construct(
         private MalhaFinaService $malhaFina,
@@ -148,21 +185,22 @@ class PredictiveAuditService
     {
         $score = 0;
         $factors = [];
+        $pesos = $this->pesos();
 
         $volumeCnpj = (int) ($volumePorCompany[$request->company_id] ?? 0);
         if ($request->company_id !== null && $volumeCnpj >= $volumeLimite) {
-            $score += self::PESO_VOLUME;
-            $factors[] = ['chave' => 'volume_cnpj', 'peso' => self::PESO_VOLUME, 'detalhe' => "{$volumeCnpj} deferimentos do mesmo CNPJ na janela"];
+            $score += $pesos['volume'];
+            $factors[] = ['chave' => 'volume_cnpj', 'peso' => $pesos['volume'], 'detalhe' => "{$volumeCnpj} deferimentos do mesmo CNPJ na janela"];
         }
 
         if ($request->property_registration !== null && (int) ($volumePorInscricao[$request->property_registration] ?? 0) >= 2) {
-            $score += self::PESO_INSCRICAO;
-            $factors[] = ['chave' => 'inscricao_repetida', 'peso' => self::PESO_INSCRICAO, 'detalhe' => 'mesma inscrição imobiliária em múltiplos deferimentos na janela'];
+            $score += $pesos['inscricao'];
+            $factors[] = ['chave' => 'inscricao_repetida', 'peso' => $pesos['inscricao'], 'detalhe' => 'mesma inscrição imobiliária em múltiplos deferimentos na janela'];
         }
 
         if ($request->applicant_proceeded_despite) {
-            $score += self::PESO_PROSSEGUIU;
-            $factors[] = ['chave' => 'prosseguiu_apesar_alerta', 'peso' => self::PESO_PROSSEGUIU, 'detalhe' => 'requerente prosseguiu apesar de alerta de duplicidade/inconsistência'];
+            $score += $pesos['prosseguiu'];
+            $factors[] = ['chave' => 'prosseguiu_apesar_alerta', 'peso' => $pesos['prosseguiu'], 'detalhe' => 'requerente prosseguiu apesar de alerta de duplicidade/inconsistência'];
         }
 
         return [min(100, $score), $factors];
@@ -170,9 +208,11 @@ class PredictiveAuditService
 
     private function severidade(int $score): AbuseSeverity
     {
+        $cortes = $this->cortes();
+
         return match (true) {
-            $score >= 80 => AbuseSeverity::Alta,
-            $score >= 60 => AbuseSeverity::Media,
+            $score >= $cortes['alta'] => AbuseSeverity::Alta,
+            $score >= $cortes['media'] => AbuseSeverity::Media,
             default => AbuseSeverity::Baixa,
         };
     }

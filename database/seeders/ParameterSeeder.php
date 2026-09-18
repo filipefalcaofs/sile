@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ParameterGovernance;
 use App\Models\Parameter;
 use Illuminate\Database\Seeder;
 
@@ -18,6 +19,10 @@ class ParameterSeeder extends Seeder
         foreach (self::catalog() as $key => $meta) {
             $sensitive = (bool) ($meta['sensitive'] ?? false);
             unset($meta['sensitive']);
+
+            $meta['governance'] = in_array($key, self::decisionKeys(), true)
+                ? ParameterGovernance::Decision->value
+                : ParameterGovernance::Operational->value;
 
             $parameter = Parameter::query()->updateOrCreate(['key' => $key], $meta);
 
@@ -253,7 +258,7 @@ class ParameterSeeder extends Seeder
                 'group' => 'risco',
                 'type' => 'json',
                 'default_value' => '{"baixo_a":"expresso","baixo_b":"expresso","alto":"analise"}',
-                'validation_rules' => ['required', 'json'],
+                'validation_rules' => ['required', 'json', 'json_fluxo_map'],
                 'description' => 'Mapa de encaminhamento por nível de risco da dimensão decisiva (expresso/analise) — Decreto 32.636/2020 não tem nível médio',
             ],
             'risco.dimensao_tvl' => [
@@ -367,6 +372,13 @@ class ParameterSeeder extends Seeder
                 'default_value' => '["rascunho","protocolada"]',
                 'validation_rules' => ['required', 'json'],
                 'description' => 'Estados em que a solicitação pode ser cancelada pelo requerente (antes da decisão) — definição fina pendente SEDUR',
+            ],
+            'solicitacao.duplicidade.janela_dias' => [
+                'group' => 'solicitacao',
+                'type' => 'integer',
+                'default_value' => '180',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:3650'],
+                'description' => 'Janela (dias) da detecção de reincidência por CNPJ — alerta com link ao processo anterior, nunca bloqueia (direito de petição). Definição oficial pendente SEDUR',
             ],
             'seguranca.throttle.consulta_protocolo.por_minuto' => [
                 'group' => 'seguranca',
@@ -860,6 +872,20 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:100'],
                 'description' => 'Score mínimo (0-100) para um processo deferido no expresso virar anomalia preditiva',
             ],
+            'ia.auditoria_preditiva.pesos' => [
+                'group' => 'ia',
+                'type' => 'json',
+                'default_value' => '{"volume":40,"inscricao":30,"prosseguiu":40}',
+                'validation_rules' => ['required', 'json'],
+                'description' => 'Pesos dos sinais determinísticos da auditoria preditiva (volume de deferimentos, inscrição repetida, prosseguiu apesar de alerta)',
+            ],
+            'ia.auditoria_preditiva.cortes_severidade' => [
+                'group' => 'ia',
+                'type' => 'json',
+                'default_value' => '{"alta":80,"media":60}',
+                'validation_rules' => ['required', 'json'],
+                'description' => 'Cortes de severidade da auditoria preditiva: score ≥ alta encaminha à malha fina; ≥ média gera anomalia média',
+            ],
             // Funções de IA (Fase 14 — HU-014 aplicada à IA). Toggle por função
             // (key features.ia_*, grupo de negócio 'ia' — key ≠ group é a norma).
             // TODOS nascem DESLIGADOS (0): a fundação multi-provider (Onda 0) não
@@ -915,6 +941,23 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita os assistentes conversacionais por IA do cidadão e do analista; desligado degrada de forma comunicada',
             ],
+        ];
+    }
+
+    /**
+     * Chaves cujo valor vigente só muda com quatro olhos. Qualquer outra
+     * entrada do catálogo permanece operacional (PUT imediato).
+     *
+     * @return list<string>
+     */
+    public static function decisionKeys(): array
+    {
+        return [
+            'risco.mapa_encaminhamento',
+            'risco.dimensao_tvl',
+            'analise.escritorio_virtual.cnae_gatilho_sede',
+            'features.fluxo_expresso',
+            'features.simulacao_protocolo',
         ];
     }
 }

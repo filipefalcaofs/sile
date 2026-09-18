@@ -3,9 +3,11 @@
 namespace Tests\Feature\Solicitacao;
 
 use App\Models\Company;
+use App\Models\Parameter;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\DuplicateRequestDetector;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
@@ -108,5 +110,23 @@ class DuplicateRequestDetectorTest extends TestCase
 
         $this->assertNotNull($alert);
         $this->assertSame($newer->id, $alert['request_id']);
+    }
+
+    public function test_janela_administravel_via_settings(): void
+    {
+        Parameter::factory()->integer('180')->create([
+            'key' => 'solicitacao.duplicidade.janela_dias',
+            'group' => 'solicitacao',
+            'value' => '10',
+        ]);
+        Cache::flush();
+
+        $company = Company::factory()->create();
+        $old = ViabilityRequest::factory()->draft()->create(['company_id' => $company->id]);
+        ViabilityRequest::query()->whereKey($old->id)->update([
+            'created_at' => now()->subDays(30),
+        ]);
+
+        $this->assertNull($this->detector()->detect($company));
     }
 }

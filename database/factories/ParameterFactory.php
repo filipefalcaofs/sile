@@ -22,6 +22,7 @@ class ParameterFactory extends Factory
         return [
             'key' => fake()->unique()->lexify('grupo.chave.????'),
             'group' => 'geral',
+            'governance' => 'operational',
             'type' => 'string',
             'sensitive' => false,
             'value' => null,

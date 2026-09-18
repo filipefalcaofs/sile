@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Enums\Fluxo;
+use App\Enums\RiscoMunicipal;
 use App\Notifications\Channels\WhatsAppChannel;
 use App\Services\Abuso\AbuseDetectionService;
 use App\Services\Abuso\Detectors\CondicionanteEvasaoDetector;
@@ -174,6 +176,29 @@ class AppServiceProvider extends ServiceProvider
                     && ! array_any($decoded, fn ($item) => ! is_string($item) || $item === '');
             },
             'O campo :attribute deve ser um JSON com uma lista não vazia de textos.',
+        );
+
+        Validator::extend(
+            'json_fluxo_map',
+            function (string $attribute, mixed $value): bool {
+                $decoded = json_decode((string) $value, true);
+
+                if (! is_array($decoded) || array_is_list($decoded)) {
+                    return false;
+                }
+
+                $expected = collect(RiscoMunicipal::cases())->map->value->sort()->values()->all();
+                $keys = collect(array_keys($decoded))->sort()->values()->all();
+
+                if ($keys !== $expected) {
+                    return false;
+                }
+
+                $fluxos = collect(Fluxo::cases())->map->value->all();
+
+                return ! array_any($decoded, fn ($item) => ! is_string($item) || ! in_array($item, $fluxos, true));
+            },
+            'O mapa de encaminhamento deve ter as chaves baixo_a, baixo_b e alto com valores expresso ou analise.',
         );
 
         config(['auth.passwords.users.expire' => (int) Settings::get('security.password_reset_expire', 60)]);

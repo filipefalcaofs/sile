@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(118, Parameter::query()->count());
+        $this->assertSame(121, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -315,7 +315,7 @@ class ParameterSeederTest extends TestCase
         $this->assertStringContainsString('expresso', $mapa->default_value);
         $this->assertStringContainsString('alto', $mapa->default_value);
         $this->assertStringContainsString('analise', $mapa->default_value);
-        $this->assertSame(['required', 'json'], $mapa->validation_rules);
+        $this->assertSame(['required', 'json', 'json_fluxo_map'], $mapa->validation_rules);
         $this->assertNull($mapa->value);
 
         // O parâmetro json é decodificado para array em typedValue() — o
@@ -910,6 +910,29 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('70', $limiar->default_value);
         $this->assertSame(['required', 'integer', 'min:1', 'max:100'], $limiar->validation_rules);
         $this->assertSame(70, $limiar->typedValue());
+
+        $pesos = Parameter::query()->where('key', 'ia.auditoria_preditiva.pesos')->first();
+        $this->assertNotNull($pesos);
+        $this->assertSame('ia', $pesos->group);
+        $this->assertSame('json', $pesos->type);
+        $this->assertSame(['volume' => 40, 'inscricao' => 30, 'prosseguiu' => 40], $pesos->typedValue());
+
+        $cortes = Parameter::query()->where('key', 'ia.auditoria_preditiva.cortes_severidade')->first();
+        $this->assertNotNull($cortes);
+        $this->assertSame(['alta' => 80, 'media' => 60], $cortes->typedValue());
+    }
+
+    public function test_seeder_registra_janela_de_duplicidade(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $janela = Parameter::query()->where('key', 'solicitacao.duplicidade.janela_dias')->first();
+        $this->assertNotNull($janela);
+        $this->assertSame('solicitacao', $janela->group);
+        $this->assertSame('integer', $janela->type);
+        $this->assertSame('180', $janela->default_value);
+        $this->assertSame(['required', 'integer', 'min:1', 'max:3650'], $janela->validation_rules);
+        $this->assertSame(180, $janela->typedValue());
     }
 
     public function test_seeder_registra_toggles_de_ia(): void
@@ -949,6 +972,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(118, Parameter::query()->count());
+        $this->assertSame(121, Parameter::query()->count());
     }
 }

@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Exceptions\FourEyesViolationException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\UpdateParameterRequest;
 use App\Models\Activity;
 use App\Models\Parameter;
+use App\Services\Parametros\ParameterChangeService;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\ParametrosReportSource;
 use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
+use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -36,7 +39,10 @@ class ParameterController extends Controller
             );
         }
 
+        $viewerId = $request->user()?->id;
+
         $groups = Parameter::query()
+            ->with('pendingProposal.author')
             ->orderBy('group')
             ->orderBy('key')
             ->get()
@@ -51,6 +57,14 @@ class ParameterController extends Controller
                 'value' => $parameter->sensitive ? null : $parameter->value,
                 'has_admin_value' => $parameter->getRawOriginal('value') !== null,
                 'updated_at' => $parameter->updated_at?->toIso8601String(),
+                'governance' => $parameter->governance->value,
+                'pending_proposal' => $parameter->pendingProposal === null ? null : [
+                    'proposed_value' => $parameter->pendingProposal->proposed_value,
+                    'created_by' => $parameter->pendingProposal->created_by,
+                    'author_name' => $parameter->pendingProposal->author?->name,
+                ],
+                'can_approve' => $parameter->pendingProposal !== null
+                    && $viewerId !== $parameter->pendingProposal->created_by,
             ])->values());
 
         return Inertia::render('gestao/parametros/index', [
@@ -72,6 +86,20 @@ class ParameterController extends Controller
             return back()->with('status', __('Valor mantido.'));
         }
 
+        if ($parameter->isDecision()) {
+            try {
+                app(ParameterChangeService::class)->propose(
+                    $parameter,
+                    (string) $input,
+                    (int) $request->user()->id,
+                );
+            } catch (DomainException $e) {
+                return back()->with('status', __($e->getMessage()));
+            }
+
+            return back()->with('status', __('Proposta registrada. A alteração só vale após aprovação de um segundo usuário.'));
+        }
+
         $old = $parameter->value;
         $parameter->update(['value' => $input]);
 
@@ -88,6 +116,40 @@ class ParameterController extends Controller
         );
 
         return back()->with('status', __('Parâmetro atualizado com sucesso.'));
+    }
+
+    public function approve(Request $request, Parameter $parameter): RedirectResponse
+    {
+        $proposal = $parameter->pendingProposal;
+
+        if ($proposal === null) {
+            return back()->with('error', __('Não há proposta pendente para aprovar.'));
+        }
+
+        try {
+            app(ParameterChangeService::class)->approve($proposal, (int) $request->user()->id);
+        } catch (FourEyesViolationException|DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('status', __('Parâmetro aprovado. O valor vigente foi atualizado.'));
+    }
+
+    public function reject(Request $request, Parameter $parameter): RedirectResponse
+    {
+        $proposal = $parameter->pendingProposal;
+
+        if ($proposal === null) {
+            return back()->with('error', __('Não há proposta pendente para rejeitar.'));
+        }
+
+        try {
+            app(ParameterChangeService::class)->reject($proposal, (int) $request->user()->id);
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('status', __('Proposta rejeitada. O valor vigente foi mantido.'));
     }
 
     /**

@@ -59,6 +59,9 @@ class ManageParametersTest extends TestCase
                     'value',
                     'has_admin_value',
                     'updated_at',
+                    'governance',
+                    'pending_proposal',
+                    'can_approve',
                 ]))
                 ->where('groups.seguranca.0.key', 'security.govbr.minimum_level')
                 ->where('groups.seguranca.0.type', 'string')

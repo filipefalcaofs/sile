@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Enums\ParameterGovernance;
+use App\Enums\ParameterProposalStatus;
 use Database\Factories\ParameterFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 
@@ -22,7 +26,7 @@ use Illuminate\Support\Facades\Crypt;
  * sensíveis em claro. O histórico (RN-008) é gravado por auditoria explícita
  * no fluxo de gravação.
  */
-#[Fillable(['key', 'group', 'type', 'value', 'default_value', 'validation_rules', 'description', 'requires_connection_test'])]
+#[Fillable(['key', 'group', 'governance', 'type', 'value', 'default_value', 'validation_rules', 'description', 'requires_connection_test'])]
 class Parameter extends Model
 {
     /** @use HasFactory<ParameterFactory> */
@@ -34,6 +38,7 @@ class Parameter extends Model
     protected function casts(): array
     {
         return [
+            'governance' => ParameterGovernance::class,
             'validation_rules' => 'array',
             'sensitive' => 'boolean',
             'requires_connection_test' => 'boolean',
@@ -83,5 +88,27 @@ class Parameter extends Model
             'json' => json_decode($raw, true),
             default => $raw,
         };
+    }
+
+    public function isDecision(): bool
+    {
+        return $this->governance === ParameterGovernance::Decision;
+    }
+
+    /**
+     * @return HasMany<ParameterProposal, $this>
+     */
+    public function proposals(): HasMany
+    {
+        return $this->hasMany(ParameterProposal::class);
+    }
+
+    /**
+     * @return HasOne<ParameterProposal, $this>
+     */
+    public function pendingProposal(): HasOne
+    {
+        return $this->hasOne(ParameterProposal::class)
+            ->where('status', ParameterProposalStatus::Pending);
     }
 }
