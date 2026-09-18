@@ -292,6 +292,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // CRUD do rascunho editável dos Quadros da LOUOS (HU-046): abrir/retomar,
             // inserir/alterar/excluir linha, importar CSV, publicar por quatro olhos,
             // descartar e download do modelo CSV por Quadro.
+            Route::get('manual', [LouosDraftController::class, 'manual'])->name('manual');
             Route::get('rascunho', [LouosDraftController::class, 'show'])->name('rascunho.show');
             Route::post('rascunho', [LouosDraftController::class, 'open'])->name('rascunho.abrir');
             Route::post('rascunho/linhas', [LouosDraftController::class, 'storeLinha'])->name('rascunho.linhas.store');

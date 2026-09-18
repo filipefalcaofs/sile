@@ -1,4 +1,4 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
@@ -64,6 +64,7 @@ interface RascunhoProps {
     diff: DiffInfo | null;
     canPublish: boolean;
     perPageOptions?: number[];
+    urlManual: string;
 }
 
 type SharedPropsWithImportacao = SharedProps & {
@@ -477,7 +478,15 @@ function DescartarModal({
 }
 
 /** Formulário de abertura de rascunho quando nenhum está ativo. */
-function AbrirRascunhoCard({ quadro, quadroLabel }: { quadro: string; quadroLabel: string }) {
+function AbrirRascunhoCard({
+    quadro,
+    quadroLabel,
+    urlManual,
+}: {
+    quadro: string;
+    quadroLabel: string;
+    urlManual: string;
+}) {
     const { data, setData, post, processing, errors } = useForm({ quadro, version: '' });
 
     function submit(event: FormEvent) {
@@ -496,6 +505,14 @@ function AbrirRascunhoCard({ quadro, quadroLabel }: { quadro: string; quadroLabe
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             Abra um rascunho de edição para o {quadroLabel}. A versão vigente permanece intacta até a
                             publicação.
+                        </p>
+                        <p className="mt-3">
+                            <Link
+                                href={urlManual}
+                                className="text-sm text-brand-600 underline-offset-2 hover:underline focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                            >
+                                Como montar o CSV deste Quadro
+                            </Link>
                         </p>
                     </div>
                     <form onSubmit={submit} className="flex w-full items-end gap-3 sm:w-auto">
@@ -531,6 +548,7 @@ export default function LouosRascunho({
     diff,
     canPublish,
     perPageOptions = PER_PAGE_OPTIONS,
+    urlManual,
 }: RascunhoProps) {
     const { auth, flash } = usePage<SharedPropsWithImportacao>().props;
     const canMaintain = auth.permissions.includes('manter-louos');
@@ -594,6 +612,14 @@ export default function LouosRascunho({
                     { label: 'Painel', href: '/gestao' },
                     { label: 'Quadros da LOUOS', href: '/gestao/louos' },
                 ]}
+                actions={
+                    <Link
+                        href={urlManual}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03]"
+                    >
+                        Manual de CSV
+                    </Link>
+                }
             />
 
             <div className="space-y-6">
@@ -615,7 +641,7 @@ export default function LouosRascunho({
 
                 {draft === null ? (
                     canMaintain ? (
-                        <AbrirRascunhoCard quadro={quadro} quadroLabel={quadroLabel} />
+                        <AbrirRascunhoCard quadro={quadro} quadroLabel={quadroLabel} urlManual={urlManual} />
                     ) : (
                         <Card>
                             <CardContent>
@@ -659,6 +685,12 @@ export default function LouosRascunho({
                                             >
                                                 Importar CSV
                                             </Button>
+                                            <Link
+                                                href={urlManual}
+                                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 focus:outline-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03]"
+                                            >
+                                                Manual de CSV
+                                            </Link>
                                             <a
                                                 href={`/gestao/louos/modelo-csv?quadro=${quadro}`}
                                                 download

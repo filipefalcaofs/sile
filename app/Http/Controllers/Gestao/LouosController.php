@@ -101,6 +101,7 @@ class LouosController extends Controller
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'urlRascunho' => route('gestao.louos.rascunho.show', ['quadro' => $quadro], false),
+            'urlManual' => route('gestao.louos.manual', ['quadro' => $quadro], false),
         ]);
     }
 

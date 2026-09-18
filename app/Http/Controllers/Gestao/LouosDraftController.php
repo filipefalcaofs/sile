@@ -71,6 +71,7 @@ class LouosDraftController extends Controller
                 'itens' => null,
                 'diff' => null,
                 'canPublish' => false,
+                'urlManual' => $this->urlManual($quadro),
             ]);
         }
 
@@ -97,6 +98,25 @@ class LouosDraftController extends Controller
             'itens' => $this->listarLinhas($quadro, $draft, $search, $perPage),
             'diff' => $this->service->diff($draft),
             'canPublish' => $request->user()?->id !== $draft->created_by,
+            'urlManual' => $this->urlManual($quadro),
+        ]);
+    }
+
+    /**
+     * Manual operacional de montagem do CSV de importação do Quadro selecionado.
+     */
+    public function manual(Request $request): Response
+    {
+        $quadro = $request->string('quadro')->toString();
+
+        if (! array_key_exists($quadro, LouosDraftService::QUADRO_DOMAINS)) {
+            $quadro = 'quadro7';
+        }
+
+        return Inertia::render('gestao/louos/manual', [
+            'quadro' => $quadro,
+            'urlModeloCsv' => route('gestao.louos.modelo-csv', ['quadro' => $quadro], false),
+            'urlRascunho' => route('gestao.louos.rascunho.show', ['quadro' => $quadro], false),
         ]);
     }
 
@@ -271,6 +291,11 @@ class LouosDraftController extends Controller
             "modelo-{$quadro}.csv",
             ['Content-Type' => 'text/csv; charset=UTF-8'],
         );
+    }
+
+    private function urlManual(string $quadro): string
+    {
+        return route('gestao.louos.manual', ['quadro' => $quadro], false);
     }
 
     /**

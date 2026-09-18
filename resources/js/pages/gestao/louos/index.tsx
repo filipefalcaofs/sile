@@ -56,6 +56,7 @@ interface LouosIndexProps {
     };
     perPageOptions: number[];
     urlRascunho: string;
+    urlManual: string;
 }
 
 /**
@@ -193,6 +194,7 @@ export default function LouosIndex({
     filtros,
     perPageOptions,
     urlRascunho,
+    urlManual,
 }: LouosIndexProps) {
     const { auth } = usePage<SharedProps>().props;
     const canMaintain = auth.permissions.includes('manter-louos');
@@ -240,6 +242,13 @@ export default function LouosIndex({
                         actions={
                             canMaintain ? (
                                 <div className="flex flex-wrap items-center gap-3">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => router.get(urlManual)}
+                                    >
+                                        Manual de CSV
+                                    </Button>
                                     <Button
                                         size="sm"
                                         variant="outline"
