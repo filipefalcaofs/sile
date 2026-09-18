@@ -2,7 +2,9 @@
 
 namespace App\Services\Geo;
 
+use App\Models\GeoServerLayer;
 use App\Support\Settings;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -93,16 +95,27 @@ class GeoServerWfsZonaClient
     }
 
     /**
+     * Catálogo DB-first (geoserver_layers, dado administrável): banco
+     * alcançável manda — mesmo VAZIO, que é resposta honesta ("nenhuma camada
+     * cadastrada"). O config só é fallback com o banco INALCANÇÁVEL
+     * (QueryException — build Docker, CI sem migrate), padrão Settings.
+     *
      * @return list<string>
      */
     private function typeNames(): array
     {
-        $names = config('sile.integrations.geoserver.type_names', []);
+        try {
+            return GeoServerLayer::query()->ativos()->get()
+                ->map(fn (GeoServerLayer $camada): string => $camada->nomeCompleto())
+                ->all();
+        } catch (QueryException) {
+            $names = config('sile.integrations.geoserver.type_names', []);
 
-        return array_values(array_filter(
-            is_array($names) ? $names : [],
-            fn (mixed $name): bool => is_string($name) && $name !== '',
-        ));
+            return array_values(array_filter(
+                is_array($names) ? $names : [],
+                fn (mixed $name): bool => is_string($name) && $name !== '',
+            ));
+        }
     }
 
     private function prepare(mixed $pending): mixed

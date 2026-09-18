@@ -50,6 +50,12 @@ final class PermissionCatalog
                 'group' => 'Território e LOUOS',
             ],
             [
+                'name' => 'manter-territorio',
+                'label' => 'Manter camadas do GeoServer',
+                'description' => 'Cadastra e liga/desliga as camadas WFS de zona consultadas no GeoServer.',
+                'group' => 'Território e LOUOS',
+            ],
+            [
                 'name' => 'consultar-louos',
                 'label' => 'Consultar quadros LOUOS',
                 'description' => 'Vê as regras vigentes da LOUOS, sem publicar versões.',

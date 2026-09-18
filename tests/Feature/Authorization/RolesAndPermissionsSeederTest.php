@@ -92,6 +92,29 @@ class RolesAndPermissionsSeederTest extends TestCase
         );
     }
 
+    /**
+     * Manutenção do catálogo de camadas do GeoServer (manter-territorio):
+     * espelha manter-louos/manter-cnaes — só o administrador.
+     */
+    public function test_apenas_administrador_recebe_manter_territorio(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertSame(
+            'manter-territorio',
+            Permission::findByName('manter-territorio', 'web')->name,
+        );
+
+        $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('manter-territorio'));
+
+        foreach (['analista', 'gestor', 'cidadao'] as $role) {
+            $this->assertFalse(
+                Role::findByName($role, 'web')->hasPermissionTo('manter-territorio'),
+                "O papel {$role} não pode manter o catálogo de camadas do GeoServer.",
+            );
+        }
+    }
+
     public function test_papeis_recebem_permissoes_de_louos(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
@@ -393,7 +416,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(32, Permission::query()->count());
+        $this->assertSame(33, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void

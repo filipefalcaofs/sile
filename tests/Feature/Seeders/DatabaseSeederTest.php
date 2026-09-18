@@ -47,7 +47,7 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
 
         $this->assertSame(4, Role::query()->count());
-        // 32 permissões (HU-013): as 17 base (sem consultar-risco/manter-risco,
+        // 33 permissões (HU-013): as 17 base (sem consultar-risco/manter-risco,
         // consolidadas em consultar-cnaes/manter-cnaes) + as 5 da análise técnica
         // (analisar-processos, distribuir-processos, emitir-tvl,
         // encaminhar-malha-fina, manter-setores) + as 3 de auditoria e
@@ -58,8 +58,9 @@ class DatabaseSeederTest extends TestCase
         // manual à análise (enviar-tvl-analise — tela T06 EV) + a de tipos de
         // imóvel (manter-tipos-imovel — parametrização do motor REGIN) + a de
         // gatilhos de risco (manter-gatilhos-risco — parametrização dos
-        // gatilhos semi-expresso).
-        $this->assertSame(32, Permission::query()->count());
+        // gatilhos semi-expresso) + a de território (manter-territorio —
+        // catálogo administrável de camadas do GeoServer).
+        $this->assertSame(33, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
         // 100 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação

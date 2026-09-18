@@ -24,6 +24,7 @@ use App\Http\Controllers\Gestao\EscritorioVirtualDesvinculacaoController;
 use App\Http\Controllers\Gestao\ExportacaoController;
 use App\Http\Controllers\Gestao\ForgotPasswordController;
 use App\Http\Controllers\Gestao\GeocodeController;
+use App\Http\Controllers\Gestao\GeoServerLayerController;
 use App\Http\Controllers\Gestao\HolidayController;
 use App\Http\Controllers\Gestao\IndeferimentoDocumentController;
 use App\Http\Controllers\Gestao\InscricaoImobiliariaIntegrationController;
@@ -307,6 +308,15 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('geocodificar', GeocodeController::class)->middleware('throttle:geocoding')->name('geocodificar');
             Route::post('identificar', [TerritoryController::class, 'identify'])->name('identificar');
             Route::post('validar-localizacao', [TerritoryController::class, 'validateLocation'])->name('validar-localizacao');
+        });
+
+        // Catálogo de camadas do GeoServer SEDUR (WFS): zona nova entra por
+        // cadastro, sem deploy. Leitura DB-first com fallback de config.
+        Route::middleware('permission:manter-territorio')->prefix('territorio/geoserver')->name('territorio.geoserver.')->group(function () {
+            Route::get('/', [GeoServerLayerController::class, 'index'])->name('index');
+            Route::post('/', [GeoServerLayerController::class, 'store'])->name('store');
+            Route::put('{geoServerLayer}', [GeoServerLayerController::class, 'update'])->name('update');
+            Route::put('{geoServerLayer}/ativacao', [GeoServerLayerController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
         // Quadros da LOUOS (HU-015..018/HU-046): a consulta da versão vigente dos

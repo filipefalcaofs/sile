@@ -40,6 +40,10 @@ class DatabaseSeeder extends Seeder
             DevAdminSeeder::class,
             CompanySeeder::class,
             GeoLayerSeeder::class,
+            // Catálogo de camadas WFS do GeoServer SEDUR: as 20 FeatureTypes de
+            // zona que viviam hardcoded em config/sile.php — zona nova passa a
+            // entrar por cadastro (manter-territorio), sem deploy.
+            GeoServerLayerSeeder::class,
             // Depende de empresas/CNAEs/catálogos acima — fecha o seed de dev.
             SolicitacaoDevSeeder::class,
             // Fluxo expresso (EP09) — SÓ dev/teste (gate de ambiente nos próprios

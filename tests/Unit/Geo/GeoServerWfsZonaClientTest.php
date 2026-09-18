@@ -2,17 +2,23 @@
 
 namespace Tests\Unit\Geo;
 
+use App\Models\GeoServerLayer;
 use App\Services\Geo\GeoServerWfsZonaClient;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
  * Cliente WFS do GeoServer SEDUR: identifica a zona urbanística de um ponto
- * por INTERSECTS nas FeatureTypes oficiais. Http::fake — a chamada viva é
- * evidência de homologação, não da suíte.
+ * por INTERSECTS nas FeatureTypes oficiais. O catálogo de camadas é lido do
+ * banco (geoserver_layers, DB-first — dado administrável); o config só é
+ * fallback com o banco inalcançável. Http::fake — a chamada viva é evidência
+ * de homologação, não da suíte.
  */
 class GeoServerWfsZonaClientTest extends TestCase
 {
+    use LazilyRefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -23,9 +29,11 @@ class GeoServerWfsZonaClientTest extends TestCase
             'sile.features.geoserver_zona' => true,
             'sile.integrations.geoserver.backoff_ms' => 0,
             'sile.integrations.geoserver.retries' => 0,
-            'sile.integrations.geoserver.type_names' => [
-                'louos_zpr3:VM_L_Z_USO_ZPR_3',
-            ],
+        ]);
+
+        GeoServerLayer::factory()->create([
+            'workspace' => 'louos_zpr3',
+            'type_name' => 'VM_L_Z_USO_ZPR_3',
         ]);
     }
 
@@ -72,6 +80,45 @@ class GeoServerWfsZonaClientTest extends TestCase
         $this->assertNull($hit->codigo);
         $this->assertNotEmpty($hit->motivo);
         $this->assertStringContainsString('GeoServer', (string) $hit->motivo);
+    }
+
+    /**
+     * Camada desativada no cadastro sai da consulta WFS na próxima chamada —
+     * é o que torna o CRUD real (não fachada): a tela dirige as URLs.
+     */
+    public function test_camada_inativa_nao_entra_na_consulta(): void
+    {
+        GeoServerLayer::factory()->create([
+            'workspace' => 'louos_zem',
+            'type_name' => 'VM_L_Z_USO_ZEM',
+            'ativo' => false,
+        ]);
+
+        Http::fake([
+            '*' => Http::response(['type' => 'FeatureCollection', 'features' => []], 200),
+        ]);
+
+        $hit = app(GeoServerWfsZonaClient::class)->identificar(-12.97, -38.51);
+
+        $this->assertSame('nao_encontrado', $hit->status);
+        Http::assertSent(fn ($request): bool => str_contains($request->url(), 'louos_zpr3'));
+        Http::assertNotSent(fn ($request): bool => str_contains($request->url(), 'louos_zem'));
+    }
+
+    /**
+     * Banco alcançável e VAZIO é resposta honesta: nenhuma camada cadastrada
+     * = nenhuma consulta WFS (o config NÃO é fallback neste caso — só com o
+     * banco inalcançável).
+     */
+    public function test_sem_camadas_ativas_nao_chama_http(): void
+    {
+        GeoServerLayer::query()->delete();
+
+        $hit = app(GeoServerWfsZonaClient::class)->identificar(-12.97, -38.51);
+
+        $this->assertSame('indisponivel', $hit->status);
+        $this->assertStringContainsString('Nenhuma FeatureType', (string) $hit->motivo);
+        Http::assertNothingSent();
     }
 
     /**
