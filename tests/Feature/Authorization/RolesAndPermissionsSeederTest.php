@@ -338,6 +338,33 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
     }
 
+    public function test_papeis_recebem_permissao_manter_gatilhos_risco(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertSame(
+            'manter-gatilhos-risco',
+            Permission::findByName('manter-gatilhos-risco', 'web')->name,
+        );
+
+        // Administrador e gestor mantêm os gatilhos semi-expresso (espelha
+        // manter-tipos-imovel — parametrização das regras do licenciamento).
+        foreach (['administrador', 'gestor'] as $role) {
+            $this->assertTrue(
+                Role::findByName($role, 'web')->hasPermissionTo('manter-gatilhos-risco'),
+                "O papel {$role} deve ter manter-gatilhos-risco.",
+            );
+        }
+
+        // Analista e cidadão NÃO recebem a permissão.
+        foreach (['analista', 'cidadao'] as $role) {
+            $this->assertFalse(
+                Role::findByName($role, 'web')->hasPermissionTo('manter-gatilhos-risco'),
+                "O papel {$role} não deve ter manter-gatilhos-risco.",
+            );
+        }
+    }
+
     public function test_papel_administrador_recebe_permissao_de_config_ia(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
@@ -366,7 +393,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(4, Role::query()->count());
-        $this->assertSame(31, Permission::query()->count());
+        $this->assertSame(32, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void

@@ -38,6 +38,12 @@ final class PermissionCatalog
                 'group' => 'CNAEs',
             ],
             [
+                'name' => 'manter-gatilhos-risco',
+                'label' => 'Manter gatilhos de risco',
+                'description' => 'Edita e liga/desliga os gatilhos semi-expresso que enviam processos à análise técnica.',
+                'group' => 'CNAEs',
+            ],
+            [
                 'name' => 'consultar-territorio',
                 'label' => 'Consultar território',
                 'description' => 'Acessa o mapa e as camadas geográficas da cidade.',

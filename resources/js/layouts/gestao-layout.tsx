@@ -106,6 +106,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('manter-tipos-imovel'),
                 },
                 {
+                    name: 'Gatilhos de risco',
+                    href: '/gestao/gatilhos-risco',
+                    icon: <TagIcon />,
+                    visible: auth.permissions.includes('manter-gatilhos-risco'),
+                },
+                {
                     name: 'Quadros LOUOS',
                     href: '/gestao/louos',
                     icon: <FileIcon />,

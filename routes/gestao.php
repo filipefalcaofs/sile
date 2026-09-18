@@ -43,6 +43,7 @@ use App\Http\Controllers\Gestao\ReginProtocoloSimulacaoController;
 use App\Http\Controllers\Gestao\RelatorioController;
 use App\Http\Controllers\Gestao\ResetPasswordController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
+use App\Http\Controllers\Gestao\RiskTriggerController;
 use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\SectorController;
 use App\Http\Controllers\Gestao\StandardTextController;
@@ -349,6 +350,15 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [PropertyTypeController::class, 'store'])->name('store');
             Route::put('{propertyType}', [PropertyTypeController::class, 'update'])->name('update');
             Route::put('{propertyType}/ativacao', [PropertyTypeController::class, 'toggleActivation'])->name('ativacao.update');
+        });
+
+        // Gatilhos semi-expresso (HU-049/HU-051): dado administrável. Sem
+        // create/destroy — o código é enum-bound e tem comportamento no motor;
+        // desligar um gatilho muda o roteamento (ação sensível, auditada).
+        Route::middleware('permission:manter-gatilhos-risco')->prefix('gatilhos-risco')->name('gatilhos-risco.')->group(function () {
+            Route::get('/', [RiskTriggerController::class, 'index'])->name('index');
+            Route::put('{riskTrigger}', [RiskTriggerController::class, 'update'])->name('update');
+            Route::put('{riskTrigger}/ativacao', [RiskTriggerController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
         // Servidores de e-mail administráveis (HU-014 / ConfigEmail): CRUD sob
