@@ -10,6 +10,12 @@ import Button from '@/components/ui/button';
 import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
 
+interface PendingProposal {
+    proposed_value: string;
+    created_by: number;
+    author_name: string | null;
+}
+
 interface ParameterItem {
     key: string;
     type: string;
@@ -20,6 +26,9 @@ interface ParameterItem {
     value: string | null;
     has_admin_value: boolean;
     updated_at: string | null;
+    governance: 'operational' | 'decision';
+    pending_proposal: PendingProposal | null;
+    can_approve: boolean;
 }
 
 interface ParametersIndexProps {
@@ -160,16 +169,29 @@ function ParameterSection({ item }: { item: ParameterItem }) {
                             {item.description}
                         </h4>
                         {item.has_admin_value && <Badge size="sm">Administrado</Badge>}
+                        {item.governance === 'decision' && <Badge size="sm">Decisório</Badge>}
                     </div>
                     <p className="mt-1 font-mono text-theme-xs text-gray-400 dark:text-gray-500">{item.key}</p>
                     <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
                         Padrão: {item.default_value ?? '—'}
                     </p>
+                    {item.governance === 'decision' && (
+                        <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
+                            Alteração decisória: o valor vigente só muda após aprovação de um segundo usuário.
+                        </p>
+                    )}
                 </div>
                 <TableAction tone="brand" href={`/gestao/parametros/${item.key}/historico`}>
                     Histórico
                 </TableAction>
             </div>
+
+            {item.pending_proposal && (
+                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-theme-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-500/10 dark:text-amber-200">
+                    Proposta pendente de {item.pending_proposal.author_name ?? 'outro usuário'}:{' '}
+                    <span className="font-mono">{item.pending_proposal.proposed_value}</span>
+                </div>
+            )}
 
             <Form action={`/gestao/parametros/${item.key}`} method="put" className="mt-5">
                 {({ errors, processing }) => (
@@ -177,12 +199,41 @@ function ParameterSection({ item }: { item: ParameterItem }) {
                         <ValueField item={item} error={errors.value} />
                         <div>
                             <Button size="sm" type="submit" disabled={processing}>
-                                {processing ? 'Salvando...' : 'Salvar'}
+                                {processing
+                                    ? 'Salvando...'
+                                    : item.governance === 'decision'
+                                      ? 'Propor alteração'
+                                      : 'Salvar'}
                             </Button>
                         </div>
                     </div>
                 )}
             </Form>
+
+            {item.pending_proposal && item.can_approve && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                    <Form action={`/gestao/parametros/${item.key}/aprovar`} method="post">
+                        {({ processing }) => (
+                            <Button size="sm" type="submit" disabled={processing}>
+                                Aprovar
+                            </Button>
+                        )}
+                    </Form>
+                    <Form action={`/gestao/parametros/${item.key}/rejeitar`} method="post">
+                        {({ processing }) => (
+                            <Button size="sm" type="submit" disabled={processing}>
+                                Rejeitar
+                            </Button>
+                        )}
+                    </Form>
+                </div>
+            )}
+
+            {item.pending_proposal && !item.can_approve && (
+                <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
+                    Aguardando segundo aprovador.
+                </p>
+            )}
 
             {item.requires_connection_test && (
                 <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
@@ -205,7 +256,8 @@ export default function ParametersIndex({ groups }: ParametersIndexProps) {
 
             <div className="flex flex-col gap-4 md:gap-6">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Alterações valem imediatamente, sem novo deploy, e ficam registradas no histórico auditado
+                    Alterações operacionais valem imediatamente, sem novo deploy. Parâmetros decisórios exigem
+                    aprovação de um segundo usuário (quatro olhos) e ficam registrados no histórico auditado.
                 </p>
 
                 <div className="border-b border-gray-200 dark:border-gray-800">
