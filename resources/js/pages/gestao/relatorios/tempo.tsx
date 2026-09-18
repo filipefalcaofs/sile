@@ -56,6 +56,7 @@ interface FiltrosForm {
 }
 
 const URL_TEMPO = '/gestao/relatorios/tempo';
+const URL_ESCRITORIO_VIRTUAL = '/gestao/relatorios/escritorio-virtual';
 
 /** Rótulos legíveis das etapas; a espera agrega encaminhamento e Junta/BAP. */
 const ETAPA_LABELS: Record<string, string> = {
@@ -218,10 +219,11 @@ export default function TempoAnalise({ tempoPorEtapa, tempoEmissaoTvl, filtros }
         return params;
     }, [form]);
 
-    // Mesmo recorte, mas o ?relatorio=escritorio-virtual troca o ReportSource no
-    // backend (sedes de escritório virtual — SAPS) sem mexer na URL base.
+    // A lista de sedes de escritório virtual é servida pelo endpoint do próprio
+    // domínio (?recorte=sedes) — o endpoint de tempo exporta só tempo por etapa.
+    // Os filtros de período da tela são os que a fonte de sedes honra.
     const sedesParams = useMemo<ServerTableParams>(
-        () => ({ ...currentParams, relatorio: 'escritorio-virtual' }),
+        () => ({ ...currentParams, recorte: 'sedes' }),
         [currentParams],
     );
 
@@ -327,9 +329,9 @@ export default function TempoAnalise({ tempoPorEtapa, tempoEmissaoTvl, filtros }
                 <Card>
                     <CardHeader
                         title="Sedes de escritório virtual (SAPS)"
-                        description="A relação das sedes de escritório virtual é servida pelo relatório exportável — empresa, CNPJ, protocolo e resultado — sobre o mesmo recorte de período."
+                        description="A relação das sedes de escritório virtual — empresa, CNPJ, protocolo e resultado — é exportada pelo relatório de escritório virtual sobre o mesmo recorte de período."
                         actions={
-                            <ExportMenu url={URL_TEMPO} params={sedesParams} label="Exportar sedes de escritório virtual" />
+                            <ExportMenu url={URL_ESCRITORIO_VIRTUAL} params={sedesParams} label="Exportar sedes de escritório virtual" />
                         }
                     />
                     <CardContent>

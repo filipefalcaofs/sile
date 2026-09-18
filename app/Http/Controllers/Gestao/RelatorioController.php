@@ -89,16 +89,17 @@ class RelatorioController extends Controller
     }
 
     /**
-     * Tempo por etapa (HU-129) + relatórios SAPS de tempo. O ?relatorio= escolhe a
-     * fonte de export quando há mais de uma: `escritorio-virtual` exporta as sedes
-     * de escritório virtual; o default (`tempo`) exporta o detalhamento por etapa.
+     * Tempo por etapa (HU-129). A exportação é SEMPRE o detalhamento por etapa:
+     * a lista de sedes de escritório virtual migrou para o endpoint do próprio
+     * domínio ({@see escritorioVirtual()} com ?recorte=sedes) — um endpoint, uma
+     * família de relatório.
      */
     public function tempo(RelatorioFiltersRequest $request): InertiaResponse|Response
     {
         $filtros = $request->toReportFilters();
 
         if ($formato = $this->formato($request)) {
-            return $this->exportar($this->fonteTempo($request), $filtros, $formato, $request);
+            return $this->exportar(app(TempoAnaliseReportSource::class), $filtros, $formato, $request);
         }
 
         $this->auditarConsulta('consulta-tempo', 'Consulta do relatório de tempo de análise', $filtros);
@@ -214,15 +215,21 @@ class RelatorioController extends Controller
      * Relatório sede × abrigados de escritório virtual (Plano R1): agrupa, por
      * inscrição imobiliária travada, a SEDE (alvo do lock ativo) e os ABRIGADOS
      * (decisões is_virtual_office_tenant). Com ?formato=, exporta o MESMO recorte
-     * pelo contrato único (RelatorioSedeReportSource — RN-005/009); senão audita a
-     * consulta e renderiza a tela com o paginator projetado por `linha()`.
+     * pelo contrato único (RelatorioSedeReportSource — RN-005/009); com
+     * ?recorte=sedes, exporta a LISTA PLANA de sedes EV (EscritorioVirtualReportSource
+     * — SAPS RN-006: empresa/CNPJ/bairro/resultado, recorte por período). Senão
+     * audita a consulta e renderiza a tela com o paginator projetado por `linha()`.
      */
     public function escritorioVirtual(RelatorioFiltersRequest $request): InertiaResponse|Response
     {
         $filtros = $request->toReportFilters();
 
         if ($formato = $this->formato($request)) {
-            return $this->exportar(app(RelatorioSedeReportSource::class), $filtros, $formato, $request);
+            $source = $request->string('recorte')->toString() === 'sedes'
+                ? app(EscritorioVirtualReportSource::class)
+                : app(RelatorioSedeReportSource::class);
+
+            return $this->exportar($source, $filtros, $formato, $request);
         }
 
         $this->auditarConsulta('consulta-escritorio-virtual', 'Consulta do relatório sede × abrigados de escritório virtual', $filtros);
@@ -295,18 +302,6 @@ class RelatorioController extends Controller
         $perPage = (int) $request->input('per_page');
 
         return in_array($perPage, self::PER_PAGE_OPTIONS, true) ? $perPage : 15;
-    }
-
-    /**
-     * Fonte do export do relatório de tempo, selecionada pelo ?relatorio= (um
-     * endpoint serve mais de um ReportSource): escritorio-virtual → sedes;
-     * default → detalhamento por etapa.
-     */
-    private function fonteTempo(RelatorioFiltersRequest $request): ReportSource
-    {
-        return $request->string('relatorio')->toString() === 'escritorio-virtual'
-            ? app(EscritorioVirtualReportSource::class)
-            : app(TempoAnaliseReportSource::class);
     }
 
     /**

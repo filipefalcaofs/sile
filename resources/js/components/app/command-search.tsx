@@ -34,6 +34,8 @@ const DESTINOS: DestinoComando[] = [
     { label: 'Quedas do expresso', grupo: 'Relatórios', href: '/gestao/relatorios/quedas', permissao: 'consultar-relatorios' },
     { label: 'Painel por bairro', grupo: 'Relatórios', href: '/gestao/relatorios/geo-bairro', permissao: 'consultar-relatorios' },
     { label: 'Saturação locacional', grupo: 'Relatórios', href: '/gestao/relatorios/saturacao', permissao: 'consultar-relatorios' },
+    { label: 'Escritório virtual (sede × abrigados)', grupo: 'Relatórios', href: '/gestao/relatorios/escritorio-virtual', permissao: 'consultar-relatorios' },
+    { label: 'Tempo de emissão de TVL', grupo: 'Relatórios', href: '/gestao/relatorios/tempo-emissao-tvl', permissao: 'consultar-relatorios' },
     { label: 'Feriados', grupo: 'Relatórios', href: '/gestao/feriados', permissao: 'manter-parametros' },
     { label: 'API REGIN', grupo: 'Administração', href: '/gestao/config-regin', permissao: 'manter-parametros' },
     { label: 'API de inscrição imobiliária', grupo: 'Administração', href: '/gestao/config-inscricao-imobiliaria', permissao: 'manter-parametros' },

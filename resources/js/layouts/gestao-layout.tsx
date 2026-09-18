@@ -200,6 +200,18 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('consultar-relatorios'),
                 },
                 {
+                    name: 'Escritório virtual (sede × abrigados)',
+                    href: '/gestao/relatorios/escritorio-virtual',
+                    icon: <FileIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
+                    name: 'Tempo de emissão de TVL',
+                    href: '/gestao/relatorios/tempo-emissao-tvl',
+                    icon: <ListIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
                     name: 'Feriados',
                     href: '/gestao/feriados',
                     icon: <TagIcon />,

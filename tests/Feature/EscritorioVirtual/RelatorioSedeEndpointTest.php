@@ -139,6 +139,28 @@ class RelatorioSedeEndpointTest extends TestCase
         ]);
     }
 
+    public function test_exporta_lista_de_sedes_pelo_recorte_sedes(): void
+    {
+        // Lista plana de sedes EV (SAPS, RN-006): recorte is_virtual_office=true
+        // com empresa/CNPJ/bairro/resultado — migrada do endpoint de tempo.
+        ViabilityRequest::factory()->protocoled()->create([
+            'is_virtual_office' => true,
+            'protocol_number' => 'VIA-2026-SEDES1',
+        ]);
+
+        $response = $this->actingAs($this->consultor(), 'gestao')
+            ->get('/gestao/relatorios/escritorio-virtual?formato=csv&recorte=sedes')
+            ->assertOk();
+
+        $this->assertStringContainsString('Empresa', $response->streamedContent());
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'relatorios',
+            'event' => 'exporta-escritorio-virtual-csv',
+            'result' => 'sucesso',
+        ]);
+    }
+
     public function test_sem_consultar_relatorios_recebe_403(): void
     {
         $semPermissao = User::factory()->analista()->withAcceptedLgpdTerm()->create();

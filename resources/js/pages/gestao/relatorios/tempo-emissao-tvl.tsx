@@ -332,14 +332,7 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
                     <CardHeader
                         title="Filtros"
                         description="Recorte por serviço, período de emissão, resultado e CNAE. O período recorta pela emissão do TVL — sem processos no recorte, a tabela fica vazia (nunca um dado inventado)."
-                        actions={
-                            <ExportMenu
-                                url={URL_TEMPO_EMISSAO_TVL}
-                                params={exportParams}
-                                formatos={['xlsx']}
-                                label="Exportar Excel"
-                            />
-                        }
+                        actions={<ExportMenu url={URL_TEMPO_EMISSAO_TVL} params={exportParams} />}
                     />
                     <CardContent>
                         <form onSubmit={pesquisar}>
@@ -410,7 +403,7 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
                 <Card>
                     <CardHeader
                         title="Processos e tempo de emissão"
-                        description="Cada linha é um processo decidido no recorte com o tempo entre a abertura e a emissão do TVL. A exportação em Excel entrega exatamente este recorte."
+                        description="Cada linha é um processo decidido no recorte com o tempo entre a abertura e a emissão do TVL. A exportação (CSV/Excel/PDF) entrega exatamente este recorte."
                         actions={
                             <div className="flex flex-wrap items-center gap-3">
                                 <SeletorColunas

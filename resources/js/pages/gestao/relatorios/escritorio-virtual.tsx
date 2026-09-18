@@ -222,7 +222,7 @@ export default function EscritorioVirtual({ relatorio, filtros, perPageOptions }
                     <CardHeader
                         title="Filtros"
                         description="Recorte por número da sede (TVL) e/ou inscrição imobiliária. A sede é o alvo do lock ativo da inscrição; os abrigados são as decisões marcadas como escritório virtual."
-                        actions={<ExportMenu url={URL_ESCRITORIO_VIRTUAL} params={exportParams} formatos={['xlsx']} label="Gerar Excel" />}
+                        actions={<ExportMenu url={URL_ESCRITORIO_VIRTUAL} params={exportParams} />}
                     />
                     <CardContent>
                         <form onSubmit={pesquisar}>
@@ -281,7 +281,7 @@ export default function EscritorioVirtual({ relatorio, filtros, perPageOptions }
                 <Card>
                     <CardHeader
                         title="Sedes e abrigados"
-                        description="Cada inscrição travada agrupa a sede e seus abrigados de escritório virtual. A exportação em Excel entrega exatamente este recorte."
+                        description="Cada inscrição travada agrupa a sede e seus abrigados de escritório virtual. A exportação (CSV/Excel/PDF) entrega exatamente este recorte."
                         actions={<PerPageSelect value={perPage} options={perPageOptions} onChange={alterarPerPage} />}
                     />
                     <CardContent>

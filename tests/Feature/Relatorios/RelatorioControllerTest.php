@@ -200,19 +200,19 @@ class RelatorioControllerTest extends TestCase
         ]);
     }
 
-    public function test_tempo_exporta_escritorio_virtual_pelo_parametro_relatorio(): void
+    public function test_tempo_ignora_parametro_relatorio_legado_e_exporta_tempo(): void
     {
         $this->protocolada(['is_virtual_office' => true]);
 
-        $response = $this->actingAs($this->gestor(), 'gestao')
+        $this->actingAs($this->gestor(), 'gestao')
             ->get('/gestao/relatorios/tempo?formato=csv&relatorio=escritorio-virtual')
             ->assertOk();
 
-        $this->assertStringContainsString('Empresa', $response->streamedContent());
-
+        // O endpoint de tempo exporta SEMPRE o detalhamento por etapa: a lista
+        // de sedes migrou para o endpoint de escritório virtual (?recorte=sedes).
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'relatorios',
-            'event' => 'exporta-escritorio-virtual-csv',
+            'event' => 'exporta-tempo-analise-csv',
             'result' => 'sucesso',
         ]);
     }

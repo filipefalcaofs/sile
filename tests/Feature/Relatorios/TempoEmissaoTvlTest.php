@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
+use App\Services\Relatorios\Export\Sources\RelatorioTempoEmissaoTvlReportSource;
 use App\Services\Relatorios\RelatorioTempoEmissaoTvlService;
 use App\Services\Relatorios\ReportFilters;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -231,5 +232,20 @@ class TempoEmissaoTvlTest extends TestCase
         $this->actingAs($semPermissao, 'gestao')
             ->get('/gestao/relatorios/tempo-emissao-tvl')
             ->assertForbidden();
+    }
+
+    // Os blocos DAM não são modelados: a exportação não os expõe como colunas
+    // mortas (a tela os mantém ocultos por padrão no seletor de colunas).
+    public function test_exportacao_nao_expoe_colunas_dam_nao_modeladas(): void
+    {
+        $definicao = app(RelatorioTempoEmissaoTvlReportSource::class)
+            ->definition(ReportFilters::fromArray([]));
+
+        $chaves = array_column($definicao->colunas, 'key');
+
+        $this->assertSame(
+            ['processo', 'servico', 'tipo', 'abertura', 'tvl_disponivel', 'tvl_numero', 'emissao', 'duracao_minutos'],
+            $chaves,
+        );
     }
 }

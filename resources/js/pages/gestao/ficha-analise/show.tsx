@@ -292,9 +292,11 @@ export function escapeHtml(valor: string): string {
 /**
  * Extrato de tramitação real (não é PDF novo nem endpoint novo — spec
  * 2026-07-24 D7): monta uma janela de impressão do navegador a partir dos
- * mesmos dados já renderizados na tabela.
+ * mesmos dados já renderizados na tabela. O cabeçalho formal identifica o
+ * sistema, o processo, a data/hora de emissão e o usuário emissor — o extrato
+ * circula como peça operacional documental, não como impressão anônima.
  */
-function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoItem[]) {
+function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoItem[], emitidoPor: string) {
     const janela = window.open('', '_blank', 'width=800,height=600');
 
     if (!janela) {
@@ -302,6 +304,8 @@ function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoIt
 
         return;
     }
+
+    const emitidoEm = formatarDataHora(new Date().toISOString());
 
     const linhas = itens
         .map(
@@ -324,14 +328,25 @@ function imprimirExtratoTramitacao(protocolo: string | null, itens: TramitacaoIt
                     table { width: 100%; border-collapse: collapse; }
                     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 13px; }
                     th { background: #f3f4f6; }
+                    header { margin-bottom: 16px; }
+                    header h3 { margin: 0 0 4px; }
+                    header p, footer p { margin: 2px 0; font-size: 12px; color: #555; }
+                    footer { margin-top: 16px; border-top: 1px solid #ccc; padding-top: 8px; }
                 </style>
             </head>
             <body>
-                <h3>Extrato de tramitação — ${escapeHtml(protocolo ?? '')}</h3>
+                <header>
+                    <h3>Extrato de tramitação — ${escapeHtml(protocolo ?? '')}</h3>
+                    <p>Viabiliza — Sistema de Licenciamento Eletrônico · SEDUR</p>
+                    <p>Emitido em ${escapeHtml(emitidoEm)} por ${escapeHtml(emitidoPor)}</p>
+                </header>
                 <table>
                     <thead><tr><th>Data</th><th>Setor</th><th>Usuário</th><th>Status</th></tr></thead>
                     <tbody>${linhas}</tbody>
                 </table>
+                <footer>
+                    <p>Extrato gerado eletronicamente a partir da trilha operacional registrada no processo.</p>
+                </footer>
             </body>
         </html>
     `);
@@ -1807,7 +1822,7 @@ export default function FichaAnaliseShow({
                                     <Button
                                         size="xs"
                                         variant="outline"
-                                        onClick={() => imprimirExtratoTramitacao(processo.protocol_number, tramitacao)}
+                                        onClick={() => imprimirExtratoTramitacao(processo.protocol_number, tramitacao, auth.user?.name ?? '—')}
                                     >
                                         Imprimir Extrato da Tramitação
                                     </Button>

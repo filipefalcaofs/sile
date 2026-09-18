@@ -18,8 +18,10 @@ use Illuminate\Database\Eloquent\Builder;
  * serviço (container) e o recorte viaja no bag serializável — NÃO é SyncOnly.
  *
  * `personalData=false`: as colunas trazem só protocolo, serviço, datas e nº do TVL
- * — sem PII do requerente. Os blocos DAM saem em branco (não modelados) e a duração
- * Emissão−Abertura é reportada em MINUTOS ÚTEIS (mesma semântica do TempoAnalise).
+ * — sem PII do requerente. Os blocos DAM não são modelados e NÃO viram colunas
+ * mortas na exportação (na tela ficam ocultos por padrão no seletor de colunas);
+ * a duração Emissão−Abertura é reportada em MINUTOS ÚTEIS (mesma semântica do
+ * TempoAnalise).
  */
 final class RelatorioTempoEmissaoTvlReportSource implements ReportSource
 {
@@ -34,10 +36,6 @@ final class RelatorioTempoEmissaoTvlReportSource implements ReportSource
                 ['key' => 'servico', 'label' => 'Serviço'],
                 ['key' => 'tipo', 'label' => 'Tipo'],
                 ['key' => 'abertura', 'label' => 'Abertura'],
-                ['key' => 'dam_numero', 'label' => 'DAM Nº'],
-                ['key' => 'dam_emissao', 'label' => 'DAM Emissão'],
-                ['key' => 'dam_pagamento', 'label' => 'DAM Pagamento'],
-                ['key' => 'dam_valor', 'label' => 'DAM Valor'],
                 ['key' => 'tvl_disponivel', 'label' => 'TVL Disponível'],
                 ['key' => 'tvl_numero', 'label' => 'Nº TVL'],
                 ['key' => 'emissao', 'label' => 'Emissão'],
@@ -68,10 +66,6 @@ final class RelatorioTempoEmissaoTvlReportSource implements ReportSource
             $l['servico'],
             $l['tipo'],
             $l['abertura'],
-            $l['dam_numero'],
-            $l['dam_emissao'],
-            $l['dam_pagamento'],
-            $l['dam_valor'],
             $l['tvl_disponivel'] ? 'Sim' : 'Não',
             $l['tvl_numero'],
             $l['emissao'],
