@@ -46,6 +46,9 @@ class RelatorioFiltersRequest extends FormRequest
             'servico' => ['nullable', 'integer'],
             'resultado' => ['nullable', 'string', 'in:deferida,indeferida'],
             'tipo' => ['nullable', 'string', 'in:viabilidade,revisao'],
+            // Relatório de pendências/exigências: recorte pelo status da
+            // pendência (não confundir com o status do processo).
+            'status_pendencia' => ['nullable', 'string', 'in:aberta,respondida,expirada,cancelada'],
         ];
     }
 
@@ -67,6 +70,7 @@ class RelatorioFiltersRequest extends FormRequest
             'servico' => 'serviço',
             'resultado' => 'resultado',
             'tipo' => 'tipo',
+            'status_pendencia' => 'situação da pendência',
         ];
     }
 

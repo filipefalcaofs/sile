@@ -4,27 +4,36 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\RelatorioFiltersRequest;
+use App\Models\AnalysisPendency;
+use App\Models\Sector;
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\Export\Sources\EscritorioVirtualReportSource;
 use App\Services\Relatorios\Export\Sources\ExpressoQuedaReportSource;
+use App\Services\Relatorios\Export\Sources\PendenciasReportSource;
 use App\Services\Relatorios\Export\Sources\ProdutividadeReportSource;
 use App\Services\Relatorios\Export\Sources\RelatorioSedeReportSource;
 use App\Services\Relatorios\Export\Sources\RelatorioTempoEmissaoTvlReportSource;
+use App\Services\Relatorios\Export\Sources\SlaVencimentosReportSource;
 use App\Services\Relatorios\Export\Sources\SolicitacoesReportSource;
 use App\Services\Relatorios\Export\Sources\TempoAnaliseReportSource;
 use App\Services\Relatorios\ExpressoQuedaService;
 use App\Services\Relatorios\GeoBairroIndicadorService;
 use App\Services\Relatorios\IndicadoresViabilidadeService;
+use App\Services\Relatorios\PendenciasRelatorioService;
 use App\Services\Relatorios\ProdutividadeAnalistaService;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Services\Relatorios\RelatorioTempoEmissaoTvlService;
 use App\Services\Relatorios\ReportFilters;
 use App\Services\Relatorios\SaturacaoService;
+use App\Services\Relatorios\SlaVencimentosService;
 use App\Services\Relatorios\TempoAnaliseService;
+use App\Services\Relatorios\TrilhaProcessoService;
 use App\Support\Audit\AuditService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -59,6 +68,9 @@ class RelatorioController extends Controller
         private SaturacaoService $saturacao,
         private RelatorioSedeEscritorioVirtualService $relatorioSede,
         private RelatorioTempoEmissaoTvlService $tempoEmissaoTvl,
+        private SlaVencimentosService $slaVencimentos,
+        private PendenciasRelatorioService $pendenciasRelatorio,
+        private TrilhaProcessoService $trilhaProcesso,
         private AuditService $audit,
     ) {}
 
@@ -273,6 +285,130 @@ class RelatorioController extends Controller
             'servicos' => $this->servicoOptions(),
             'filtros' => $filtros->aplicados(),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
+        ]);
+    }
+
+    /**
+     * SLA e vencimentos da análise (relatório operacional): processos EM
+     * ANDAMENTO com prazo materializado, o mais urgente primeiro, com o resumo
+     * em SQL (em andamento / vencidos / vencendo na janela parametrizável) e o
+     * semáforo on-the-fly por linha. Com ?formato=, exporta o MESMO recorte
+     * pelo contrato único (SlaVencimentosReportSource — RN-005); senão audita a
+     * consulta e renderiza a tela paginada. Os seletores de setor/analista vêm
+     * dos cadastros reais (setores ativos; usuários com analisar-processos).
+     */
+    public function slaVencimentos(RelatorioFiltersRequest $request): InertiaResponse|Response
+    {
+        $filtros = $request->toReportFilters();
+
+        if ($formato = $this->formato($request)) {
+            return $this->exportar(app(SlaVencimentosReportSource::class), $filtros, $formato, $request);
+        }
+
+        $this->auditarConsulta('consulta-sla-vencimentos', 'Consulta do relatório de SLA e vencimentos', $filtros);
+
+        return Inertia::render('gestao/relatorios/sla', [
+            'resumo' => $this->slaVencimentos->resumo($filtros),
+            'relatorio' => $this->slaVencimentos
+                ->builder($filtros)
+                ->paginate($this->perPage($request))
+                ->withQueryString()
+                ->through(fn (ViabilityRequest $r): array => $this->slaVencimentos->linha($r)),
+            'setores' => Sector::query()->orderBy('name')->get(['id', 'name'])
+                ->map(fn (Sector $s): array => ['value' => $s->id, 'label' => $s->name])
+                ->all(),
+            'analistas' => User::query()->permission('analisar-processos')->orderBy('name')->get(['id', 'name'])
+                ->map(fn (User $u): array => ['value' => $u->id, 'label' => $u->name])
+                ->all(),
+            'filtros' => $filtros->only(['setor', 'analista']),
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+        ]);
+    }
+
+    /**
+     * Pendências/exigências (relatório operacional): abertas, vencidas,
+     * respondidas e expiradas com o tempo médio de resposta do requerente, e a
+     * lista das pendências do recorte (abertas pelo prazo primeiro). Com
+     * ?formato=, exporta o MESMO recorte pelo contrato único
+     * (PendenciasReportSource — RN-005); senão audita a consulta e renderiza a
+     * tela paginada.
+     */
+    public function pendencias(RelatorioFiltersRequest $request): InertiaResponse|Response
+    {
+        $filtros = $request->toReportFilters();
+
+        if ($formato = $this->formato($request)) {
+            return $this->exportar(app(PendenciasReportSource::class), $filtros, $formato, $request);
+        }
+
+        $this->auditarConsulta('consulta-pendencias', 'Consulta do relatório de pendências e exigências', $filtros);
+
+        return Inertia::render('gestao/relatorios/pendencias', [
+            'resumo' => $this->pendenciasRelatorio->resumo($filtros),
+            'relatorio' => $this->pendenciasRelatorio
+                ->builder($filtros)
+                ->paginate($this->perPage($request))
+                ->withQueryString()
+                ->through(fn (AnalysisPendency $p): array => $this->pendenciasRelatorio->linha($p)),
+            'filtros' => $filtros->only(['data_de', 'data_ate', 'status_pendencia']),
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+        ]);
+    }
+
+    /**
+     * Trilha de auditoria por processo (prestação de contas): busca por número
+     * de protocolo e consolida as fontes reais de histórico (transições dos
+     * dois eixos + activity_log + decisão) ordenadas por data. Sem protocolo,
+     * renderiza a tela de busca; protocolo inexistente → trilha null (estado
+     * honesto). A consulta é auditada (RN-002).
+     */
+    public function trilha(RelatorioFiltersRequest $request): InertiaResponse
+    {
+        $protocolo = $request->string('protocolo')->trim()->toString();
+
+        $trilha = $protocolo !== '' ? $this->trilhaProcesso->trilha($protocolo) : null;
+
+        if ($protocolo !== '') {
+            $this->auditarConsulta('consulta-trilha-processo', 'Consulta da trilha de auditoria por processo', ReportFilters::fromArray(['protocolo' => $protocolo]));
+        }
+
+        return Inertia::render('gestao/relatorios/trilha', [
+            'trilha' => $trilha,
+            'protocolo' => $protocolo !== '' ? $protocolo : null,
+        ]);
+    }
+
+    /**
+     * Impressão em PDF da trilha por processo (documento de prestação de
+     * contas): DomPDF sobre o Blade real, com identificação do emissor e do
+     * período de emissão. Protocolo inexistente → 404 (nunca um PDF vazio
+     * fingindo resultado). A impressão é auditada (RN-002).
+     */
+    public function trilhaImprimir(RelatorioFiltersRequest $request): Response
+    {
+        $protocolo = $request->string('protocolo')->trim()->toString();
+
+        $trilha = $protocolo !== '' ? $this->trilhaProcesso->trilha($protocolo) : null;
+
+        abort_if($trilha === null, 404, 'Processo não encontrado para o protocolo informado.');
+
+        $this->audit->log(
+            logName: 'relatorios',
+            event: 'imprime-trilha-processo',
+            description: "Impressão da trilha de auditoria do processo {$protocolo}",
+            properties: ['protocolo' => $protocolo, 'viability_request_id' => $trilha['processo']['id']],
+            result: 'sucesso',
+        );
+
+        $pdf = Pdf::loadView('documentos.trilha-processo', [
+            'trilha' => $trilha,
+            'emitido_em' => now(),
+            'emitido_por' => $request->user()?->name,
+        ])->setPaper('a4', 'portrait')->output();
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="trilha-'.$protocolo.'.pdf"',
         ]);
     }
 

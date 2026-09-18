@@ -212,6 +212,24 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('consultar-relatorios'),
                 },
                 {
+                    name: 'SLA e vencimentos',
+                    href: '/gestao/relatorios/sla',
+                    icon: <AlertIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
+                    name: 'Pendências e exigências',
+                    href: '/gestao/relatorios/pendencias',
+                    icon: <ListIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
+                    name: 'Trilha por processo',
+                    href: '/gestao/relatorios/trilha',
+                    icon: <ShieldIcon />,
+                    visible: auth.permissions.includes('consultar-relatorios'),
+                },
+                {
                     name: 'Feriados',
                     href: '/gestao/feriados',
                     icon: <TagIcon />,

@@ -217,6 +217,21 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // (separada do KPI `tempo`) — tabela dos processos decididos no recorte
             // com o tempo Emissão−Abertura. Export pelo contrato único (?formato=).
             Route::get('tempo-emissao-tvl', [RelatorioController::class, 'tempoEmissaoTvl'])->name('tempo-emissao-tvl');
+            // SLA e vencimentos da análise (relatório operacional): processos em
+            // andamento com prazo materializado, o mais urgente primeiro, com
+            // resumo em SQL + semáforo on-the-fly. Export pelo contrato único.
+            Route::get('sla', [RelatorioController::class, 'slaVencimentos'])->name('sla');
+            // Pendências/exigências (relatório operacional): abertas/vencidas/
+            // respondidas/expiradas + tempo médio de resposta do requerente.
+            // Export pelo contrato único (?formato=).
+            Route::get('pendencias', [RelatorioController::class, 'pendencias'])->name('pendencias');
+            // Trilha de auditoria por processo (prestação de contas): busca por
+            // protocolo consolidando transições + activity_log + decisão. A
+            // impressão é PDF DomPDF auditado (multi-fonte — fora do contrato
+            // tabular de exportação). 'trilha/imprimir' é literal e vem ANTES
+            // de qualquer wildcard.
+            Route::get('trilha/imprimir', [RelatorioController::class, 'trilhaImprimir'])->name('trilha.imprimir');
+            Route::get('trilha', [RelatorioController::class, 'trilha'])->name('trilha');
         });
 
         // Ficha única do CNAE: dados + classificação de risco municipal +
