@@ -7,13 +7,11 @@ use App\Enums\ResultadoViabilidade;
 use App\Models\DecisionText;
 use App\Models\LouosQuadro7Faixa;
 use App\Services\Analise\JustificativaFundamentadaComposer;
-use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\LouosEnquadramentoService;
 use Database\Seeders\DecisionTextSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
-use ReflectionClassConstant;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -72,10 +70,11 @@ class DecisionTextSeederTest extends TestCase
 
         $catalogo = new DecisionTextCatalog;
 
-        // Os literais das chaves LOUOS e da consulta são os valores provados
-        // corretos pelos goldens de byte-identidade (LouosTextosByteIdenticosTest
-        // e TextosServicosByteIdenticosTest) — as constantes foram removidas dos
-        // services na migração (Fase 4, Tasks 2-3).
+        // Os literais são os valores provados corretos pelos goldens de
+        // byte-identidade (LouosTextosByteIdenticosTest,
+        // TextosServicosByteIdenticosTest e o golden da explicação legada em
+        // DecisionExplanationTest) — as constantes foram removidas dos services
+        // na migração (Fase 4, Tasks 2-4).
         $this->assertSame(
             'Lei nº 9.148/2016 (LOUOS)',
             $catalogo->get('base_legal.louos'),
@@ -89,7 +88,7 @@ class DecisionTextSeederTest extends TestCase
             $catalogo->get('consulta.aviso.zona_pendente'),
         );
         $this->assertSame(
-            self::constante(DecisionExplanationService::class, 'TITULO_RISCO'),
+            'Classificação de risco',
             $catalogo->get('explicacao.titulo.risco'),
         );
     }
@@ -180,10 +179,5 @@ class DecisionTextSeederTest extends TestCase
         ]);
 
         $this->assertSame($atual, $doCatalogo);
-    }
-
-    private static function constante(string $class, string $nome): string
-    {
-        return (string) (new ReflectionClassConstant($class, $nome))->getValue();
     }
 }

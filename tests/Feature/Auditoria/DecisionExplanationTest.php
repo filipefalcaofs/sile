@@ -170,6 +170,105 @@ class DecisionExplanationTest extends TestCase
     }
 
     /**
+     * Golden de byte-identidade (Fase 4, Task 4): os 14 textos da explicação
+     * legada (7 títulos + 7 motivos) são assertados como strings EXATAS — a
+     * rede que prova que a migração das constantes para o catálogo
+     * decision_texts não mudou uma vírgula do que é emitido.
+     */
+    public function test_textos_da_explicacao_legada_sao_byte_identicos(): void
+    {
+        // Cenário A: veredito permitido cuja fundamentação cita só o Quadro 7.
+        $decision = ViabilityDecision::factory()->create();
+
+        $passos = app(DecisionExplanationService::class)->explain($decision)['por_cnae'][0]['passos'];
+
+        $entrada = $this->passo($passos, 'entrada');
+        $this->assertSame('Entrada', $entrada['titulo']);
+
+        $risco = $this->passo($passos, 'risco');
+        $this->assertSame('Classificação de risco', $risco['titulo']);
+        $this->assertSame(
+            'O Decreto nº 32.636/2020 classifica o risco do CNAE e define se o processo vai ao fluxo expresso ou à análise técnica. O nível e o encaminhamento desta decisão não foram gravados.',
+            $risco['motivo'],
+        );
+
+        $quadro7 = $this->passo($passos, 'louos.quadro7');
+        $this->assertSame('LOUOS — Quadro 7 (classificação do uso)', $quadro7['titulo']);
+        $this->assertSame(
+            'O Quadro 7 classifica o uso (CNAE × área → grupo). O grupo e a faixa desta decisão não foram gravados.',
+            $quadro7['motivo'],
+        );
+
+        $quadro10 = $this->passo($passos, 'louos.quadro10');
+        $this->assertSame('LOUOS — Quadro 10 (permissão na zona)', $quadro10['titulo']);
+        $this->assertSame(
+            'O Quadro 10 permite ou proíbe o grupo na zona. A permissão e a zona desta decisão não foram gravadas.',
+            $quadro10['motivo'],
+        );
+
+        $quadro11a = $this->passo($passos, 'louos.quadro11a');
+        $this->assertSame('LOUOS — Quadro 11-A (condições pela via)', $quadro11a['titulo']);
+        $this->assertSame(
+            'O Quadro 11-A condiciona a instalação pela via (classe viária × grupo). Não permite nem proíbe o uso. As condições desta decisão não foram gravadas.',
+            $quadro11a['motivo'],
+        );
+
+        $consolidacao = $this->passo($passos, 'consolidacao');
+        $this->assertSame('Consolidação do veredito locacional', $consolidacao['titulo']);
+        $this->assertSame(
+            'O registro cita o Quadro 7 da LOUOS como fundamento do veredito permitido. O Quadro 7 só classifica o uso (grupo por CNAE e área). Quem permite ou proíbe na zona é o Quadro 10. Grupo, faixa de área e zona não foram gravados nesta decisão.',
+            $consolidacao['motivo'],
+        );
+
+        $desfecho = $this->passo($passos, 'desfecho');
+        $this->assertSame('Desfecho', $desfecho['titulo']);
+
+        // Cenário B: veredito permitido cuja fundamentação cita o Quadro 10.
+        $decisionB = ViabilityDecision::factory()->create([
+            'viability_request_id' => ViabilityRequest::factory()->protocoled()->create([
+                'protocol_number' => 'VIA-'.now()->year.'-000002',
+            ]),
+            'tvl_product_number' => 'TVL-'.now()->year.'-000002',
+            'per_cnae' => [[
+                'cnae' => '4712100',
+                'cnae_formatado' => '4712-1/00',
+                'is_primary' => true,
+                'tendencia' => 'permitido',
+                'tendencia_label' => 'Permitido',
+                'fluxo' => 'expresso',
+                'fundamentacao' => ['Lei nº 9.148/2016 (LOUOS) — Quadro 10'],
+            ]],
+        ]);
+
+        $passosB = app(DecisionExplanationService::class)->explain($decisionB)['por_cnae'][0]['passos'];
+
+        $this->assertSame(
+            'O registro cita o Quadro 10 da LOUOS (permissão do grupo na zona). Os detalhes (grupo, faixa e zona) não foram gravados nesta decisão.',
+            $this->passo($passosB, 'consolidacao')['motivo'],
+        );
+
+        // Cenário C: CNAE sem veredito gravado — consolidação e desfecho
+        // marcados com o motivo genérico de passo não registrado.
+        $decisionC = ViabilityDecision::factory()->create([
+            'viability_request_id' => ViabilityRequest::factory()->protocoled()->create([
+                'protocol_number' => 'VIA-'.now()->year.'-000003',
+            ]),
+            'tvl_product_number' => 'TVL-'.now()->year.'-000003',
+            'per_cnae' => [[
+                'cnae' => '4712100',
+                'cnae_formatado' => '4712-1/00',
+                'is_primary' => true,
+                'fluxo' => 'expresso',
+            ]],
+        ]);
+
+        $passosC = app(DecisionExplanationService::class)->explain($decisionC)['por_cnae'][0]['passos'];
+
+        $this->assertSame('não registrado nesta decisão', $this->passo($passosC, 'consolidacao')['motivo']);
+        $this->assertSame('não registrado nesta decisão', $this->passo($passosC, 'desfecho')['motivo']);
+    }
+
+    /**
      * O DecisionExplanationResource resolve o payload da projeção no shape de
      * apresentação consumido pela UI (12-10): por_cnae[].passos, fundamentacao,
      * rules_versions, legado e desfecho.

@@ -132,7 +132,6 @@ final class DecisionTextCatalog
             'justificativa.conclusao.permitido_com_condicoes' => 'Diante do enquadramento acima, manifesta-se pelo deferimento desta atividade na zona :zona, condicionado ao cumprimento das exigências urbanísticas incidentes.',
             'justificativa.conclusao.nao_permitido' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso proibido na zona :zona segundo o Quadro 10 da LOUOS.',
             'justificativa.conclusao.padrao' => 'Não há elementos suficientes para deferir ou indeferir. Encaminha-se a atividade à análise técnica, sem sugerir desfecho locacional.',
-            'justificativa.fundamentacao.padrao' => 'Lei nº 9.148/2016 (LOUOS)',
 
             // Explicabilidade da decisão (DecisionExplanationService) — títulos.
             'explicacao.titulo.entrada' => 'Entrada',

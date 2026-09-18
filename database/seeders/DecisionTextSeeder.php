@@ -47,7 +47,6 @@ class DecisionTextSeeder extends Seeder
         'justificativa.conclusao.permitido_com_condicoes' => 'Conclusão da justificativa quando o veredito é permitido com condições. Placeholder: :zona.',
         'justificativa.conclusao.nao_permitido' => 'Conclusão da justificativa quando o veredito é não permitido. Placeholder: :zona.',
         'justificativa.conclusao.padrao' => 'Conclusão da justificativa quando não há elementos para deferir ou indeferir.',
-        'justificativa.fundamentacao.padrao' => 'Fundamentação padrão da justificativa quando o motor não gravou referências.',
         'explicacao.titulo.entrada' => 'Título do passo de entrada na explicação da decisão.',
         'explicacao.titulo.risco' => 'Título do passo de classificação de risco na explicação da decisão.',
         'explicacao.titulo.quadro7' => 'Título do passo do Quadro 7 na explicação da decisão.',

@@ -4,6 +4,7 @@ namespace App\Services\Auditoria;
 
 use App\Enums\ResultadoViabilidade;
 use App\Models\ViabilityDecision;
+use App\Services\Decisao\DecisionTextCatalog;
 
 /**
  * Explicabilidade passo a passo das decisões (HU-099 RN-004/RN-005) como
@@ -23,33 +24,13 @@ use App\Models\ViabilityDecision;
  */
 final class DecisionExplanationService
 {
-    private const TITULO_ENTRADA = 'Entrada';
-
-    private const TITULO_RISCO = 'Classificação de risco';
-
-    private const TITULO_QUADRO7 = 'LOUOS — Quadro 7 (classificação do uso)';
-
-    private const TITULO_QUADRO10 = 'LOUOS — Quadro 10 (permissão na zona)';
-
-    private const TITULO_QUADRO11A = 'LOUOS — Quadro 11-A (condições pela via)';
-
-    private const TITULO_CONSOLIDACAO = 'Consolidação do veredito locacional';
-
-    private const TITULO_DESFECHO = 'Desfecho';
-
-    private const MOTIVO_NAO_REGISTRADO = 'não registrado nesta decisão';
-
-    private const MOTIVO_RISCO_NAO_REGISTRADO = 'O Decreto nº 32.636/2020 classifica o risco do CNAE e define se o processo vai ao fluxo expresso ou à análise técnica. O nível e o encaminhamento desta decisão não foram gravados.';
-
-    private const MOTIVO_QUADRO7_NAO_REGISTRADO = 'O Quadro 7 classifica o uso (CNAE × área → grupo). O grupo e a faixa desta decisão não foram gravados.';
-
-    private const MOTIVO_QUADRO10_NAO_REGISTRADO = 'O Quadro 10 permite ou proíbe o grupo na zona. A permissão e a zona desta decisão não foram gravadas.';
-
-    private const MOTIVO_QUADRO11A_NAO_REGISTRADO = 'O Quadro 11-A condiciona a instalação pela via (classe viária × grupo). Não permite nem proíbe o uso. As condições desta decisão não foram gravadas.';
-
-    private const MOTIVO_PERMITIDO_SO_QUADRO7 = 'O registro cita o Quadro 7 da LOUOS como fundamento do veredito permitido. O Quadro 7 só classifica o uso (grupo por CNAE e área). Quem permite ou proíbe na zona é o Quadro 10. Grupo, faixa de área e zona não foram gravados nesta decisão.';
-
-    private const MOTIVO_PERMITIDO_COM_QUADRO10 = 'O registro cita o Quadro 10 da LOUOS (permissão do grupo na zona). Os detalhes (grupo, faixa e zona) não foram gravados nesta decisão.';
+    /**
+     * Os títulos dos passos e os motivos dos passos não registrados (decisão
+     * legada) vivem no catálogo decision_texts (explicacao.titulo.* /
+     * explicacao.motivo.*) — administráveis sem deploy, com fallback aos
+     * textos de fábrica byte-idênticos aos das constantes removidas.
+     */
+    public function __construct(private DecisionTextCatalog $textos) {}
 
     /**
      * Projeta a explicação passo a passo da decisão a partir do que foi GRAVADO.
@@ -191,16 +172,16 @@ final class DecisionExplanationService
 
         $passos = [
             $this->passoEntradaLegado($item),
-            $this->passoNaoRegistrado('risco', self::TITULO_RISCO, self::MOTIVO_RISCO_NAO_REGISTRADO),
-            $this->passoNaoRegistrado('louos.quadro7', self::TITULO_QUADRO7, self::MOTIVO_QUADRO7_NAO_REGISTRADO),
-            $this->passoNaoRegistrado('louos.quadro10', self::TITULO_QUADRO10, self::MOTIVO_QUADRO10_NAO_REGISTRADO),
-            $this->passoNaoRegistrado('louos.quadro11a', self::TITULO_QUADRO11A, self::MOTIVO_QUADRO11A_NAO_REGISTRADO),
+            $this->passoNaoRegistrado('risco', $this->textos->get('explicacao.titulo.risco'), $this->textos->get('explicacao.motivo.risco_nao_registrado')),
+            $this->passoNaoRegistrado('louos.quadro7', $this->textos->get('explicacao.titulo.quadro7'), $this->textos->get('explicacao.motivo.quadro7_nao_registrado')),
+            $this->passoNaoRegistrado('louos.quadro10', $this->textos->get('explicacao.titulo.quadro10'), $this->textos->get('explicacao.motivo.quadro10_nao_registrado')),
+            $this->passoNaoRegistrado('louos.quadro11a', $this->textos->get('explicacao.titulo.quadro11a'), $this->textos->get('explicacao.motivo.quadro11a_nao_registrado')),
             $temVeredito
                 ? $this->passoConsolidacaoLegado($item, $fundamentacao)
-                : $this->passoNaoRegistrado('consolidacao', self::TITULO_CONSOLIDACAO),
+                : $this->passoNaoRegistrado('consolidacao', $this->textos->get('explicacao.titulo.consolidacao')),
             $temVeredito
                 ? $this->passoDesfechoLegado($item)
-                : $this->passoNaoRegistrado('desfecho', self::TITULO_DESFECHO),
+                : $this->passoNaoRegistrado('desfecho', $this->textos->get('explicacao.titulo.desfecho')),
         ];
 
         return [
@@ -220,7 +201,7 @@ final class DecisionExplanationService
     {
         return [
             'passo' => 'entrada',
-            'titulo' => self::TITULO_ENTRADA,
+            'titulo' => $this->textos->get('explicacao.titulo.entrada'),
             'registrado' => true,
             'entrada' => [
                 'cnae' => $item['cnae'] ?? null,
@@ -242,7 +223,7 @@ final class DecisionExplanationService
     {
         return [
             'passo' => 'consolidacao',
-            'titulo' => self::TITULO_CONSOLIDACAO,
+            'titulo' => $this->textos->get('explicacao.titulo.consolidacao'),
             'registrado' => true,
             'entrada' => null,
             'resultado_parcial' => [
@@ -263,7 +244,7 @@ final class DecisionExplanationService
     {
         return [
             'passo' => 'desfecho',
-            'titulo' => self::TITULO_DESFECHO,
+            'titulo' => $this->textos->get('explicacao.titulo.desfecho'),
             'registrado' => true,
             'entrada' => null,
             'resultado_parcial' => [
@@ -290,7 +271,7 @@ final class DecisionExplanationService
             'registrado' => false,
             'entrada' => null,
             'resultado_parcial' => null,
-            'motivo' => $motivo ?? self::MOTIVO_NAO_REGISTRADO,
+            'motivo' => $motivo ?? $this->textos->get('explicacao.motivo.nao_registrado'),
             'versao_regra' => null,
         ];
     }
@@ -314,11 +295,11 @@ final class DecisionExplanationService
         ], true);
 
         if ($permitido && $citaQuadro7 && ! $citaQuadro10) {
-            return self::MOTIVO_PERMITIDO_SO_QUADRO7;
+            return $this->textos->get('explicacao.motivo.permitido_so_quadro7');
         }
 
         if ($permitido && $citaQuadro10) {
-            return self::MOTIVO_PERMITIDO_COM_QUADRO10;
+            return $this->textos->get('explicacao.motivo.permitido_com_quadro10');
         }
 
         return null;
