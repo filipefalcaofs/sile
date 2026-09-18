@@ -33,6 +33,9 @@ class RuleVersionTest extends TestCase
         $this->assertTrue(RuleDomain::RiscoMunicipal->isSensitive());
         $this->assertTrue(RuleDomain::RiscoSanitario->isSensitive());
         $this->assertFalse(RuleDomain::Condicionante->isSensitive());
+        // Anexos A/B do Decreto 35.062/2021: publicar anexo bloqueia/libera
+        // constituição de sede — decisório, exige quatro olhos (auditoria G7).
+        $this->assertTrue(RuleDomain::AtividadesEscritorioVirtual->isSensitive());
 
         $this->assertSame('rascunho', RuleVersionStatus::Rascunho->value);
         $this->assertSame('vigente', RuleVersionStatus::Vigente->value);

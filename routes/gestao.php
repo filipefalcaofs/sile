@@ -19,6 +19,7 @@ use App\Http\Controllers\Gestao\DocumentRequirementController;
 use App\Http\Controllers\Gestao\EmailLogController;
 use App\Http\Controllers\Gestao\EmailServerController;
 use App\Http\Controllers\Gestao\EnviarParaAnaliseController;
+use App\Http\Controllers\Gestao\EscritorioVirtualAnexosController;
 use App\Http\Controllers\Gestao\EscritorioVirtualDesvinculacaoController;
 use App\Http\Controllers\Gestao\ExportacaoController;
 use App\Http\Controllers\Gestao\ForgotPasswordController;
@@ -316,6 +317,16 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('simulacao', [LouosSandboxController::class, 'index'])->name('sandbox.index');
             Route::post('simulacao', [LouosSandboxController::class, 'simulate'])->name('sandbox.simular');
             Route::put('simulacao/publicar', [LouosSandboxController::class, 'publish'])->name('sandbox.publicar');
+        });
+
+        // Anexos A/B do Decreto 35.062/2021 (escritório virtual): publicação
+        // versionada com quatro olhos — a lista vigente só muda no publish.
+        // Reuso deliberado de manter-cnaes: os anexos são listas de CNAE,
+        // mesmo mantenedor do risco (sem permissão nova).
+        Route::middleware('permission:manter-cnaes')->prefix('escritorio-virtual/anexos')->name('escritorio-virtual.anexos.')->group(function () {
+            Route::get('/', [EscritorioVirtualAnexosController::class, 'index'])->name('index');
+            Route::post('/', [EscritorioVirtualAnexosController::class, 'store'])->name('store');
+            Route::post('{versao}/publicar', [EscritorioVirtualAnexosController::class, 'publicar'])->name('publicar');
         });
 
         // Requisitos documentais (HU-067): cadastro administrável do modelo

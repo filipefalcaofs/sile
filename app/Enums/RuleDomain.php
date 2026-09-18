@@ -42,15 +42,19 @@ enum RuleDomain: string
 
     /**
      * Domínio cuja publicação exige quatro olhos (publicador distinto do autor
-     * do rascunho): as dimensões de risco que reclassificam atividade econômica
-     * e os Quadros da LOUOS, que decidem a viabilidade locacional.
+     * do rascunho): as dimensões de risco que reclassificam atividade econômica,
+     * os Quadros da LOUOS, que decidem a viabilidade locacional, e os Anexos
+     * A/B do Decreto 35.062/2021, que definem quem constitui sede/abrigado de
+     * escritório virtual — publicar anexo bloqueia/libera constituição de sede
+     * (decisório; auditoria, ponto G7).
      */
     public function isSensitive(): bool
     {
         return match ($this) {
             self::RiscoMunicipal, self::RiscoSanitario => true,
             self::LouosQuadro7, self::LouosQuadro10, self::LouosQuadro11a => true,
-            self::Condicionante, self::AtividadesEscritorioVirtual => false,
+            self::AtividadesEscritorioVirtual => true,
+            self::Condicionante => false,
         };
     }
 }

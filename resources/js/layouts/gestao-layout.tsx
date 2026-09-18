@@ -129,6 +129,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     icon: <FileIcon />,
                     visible: auth.permissions.includes('manter-requisitos-documentais'),
                 },
+                {
+                    name: 'Anexos escritório virtual',
+                    href: '/gestao/escritorio-virtual/anexos',
+                    icon: <FileIcon />,
+                    visible: auth.permissions.includes('manter-cnaes'),
+                },
             ],
         },
         {
