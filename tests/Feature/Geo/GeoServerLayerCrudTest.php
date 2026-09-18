@@ -126,6 +126,30 @@ class GeoServerLayerCrudTest extends TestCase
     }
 
     /**
+     * Re-seed em deploy NUNCA reativa uma camada desativada pela UI nem
+     * sobrescreve a ordem/rótulo administrados (padrão RiskTriggerSeeder):
+     * o seeder só cria as ausentes; as existentes ficam intactas.
+     */
+    public function test_reseed_preserva_o_liga_desliga_e_a_ordem_administrados(): void
+    {
+        $this->seed(GeoServerLayerSeeder::class);
+
+        $camada = GeoServerLayer::query()
+            ->where('workspace', 'louos_zpr1')
+            ->where('type_name', 'VM_L_Z_USO_ZPR_1')
+            ->firstOrFail();
+        $camada->update(['ativo' => false, 'ordem' => 99, 'label' => 'Editada pelo admin']);
+
+        $this->seed(GeoServerLayerSeeder::class);
+
+        $camada->refresh();
+
+        $this->assertFalse($camada->ativo);
+        $this->assertSame(99, $camada->ordem);
+        $this->assertSame('Editada pelo admin', $camada->label);
+    }
+
+    /**
      * A carga inicial espelha as 20 FeatureTypes que hoje vivem hardcoded em
      * config/sile.php (integrations.geoserver.type_names) — zona nova passa
      * a entrar por cadastro. Idempotente por workspace+type_name.
