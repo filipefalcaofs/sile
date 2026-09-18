@@ -5,6 +5,7 @@ namespace App\Services\Decisao;
 use App\Models\DecisionText;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 /**
@@ -24,6 +25,9 @@ use InvalidArgumentException;
  */
 final class DecisionTextCatalog
 {
+    /** @var array<string, true> */
+    private array $reportedMissing = [];
+
     /**
      * Texto vigente da chave: banco (edição administrada) ou fábrica.
      *
@@ -40,6 +44,14 @@ final class DecisionTextCatalog
         $defaults = self::defaults();
 
         if (array_key_exists($key, $defaults)) {
+            // Banco alcançável mas sem a chave (deploy sem o seed): o documento
+            // sai com o texto de fábrica — correto — mas a edição administrada
+            // não está valendo. Reportar uma vez por chave por instância.
+            if (! isset($this->reportedMissing[$key])) {
+                $this->reportedMissing[$key] = true;
+                Log::warning("Texto decisório ausente no banco; emitindo o texto de fábrica: {$key}");
+            }
+
             return $defaults[$key];
         }
 

@@ -7,6 +7,7 @@ use App\Services\Decisao\DecisionTextCatalog;
 use Database\Seeders\DecisionTextSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -33,6 +34,22 @@ class DecisionTextCatalogTest extends TestCase
         $catalogo = new DecisionTextCatalog;
 
         $this->assertSame('Lei nº 9.148/2016 (LOUOS)', $catalogo->get('base_legal.louos'));
+    }
+
+    public function test_fallback_de_chave_ausente_e_reportado_nunca_silencioso(): void
+    {
+        // Banco alcançável sem a chave (deploy sem o seed): o documento sai
+        // com o texto de fábrica, mas a operação precisa ficar sabendo que a
+        // edição administrada não está valendo.
+        Log::spy();
+
+        $catalogo = new DecisionTextCatalog;
+        $catalogo->get('base_legal.louos');
+        $catalogo->get('base_legal.louos');
+
+        Log::shouldHaveReceived('warning')
+            ->once()
+            ->withArgs(fn (string $message) => str_contains($message, 'base_legal.louos'));
     }
 
     public function test_render_interpola_os_placeholders(): void
