@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestTransition;
+use App\Services\Relatorios\ReportFilters;
+use App\Services\Relatorios\SlaVencimentosService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -16,13 +18,11 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * KPIs do EP15 no painel executivo (HU-122), estendendo o padrão da Fase 2.4:
- * cada bloco de KPI é condicionado à permissão do módulo e os números vêm dos
- * serviços route-free (15-03/05/07) sobre DADO REAL da janela corrente. A prova
- * anti-fachada (CA-03) é central: sem série histórica persistida o bloco NÃO
- * traz `delta` ("+X%" inventado), é null sem `consultar-relatorios` (gated) e,
- * sem dados no período, degrada honesto (taxa null, volume 0), nunca um número
- * fabricado.
+ * KPIs operacionais da home (HU-122): `kpis.operacao` condicionado a
+ * `consultar-relatorios`. Os números vêm dos serviços route-free sobre dado
+ * real da janela. Sem série histórica persistida o bloco NÃO traz `delta`
+ * (anti-fachada CA-03); sem permissão é null; sem dados no período degrada
+ * honesto (taxa null, volume 0), nunca um número fabricado.
  */
 class DashboardKpisTest extends TestCase
 {
@@ -83,24 +83,19 @@ class DashboardKpisTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/dashboard')
-                ->where('kpis.relatorios.volume', 3)
-                // Comparação numérica (a taxa float pode trafegar como inteiro no
-                // JSON): a intenção é a razão real 3/4 = 75% e 1/4 = 25%.
-                ->where('kpis.relatorios.taxa_deferimento', fn ($taxa) => (float) $taxa === 75.0)
-                ->where('kpis.relatorios.taxa_indeferimento', fn ($taxa) => (float) $taxa === 25.0)
-                ->where('kpis.relatorios.tempo_analise_minutos', 120)
-                ->where('kpis.relatorios.taxa_expressa', fn ($taxa) => (float) $taxa === 50.0)
-                // Meta não definida (RN-004): null honesto, nunca inventada.
-                ->where('kpis.relatorios.meta_expressa', null)
-                // Anti-fachada (CA-03): sem janela histórica, NENHUM delta inventado.
-                ->missing('kpis.relatorios.delta'));
+                ->where('kpis.operacao.protocolos', 3)
+                ->where('kpis.operacao.decisoes.total', 4)
+                ->where('kpis.operacao.decisoes.expresso', 2)
+                ->where('kpis.operacao.decisoes.humano', 2)
+                ->where('kpis.operacao.taxa_expressa', fn ($taxa) => (float) $taxa === 50.0)
+                ->where('kpis.operacao.meta_expressa', null)
+                ->missing('kpis.operacao.delta')
+                ->missing('kpis.relatorios'));
     }
 
     #[Test]
-    public function bloco_relatorios_e_null_sem_a_permissao_consultar_relatorios(): void
+    public function operacao_e_null_sem_consultar_relatorios(): void
     {
-        // O analista não tem `consultar-relatorios` → o bloco é gated (null),
-        // exatamente como os demais KPIs por módulo da Fase 2.4.
         $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
 
         ViabilityRequest::factory()->create([
@@ -114,15 +109,12 @@ class DashboardKpisTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/dashboard')
-                ->where('kpis.relatorios', null));
+                ->where('kpis.operacao', null));
     }
 
     #[Test]
     public function periodo_sem_dados_degrada_honesto_sem_taxa_fabricada(): void
     {
-        // CA-03: gestor com permissão, mas sem solicitações/decisões na janela →
-        // volume 0 real e taxas null (sem decisões/elegíveis), jamais 0% que finge
-        // ter medido algo nem delta inventado.
         Carbon::setTestNow(self::AGORA);
 
         $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
@@ -132,12 +124,55 @@ class DashboardKpisTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/dashboard')
-                ->where('kpis.relatorios.volume', 0)
-                ->where('kpis.relatorios.taxa_deferimento', null)
-                ->where('kpis.relatorios.taxa_indeferimento', null)
-                ->where('kpis.relatorios.tempo_analise_minutos', null)
-                ->where('kpis.relatorios.taxa_expressa', null)
-                ->missing('kpis.relatorios.delta'));
+                ->where('kpis.operacao.protocolos', 0)
+                ->where('kpis.operacao.decisoes.total', 0)
+                ->where('kpis.operacao.taxa_expressa', null)
+                ->where('kpis.operacao.serie_fluxo', [])
+                ->where('kpis.operacao.estoque_total', 0)
+                ->where('kpis.operacao.atrasados', 0));
+    }
+
+    #[Test]
+    public function atrasados_da_home_coincidem_com_resumo_do_sla(): void
+    {
+        Carbon::setTestNow(self::AGORA);
+
+        $vencido = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocoled_at' => Carbon::parse(self::DENTRO_DA_JANELA),
+            'analysis_due_at' => Carbon::parse('2026-06-14 12:00'),
+            'analysis_stage' => 'analise',
+            'analysis_stage_started_at' => Carbon::parse('2026-06-10 12:00'),
+        ]);
+        $this->assertNotNull($vencido->id);
+
+        $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        $vencidosSla = app(SlaVencimentosService::class)
+            ->resumo(ReportFilters::fromArray([]))['vencidos'];
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kpis.operacao.atrasados', $vencidosSla)
+                ->where('kpis.operacao.atrasados', 1));
+    }
+
+    #[Test]
+    public function rascunho_nao_entra_em_protocolos(): void
+    {
+        Carbon::setTestNow(self::AGORA);
+        ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::Rascunho,
+            'protocoled_at' => Carbon::parse(self::DENTRO_DA_JANELA),
+        ]);
+
+        $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('kpis.operacao.protocolos', 0));
     }
 
     /**
