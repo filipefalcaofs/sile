@@ -38,6 +38,10 @@ export interface ProcessoItem {
     tvl_product_number: string | null;
     status: string;
     status_label: string;
+    origin: string;
+    origin_label: string;
+    tipo_imovel: string | null;
+    contingency_reason: string | null;
     empresa: string | null;
     cnpj: string | null;
     imovel: string;

@@ -149,6 +149,9 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
                                     <Badge color="light" size="sm">
                                         {processo.status_label}
                                     </Badge>
+                                    <Badge color={processo.origin === 'contingencia' ? 'warning' : 'light'} size="sm">
+                                        {processo.origin_label}
+                                    </Badge>
                                     <CategoriaBadges categorias={processo.categorias} />
                                 </div>
                                 <div>
@@ -237,6 +240,11 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
                                         <DescItem label="CNPJ">{processo.cnpj ?? '—'}</DescItem>
                                         <DescItem label="Imóvel">{processo.endereco_completo || processo.imovel || '—'}</DescItem>
                                         <DescItem label="Inscrição imobiliária">{processo.inscricao ?? '—'}</DescItem>
+                                        <DescItem label="Tipo de imóvel">{processo.tipo_imovel ?? '—'}</DescItem>
+                                        <DescItem label="Origem">{processo.origin_label}</DescItem>
+                                        {processo.contingency_reason && (
+                                            <DescItem label="Motivo da contingência">{processo.contingency_reason}</DescItem>
+                                        )}
                                         <DescItem label="Status">{processo.status_label}</DescItem>
                                         <DescItem label="Situação da análise">
                                             {processo.analysis_status_label ?? '—'}
