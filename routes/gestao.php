@@ -24,6 +24,7 @@ use App\Http\Controllers\Gestao\EscritorioVirtualDesvinculacaoController;
 use App\Http\Controllers\Gestao\ExportacaoController;
 use App\Http\Controllers\Gestao\ForgotPasswordController;
 use App\Http\Controllers\Gestao\GeocodeController;
+use App\Http\Controllers\Gestao\GeoLayerController;
 use App\Http\Controllers\Gestao\GeoServerLayerController;
 use App\Http\Controllers\Gestao\HolidayController;
 use App\Http\Controllers\Gestao\IndeferimentoDocumentController;
@@ -317,6 +318,14 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [GeoServerLayerController::class, 'store'])->name('store');
             Route::put('{geoServerLayer}', [GeoServerLayerController::class, 'update'])->name('update');
             Route::put('{geoServerLayer}/ativacao', [GeoServerLayerController::class, 'toggleActivation'])->name('ativacao.update');
+        });
+
+        // Camadas geográficas versionadas (HU-036, parametrização 3.1): importação
+        // de GeoJSON oficial pela interface — o mesmo GeoJsonLayerImporter do
+        // geo:importar, com guarda de driver honesta (PostGIS-only, nunca finge).
+        Route::middleware('permission:manter-territorio')->prefix('territorio/camadas')->name('territorio.camadas.')->group(function () {
+            Route::get('/', [GeoLayerController::class, 'index'])->name('index');
+            Route::post('/', [GeoLayerController::class, 'store'])->name('store');
         });
 
         // Quadros da LOUOS (HU-015..018/HU-046): a consulta da versão vigente dos

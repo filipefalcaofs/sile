@@ -30,6 +30,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('consultar-territorio'),
                 },
                 {
+                    name: 'Camadas geográficas',
+                    href: '/gestao/territorio/camadas',
+                    icon: <MapPinIcon />,
+                    visible: auth.permissions.includes('manter-territorio'),
+                },
+                {
                     name: 'Camadas do GeoServer',
                     href: '/gestao/territorio/geoserver',
                     icon: <GridIcon />,

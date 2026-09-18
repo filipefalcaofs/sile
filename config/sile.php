@@ -78,6 +78,11 @@ return [
         // Constante técnica (raio em metros da "via mais próxima"): fica SÓ
         // aqui, NÃO entra no catálogo do ParameterSeeder — precedente [02-02].
         'via_max_metros' => 50,
+        // Constante TÉCNICA de upload (fora do catálogo HU-014 — precedente
+        // [02-02]): teto em MB do GeoJSON importado pela gestão de camadas.
+        // É limite de infraestrutura (tamanho de request), não valor de
+        // negócio; ajustável sem deploy se uma base oficial maior precisar subir.
+        'upload_max_mb' => 20,
     ],
     'retencao' => [
         'access_logs' => ['dias' => 365],
