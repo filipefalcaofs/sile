@@ -129,4 +129,61 @@ class GeoLayerManagementPostgisTest extends PostgisTestCase
         $this->assertSame(3, $layer->feature_count);
         $this->assertSame(3, (int) DB::selectOne('SELECT COUNT(*) c FROM geo_features WHERE geo_layer_id = ?', [$layer->id])->c);
     }
+
+    /**
+     * Conteúdo que não é JSON: o controller responde flash.error amigável SEM
+     * o path do arquivo temporário (detalhe interno, não do admin) e NADA é
+     * criado. Só é alcançável no grupo postgis — em SQLite a guarda de driver
+     * retorna antes.
+     */
+    public function test_upload_com_json_invalido_retorna_flash_error_sem_path(): void
+    {
+        $arquivo = UploadedFile::fake()->createWithContent(
+            'bairros.geojson',
+            '{ isto nao e json valido ',
+        );
+
+        $this->actingAs($this->administrador(), 'gestao')
+            ->post('/gestao/territorio/camadas', [
+                'tipo' => 'bairro',
+                'versao' => 'gestao-2026-09',
+                'origem' => 'GeoSalvador',
+                'arquivo' => $arquivo,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error', 'O arquivo enviado não é um JSON válido. Verifique o conteúdo e tente novamente.');
+
+        $this->assertStringNotContainsString('/', (string) session('error'));
+        $this->assertDatabaseCount('geo_layers', 0);
+        $this->assertDatabaseCount('geo_features', 0);
+    }
+
+    /**
+     * JSON válido que não é um FeatureCollection: o InvalidArgumentException
+     * do importador vira flash.error com a mensagem dele e NADA é criado.
+     */
+    public function test_upload_com_json_que_nao_e_feature_collection_e_rejeitado(): void
+    {
+        $arquivo = UploadedFile::fake()->createWithContent(
+            'bairros.geojson',
+            json_encode([
+                'type' => 'Feature',
+                'geometry' => ['type' => 'Point', 'coordinates' => [-38.5, -12.9]],
+                'properties' => [],
+            ], JSON_THROW_ON_ERROR),
+        );
+
+        $this->actingAs($this->administrador(), 'gestao')
+            ->post('/gestao/territorio/camadas', [
+                'tipo' => 'bairro',
+                'versao' => 'gestao-2026-09',
+                'origem' => 'GeoSalvador',
+                'arquivo' => $arquivo,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error', 'Falha na importação: GeoJSON inválido: esperado um FeatureCollection com features[].');
+
+        $this->assertDatabaseCount('geo_layers', 0);
+        $this->assertDatabaseCount('geo_features', 0);
+    }
 }
