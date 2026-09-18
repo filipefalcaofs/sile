@@ -1,4 +1,4 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
@@ -14,6 +14,8 @@ import DataTable from '@/components/ui/data-table/data-table';
 import type { ColumnDef } from '@/components/ui/data-table/types';
 import EmptyState from '@/components/ui/empty-state';
 import GestaoLayout from '@/layouts/gestao-layout';
+import { rotulo, type VocabularioItem } from '@/lib/vocabulario';
+import type { SharedProps } from '@/types';
 
 type ResultadoColor = 'success' | 'warning' | 'error' | 'light';
 
@@ -54,22 +56,28 @@ interface SandboxProps {
     simulacao?: Simulacao | null;
 }
 
-const RESULTADO_META: Record<string, { label: string; color: ResultadoColor }> = {
-    permitido: { label: 'Permitido', color: 'success' },
-    permitido_com_condicoes: { label: 'Permitido com condições', color: 'warning' },
-    nao_permitido: { label: 'Não permitido', color: 'error' },
-    pendente: { label: 'Pendente de análise', color: 'light' },
+const RESULTADO_COLORS: Record<string, ResultadoColor> = {
+    permitido: 'success',
+    permitido_com_condicoes: 'warning',
+    nao_permitido: 'error',
+    pendente: 'light',
 };
 
-function resultadoMeta(value: string): { label: string; color: ResultadoColor } {
-    return RESULTADO_META[value] ?? { label: value, color: 'light' };
+function resultadoMeta(
+    value: string,
+    itens?: VocabularioItem[],
+): { label: string; color: ResultadoColor } {
+    return {
+        label: rotulo(itens, value),
+        color: RESULTADO_COLORS[value] ?? 'light',
+    };
 }
 
 /** Rótulo legível de uma transição "de→para" da distribuição. */
-function transicaoLabel(chave: string): string {
+function transicaoLabel(chave: string, itens?: VocabularioItem[]): string {
     const [de, para] = chave.split('→');
 
-    return `${resultadoMeta(de ?? '').label} → ${resultadoMeta(para ?? '').label}`;
+    return `${resultadoMeta(de ?? '', itens).label} → ${resultadoMeta(para ?? '', itens).label}`;
 }
 
 const COMPOSITE_SEPARATOR = '::';
@@ -253,6 +261,7 @@ export default function LouosSandbox({ rascunhos, amostraPadrao, simulacao = nul
 
 /** Resumo do impacto + tabela de divergências (resultado vigente × simulado). */
 function SimulacaoResultado({ simulacao }: { simulacao: Simulacao }) {
+    const itens = usePage<SharedProps>().props.vocabulario.resultado_viabilidade;
     const columns: ColumnDef<Divergencia>[] = [
         {
             id: 'cnae',
@@ -272,7 +281,7 @@ function SimulacaoResultado({ simulacao }: { simulacao: Simulacao }) {
             header: 'Resultado vigente',
             cellClassName: 'whitespace-nowrap',
             cell: (row) => {
-                const meta = resultadoMeta(row.resultado_vigente);
+                const meta = resultadoMeta(row.resultado_vigente, itens);
 
                 return (
                     <Badge color={meta.color} size="sm">
@@ -286,7 +295,7 @@ function SimulacaoResultado({ simulacao }: { simulacao: Simulacao }) {
             header: 'Resultado simulado',
             cellClassName: 'whitespace-nowrap',
             cell: (row) => {
-                const meta = resultadoMeta(row.resultado_simulado);
+                const meta = resultadoMeta(row.resultado_simulado, itens);
 
                 return (
                     <Badge color={meta.color} size="sm">
@@ -321,7 +330,7 @@ function SimulacaoResultado({ simulacao }: { simulacao: Simulacao }) {
                                     key={chave}
                                     className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-theme-xs text-gray-600 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-300"
                                 >
-                                    {transicaoLabel(chave)}
+                                    {transicaoLabel(chave, itens)}
                                     <span className="font-semibold text-gray-800 dark:text-white/90">{quantidade}</span>
                                 </span>
                             ))}

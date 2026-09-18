@@ -79,8 +79,19 @@ export const ALTERACAO_FIELDS: Record<string, AlteracaoField[]> = {
     ],
 };
 
-export function fieldsFor(quadro: string): AlteracaoField[] {
-    return ALTERACAO_FIELDS[quadro] ?? ALTERACAO_FIELDS.quadro7;
+export function fieldsFor(
+    quadro: string,
+    quadro10Permissao?: { value: string; label: string }[],
+): AlteracaoField[] {
+    const fields = ALTERACAO_FIELDS[quadro] ?? ALTERACAO_FIELDS.quadro7;
+
+    if (!quadro10Permissao?.length) {
+        return fields;
+    }
+
+    return fields.map((field) =>
+        field.key === 'permissao' ? { ...field, options: quadro10Permissao } : field,
+    );
 }
 
 const OBSERVACAO_FIELD: AlteracaoField = { key: 'observacao', label: 'Observação', kind: 'textarea', full: true };
@@ -89,8 +100,11 @@ const OBSERVACAO_FIELD: AlteracaoField = { key: 'observacao', label: 'Observaç�
  * Campos para o CRUD de uma linha do rascunho — inclui o campo `observacao` que
  * existe nas três tabelas tipadas mas não faz parte do modal de publicação (ALTERACAO_FIELDS).
  */
-export function linhaFieldsFor(quadro: string): AlteracaoField[] {
-    return [...fieldsFor(quadro), OBSERVACAO_FIELD];
+export function linhaFieldsFor(
+    quadro: string,
+    quadro10Permissao?: { value: string; label: string }[],
+): AlteracaoField[] {
+    return [...fieldsFor(quadro, quadro10Permissao), OBSERVACAO_FIELD];
 }
 
 /**

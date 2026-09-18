@@ -104,7 +104,8 @@ function LinhaQuadroModal({
     onClose: () => void;
 }) {
     const isEdit = linhaId !== null;
-    const fields = linhaFieldsFor(quadro);
+    const quadro10Permissao = usePage<SharedProps>().props.vocabulario.quadro10_permissao;
+    const fields = linhaFieldsFor(quadro, quadro10Permissao);
 
     const { data, setData, post, put, processing, errors, reset, transform } = useForm<Record<string, string>>(initialValues);
 

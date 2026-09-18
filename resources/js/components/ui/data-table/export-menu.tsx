@@ -1,6 +1,8 @@
+import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { ChevronDownIcon, FileIcon } from '@/components/icons';
 import { Dropdown } from '@/components/ui/dropdown';
+import type { SharedProps } from '@/types';
 import type { ServerTableParams } from './use-server-table';
 
 export type ExportFormat = 'csv' | 'xlsx' | 'pdf';
@@ -50,13 +52,15 @@ function buildHref(url: string, params: ServerTableParams, formato: ExportFormat
 export function ExportMenu({
     url,
     params,
-    formatos = DEFAULT_FORMATS,
+    formatos,
     label = 'Exportar',
     className = '',
 }: ExportMenuProps) {
+    const { export_formatos: formatosCatalogo } = usePage<SharedProps>().props;
+    const habilitados = formatos ?? formatosCatalogo ?? DEFAULT_FORMATS;
     const [isOpen, setIsOpen] = useState(false);
 
-    if (formatos.length === 0) {
+    if (habilitados.length === 0) {
         return null;
     }
 
@@ -76,7 +80,7 @@ export function ExportMenu({
 
             <Dropdown isOpen={isOpen} onClose={() => setIsOpen(false)} className="w-48 p-2">
                 <ul role="menu" className="flex flex-col gap-1">
-                    {formatos.map((formato) => (
+                    {habilitados.map((formato) => (
                         <li key={formato} role="none">
                             <a
                                 role="menuitem"

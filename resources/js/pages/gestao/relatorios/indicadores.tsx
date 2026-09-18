@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
@@ -16,6 +16,8 @@ import type { ColumnDef } from '@/components/ui/data-table/types';
 import EmptyState from '@/components/ui/empty-state';
 import KpiCard from '@/components/ui/kpi-card';
 import GestaoLayout from '@/layouts/gestao-layout';
+import { rotulo, type VocabularioCatalog } from '@/lib/vocabulario';
+import type { SharedProps } from '@/types';
 
 /** Solicitações protocoladas por dia (HU-123). */
 interface SeriePonto {
@@ -98,13 +100,7 @@ const CATEGORIA_OPTIONS = [
     { value: 'sede_escritorio', label: 'Sede de Escritório' },
 ];
 
-const RISCO_LABELS: Record<string, string> = {
-    baixo_a: 'Baixo',
-    baixo_b: 'Médio',
-    medio: 'Médio',
-    alto: 'Alto',
-    expresso: 'Expresso',
-    semi_expresso: 'Semi-expresso',
+const RISCO_FALLBACK: Record<string, string> = {
     analise: 'Análise',
     nao_classificado: 'Não classificado',
 };
@@ -128,8 +124,14 @@ function formatarCnae(code: string): string {
     return /^\d{7}$/.test(code) ? `${code.slice(0, 4)}-${code.slice(4, 5)}/${code.slice(5, 7)}` : code;
 }
 
-function rotuloRisco(nivel: string): string {
-    return RISCO_LABELS[nivel] ?? nivel;
+function rotuloRisco(nivel: string, vocabulario: VocabularioCatalog): string {
+    return (
+        rotulo(vocabulario.risco_municipal, nivel, '') ||
+        rotulo(vocabulario.risco_sanitario, nivel, '') ||
+        rotulo(vocabulario.analysis_category, nivel, '') ||
+        RISCO_FALLBACK[nivel] ||
+        nivel
+    );
 }
 
 /** Série de volume protocolado por dia (linha). */
@@ -153,7 +155,7 @@ function periodoChartOption(serie: SeriePonto[]): EChartsOption {
 }
 
 /** Distribuição por nível de risco (rosca). */
-function riscoChartOption(itens: PorRiscoItem[]): EChartsOption {
+function riscoChartOption(itens: PorRiscoItem[], vocabulario: VocabularioCatalog): EChartsOption {
     return {
         tooltip: { trigger: 'item' },
         legend: { bottom: 0, type: 'scroll' },
@@ -165,7 +167,7 @@ function riscoChartOption(itens: PorRiscoItem[]): EChartsOption {
                 avoidLabelOverlap: true,
                 itemStyle: { borderRadius: 6, borderWidth: 2 },
                 label: { show: false },
-                data: itens.map((item) => ({ name: rotuloRisco(item.nivel), value: item.total })),
+                data: itens.map((item) => ({ name: rotuloRisco(item.nivel, vocabulario), value: item.total })),
             },
         ],
     };
@@ -218,6 +220,7 @@ export default function IndicadoresViabilidade({
     taxaIndeferimento,
     filtros,
 }: IndicadoresProps) {
+    const { vocabulario } = usePage<SharedProps>().props;
     const [form, setForm] = useState<FiltrosForm>({
         data_de: filtros.data_de ?? '',
         data_ate: filtros.data_ate ?? '',
@@ -400,7 +403,7 @@ export default function IndicadoresViabilidade({
                         <CardContent>
                             {porRisco.length > 0 ? (
                                 <>
-                                    <Chart option={riscoChartOption(porRisco)} className="h-72 w-full" />
+                                    <Chart option={riscoChartOption(porRisco, vocabulario)} className="h-72 w-full" />
                                     <FonteRiscoLegenda itens={porRisco} />
                                 </>
                             ) : (

@@ -1,6 +1,9 @@
+import { usePage } from '@inertiajs/react';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { rotulo } from '@/lib/vocabulario';
+import type { SharedProps } from '@/types';
 
 /** Veredito locacional propagado do motor LOUOS (HU-044). */
 export type VereditoResultado = 'permitido' | 'permitido_com_condicoes' | 'nao_permitido' | 'pendente';
@@ -152,21 +155,9 @@ const VEREDITO_STYLES: Record<VereditoResultado, { container: string; chip: stri
     },
 };
 
-const RISCO_SANITARIO_LABELS: Record<string, string> = {
-    baixo: 'Baixo Risco',
-    medio: 'Médio Risco',
-    alto: 'Alto Risco',
-};
-
-const RISCO_MUNICIPAL_LABELS: Record<string, string> = {
-    baixo_a: 'Baixo',
-    baixo_b: 'Médio',
-    alto: 'Alto',
-};
-
-/** Humaniza um value de enum (ex.: `baixo_a` → `Baixo`) como fallback honesto. */
+/** Humaniza um value de enum quando o catálogo compartilhado não cobre. */
 function humanizar(valor: string): string {
-    return RISCO_MUNICIPAL_LABELS[valor] ?? valor.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+    return valor.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 }
 
 /** Cor do badge por nível de risco — diferenciação visual, nunca classificação inventada. */
@@ -234,6 +225,7 @@ function DimensaoItem({ rotulo, dimensao }: { rotulo: string; dimensao: Dimensao
  * Permitido/Não permitido sem zona. Reutilizável pelo histórico (07-09).
  */
 export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) {
+    const { vocabulario } = usePage<SharedProps>().props;
     const veredito = result.veredito_locacional;
     const estilo = VEREDITO_STYLES[veredito.resultado];
     const { municipal, sanitario, encaminhamento } = result.risco;
@@ -244,7 +236,7 @@ export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) 
 
     const sanitarioLabel =
         sanitario.nivel_final !== null
-            ? (RISCO_SANITARIO_LABELS[sanitario.nivel_final] ?? humanizar(sanitario.nivel_final))
+            ? rotulo(vocabulario.risco_sanitario, sanitario.nivel_final, humanizar(sanitario.nivel_final))
             : null;
 
     return (

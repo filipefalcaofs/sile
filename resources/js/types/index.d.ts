@@ -1,4 +1,5 @@
 import type { PageProps } from '@inertiajs/core';
+import type { VocabularioCatalog } from '@/lib/vocabulario';
 
 export interface SharedProps extends PageProps {
     auth: {
@@ -16,4 +17,6 @@ export interface SharedProps extends PageProps {
     };
     appVersion: string;
     appRevision: string;
+    vocabulario: VocabularioCatalog;
+    export_formatos: Array<'csv' | 'xlsx' | 'pdf'>;
 }
