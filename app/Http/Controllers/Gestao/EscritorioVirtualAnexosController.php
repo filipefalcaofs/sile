@@ -14,6 +14,7 @@ use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -124,9 +125,14 @@ class EscritorioVirtualAnexosController extends Controller
                 Storage::disk('local')->path($caminhoB),
                 (int) $request->user()->id,
             );
-        } catch (RuntimeException|DomainException $e) {
-            // CSV fora do cabeçalho esperado ou nome de versão já publicado —
-            // erro de entrada do mantenedor, nunca 500.
+        } catch (RuntimeException $e) {
+            // A mensagem do import inclui o path absoluto do CSV temporário —
+            // detalhe técnico vai para o log; o mantenedor vê mensagem amigável.
+            Log::warning("Importação dos anexos de escritório virtual rejeitada: {$e->getMessage()}");
+
+            return back()->with('error', 'Cabeçalho inesperado no CSV: esperado cnae_code,cnae_description.');
+        } catch (DomainException $e) {
+            // Nome de versão já publicado — mensagem segura, vai crua.
             return back()->with('error', $e->getMessage());
         } finally {
             Storage::disk('local')->delete([$caminhoA, $caminhoB]);
