@@ -579,9 +579,10 @@ class LouosEnquadramentoService
 
     /**
      * Nome da zona usado na busca do Quadro 10: o `nome` derivado pelo território
-     * tem precedência; senão as chaves usuais das propriedades da feição
-     * (atributo a confirmar com a base oficial da SEDUR). Null quando ausente —
-     * a busca degrada para `nao_encontrado`, nunca inventa zona.
+     * tem precedência; senão os atributos da feição listados no parâmetro
+     * `geo.zona.atributos_nome` (HU-014 — a confirmar com a base oficial da
+     * SEDUR). Null quando ausente — a busca degrada para `nao_encontrado`,
+     * nunca inventa zona.
      *
      * @param  array<string, mixed>  $zona
      */
@@ -596,7 +597,10 @@ class LouosEnquadramentoService
         /** @var array<string, mixed> $propriedades */
         $propriedades = $zona['propriedades'] ?? [];
 
-        foreach (['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA'] as $chave) {
+        /** @var list<string> $atributos */
+        $atributos = Settings::get('geo.zona.atributos_nome', ['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA']);
+
+        foreach ($atributos as $chave) {
             $valor = $propriedades[$chave] ?? null;
 
             if (is_string($valor) && $valor !== '') {

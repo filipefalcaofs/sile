@@ -238,6 +238,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:100'],
                 'description' => 'Percentual mínimo de sobreposição entre o polígono informado e o lote oficial antes de alertar',
             ],
+            'geo.zona.atributos_nome' => [
+                'group' => 'geo',
+                'type' => 'json',
+                'default_value' => '["ZONA","zona","SIGLA_ZONA","SUBZONA"]',
+                'validation_rules' => ['required', 'array', 'min:1'],
+                'description' => 'Atributos da feição da camada de zona candidatos a nome/código da zona, em ordem de precedência (a confirmar com a base oficial SEDUR)',
+            ],
             'risco.mapa_encaminhamento' => [
                 'group' => 'risco',
                 'type' => 'json',

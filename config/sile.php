@@ -72,6 +72,9 @@ return [
     // Fase 3.1.
     'geo' => [
         'validacao' => ['sobreposicao_minima' => 50],
+        // Atributos candidatos ao nome da zona na feição — fallback do
+        // parâmetro geo.zona.atributos_nome (HU-014).
+        'zona' => ['atributos_nome' => ['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA']],
         // Constante técnica (raio em metros da "via mais próxima"): fica SÓ
         // aqui, NÃO entra no catálogo do ParameterSeeder — precedente [02-02].
         'via_max_metros' => 50,
