@@ -1,0 +1,1324 @@
+zona,grupo_uso,subgrupo,permissao,condicionante_ref,base_legal
+ZPR 1,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,R1,,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,R1,,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,R1,,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,R2,R2-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,R2,R2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,R2,R2-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,R2,R2-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,R2,R2-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,R2,R2-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,R2,R2-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,R2,R2-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,R2,R2-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,R2,R2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,R2,R2-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,R3,R3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,R3,R3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,R3,R3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,R3,R3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,R3,R3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,R3,R3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,R3,R3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,R3,R3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,R3,R3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,R3,R3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,R3,R3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,R3,R3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,R3,R3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,R3,R3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,R3,R3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,R3,R3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,R3,R3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,R3,R3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,R3,R3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,R3,R3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,R3,R3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,R3,R3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,R3,R3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,R3,R3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,R3,R3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,R3,R3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,R3,R3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,R3,R3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,R3,R3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,R3,R3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,R3,R3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,R3,R3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,R3,R3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,R3,R3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,R3,R3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,R3,R3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,R3,R3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,R3,R3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,R3,R3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,EHIS,,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,EHIS,,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,EHIS,,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,EHMP,,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,EHMP,,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,EHMP,,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-08,S(C),,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-08,S(C),,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-08,S(C),,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-08,S(C),,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-08,S(C),,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-08,S(C),,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-08,S(C),,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR1,nR1-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR1,nR1-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR1,nR1-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-08,S(C),,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-08,S(C),,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,nR2,nR2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,nR2,nR2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,nR2,nR2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,nR2,nR2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZIT,nR2,nR2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID1,ID1-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID1,ID1-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID1,ID1-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID1,ID1-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID1,ID1-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID1,ID1-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID1,ID1-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID1,ID1-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID1,ID1-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID1,ID1-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID1,ID1-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID1,ID1-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID1,ID1-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID1,ID1-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID1,ID1-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID1,ID1-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID1,ID1-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID1,ID1-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID1,ID1-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID1,ID1-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID1,ID1-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID1,ID1-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID1,ID1-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID1,ID1-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID1,ID1-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID1,ID1-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID1,ID1-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID1,ID1-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID1,ID1-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID1,ID1-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID1,ID1-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID1,ID1-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID2,ID2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID2,ID2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID2,ID2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID2,ID2-05,S(A),,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID2,ID2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID2,ID2-05,S(B),,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID2,ID2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID2,ID2-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID2,ID2-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID2,ID2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID2,ID2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID2,ID2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID2,ID2-06,S(A),,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID2,ID2-06,S(B),,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID2,ID2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID2,ID2-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID2,ID2-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID2,ID2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID2,ID2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID2,ID2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID2,ID2-07,S(A),,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID2,ID2-07,S(B),,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID2,ID2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID2,ID2-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID2,ID2-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID2,ID2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID2,ID2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID2,ID2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID2,ID2-09,S(A),,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID2,ID2-09,S(B),,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID2,ID2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID2,ID2-09,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID2,ID2-09,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID2,ID2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID2,ID2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID2,ID2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID2,ID2-11,S(A),,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID2,ID2-11,S(B),,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID2,ID2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID2,ID2-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID2,ID2-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID2,ID2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID2,ID2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID2,ID2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID2,ID2-12,S(A),,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID2,ID2-12,S(B),,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID2,ID2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID2,ID2-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID2,ID2-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID2,ID2-15,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID2,ID2-15,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID2,ID2-15,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID2,ID2-15,S(A),,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID2,ID2-15,S(B),,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID2,ID2-15,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID2,ID2-15,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID2,ID2-15,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID2,ID2-18,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID2,ID2-18,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID2,ID2-18,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID2,ID2-18,S(A),,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID2,ID2-18,S(B),,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID2,ID2-18,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID2,ID2-18,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID2,ID2-18,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-01,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-01,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-02,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-02,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-03,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-03,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-04,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-04,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-05,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-05,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-06,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-06,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-07,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-07,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-08,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-08,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-10,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-10,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-11,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-11,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-12,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-12,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-13,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-13,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-14,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-14,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-16,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-16,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-17,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-17,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-17,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-17,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-19,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-19,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-19,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-19,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-20,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-20,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-20,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-20,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 1,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 2,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZPR 3,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 1,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 2,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 3,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 4,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZEIS 5,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/01,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/02,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 1/03,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe 2,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMe - CA,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 1 - IPITANGA,ID3,ID3-21,S,,Lei nº 9.148/2016 — Quadro 10
+ZCMu 2,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMe,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZCLMu,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZDE 1,ID3,ID3-21,S,,Lei nº 9.148/2016 — Quadro 10
+ZDE 2,ID3,ID3-21,S,,Lei nº 9.148/2016 — Quadro 10
+ZUSI,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10
+ZIT,ID3,ID3-21,N,,Lei nº 9.148/2016 — Quadro 10

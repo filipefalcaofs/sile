@@ -85,11 +85,11 @@ class LouosQuadro10ImportService
                 continue;
             }
 
-            $permissao = Quadro10Permissao::tryFrom($data['permissao']);
+            $permissao = Quadro10Permissao::tryFromSinal($data['permissao']);
 
             if ($permissao === null) {
                 $rejected[] = sprintf(
-                    "zona '%s' / grupo '%s': permissão '%s' desconhecida (esperado permitido|permitido_condicionado|proibido)",
+                    "zona '%s' / grupo '%s': permissão '%s' desconhecida (esperado permitido|permitido_condicionado|proibido ou S|N|S(c))",
                     $data['zona'],
                     $data['grupo_uso'],
                     $data['permissao'],
@@ -98,13 +98,19 @@ class LouosQuadro10ImportService
                 continue;
             }
 
+            $condicionante = $data['condicionante_ref'] === '' ? null : $data['condicionante_ref'];
+
+            if ($condicionante === null && preg_match('/\(\s*([abc])\s*\)/i', $data['permissao'], $nota) === 1) {
+                $condicionante = 'Observação ('.$nota[1].') do Quadro 10 da Lei nº 9.148/2016';
+            }
+
             $rows[] = [
                 'rule_version_id' => $version->getKey(),
                 'zona' => $data['zona'],
                 'grupo_uso' => $data['grupo_uso'],
                 'subgrupo' => $data['subgrupo'],
                 'permissao' => $permissao->value,
-                'condicionante_ref' => $data['condicionante_ref'] === '' ? null : $data['condicionante_ref'],
+                'condicionante_ref' => $condicionante,
                 'base_legal' => $data['base_legal'] === '' ? null : $data['base_legal'],
             ];
         }

@@ -13,11 +13,11 @@ use SplFileObject;
  * RiscoMunicipalImportService. As faixas ficam ligadas a uma versão de regra
  * (rule_version_id, domínio louos_quadro7) — dado versionado, nunca código.
  *
- * PROVENIÊNCIA: seed DERIVADO da Lei nº 9.148/2016 (Quadro 7) combinada ao
- * modelo "Enquadramento TVL" do SAPS legado (atividade → faixa de área →
- * grupo/subgrupo de uso: ex. minimercado até 350 m² = nR1, acima = nR2;
- * escritório até 1.250 m² = nR1, acima = nR2). É SUBSTITUÍVEL pela planilha
- * oficial do Quadro 7 da SEDUR quando entregue — muda a carga, não a lógica.
+ * PROVENIÊNCIA: ponte operacional CNAE→uso gerada de
+ * database/data/regras-20-08-26/cnae-enquadramentos.csv (planilha 20.08.26).
+ * O PDF do Quadro 7 da Lei nº 9.148/2016 classifica usos (nR/ID), não CNAE.
+ * Escritório genérico 07.12.13 só entra quando é o único uso do CNAE; 9900-8/00
+ * fica de fora do catálogo 2.3. SUBSTITUÍVEL por planilha homologada da SEDUR.
  *
  * Idempotente: upsert por (rule_version_id, cnae_code, area_min); o upsert NÃO
  * toca 'observacao' — anotações dos mantenedores (05-06) sobrevivem a

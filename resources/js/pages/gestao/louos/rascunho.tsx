@@ -77,7 +77,7 @@ function linhaToFormValues(quadro: string, row: QuadroItem): Record<string, stri
     const values: Record<string, string> = {};
 
     for (const field of fields) {
-        const raw = (row as Record<string, unknown>)[field.key];
+        const raw = (row as unknown as Record<string, unknown>)[field.key];
 
         if (raw === null || raw === undefined) {
             values[field.key] = '';

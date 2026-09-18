@@ -119,11 +119,11 @@ class LouosMaintenanceTest extends TestCase
             RuleDomain::LouosQuadro10,
             'lei-9148-2016-quadro10-rev2',
             [
-                // ZPR-1 / nR3 deixa de ser proibido e passa a permitido condicionado.
+                // ZPR 1 / nR1-08 deixa de ser proibido e passa a permitido condicionado.
                 [
-                    'zona' => 'ZPR-1',
-                    'grupo_uso' => 'nR3',
-                    'subgrupo' => '',
+                    'zona' => 'ZPR 1',
+                    'grupo_uso' => 'nR1',
+                    'subgrupo' => 'nR1-08',
                     'permissao' => Quadro10Permissao::PermitidoCondicionado->value,
                     'condicionante_ref' => 'CU-09',
                 ],
@@ -140,16 +140,18 @@ class LouosMaintenanceTest extends TestCase
 
         $alterada = LouosQuadro10Permissao::query()
             ->where('rule_version_id', $nova->id)
-            ->where('zona', 'ZPR-1')
-            ->where('grupo_uso', 'nR3')
+            ->where('zona', 'ZPR 1')
+            ->where('grupo_uso', 'nR1')
+            ->where('subgrupo', 'nR1-08')
             ->first();
         $this->assertSame(Quadro10Permissao::PermitidoCondicionado, $alterada->permissao);
 
         // A anterior preservou a proibição original.
         $original = LouosQuadro10Permissao::query()
             ->where('rule_version_id', $anterior->id)
-            ->where('zona', 'ZPR-1')
-            ->where('grupo_uso', 'nR3')
+            ->where('zona', 'ZPR 1')
+            ->where('grupo_uso', 'nR1')
+            ->where('subgrupo', 'nR1-08')
             ->first();
         $this->assertSame(Quadro10Permissao::Proibido, $original->permissao);
     }

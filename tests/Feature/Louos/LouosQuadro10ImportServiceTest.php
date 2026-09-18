@@ -84,6 +84,76 @@ class LouosQuadro10ImportServiceTest extends TestCase
         $this->assertTrue($permissoes->contains(Quadro10Permissao::Proibido));
     }
 
+    public function test_aceita_sinais_oficiais_s_n_sc_da_matriz(): void
+    {
+        $version = RuleVersion::factory()->create([
+            'domain' => RuleDomain::LouosQuadro10,
+            'version' => 'teste-quadro10-oficial',
+        ]);
+
+        $csv = $this->csvTemporario([
+            self::HEADER,
+            'ZPR 1,nR1,nR1-01,S,,Quadro 10 da Lei nº 9.148/2016',
+            'ZPR 1,nR1,nR1-08,S (c),Quadro 12,Quadro 10 da Lei nº 9.148/2016',
+            'ZIT,nR2,nR2-01,N,,Quadro 10 da Lei nº 9.148/2016',
+        ]);
+
+        try {
+            $report = app(LouosQuadro10ImportService::class)->import($version, $csv);
+        } finally {
+            unlink($csv);
+        }
+
+        $this->assertSame([], $report['rejeitados']);
+        $this->assertSame(3, LouosQuadro10Permissao::query()->count());
+        $this->assertTrue(
+            LouosQuadro10Permissao::query()
+                ->where('zona', 'ZPR 1')
+                ->where('subgrupo', 'nR1-01')
+                ->where('permissao', Quadro10Permissao::Permitido)
+                ->exists(),
+        );
+        $this->assertTrue(
+            LouosQuadro10Permissao::query()
+                ->where('zona', 'ZPR 1')
+                ->where('subgrupo', 'nR1-08')
+                ->where('permissao', Quadro10Permissao::PermitidoCondicionado)
+                ->exists(),
+        );
+        $this->assertTrue(
+            LouosQuadro10Permissao::query()
+                ->where('zona', 'ZIT')
+                ->where('permissao', Quadro10Permissao::Proibido)
+                ->exists(),
+        );
+    }
+
+    public function test_csv_oficial_do_quadro10_importa_matriz_completa(): void
+    {
+        $version = RuleVersion::factory()->create([
+            'domain' => RuleDomain::LouosQuadro10,
+            'version' => 'lei-9148-2016-quadro10-oficial',
+        ]);
+
+        $report = app(LouosQuadro10ImportService::class)->import(
+            $version,
+            database_path('data/louos/oficial/quadro10-permissoes.csv'),
+        );
+
+        $this->assertSame([], $report['rejeitados']);
+        $this->assertSame(1323, $report['total']);
+        $this->assertSame(1323, LouosQuadro10Permissao::query()->where('rule_version_id', $version->id)->count());
+        $this->assertSame(21, LouosQuadro10Permissao::query()->where('rule_version_id', $version->id)->distinct()->count('zona'));
+        $this->assertTrue(
+            LouosQuadro10Permissao::query()
+                ->where('zona', 'ZPR 2')
+                ->where('subgrupo', 'nR1-08')
+                ->where('permissao', Quadro10Permissao::PermitidoCondicionado)
+                ->exists(),
+            'nR1-08 em ZPR 2 é S(c) na matriz oficial.',
+        );
+    }
+
     public function test_seeder_publica_versao_vigente_e_e_idempotente(): void
     {
         $this->seed(LouosQuadro10Seeder::class);

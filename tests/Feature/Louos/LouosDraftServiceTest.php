@@ -357,20 +357,56 @@ class LouosDraftServiceTest extends TestCase
 
             // Vigente intacta: não tem CNAE 9999999 (CNAE sintético)
             $this->assertDatabaseMissing('louos_quadro7_faixas', ['rule_version_id' => $vigente->id, 'cnae_code' => '9999999']);
-            $this->assertSame($contagemVigente, LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count());
-
-            // Auditoria registra o evento com o nome original do arquivo
-            $this->assertDatabaseHas('activity_log', ['log_name' => 'louos', 'event' => 'rascunho-importacao']);
-
-            $activity = Activity::query()
-                ->where('log_name', 'louos')
-                ->where('event', 'rascunho-importacao')
-                ->latest()
-                ->first();
-            $this->assertSame('planilha-quadro7.csv', $activity->properties['arquivo']);
         } finally {
-            @unlink($tmpFile);
+            unlink($tmpFile);
         }
+
+        $this->assertSame($contagemVigente, LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count());
+
+        $this->assertDatabaseHas('activity_log', ['log_name' => 'louos', 'event' => 'rascunho-importacao']);
+
+        $activity = Activity::query()
+            ->where('log_name', 'louos')
+            ->where('event', 'rascunho-importacao')
+            ->latest()
+            ->first();
+        $this->assertSame('planilha-quadro7.csv', $activity->properties['arquivo']);
+    }
+
+    public function test_importar_csv_substituindo_apaga_linhas_anteriores_do_rascunho(): void
+    {
+        $this->seed(LouosQuadro7Seeder::class);
+
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first();
+        $contagemVigente = LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count();
+
+        $user = User::factory()->create();
+        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-import-replace-v1', $user->id);
+
+        $this->assertGreaterThan(0, LouosQuadro7Faixa::query()->where('rule_version_id', $draft->id)->count());
+
+        $csv = implode("\n", [
+            'cnae,grupo,subgrupo,area_min,area_max,observacao',
+            '8888-8/88,nR1,nR1-01,0,350,carga oficial',
+        ]);
+        $tmpFile = tempnam(sys_get_temp_dir(), 'louos_replace_').'.csv';
+        file_put_contents($tmpFile, $csv);
+
+        try {
+            $relatorio = $this->service()->importarCsv($draft, $tmpFile, 'oficial.csv', substituir: true);
+        } finally {
+            unlink($tmpFile);
+        }
+
+        $this->assertSame(1, $relatorio['importados']);
+        $this->assertSame(1, LouosQuadro7Faixa::query()->where('rule_version_id', $draft->id)->count());
+        $this->assertTrue(
+            LouosQuadro7Faixa::query()
+                ->where('rule_version_id', $draft->id)
+                ->where('cnae_code', '8888888')
+                ->exists(),
+        );
+        $this->assertSame($contagemVigente, LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count());
     }
 
     public function test_normaliza_grupo_uso_nulo_no_quadro10(): void

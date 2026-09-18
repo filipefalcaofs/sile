@@ -146,6 +146,32 @@ class LouosQuadro11ImportServiceTest extends TestCase
         }
     }
 
+    public function test_csv_oficial_do_quadro11a_importa_matriz_por_subcategoria_e_via(): void
+    {
+        $version = RuleVersion::factory()->create([
+            'domain' => RuleDomain::LouosQuadro11a,
+            'version' => 'lei-9148-2016-quadro11a-oficial',
+        ]);
+
+        $report = app(LouosQuadro11ImportService::class)->import(
+            $version,
+            database_path('data/louos/oficial/quadro11a-condicoes-via.csv'),
+        );
+
+        $this->assertSame([], $report['rejeitados']);
+        $this->assertSame(525, $report['total']);
+        $this->assertSame(7, LouosQuadro11CondicaoVia::query()->where('rule_version_id', $version->id)->distinct()->count('classe_via'));
+
+        $nR308Local = LouosQuadro11CondicaoVia::query()
+            ->where('rule_version_id', $version->id)
+            ->where('classe_via', 'VL')
+            ->where('grupo_uso', 'nR3-08')
+            ->first();
+
+        $this->assertNotNull($nR308Local);
+        $this->assertSame(['Não'], $nR308Local->condicoes);
+    }
+
     public function test_seeder_publica_apenas_versao_do_11a(): void
     {
         $this->seed(LouosQuadro11Seeder::class);

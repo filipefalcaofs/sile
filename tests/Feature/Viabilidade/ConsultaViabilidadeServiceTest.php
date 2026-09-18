@@ -39,7 +39,7 @@ class ConsultaViabilidadeServiceTest extends TestCase
 
     private const CNAE_MINIMERCADO = '4712-1/00';
 
-    private const CNAE_SOFTWARE_FORA_QUADRO7 = '6201-5/01';
+    private const CNAE_FORA_QUADRO7 = '9999-9/99';
 
     private const AVISO_ZONA_PENDENTE = 'Veredito locacional pendente: zona urbanística pendente da base oficial (SEDUR).';
 
@@ -225,16 +225,14 @@ class ConsultaViabilidadeServiceTest extends TestCase
 
     public function test_consulta_por_cnae_fora_do_quadro7_fica_pendente_sem_inventar_grupo(): void
     {
-        // CNAE classificado no risco municipal, porém SEM faixa no Quadro 7,
-        // consultado SEM área: o motor devolve nao_encontrado (não inventa grupo)
-        // e o veredito fica pendente — o risco continua real.
-        $result = $this->service()->consultarPorCnae(self::CNAE_SOFTWARE_FORA_QUADRO7, null);
+        // Código fora do catálogo: sem faixa no Quadro 7 o motor devolve
+        // nao_encontrado (não inventa grupo) e o veredito fica pendente.
+        $result = $this->service()->consultarPorCnae(self::CNAE_FORA_QUADRO7, null);
 
         $this->assertSame('nao_encontrado', $result->enquadramento->quadro7['status']);
         $this->assertNull($result->enquadramento->quadro7['grupo']);
 
         $this->assertSame('pendente', $result->vereditoLocacional()['resultado']);
-        $this->assertSame('classificado', $result->risco->municipal['status']);
     }
 
     public function test_consulta_por_cnae_sem_area_nao_forca_veredito(): void

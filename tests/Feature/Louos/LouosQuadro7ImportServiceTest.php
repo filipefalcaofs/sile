@@ -38,13 +38,18 @@ class LouosQuadro7ImportServiceTest extends TestCase
 
         $totalFaixas = $activity->properties->get('total_faixas');
 
-        $this->assertGreaterThan(0, $totalFaixas, 'O Quadro 7 deveria carregar faixas reais derivadas da Lei 9.148/2016.');
+        $this->assertGreaterThan(0, $totalFaixas, 'O Quadro 7 deveria carregar faixas reais da planilha 20.08.26.');
         $this->assertSame(
             $totalFaixas,
             LouosQuadro7Faixa::query()->count(),
             'A contagem de faixas no banco diverge do relatório do import.',
         );
         $this->assertSame([], $activity->properties->get('rejeitados'));
+        $this->assertSame(
+            1331,
+            LouosQuadro7Faixa::query()->distinct()->count('cnae_code'),
+            'A carga operacional deve cobrir as 1.331 subclasses do catálogo CNAE 2.3.',
+        );
     }
 
     public function test_rejeita_faixas_sobrepostas_do_mesmo_cnae(): void
@@ -109,7 +114,7 @@ class LouosQuadro7ImportServiceTest extends TestCase
 
         app(LouosQuadro7ImportService::class)->import(
             $version,
-            database_path('data/louos/quadro7-faixas.csv'),
+            database_path('data/louos/oficial/quadro7-faixas.csv'),
         );
 
         $this->assertSame('Anotação do mantenedor', $faixa->fresh()->observacao);

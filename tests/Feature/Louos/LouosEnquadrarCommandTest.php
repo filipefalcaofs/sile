@@ -46,14 +46,14 @@ class LouosEnquadrarCommandTest extends TestCase
 
     public function test_enquadra_com_zona_proibida_sai_nao_permitido(): void
     {
-        // 1091-1/02 enquadra em nR3; a zona ZPAM (entrada explícita do operador)
-        // proíbe nR3 no Quadro 10 real → veredito nao_permitido (RN-005).
+        // 0161-0/99 @ 200 m² enquadra em nR1-08; ZPR 1 proíbe nR1-08 no
+        // Quadro 10 oficial → nao_permitido (RN-005).
         $this->artisan('louos:enquadrar', [
-            'cnae' => '1091102',
+            'cnae' => '0161099',
             '--area' => '200',
-            '--zona' => 'ZPAM',
+            '--zona' => 'ZPR 1',
         ])
-            ->expectsOutputToContain('nR3')
+            ->expectsOutputToContain('nR1')
             ->expectsOutputToContain('Não permitido')
             ->assertSuccessful();
     }
