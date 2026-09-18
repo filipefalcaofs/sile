@@ -123,7 +123,7 @@ Com `SILE_DEMO_DATA=true`, o seed cria:
 | URL | `{APP_URL}/gestao/login` |
 | E-mail | `validacao@sedur.salvador.ba.gov.br` |
 | Senha | `SileDemo2026!` |
-| Perfil inicial | `validacao-fase-completa` |
+| Perfil inicial | `administrador` |
 
 ### Portal do cidadão
 
@@ -172,7 +172,8 @@ Perfis pré-criados (Gestão → Perfis):
 | `validacao-fase-10` | + Processos + Análise |
 | `validacao-fase-completa` | + Auditoria + Relatórios |
 
-Para restringir a cliente a uma fase: **Gestão > Usuários** → editar `validacao@sedur...` → trocar perfil.
+A validadora nasce como `administrador` (todas as telas, inclusive Perfis e Usuários).
+Para restringir a uma fase: **Gestão > Usuários** → editar `validacao@sedur...` → trocar perfil.
 
 ## 7. Verificação pós-deploy
 

@@ -46,6 +46,16 @@ test: adiciona testes para serviço de notificações
 - Arquivos de build (`dist/`, `.next/`, `.nuxt/`)
 - Credenciais, chaves de API, certificados
 
+## Remotes deste projeto
+
+| Remote | Destino |
+|---|---|
+| `softwell` | Repo de **dev da empresa** — https://gitlab.softwell.com.br/techpulse/sile.git |
+| `origin` | Espelho / trabalho (GitHub) |
+| `semit` | GitLab institucional da Prefeitura (somente com pedido de SEMIT) |
+
+Pedido de “subir versão para o repo de dev da empresa” → `git push` em `softwell`. Ver `.cursor/rules/gitlab-softwell.mdc`.
+
 ## Antes de release
 
 - Garantir que o build passa sem erros
