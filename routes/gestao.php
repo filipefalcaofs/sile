@@ -15,6 +15,7 @@ use App\Http\Controllers\Gestao\Conta\PasswordController as ContaPasswordControl
 use App\Http\Controllers\Gestao\Conta\ProfileController as ContaProfileController;
 use App\Http\Controllers\Gestao\ContingenciaController;
 use App\Http\Controllers\Gestao\DashboardController;
+use App\Http\Controllers\Gestao\DecisionTextController;
 use App\Http\Controllers\Gestao\DocumentRequirementController;
 use App\Http\Controllers\Gestao\EmailLogController;
 use App\Http\Controllers\Gestao\EmailServerController;
@@ -483,6 +484,20 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [StandardTextController::class, 'store'])->name('store');
             Route::put('{standardText}', [StandardTextController::class, 'update'])->name('update');
             Route::put('{standardText}/ativacao', [StandardTextController::class, 'toggleActivation'])->name('ativacao.update');
+        });
+
+        // Textos decisórios do motor (Fase 4): catálogo administrável dos
+        // textos emitidos em documentos oficiais (TVL/parecer/ficha do
+        // cidadão), lidos via DecisionTextCatalog. SEM create/delete/toggle —
+        // a chave é ligada ao motor (call site no código): criar chave sem
+        // call site seria fachada e apagar quebraria a emissão do documento.
+        // Reuso de manter-parametros (mesmo mantenedor dos textos-padrão, sem
+        // permissão nova). A edição é auditada (HasAuditoria, RN-002) e tem
+        // efeito sem deploy (o model invalida o cache do catálogo na escrita).
+        // O binding é pela key ({decisionText:key}): chave desconhecida é 404.
+        Route::middleware('permission:manter-parametros')->prefix('textos-decisao')->name('textos-decisao.')->group(function () {
+            Route::get('/', [DecisionTextController::class, 'index'])->name('index');
+            Route::put('{decisionText:key}', [DecisionTextController::class, 'update'])->name('update');
         });
 
         // Termos legais versionados (LGPD e futuros — HU-014, item 2.3): CRUD
