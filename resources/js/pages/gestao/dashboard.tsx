@@ -32,6 +32,8 @@ interface EstoqueStatusItem {
 
 interface OperacaoKpis {
     janela_dias: number;
+    data_de: string;
+    data_ate: string;
     protocolos: number;
     decisoes: DecisoesKpi;
     estoque_total: number;
@@ -62,32 +64,18 @@ function formatarPercentual(valor: number | null): string {
     return valor === null ? '—' : `${percentFormat.format(valor)}%`;
 }
 
-/** Data local YYYY-MM-DD — mesma regra de Carbon::format('Y-m-d') no fuso do cliente. */
-function formatarIsoLocal(data: Date): string {
-    const ano = data.getFullYear();
-    const mes = String(data.getMonth() + 1).padStart(2, '0');
-    const dia = String(data.getDate()).padStart(2, '0');
-
-    return `${ano}-${mes}-${dia}`;
+function hrefProtocolos(dataDe: string, dataAte: string): string {
+    return `/gestao/processos?data_de=${dataDe}&data_ate=${dataAte}`;
 }
 
-/** Recorte da janela da home: hoje − N dias / hoje, alinhado a subDays no servidor. */
-function janelaProtocolos(janelaDias: number): { de: string; ate: string } {
-    const ate = new Date();
-    const de = new Date();
-    de.setDate(de.getDate() - janelaDias);
-
-    return { de: formatarIsoLocal(de), ate: formatarIsoLocal(ate) };
-}
-
-function hrefProtocolos(janelaDias: number): string {
-    const { de, ate } = janelaProtocolos(janelaDias);
-
-    return `/gestao/processos?data_de=${de}&data_ate=${ate}`;
+function hrefDecisoes(dataDe: string, dataAte: string): string {
+    return `/gestao/relatorios/indicadores?data_de=${dataDe}&data_ate=${dataAte}`;
 }
 
 function hrefEstoqueStatus(status: string | null): string {
-    return status === null ? '/gestao/processos' : `/gestao/processos?analysis_status=${encodeURIComponent(status)}`;
+    return status === null
+        ? '/gestao/processos?grupo=em_andamento'
+        : `/gestao/processos?grupo=em_andamento&analysis_status=${encodeURIComponent(status)}`;
 }
 
 /** Entrada (protocolos) × saída (decisões) por dia — eixo Y inteiro. */
@@ -248,7 +236,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
         ? [
               {
                   key: 'protocolos',
-                  href: hrefProtocolos(operacao.janela_dias),
+                  href: hrefProtocolos(operacao.data_de, operacao.data_ate),
                   label: 'Protocolos',
                   value: numberFormat.format(operacao.protocolos),
                   note: `nos últimos ${operacao.janela_dias} dias`,
@@ -257,7 +245,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
               },
               {
                   key: 'decisoes',
-                  href: '/gestao/relatorios/indicadores',
+                  href: hrefDecisoes(operacao.data_de, operacao.data_ate),
                   label: 'Decisões',
                   value: numberFormat.format(operacao.decisoes.total),
                   note: `${numberFormat.format(operacao.decisoes.expresso)} expresso · ${numberFormat.format(operacao.decisoes.humano)} análise`,
@@ -266,7 +254,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
               },
               {
                   key: 'estoque',
-                  href: '/gestao/processos',
+                  href: '/gestao/processos?grupo=em_andamento',
                   label: 'Estoque',
                   value: numberFormat.format(operacao.estoque_total),
                   note: 'em aberto neste momento',

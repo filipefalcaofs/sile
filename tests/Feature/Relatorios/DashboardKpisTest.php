@@ -84,6 +84,8 @@ class DashboardKpisTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/dashboard')
                 ->where('kpis.operacao.protocolos', 3)
+                ->where('kpis.operacao.data_de', '2026-05-16')
+                ->where('kpis.operacao.data_ate', '2026-06-15')
                 ->where('kpis.operacao.decisoes.total', 4)
                 ->where('kpis.operacao.decisoes.expresso', 2)
                 ->where('kpis.operacao.decisoes.humano', 2)
@@ -125,6 +127,8 @@ class DashboardKpisTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/dashboard')
                 ->where('kpis.operacao.protocolos', 0)
+                ->where('kpis.operacao.data_de', '2026-05-16')
+                ->where('kpis.operacao.data_ate', '2026-06-15')
                 ->where('kpis.operacao.decisoes.total', 0)
                 ->where('kpis.operacao.taxa_expressa', null)
                 ->where('kpis.operacao.serie_fluxo', [])

@@ -44,9 +44,11 @@ class DashboardController extends Controller
         SlaVencimentosService $sla,
     ): array {
         $janelaDias = (int) Settings::get('relatorios.dashboard.janela_dias', 30);
+        $dataDe = now()->subDays($janelaDias)->format('Y-m-d');
+        $dataAte = now()->format('Y-m-d');
         $filtros = ReportFilters::fromArray([
-            'data_de' => now()->subDays($janelaDias)->format('Y-m-d'),
-            'data_ate' => now()->format('Y-m-d'),
+            'data_de' => $dataDe,
+            'data_ate' => $dataAte,
         ]);
         $estoqueFiltros = ReportFilters::fromArray([]);
         $expressa = $quedas->taxaRespostaExpressa($filtros);
@@ -54,6 +56,8 @@ class DashboardController extends Controller
 
         return [
             'janela_dias' => $janelaDias,
+            'data_de' => $dataDe,
+            'data_ate' => $dataAte,
             'protocolos' => $indicadores->volumeProtocolos($filtros),
             'decisoes' => $decisoes,
             'estoque_total' => $sla->estoqueTotal(),
