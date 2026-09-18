@@ -2,9 +2,12 @@
 
 namespace Tests\Feature\Seeders;
 
+use App\Models\GeoServerLayer;
+use App\Models\LouosQuadro10Permissao;
 use App\Models\PropertyType;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\Zona;
 use App\Support\DemoMode;
 use Database\Seeders\DemonstracaoClienteSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -120,6 +123,31 @@ class DemonstracaoClienteSeederTest extends TestCase
         $this->assertNotNull($galpao, 'Esperava o catálogo de tipos de imóvel no seed de homologação.');
         $this->assertTrue($galpao->drives_rule);
         $this->assertContains('galpao', $galpao->aliases->pluck('alias')->all());
+    }
+
+    /**
+     * O stack do Portainer roda ESTE seeder no deploy: sem o catálogo de
+     * camadas do GeoServer, a identificação de zona (DB-first) responde
+     * indisponível; sem o cadastro de zonas, a publicação do Quadro 10 fica
+     * bloqueada. O ZonaSeeder deriva da vigente do Quadro 10 — por isso entra
+     * DEPOIS dos seeders LOUOS na lista de homologação.
+     */
+    public function test_carrega_os_catalogos_de_territorio(): void
+    {
+        config(['sile.demo_data' => true]);
+
+        $this->seed(DemonstracaoClienteSeeder::class);
+
+        $this->assertSame(20, GeoServerLayer::query()->count());
+        $this->assertSame(
+            Zona::query()->count(),
+            LouosQuadro10Permissao::query()
+                ->join('rule_versions', 'rule_versions.id', '=', 'louos_quadro10_permissoes.rule_version_id')
+                ->where('rule_versions.status', 'vigente')
+                ->distinct()->count('zona'),
+            'Esperava uma zona cadastrada por zona distinta da vigente do Quadro 10.',
+        );
+        $this->assertGreaterThan(0, Zona::query()->count());
     }
 
     public function test_rotaciona_senhas_dos_usuarios_dev_para_a_senha_demo(): void

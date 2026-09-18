@@ -88,6 +88,8 @@ class DemonstracaoClienteSeeder extends Seeder
         LouosQuadro7Seeder::class,
         LouosQuadro10Seeder::class,
         LouosQuadro11Seeder::class,
+        GeoServerLayerSeeder::class,
+        ZonaSeeder::class,
         ViabilityServiceTypeSeeder::class,
         DocumentRequirementSeeder::class,
         SectorSeeder::class,
