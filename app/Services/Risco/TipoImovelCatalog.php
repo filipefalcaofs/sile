@@ -27,27 +27,27 @@ final readonly class TipoImovelCatalog
 
     /**
      * Catálogo vigente: banco (cadastro administrável) com cache invalidado
-     * na escrita dos models — efeito sem deploy, padrão Settings. O fallback
-     * sedur200826() só vale com o banco INALCANÇÁVEL (build Docker, CI, testes
-     * Unit); banco alcançável e vazio degrada tudo para análise (honesto).
+     * na escrita dos models — efeito sem deploy, padrão Settings. O cache
+     * guarda só array: `serializable_classes=false` no store database recusa
+     * objeto PHP e devolveria __PHP_Incomplete_Class (500 no Portainer).
+     * O fallback sedur200826() só vale com o banco INALCANÇÁVEL (build Docker,
+     * CI, testes Unit); banco alcançável e vazio degrada tudo para análise.
      */
     public static function vigente(): self
     {
         try {
-            return Cache::remember(
-                PropertyType::CACHE_KEY,
-                (int) config('sile.parameters.cache_ttl', 300),
-                function () {
-                    $dirigemRegra = [];
-                    $ramoComum = [];
+            $ttl = (int) config('sile.parameters.cache_ttl', 300);
+            $payload = Cache::remember(PropertyType::CACHE_KEY, $ttl, fn (): array => self::payloadDoBanco());
 
-                    foreach (PropertyType::query()->active()->with('aliases')->get() as $tipo) {
-                        $mapa = $tipo->drives_rule ? 'dirigemRegra' : 'ramoComum';
-                        ${$mapa}[$tipo->code] = $tipo->aliases->pluck('alias')->all();
-                    }
+            if (! self::payloadValido($payload)) {
+                Cache::forget(PropertyType::CACHE_KEY);
+                $payload = self::payloadDoBanco();
+                Cache::put(PropertyType::CACHE_KEY, $payload, $ttl);
+            }
 
-                    return new self(dirigemRegra: $dirigemRegra, ramoComum: $ramoComum);
-                },
+            return new self(
+                dirigemRegra: $payload['dirigemRegra'],
+                ramoComum: $payload['ramoComum'],
             );
         } catch (QueryException|\Exception $e) {
             // O fallback muda o que o motor reconhece (roteamento): precisa
@@ -56,6 +56,34 @@ final readonly class TipoImovelCatalog
 
             return self::sedur200826();
         }
+    }
+
+    /**
+     * @return array{dirigemRegra: AliasMap, ramoComum: AliasMap}
+     */
+    private static function payloadDoBanco(): array
+    {
+        $dirigemRegra = [];
+        $ramoComum = [];
+
+        foreach (PropertyType::query()->active()->with('aliases')->get() as $tipo) {
+            $mapa = $tipo->drives_rule ? 'dirigemRegra' : 'ramoComum';
+            ${$mapa}[$tipo->code] = $tipo->aliases->pluck('alias')->all();
+        }
+
+        return [
+            'dirigemRegra' => $dirigemRegra,
+            'ramoComum' => $ramoComum,
+        ];
+    }
+
+    private static function payloadValido(mixed $payload): bool
+    {
+        return is_array($payload)
+            && array_key_exists('dirigemRegra', $payload)
+            && array_key_exists('ramoComum', $payload)
+            && is_array($payload['dirigemRegra'])
+            && is_array($payload['ramoComum']);
     }
 
     /**

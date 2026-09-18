@@ -16,6 +16,7 @@ use App\Services\Risco\TipoImovelCatalog;
 use Database\Seeders\PropertyTypeSeeder;
 use Database\Seeders\RiskTriggerSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
@@ -97,5 +98,50 @@ class TipoImovelCatalogVigenteTest extends TestCase
             TipoGatilho::DadosDoProcesso->value,
             array_column($comTipoInativo->encaminhamento['gatilhos_acionados'], 'codigo'),
         );
+    }
+
+    public function test_segunda_leitura_no_cache_database_devolve_catalogo(): void
+    {
+        $this->seed(PropertyTypeSeeder::class);
+        $this->usarCacheDatabase();
+
+        $primeiro = TipoImovelCatalog::vigente();
+        $segundo = TipoImovelCatalog::vigente();
+
+        $this->assertInstanceOf(TipoImovelCatalog::class, $primeiro);
+        $this->assertInstanceOf(TipoImovelCatalog::class, $segundo);
+        $this->assertSame(
+            TipoImovelReconhecimento::DirigeRegra,
+            TipoImovel::fromRegin('GALPÃO', $segundo)->reconhecimento,
+        );
+    }
+
+    public function test_entrada_envenenada_com_objeto_e_reconstruida_do_banco(): void
+    {
+        $this->seed(PropertyTypeSeeder::class);
+        $this->usarCacheDatabase();
+
+        Cache::put(
+            PropertyType::CACHE_KEY,
+            new TipoImovelCatalog(dirigemRegra: ['galpao' => ['galpao']], ramoComum: []),
+            300,
+        );
+
+        $catalogo = TipoImovelCatalog::vigente();
+
+        $this->assertInstanceOf(TipoImovelCatalog::class, $catalogo);
+        $this->assertSame(
+            TipoImovelReconhecimento::DirigeRegra,
+            TipoImovel::fromRegin('GALPÃO', $catalogo)->reconhecimento,
+        );
+    }
+
+    private function usarCacheDatabase(): void
+    {
+        $this->app['config']->set('cache.default', 'database');
+        $this->app->forgetInstance('cache');
+        $this->app->forgetInstance('cache.store');
+
+        Cache::forget(PropertyType::CACHE_KEY);
     }
 }
