@@ -18,7 +18,6 @@ use App\Services\Risco\RiscoClassificationService;
 use App\Services\Risco\RiscoInput;
 use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
-use App\Support\Audit\AuditService;
 use Carbon\Carbon;
 use Database\Seeders\PropertyTypeSeeder;
 use Database\Seeders\RiskTriggerSeeder;
@@ -40,7 +39,7 @@ class RiscoClassificationServiceTest extends TestCase
 
     private function service(): RiscoClassificationService
     {
-        return new RiscoClassificationService(app(AuditService::class));
+        return app(RiscoClassificationService::class);
     }
 
     private function versaoMunicipal(string $version = 'decreto-32636-2020'): RuleVersion

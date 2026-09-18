@@ -11,7 +11,6 @@ use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\LouosEnquadramentoService;
-use App\Services\Viabilidade\ConsultaViabilidadeService;
 use Database\Seeders\DecisionTextSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use ReflectionClassConstant;
@@ -73,9 +72,10 @@ class DecisionTextSeederTest extends TestCase
 
         $catalogo = new DecisionTextCatalog;
 
-        // Os literais das chaves LOUOS são os valores provados corretos pelo
-        // golden de byte-identidade (LouosTextosByteIdenticosTest) — as
-        // constantes foram removidas do service na migração (Fase 4, Task 2).
+        // Os literais das chaves LOUOS e da consulta são os valores provados
+        // corretos pelos goldens de byte-identidade (LouosTextosByteIdenticosTest
+        // e TextosServicosByteIdenticosTest) — as constantes foram removidas dos
+        // services na migração (Fase 4, Tasks 2-3).
         $this->assertSame(
             'Lei nº 9.148/2016 (LOUOS)',
             $catalogo->get('base_legal.louos'),
@@ -85,7 +85,7 @@ class DecisionTextSeederTest extends TestCase
             $catalogo->get('louos.motivo.proibido'),
         );
         $this->assertSame(
-            self::constante(ConsultaViabilidadeService::class, 'AVISO_ZONA_PENDENTE'),
+            'Veredito locacional pendente: zona urbanística pendente da base oficial (SEDUR).',
             $catalogo->get('consulta.aviso.zona_pendente'),
         );
         $this->assertSame(
@@ -98,7 +98,7 @@ class DecisionTextSeederTest extends TestCase
     {
         $this->seed(DecisionTextSeeder::class);
 
-        $composer = new JustificativaFundamentadaComposer;
+        $composer = app(JustificativaFundamentadaComposer::class);
         $conclusao = new ReflectionMethod($composer, 'conclusao');
 
         $atual = $conclusao->invoke($composer, [

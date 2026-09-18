@@ -13,7 +13,6 @@ use App\Services\Risco\RiscoClassificationService;
 use App\Services\Risco\RiscoInput;
 use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
-use App\Support\Audit\AuditService;
 use Database\Seeders\PropertyTypeSeeder;
 use Database\Seeders\RiskTriggerSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -87,7 +86,7 @@ class TipoImovelCatalogVigenteTest extends TestCase
             'risco_municipal' => RiscoMunicipal::BaixoA,
         ]);
 
-        $service = new RiscoClassificationService(app(AuditService::class));
+        $service = app(RiscoClassificationService::class);
 
         $semTipo = $service->classify(RiscoInput::paraCnae('1212121'));
         $this->assertSame('expresso', $semTipo->encaminhamento['fluxo']);

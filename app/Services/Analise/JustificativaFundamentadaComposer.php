@@ -6,6 +6,7 @@ use App\Enums\Fluxo;
 use App\Enums\Quadro10Permissao;
 use App\Enums\ResultadoViabilidade;
 use App\Models\Cnae;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Schema;
  */
 class JustificativaFundamentadaComposer
 {
+    public function __construct(private DecisionTextCatalog $textos) {}
+
     /**
      * @param  array<string, mixed>  $item
      */
@@ -336,12 +339,14 @@ class JustificativaFundamentadaComposer
         $resultado = (string) ($fatos['consolidado']['resultado'] ?? '');
         $zona = $fatos['zona'] ?? 'a zona identificada';
 
-        return match ($resultado) {
-            ResultadoViabilidade::Permitido->value => 'Diante do enquadramento acima, manifesta-se pelo deferimento desta atividade, por ser locacionalmente permitida na zona '.$zona.', sem condicionantes urbanísticas incidentes.',
-            ResultadoViabilidade::PermitidoComCondicoes->value => 'Diante do enquadramento acima, manifesta-se pelo deferimento desta atividade na zona '.$zona.', condicionado ao cumprimento das exigências urbanísticas incidentes.',
-            ResultadoViabilidade::NaoPermitido->value => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso proibido na zona '.$zona.' segundo o Quadro 10 da LOUOS.',
-            default => 'Não há elementos suficientes para deferir ou indeferir. Encaminha-se a atividade à análise técnica, sem sugerir desfecho locacional.',
+        $chave = match ($resultado) {
+            ResultadoViabilidade::Permitido->value => 'justificativa.conclusao.permitido',
+            ResultadoViabilidade::PermitidoComCondicoes->value => 'justificativa.conclusao.permitido_com_condicoes',
+            ResultadoViabilidade::NaoPermitido->value => 'justificativa.conclusao.nao_permitido',
+            default => 'justificativa.conclusao.padrao',
         };
+
+        return $this->textos->render($chave, [':zona' => $zona]);
     }
 
     /**
@@ -352,7 +357,7 @@ class JustificativaFundamentadaComposer
         $refs = $fatos['fundamentacao'];
 
         if ($refs === []) {
-            $refs = ['Lei nº 9.148/2016 (LOUOS)'];
+            $refs = [$this->textos->get('base_legal.louos')];
         }
 
         return 'Fundamentação: '.implode('; ', $refs).'.';

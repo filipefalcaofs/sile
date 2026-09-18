@@ -19,7 +19,7 @@ class JustificativaFundamentadaComposerTest extends TestCase
 {
     public function test_redige_deferimento_fundamentado_com_quadros_zona_e_risco(): void
     {
-        $texto = (new JustificativaFundamentadaComposer)->paraConsulta(
+        $texto = app(JustificativaFundamentadaComposer::class)->paraConsulta(
             $this->consultaPermitida(),
             [
                 'cnae' => '4771701',
@@ -46,7 +46,7 @@ class JustificativaFundamentadaComposerTest extends TestCase
 
     public function test_redige_indeferimento_quando_quadro_10_proibe(): void
     {
-        $texto = (new JustificativaFundamentadaComposer)->paraConsulta(
+        $texto = app(JustificativaFundamentadaComposer::class)->paraConsulta(
             $this->consultaProibida(),
             [
                 'cnae' => '8888883',
@@ -63,7 +63,7 @@ class JustificativaFundamentadaComposerTest extends TestCase
 
     public function test_nao_sugere_desfecho_quando_nao_ha_enquadramento_no_quadro_7(): void
     {
-        $texto = (new JustificativaFundamentadaComposer)->paraConsulta(
+        $texto = app(JustificativaFundamentadaComposer::class)->paraConsulta(
             $this->consultaSemQuadro7(),
             [
                 'cnae' => '4721104',
@@ -105,7 +105,7 @@ class JustificativaFundamentadaComposerTest extends TestCase
             avisos: $consulta->avisos,
         );
 
-        $texto = (new JustificativaFundamentadaComposer)->paraConsulta($consulta, [
+        $texto = app(JustificativaFundamentadaComposer::class)->paraConsulta($consulta, [
             'cnae' => '4771701',
             'cnae_formatado' => '4771-7/01',
         ]);
@@ -123,8 +123,8 @@ class JustificativaFundamentadaComposerTest extends TestCase
             'descricao' => 'Comércio varejista de produtos farmacêuticos',
         ];
 
-        $aoVivo = (new JustificativaFundamentadaComposer)->paraConsulta($consulta, $item);
-        $doSnapshot = (new JustificativaFundamentadaComposer)->paraSnapshot($consulta->toArray(), $item);
+        $aoVivo = app(JustificativaFundamentadaComposer::class)->paraConsulta($consulta, $item);
+        $doSnapshot = app(JustificativaFundamentadaComposer::class)->paraSnapshot($consulta->toArray(), $item);
 
         $this->assertSame($aoVivo, $doSnapshot);
     }

@@ -7,6 +7,7 @@ use App\Enums\DecisionOutcome;
 use App\Enums\ResultadoViabilidade;
 use App\Models\AnalysisRecord;
 use App\Models\ViabilityRequest;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Support\Audit\AuditService;
@@ -55,6 +56,7 @@ class PreAnaliseService
         private readonly AuditService $audit,
         private readonly MotivoAnaliseComposer $motivos,
         private readonly JustificativaFundamentadaComposer $justificativas,
+        private readonly DecisionTextCatalog $textos,
     ) {}
 
     /**
@@ -284,7 +286,11 @@ class PreAnaliseService
     private function parecerRascunho(ViabilityRequest $request, ResolvedViability $resolved): string
     {
         $partes = [
-            'Analisa-se o requerimento à luz da Lei nº 9.148/2016 (LOUOS) e das regras de risco aplicáveis. Veredito locacional consolidado: '.ResultadoViabilidade::from($resolved->consolidado)->label().'.',
+            $this->textos->render('analise.pre_analise.intro', [
+                // O rótulo do veredito continua vindo do enum (vocabulário —
+                // Fase 6, fora do escopo); o template leva só o :resultado.
+                ':resultado' => ResultadoViabilidade::from($resolved->consolidado)->label(),
+            ]),
         ];
 
         foreach ($resolved->por_cnae as $item) {

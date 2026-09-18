@@ -11,6 +11,7 @@ use App\Models\RiskCondicionante;
 use App\Models\RiskTrigger;
 use App\Models\RuleVersion;
 use App\Models\SanitaryRiskClassification;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Carbon\CarbonInterface;
@@ -33,7 +34,10 @@ use Carbon\CarbonInterface;
  */
 class RiscoClassificationService
 {
-    public function __construct(private AuditService $audit) {}
+    public function __construct(
+        private AuditService $audit,
+        private DecisionTextCatalog $textos,
+    ) {}
 
     /**
      * Classifica o CNAE do input nas duas dimensões, resolve o encaminhamento e
@@ -303,7 +307,7 @@ class RiscoClassificationService
         $referencias = [];
 
         if ($municipal['status'] === RiscoResult::STATUS_CLASSIFICADO) {
-            $referencias[] = 'Decreto Municipal nº 32.636/2020';
+            $referencias[] = $this->textos->get('base_legal.risco_municipal');
 
             foreach ($municipal['condicionantes'] as $condicionante) {
                 $referencias[] = (string) $condicionante;

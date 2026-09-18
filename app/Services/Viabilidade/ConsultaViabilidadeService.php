@@ -2,6 +2,7 @@
 
 namespace App\Services\Viabilidade;
 
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\TerritoryResult;
@@ -38,12 +39,6 @@ use App\Support\Audit\AuditService;
  */
 class ConsultaViabilidadeService
 {
-    private const AVISO_ZONA_PENDENTE = 'Veredito locacional pendente: zona urbanística pendente da base oficial (SEDUR).';
-
-    private const AVISO_CNAE_SEM_LOCAL = 'Consulta por CNAE não avalia o local: o veredito locacional depende do endereço/zona. Para a viabilidade locacional, consulte por endereço.';
-
-    private const AVISO_INSCRICAO_INDISPONIVEL = 'Resolução por inscrição imobiliária indisponível (base de lotes pendente SEDUR). Resultado sem análise territorial; consulte por endereço para o veredito locacional.';
-
     public function __construct(
         private Geocoder $geocoder,
         private TerritoryService $territory,
@@ -51,6 +46,7 @@ class ConsultaViabilidadeService
         private RiscoClassificationService $risco,
         private PropertyRegistryLookup $propertyRegistry,
         private AuditService $audit,
+        private DecisionTextCatalog $textos,
     ) {}
 
     /**
@@ -79,7 +75,7 @@ class ConsultaViabilidadeService
     {
         $input = ConsultaViabilidadeInput::paraCnae($cnae, $area, $tipoImovel);
 
-        return $this->consultarPorCnaeComEntrada($input, [self::AVISO_CNAE_SEM_LOCAL]);
+        return $this->consultarPorCnaeComEntrada($input, [$this->textos->get('consulta.aviso.cnae_sem_local')]);
     }
 
     /**
@@ -95,7 +91,7 @@ class ConsultaViabilidadeService
         try {
             $ponto = $this->propertyRegistry->resolve($inscricao);
         } catch (PropertyRegistryUnavailableException) {
-            return $this->consultarPorCnaeComEntrada($input, [self::AVISO_INSCRICAO_INDISPONIVEL]);
+            return $this->consultarPorCnaeComEntrada($input, [$this->textos->get('consulta.aviso.inscricao_indisponivel')]);
         } catch (PropertyNotFoundException) {
             return $this->consultarPorCnaeComEntrada($input, [
                 'Inscrição imobiliária não encontrada no Cadastro (SEFAZ/SEDUR). Resultado sem análise territorial; consulte por endereço para o veredito locacional.',
@@ -158,7 +154,7 @@ class ConsultaViabilidadeService
         $avisos = [];
 
         if (($territory->zona['status'] ?? null) !== 'identificado') {
-            $avisos[] = self::AVISO_ZONA_PENDENTE;
+            $avisos[] = $this->textos->get('consulta.aviso.zona_pendente');
         }
 
         $enquadramento = $this->louos->enquadrar(
