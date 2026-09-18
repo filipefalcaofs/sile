@@ -27,4 +27,8 @@ php artisan route:cache
 php artisan view:cache || true
 
 echo "[entrypoint] Iniciando servicos..."
+if [ "$#" -gt 0 ]; then
+    echo "[entrypoint] Comando: $*"
+    exec "$@"
+fi
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
