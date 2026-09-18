@@ -1,55 +1,49 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
-import { AlertIcon, ArrowRightIcon, CheckCircleIcon, FileIcon, GroupIcon, InfoIcon, ListIcon, LockIcon, PlugInIcon, TableIcon, UserCircleIcon } from '@/components/icons';
-import Badge from '@/components/ui/badge';
+import { AlertIcon, ArrowRightIcon, CheckCircleIcon, FileIcon, GroupIcon, InfoIcon, ListIcon, LockIcon, PlugInIcon, TableIcon } from '@/components/icons';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import Chart from '@/components/ui/chart/chart';
+import { echarts } from '@/components/ui/chart/echarts-core';
 import type { EChartsOption } from '@/components/ui/chart/echarts-core';
 import KpiCard from '@/components/ui/kpi-card';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
 
-/** Ponto da série de volume por dia (HU-123). */
-interface SerieVolumePonto {
+interface DecisoesKpi {
+    total: number;
+    expresso: number;
+    humano: number;
+}
+
+interface SerieFluxoPonto {
     dia: string;
+    entrada: number;
+    saida: number;
+}
+
+interface EstoqueStatusItem {
+    status: string | null;
+    label: string;
+    grupo: string | null;
     total: number;
 }
 
-/** Fatia da distribuição por nível de risco (HU-126). */
-interface PorRiscoItem {
-    nivel: string;
-    fonte: string;
-    total: number;
-}
-
-/**
- * KPIs operacionais do EP15 no painel (HU-122). As taxas são null quando não há
- * base no período (degradação honesta, CA-03); NÃO há campo `delta` — sem série
- * histórica não existe comparativo, nunca um "+X%" inventado.
- */
-interface RelatoriosKpis {
-    volume: number;
-    taxa_deferimento: number | null;
-    taxa_indeferimento: number | null;
-    tempo_analise_minutos: number | null;
+interface OperacaoKpis {
+    janela_dias: number;
+    protocolos: number;
+    decisoes: DecisoesKpi;
+    estoque_total: number;
+    atrasados: number;
     taxa_expressa: number | null;
     meta_expressa: number | null;
-    janela_dias: number;
-    serie_volume: SerieVolumePonto[];
-    por_risco: PorRiscoItem[];
-}
-
-interface DashboardKpis {
-    cnaes: { ativos: number; total: number } | null;
-    usuarios: { ativos: number; total: number } | null;
-    perfis: { total: number; permissoes: number } | null;
-    acessos: { logins: number; janela_dias: number } | null;
-    relatorios: RelatoriosKpis | null;
+    serie_fluxo: SerieFluxoPonto[];
+    estoque_por_status: EstoqueStatusItem[];
 }
 
 interface DashboardProps {
-    kpis: DashboardKpis;
+    kpis: { operacao: OperacaoKpis | null };
 }
 
 interface ModuleCard {
@@ -63,77 +57,79 @@ interface ModuleCard {
 const numberFormat = new Intl.NumberFormat('pt-BR');
 const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
 
-/** Rótulos pt-BR dos níveis de risco/categoria; código desconhecido fica como veio. */
-const RISCO_LABELS: Record<string, string> = {
-    baixo_a: 'Baixo',
-    baixo_b: 'Médio',
-    medio: 'Médio',
-    alto: 'Alto',
-    expresso: 'Expresso',
-    semi_expresso: 'Semi-expresso',
-    analise: 'Análise',
-    nao_classificado: 'Não classificado',
-};
-
 /** Percentual honesto: null (sem base no período) vira travessão, nunca 0% fabricado. */
 function formatarPercentual(valor: number | null): string {
     return valor === null ? '—' : `${percentFormat.format(valor)}%`;
 }
 
-/** Minutos úteis em formato legível; null (sem amostras) vira travessão. */
-function formatarMinutos(valor: number | null): string {
-    if (valor === null) {
-        return '—';
-    }
+/** Data local YYYY-MM-DD — mesma regra de Carbon::format('Y-m-d') no fuso do cliente. */
+function formatarIsoLocal(data: Date): string {
+    const ano = data.getFullYear();
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getDate()).padStart(2, '0');
 
-    if (valor < 60) {
-        return `${numberFormat.format(valor)} min`;
-    }
-
-    const horas = Math.floor(valor / 60);
-    const minutos = valor % 60;
-
-    return minutos === 0 ? `${horas}h` : `${horas}h ${minutos}min`;
+    return `${ano}-${mes}-${dia}`;
 }
 
-function rotuloRisco(nivel: string): string {
-    return RISCO_LABELS[nivel] ?? nivel;
+/** Recorte da janela da home: hoje − N dias / hoje, alinhado a subDays no servidor. */
+function janelaProtocolos(janelaDias: number): { de: string; ate: string } {
+    const ate = new Date();
+    const de = new Date();
+    de.setDate(de.getDate() - janelaDias);
+
+    return { de: formatarIsoLocal(de), ate: formatarIsoLocal(ate) };
 }
 
-/** Série de volume protocolado por dia (linha) — eixo Y inteiro (contagem). */
-function volumeChartOption(serie: SerieVolumePonto[]): EChartsOption {
+function hrefProtocolos(janelaDias: number): string {
+    const { de, ate } = janelaProtocolos(janelaDias);
+
+    return `/gestao/processos?data_de=${de}&data_ate=${ate}`;
+}
+
+function hrefEstoqueStatus(status: string | null): string {
+    return status === null ? '/gestao/processos' : `/gestao/processos?analysis_status=${encodeURIComponent(status)}`;
+}
+
+/** Entrada (protocolos) × saída (decisões) por dia — eixo Y inteiro. */
+function fluxoChartOption(serie: SerieFluxoPonto[]): EChartsOption {
     return {
         tooltip: { trigger: 'axis' },
+        legend: { bottom: 0 },
         grid: { left: 44, right: 16, top: 24, bottom: 32, containLabel: true },
         xAxis: { type: 'category', data: serie.map((ponto) => ponto.dia) },
         yAxis: { type: 'value', minInterval: 1 },
         series: [
             {
                 type: 'line',
-                name: 'Solicitações',
+                name: 'Entrada',
                 smooth: true,
                 showSymbol: serie.length === 1,
-                areaStyle: {},
-                data: serie.map((ponto) => ponto.total),
+                data: serie.map((ponto) => ponto.entrada),
+            },
+            {
+                type: 'line',
+                name: 'Saída',
+                smooth: true,
+                showSymbol: serie.length === 1,
+                data: serie.map((ponto) => ponto.saida),
             },
         ],
     };
 }
 
-/** Distribuição por nível de risco (rosca). */
-function riscoChartOption(itens: PorRiscoItem[]): EChartsOption {
+/** Estoque operacional em barras horizontais (API já omite total = 0). */
+function estoqueChartOption(itens: EstoqueStatusItem[]): EChartsOption {
     return {
-        tooltip: { trigger: 'item' },
-        legend: { bottom: 0, type: 'scroll' },
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        grid: { left: 16, right: 24, top: 16, bottom: 16, containLabel: true },
+        xAxis: { type: 'value', minInterval: 1 },
+        yAxis: { type: 'category', data: itens.map((item) => item.label) },
         series: [
             {
-                type: 'pie',
-                name: 'Solicitações',
-                radius: ['45%', '70%'],
-                avoidLabelOverlap: true,
-                itemStyle: { borderRadius: 6, borderWidth: 2 },
-                label: { show: false },
-                data: itens.map((item) => ({ name: rotuloRisco(item.nivel), value: item.total })),
+                type: 'bar',
+                name: 'Estoque',
+                cursor: 'pointer',
+                data: itens.map((item) => item.total),
             },
         ],
     };
@@ -148,43 +144,74 @@ function GraficoSemDados() {
     );
 }
 
+/**
+ * O wrapper Chart não expõe onEvents. Amarra o clique na instância ECharts
+ * já montada (mesmo core registrado) para o drill-down por analysis_status.
+ */
+function EstoquePorStatusChart({ itens }: { itens: EstoqueStatusItem[] }) {
+    const wrapperRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const wrapper = wrapperRef.current;
+
+        if (!wrapper) {
+            return;
+        }
+
+        let disposed = false;
+        let attached: ReturnType<typeof echarts.getInstanceByDom> = undefined;
+
+        const onClick = (params: { dataIndex?: number }) => {
+            const item = typeof params.dataIndex === 'number' ? itens[params.dataIndex] : undefined;
+
+            if (!item) {
+                return;
+            }
+
+            router.visit(hrefEstoqueStatus(item.status));
+        };
+
+        const tryAttach = (): boolean => {
+            const nos = wrapper.querySelectorAll('div');
+
+            for (const no of nos) {
+                const instancia = echarts.getInstanceByDom(no);
+
+                if (instancia) {
+                    instancia.off('click');
+                    instancia.on('click', onClick);
+                    attached = instancia;
+
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        const id = window.setInterval(() => {
+            if (!disposed && tryAttach()) {
+                window.clearInterval(id);
+            }
+        }, 50);
+
+        return () => {
+            disposed = true;
+            window.clearInterval(id);
+            attached?.off('click');
+        };
+    }, [itens]);
+
+    return (
+        <div ref={wrapperRef}>
+            <Chart option={estoqueChartOption(itens)} className="h-72 w-full" />
+        </div>
+    );
+}
+
 export default function Dashboard({ kpis }: DashboardProps) {
     const { auth } = usePage<SharedProps>().props;
-
-    const indicators = [
-        kpis.cnaes && {
-            key: 'cnaes',
-            label: 'CNAEs ativos',
-            value: numberFormat.format(kpis.cnaes.ativos),
-            note: `de ${numberFormat.format(kpis.cnaes.total)} cadastrados`,
-            icon: <TableIcon className="size-6" />,
-            tone: 'brand' as const,
-        },
-        kpis.usuarios && {
-            key: 'usuarios',
-            label: 'Usuários ativos',
-            value: numberFormat.format(kpis.usuarios.ativos),
-            note: `de ${numberFormat.format(kpis.usuarios.total)} contas`,
-            icon: <GroupIcon className="size-6" />,
-            tone: 'success' as const,
-        },
-        kpis.perfis && {
-            key: 'perfis',
-            label: 'Perfis de acesso',
-            value: numberFormat.format(kpis.perfis.total),
-            note: `${numberFormat.format(kpis.perfis.permissoes)} permissões granulares`,
-            icon: <LockIcon className="size-6" />,
-            tone: 'info' as const,
-        },
-        kpis.acessos && {
-            key: 'acessos',
-            label: 'Acessos recentes',
-            value: numberFormat.format(kpis.acessos.logins),
-            note: `logins em ${kpis.acessos.janela_dias} dias`,
-            icon: <UserCircleIcon className="size-6" />,
-            tone: 'warning' as const,
-        },
-    ].filter((indicator) => indicator !== null);
+    const operacao = kpis.operacao;
 
     const modules: ModuleCard[] = [
         {
@@ -217,47 +244,50 @@ export default function Dashboard({ kpis }: DashboardProps) {
         },
     ].filter((module) => module.visible);
 
-    const relatorios = kpis.relatorios;
-
-    const relatoriosIndicators = relatorios
+    const operacaoIndicators = operacao
         ? [
               {
-                  key: 'volume',
-                  label: 'Solicitações protocoladas',
-                  value: numberFormat.format(relatorios.volume),
-                  note: `nos últimos ${relatorios.janela_dias} dias`,
+                  key: 'protocolos',
+                  href: hrefProtocolos(operacao.janela_dias),
+                  label: 'Protocolos',
+                  value: numberFormat.format(operacao.protocolos),
+                  note: `nos últimos ${operacao.janela_dias} dias`,
                   icon: <FileIcon className="size-6" />,
                   tone: 'brand' as const,
               },
               {
-                  key: 'deferimento',
-                  label: 'Taxa de deferimento',
-                  value: formatarPercentual(relatorios.taxa_deferimento),
-                  note: relatorios.taxa_deferimento === null ? 'sem decisões no período' : 'das decisões no período',
+                  key: 'decisoes',
+                  href: '/gestao/relatorios/indicadores',
+                  label: 'Decisões',
+                  value: numberFormat.format(operacao.decisoes.total),
+                  note: `${numberFormat.format(operacao.decisoes.expresso)} expresso · ${numberFormat.format(operacao.decisoes.humano)} análise`,
                   icon: <CheckCircleIcon className="size-6" />,
                   tone: 'success' as const,
               },
               {
-                  key: 'indeferimento',
-                  label: 'Taxa de indeferimento',
-                  value: formatarPercentual(relatorios.taxa_indeferimento),
-                  note: relatorios.taxa_indeferimento === null ? 'sem decisões no período' : 'das decisões no período',
-                  icon: <AlertIcon className="size-6" />,
-                  tone: 'error' as const,
-              },
-              {
-                  key: 'tempo',
-                  label: 'Tempo médio de análise',
-                  value: formatarMinutos(relatorios.tempo_analise_minutos),
-                  note: relatorios.tempo_analise_minutos === null ? 'sem amostras no período' : 'tempo útil por processo',
+                  key: 'estoque',
+                  href: '/gestao/processos',
+                  label: 'Estoque',
+                  value: numberFormat.format(operacao.estoque_total),
+                  note: 'em aberto neste momento',
                   icon: <InfoIcon className="size-6" />,
                   tone: 'info' as const,
               },
               {
+                  key: 'atrasados',
+                  href: '/gestao/relatorios/sla',
+                  label: 'Atrasados',
+                  value: numberFormat.format(operacao.atrasados),
+                  note: 'prazo-limite ultrapassado',
+                  icon: <AlertIcon className="size-6" />,
+                  tone: 'error' as const,
+              },
+              {
                   key: 'expressa',
+                  href: '/gestao/relatorios/quedas',
                   label: 'Resposta expressa',
-                  value: formatarPercentual(relatorios.taxa_expressa),
-                  note: relatorios.meta_expressa === null ? 'meta não definida' : `meta ${formatarPercentual(relatorios.meta_expressa)}`,
+                  value: formatarPercentual(operacao.taxa_expressa),
+                  note: operacao.meta_expressa === null ? 'meta não definida' : `meta ${formatarPercentual(operacao.meta_expressa)}`,
                   icon: <ListIcon className="size-6" />,
                   tone: 'brand' as const,
               },
@@ -266,64 +296,35 @@ export default function Dashboard({ kpis }: DashboardProps) {
 
     return (
         <>
-            <Head title="Painel de gestão" />
-            <PageHeader title="Painel de gestão" breadcrumbs={[{ label: 'Gestão' }]} />
+            <Head title="Visão geral da operação" />
+            <PageHeader title="Visão geral da operação" breadcrumbs={[{ label: 'Gestão' }]} />
 
             <div className="grid grid-cols-12 gap-4 md:gap-6">
-                {indicators.length > 0 && (
-                    <div className="col-span-12">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
-                            {indicators.map((indicator) => (
-                                <KpiCard
-                                    key={indicator.key}
-                                    label={indicator.label}
-                                    value={indicator.value}
-                                    note={indicator.note}
-                                    icon={indicator.icon}
-                                    tone={indicator.tone}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {relatorios && (
+                {operacao && (
                     <div className="col-span-12 space-y-4 md:space-y-6">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                            <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">
-                                Operação dos últimos {relatorios.janela_dias} dias
-                            </h3>
-                            <Link
-                                href="/gestao/relatorios/indicadores"
-                                className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
-                            >
-                                Indicadores de viabilidade
-                                <ArrowRightIcon className="size-4" />
-                            </Link>
-                        </div>
-
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-5">
-                            {relatoriosIndicators.map((indicator) => (
-                                <KpiCard
-                                    key={indicator.key}
-                                    label={indicator.label}
-                                    value={indicator.value}
-                                    note={indicator.note}
-                                    icon={indicator.icon}
-                                    tone={indicator.tone}
-                                />
+                            {operacaoIndicators.map((indicator) => (
+                                <Link key={indicator.key} href={indicator.href} className="block rounded-2xl">
+                                    <KpiCard
+                                        label={indicator.label}
+                                        value={indicator.value}
+                                        note={indicator.note}
+                                        icon={indicator.icon}
+                                        tone={indicator.tone}
+                                    />
+                                </Link>
                             ))}
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-2">
                             <Card>
                                 <CardHeader
-                                    title="Volume de solicitações"
-                                    description={`Protocoladas por dia nos últimos ${relatorios.janela_dias} dias.`}
+                                    title="Entrada e saída"
+                                    description={`Protocolos e decisões por dia nos últimos ${operacao.janela_dias} dias.`}
                                 />
                                 <CardContent>
-                                    {relatorios.serie_volume.length > 0 ? (
-                                        <Chart option={volumeChartOption(relatorios.serie_volume)} className="h-72 w-full" />
+                                    {operacao.serie_fluxo.length > 0 ? (
+                                        <Chart option={fluxoChartOption(operacao.serie_fluxo)} className="h-72 w-full" />
                                     ) : (
                                         <GraficoSemDados />
                                     )}
@@ -331,12 +332,12 @@ export default function Dashboard({ kpis }: DashboardProps) {
                             </Card>
                             <Card>
                                 <CardHeader
-                                    title="Distribuição por risco"
-                                    description="Por nível do Decreto nº 32.636/2020 (real) ou categoria derivada."
+                                    title="Estoque por status"
+                                    description="Processos em aberto neste momento. Clique na barra para filtrar."
                                 />
                                 <CardContent>
-                                    {relatorios.por_risco.length > 0 ? (
-                                        <Chart option={riscoChartOption(relatorios.por_risco)} className="h-72 w-full" />
+                                    {operacao.estoque_por_status.length > 0 ? (
+                                        <EstoquePorStatusChart itens={operacao.estoque_por_status} />
                                     ) : (
                                         <GraficoSemDados />
                                     )}
@@ -360,12 +361,8 @@ export default function Dashboard({ kpis }: DashboardProps) {
                                     </div>
                                     <div className="mt-5 flex items-end justify-between">
                                         <div>
-                                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                {module.label}
-                                            </span>
-                                            <h4 className="mt-2 text-xl font-semibold text-gray-800 dark:text-white/90">
-                                                {module.name}
-                                            </h4>
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">{module.label}</span>
+                                            <h4 className="mt-2 text-xl font-semibold text-gray-800 dark:text-white/90">{module.name}</h4>
                                         </div>
                                         <ArrowRightIcon className="mb-1.5 size-5 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-brand-500 dark:text-gray-500 dark:group-hover:text-brand-400" />
                                     </div>
@@ -374,47 +371,6 @@ export default function Dashboard({ kpis }: DashboardProps) {
                         </div>
                     </div>
                 )}
-
-                <div className="col-span-12">
-                    <Card>
-                        <CardHeader
-                            title="Sessão atual"
-                            description="Conta conectada ao ambiente de gestão da SEDUR."
-                        />
-                        <CardContent>
-                            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
-                                <div>
-                                    <dt className="text-theme-xs text-gray-500 dark:text-gray-400">Nome</dt>
-                                    <dd className="mt-1 text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                        {auth.user?.name ?? '—'}
-                                    </dd>
-                                </div>
-                                <div>
-                                    <dt className="text-theme-xs text-gray-500 dark:text-gray-400">E-mail</dt>
-                                    <dd className="mt-1 text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                        {auth.user?.email ?? '—'}
-                                    </dd>
-                                </div>
-                                <div>
-                                    <dt className="text-theme-xs text-gray-500 dark:text-gray-400">Papéis</dt>
-                                    <dd className="mt-1 flex flex-wrap gap-1">
-                                        {auth.roles.length === 0 ? (
-                                            <span className="text-theme-sm text-gray-400 dark:text-gray-500">
-                                                Sem papel
-                                            </span>
-                                        ) : (
-                                            auth.roles.map((role) => (
-                                                <Badge key={role} size="sm">
-                                                    {role}
-                                                </Badge>
-                                            ))
-                                        )}
-                                    </dd>
-                                </div>
-                            </dl>
-                        </CardContent>
-                    </Card>
-                </div>
             </div>
         </>
     );
