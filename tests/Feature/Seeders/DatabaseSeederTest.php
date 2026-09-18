@@ -82,8 +82,10 @@ class DatabaseSeederTest extends TestCase
         // analise.escritorio_virtual.pergunta_geral)
         // + 1 da pergunta vinculada de intenção de sede no passo de
         // atividades do portal (SDD escritorio-virtual-telas-portal, Tarefa 3:
-        // analise.escritorio_virtual.pergunta_vinculada).
-        $this->assertSame(116, Parameter::query()->count());
+        // analise.escritorio_virtual.pergunta_vinculada)
+        // + 1 da flag de bypass de homologação do motor de risco (Fase 0
+        // parametrização: features.simulacao_protocolo — DEFAULT OFF).
+        $this->assertSame(117, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -353,7 +355,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(116, Parameter::query()->count());
+        $this->assertSame(117, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

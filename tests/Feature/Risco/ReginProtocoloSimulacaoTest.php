@@ -221,6 +221,8 @@ class ReginProtocoloSimulacaoTest extends TestCase
 
     public function test_simulacao_baixo_cria_processo_expresso_com_tvl(): void
     {
+        config(['sile.features.simulacao_protocolo' => true]);
+
         $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('33072');
 
         $this->assertNotNull($relatorio['processo_id']);

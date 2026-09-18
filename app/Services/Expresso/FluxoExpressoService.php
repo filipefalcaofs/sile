@@ -23,6 +23,7 @@ use App\Services\Analise\AnalysisSlaService;
 use App\Services\Auditoria\DecisionTraceBuilder;
 use App\Services\EscritorioVirtual\AbrigadoResolver;
 use App\Services\EscritorioVirtual\DesvincularInscricaoService;
+use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
@@ -215,12 +216,13 @@ class FluxoExpressoService
         // decidir nem emitir. Anti-fachada: jamais um deferimento/indeferimento
         // inventado (a base oficial liga o caminho de decisão).
         //
-        // Exceção honesta da homologação do motor de risco (simulação REGIN):
+        // Exceção honesta da homologação do motor de risco (simulação REGIN),
+        // disponível apenas com features.simulacao_protocolo LIGADA:
         // o conjunto já foi classificado pelo Decreto; a zona oficial ainda
         // não está neste ambiente. Baixo/Médio segue o expresso (TVL) sem
         // fingir zoneamento. Processo REGIN de verdade continua bloqueado aqui.
         if ($resolved->consolidado === ResultadoViabilidade::Pendente->value
-            && ! $this->eSimulacaoRiscoRegin($request)) {
+            && ! $this->bypassSimulacaoHomologacao($request)) {
             return $this->encaminharAnalise(
                 $request,
                 'veredito locacional pendente — zona urbanística pendente SEDUR',
@@ -246,7 +248,7 @@ class FluxoExpressoService
         }
 
         if ($resolved->consolidado === ResultadoViabilidade::Pendente->value
-            && $this->eSimulacaoRiscoRegin($request)) {
+            && $this->bypassSimulacaoHomologacao($request)) {
             return $this->emitir(
                 $request,
                 new ResolvedViability(
@@ -280,12 +282,15 @@ class FluxoExpressoService
     }
 
     /**
-     * Processo nascido do simulador de protocolos SEDUR — não é o REGIN real.
+     * Bypass de homologação do motor de risco (simulação REGIN): só vale com
+     * features.simulacao_protocolo LIGADA. Desligada (default), o processo de
+     * simulação segue o fluxo normal — pendente vai à análise, sem exceção.
      */
-    private function eSimulacaoRiscoRegin(ViabilityRequest $request): bool
+    private function bypassSimulacaoHomologacao(ViabilityRequest $request): bool
     {
         return $request->origin === ViabilityRequestOrigin::Regin
-            && $request->contingency_reason === 'simulacao_protocolo';
+            && $request->contingency_reason === ReginProtocoloSimulacaoService::CONTINGENCIA
+            && Settings::enabled('simulacao_protocolo');
     }
 
     /**

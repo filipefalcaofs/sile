@@ -378,6 +378,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita o deferimento/indeferimento automático (fluxo expresso); desligado, toda solicitação protocolada vai para análise técnica (degradação comunicada)',
             ],
+            'features.simulacao_protocolo' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'SOMENTE HOMOLOGAÇÃO: ligado, processos nascidos do simulador de protocolos REGIN com veredito pendente emitem TVL como permitidos (a zona oficial ainda não está na base). Desligado, seguem o fluxo normal (pendente → análise técnica). NUNCA ligar em produção; remoção prevista antes do go-live',
+            ],
             'features.notificacao_resultado_expresso' => [
                 'group' => 'features',
                 'type' => 'boolean',
