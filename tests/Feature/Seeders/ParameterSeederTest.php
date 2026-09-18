@@ -335,6 +335,26 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($dimensao->value);
     }
 
+    public function test_seeder_registra_atributos_de_nome_da_zona(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $atributos = Parameter::query()->where('key', 'geo.zona.atributos_nome')->first();
+
+        $this->assertNotNull($atributos);
+        $this->assertSame('geo', $atributos->group);
+        $this->assertSame('json', $atributos->type);
+        $this->assertSame('["ZONA","zona","SIGLA_ZONA","SUBZONA"]', $atributos->default_value);
+        // A validação é sobre a STRING crua do request (UpdateParameterRequest):
+        // 'json' garante a sintaxe e a regra nomeada 'json_string_list' garante
+        // a lista não vazia de strings após o decode — 'array'/'min:1' aqui
+        // rejeitariam qualquer edição legítima pela UI.
+        $this->assertSame(['required', 'json', 'json_string_list'], $atributos->validation_rules);
+        $this->assertNull($atributos->value);
+
+        $this->assertSame(['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA'], $atributos->typedValue());
+    }
+
     public function test_seeder_registra_parametros_do_motor_louos(): void
     {
         $this->seed(ParameterSeeder::class);

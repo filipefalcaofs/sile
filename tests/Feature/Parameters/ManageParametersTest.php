@@ -170,6 +170,40 @@ class ManageParametersTest extends TestCase
         );
     }
 
+    public function test_lista_de_atributos_da_zona_aceita_json_de_lista_de_strings(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->put('/gestao/parametros/geo.zona.atributos_nome', ['value' => '["NM_ZONA","ZONA"]'])
+            ->assertRedirect();
+
+        $this->assertSame(
+            '["NM_ZONA","ZONA"]',
+            Parameter::query()->where('key', 'geo.zona.atributos_nome')->value('value'),
+        );
+    }
+
+    public function test_lista_de_atributos_da_zona_rejeita_json_que_nao_e_lista_de_strings(): void
+    {
+        $admin = $this->admin();
+
+        // Lista vazia: o motor ficaria sem nenhum atributo candidato.
+        $this->actingAs($admin, 'gestao')
+            ->put('/gestao/parametros/geo.zona.atributos_nome', ['value' => '[]'])
+            ->assertSessionHasErrors('value');
+
+        // Mapa associativo, não lista.
+        $this->actingAs($admin, 'gestao')
+            ->put('/gestao/parametros/geo.zona.atributos_nome', ['value' => '{"ZONA":"sigla"}'])
+            ->assertSessionHasErrors('value');
+
+        // Item que não é string não é nome de atributo válido.
+        $this->actingAs($admin, 'gestao')
+            ->put('/gestao/parametros/geo.zona.atributos_nome', ['value' => '["ZONA",123]'])
+            ->assertSessionHasErrors('value');
+
+        $this->assertNull(Parameter::query()->where('key', 'geo.zona.atributos_nome')->value('value'));
+    }
+
     public function test_gestor_nao_mantem_parametros(): void
     {
         $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();

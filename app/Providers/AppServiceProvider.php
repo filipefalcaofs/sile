@@ -39,6 +39,7 @@ use App\Support\PasswordPolicy;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -156,6 +157,24 @@ class AppServiceProvider extends ServiceProvider
         Notification::extend('whatsapp', fn ($app): WhatsAppChannel => $app->make(WhatsAppChannel::class));
 
         PasswordPolicy::configureDefaults();
+
+        // Regra nomeada para o catálogo HU-014: as validation_rules são
+        // persistidas em JSON (cast array do Parameter), onde closures NÃO
+        // serializam — a validação estrutural de parâmetros json precisa ser
+        // referenciável por string. Garante JSON de lista não vazia de strings
+        // (ex.: geo.zona.atributos_nome).
+        Validator::extend(
+            'json_string_list',
+            function (string $attribute, mixed $value): bool {
+                $decoded = json_decode((string) $value, true);
+
+                return is_array($decoded)
+                    && $decoded !== []
+                    && array_is_list($decoded)
+                    && ! array_any($decoded, fn ($item) => ! is_string($item) || $item === '');
+            },
+            'O campo :attribute deve ser um JSON com uma lista não vazia de textos.',
+        );
 
         config(['auth.passwords.users.expire' => (int) Settings::get('security.password_reset_expire', 60)]);
 

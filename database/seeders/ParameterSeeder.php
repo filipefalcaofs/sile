@@ -242,7 +242,11 @@ class ParameterSeeder extends Seeder
                 'group' => 'geo',
                 'type' => 'json',
                 'default_value' => '["ZONA","zona","SIGLA_ZONA","SUBZONA"]',
-                'validation_rules' => ['required', 'array', 'min:1'],
+                // A validação dinâmica (UpdateParameterRequest) aplica as regras
+                // sobre a STRING crua do request: 'json' garante a sintaxe e a
+                // regra nomeada 'json_string_list' (AppServiceProvider) garante
+                // lista não vazia de strings após o decode.
+                'validation_rules' => ['required', 'json', 'json_string_list'],
                 'description' => 'Atributos da feição da camada de zona candidatos a nome/código da zona, em ordem de precedência (a confirmar com a base oficial SEDUR)',
             ],
             'risco.mapa_encaminhamento' => [
