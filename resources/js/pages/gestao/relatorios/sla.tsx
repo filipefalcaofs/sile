@@ -2,12 +2,15 @@ import { Head, router } from '@inertiajs/react';
 import { useCallback, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
+import Input from '@/components/form/input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import { AlertIcon, CheckCircleIcon, ListIcon, SearchIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import Chart from '@/components/ui/chart/chart';
+import type { EChartsOption } from '@/components/ui/chart/echarts-core';
 import DataTable from '@/components/ui/data-table/data-table';
 import { ExportMenu } from '@/components/ui/data-table/export-menu';
 import PerPageSelect from '@/components/ui/data-table/per-page-select';
@@ -47,11 +50,34 @@ interface RelatorioPaginator {
     per_page: number;
 }
 
+interface AgingFaixa {
+    faixa: '0_50' | '50_80' | '80_100' | 'acima_100' | 'indeterminada';
+    label: string;
+    total: number;
+}
+
+interface AtrasadoEtapa {
+    etapa: 'distribuicao' | 'analise';
+    label: string;
+    total: number;
+}
+
+interface CumprimentoSla {
+    dentro_sla: number;
+    com_prazo: number;
+    taxa: number | null;
+    data_de: string | null;
+    data_ate: string | null;
+}
+
 interface ResumoSla {
     em_andamento: number;
     vencidos: number;
     vencendo: number;
     janela_vencimento_dias: number;
+    aging: AgingFaixa[];
+    atrasados_por_etapa: AtrasadoEtapa[];
+    cumprimento: CumprimentoSla;
 }
 
 interface Opcao {
@@ -62,6 +88,8 @@ interface Opcao {
 interface FiltrosAplicados {
     setor?: number | string;
     analista?: number | string;
+    data_de?: string;
+    data_ate?: string;
 }
 
 interface SlaProps {
@@ -76,6 +104,8 @@ interface SlaProps {
 interface FiltrosForm {
     setor: string;
     analista: string;
+    data_de: string;
+    data_ate: string;
 }
 
 const URL_SLA = '/gestao/relatorios/sla';
@@ -88,6 +118,52 @@ const dateTimeFormat = new Intl.DateTimeFormat('pt-BR', {
     minute: '2-digit',
 });
 
+const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
+
+const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
+
+/** Percentual honesto: null (sem decisões humanas com prazo) vira travessão. */
+function formatarPercentual(valor: number | null): string {
+    return valor === null ? '—' : `${percentFormat.format(valor)}%`;
+}
+
+/** Aging empilhado: uma categoria Estoque, uma barra por faixa. */
+function agingChartOption(aging: AgingFaixa[]): EChartsOption {
+    return {
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        legend: { bottom: 0, type: 'scroll' },
+        grid: { left: 16, right: 16, top: 16, bottom: 32, containLabel: true },
+        xAxis: { type: 'category', data: ['Estoque'] },
+        yAxis: { type: 'value', minInterval: 1 },
+        series: aging.map((faixa) => ({
+            type: 'bar',
+            name: faixa.label,
+            stack: 'aging',
+            data: [faixa.total],
+        })),
+    };
+}
+
+/** Atrasados vencidos agrupados por etapa do SLA. */
+function atrasadosChartOption(itens: AtrasadoEtapa[]): EChartsOption {
+    return {
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        grid: { left: 16, right: 16, top: 16, bottom: 16, containLabel: true },
+        xAxis: { type: 'category', data: itens.map((item) => item.label) },
+        yAxis: { type: 'value', minInterval: 1 },
+        series: [{ type: 'bar', name: 'Atrasados', data: itens.map((item) => item.total) }],
+    };
+}
+
+/** Estado vazio honesto de um gráfico. */
+function GraficoSemDados() {
+    return (
+        <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gray-50 text-theme-sm text-gray-400 dark:bg-white/[0.02] dark:text-gray-500">
+            Sem dados no período.
+        </div>
+    );
+}
+
 /** Formata a data/hora ISO8601 no padrão brasileiro; null/inválida → travessão. */
 function formatarDataHora(iso: string | null): string {
     if (!iso) {
@@ -97,6 +173,48 @@ function formatarDataHora(iso: string | null): string {
     const data = new Date(iso);
 
     return Number.isNaN(data.getTime()) ? '—' : dateTimeFormat.format(data);
+}
+
+/** Percentual honesto: null (sem decisões humanas com prazo) vira travessão. */
+function formatarPercentual(valor: number | null): string {
+    return valor === null ? '—' : `${percentFormat.format(valor)}%`;
+}
+
+/** Aging empilhado: uma categoria Estoque, uma série por faixa. */
+function agingChartOption(aging: AgingFaixa[]): EChartsOption {
+    return {
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        legend: { bottom: 0, type: 'scroll' },
+        grid: { left: 16, right: 16, top: 16, bottom: 32, containLabel: true },
+        xAxis: { type: 'category', data: ['Estoque'] },
+        yAxis: { type: 'value', minInterval: 1 },
+        series: aging.map((faixa) => ({
+            type: 'bar',
+            name: faixa.label,
+            stack: 'aging',
+            data: [faixa.total],
+        })),
+    };
+}
+
+/** Atrasados vencidos agrupados por etapa operacional. */
+function atrasadosChartOption(itens: AtrasadoEtapa[]): EChartsOption {
+    return {
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        grid: { left: 16, right: 16, top: 16, bottom: 16, containLabel: true },
+        xAxis: { type: 'category', data: itens.map((item) => item.label) },
+        yAxis: { type: 'value', minInterval: 1 },
+        series: [{ type: 'bar', name: 'Atrasados', data: itens.map((item) => item.total) }],
+    };
+}
+
+/** Estado vazio honesto de um gráfico. */
+function GraficoSemDados() {
+    return (
+        <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gray-50 text-theme-sm text-gray-400 dark:bg-white/[0.02] dark:text-gray-500">
+            Sem dados no período.
+        </div>
+    );
 }
 
 /** Badge do semáforo do SLA (cores reais do backend — nunca presumidas). */
@@ -160,6 +278,8 @@ export default function SlaVencimentos({ resumo, relatorio, setores, analistas, 
     const [form, setForm] = useState<FiltrosForm>({
         setor: filtros.setor != null ? String(filtros.setor) : '',
         analista: filtros.analista != null ? String(filtros.analista) : '',
+        data_de: filtros.data_de ?? '',
+        data_ate: filtros.data_ate ?? '',
     });
     const [perPage, setPerPage] = useState<number>(relatorio.per_page);
 
@@ -176,6 +296,14 @@ export default function SlaVencimentos({ resumo, relatorio, setores, analistas, 
             params.analista = estado.analista;
         }
 
+        if (estado.data_de.trim() !== '') {
+            params.data_de = estado.data_de;
+        }
+
+        if (estado.data_ate.trim() !== '') {
+            params.data_ate = estado.data_ate;
+        }
+
         router.get(URL_SLA, params, { preserveState: true, preserveScroll: true, replace: true });
     }, []);
 
@@ -185,7 +313,7 @@ export default function SlaVencimentos({ resumo, relatorio, setores, analistas, 
     }
 
     function limpar() {
-        const vazio: FiltrosForm = { setor: '', analista: '' };
+        const vazio: FiltrosForm = { setor: '', analista: '', data_de: '', data_ate: '' };
         setForm(vazio);
         visitar(vazio, perPage);
     }
@@ -212,6 +340,7 @@ export default function SlaVencimentos({ resumo, relatorio, setores, analistas, 
     }, [filtros]);
 
     const filtrando = Boolean(filtros.setor) || Boolean(filtros.analista);
+    const agingVazio = resumo.aging.every((faixa) => faixa.total === 0);
 
     const setorOptions = useMemo(() => setores.map((s) => ({ value: String(s.value), label: s.label })), [setores]);
     const analistaOptions = useMemo(() => analistas.map((a) => ({ value: String(a.value), label: a.label })), [analistas]);
@@ -249,15 +378,61 @@ export default function SlaVencimentos({ resumo, relatorio, setores, analistas, 
                     />
                 </div>
 
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 md:gap-6">
+                    <KpiCard
+                        label="Decisões no prazo"
+                        value={formatarPercentual(resumo.cumprimento.taxa)}
+                        note={
+                            resumo.cumprimento.com_prazo > 0
+                                ? `de ${resumo.cumprimento.com_prazo} decisões humanas com prazo`
+                                : 'sem decisões humanas com prazo'
+                        }
+                        icon={<CheckCircleIcon className="size-6" />}
+                        tone="success"
+                    />
+                    <Card>
+                        <CardHeader title="Aging do estoque" description="Consumo do prazo já materializado, neste momento." />
+                        <CardContent>
+                            {agingVazio ? <GraficoSemDados /> : <Chart option={agingChartOption(resumo.aging)} className="h-72 w-full" />}
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader title="Atrasados por etapa" description="Somente vencidos (prazo-limite ultrapassado)." />
+                        <CardContent>
+                            <Chart option={atrasadosChartOption(resumo.atrasados_por_etapa)} className="h-72 w-full" />
+                        </CardContent>
+                    </Card>
+                </div>
+
                 <Card>
                     <CardHeader
                         title="Filtros"
-                        description="Recorte por setor e/ou analista. A exportação (CSV/Excel/PDF) entrega exatamente o recorte aplicado."
+                        description="O período recorta só o cumprimento. Estoque, aging e lista são o momento atual."
                         actions={<ExportMenu url={URL_SLA} params={exportParams} />}
                     />
                     <CardContent>
                         <form onSubmit={pesquisar}>
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                                <div>
+                                    <Label htmlFor="filtro-data-de">Período de</Label>
+                                    <Input
+                                        id="filtro-data-de"
+                                        type="date"
+                                        value={form.data_de}
+                                        onChange={(e) => setForm((atual) => ({ ...atual, data_de: e.target.value }))}
+                                        aria-label="Período de"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="filtro-data-ate">Período até</Label>
+                                    <Input
+                                        id="filtro-data-ate"
+                                        type="date"
+                                        value={form.data_ate}
+                                        onChange={(e) => setForm((atual) => ({ ...atual, data_ate: e.target.value }))}
+                                        aria-label="Período até"
+                                    />
+                                </div>
                                 <div>
                                     <Label htmlFor="filtro-setor">Setor</Label>
                                     <Select

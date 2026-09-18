@@ -38,6 +38,7 @@ use App\Services\Relatorios\SlaVencimentosService;
 use App\Services\Relatorios\TempoAnaliseService;
 use App\Services\Relatorios\TrilhaProcessoService;
 use App\Support\Audit\AuditService;
+use App\Support\Settings;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -300,26 +301,38 @@ class RelatorioController extends Controller
     /**
      * SLA e vencimentos da análise (relatório operacional): processos EM
      * ANDAMENTO com prazo materializado, o mais urgente primeiro, com o resumo
-     * em SQL (em andamento / vencidos / vencendo na janela parametrizável) e o
-     * semáforo on-the-fly por linha. Com ?formato=, exporta o MESMO recorte
-     * pelo contrato único (SlaVencimentosReportSource — RN-005); senão audita a
-     * consulta e renderiza a tela paginada. Os seletores de setor/analista vêm
-     * dos cadastros reais (setores ativos; usuários com analisar-processos).
+     * em SQL (em andamento / vencidos / vencendo na janela parametrizável), aging,
+     * atrasados por etapa e cumprimento no período. Estoque/lista ignoram datas
+     * (momento atual); o período recorta só o cumprimento. Com ?formato=,
+     * exporta o recorte da lista (setor/analista — RN-005).
      */
     public function slaVencimentos(RelatorioFiltersRequest $request): InertiaResponse|Response
     {
-        $filtros = $request->toReportFilters();
+        $recebidos = $request->toReportFilters();
+        $estoque = ReportFilters::fromArray($recebidos->only(['setor', 'analista']));
+        $cumprimentoFiltros = $this->filtrosCumprimento($recebidos);
 
         if ($formato = $this->formato($request)) {
-            return $this->exportar(app(SlaVencimentosReportSource::class), $filtros, $formato, $request);
+            return $this->exportar(app(SlaVencimentosReportSource::class), $estoque, $formato, $request);
         }
 
-        $this->auditarConsulta('consulta-sla-vencimentos', 'Consulta do relatório de SLA e vencimentos', $filtros);
+        $this->auditarConsulta(
+            'consulta-sla-vencimentos',
+            'Consulta do relatório de SLA e vencimentos',
+            ReportFilters::fromArray(array_merge(
+                $recebidos->aplicados(),
+                $cumprimentoFiltros->only(['data_de', 'data_ate']),
+            )),
+        );
 
         return Inertia::render('gestao/relatorios/sla', [
-            'resumo' => $this->slaVencimentos->resumo($filtros),
+            'resumo' => array_merge($this->slaVencimentos->resumo($estoque), [
+                'aging' => $this->slaVencimentos->aging($estoque),
+                'atrasados_por_etapa' => $this->slaVencimentos->atrasadosPorEtapa($estoque),
+                'cumprimento' => $this->slaVencimentos->cumprimento($cumprimentoFiltros),
+            ]),
             'relatorio' => $this->slaVencimentos
-                ->builder($filtros)
+                ->builder($estoque)
                 ->paginate($this->perPage($request))
                 ->withQueryString()
                 ->through(fn (ViabilityRequest $r): array => $this->slaVencimentos->linha($r)),
@@ -329,7 +342,13 @@ class RelatorioController extends Controller
             'analistas' => User::query()->permission('analisar-processos')->orderBy('name')->get(['id', 'name'])
                 ->map(fn (User $u): array => ['value' => $u->id, 'label' => $u->name])
                 ->all(),
-            'filtros' => $filtros->only(['setor', 'analista']),
+            'filtros' => array_merge(
+                $estoque->only(['setor', 'analista']),
+                [
+                    'data_de' => $cumprimentoFiltros->from()?->toDateString(),
+                    'data_ate' => $cumprimentoFiltros->to()?->toDateString(),
+                ],
+            ),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);
     }
@@ -494,6 +513,26 @@ class RelatorioController extends Controller
             ->get(['id', 'name'])
             ->map(fn (ViabilityServiceType $t): array => ['value' => $t->id, 'label' => $t->name])
             ->all();
+    }
+
+    /**
+     * Bag do cumprimento: setor/analista + período. Sem as duas datas, aplica
+     * a janela parametrizável (relatorios.dashboard.janela_dias).
+     */
+    private function filtrosCumprimento(ReportFilters $recebidos): ReportFilters
+    {
+        $bag = $recebidos->only(['setor', 'analista', 'data_de', 'data_ate']);
+
+        if ($recebidos->from() === null && $recebidos->to() === null) {
+            $janela = (int) Settings::get(
+                'relatorios.dashboard.janela_dias',
+                config('sile.relatorios.dashboard.janela_dias', 30),
+            );
+            $bag['data_de'] = now()->subDays($janela)->toDateString();
+            $bag['data_ate'] = now()->toDateString();
+        }
+
+        return ReportFilters::fromArray($bag);
     }
 
     /**

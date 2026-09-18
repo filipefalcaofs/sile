@@ -177,6 +177,39 @@ class SlaVencimentosTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_endpoint_entrega_aging_etapa_e_cumprimento_com_periodo_default(): void
+    {
+        $this->emAndamento('VIA-2026-000030', '2026-06-14 12:00');
+
+        $this->actingAs($this->consultor(), 'gestao')
+            ->get('/gestao/relatorios/sla')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/relatorios/sla', false)
+                ->has('resumo.aging', 5)
+                ->has('resumo.atrasados_por_etapa', 2)
+                ->where('resumo.vencidos', 1)
+                ->where('resumo.cumprimento.data_de', '2026-05-16')
+                ->where('resumo.cumprimento.data_ate', '2026-06-15')
+                ->has('filtros.data_de')
+                ->has('filtros.data_ate'));
+    }
+
+    public function test_query_de_periodo_nao_muda_vencidos_da_lista(): void
+    {
+        $this->emAndamento('VIA-2026-000031', '2026-06-14 12:00');
+
+        $this->actingAs($this->consultor(), 'gestao')
+            ->get('/gestao/relatorios/sla?data_de=2020-01-01&data_ate=2020-01-31')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('resumo.em_andamento', 1)
+                ->where('resumo.vencidos', 1)
+                ->has('relatorio.data', 1)
+                ->where('resumo.cumprimento.com_prazo', 0)
+                ->where('resumo.cumprimento.taxa', null));
+    }
+
     public function test_aging_classifica_faixas_e_indeterminada(): void
     {
         $agora = Carbon::parse('2026-06-15 12:00:00');
