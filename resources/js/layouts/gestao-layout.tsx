@@ -130,6 +130,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('consultar-louos'),
                 },
                 {
+                    name: 'Zonas',
+                    href: '/gestao/louos/zonas',
+                    icon: <MapPinIcon />,
+                    visible: auth.permissions.includes('manter-louos'),
+                },
+                {
                     name: 'Simulação de regras',
                     href: '/gestao/louos/simulacao',
                     icon: <GearIcon />,

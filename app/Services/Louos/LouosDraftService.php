@@ -9,6 +9,7 @@ use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
+use App\Models\Zona;
 use App\Services\Rules\RuleVersionService;
 use App\Support\Audit\AuditService;
 use DomainException;
@@ -311,10 +312,13 @@ final class LouosDraftService
      * audita o diff na trilha `louos`.
      *
      * @throws FourEyesViolationException quando publicador = autor
+     * @throws DomainException quando o rascunho do Quadro 10 referencia zona
+     *                         ausente do cadastro de zonas ativas
      */
     public function publicar(RuleVersion $draft, int $publisherId): RuleVersion
     {
         $this->assertDraft($draft);
+        $this->assertZonasCadastradas($draft);
 
         $diffResult = $this->diff($draft);
 
@@ -333,6 +337,48 @@ final class LouosDraftService
         );
 
         return $published;
+    }
+
+    /**
+     * Borda de publicação do Quadro 10 (parametrização 3.3): a coluna `zona`
+     * é string livre e um typo publicado vira `nao_encontrado` no motor,
+     * degradando CADA processo daquela zona para pendente — silenciosamente.
+     * Toda zona do rascunho precisa constar do cadastro de zonas ATIVAS. A
+     * guarda é exclusiva do Quadro 10 e NÃO toca a vigente: zona desativada
+     * permanece nos quadros históricos e só bloqueia publicação nova.
+     * Seeders publicam por RuleVersionService (fora deste caminho), sem
+     * problema de bootstrap.
+     *
+     * @throws DomainException listando as zonas ausentes do cadastro ativo
+     */
+    private function assertZonasCadastradas(RuleVersion $draft): void
+    {
+        if ($draft->domain !== RuleDomain::LouosQuadro10) {
+            return;
+        }
+
+        $zonasRascunho = LouosQuadro10Permissao::query()
+            ->where('rule_version_id', $draft->id)
+            ->distinct()
+            ->pluck('zona');
+
+        if ($zonasRascunho->isEmpty()) {
+            return;
+        }
+
+        $cadastradas = Zona::query()
+            ->ativas()
+            ->whereIn('codigo', $zonasRascunho)
+            ->pluck('codigo');
+
+        $ausentes = $zonasRascunho->diff($cadastradas)->sort()->values();
+
+        if ($ausentes->isNotEmpty()) {
+            throw new DomainException(
+                'Publicação bloqueada: as zonas '.$ausentes->implode(', ')
+                .' não constam do cadastro de zonas ativas. Cadastre-as ou reative-as em Gestão > Zonas antes de publicar o Quadro 10.'
+            );
+        }
     }
 
     /**

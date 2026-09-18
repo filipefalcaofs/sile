@@ -35,6 +35,11 @@ class DatabaseSeeder extends Seeder
             LouosQuadro7Seeder::class,
             LouosQuadro10Seeder::class,
             LouosQuadro11Seeder::class,
+            // Zonas urbanísticas da LOUOS (parametrização 3.3): nascem dos
+            // valores distintos de `zona` do Quadro 10 VIGENTE — por isso
+            // roda APÓS os seeders LOUOS. Sem quadro vigente, fica vazio
+            // (honesto). Idempotente; preserva os campos administrados.
+            ZonaSeeder::class,
             ViabilityServiceTypeSeeder::class,
             DocumentRequirementSeeder::class,
             DevAdminSeeder::class,

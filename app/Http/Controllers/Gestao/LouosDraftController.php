@@ -14,6 +14,7 @@ use App\Models\RuleVersion;
 use App\Models\User;
 use App\Services\Louos\LouosDraftService;
 use App\Support\Settings;
+use DomainException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -241,7 +242,7 @@ class LouosDraftController extends Controller
 
         try {
             $publicado = $this->service->publicar($draft, (int) $request->user()->id);
-        } catch (FourEyesViolationException $e) {
+        } catch (FourEyesViolationException|DomainException $e) {
             return back()->with('error', $e->getMessage());
         }
 

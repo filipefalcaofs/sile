@@ -57,6 +57,7 @@ use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\TvlDocumentController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
+use App\Http\Controllers\Gestao\ZonaController;
 use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\Portal\CnaeSearchController;
 use App\Http\Middleware\ResolveAssistedAttendance;
@@ -361,6 +362,19 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('simulacao', [LouosSandboxController::class, 'index'])->name('sandbox.index');
             Route::post('simulacao', [LouosSandboxController::class, 'simulate'])->name('sandbox.simular');
             Route::put('simulacao/publicar', [LouosSandboxController::class, 'publish'])->name('sandbox.publicar');
+
+            // Cadastro de zonas urbanísticas da LOUOS (parametrização 3.3):
+            // fonte de verdade das zonas do Quadro 10 — a publicação do
+            // rascunho valida que toda zona referenciada existe aqui e está
+            // ativa (typo vira bloqueio explícito, nunca `nao_encontrado`
+            // silencioso). Reuso de manter-louos: a zona é artefato da LOUOS,
+            // mesmo mantenedor dos quadros (sem permissão nova).
+            Route::prefix('zonas')->name('zonas.')->group(function () {
+                Route::get('/', [ZonaController::class, 'index'])->name('index');
+                Route::post('/', [ZonaController::class, 'store'])->name('store');
+                Route::put('{zona}', [ZonaController::class, 'update'])->name('update');
+                Route::put('{zona}/ativacao', [ZonaController::class, 'toggleActivation'])->name('ativacao.update');
+            });
         });
 
         // Anexos A/B do Decreto 35.062/2021 (escritório virtual): publicação
