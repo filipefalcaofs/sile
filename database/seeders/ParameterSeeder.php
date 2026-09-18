@@ -383,7 +383,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '0',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'SOMENTE HOMOLOGAÇÃO: ligado, processos nascidos do simulador de protocolos REGIN com veredito pendente emitem TVL como permitidos (a zona oficial ainda não está na base). Desligado, seguem o fluxo normal (pendente → análise técnica). NUNCA ligar em produção; remoção prevista antes do go-live',
+                'description' => 'SOMENTE HOMOLOGAÇÃO: processos do simulador REGIN com veredito pendente emitem TVL como permitidos. Desligado, seguem o fluxo normal (pendente → análise). NUNCA ligar em produção',
             ],
             'features.notificacao_resultado_expresso' => [
                 'group' => 'features',
