@@ -241,6 +241,12 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                     visible: auth.permissions.includes('manter-parametros'),
                 },
                 {
+                    name: 'Termos legais',
+                    href: '/gestao/termos-legais',
+                    icon: <FileIcon />,
+                    visible: auth.permissions.includes('manter-parametros'),
+                },
+                {
                     name: 'API REGIN',
                     href: '/gestao/config-regin',
                     icon: <PlugInIcon />,

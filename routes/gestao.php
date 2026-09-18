@@ -26,6 +26,7 @@ use App\Http\Controllers\Gestao\ForgotPasswordController;
 use App\Http\Controllers\Gestao\GeocodeController;
 use App\Http\Controllers\Gestao\HolidayController;
 use App\Http\Controllers\Gestao\InscricaoImobiliariaIntegrationController;
+use App\Http\Controllers\Gestao\LegalTermController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
 use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\LouosController;
@@ -425,6 +426,22 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [StandardTextController::class, 'store'])->name('store');
             Route::put('{standardText}', [StandardTextController::class, 'update'])->name('update');
             Route::put('{standardText}/ativacao', [StandardTextController::class, 'toggleActivation'])->name('ativacao.update');
+        });
+
+        // Termos legais versionados (LGPD e futuros — HU-014, item 2.3): CRUD
+        // administrável atrás de manter-parametros (reuso — textos administráveis
+        // do mesmo mantenedor, como textos-padrao/feriados; sem permissão nova).
+        // A versão é computada (max+1 por tipo, nunca do usuário) e o termo
+        // PUBLICADO é imutável (sem update/destroy — o aceite referencia aquela
+        // versão exata); publicar torna a versão vigente preservando os aceites
+        // anteriores. A rota estática `publicar` vem com dois segmentos — não
+        // colide com o wildcard {legalTerm}.
+        Route::middleware('permission:manter-parametros')->prefix('termos-legais')->name('termos-legais.')->group(function () {
+            Route::get('/', [LegalTermController::class, 'index'])->name('index');
+            Route::post('/', [LegalTermController::class, 'store'])->name('store');
+            Route::put('{legalTerm}', [LegalTermController::class, 'update'])->name('update');
+            Route::put('{legalTerm}/publicar', [LegalTermController::class, 'publicar'])->name('publicar.update');
+            Route::delete('{legalTerm}', [LegalTermController::class, 'destroy'])->name('destroy');
         });
 
         // Calendário de feriados (HU-137): dado administrável que o
