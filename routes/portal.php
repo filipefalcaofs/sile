@@ -9,6 +9,7 @@ use App\Http\Controllers\Portal\CnpjLookupController;
 use App\Http\Controllers\Portal\CompanyCnaeController;
 use App\Http\Controllers\Portal\CompanyController;
 use App\Http\Controllers\Portal\CompanyLinkController;
+use App\Http\Controllers\Portal\ComprovanteProtocoloController;
 use App\Http\Controllers\Portal\ConsultaProtocoloController;
 use App\Http\Controllers\Portal\ConsultaProtocoloPublicaController;
 use App\Http\Controllers\Portal\ConsultaViabilidadeController;
@@ -148,6 +149,11 @@ Route::middleware(['auth:web', 'verified'])
             // timeline em linguagem simples + prazo estimado com ressalva e gera o
             // link público assinado de acompanhamento. Auditada (RN-002).
             Route::get('solicitacoes/{solicitacao}', [ConsultaProtocoloController::class, 'show'])->name('solicitacoes.show');
+
+            // Comprovante de protocolo em PDF (documento formal do cidadão) —
+            // download autenticado do dono/representado (policy view), só de
+            // solicitação protocolada; cada emissão é auditada (RN-002).
+            Route::get('solicitacoes/{solicitacao}/comprovante', [ComprovanteProtocoloController::class, 'show'])->name('solicitacoes.comprovante');
 
             // Atividades da solicitação (HU-064/HU-065) — rota com {solicitacao}
             // DEPOIS das literais. Define o CNAE principal + complementares

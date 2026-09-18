@@ -964,6 +964,21 @@ export default function FichaAnaliseShow({
         });
     }
 
+    function emitirIndeferimento() {
+        tvl.post(`/gestao/processos/${processo.id}/indeferimento`, {
+            onSuccess: (resposta) => {
+                const url = resposta?.download_url ?? resposta?.url ?? null;
+
+                if (url) {
+                    window.open(url, '_blank', 'noopener');
+                } else {
+                    router.reload();
+                }
+            },
+            onHttpException: () => false,
+        });
+    }
+
     function compararRevisoes() {
         setDiffErro(null);
         setDiffData(null);
@@ -1895,9 +1910,14 @@ export default function FichaAnaliseShow({
                                             <Button onClick={novaRevisao} variant="outline" size="sm" loading={acao.processing}>
                                                 Criar nova revisão
                                             </Button>
-                                            {podeEmitirTvl && (
+                                            {podeEmitirTvl && processo.status === 'deferida' && (
                                                 <Button onClick={emitirTvl} variant="outline" size="sm" loading={tvl.processing}>
                                                     Emitir / baixar TVL
+                                                </Button>
+                                            )}
+                                            {podeEmitirTvl && processo.status === 'indeferida' && (
+                                                <Button onClick={emitirIndeferimento} variant="outline" size="sm" loading={tvl.processing}>
+                                                    Emitir / baixar documento de indeferimento
                                                 </Button>
                                             )}
                                         </>

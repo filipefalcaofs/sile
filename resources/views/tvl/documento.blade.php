@@ -140,7 +140,7 @@
 
     <div class="rodape">
         Código de verificação: <strong>{{ $verification_code }}</strong>.
-        A autenticidade deste documento pode ser conferida na retaguarda da SEDUR.
+        A autenticidade deste documento pode ser conferida em {{ $url_verificacao }}.
     </div>
 </body>
 </html>

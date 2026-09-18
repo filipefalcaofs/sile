@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Comprovante de Protocolo</title>
+    <style>
+        * { font-family: "DejaVu Sans", sans-serif; }
+        body { font-size: 12px; color: #1a1a1a; margin: 0; line-height: 1.4; }
+        .cabecalho { text-align: center; border-bottom: 2px solid #1a1a1a; padding-bottom: 8px; margin-bottom: 10px; }
+        .cabecalho .orgao { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #444; }
+        .cabecalho h1 { font-size: 16px; margin: 6px 0 4px; }
+        .numero-protocolo { font-size: 13px; font-weight: bold; }
+        .declaracao { font-size: 11px; margin: 0 0 12px; }
+        .secao { margin-bottom: 12px; }
+        .secao h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #999; padding-bottom: 2px; margin: 0 0 6px; }
+        .campo { margin: 1px 0; }
+        .campo strong { display: inline-block; min-width: 130px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 4px 6px; border: 1px solid #ccc; font-size: 11px; vertical-align: top; }
+        th { background: #f0f0f0; }
+        .rodape { margin-top: 18px; font-size: 9.5px; color: #555; border-top: 1px solid #ccc; padding-top: 6px; }
+    </style>
+</head>
+<body>
+    <div class="cabecalho">
+        <div class="orgao">Viabiliza &mdash; Sistema de Licenciamento Eletrônico</div>
+        <div class="orgao">Prefeitura Municipal de Salvador &mdash; SEDUR</div>
+        <h1>Comprovante de Protocolo</h1>
+        <div class="numero-protocolo">Protocolo: {{ $protocolo }}</div>
+    </div>
+
+    <p class="declaracao">
+        Comprova-se o registro da solicitação de viabilidade locacional abaixo, protocolada em
+        <strong>{{ optional($protocolado_em)->format('d/m/Y \à\s H:i') }}</strong>.
+        Este documento comprova o registro da solicitação &mdash; não é certidão nem decisão de
+        viabilidade, que segue em análise pela SEDUR.
+    </p>
+
+    <div class="secao">
+        <h2>Identificação</h2>
+        <div class="campo"><strong>Protocolo:</strong> {{ $protocolo }}</div>
+        <div class="campo"><strong>Data do protocolo:</strong> {{ optional($protocolado_em)->format('d/m/Y H:i') }}</div>
+        <div class="campo"><strong>Emitido em:</strong> {{ optional($emitido_em)->format('d/m/Y H:i') }}</div>
+    </div>
+
+    <div class="secao">
+        <h2>Empresa</h2>
+        <div class="campo"><strong>Razão social:</strong> {{ $empresa['razao_social'] ?? '—' }}</div>
+        @if (! empty($empresa['nome_fantasia']))
+            <div class="campo"><strong>Nome fantasia:</strong> {{ $empresa['nome_fantasia'] }}</div>
+        @endif
+        <div class="campo"><strong>CNPJ:</strong> {{ $empresa['cnpj'] ?? '—' }}</div>
+    </div>
+
+    <div class="secao">
+        <h2>Imóvel</h2>
+        <div class="campo"><strong>Endereço:</strong> {{ $imovel['endereco'] !== '' ? $imovel['endereco'] : '—' }}</div>
+        @if (! empty($imovel['bairro']))
+            <div class="campo"><strong>Bairro:</strong> {{ $imovel['bairro'] }}</div>
+        @endif
+        @if (! empty($imovel['cep']))
+            <div class="campo"><strong>CEP:</strong> {{ $imovel['cep'] }}</div>
+        @endif
+        @if (! empty($imovel['area_m2']))
+            <div class="campo"><strong>Área utilizada:</strong> {{ $imovel['area_m2'] }} m²</div>
+        @endif
+    </div>
+
+    <div class="secao">
+        <h2>Atividades econômicas</h2>
+        @if (count($atividades) > 0)
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 110px;">CNAE</th>
+                        <th>Descrição</th>
+                        <th style="width: 90px;">Principal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($atividades as $atividade)
+                        <tr>
+                            <td>{{ $atividade['codigo_formatado'] }}</td>
+                            <td>{{ $atividade['descricao'] ?? '—' }}</td>
+                            <td>{{ $atividade['is_primary'] ? 'Sim' : 'Não' }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @else
+            <p>—</p>
+        @endif
+    </div>
+
+    <div class="rodape">
+        Código de verificação: <strong>{{ $verification_code }}</strong>.
+        A autenticidade deste documento pode ser conferida em {{ $url_verificacao }}.
+    </div>
+</body>
+</html>

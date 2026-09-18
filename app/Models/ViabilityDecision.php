@@ -67,6 +67,11 @@ class ViabilityDecision extends Model
         return $this->outcome === DecisionOutcome::Deferida;
     }
 
+    public function isIndeferida(): bool
+    {
+        return $this->outcome === DecisionOutcome::Indeferida;
+    }
+
     /**
      * Solicitação decidida (1:1 — unique viability_request_id).
      *

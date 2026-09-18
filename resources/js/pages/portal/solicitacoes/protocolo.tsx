@@ -342,6 +342,14 @@ export default function Protocolo({ solicitacao, timeline, publicLink, temDecisa
                         <Badge size="sm" color={statusColor(solicitacao.status.value)}>
                             {solicitacao.status.public_label}
                         </Badge>
+                        {solicitacao.protocol_number && (
+                            <a
+                                href={`/portal/solicitacoes/${solicitacao.id}/comprovante`}
+                                className="text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
+                            >
+                                Baixar comprovante (PDF)
+                            </a>
+                        )}
                         <Link
                             href={`/portal/solicitacoes/${solicitacao.id}/comunicacoes`}
                             className="text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
