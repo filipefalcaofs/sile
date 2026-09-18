@@ -80,6 +80,7 @@ class DemonstracaoClienteSeeder extends Seeder
         RolesAndPermissionsSeeder::class,
         LegalTermSeeder::class,
         ParameterSeeder::class,
+        DecisionTextSeeder::class,
         CnaeSeeder::class,
         RiscoMunicipalSeeder::class,
         RiscoSanitarioSeeder::class,

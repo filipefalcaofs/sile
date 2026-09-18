@@ -18,6 +18,9 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             LegalTermSeeder::class,
             ParameterSeeder::class,
+            // Textos decisórios (TVL/parecer/ficha) — catálogo administrável
+            // por chave estável, seedado a partir de DecisionTextCatalog::defaults().
+            DecisionTextSeeder::class,
             CnaeSeeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
