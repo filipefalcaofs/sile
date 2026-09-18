@@ -120,8 +120,6 @@ const dateTimeFormat = new Intl.DateTimeFormat('pt-BR', {
 
 const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
 
-const percentFormat = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
-
 /** Percentual honesto: null (sem decisões humanas com prazo) vira travessão. */
 function formatarPercentual(valor: number | null): string {
     return valor === null ? '—' : `${percentFormat.format(valor)}%`;
@@ -173,48 +171,6 @@ function formatarDataHora(iso: string | null): string {
     const data = new Date(iso);
 
     return Number.isNaN(data.getTime()) ? '—' : dateTimeFormat.format(data);
-}
-
-/** Percentual honesto: null (sem decisões humanas com prazo) vira travessão. */
-function formatarPercentual(valor: number | null): string {
-    return valor === null ? '—' : `${percentFormat.format(valor)}%`;
-}
-
-/** Aging empilhado: uma categoria Estoque, uma série por faixa. */
-function agingChartOption(aging: AgingFaixa[]): EChartsOption {
-    return {
-        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-        legend: { bottom: 0, type: 'scroll' },
-        grid: { left: 16, right: 16, top: 16, bottom: 32, containLabel: true },
-        xAxis: { type: 'category', data: ['Estoque'] },
-        yAxis: { type: 'value', minInterval: 1 },
-        series: aging.map((faixa) => ({
-            type: 'bar',
-            name: faixa.label,
-            stack: 'aging',
-            data: [faixa.total],
-        })),
-    };
-}
-
-/** Atrasados vencidos agrupados por etapa operacional. */
-function atrasadosChartOption(itens: AtrasadoEtapa[]): EChartsOption {
-    return {
-        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-        grid: { left: 16, right: 16, top: 16, bottom: 16, containLabel: true },
-        xAxis: { type: 'category', data: itens.map((item) => item.label) },
-        yAxis: { type: 'value', minInterval: 1 },
-        series: [{ type: 'bar', name: 'Atrasados', data: itens.map((item) => item.total) }],
-    };
-}
-
-/** Estado vazio honesto de um gráfico. */
-function GraficoSemDados() {
-    return (
-        <div className="flex h-72 w-full items-center justify-center rounded-2xl bg-gray-50 text-theme-sm text-gray-400 dark:bg-white/[0.02] dark:text-gray-500">
-            Sem dados no período.
-        </div>
-    );
 }
 
 /** Badge do semáforo do SLA (cores reais do backend — nunca presumidas). */
