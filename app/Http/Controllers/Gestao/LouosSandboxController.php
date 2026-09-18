@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Enums\RuleDomain;
 use App\Enums\RuleVersionStatus;
+use App\Exceptions\FourEyesViolationException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\SimulateLouosRequest;
 use App\Models\RuleVersion;
+use App\Services\Louos\LouosDraftService;
 use App\Services\Louos\LouosSandboxSimulationService;
-use App\Services\Rules\RuleVersionService;
 use App\Support\Settings;
+use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,7 +22,10 @@ use Inertia\Response;
  * gestor seleciona um rascunho de Quadro, simula o impacto contra cenários reais
  * reexecutando o MOTOR REAL (LouosSandboxSimulationService) — sem efeito colateral
  * (RN-001) — e só então publica o rascunho como nova versão por quatro olhos
- * (RuleVersionService, autor ≠ publicador). Gate cross-guard via permission:
+ * (autor ≠ publicador). A publicação é roteada pelo LouosDraftService, que
+ * aplica a guarda de zonas do Quadro 10 e audita o diff (`rascunho-publicado`)
+ * — o sandbox NÃO publica direto no RuleVersionService, para não bypassar as
+ * bordas de publicação do domínio. Gate cross-guard via permission:
  * manter-louos nas rotas (simular/publicar é manutenção). Espelha o LouosController.
  */
 class LouosSandboxController extends Controller
@@ -38,7 +43,7 @@ class LouosSandboxController extends Controller
 
     public function __construct(
         private LouosSandboxSimulationService $sandbox,
-        private RuleVersionService $versions,
+        private LouosDraftService $drafts,
     ) {}
 
     public function index(Request $request): Response
@@ -69,7 +74,9 @@ class LouosSandboxController extends Controller
      * Publica o rascunho como nova versão vigente por quatro olhos (RN-005): o
      * publicador (usuário autenticado) deve ser distinto do autor do rascunho. O
      * bloqueio é interceptado antes e comunicado (flash.error), como no
-     * LouosController; o RuleVersionService é a defesa de domínio.
+     * LouosController. A publicação passa pelo LouosDraftService — mesma borda
+     * do mantenedor: guarda de zonas do Quadro 10 (DomainException → flash.error),
+     * diff e auditoria `rascunho-publicado`.
      */
     public function publish(SimulateLouosRequest $request): RedirectResponse
     {
@@ -91,7 +98,11 @@ class LouosSandboxController extends Controller
             );
         }
 
-        $versao = $this->versions->publish($draft, $publisherId);
+        try {
+            $versao = $this->drafts->publicar($draft, $publisherId);
+        } catch (FourEyesViolationException|DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with(
             'status',

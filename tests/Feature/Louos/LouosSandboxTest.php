@@ -12,6 +12,7 @@ use App\Models\LouosQuadro7Faixa;
 use App\Models\Parameter;
 use App\Models\RuleVersion;
 use App\Models\User;
+use App\Models\Zona;
 use App\Services\Louos\LouosSandboxSimulationService;
 use App\Services\Rules\RuleVersionService;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -337,6 +338,7 @@ class LouosSandboxTest extends TestCase
         $this->seedQuadro10Vigente([
             ['zona' => 'ZPR-1', 'grupo_uso' => 'nR1', 'permissao' => Quadro10Permissao::Permitido],
         ]);
+        Zona::factory()->create(['codigo' => 'ZPR-1']);
         $draft = $this->abrirRascunhoQuadro10('q10-rascunho', $autor->id, [
             'zona' => 'ZPR-1', 'grupo_uso' => 'nR1', 'permissao' => Quadro10Permissao::Proibido,
         ]);
@@ -364,6 +366,101 @@ class LouosSandboxTest extends TestCase
 
         $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro10)->firstOrFail();
         $this->assertSame('q10-rascunho', $vigente->version);
+        $this->assertSame(RuleVersionStatus::Vigente, $vigente->status);
+    }
+
+    public function test_publicar_pelo_sandbox_com_zona_inexistente_e_rejeitado(): void
+    {
+        // Issue I2 (revisão final Fase 3): o publish do sandbox ia DIRETO ao
+        // RuleVersionService, bypassando a guarda de zonas do LouosDraftService
+        // — um typo de zona publicado pelo sandbox virava `nao_encontrado`
+        // silencioso no motor. A rejeição lista a zona e preserva a vigente.
+        $autor = $this->administrador();
+        $publicador = $this->administrador();
+
+        $this->seedQuadro10Vigente([
+            ['zona' => 'ZPR-1', 'grupo_uso' => 'nR1', 'permissao' => Quadro10Permissao::Permitido],
+        ]);
+        Zona::factory()->create(['codigo' => 'ZPR-1']);
+
+        $draft = $this->abrirRascunhoQuadro10('q10-rascunho', $autor->id);
+        LouosQuadro10Permissao::factory()->create([
+            'rule_version_id' => $draft->id,
+            'zona' => 'ZPR-9',
+            'grupo_uso' => 'nR3',
+            'subgrupo' => '',
+            'permissao' => Quadro10Permissao::Permitido,
+        ]);
+
+        $this->actingAs($publicador, 'gestao')
+            ->put('/gestao/louos/simulacao/publicar', [
+                'quadro' => 'quadro10',
+                'versao_rascunho' => 'q10-rascunho',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertStringContainsString('ZPR-9', (string) session('error'));
+        $this->assertSame(RuleVersionStatus::Rascunho, $draft->fresh()->status);
+        $this->assertSame('q10-vigente', RuleVersion::vigente(RuleDomain::LouosQuadro10)->firstOrFail()->version);
+    }
+
+    public function test_publicar_pelo_sandbox_com_zona_cadastrada_publica_normalmente(): void
+    {
+        // Anti-regressão: com a zona no cadastro ativo, o sandbox publica e
+        // herda a auditoria `rascunho-publicado` (diff) do LouosDraftService.
+        $autor = $this->administrador();
+        $publicador = $this->administrador();
+
+        $this->seedQuadro10Vigente([
+            ['zona' => 'ZPR-1', 'grupo_uso' => 'nR1', 'permissao' => Quadro10Permissao::Permitido],
+        ]);
+        Zona::factory()->create(['codigo' => 'ZPR-1']);
+
+        $this->abrirRascunhoQuadro10('q10-rascunho', $autor->id, [
+            'zona' => 'ZPR-1', 'grupo_uso' => 'nR1', 'permissao' => Quadro10Permissao::Proibido,
+        ]);
+
+        $this->actingAs($publicador, 'gestao')
+            ->put('/gestao/louos/simulacao/publicar', [
+                'quadro' => 'quadro10',
+                'versao_rascunho' => 'q10-rascunho',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro10)->firstOrFail();
+        $this->assertSame('q10-rascunho', $vigente->version);
+        $this->assertSame(RuleVersionStatus::Vigente, $vigente->status);
+
+        $this->assertSame(1, Activity::query()->where('event', 'rascunho-publicado')->count());
+    }
+
+    public function test_publicar_pelo_sandbox_de_outro_dominio_nao_e_afetado_pela_guarda(): void
+    {
+        // A guarda de zonas é exclusiva do Quadro 10: um rascunho do Quadro 7
+        // publica pelo sandbox sem nenhuma zona cadastrada.
+        $autor = $this->administrador();
+        $publicador = $this->administrador();
+
+        RuleVersion::factory()->rascunho()->create([
+            'domain' => RuleDomain::LouosQuadro7,
+            'version' => 'q7-rascunho',
+            'created_by' => $autor->id,
+        ]);
+
+        $this->assertSame(0, Zona::query()->count());
+
+        $this->actingAs($publicador, 'gestao')
+            ->put('/gestao/louos/simulacao/publicar', [
+                'quadro' => 'quadro7',
+                'versao_rascunho' => 'q7-rascunho',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro7)->firstOrFail();
+        $this->assertSame('q7-rascunho', $vigente->version);
         $this->assertSame(RuleVersionStatus::Vigente, $vigente->status);
     }
 
