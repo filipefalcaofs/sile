@@ -13,7 +13,7 @@ class ReginRecebeService
 {
     public function __construct(
         private AuditService $audit,
-        private ReginProtocoloSimulacaoService $processos,
+        private ReginProcessoProtocolador $protocolador,
     ) {}
 
     /**
@@ -56,7 +56,7 @@ class ReginRecebeService
             ]);
 
             try {
-                $processo = $this->processos->materializarDoCatalogo($protocolo);
+                $processo = $this->protocolador->protocolar($recebimento);
 
                 if ($processo !== null) {
                     $recebimento->update(['viability_request_id' => $processo->id]);

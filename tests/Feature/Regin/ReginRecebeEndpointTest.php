@@ -106,7 +106,7 @@ class ReginRecebeEndpointTest extends TestCase
         $processo = ViabilityRequest::query()->find($recebimento->viability_request_id);
         $this->assertNotNull($processo);
         $this->assertSame(ViabilityRequestOrigin::Regin, $processo->origin);
-        $this->assertSame('5921000030-00043747/2026', $processo->external_reference);
+        $this->assertSame('43747', $processo->external_reference);
         $this->assertSame('regin_recebe', $processo->contingency_reason);
     }
 
@@ -122,7 +122,26 @@ class ReginRecebeEndpointTest extends TestCase
             'cnpjOrigem' => '13927801000149',
             'codFuncao' => 103,
             'dataGeracao' => '2026-09-16T16:00:00.000Z',
-            'json' => ['INFORMACOES_COMPLEMENTARES' => ['RES_AREA' => 834]],
+            'json' => [
+                'rowset' => [
+                    'RUC_GENERAL' => [
+                        'RGE_CGC_CPF' => '13927801000149',
+                        'RGE_NOMB' => 'Empresa REGIN Teste',
+                    ],
+                    'RUC_ESTAB' => [
+                        'RES_AREA' => '834',
+                        'RES_DIRECCION' => 'Rua das Flores',
+                        'RES_NUME' => '100',
+                        'RES_URBANIZACION' => 'Centro',
+                        'RES_ZONA_POSTAL' => '40000000',
+                    ],
+                    'GROUPRUC_ACTV_ECON' => [
+                        'RUC_ACTV_ECON' => [
+                            ['RAE_TAE_COD_ACTVD' => '4712100', 'RAE_CALIF_ACTV' => '1'],
+                        ],
+                    ],
+                ],
+            ],
             'nire' => '00000000000',
             'protocolo' => $protocolo,
             'servico' => 'WsProSol098',

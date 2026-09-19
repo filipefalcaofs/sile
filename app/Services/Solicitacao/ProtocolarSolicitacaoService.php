@@ -3,6 +3,7 @@
 namespace App\Services\Solicitacao;
 
 use App\Enums\ResultadoViabilidade;
+use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\SolicitacaoProtocolada;
 use App\Models\User;
@@ -106,7 +107,7 @@ class ProtocolarSolicitacaoService
             $missing[] = 'empresa';
         }
 
-        if (blank($request->property_polygon_geojson)) {
+        if (blank($request->property_polygon_geojson) && $request->origin !== ViabilityRequestOrigin::Regin) {
             $missing[] = 'imóvel (polígono)';
         }
 
@@ -129,6 +130,10 @@ class ProtocolarSolicitacaoService
      */
     private function guardRequiredDocuments(ViabilityRequest $request): void
     {
+        if ($request->origin === ViabilityRequestOrigin::Regin) {
+            return;
+        }
+
         $missing = $this->documents->missing($request);
 
         if ($missing->isNotEmpty()) {
