@@ -5,10 +5,12 @@ namespace Tests\Feature\Expresso;
 use App\Enums\DecisionOutcome;
 use App\Events\ResultadoEmitido;
 use App\Models\Activity;
+use App\Models\Parameter;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginParecerNotifier;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
@@ -66,14 +68,49 @@ class ComunicarResultadoReginListenerTest extends TestCase
         };
     }
 
+    private function credenciaisRegin(): void
+    {
+        Parameter::factory()->create([
+            'key' => 'integrations.regin.em_producao',
+            'group' => 'integracoes',
+            'type' => 'boolean',
+            'value' => '0',
+            'default_value' => '0',
+        ]);
+        Parameter::factory()->create([
+            'key' => 'integrations.regin.url_homologacao',
+            'group' => 'integracoes',
+            'type' => 'string',
+            'value' => 'http://10.57.247.9:8080/api_integracao',
+            'default_value' => 'http://10.57.247.9:8080/api_integracao',
+        ]);
+        Parameter::factory()->create([
+            'key' => 'integrations.regin.usuario',
+            'group' => 'integracoes',
+            'type' => 'string',
+            'value' => 'sedur_integracao',
+            'default_value' => 'sedur_integracao',
+        ]);
+        Parameter::factory()->sensitive()->create([
+            'key' => 'integrations.regin.senha',
+            'group' => 'integracoes',
+            'type' => 'string',
+            'value' => 'segredo',
+            'default_value' => null,
+        ]);
+    }
+
     public function test_canal_bloqueado_audita_pendencia_uma_unica_vez_sem_quebrar_o_fluxo(): void
     {
-        // Caminho REAL hoje: binding default (Unavailable) lança ReginUnavailableException.
-        // O listener captura e audita a pendência — NUNCA sucesso fictício (anti-fachada).
-        [$request, $decision] = $this->requestComDecisao();
+        $this->credenciaisRegin();
+        Http::fake([
+            '*/acesso/auth' => Http::response(['token' => 'jwt-1']),
+            '*/recebe' => Http::response('erro', 500),
+        ]);
 
-        // Não relança para fora: a decisão (já gravada/auditada síncrona) não pode
-        // falhar por causa da integração bloqueada. event() retorna normalmente.
+        [$request, $decision] = $this->requestComDecisao();
+        $request->forceFill(['external_reference' => '43747'])->save();
+
         event(new ResultadoEmitido($request, $decision));
 
         $pendencias = Activity::query()
@@ -137,5 +174,27 @@ class ComunicarResultadoReginListenerTest extends TestCase
 
         $this->assertCount(1, $fake->chamadas, 'O indeferimento também é comunicado ao Regin (RN-008).');
         $this->assertSame(DecisionOutcome::Indeferida, $fake->chamadas[0]['decision']->outcome);
+    }
+
+    public function test_binding_real_envia_parecer_e_audita_sucesso(): void
+    {
+        $this->credenciaisRegin();
+        Http::fake([
+            '*/acesso/auth' => Http::response(['token' => 'jwt-1']),
+            '*/recebe' => Http::response('RECEBIDO_SUCESSO'),
+        ]);
+
+        [$request, $decision] = $this->requestComDecisao();
+        $request->forceFill(['external_reference' => '43747'])->save();
+
+        event(new ResultadoEmitido($request, $decision));
+
+        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/recebe') && $r->hasHeader('JWT', 'jwt-1'));
+
+        $this->assertSame(1, Activity::query()
+            ->where('log_name', 'integracoes')
+            ->where('event', 'regin-parecer')
+            ->where('result', 'sucesso')
+            ->count());
     }
 }
