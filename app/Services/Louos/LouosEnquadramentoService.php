@@ -612,7 +612,7 @@ class LouosEnquadramentoService
 
         $permissao = $this->buscarPermissaoQuadro10(
             $version,
-            Quadro10Zona::oficializar($this->zonaNome($zona)),
+            $this->zonaNome($zona),
             $enquadramento['grupo'] ?? null,
             $enquadramento['subgrupo'] ?? null,
         );
@@ -797,6 +797,42 @@ class LouosEnquadramentoService
         ?string $grupo,
         ?string $subgrupo,
     ): ?LouosQuadro10Permissao {
+        foreach ($this->nomesZonaQuadro10($zona) as $nome) {
+            $hit = $this->primeiraPermissaoQuadro10($version, $nome, $grupo, $subgrupo);
+
+            if ($hit !== null) {
+                return $hit;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Grafia do PDF primeiro; se a célula foi gravada com alias GIS (ZPR-1),
+     * tenta o nome original. Não inventa zona.
+     *
+     * @return list<string>
+     */
+    private function nomesZonaQuadro10(?string $zona): array
+    {
+        $nomes = [];
+
+        foreach ([Quadro10Zona::oficializar($zona), $zona] as $nome) {
+            if (is_string($nome) && $nome !== '' && ! in_array($nome, $nomes, true)) {
+                $nomes[] = $nome;
+            }
+        }
+
+        return $nomes;
+    }
+
+    private function primeiraPermissaoQuadro10(
+        RuleVersion $version,
+        string $zona,
+        ?string $grupo,
+        ?string $subgrupo,
+    ): ?LouosQuadro10Permissao {
         $base = fn (): Builder => LouosQuadro10Permissao::query()
             ->where('rule_version_id', $version->getKey())
             ->where('zona', $zona)
@@ -867,7 +903,12 @@ class LouosEnquadramentoService
             );
         }
 
-        $condicao = $this->buscarCondicaoVia($version, $classeVia, $enquadramento['grupo'] ?? null);
+        $condicao = $this->buscarCondicaoVia(
+            $version,
+            $classeVia,
+            $enquadramento['grupo'] ?? null,
+            $enquadramento['subgrupo'] ?? null,
+        );
 
         if ($condicao === null) {
             return $this->dimNaoEncontrado(
@@ -912,14 +953,18 @@ class LouosEnquadramentoService
      * grupo de uso, prefere a regra do grupo específico, caindo para a regra
      * geral da classe (grupo vazio/nulo).
      */
-    private function buscarCondicaoVia(RuleVersion $version, string $classeVia, ?string $grupo): ?LouosQuadro11CondicaoVia
+    private function buscarCondicaoVia(RuleVersion $version, string $classeVia, ?string $grupo, ?string $subgrupo = null): ?LouosQuadro11CondicaoVia
     {
         $base = fn (): Builder => LouosQuadro11CondicaoVia::query()
             ->where('rule_version_id', $version->getKey())
             ->where('classe_via', $classeVia);
 
-        if ($grupo !== null && $grupo !== '') {
-            $especifica = $base()->where('grupo_uso', $grupo)->first();
+        foreach ([$subgrupo, $grupo] as $uso) {
+            if (! is_string($uso) || $uso === '') {
+                continue;
+            }
+
+            $especifica = $base()->where('grupo_uso', $uso)->first();
 
             if ($especifica !== null) {
                 return $especifica;

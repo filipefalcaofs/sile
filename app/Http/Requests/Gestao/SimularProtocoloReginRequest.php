@@ -14,6 +14,29 @@ class SimularProtocoloReginRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $respostas = $this->input('respostas');
+
+        if (! is_array($respostas)) {
+            return;
+        }
+
+        $normalizadas = [];
+
+        foreach ($respostas as $cnae => $mapa) {
+            if (! is_array($mapa)) {
+                continue;
+            }
+
+            foreach ($mapa as $numero => $valor) {
+                $normalizadas[$cnae][$numero] = $this->paraBool($valor);
+            }
+        }
+
+        $this->merge(['respostas' => $normalizadas]);
+    }
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -23,6 +46,12 @@ class SimularProtocoloReginRequest extends FormRequest
 
         return [
             'codigo' => ['required', 'string', 'max:64', Rule::in($codigos)],
+            'respostas' => ['nullable', 'array'],
+            'respostas.*' => ['array'],
+            'respostas.*.*' => ['boolean'],
+            'zona' => ['nullable', 'string', 'max:64'],
+            'via' => ['nullable', 'string', 'max:32'],
+            'tipo_imovel' => ['nullable', 'string', 'max:120'],
         ];
     }
 
@@ -34,5 +63,10 @@ class SimularProtocoloReginRequest extends FormRequest
         return [
             'codigo.in' => 'Protocolo de validação desconhecido.',
         ];
+    }
+
+    private function paraBool(mixed $valor): bool
+    {
+        return filter_var($valor, FILTER_VALIDATE_BOOLEAN);
     }
 }

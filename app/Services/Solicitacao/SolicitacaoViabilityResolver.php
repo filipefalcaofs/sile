@@ -6,6 +6,7 @@ use App\Enums\Fluxo;
 use App\Enums\ResultadoViabilidade;
 use App\Models\Cnae;
 use App\Models\ViabilityRequest;
+use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
@@ -63,9 +64,16 @@ class SolicitacaoViabilityResolver
         $rulesVersions = [];
 
         foreach ($this->orderedCnaes($request) as $cnae) {
-            $result = $ponto === null
-                ? $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $request->respostasTratamento)
-                : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area, $tipoImovel, $request->respostasTratamento);
+            $respostas = $request->respostasDaPlanilha($cnae->code);
+            $territorio = ReginProtocoloSimulacaoService::territorioDoSnapshot(
+                is_array($request->simulation_snapshot) ? $request->simulation_snapshot : [],
+            );
+
+            $result = $territorio !== null
+                ? $this->consulta->consultarComTerritorio($territorio, $cnae->code, $area, $tipoImovel, $respostas)
+                : ($ponto === null
+                    ? $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $respostas)
+                    : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area, $tipoImovel, $respostas));
 
             $veredito = $result->vereditoLocacional();
 

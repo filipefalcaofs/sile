@@ -4,14 +4,20 @@ namespace App\Services\Regin;
 
 use App\Enums\Fluxo;
 use App\Enums\RiscoMunicipal;
+use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestOrigin;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\ReginSimulacaoExecucao;
+use App\Models\RuleVersion;
+use App\Models\TratamentoCnaeBinding;
+use App\Models\TratamentoPergunta;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Geo\TerritoryResult;
+use App\Services\Louos\EnquadramentoResult;
 use App\Services\Risco\RiscoClassificationService;
 use App\Services\Risco\RiscoInput;
 use App\Services\Risco\TipoImovel;
@@ -19,6 +25,7 @@ use App\Services\Risco\TipoImovelCatalog;
 use App\Services\Solicitacao\DocumentRequirementResolver;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Support\Audit\AuditService;
+use App\Support\Louos\Quadro10Zona;
 
 /**
  * Aplica o motor REAL sobre um protocolo SEDUR, com tipo de imóvel e área
@@ -81,10 +88,54 @@ class ReginProtocoloSimulacaoService
     /**
      * @return array<string, mixed>
      */
-    public function simular(string $codigo): array
+    /**
+     * O que o motor precisa e o catálogo/usuário ainda não respondeu.
+     * Null = pode rodar.
+     *
+     * @param  array<string, mixed>  $entrada
+     * @return array<string, mixed>|null
+     */
+    public function pendencias(string $codigo, array $entrada = []): ?array
     {
-        $protocolo = $this->catalogo->porCodigo($codigo);
-        $relatorio = $this->relatorio($protocolo, origem: self::CONTINGENCIA);
+        $protocolo = $this->aplicarEntrada($this->catalogo->porCodigo($codigo), $entrada);
+        $perguntas = $this->perguntasPendentes($protocolo, $entrada);
+        $faltando = array_values(array_filter($perguntas, static fn (array $p): bool => $p['valor'] === null));
+        $campos = [];
+
+        if (trim((string) ($protocolo['zona'] ?? '')) === '') {
+            $campos[] = 'zona';
+        }
+
+        if (trim((string) ($protocolo['via'] ?? '')) === '') {
+            $campos[] = 'via';
+        }
+
+        if (trim((string) ($protocolo['tipo_imovel'] ?? '')) === '') {
+            $campos[] = 'tipo_imovel';
+        }
+
+        if ($faltando === [] && $campos === []) {
+            return null;
+        }
+
+        return [
+            'codigo' => $codigo,
+            'rotulo' => $protocolo['rotulo'],
+            'perguntas' => $perguntas,
+            'zona' => $protocolo['zona'] ?? null,
+            'via' => $protocolo['via'] ?? null,
+            'tipo_imovel' => $protocolo['tipo_imovel'] ?? null,
+            'campos' => $campos,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $entrada
+     */
+    public function simular(string $codigo, array $entrada = []): array
+    {
+        $protocolo = $this->aplicarEntrada($this->catalogo->porCodigo($codigo), $entrada);
+        $relatorio = $this->relatorio($protocolo, origem: self::CONTINGENCIA, entrada: $entrada);
 
         $processo = $this->processoExistente($relatorio['codigo'], (string) $protocolo['processo'])
             ?? $this->criarProcesso($protocolo, $relatorio, self::CONTINGENCIA);
@@ -189,9 +240,10 @@ class ReginProtocoloSimulacaoService
 
     /**
      * @param  array<string, mixed>  $protocolo
+     * @param  array<string, mixed>  $entrada
      * @return array<string, mixed>
      */
-    private function relatorio(array $protocolo, string $origem): array
+    private function relatorio(array $protocolo, string $origem, array $entrada = []): array
     {
         $tipo = TipoImovel::fromRegin(
             isset($protocolo['tipo_imovel']) ? (string) $protocolo['tipo_imovel'] : null,
@@ -199,14 +251,18 @@ class ReginProtocoloSimulacaoService
         );
         $area = isset($protocolo['area_utilizada']) ? (float) $protocolo['area_utilizada'] : null;
         $porCnae = [];
+        $respostasPorCnae = [];
 
         foreach ($protocolo['atividades'] ?? [] as $atividade) {
             $cnae = (string) ($atividade['cnae'] ?? '');
             $respostas = $this->respostas($atividade['perguntas'] ?? []);
+            $respostasTratamento = $this->respostasPlanilha($cnae, $atividade, $entrada);
+            $respostasPorCnae[$this->digitosCnae($cnae)] = $respostasTratamento;
 
             $result = $this->risco->classify(new RiscoInput(
                 cnaeCode: $cnae,
                 respostasCondicionantes: $respostas,
+                respostasTratamento: $respostasTratamento,
                 areaUtilizada: $area,
                 tipoImovel: $tipo,
             ));
@@ -235,6 +291,7 @@ class ReginProtocoloSimulacaoService
             'tipo_imovel_permite_decisao_automatica' => $tipo->permiteDecisaoAutomatica(),
             'por_cnae' => $porCnae,
             'consolidado' => $this->consolidar($porCnae),
+            'respostas_tratamento_por_cnae' => $respostasPorCnae,
         ];
     }
 
@@ -528,5 +585,239 @@ class ReginProtocoloSimulacaoService
         }
 
         return $mapa;
+    }
+
+    /**
+     * @param  array<string, mixed>  $protocolo
+     * @param  array<string, mixed>  $entrada
+     * @return array<string, mixed>
+     */
+    private function aplicarEntrada(array $protocolo, array $entrada): array
+    {
+        foreach (['zona', 'via', 'tipo_imovel'] as $campo) {
+            if (isset($entrada[$campo]) && trim((string) $entrada[$campo]) !== '') {
+                $protocolo[$campo] = trim((string) $entrada[$campo]);
+            }
+        }
+
+        return $protocolo;
+    }
+
+    /**
+     * @param  array<string, mixed>  $protocolo
+     * @param  array<string, mixed>  $entrada
+     * @return list<array{cnae: string, numero: int, texto: string, valor: ?bool}>
+     */
+    private function perguntasPendentes(array $protocolo, array $entrada): array
+    {
+        $lista = [];
+
+        foreach ($protocolo['atividades'] ?? [] as $atividade) {
+            $cnae = (string) ($atividade['cnae'] ?? '');
+            $respostas = $this->respostasPlanilha($cnae, is_array($atividade) ? $atividade : [], $entrada);
+
+            foreach ($this->perguntasDoCnae($cnae) as $numero) {
+                $lista[] = [
+                    'cnae' => $cnae,
+                    'numero' => $numero,
+                    'texto' => $this->textoPergunta($numero),
+                    'valor' => $respostas[$numero] ?? null,
+                ];
+            }
+        }
+
+        return $lista;
+    }
+
+    /**
+     * @param  array<string, mixed>  $atividade
+     * @param  array<string, mixed>  $entrada
+     * @return array<int, bool>
+     */
+    private function respostasPlanilha(string $cnae, array $atividade, array $entrada): array
+    {
+        $digitos = $this->digitosCnae($cnae);
+        $obrigatorias = $this->perguntasDoCnae($cnae);
+        $mapa = [];
+
+        foreach ($atividade['perguntas'] ?? [] as $pergunta) {
+            if (! is_array($pergunta) || ! array_key_exists('valor', $pergunta) || ! is_bool($pergunta['valor'])) {
+                continue;
+            }
+
+            $numero = $this->numeroPerguntaCatalogo($pergunta, $obrigatorias);
+
+            if ($numero !== null) {
+                $mapa[$numero] = $pergunta['valor'];
+            }
+        }
+
+        $informadas = $entrada['respostas'][$digitos] ?? $entrada['respostas'][$cnae] ?? [];
+
+        if (is_array($informadas)) {
+            foreach ($informadas as $numero => $valor) {
+                $mapa[(int) $numero] = (bool) $valor;
+            }
+        }
+
+        return $mapa;
+    }
+
+    /**
+     * @param  array<string, mixed>  $pergunta
+     * @param  list<int>  $obrigatorias
+     */
+    private function numeroPerguntaCatalogo(array $pergunta, array $obrigatorias): ?int
+    {
+        $codigo = (string) ($pergunta['codigo'] ?? '');
+
+        if (preg_match('/^P?(\d+)$/i', $codigo, $match) === 1) {
+            $numero = (int) $match[1];
+
+            if (in_array($numero, $obrigatorias, true)) {
+                return $numero;
+            }
+        }
+
+        $texto = $this->normalizarTexto((string) ($pergunta['texto'] ?? ''));
+
+        foreach ($obrigatorias as $numero) {
+            if ($this->normalizarTexto($this->textoPergunta($numero)) === $texto) {
+                return $numero;
+            }
+        }
+
+        if (count($obrigatorias) === 1 && $texto !== '') {
+            return $obrigatorias[0];
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function perguntasDoCnae(string $cnae): array
+    {
+        $versao = RuleVersion::vigente(RuleDomain::RiscoTratamento)->first();
+
+        if ($versao === null) {
+            return [];
+        }
+
+        $formatado = $this->formatarCnae($this->digitosCnae($cnae));
+
+        return TratamentoCnaeBinding::query()
+            ->where('rule_version_id', $versao->getKey())
+            ->where('cnae', $formatado)
+            ->pluck('perguntas')
+            ->flatten()
+            ->filter()
+            ->map(fn (mixed $numero): int => (int) $numero)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    private function textoPergunta(int $numero): string
+    {
+        $versao = RuleVersion::vigente(RuleDomain::RiscoTratamento)->first();
+
+        if ($versao === null) {
+            return "Pergunta {$numero}";
+        }
+
+        $texto = TratamentoPergunta::query()
+            ->where('rule_version_id', $versao->getKey())
+            ->where('numero', $numero)
+            ->value('texto');
+
+        return is_string($texto) && $texto !== '' ? $texto : "Pergunta {$numero}";
+    }
+
+    private function digitosCnae(string $cnae): string
+    {
+        return (string) preg_replace('/\D/', '', $cnae);
+    }
+
+    private function formatarCnae(string $code): string
+    {
+        if (strlen($code) !== 7) {
+            return $code;
+        }
+
+        return substr($code, 0, 4).'-'.substr($code, 4, 1).'/'.substr($code, 5, 2);
+    }
+
+    private function normalizarTexto(string $texto): string
+    {
+        $texto = mb_strtolower($texto);
+        $texto = preg_replace('/\s+/', ' ', $texto) ?? $texto;
+
+        return trim($texto);
+    }
+
+    /**
+     * Território da simulação: zona e via do catálogo/formulário, com a classe
+     * viária explícita — não usa o polígono fictício.
+     *
+     * @param  array<string, mixed>  $snapshot
+     */
+    public static function territorioDoSnapshot(array $snapshot): ?TerritoryResult
+    {
+        $zona = Quadro10Zona::oficializar(isset($snapshot['zona']) ? (string) $snapshot['zona'] : null);
+        $via = self::oficializarVia(isset($snapshot['via']) ? (string) $snapshot['via'] : null);
+
+        if ($zona === null) {
+            return null;
+        }
+
+        $vazia = [
+            'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
+            'nome' => null,
+            'propriedades' => null,
+            'motivo' => null,
+            'versao_camada' => null,
+        ];
+
+        return new TerritoryResult(
+            bairro: $vazia,
+            via: $via === null
+                ? $vazia + ['distancia_m' => null]
+                : [
+                    'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
+                    'nome' => $via,
+                    'propriedades' => ['CLASSE_VIA_LOUOS' => $via],
+                    'motivo' => null,
+                    'versao_camada' => 'simulacao-regin',
+                    'distancia_m' => null,
+                ],
+            zona: [
+                'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
+                'nome' => $zona,
+                'propriedades' => ['NOME' => $zona],
+                'motivo' => null,
+                'versao_camada' => 'simulacao-regin',
+            ],
+            lote: $vazia,
+            restricoes: [
+                'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
+                'itens' => [],
+                'motivo' => null,
+                'versao_camada' => null,
+            ],
+        );
+    }
+
+    public static function oficializarVia(?string $bruta): ?string
+    {
+        if ($bruta === null) {
+            return null;
+        }
+
+        $texto = trim(preg_replace('/[\s_-]+/', ' ', $bruta) ?? '');
+
+        return $texto !== '' ? $texto : null;
     }
 }

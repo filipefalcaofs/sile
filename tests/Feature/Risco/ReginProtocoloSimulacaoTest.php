@@ -2,13 +2,18 @@
 
 namespace Tests\Feature\Risco;
 
+use App\Enums\RuleDomain;
 use App\Enums\TipoImovelReconhecimento;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\RuleVersion;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginProtocoloCatalog;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
+use App\Services\Tratamento\TratamentoRegrasImportService;
+use Database\Seeders\LouosQuadro10Seeder;
+use Database\Seeders\LouosQuadro11Seeder;
 use Database\Seeders\PropertyTypeSeeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
@@ -292,5 +297,55 @@ class ReginProtocoloSimulacaoTest extends TestCase
         app(ReginProtocoloSimulacaoService::class)->apagar('43747');
 
         $this->assertNull(ViabilityRequest::query()->find($processoId));
+    }
+
+    public function test_33072_sem_resposta_da_planilha_nao_roda_e_pede_o_que_falta(): void
+    {
+        $this->seedPlanilhaTratamento();
+
+        $this->post('/gestao/risco/simulacao-regin', ['codigo' => '33072'])
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/risco/simulacao-regin')
+                ->where('relatorio', null)
+                ->where('pendencias.codigo', '33072')
+                ->has('pendencias.perguntas', 1)
+                ->where('pendencias.perguntas.0.numero', 11)
+                ->where('pendencias.perguntas.0.cnae', '6622-3/00'));
+
+        $this->assertSame(0, ViabilityRequest::query()->count());
+    }
+
+    public function test_33072_com_resposta_e_territorio_do_catalogo_defere(): void
+    {
+        $this->seedPlanilhaTratamento();
+        $this->seed([LouosQuadro10Seeder::class, LouosQuadro11Seeder::class]);
+
+        $this->post('/gestao/risco/simulacao-regin', [
+            'codigo' => '33072',
+            'respostas' => ['6622300' => ['11' => false]],
+        ])
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/risco/simulacao-regin')
+                ->where('pendencias', null)
+                ->where('relatorio.status', ViabilityRequestStatus::Deferida->value)
+                ->where('relatorio.codigo', '33072'));
+
+        $processo = ViabilityRequest::query()->first();
+
+        $this->assertNotNull($processo);
+        $this->assertSame(ViabilityRequestStatus::Deferida, $processo->status);
+        $this->assertNotEmpty($processo->decision?->tvl_product_number);
+    }
+
+    private function seedPlanilhaTratamento(): void
+    {
+        $versao = RuleVersion::factory()->create([
+            'domain' => RuleDomain::RiscoTratamento,
+            'version' => 'planilha-20-08-26',
+        ]);
+
+        (new TratamentoRegrasImportService)->import($versao, database_path('data/regras-20-08-26'));
     }
 }

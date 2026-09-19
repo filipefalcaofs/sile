@@ -62,6 +62,36 @@ class ViabilityRequest extends Model
     public array $respostasTratamento = [];
 
     /**
+     * Respostas da planilha para um CNAE: primeiro as informadas em memória,
+     * senão as gravadas no snapshot da simulação REGIN.
+     *
+     * @return array<int, bool>
+     */
+    public function respostasDaPlanilha(?string $cnae = null): array
+    {
+        if ($this->respostasTratamento !== []) {
+            return $this->respostasTratamento;
+        }
+
+        $snapshot = is_array($this->simulation_snapshot) ? $this->simulation_snapshot : [];
+        $porCnae = $snapshot['respostas_tratamento_por_cnae'] ?? [];
+
+        if ($cnae !== null && is_array($porCnae)) {
+            $digitos = (string) preg_replace('/\D/', '', $cnae);
+            $respostas = $porCnae[$digitos] ?? $porCnae[$cnae] ?? null;
+
+            if (is_array($respostas)) {
+                return array_combine(
+                    array_map(intval(...), array_keys($respostas)),
+                    array_map(boolval(...), array_values($respostas)),
+                ) ?: [];
+            }
+        }
+
+        return is_array($snapshot['respostas_tratamento'] ?? null) ? $snapshot['respostas_tratamento'] : [];
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

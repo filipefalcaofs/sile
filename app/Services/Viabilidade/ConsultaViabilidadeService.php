@@ -135,6 +135,29 @@ class ConsultaViabilidadeService
     }
 
     /**
+     * Consulta com território já resolvido (simulação REGIN: zona/via do
+     * catálogo ou do formulário). Mesma pipeline de motores, sem GIS.
+     *
+     * @param  array<int, bool>  $respostas
+     */
+    public function consultarComTerritorio(TerritoryResult $territory, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): ConsultaViabilidadeResult
+    {
+        $input = ConsultaViabilidadeInput::paraPonto($cnae, $area, $tipoImovel, $respostas);
+
+        $enquadramento = $this->louos->enquadrar(
+            new EnquadramentoInput(
+                area: (float) ($input->area ?? 0.0),
+                cnaePrincipal: $input->cnae,
+                territory: $territory,
+                respostas: $input->respostas,
+                tipoImovel: $input->tipoImovel,
+            ),
+        );
+
+        return $this->comporEResultar($input, null, $territory, $enquadramento, $this->risco->classify($this->riscoInput($input)), []);
+    }
+
+    /**
      * Análise por CNAE + área SEM território, reutilizada pela via CNAE pura
      * (HU-056) e pela inscrição degradada (HU-055, quando a base de lotes está
      * indisponível): enquadra com território NULL (Quadro 10 indisponível →

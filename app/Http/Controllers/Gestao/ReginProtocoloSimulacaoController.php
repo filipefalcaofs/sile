@@ -25,9 +25,22 @@ class ReginProtocoloSimulacaoController extends Controller
 
     public function simulate(SimularProtocoloReginRequest $request): Response
     {
+        $entrada = $request->validated();
+        $codigo = (string) $entrada['codigo'];
+        $pendencias = $this->simulacao->pendencias($codigo, $entrada);
+
+        if ($pendencias !== null) {
+            return Inertia::render('gestao/risco/simulacao-regin', [
+                ...$this->baseProps(),
+                'pendencias' => $pendencias,
+                'relatorio' => null,
+            ]);
+        }
+
         return Inertia::render('gestao/risco/simulacao-regin', [
             ...$this->baseProps(),
-            'relatorio' => $this->simulacao->simular((string) $request->validated('codigo')),
+            'pendencias' => null,
+            'relatorio' => $this->simulacao->simular($codigo, $entrada),
         ]);
     }
 
@@ -41,7 +54,7 @@ class ReginProtocoloSimulacaoController extends Controller
     }
 
     /**
-     * @return array{protocolos: list<array<string, mixed>>, aviso: string, relatorio: ?array<string, mixed>, execucoes: list<array<string, mixed>>}
+     * @return array{protocolos: list<array<string, mixed>>, aviso: string, relatorio: ?array<string, mixed>, execucoes: list<array<string, mixed>>, pendencias: ?array<string, mixed>}
      */
     private function baseProps(): array
     {
@@ -50,6 +63,7 @@ class ReginProtocoloSimulacaoController extends Controller
             'aviso' => ReginProtocoloSimulacaoService::AVISO,
             'relatorio' => $this->simulacao->ultima(),
             'execucoes' => $this->simulacao->execucoes(),
+            'pendencias' => null,
         ];
     }
 }

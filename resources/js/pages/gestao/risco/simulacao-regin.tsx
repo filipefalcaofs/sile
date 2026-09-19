@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import { InfoIcon } from '@/components/icons';
@@ -8,6 +8,8 @@ import ConfirmDialog from '@/components/ui/confirm-dialog';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table/data-table';
 import type { ColumnDef } from '@/components/ui/data-table/types';
+import Input from '@/components/form/input';
+import Label from '@/components/form/label';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 interface ProtocoloResumo {
@@ -113,11 +115,29 @@ interface ExecucaoSalva {
     atualizado_em: string | null;
 }
 
+interface PerguntaPendente {
+    cnae: string;
+    numero: number;
+    texto: string;
+    valor: boolean | null;
+}
+
+interface PendenciasSimulacao {
+    codigo: string;
+    rotulo: string;
+    perguntas: PerguntaPendente[];
+    zona: string | null;
+    via: string | null;
+    tipo_imovel: string | null;
+    campos: string[];
+}
+
 interface Props {
     protocolos: ProtocoloResumo[];
     aviso: string;
     relatorio?: Relatorio | null;
     execucoes?: ExecucaoSalva[];
+    pendencias?: PendenciasSimulacao | null;
 }
 
 function reconhecimentoLabel(valor: string): string {
@@ -201,8 +221,15 @@ function fluxoLabel(fluxo?: string | null): string {
     return fluxo ?? '—';
 }
 
-export default function SimulacaoRegin({ protocolos, aviso, relatorio = null, execucoes = [] }: Props) {
+export default function SimulacaoRegin({
+    protocolos,
+    aviso,
+    relatorio = null,
+    execucoes = [],
+    pendencias = null,
+}: Props) {
     const resultadoRef = useRef<HTMLDivElement>(null);
+    const pendenciasRef = useRef<HTMLDivElement>(null);
     const [apagando, setApagando] = useState<string | null>(null);
 
     useEffect(() => {
@@ -210,6 +237,12 @@ export default function SimulacaoRegin({ protocolos, aviso, relatorio = null, ex
             resultadoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }, [relatorio?.codigo]);
+
+    useEffect(() => {
+        if (pendencias) {
+            pendenciasRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [pendencias?.codigo]);
 
     const colunas: ColumnDef<ProtocoloResumo>[] = [
         { id: 'rotulo', header: 'Protocolo', cell: (row) => row.rotulo },
@@ -276,6 +309,12 @@ export default function SimulacaoRegin({ protocolos, aviso, relatorio = null, ex
                         />
                     </CardContent>
                 </Card>
+
+                {pendencias && (
+                    <div ref={pendenciasRef}>
+                        <FormularioPendencias pendencias={pendencias} />
+                    </div>
+                )}
 
                 {relatorio && (
                     <div ref={resultadoRef} id="resultado-motor">
@@ -652,6 +691,170 @@ function CnaeMotor({ item }: { item: ClassificacaoCnae }) {
                 </div>
             )}
         </div>
+    );
+}
+
+function chaveCnae(cnae: string): string {
+    return cnae.replace(/\D/g, '') || cnae;
+}
+
+function FormularioPendencias({ pendencias }: { pendencias: PendenciasSimulacao }) {
+    const respostasIniciais: Record<string, Record<string, boolean | null>> = {};
+
+    for (const pergunta of pendencias.perguntas) {
+        const cnae = chaveCnae(pergunta.cnae);
+        respostasIniciais[cnae] ??= {};
+        respostasIniciais[cnae][String(pergunta.numero)] = pergunta.valor;
+    }
+
+    const form = useForm({
+        codigo: pendencias.codigo,
+        respostas: respostasIniciais,
+        zona: pendencias.zona ?? '',
+        via: pendencias.via ?? '',
+        tipo_imovel: pendencias.tipo_imovel ?? '',
+    });
+
+    const perguntasSemResposta = pendencias.perguntas.filter((pergunta) => {
+        const valor = form.data.respostas[chaveCnae(pergunta.cnae)]?.[String(pergunta.numero)];
+
+        return valor === null || valor === undefined;
+    });
+
+    const camposFaltando = pendencias.campos.filter((campo) => {
+        if (campo === 'zona') {
+            return form.data.zona.trim() === '';
+        }
+
+        if (campo === 'via') {
+            return form.data.via.trim() === '';
+        }
+
+        return form.data.tipo_imovel.trim() === '';
+    });
+
+    const incompleto = perguntasSemResposta.length > 0 || camposFaltando.length > 0;
+
+    return (
+        <Card>
+            <CardHeader
+                title={`Falta responder — ${pendencias.rotulo}`}
+                description="O motor precisa dessas respostas da planilha (e do território, se o catálogo não trouxe) antes de criar o processo."
+            />
+            <CardContent>
+                <form
+                    className="space-y-6"
+                    onSubmit={(evento) => {
+                        evento.preventDefault();
+                        form.post('/gestao/risco/simulacao-regin');
+                    }}
+                >
+                    {pendencias.perguntas.length > 0 && (
+                        <div className="space-y-4">
+                            {pendencias.perguntas.map((pergunta) => {
+                                const cnae = chaveCnae(pergunta.cnae);
+                                const chave = String(pergunta.numero);
+                                const valor = form.data.respostas[cnae]?.[chave] ?? null;
+
+                                return (
+                                    <fieldset
+                                        key={`${pergunta.cnae}-${pergunta.numero}`}
+                                        className="rounded-lg border border-gray-200 p-4 dark:border-gray-800"
+                                    >
+                                        <legend className="px-1 text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                            CNAE {pergunta.cnae} · Pergunta {pergunta.numero}
+                                        </legend>
+                                        <p className="mt-2 whitespace-pre-line text-theme-sm text-gray-600 dark:text-gray-300">
+                                            {pergunta.texto}
+                                        </p>
+                                        <div className="mt-3 flex items-center gap-6">
+                                            <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                                                <input
+                                                    type="radio"
+                                                    name={`resposta-${cnae}-${chave}`}
+                                                    checked={valor === true}
+                                                    onChange={() =>
+                                                        form.setData('respostas', {
+                                                            ...form.data.respostas,
+                                                            [cnae]: {
+                                                                ...form.data.respostas[cnae],
+                                                                [chave]: true,
+                                                            },
+                                                        })
+                                                    }
+                                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                                />
+                                                Sim
+                                            </label>
+                                            <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+                                                <input
+                                                    type="radio"
+                                                    name={`resposta-${cnae}-${chave}`}
+                                                    checked={valor === false}
+                                                    onChange={() =>
+                                                        form.setData('respostas', {
+                                                            ...form.data.respostas,
+                                                            [cnae]: {
+                                                                ...form.data.respostas[cnae],
+                                                                [chave]: false,
+                                                            },
+                                                        })
+                                                    }
+                                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                                />
+                                                Não
+                                            </label>
+                                        </div>
+                                    </fieldset>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {pendencias.campos.includes('zona') && (
+                        <div>
+                            <Label htmlFor="pendencia-zona">Zona urbanística</Label>
+                            <Input
+                                id="pendencia-zona"
+                                value={form.data.zona}
+                                onChange={(evento) => form.setData('zona', evento.target.value)}
+                                placeholder="Ex.: ZEIS 1"
+                            />
+                        </div>
+                    )}
+
+                    {pendencias.campos.includes('via') && (
+                        <div>
+                            <Label htmlFor="pendencia-via">Classe da via (LOUOS)</Label>
+                            <Input
+                                id="pendencia-via"
+                                value={form.data.via}
+                                onChange={(evento) => form.setData('via', evento.target.value)}
+                                placeholder="Ex.: VL"
+                            />
+                        </div>
+                    )}
+
+                    {pendencias.campos.includes('tipo_imovel') && (
+                        <div>
+                            <Label htmlFor="pendencia-tipo">Tipo de imóvel</Label>
+                            <Input
+                                id="pendencia-tipo"
+                                value={form.data.tipo_imovel}
+                                onChange={(evento) => form.setData('tipo_imovel', evento.target.value)}
+                                placeholder="Ex.: Edificação Comercial"
+                            />
+                        </div>
+                    )}
+
+                    <div className="flex justify-end">
+                        <Button type="submit" size="sm" disabled={incompleto || form.processing} loading={form.processing}>
+                            Rodar simulação
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
     );
 }
 

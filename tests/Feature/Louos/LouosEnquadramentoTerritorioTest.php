@@ -265,6 +265,21 @@ class LouosEnquadramentoTerritorioTest extends TestCase
         $this->assertStringContainsStringIgnoringCase('permitido', (string) $quadro10['motivo']);
     }
 
+    public function test_celula_gravada_como_zpr_hifen_ainda_e_encontrada(): void
+    {
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
+        $this->quadro10Permissao('ZPR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $quadro10 = $this->service()->enquadrar(
+            EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComZona(
+                $this->zonaIdentificada('ZPR-1'),
+            ), [11 => true]),
+        )->quadro10;
+
+        $this->assertSame(EnquadramentoResult::STATUS_IDENTIFICADO, $quadro10['status']);
+        $this->assertSame(Quadro10Permissao::Permitido->value, $quadro10['permissao']);
+    }
+
     public function test_zona_identificada_retorna_proibido(): void
     {
         // RN-005: permissão proibida na zona (o consolidado vira nao_permitido no
