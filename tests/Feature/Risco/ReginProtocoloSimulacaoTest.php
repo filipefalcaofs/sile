@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Risco;
 
+use App\Enums\ResultadoViabilidade;
 use App\Enums\RuleDomain;
 use App\Enums\TipoImovelReconhecimento;
 use App\Enums\ViabilityRequestOrigin;
@@ -11,6 +12,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginProtocoloCatalog;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
+use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Tratamento\TratamentoRegrasImportService;
 use Database\Seeders\LouosQuadro10Seeder;
 use Database\Seeders\LouosQuadro11Seeder;
@@ -337,6 +339,137 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertNotNull($processo);
         $this->assertSame(ViabilityRequestStatus::Deferida, $processo->status);
         $this->assertNotEmpty($processo->decision?->tvl_product_number);
+    }
+
+    public function test_nenhum_protocolo_do_catalogo_fica_com_veredito_pendente(): void
+    {
+        $this->seedPlanilhaTratamento();
+        $this->seed([LouosQuadro10Seeder::class, LouosQuadro11Seeder::class]);
+
+        $codigos = array_column(app(ReginProtocoloCatalog::class)->todos(), 'codigo');
+        $linhas = [];
+
+        foreach ($codigos as $codigo) {
+            $entrada = $this->entradaQueFechaPendencias($codigo);
+
+            $this->post('/gestao/risco/simulacao-regin', $entrada)
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->where('pendencias', null)
+                    ->where('relatorio.codigo', $codigo)
+                    ->where('relatorio.status', fn (string $status): bool => in_array($status, [
+                        ViabilityRequestStatus::Deferida->value,
+                        ViabilityRequestStatus::Indeferida->value,
+                        ViabilityRequestStatus::EmAnalise->value,
+                    ], true)));
+
+            $processo = ViabilityRequest::query()
+                ->where('external_reference', app(ReginProtocoloCatalog::class)->porCodigo($codigo)['processo'])
+                ->latest('id')
+                ->first();
+
+            $this->assertNotNull($processo, $codigo);
+
+            $resolvido = app(SolicitacaoViabilityResolver::class)->resolve($processo);
+            $motivos = [];
+
+            foreach ($resolvido->por_cnae as $item) {
+                $consulta = $item['consulta_array'] ?? [];
+                $motivos[] = $item['cnae'].':'.$item['tendencia'].'/'.($consulta['enquadramento']['consolidado']['motivo'] ?? $consulta['enquadramento']['enquadramento']['motivo'] ?? '—');
+            }
+
+            $linhas[] = [
+                'codigo' => $codigo,
+                'status' => $processo->status->value,
+                'tvl' => $processo->decision?->tvl_product_number,
+                'consolidado' => $resolvido->consolidado,
+                'motivos' => implode(' | ', $motivos),
+            ];
+
+            $this->assertNotSame(
+                ResultadoViabilidade::Pendente->value,
+                $resolvido->consolidado,
+                $codigo.' ficou pendente: '.$linhas[array_key_last($linhas)]['motivos'],
+            );
+        }
+
+        fwrite(STDERR, PHP_EOL.json_encode($linhas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE).PHP_EOL);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function entradaQueFechaPendencias(string $codigo): array
+    {
+        $service = app(ReginProtocoloSimulacaoService::class);
+        $entrada = ['codigo' => $codigo];
+        $pendencias = $service->pendencias($codigo, $entrada);
+
+        if ($pendencias === null) {
+            return $entrada;
+        }
+
+        foreach ($pendencias['perguntas'] as $pergunta) {
+            if ($pergunta['valor'] !== null) {
+                continue;
+            }
+
+            $digitos = (string) preg_replace('/\D/', '', (string) $pergunta['cnae']);
+            $entrada['respostas'][$digitos][(string) $pergunta['numero']] = $this->respostaPadraoDaPergunta(
+                (int) $pergunta['numero'],
+                (string) $pergunta['cnae'],
+                $codigo,
+            );
+        }
+
+        if (in_array('tipo_imovel', $pendencias['campos'], true)) {
+            $entrada['tipo_imovel'] = 'Edificação Comercial';
+        }
+
+        if (in_array('zona', $pendencias['campos'], true)) {
+            $entrada['zona'] = (string) $pendencias['zona'];
+        }
+
+        if (in_array('via', $pendencias['campos'], true)) {
+            $entrada['via'] = (string) $pendencias['via'];
+        }
+
+        return $entrada;
+    }
+
+    private function respostaPadraoDaPergunta(int $numero, string $cnae, string $codigo): bool
+    {
+        $noLocalDoCatalogo = [
+            '33072' => ['6622-3/00' => false],
+            '43747' => ['6202-3/00' => true],
+            'abrigado-2108519' => ['8219-9/99' => false],
+            'sede-virtual' => ['8211-3/00' => true],
+            '53514' => true,
+            '53528' => true,
+            '54675' => true,
+            '54709' => true,
+            '54560' => [
+                '1340-5/01' => true,
+                '1412-6/02' => false,
+                '1813-0/01' => true,
+                '4781-4/00' => false,
+            ],
+            '54772' => [
+                '3314-7/10' => false,
+                '4751-2/01' => true,
+                '6202-3/00' => true,
+            ],
+        ];
+
+        $mapa = $noLocalDoCatalogo[$codigo] ?? true;
+        $noLocal = is_array($mapa) ? ($mapa[$cnae] ?? true) : $mapa;
+
+        return match ($numero) {
+            2, 8, 11, 13 => $noLocal,
+            3, 5 => false,
+            4 => $codigo === 'sede-virtual',
+            default => $noLocal,
+        };
     }
 
     private function seedPlanilhaTratamento(): void

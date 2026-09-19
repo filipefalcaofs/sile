@@ -59,7 +59,7 @@ class TratamentoRamoResolver
             ->get();
 
         $noLocal = $this->atividadeNoLocal($input, $perguntas);
-        $linha = $this->escolherLinha($enquadramentos, $noLocal);
+        $linha = $this->escolherLinha($enquadramentos, $noLocal, $input->respostas);
 
         if ($linha === null) {
             return new TratamentoRamoResult(
@@ -147,6 +147,14 @@ class TratamentoRamoResolver
      */
     private function atividadeNoLocal(TratamentoRamoInput $input, $perguntas): ?bool
     {
+        $preferidas = [2, 8, 11, 13];
+
+        foreach ($preferidas as $numero) {
+            if ($perguntas->contains($numero) && array_key_exists($numero, $input->respostas)) {
+                return (bool) $input->respostas[$numero];
+            }
+        }
+
         foreach ($perguntas as $numero) {
             if (array_key_exists((int) $numero, $input->respostas)) {
                 return (bool) $input->respostas[(int) $numero];
@@ -158,8 +166,9 @@ class TratamentoRamoResolver
 
     /**
      * @param  Collection<int, TratamentoEnquadramento>  $linhas
+     * @param  array<int, bool>  $respostas
      */
-    private function escolherLinha($linhas, ?bool $noLocal): ?TratamentoEnquadramento
+    private function escolherLinha($linhas, ?bool $noLocal, array $respostas = []): ?TratamentoEnquadramento
     {
         if ($linhas->count() === 1) {
             return $linhas->first();
@@ -173,10 +182,40 @@ class TratamentoRamoResolver
         }
 
         if ($noLocal === true && $outros->isNotEmpty()) {
-            return $outros->first();
+            return $this->escolherLinhaNoLocal($outros, $respostas);
         }
 
         return $escritorio ?? $linhas->first();
+    }
+
+    /**
+     * @param  Collection<int, TratamentoEnquadramento>  $outros
+     * @param  array<int, bool>  $respostas
+     */
+    private function escolherLinhaNoLocal($outros, array $respostas): TratamentoEnquadramento
+    {
+        if ($outros->count() === 1) {
+            return $outros->first();
+        }
+
+        $artesanal = array_key_exists(3, $respostas) ? (bool) $respostas[3] : null;
+
+        if ($artesanal === true) {
+            return $outros->first(
+                fn (TratamentoEnquadramento $linha): bool => $this->eFamiliaId((string) $linha->subcategoria)
+                    || $this->eCnlu((string) $linha->risco)
+                    || str_contains(mb_strtoupper((string) $linha->risco), 'ALTO'),
+            ) ?? $outros->first();
+        }
+
+        if ($artesanal === false) {
+            return $outros->first(
+                fn (TratamentoEnquadramento $linha): bool => ! $this->eFamiliaId((string) $linha->subcategoria)
+                    && ! $this->eCnlu((string) $linha->risco),
+            ) ?? $outros->first();
+        }
+
+        return $outros->first();
     }
 
     /**

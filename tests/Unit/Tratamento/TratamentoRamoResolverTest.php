@@ -86,6 +86,33 @@ class TratamentoRamoResolverTest extends TestCase
         $this->assertStringContainsString('CNLU', $ramo->motivo ?? '');
     }
 
+    public function test_1340_no_local_sem_artesanal_nao_cai_no_id(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1340-5/01',
+            respostas: [2 => true, 3 => false],
+            areaUtilizada: 53.0,
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.09.17', $ramo->codigoLouos);
+        $this->assertSame('nR1-09', $ramo->subgrupo);
+    }
+
+    public function test_1340_no_local_artesanal_enquadra_id(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1340-5/01',
+            respostas: [2 => true, 3 => true],
+            areaUtilizada: 53.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('09.11.20', $ramo->codigoLouos);
+        $this->assertSame('ID3-11', $ramo->subgrupo);
+    }
+
     public function test_pergunta_faltando_nao_resolve(): void
     {
         $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
