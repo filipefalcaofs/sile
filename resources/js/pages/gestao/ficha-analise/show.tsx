@@ -219,8 +219,6 @@ interface FichaAnaliseShowProps {
     sugestoesIa?: SugestaoIa[];
     /** Disponibilidade honesta do copiloto (resumo + minuta). Sempre no load inicial. */
     iaFicha: IaFicha;
-    /** Sugestão de desfecho do especialista. O analista decide. */
-    indicacaoEspecialista: IndicacaoEspecialista;
 }
 
 interface IaFicha {
@@ -228,14 +226,6 @@ interface IaFicha {
     resumo_motivo: string | null;
     parecer_disponivel: boolean;
     parecer_motivo: string | null;
-}
-
-interface IndicacaoEspecialista {
-    desfecho: 'deferida' | 'indeferida' | null;
-    desfecho_label: string;
-    motivo: string;
-    fonte: string;
-    analista_decide: boolean;
 }
 
 const STATUS_OPCOES: { value: StatusFicha; label: string }[] = [
@@ -676,7 +666,6 @@ export default function FichaAnaliseShow({
     autosaveDebounceMs,
     sugestoesIa,
     iaFicha,
-    indicacaoEspecialista,
 }: FichaAnaliseShowProps) {
     const { auth } = usePage<SharedProps>().props;
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
@@ -1185,8 +1174,6 @@ export default function FichaAnaliseShow({
                         )}
                     </div>
                 </div>
-
-                <IndicacaoEspecialistaCard indicacao={indicacaoEspecialista} />
 
                 {!editavel && (
                     <div className="flex items-start gap-3 rounded-xl border border-success-200 bg-success-50 p-4 dark:border-success-500/30 dark:bg-success-500/15">
@@ -1980,7 +1967,7 @@ export default function FichaAnaliseShow({
                 isOpen={showFinalizar}
                 variant="info"
                 title="Finalizar processo?"
-                description={`A ficha fica imutável e o processo é concluído conforme a decisão do analista em cada CNAE. Indicação do especialista: ${indicacaoEspecialista.desfecho_label}. Essa indicação não decide sozinha.`}
+                description="A ficha fica imutável e o processo é concluído conforme a decisão do analista em cada CNAE."
                 confirmLabel="Finalizar processo"
                 processing={acao.processing}
                 onConfirm={finalizarFicha}
@@ -2139,41 +2126,6 @@ export default function FichaAnaliseShow({
                 </Modal>
             )}
         </>
-    );
-}
-
-function IndicacaoEspecialistaCard({ indicacao }: { indicacao: IndicacaoEspecialista }) {
-    const cor = statusColor(indicacao.desfecho);
-
-    return (
-        <Card>
-            <CardHeader
-                title="Indicação do especialista"
-                description="Sugestão de deferir ou indeferir com base no motor e, quando houver, no agente de IA. O analista decide o desfecho."
-            />
-            <CardContent>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
-                            O especialista sugere
-                        </p>
-                        <div className="mt-1">
-                            <Badge color={cor} size="sm">
-                                {indicacao.desfecho_label}
-                            </Badge>
-                        </div>
-                    </div>
-                    {indicacao.analista_decide && (
-                        <p className="text-theme-xs text-gray-500 dark:text-gray-400">
-                            O analista confirma ou altera essa indicação ao analisar cada atividade.
-                        </p>
-                    )}
-                </div>
-                {indicacao.motivo !== '' && (
-                    <p className="mt-3 text-theme-sm text-gray-600 dark:text-gray-300">{indicacao.motivo}</p>
-                )}
-            </CardContent>
-        </Card>
     );
 }
 
