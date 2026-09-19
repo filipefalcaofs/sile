@@ -18,7 +18,7 @@ class ReginUnavailableException extends RuntimeException
         public readonly ?string $motivo = null,
     ) {
         parent::__construct(
-            'Comunicação do parecer ao Regin/Junta indisponível: contrato/homologação pendente (Fase 13).',
+            $motivo ?? 'Comunicação do parecer ao Regin/Junta indisponível: contrato/homologação pendente (Fase 13).',
         );
     }
 }
