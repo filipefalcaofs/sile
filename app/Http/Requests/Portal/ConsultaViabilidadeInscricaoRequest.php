@@ -10,7 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * (cidadão anônimo): authorize true. A resolução do ponto depende da base de
  * lotes (pendente SEDUR — contrato PropertyRegistryLookup); enquanto
  * indisponível, o serviço degrada para a via CNAE com aviso. O `cnae` é exigido
- * (sustenta a análise por atividade); a `area` (m²) alimenta o Quadro 7.
+ * (sustenta a análise por atividade); a `area` (m²) alimenta o enquadramento da planilha.
  */
 class ConsultaViabilidadeInscricaoRequest extends FormRequest
 {

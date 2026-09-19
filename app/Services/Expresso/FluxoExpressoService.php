@@ -764,7 +764,7 @@ class FluxoExpressoService
     /**
      * Versão de regra representativa da decisão (RN-005) para a coluna
      * rules_version da auditoria: a primeira versão real aplicada, na ordem em
-     * que governa o veredito (Quadro 10 → 7 → 11A → risco → território). O
+     * que governa o veredito (Quadro 10 → risco_tratamento → 11A → risco → território). O
      * mapa completo de versões fica na ViabilityDecision.
      *
      * @param  array<string, array<string, ?string>>  $rulesVersions
@@ -773,7 +773,7 @@ class FluxoExpressoService
     {
         $ordem = [
             ['louos', 'quadro10'],
-            ['louos', 'quadro7'],
+            ['louos', 'risco_tratamento'],
             ['louos', 'quadro11a'],
             ['risco', 'municipal'],
             ['risco', 'sanitario'],

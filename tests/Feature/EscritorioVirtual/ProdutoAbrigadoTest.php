@@ -12,7 +12,6 @@ use App\Events\ResultadoEmitido;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityDecision;
@@ -24,6 +23,7 @@ use Database\Seeders\EscritorioVirtualCnaeSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -36,6 +36,7 @@ use Tests\TestCase;
 class ProdutoAbrigadoTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     protected function setUp(): void
     {
@@ -83,7 +84,7 @@ class ProdutoAbrigadoTest extends TestCase
         Event::fake([ResultadoEmitido::class]);
 
         // Inscrição sem sede ativa → não é abrigado.
-        $comum = $this->setupDeferivel('8888881', null);
+        $comum = $this->setupDeferivel('4712100', null);
 
         $result = app(FluxoExpressoService::class)->decide($comum);
 
@@ -101,7 +102,7 @@ class ProdutoAbrigadoTest extends TestCase
     {
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal($cnae, RiscoMunicipal::BaixoA);
-        $this->seedQuadro7($cnae, 'nR1', 'nR1-01');
+        $this->seedTratamento($cnae, 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         $solicitacao = ViabilityRequest::factory()->protocoled()->create([
@@ -145,23 +146,9 @@ class ProdutoAbrigadoTest extends TestCase
         $this->app->instance(SpatialRepository::class, $fake);
     }
 
-    private function seedQuadro7(string $cnae, string $grupo, string $subgrupo): void
+    private function seedTratamento(string $cnae = '', string $grupo = '', string $subgrupo = ''): void
     {
-        $version = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $version->id,
-            'cnae_code' => $cnae,
-            'grupo' => $grupo,
-            'subgrupo' => $subgrupo,
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     private function seedQuadro10(string $zona, string $grupo, Quadro10Permissao $permissao): void

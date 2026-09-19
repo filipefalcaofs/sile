@@ -12,12 +12,12 @@ use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\GeocoderException;
 use App\Services\Geo\SpatialRepository;
-use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -35,6 +35,7 @@ use Tests\TestCase;
 class ConsultaViabilidadePublicaTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private const CNAE_MINIMERCADO = '4712-1/00';
 
@@ -46,11 +47,12 @@ class ConsultaViabilidadePublicaTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedTratamentoPlanilha();
+
         // Carga REAL dos motores: Quadro 7 (enquadramento por área) e risco
         // municipal/sanitário (dimensões separadas). A lógica processa dados
         // reais — muda a carga, nunca o comportamento.
         $this->seed([
-            LouosQuadro7Seeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
         ]);
@@ -123,11 +125,12 @@ class ConsultaViabilidadePublicaTest extends TestCase
             'endereco' => 'Praça Municipal, Centro, Salvador',
             'cnae' => self::CNAE_MINIMERCADO,
             'area' => 120,
+            'respostas' => [11 => true],
         ])
             ->assertOk()
             ->assertJsonStructure(['entrada', 'veredito_locacional', 'risco', 'enquadramento', 'avisos', 'versoes'])
             ->assertJsonPath('risco.municipal.status', 'classificado')
-            ->assertJsonPath('enquadramento.quadro7.status', 'identificado')
+            ->assertJsonPath('enquadramento.enquadramento.status', 'identificado')
             // Sem zona real (pendente SEDUR), o veredito é PROPAGADO como pendente.
             ->assertJsonPath('veredito_locacional.resultado', 'pendente');
 
@@ -205,15 +208,16 @@ class ConsultaViabilidadePublicaTest extends TestCase
     public function test_consulta_por_cnae_anonima_roda_risco_e_quadro7(): void
     {
         // HU-056: consulta por CNAE (sem endereço/inscrição) roda o risco real e o
-        // Quadro 7 por área, SEM território — o veredito fica pendente (sem local)
-        // e a consulta avisa que não avalia o local. Não precisa de geocoder.
+        // Enquadramento da planilha por CNAE × perguntas × área, SEM território —
+        // o veredito fica pendente (sem local) e a consulta avisa que não avalia o local.
         $this->postJson('/portal/viabilidade/cnae', [
             'cnae' => self::CNAE_MINIMERCADO,
             'area' => 120,
+            'respostas' => [11 => true],
         ])
             ->assertOk()
             ->assertJsonPath('risco.municipal.status', 'classificado')
-            ->assertJsonPath('enquadramento.quadro7.status', 'identificado')
+            ->assertJsonPath('enquadramento.enquadramento.status', 'identificado')
             ->assertJsonPath('veredito_locacional.resultado', 'pendente')
             ->assertJsonPath('avisos.0', self::AVISO_CNAE_SEM_LOCAL)
             // Sem ponto: nenhum território/geocode inventado.

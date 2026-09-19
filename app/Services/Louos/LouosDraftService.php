@@ -7,7 +7,6 @@ use App\Enums\RuleVersionStatus;
 use App\Exceptions\FourEyesViolationException;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Models\Zona;
 use App\Services\Rules\RuleVersionService;
@@ -28,7 +27,6 @@ final class LouosDraftService
 {
     /** @var array<string, RuleDomain> */
     public const QUADRO_DOMAINS = [
-        'quadro7' => RuleDomain::LouosQuadro7,
         'quadro10' => RuleDomain::LouosQuadro10,
         'quadro11a' => RuleDomain::LouosQuadro11a,
     ];
@@ -37,7 +35,6 @@ final class LouosDraftService
         private RuleVersionService $ruleVersionService,
         private LouosQuadroCopier $copier,
         private AuditService $audit,
-        private LouosQuadro7ImportService $quadro7Import,
         private LouosQuadro10ImportService $quadro10Import,
         private LouosQuadro11ImportService $quadro11Import,
     ) {}
@@ -255,7 +252,7 @@ final class LouosDraftService
         foreach ($rascunhoIndex as $chave => $linha) {
             if (! isset($vigenteIndex[$chave])) {
                 $novas++;
-            } elseif ($this->payloadDiferente($domain, $linha, $vigenteIndex[$chave])) {
+            } elseif ($this->payloadDiferente($linha, $vigenteIndex[$chave])) {
                 $alteradas++;
             }
         }
@@ -285,7 +282,6 @@ final class LouosDraftService
         }
 
         $service = match ($domain) {
-            RuleDomain::LouosQuadro7 => $this->quadro7Import,
             RuleDomain::LouosQuadro10 => $this->quadro10Import,
             RuleDomain::LouosQuadro11a => $this->quadro11Import,
             default => throw new DomainException("Import não suportado para o domínio {$domain->value}."),
@@ -409,7 +405,6 @@ final class LouosDraftService
     private function modelClass(RuleDomain $domain): string
     {
         return match ($domain) {
-            RuleDomain::LouosQuadro7 => LouosQuadro7Faixa::class,
             RuleDomain::LouosQuadro10 => LouosQuadro10Permissao::class,
             RuleDomain::LouosQuadro11a => LouosQuadro11CondicaoVia::class,
             default => throw new DomainException("Domínio {$domain->value} não mapeado para model."),
@@ -424,9 +419,6 @@ final class LouosDraftService
     private function naturalKey(RuleDomain $domain, array $dados): string
     {
         return match ($domain) {
-            RuleDomain::LouosQuadro7 => (string) preg_replace('/\D/', '', (string) ($dados['cnae_code'] ?? ''))
-                .'|'.(float) ($dados['area_min'] ?? 0),
-
             RuleDomain::LouosQuadro10 => ($dados['zona'] ?? '')
                 .'|'.($dados['grupo_uso'] ?? '')
                 .'|'.(string) ($dados['subgrupo'] ?? ''),
@@ -447,13 +439,6 @@ final class LouosDraftService
     private function normalize(RuleDomain $domain, array $dados): array
     {
         return match ($domain) {
-            RuleDomain::LouosQuadro7 => array_merge($dados, [
-                'cnae_code' => (string) preg_replace('/\D/', '', (string) ($dados['cnae_code'] ?? '')),
-                'area_min' => (float) ($dados['area_min'] ?? 0),
-                'area_max' => isset($dados['area_max']) && $dados['area_max'] !== null
-                    ? (float) $dados['area_max']
-                    : null,
-            ]),
             RuleDomain::LouosQuadro10 => array_merge($dados, [
                 'grupo_uso' => (string) ($dados['grupo_uso'] ?? ''),
                 'subgrupo' => (string) ($dados['subgrupo'] ?? ''),
@@ -478,10 +463,6 @@ final class LouosDraftService
         $query = $modelClass::query()->where('rule_version_id', $versionId);
 
         match ($domain) {
-            RuleDomain::LouosQuadro7 => $query
-                ->where('cnae_code', $dados['cnae_code'])
-                ->where('area_min', $dados['area_min']),
-
             RuleDomain::LouosQuadro10 => $query
                 ->where('zona', $dados['zona'])
                 ->where('grupo_uso', $dados['grupo_uso'])
@@ -503,24 +484,14 @@ final class LouosDraftService
 
     /**
      * Compara o payload de duas linhas da mesma chave natural em versões
-     * diferentes. Exclui id, rule_version_id e timestamps da comparação;
-     * normaliza floats no Quadro 7 e arrays no Quadro 11A.
+     * diferentes. Exclui id, rule_version_id e timestamps da comparação.
      */
-    private function payloadDiferente(RuleDomain $domain, Model $rascunho, Model $vigente): bool
+    private function payloadDiferente(Model $rascunho, Model $vigente): bool
     {
         $exclude = array_flip(['id', 'rule_version_id', 'created_at', 'updated_at']);
 
         $a = array_diff_key($rascunho->toArray(), $exclude);
         $b = array_diff_key($vigente->toArray(), $exclude);
-
-        if ($domain === RuleDomain::LouosQuadro7) {
-            foreach (['area_min', 'area_max'] as $field) {
-                if (array_key_exists($field, $a)) {
-                    $a[$field] = $a[$field] !== null ? (float) $a[$field] : null;
-                    $b[$field] = $b[$field] !== null ? (float) $b[$field] : null;
-                }
-            }
-        }
 
         return $a !== $b;
     }

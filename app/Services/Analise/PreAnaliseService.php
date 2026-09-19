@@ -34,7 +34,7 @@ use Throwable;
  * 10-09). Degrada honesto (FA-01/CA-03): exceção do motor → revisão 1 em modo
  * manual com `engine_available=false` e ficha vazia. Veredito locacional
  * pendente (zona SEDUR) NÃO esvazia a ficha: traz o que o motor sabe (risco,
- * Quadro 7, avisos) com status `analise`, sem inventar deferimento. Toda
+ * enquadramento de uso, avisos) com status `analise`, sem inventar deferimento. Toda
  * execução é auditada (RN-005).
  */
 class PreAnaliseService
@@ -206,9 +206,9 @@ class PreAnaliseService
         return array_map(function (array $item): array {
             $status = $this->statusSugerido((string) $item['tendencia']);
             $consulta = $item['consulta'];
-            $quadro7 = $consulta->enquadramento->quadro7;
-            $grupo = is_string($quadro7['grupo'] ?? null) && $quadro7['grupo'] !== ''
-                ? $quadro7['grupo']
+            $enquadramentoUso = $consulta->enquadramento->enquadramento;
+            $grupo = is_string($enquadramentoUso['grupo'] ?? null) && $enquadramentoUso['grupo'] !== ''
+                ? $enquadramentoUso['grupo']
                 : null;
 
             return [
@@ -225,11 +225,12 @@ class PreAnaliseService
                 'condicionantes' => $this->textosCondicionantes($consulta->enquadramento->consolidado['condicionantes'] ?? []),
                 'fundamentacao' => $consulta->fundamentacao(),
                 'justificativa' => $this->justificativas->paraConsulta($consulta, $item),
-                // Paridade com o legado (spec 2026-07-24): código LOUOS/TLL
-                // estruturado não é entregue pela SEDUR ainda (bloqueio externo
-                // real) — contrato explícito null, nunca um valor inventado.
-                'codigo_louos' => null,
-                'codigo_tll' => null,
+                'codigo_louos' => is_string($enquadramentoUso['codigo_louos'] ?? null) && $enquadramentoUso['codigo_louos'] !== ''
+                    ? $enquadramentoUso['codigo_louos']
+                    : null,
+                'codigo_tll' => is_string($consulta->risco->encaminhamento['tll'] ?? null) && $consulta->risco->encaminhamento['tll'] !== ''
+                    ? $consulta->risco->encaminhamento['tll']
+                    : null,
             ];
         }, $resolved->por_cnae);
     }
@@ -437,7 +438,7 @@ class PreAnaliseService
     /**
      * Versão de regra representativa (RN-005) para a coluna rules_version da
      * auditoria: a primeira versão real aplicada, na ordem em que governa o
-     * veredito (Quadro 10 → 7 → 11A → risco → território) — mesma ordem do
+     * veredito (Quadro 10 → risco_tratamento → 11A → risco → território) — mesma ordem do
      * FluxoExpressoService. O mapa completo vai em engine_rules_versions.
      *
      * @param  array<string, array<string, ?string>>  $rulesVersions
@@ -446,7 +447,7 @@ class PreAnaliseService
     {
         $ordem = [
             ['louos', 'quadro10'],
-            ['louos', 'quadro7'],
+            ['louos', 'risco_tratamento'],
             ['louos', 'quadro11a'],
             ['risco', 'municipal'],
             ['risco', 'sanitario'],

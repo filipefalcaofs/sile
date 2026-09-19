@@ -89,7 +89,7 @@ class SugestaoParecerTest extends TestCase
 
         SugestaoParecerAgent::fake([[
             'minuta' => 'Trata-se de pedido de viabilidade locacional para comércio varejista no imóvel indicado.',
-            'fundamentacao' => 'Enquadramento permitido conforme a pré-análise do motor (Quadro 7 da LOUOS, versão registrada).',
+            'fundamentacao' => 'Enquadramento permitido conforme a pré-análise do motor (planilha vigente da LOUOS, versão registrada).',
             'recomendacao' => 'deferida',
             'confianca' => 'alta',
             'fonte' => 'pré-análise do motor (engine_snapshot) e enquadramento por CNAE da ficha',
@@ -188,7 +188,7 @@ class SugestaoParecerTest extends TestCase
 
         SugestaoParecerAgent::fake([[
             'minuta' => 'Minuta de apoio fundamentada no enquadramento do motor.',
-            'fundamentacao' => 'Permitido conforme a pré-análise do motor (Quadro 7 da LOUOS, versão registrada).',
+            'fundamentacao' => 'Permitido conforme a pré-análise do motor (planilha vigente da LOUOS, versão registrada).',
             'recomendacao' => 'deferida',
             'confianca' => 'alta',
             'fonte' => 'pré-análise do motor (engine_snapshot)',

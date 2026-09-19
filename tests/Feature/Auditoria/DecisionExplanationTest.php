@@ -54,26 +54,26 @@ class DecisionExplanationTest extends TestCase
         $this->assertFalse($explicacao['legado'], 'Decisão com trace não é legada.');
         $this->assertCount(2, $explicacao['por_cnae'], 'Um bloco por CNAE.');
 
-        $this->assertSame('8888881', $explicacao['por_cnae'][0]['cnae']);
-        $this->assertSame('8888882', $explicacao['por_cnae'][1]['cnae']);
+        $this->assertSame('4712100', $explicacao['por_cnae'][0]['cnae']);
+        $this->assertSame('0111301', $explicacao['por_cnae'][1]['cnae']);
         $this->assertTrue($explicacao['por_cnae'][0]['is_primary']);
         $this->assertSame('motor', $explicacao['por_cnae'][0]['origem']);
 
         // Ordem canônica dos passos do CNAE principal.
         $ids = $this->idsDosPassos($explicacao['por_cnae'][0]['passos']);
         $this->assertLessThan($this->posicao($ids, 'risco'), $this->posicao($ids, 'entrada'));
-        $this->assertLessThan($this->posicao($ids, 'louos.quadro7'), $this->posicao($ids, 'risco'));
-        $this->assertLessThan($this->posicao($ids, 'louos.quadro10'), $this->posicao($ids, 'louos.quadro7'));
+        $this->assertLessThan($this->posicao($ids, 'louos.enquadramento'), $this->posicao($ids, 'risco'));
+        $this->assertLessThan($this->posicao($ids, 'louos.quadro10'), $this->posicao($ids, 'louos.enquadramento'));
         $this->assertLessThan($this->posicao($ids, 'louos.quadro11a'), $this->posicao($ids, 'louos.quadro10'));
         $this->assertLessThan($this->posicao($ids, 'consolidacao'), $this->posicao($ids, 'louos.quadro11a'));
         $this->assertNotContains('louos.quadro11', $ids);
         $this->assertLessThan($this->posicao($ids, 'desfecho'), $this->posicao($ids, 'consolidacao'));
 
         // Passos LOUOS refletem versao_regra/motivo do trace, jamais inventados.
-        $quadro7 = $this->passo($explicacao['por_cnae'][0]['passos'], 'louos.quadro7');
+        $quadro7 = $this->passo($explicacao['por_cnae'][0]['passos'], 'louos.enquadramento');
         $this->assertTrue($quadro7['registrado']);
         $this->assertStringContainsString('nR1', (string) $quadro7['motivo']);
-        $this->assertStringContainsString('Quadro 7', (string) $quadro7['motivo']);
+        $this->assertStringNotContainsStringIgnoringCase('quadro 7', (string) $quadro7['motivo']);
 
         $quadro10 = $this->passo($explicacao['por_cnae'][0]['passos'], 'louos.quadro10');
         $this->assertTrue($quadro10['registrado']);
@@ -148,12 +148,12 @@ class DecisionExplanationTest extends TestCase
         $consolidacao = $this->passo($passos, 'consolidacao');
         $this->assertTrue($consolidacao['registrado']);
         $this->assertSame('permitido', $consolidacao['resultado_parcial']['resultado']);
-        $this->assertStringContainsString('Quadro 7', (string) $consolidacao['motivo']);
+        $this->assertStringContainsString('enquadramento', mb_strtolower((string) $consolidacao['motivo']));
         $this->assertStringContainsString('Quadro 10', (string) $consolidacao['motivo']);
         $this->assertStringContainsString('classifica', mb_strtolower((string) $consolidacao['motivo']));
         $this->assertStringNotContainsString('nR1', (string) $consolidacao['motivo'], 'Não inventa grupo no legado.');
 
-        $quadro7 = $this->passo($passos, 'louos.quadro7');
+        $quadro7 = $this->passo($passos, 'louos.enquadramento');
         $this->assertFalse($quadro7['registrado']);
         $this->assertStringContainsString('classifica', mb_strtolower((string) $quadro7['motivo']));
         $this->assertNull($quadro7['versao_regra']);
@@ -192,10 +192,10 @@ class DecisionExplanationTest extends TestCase
             $risco['motivo'],
         );
 
-        $quadro7 = $this->passo($passos, 'louos.quadro7');
-        $this->assertSame('LOUOS — Quadro 7 (classificação do uso)', $quadro7['titulo']);
+        $quadro7 = $this->passo($passos, 'louos.enquadramento');
+        $this->assertSame('LOUOS — Enquadramento de uso', $quadro7['titulo']);
         $this->assertSame(
-            'O Quadro 7 classifica o uso (CNAE × área → grupo). O grupo e a faixa desta decisão não foram gravados.',
+            'O enquadramento classifica o uso (CNAE × perguntas × área → grupo). O grupo desta decisão não foi gravado.',
             $quadro7['motivo'],
         );
 
@@ -216,7 +216,7 @@ class DecisionExplanationTest extends TestCase
         $consolidacao = $this->passo($passos, 'consolidacao');
         $this->assertSame('Consolidação do veredito locacional', $consolidacao['titulo']);
         $this->assertSame(
-            'O registro cita o Quadro 7 da LOUOS como fundamento do veredito permitido. O Quadro 7 só classifica o uso (grupo por CNAE e área). Quem permite ou proíbe na zona é o Quadro 10. Grupo, faixa de área e zona não foram gravados nesta decisão.',
+            'O registro cita o enquadramento da LOUOS como fundamento do veredito permitido. O enquadramento só classifica o uso. Quem permite ou proíbe na zona é o Quadro 10. Grupo e zona não foram gravados nesta decisão.',
             $consolidacao['motivo'],
         );
 
@@ -424,12 +424,12 @@ class DecisionExplanationTest extends TestCase
 
         return [
             $builder->cnaeExpresso(
-                $this->consultaArrayStub('8888881', '8888-8/81'),
-                ['cnae' => '8888881', 'cnae_formatado' => '8888-8/81', 'is_primary' => true, 'ponto' => ['lat' => -12.9714, 'lng' => -38.5014]],
+                $this->consultaArrayStub('4712100', '8888-8/81'),
+                ['cnae' => '4712100', 'cnae_formatado' => '8888-8/81', 'is_primary' => true, 'ponto' => ['lat' => -12.9714, 'lng' => -38.5014]],
             ),
             $builder->cnaeExpresso(
-                $this->consultaArrayStub('8888882', '8888-8/82'),
-                ['cnae' => '8888882', 'cnae_formatado' => '8888-8/82', 'is_primary' => false, 'ponto' => ['lat' => -12.9714, 'lng' => -38.5014]],
+                $this->consultaArrayStub('0111301', '8888-8/82'),
+                ['cnae' => '0111301', 'cnae_formatado' => '8888-8/82', 'is_primary' => false, 'ponto' => ['lat' => -12.9714, 'lng' => -38.5014]],
             ),
         ];
     }
@@ -446,7 +446,7 @@ class DecisionExplanationTest extends TestCase
         return [
             'entrada' => ['tipo' => 'ponto_conhecido', 'cnae' => $cnae, 'cnae_formatado' => $formatado, 'area' => 120.0],
             'enquadramento' => [
-                'quadro7' => ['status' => 'identificado', 'grupo' => 'nR1', 'subgrupo' => 'nR1-01', 'motivo' => 'O CNAE 8888-8/81 com área 120 m² classifica-se no grupo nR1 (nR1-01) do Quadro 7 da LOUOS.', 'versao_regra' => 'lei-9148-2016-quadro7'],
+                'enquadramento' => ['status' => 'identificado', 'grupo' => 'nR1', 'subgrupo' => 'nR1-01', 'motivo' => 'O CNAE 8888-8/81 com área 120 m² enquadra-se no grupo nR1 (nR1-01) da LOUOS (07.01.05).', 'versao_regra' => 'planilha-20-08-26'],
                 'quadro10' => ['status' => 'identificado', 'permissao' => 'permitido', 'condicionante_ref' => null, 'motivo' => 'O grupo nR1 é permitido na zona ZR-1 segundo o Quadro 10 da LOUOS.', 'versao_regra' => 'lei-9148-2016-quadro10'],
                 'quadro11a' => ['status' => 'nao_encontrado', 'condicoes' => [], 'motivo' => 'sem porte especial aplicável', 'versao_regra' => 'lei-9148-2016-quadro11a'],
             ],

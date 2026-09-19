@@ -18,16 +18,15 @@ class RuleDomainLouosTest extends TestCase
 {
     public function test_dominios_louos_existem_e_sao_sensiveis(): void
     {
-        $this->assertSame('louos_quadro7', RuleDomain::LouosQuadro7->value);
+        $this->assertFalse(defined(RuleDomain::class.'::LouosQuadro7'));
         $this->assertSame('louos_quadro10', RuleDomain::LouosQuadro10->value);
         $this->assertSame('louos_quadro11a', RuleDomain::LouosQuadro11a->value);
         $this->assertFalse(defined(RuleDomain::class.'::LouosQuadro11'));
 
-        $this->assertSame('Quadro 7 da LOUOS (enquadramento por área)', RuleDomain::LouosQuadro7->label());
         $this->assertSame('Quadro 10 da LOUOS (permissão por zona)', RuleDomain::LouosQuadro10->label());
         $this->assertSame('Quadro 11A da LOUOS (condições complementares pela via)', RuleDomain::LouosQuadro11a->label());
 
-        $this->assertTrue(RuleDomain::LouosQuadro7->isSensitive());
+        $this->assertTrue(RuleDomain::RiscoTratamento->isSensitive());
         $this->assertTrue(RuleDomain::LouosQuadro10->isSensitive());
         $this->assertTrue(RuleDomain::LouosQuadro11a->isSensitive());
     }

@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
  * para uso tanto na publicação versionada (prefixo 'alteracoes.*.') quanto
  * no CRUD de rascunho (prefixo vazio).
  *
- * Quadros aceitos: quadro7, quadro10, quadro11a.
+ * Quadros aceitos: quadro10, quadro11a.
  */
 class LouosLinhaRules
 {
@@ -20,14 +20,6 @@ class LouosLinhaRules
     public static function forQuadro(string $quadro, string $prefix = ''): array
     {
         return match ($quadro) {
-            'quadro7' => [
-                $prefix.'cnae_code' => ['required', 'string', 'max:14'],
-                $prefix.'area_min' => ['required', 'numeric', 'min:0'],
-                $prefix.'area_max' => ['nullable', 'numeric', 'min:0'],
-                $prefix.'grupo' => ['required', 'string', 'max:50'],
-                $prefix.'subgrupo' => ['nullable', 'string', 'max:50'],
-                $prefix.'observacao' => ['nullable', 'string'],
-            ],
             'quadro10' => [
                 $prefix.'zona' => ['required', 'string', 'max:50'],
                 $prefix.'grupo_uso' => ['required', 'string', 'max:50'],

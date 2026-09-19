@@ -5,7 +5,6 @@ namespace App\Services\Louos;
 use App\Enums\RuleDomain;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use InvalidArgumentException;
 
@@ -22,7 +21,7 @@ class LouosQuadroCopier
     /**
      * Copia as linhas do Quadro indicado da versão `$from` para `$to`,
      * sobrepondo com as alterações fornecidas (mesma chave natural substitui).
-     * Suporta Quadro 7, 10 e 11A; lança InvalidArgumentException para
+     * Suporta Quadro 10 e 11A; lança InvalidArgumentException para
      * domínios fora deste escopo.
      *
      * @param  list<array<string, mixed>>  $alteracoes
@@ -30,67 +29,12 @@ class LouosQuadroCopier
     public function copy(RuleDomain $domain, ?RuleVersion $from, RuleVersion $to, array $alteracoes = []): void
     {
         match ($domain) {
-            RuleDomain::LouosQuadro7 => $this->copyQuadro7($from, $to, $alteracoes),
             RuleDomain::LouosQuadro10 => $this->copyQuadro10($from, $to, $alteracoes),
             RuleDomain::LouosQuadro11a => $this->copyQuadro11($from, $to, $alteracoes),
             default => throw new InvalidArgumentException(
                 "Domínio {$domain->value} não é um Quadro da LOUOS suportado pelo copier.",
             ),
         };
-    }
-
-    /**
-     * Quadro 7 (faixas de área): chave natural cnae_code+area_min. Insert em
-     * lote sem model events — a auditoria é o evento único do publish.
-     *
-     * @param  list<array<string, mixed>>  $alteracoes
-     */
-    private function copyQuadro7(?RuleVersion $current, RuleVersion $draft, array $alteracoes): void
-    {
-        $now = now();
-
-        /** @var array<string, array<string, mixed>> $rows */
-        $rows = [];
-
-        if ($current !== null) {
-            LouosQuadro7Faixa::query()
-                ->where('rule_version_id', $current->id)
-                ->each(function (LouosQuadro7Faixa $faixa) use (&$rows, $draft, $now): void {
-                    $code = (string) preg_replace('/\D/', '', (string) $faixa->cnae_code);
-                    $rows[$code.'|'.(float) $faixa->area_min] = [
-                        'rule_version_id' => $draft->id,
-                        'cnae_code' => $code,
-                        'grupo' => $faixa->grupo,
-                        'subgrupo' => $faixa->subgrupo,
-                        'area_min' => $faixa->area_min,
-                        'area_max' => $faixa->area_max,
-                        'observacao' => $faixa->observacao,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
-                });
-        }
-
-        foreach ($alteracoes as $alteracao) {
-            $code = (string) preg_replace('/\D/', '', (string) $alteracao['cnae_code']);
-            $areaMin = (float) ($alteracao['area_min'] ?? 0);
-
-            $rows[$code.'|'.$areaMin] = [
-                'rule_version_id' => $draft->id,
-                'cnae_code' => $code,
-                'grupo' => $alteracao['grupo'],
-                'subgrupo' => $alteracao['subgrupo'] ?? null,
-                'area_min' => $areaMin,
-                'area_max' => $alteracao['area_max'] ?? null,
-                'observacao' => $alteracao['observacao'] ?? null,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
-
-        if ($rows !== []) {
-            LouosQuadro7Faixa::query()->insert(array_values($rows));
-        }
     }
 
     /**

@@ -139,7 +139,7 @@ class TerritoryServiceTest extends TestCase
             ->with(-12.97, -38.51)
             ->willReturn(new GeoServerZonaHit(
                 status: 'identificado',
-                codigo: 'ZPR-3',
+                codigo: 'ZPR 3',
                 properties: ['SUBZONA' => 'ZPR 3', 'LOCAL' => 'Nazaré'],
                 typeName: 'louos_zpr3:VM_L_Z_USO_ZPR_3',
                 motivo: null,
@@ -149,7 +149,7 @@ class TerritoryServiceTest extends TestCase
             ->identify(-12.97, -38.51);
 
         $this->assertSame('identificado', $result->zona['status']);
-        $this->assertSame('ZPR-3', $result->zona['nome']);
+        $this->assertSame('ZPR 3', $result->zona['nome']);
         $this->assertSame('ZPR 3', $result->zona['propriedades']['SUBZONA']);
         $this->assertSame('geoserver-wfs', $result->zona['versao_camada']);
         $this->assertNotContains('zona', $this->fake->containingCalls);

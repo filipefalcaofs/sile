@@ -15,7 +15,6 @@ use App\Models\Cnae;
 use App\Models\ExpressoQueda;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
@@ -24,6 +23,7 @@ use App\Services\Geo\SpatialRepository;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -45,6 +45,7 @@ use Tests\TestCase;
 class PreAnaliseServiceTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private function service(): PreAnaliseService
     {
@@ -67,6 +68,8 @@ class PreAnaliseServiceTest extends TestCase
             $cnae = Cnae::factory()->create(['code' => $code]);
             $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => $indice === 0]);
         }
+
+        $solicitacao->respostasTratamento = [11 => true];
 
         return $solicitacao;
     }
@@ -120,23 +123,9 @@ class PreAnaliseServiceTest extends TestCase
         $this->app->instance(SpatialRepository::class, $fake);
     }
 
-    private function seedQuadro7(string $cnae, string $grupo, string $subgrupo): void
+    private function seedTratamento(string $cnae = '', string $grupo = '', string $subgrupo = ''): void
     {
-        $version = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $version->id,
-            'cnae_code' => $cnae,
-            'grupo' => $grupo,
-            'subgrupo' => $subgrupo,
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     private function seedQuadro10(string $zona, string $grupo, Quadro10Permissao $permissao): void
@@ -166,11 +155,11 @@ class PreAnaliseServiceTest extends TestCase
         // (zona ANINHADA em por_cnae.consulta.territorio.zona, nunca top-level),
         // engine_rules_versions e per_cnae com o status sugerido (deferida).
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
-        $request = $this->emAnaliseComCnaes(['8888881']);
+        $request = $this->emAnaliseComCnaes(['4712100']);
 
         $record = $this->service()->preAnalisar($request);
 
@@ -194,14 +183,14 @@ class PreAnaliseServiceTest extends TestCase
         // per_cnae com o status sugerido por CNAE mapeado da tendência (permitido
         // → deferida) — sugestão, não decisão (RN-001).
         $this->assertCount(1, $record->per_cnae);
-        $this->assertSame('8888881', $record->per_cnae[0]['cnae']);
+        $this->assertSame('4712100', $record->per_cnae[0]['cnae']);
         $this->assertSame('permitido', $record->per_cnae[0]['tendencia']);
         $this->assertSame('deferida', $record->per_cnae[0]['status_sugerido']);
         $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
         $this->assertSame('nR1', $record->per_cnae[0]['grupo_uso']);
         $this->assertNotEmpty($record->per_cnae[0]['justificativa']);
         $this->assertStringContainsString('Lei nº 9.148/2016', (string) $record->per_cnae[0]['justificativa']);
-        $this->assertStringContainsString('Quadro 7', (string) $record->per_cnae[0]['justificativa']);
+        $this->assertStringContainsString('planilha vigente', (string) $record->per_cnae[0]['justificativa']);
         $this->assertStringContainsString('Quadro 10', (string) $record->per_cnae[0]['justificativa']);
         $this->assertStringContainsString('deferimento', mb_strtolower((string) $record->per_cnae[0]['justificativa']));
         $this->assertNotEmpty($record->parecer);
@@ -229,11 +218,11 @@ class PreAnaliseServiceTest extends TestCase
         // RN-001: a sugestão espelha a semântica do motor (não permitido →
         // indeferida) — nunca uma decisão paralela.
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888883', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888883', 'nR3', 'nR3-01');
-        $this->seedQuadro10('ZR-1', 'nR3', Quadro10Permissao::Proibido);
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Proibido);
 
-        $request = $this->emAnaliseComCnaes(['8888883']);
+        $request = $this->emAnaliseComCnaes(['4712100']);
 
         $record = $this->service()->preAnalisar($request);
 
@@ -253,11 +242,11 @@ class PreAnaliseServiceTest extends TestCase
         // HU-140 RN-004: reprocessar o mesmo encaminhamento NÃO cria nova revisão
         // — recalcular é ação explícita (10-09), nunca automática.
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
-        $request = $this->emAnaliseComCnaes(['8888881']);
+        $request = $this->emAnaliseComCnaes(['4712100']);
 
         $primeira = $this->service()->preAnalisar($request);
         $segunda = $this->service()->preAnalisar($request);
@@ -277,7 +266,7 @@ class PreAnaliseServiceTest extends TestCase
             $mock->shouldReceive('resolve')->andThrow(new \RuntimeException('motor fora do ar'));
         });
 
-        $request = $this->emAnaliseComCnaes(['8888881']);
+        $request = $this->emAnaliseComCnaes(['4712100']);
 
         $record = $this->service()->preAnalisar($request);
 
@@ -333,8 +322,8 @@ class PreAnaliseServiceTest extends TestCase
     public function test_condicionante_do_quadro_10_ja_vem_marcada_na_ficha(): void
     {
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888884', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888884', 'nR1', 'nR1-01');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
 
         $version = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first()
             ?? RuleVersion::factory()->create([
@@ -353,7 +342,7 @@ class PreAnaliseServiceTest extends TestCase
             'base_legal' => 'Quadro 10 da Lei nº 9.148/2016',
         ]);
 
-        $request = $this->emAnaliseComCnaes(['8888884']);
+        $request = $this->emAnaliseComCnaes(['4712100']);
 
         $record = $this->service()->preAnalisar($request);
 
@@ -369,34 +358,29 @@ class PreAnaliseServiceTest extends TestCase
 
     public function test_per_cnae_inclui_codigo_louos_e_codigo_tll_como_pendencia_explicita(): void
     {
-        // Spec 2026-07-24: contrato explícito, nunca um valor inventado — o
-        // código LOUOS/TLL estruturado depende de tabela oficial que a SEDUR
-        // ainda não entregou (docs/ANALISE-HUs-REUNIAO-SEDUR.md:241).
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
-        $request = $this->emAnaliseComCnaes(['8888881']);
+        $request = $this->emAnaliseComCnaes(['4712100']);
 
         $record = $this->service()->preAnalisar($request);
 
         $this->assertNotNull($record);
         $this->assertNotEmpty($record->per_cnae);
-        $this->assertArrayHasKey('codigo_louos', $record->per_cnae[0]);
-        $this->assertArrayHasKey('codigo_tll', $record->per_cnae[0]);
-        $this->assertNull($record->per_cnae[0]['codigo_louos']);
-        $this->assertNull($record->per_cnae[0]['codigo_tll']);
+        $this->assertSame('07.01.05', $record->per_cnae[0]['codigo_louos']);
+        $this->assertSame('2.02', $record->per_cnae[0]['codigo_tll']);
     }
 
     public function test_refaz_rascunho_vazio_degradado_com_o_motor(): void
     {
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
-        $request = $this->emAnaliseComCnaes(['8888881']);
+        $request = $this->emAnaliseComCnaes(['4712100']);
 
         AnalysisRecord::factory()->semMotor()->create([
             'viability_request_id' => $request->id,
@@ -416,19 +400,20 @@ class PreAnaliseServiceTest extends TestCase
     public function test_grava_motivo_da_queda_do_expresso_na_ficha(): void
     {
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
-        $request = $this->emAnaliseComCnaes(['8888881']);
+        $request = $this->emAnaliseComCnaes(['4712100']);
         $request->forceFill([
             'tipo_imovel' => 'Galpão',
             'tipo_imovel_normalized' => 'galpao',
         ])->save();
+        $request->respostasTratamento = [11 => true];
 
         ExpressoQueda::factory()->create([
             'viability_request_id' => $request->id,
-            'cnae' => '8888881',
+            'cnae' => '4712100',
             'tipo_gatilho' => TipoGatilho::DadosDoProcesso->value,
             'dimensao' => 'municipal',
             'motivo' => 'Nível alto (municipal) encaminhado para análise técnica',
@@ -437,7 +422,7 @@ class PreAnaliseServiceTest extends TestCase
         $record = $this->service()->preAnalisar($request);
         $motivos = implode("\n", $record->analysis_reasons ?? []);
 
-        $this->assertStringContainsString('8888-8/81', $motivos);
+        $this->assertStringContainsString('4712-1/00', $motivos);
         $this->assertStringContainsString('Nível alto (municipal)', $motivos);
         $this->assertStringContainsString('Galpão', $motivos);
         $this->assertStringContainsString('ZR-1', $motivos);
@@ -465,7 +450,7 @@ class PreAnaliseServiceTest extends TestCase
         $payload = (new AnalysisRecordResource($ficha))->resolve();
 
         $this->assertStringContainsString('Lei nº 9.148/2016', $payload['per_cnae'][0]['justificativa']);
-        $this->assertStringContainsString('Quadro 7', $payload['per_cnae'][0]['justificativa']);
+        $this->assertStringContainsString('planilha vigente', $payload['per_cnae'][0]['justificativa']);
         $this->assertStringContainsString('Quadro 10', $payload['per_cnae'][0]['justificativa']);
         $this->assertStringContainsString('deferimento', mb_strtolower($payload['per_cnae'][0]['justificativa']));
     }
@@ -515,7 +500,7 @@ class PreAnaliseServiceTest extends TestCase
                 'zona' => ['status' => 'identificado', 'nome' => 'ZR-1'],
             ],
             'enquadramento' => [
-                'quadro7' => [
+                'enquadramento' => [
                     'status' => 'identificado',
                     'grupo' => 'nR1',
                     'subgrupo' => 'nR1-01',
@@ -529,7 +514,7 @@ class PreAnaliseServiceTest extends TestCase
                     'resultado' => 'permitido',
                     'motivo' => 'Permitido pelo Quadro 10.',
                     'fundamentacao' => [
-                        'Lei nº 9.148/2016 (LOUOS) — Quadro 7',
+                        'Lei nº 9.148/2016 (LOUOS) — nR1-01',
                         'Quadro 10 da Lei nº 9.148/2016',
                     ],
                     'condicionantes' => [],
@@ -549,7 +534,7 @@ class PreAnaliseServiceTest extends TestCase
                 'fundamentacao' => ['Decreto Municipal nº 32.636/2020'],
             ],
             'fundamentacao' => [
-                'Lei nº 9.148/2016 (LOUOS) — Quadro 7',
+                'Lei nº 9.148/2016 (LOUOS) — nR1-01',
                 'Quadro 10 da Lei nº 9.148/2016',
                 'Decreto Municipal nº 32.636/2020',
             ],

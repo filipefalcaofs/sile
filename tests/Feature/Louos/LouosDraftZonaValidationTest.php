@@ -10,7 +10,7 @@ use App\Models\RuleVersion;
 use App\Models\User;
 use App\Models\Zona;
 use App\Services\Louos\LouosDraftService;
-use Database\Seeders\LouosQuadro7Seeder;
+use Database\Seeders\LouosQuadro11Seeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use DomainException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -159,14 +159,14 @@ class LouosDraftZonaValidationTest extends TestCase
      */
     public function test_validacao_nao_se_aplica_aos_demais_quadros(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro11Seeder::class);
 
         $this->assertSame(0, Zona::query()->count());
 
         $autor = User::factory()->create();
         $publicador = User::factory()->create();
 
-        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, 'q7-rascunho', $autor->id);
+        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro11a, 'q11a-rascunho', $autor->id);
 
         $publicado = $this->service()->publicar($draft, $publicador->id);
 

@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Redige a justificativa por CNAE no tom de um parecer técnico: só os fatos
- * já produzidos pelo motor (território, Quadros 7/10/11-A, risco). Nunca
+ * já produzidos pelo motor (território, enquadramento de uso, Quadros 10/11-A, risco). Nunca
  * inventa zona, grupo, permissão ou desfecho.
  */
 class JustificativaFundamentadaComposer
@@ -56,7 +56,7 @@ class JustificativaFundamentadaComposer
             'bairro' => $territorio?->bairro ?? [],
             'via' => $territorio?->via ?? [],
             'zona' => $territorio?->zona ?? [],
-            'quadro7' => $enquadramento->quadro7,
+            'enquadramento' => $enquadramento->enquadramento,
             'quadro10' => $enquadramento->quadro10,
             'quadro11a' => $enquadramento->quadro11a,
             'consolidado' => $enquadramento->consolidado,
@@ -89,7 +89,7 @@ class JustificativaFundamentadaComposer
             'bairro' => $territorio['bairro'] ?? [],
             'via' => $territorio['via'] ?? [],
             'zona' => $territorio['zona'] ?? [],
-            'quadro7' => $enquadramento['quadro7'] ?? [],
+            'enquadramento' => $enquadramento['enquadramento'] ?? [],
             'quadro10' => $enquadramento['quadro10'] ?? [],
             'quadro11a' => $enquadramento['quadro11a'] ?? [],
             'consolidado' => $enquadramento['consolidado'] ?? [],
@@ -123,7 +123,7 @@ class JustificativaFundamentadaComposer
             'via' => $this->nomeIdentificado($bruto['via'] ?? []),
             'zona' => $this->nomeIdentificado($bruto['zona'] ?? []),
             'zona_motivo' => $this->texto($bruto['zona']['motivo'] ?? null),
-            'quadro7' => is_array($bruto['quadro7'] ?? null) ? $bruto['quadro7'] : [],
+            'enquadramento' => is_array($bruto['enquadramento'] ?? null) ? $bruto['enquadramento'] : [],
             'quadro10' => is_array($bruto['quadro10'] ?? null) ? $bruto['quadro10'] : [],
             'quadro11a' => is_array($bruto['quadro11a'] ?? null) ? $bruto['quadro11a'] : [],
             'consolidado' => is_array($bruto['consolidado'] ?? null) ? $bruto['consolidado'] : [],
@@ -145,7 +145,7 @@ class JustificativaFundamentadaComposer
         $paragrafos = array_filter([
             $this->objeto($fatos),
             $this->territorio($fatos),
-            $this->quadro7($fatos),
+            $this->enquadramentoUso($fatos),
             $this->quadro10($fatos),
             $this->quadro11a($fatos),
             $this->risco($fatos),
@@ -204,26 +204,26 @@ class JustificativaFundamentadaComposer
     /**
      * @param  array<string, mixed>  $fatos
      */
-    private function quadro7(array $fatos): string
+    private function enquadramentoUso(array $fatos): string
     {
-        $quadro = $fatos['quadro7'];
-        $status = $quadro['status'] ?? null;
-        $grupo = $this->texto($quadro['grupo'] ?? null);
+        $uso = $fatos['enquadramento'];
+        $status = $uso['status'] ?? null;
+        $grupo = $this->texto($uso['grupo'] ?? null);
 
         if ($status === 'identificado' && $grupo !== null) {
-            $subgrupo = $this->texto($quadro['subgrupo'] ?? null);
+            $subgrupo = $this->texto($uso['subgrupo'] ?? null);
             $detalhe = $subgrupo !== null ? ' (subgrupo '.$subgrupo.')' : '';
 
-            return 'Pelo Quadro 7 da LOUOS, a atividade classifica-se no grupo de uso '.$grupo.$detalhe.'. O Quadro 7 apenas classifica o CNAE segundo a área ocupada; não autoriza a instalação na zona.';
+            return 'Pelo enquadramento de uso da planilha vigente, a atividade classifica-se no grupo de uso '.$grupo.$detalhe.'. O enquadramento de uso apenas classifica o CNAE segundo a área ocupada; não autoriza a instalação na zona.';
         }
 
-        $motivo = $this->texto($quadro['motivo'] ?? null);
+        $motivo = $this->texto($uso['motivo'] ?? null);
 
         if ($motivo !== null) {
-            return 'Pelo Quadro 7 da LOUOS, '.$this->iniciarMinusculo($motivo).' Sem classificação de grupo, o Quadro 10 não pode autorizar nem proibir o uso no território.';
+            return 'Pelo enquadramento de uso da planilha vigente, '.$this->iniciarMinusculo($motivo).' Sem classificação de grupo, o Quadro 10 não pode autorizar nem proibir o uso no território.';
         }
 
-        return 'A atividade não foi enquadrada no Quadro 7 da LOUOS vigente. Sem grupo de uso, o Quadro 10 não se aplica.';
+        return 'A atividade não foi enquadrada na planilha vigente. Sem grupo de uso, o Quadro 10 não se aplica.';
     }
 
     /**
@@ -233,7 +233,7 @@ class JustificativaFundamentadaComposer
     {
         $quadro = $fatos['quadro10'];
         $status = $quadro['status'] ?? null;
-        $grupo = $this->texto($fatos['quadro7']['grupo'] ?? null) ?? 'o grupo enquadrado';
+        $grupo = $this->texto($fatos['enquadramento']['grupo'] ?? null) ?? 'o grupo enquadrado';
         $zona = $fatos['zona'] ?? 'a zona identificada';
         $permissao = $this->rotuloPermissao($quadro['permissao'] ?? null);
 
@@ -276,7 +276,7 @@ class JustificativaFundamentadaComposer
             $texto = $this->encerrar($texto).' Condições incidentes: '.implode('; ', $condicoes).'.';
         }
 
-        return $this->encerrar($texto).' O Quadro 11-A não permite nem proíbe o uso — só condiciona a instalação pela via.';
+        return $this->encerrar($texto).' O Quadro 11-A pode vedar o uso (Não), encaminhar à CNLU (R) ou condicionar a instalação pela via.';
     }
 
     /**

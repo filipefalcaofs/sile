@@ -11,7 +11,7 @@
         "veredito": "pendente",
         "veredito_motivo_contem": "zoneamento",
         "risco_municipal_status": "classificado",
-        "quadro7_status": "identificado",
+        "enquadramento_status": "identificado",
         "tem_geocode": true,
         "avisos_contem": "zona"
     }

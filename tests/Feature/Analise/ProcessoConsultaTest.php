@@ -8,7 +8,9 @@ use App\Enums\ViabilityRequestStatus;
 use App\Http\Resources\ProcessoResource;
 use App\Models\Company;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestTransition;
 use App\Services\Analise\ProcessoQueryService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -255,6 +257,71 @@ class ProcessoConsultaTest extends TestCase
 
         $this->assertSame('em_analise', $payload['analysis_status']);
         $this->assertSame('Em análise', $payload['analysis_status_label']);
+    }
+
+    public function test_resource_em_analise_sem_decisao_expoe_motivo_do_encaminhamento(): void
+    {
+        $request = $this->processo();
+        ViabilityRequestTransition::factory()->create([
+            'viability_request_id' => $request->id,
+            'from_status' => ViabilityRequestStatus::Protocolada,
+            'to_status' => ViabilityRequestStatus::EmAnalise,
+            'reason' => 'veredito locacional pendente — zona urbanística pendente SEDUR',
+        ]);
+
+        $payload = (new ProcessoResource($request->fresh(['decision', 'encaminhamentoAnalise'])))->resolve();
+
+        $this->assertTrue($payload['sem_decisao_automatica']);
+        $this->assertSame(
+            'veredito locacional pendente — zona urbanística pendente SEDUR',
+            $payload['motivo_encaminhamento'],
+        );
+    }
+
+    public function test_resource_com_decisao_nao_marca_sem_decisao_automatica(): void
+    {
+        $request = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::Deferida,
+        ]);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $request->id,
+        ]);
+
+        $payload = (new ProcessoResource($request->fresh(['decision', 'encaminhamentoAnalise'])))->resolve();
+
+        $this->assertFalse($payload['sem_decisao_automatica']);
+        $this->assertNull($payload['motivo_encaminhamento']);
+    }
+
+    public function test_lista_e_detalhe_expoem_aviso_quando_em_analise_sem_decisao(): void
+    {
+        $processo = $this->processo();
+        ViabilityRequestTransition::factory()->create([
+            'viability_request_id' => $processo->id,
+            'from_status' => ViabilityRequestStatus::Protocolada,
+            'to_status' => ViabilityRequestStatus::EmAnalise,
+            'reason' => 'veredito locacional pendente — zona urbanística pendente SEDUR',
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('processos.data.0.sem_decisao_automatica', true)
+                ->where(
+                    'processos.data.0.motivo_encaminhamento',
+                    'veredito locacional pendente — zona urbanística pendente SEDUR',
+                ));
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('processo.sem_decisao_automatica', true)
+                ->where(
+                    'processo.motivo_encaminhamento',
+                    'veredito locacional pendente — zona urbanística pendente SEDUR',
+                ));
     }
 
     public function test_filtra_por_analysis_status(): void

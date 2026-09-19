@@ -61,6 +61,21 @@ export interface ProcessoItem {
     sla: ProcessoSla | null;
     protocoled_at: string | null;
     escritorio_virtual: ProcessoEscritorioVirtual | null;
+    sem_decisao_automatica?: boolean;
+    motivo_encaminhamento?: string | null;
+}
+
+/** Encaminhamento por risco do CNAE — não é deferido/indeferido. */
+export function rotuloFluxoRisco(fluxo?: string | null): string {
+    if (fluxo === 'expresso') {
+        return 'Elegível ao expresso (risco)';
+    }
+
+    if (fluxo === 'analise') {
+        return 'Análise técnica';
+    }
+
+    return fluxo ?? '—';
 }
 
 /** Cor do badge por estado do semáforo: verde=no prazo, amarelo=alerta, vermelho=vencido. */

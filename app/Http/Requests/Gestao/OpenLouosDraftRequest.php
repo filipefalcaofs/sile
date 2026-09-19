@@ -27,7 +27,7 @@ class OpenLouosDraftRequest extends FormRequest
         $domain = PublishLouosVersionRequest::QUADRO_DOMAINS[$quadro] ?? '';
 
         return [
-            'quadro' => ['required', 'string', 'in:quadro7,quadro10,quadro11a'],
+            'quadro' => ['required', 'string', 'in:quadro10,quadro11a'],
             'version' => [
                 'nullable',
                 'string',

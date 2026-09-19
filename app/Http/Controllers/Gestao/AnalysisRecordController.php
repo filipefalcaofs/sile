@@ -99,7 +99,7 @@ class AnalysisRecordController extends Controller
                 'status' => $viabilityRequest->status->value,
                 'status_label' => $viabilityRequest->status->label(),
             ],
-            'localizacao' => $this->localizacaoDoImovel($viabilityRequest),
+            'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
             'cadastroImobiliario' => $cadastro,
             'tramitacao' => $this->tramitacao($viabilityRequest),
@@ -347,9 +347,14 @@ class AnalysisRecordController extends Controller
      * Localização REAL do imóvel para o mini-mapa permanente da ficha (HU-142):
      * o polígono cadastrado (GeoJSON, fonte única `property_polygon_geojson`) e o
      * endereço formatado. Honesto por construção — devolve `null` em cada campo
-     * sem dado, nunca coordenada inventada. A zona/via oficiais seguem pendentes
-     * SEDUR (Quadro 10) e são comunicadas como tal na própria tela.
+     * sem dado, nunca coordenada inventada. Bairro vem da inscrição (Cadastro
+     * Imobiliário) quando a certidão responde; zona/via vêm do território
+     * materializado ou do snapshot do protocolo — nunca a zona no campo de bairro.
      *
+     * @param  array{
+     *   status: string,
+     *   campos: array<string, string|null>
+     * }  $cadastro
      * @return array{
      *   poligono: array<string, mixed>|null,
      *   endereco: string|null,
@@ -359,40 +364,73 @@ class AnalysisRecordController extends Controller
      *   bairro: string|null,
      *   cep: string|null,
      *   ponto_referencia: string|null,
-     *   zona: null,
-     *   via: null,
+     *   zona: string|null,
+     *   via: string|null,
      *   is_public_area: bool|null
      * }
      */
-    private function localizacaoDoImovel(ViabilityRequest $request): array
+    private function localizacaoDoImovel(ViabilityRequest $request, array $cadastro = []): array
     {
-        $logradouro = trim((string) ($request->address_street ?? ''));
-        $numeroMetrico = trim((string) ($request->address_number ?? ''));
-        $bairro = trim((string) ($request->address_neighborhood ?? ''));
-        $cep = trim((string) ($request->address_zip ?? ''));
-        $pontoReferencia = trim((string) ($request->address_reference ?? ''));
+        $logradouro = $this->textoOuNulo($request->address_street);
+        $numeroMetrico = $this->textoOuNulo($request->address_number);
+        $cep = $this->textoOuNulo($request->address_zip);
+        $pontoReferencia = $this->textoOuNulo($request->address_reference);
+        $zona = $this->textoOuNulo($request->zona_codigo)
+            ?? $this->textoOuNulo(data_get($request->simulation_snapshot, 'zona'));
+        $via = $this->textoOuNulo(data_get($request->simulation_snapshot, 'via'));
+        $bairro = $this->bairroDaLocalizacao($request, $cadastro, $zona);
 
-        $partes = array_filter([
-            $logradouro,
-            $numeroMetrico,
-            $bairro,
-        ], fn (string $parte): bool => $parte !== '');
-
-        $endereco = $partes === [] ? null : implode(', ', $partes);
+        $partes = array_values(array_filter(
+            [$logradouro, $numeroMetrico, $bairro],
+            fn (?string $parte): bool => $parte !== null,
+        ));
 
         return [
             'poligono' => $request->property_polygon_geojson,
-            'endereco' => $endereco,
+            'endereco' => $partes === [] ? null : implode(', ', $partes),
             'cod_log' => null,
-            'logradouro' => $logradouro !== '' ? $logradouro : null,
-            'numero_metrico' => $numeroMetrico !== '' ? $numeroMetrico : null,
-            'bairro' => $bairro !== '' ? $bairro : null,
-            'cep' => $cep !== '' ? $cep : null,
-            'ponto_referencia' => $pontoReferencia !== '' ? $pontoReferencia : null,
-            'zona' => null,
-            'via' => null,
+            'logradouro' => $logradouro,
+            'numero_metrico' => $numeroMetrico,
+            'bairro' => $bairro,
+            'cep' => $cep,
+            'ponto_referencia' => $pontoReferencia,
+            'zona' => $zona,
+            'via' => $via,
             'is_public_area' => $request->is_public_area,
         ];
+    }
+
+    /**
+     * @param  array{status?: string, campos?: array<string, string|null>}  $cadastro
+     */
+    private function bairroDaLocalizacao(ViabilityRequest $request, array $cadastro, ?string $zona): ?string
+    {
+        if (($cadastro['status'] ?? null) === 'disponivel') {
+            $doCadastro = $this->textoOuNulo($cadastro['campos']['bairro'] ?? null);
+
+            if ($doCadastro !== null) {
+                return $doCadastro;
+            }
+        }
+
+        $informado = $this->textoOuNulo($request->address_neighborhood);
+
+        if ($informado !== null && $zona !== null && strcasecmp($informado, $zona) === 0) {
+            return null;
+        }
+
+        return $informado;
+    }
+
+    private function textoOuNulo(mixed $valor): ?string
+    {
+        if (! is_string($valor) && ! is_numeric($valor)) {
+            return null;
+        }
+
+        $texto = trim((string) $valor);
+
+        return $texto === '' ? null : $texto;
     }
 
     /**

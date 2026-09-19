@@ -11,7 +11,6 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
@@ -27,11 +26,11 @@ use App\Services\Risco\RiscoInput;
 use App\Services\Risco\RiscoResult;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
-use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -45,6 +44,7 @@ use Tests\TestCase;
 class TextosServicosByteIdenticosTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private const CNAE_MINIMERCADO = '4712-1/00';
 
@@ -112,11 +112,11 @@ class TextosServicosByteIdenticosTest extends TestCase
     public function test_intro_do_parecer_da_pre_analise_e_byte_identica(): void
     {
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
-        $request = $this->emAnaliseComCnaes(['8888881']);
+        $request = $this->emAnaliseComCnaes(['4712100']);
 
         $record = app(PreAnaliseService::class)->preAnalisar($request);
 
@@ -185,7 +185,6 @@ class TextosServicosByteIdenticosTest extends TestCase
     private function seedMotoresReais(): void
     {
         $this->seed([
-            LouosQuadro7Seeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
         ]);
@@ -254,23 +253,9 @@ class TextosServicosByteIdenticosTest extends TestCase
         ]);
     }
 
-    private function seedQuadro7(string $cnae, string $grupo, string $subgrupo): void
+    private function seedTratamento(string $cnae = '', string $grupo = '', string $subgrupo = ''): void
     {
-        $version = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $version->id,
-            'cnae_code' => $cnae,
-            'grupo' => $grupo,
-            'subgrupo' => $subgrupo,
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     private function seedQuadro10(string $zona, string $grupo, Quadro10Permissao $permissao): void
@@ -306,6 +291,8 @@ class TextosServicosByteIdenticosTest extends TestCase
             $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => $indice === 0]);
         }
 
+        $solicitacao->respostasTratamento = [11 => true];
+
         return $solicitacao;
     }
 
@@ -336,7 +323,7 @@ class TextosServicosByteIdenticosTest extends TestCase
     private function consultaSintetica(string $resultado, ?array $fundamentacao = null): ConsultaViabilidadeResult
     {
         $fundamentacaoConsolidado = $fundamentacao ?? [
-            'Lei nº 9.148/2016 (LOUOS) — Quadro 7',
+            'Lei nº 9.148/2016 (LOUOS) — nR1-01',
             'Quadro 10 da Lei nº 9.148/2016',
         ];
 
@@ -356,11 +343,11 @@ class TextosServicosByteIdenticosTest extends TestCase
                 restricoes: ['status' => 'nao_encontrado', 'itens' => [], 'versao_camada' => null],
             ),
             enquadramento: new EnquadramentoResult(
-                quadro7: [
+                enquadramento: [
                     'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
                     'grupo' => 'nR1',
                     'subgrupo' => 'nR1-01',
-                    'motivo' => 'O CNAE 4771-7/01 com área 75 m² classifica-se no grupo nR1 (nR1-01) do Quadro 7 da LOUOS.',
+                    'motivo' => 'O CNAE 4771-7/01 com área 75 m² enquadra-se no grupo nR1 (nR1-01) da LOUOS (07.01.05).',
                 ],
                 quadro10: [
                     'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
@@ -376,10 +363,10 @@ class TextosServicosByteIdenticosTest extends TestCase
                     'resultado' => $resultado,
                     'fundamentacao' => $fundamentacaoConsolidado,
                     'condicionantes' => [],
-                    'motivo' => 'Permitido: o CNAE 4771-7/01 (área 75 m²) classificou-se no grupo nR1 pelo Quadro 7 e esse grupo é permitido na zona ZEC pelo Quadro 10.',
+                    'motivo' => 'Permitido: o CNAE 4771-7/01 (área 75 m²) classificou-se no grupo nR1 pelo enquadramento da planilha vigente e esse grupo é permitido na zona ZEC pelo Quadro 10.',
                 ],
                 versoes: [
-                    'quadro7' => 'lei-9148-2016-quadro7',
+                    'risco_tratamento' => 'planilha-20-08-26',
                     'quadro10' => 'lei-9148-2016-quadro10',
                     'quadro11a' => null,
                 ],

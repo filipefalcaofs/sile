@@ -4,8 +4,8 @@ namespace App\Services\Louos;
 
 use App\Enums\Quadro10Permissao;
 use App\Enums\RuleDomain;
+use App\Models\Cnae;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Services\Geo\TerritoryResult;
 use App\Support\Audit\AuditService;
@@ -16,11 +16,12 @@ use Illuminate\Support\Facades\DB;
  * Sandbox de simulação de impacto de parametrização da LOUOS (HU-143). Reexecuta
  * o MOTOR REAL (LouosEnquadramentoService) com uma versão RASCUNHO de um Quadro
  * (modo "versão específica" via versoesOverride — 05-03) sobre cenários derivados
- * dos CNAEs da versão vigente do Quadro 7, e compara o veredito consolidado com o
- * da versão vigente, contando as divergências — antes de qualquer publicação.
+ * do catálogo CNAE vigente e da zona fixa do Quadro 10, e compara o veredito
+ * consolidado com o da versão vigente, contando as divergências — antes de
+ * qualquer publicação.
  *
  * Escopo honesto da amostra (sem fachada): os cenários são DERIVADOS dos dados
- * reais já seedados (CNAEs do Quadro 7 vigente + uma zona fixa do Quadro 10
+ * reais já seedados (CNAEs ativos do catálogo + uma zona fixa do Quadro 10
  * vigente, para o consolidado ir além de `pendente`). Não há arquivo de cenário
  * próprio: quando o EP08 trouxer processos reais, a mesma simulação passa a usá-los
  * — muda a fonte da amostra, não a lógica.
@@ -146,56 +147,45 @@ class LouosSandboxSimulationService
             cnaePrincipal: (string) $cenario['cnae'],
             territory: $this->territorioComZona((string) $cenario['zona']),
             versoesOverride: $override,
+            respostas: [11 => true],
         ));
     }
 
     /**
      * Monta os cenários da amostra a partir dos dados REAIS: um cenário por CNAE
-     * distinto da versão vigente do Quadro 7 (área representativa da faixa) com a
-     * zona fixa derivada da versão vigente do Quadro 10. Limitado a `$amostra`.
+     * ativo do catálogo (área representativa fixa da amostra) com a zona fixa
+     * derivada da versão vigente do Quadro 10. Limitado a `$amostra`.
      *
-     * Sem Quadro 7 vigente ou sem zona no Quadro 10 vigente não há cenário
-     * comparável (o consolidado seria sempre `pendente`) → amostra vazia.
+     * Sem CNAE ativo ou sem zona no Quadro 10 vigente não há cenário comparável
+     * (o consolidado seria sempre `pendente`) → amostra vazia.
      *
      * @return list<array<string, mixed>>
      */
     private function montarCenarios(int $amostra): array
     {
-        $quadro7 = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first();
         $zona = $this->zonaFixa();
 
-        if ($quadro7 === null || $zona === null || $amostra < 1) {
+        if ($zona === null || $amostra < 1) {
             return [];
         }
 
-        $faixas = LouosQuadro7Faixa::query()
-            ->where('rule_version_id', $quadro7->getKey())
-            ->orderBy('cnae_code')
-            ->orderBy('area_min')
+        $cnaes = Cnae::query()
+            ->where('active', true)
+            ->orderBy('code')
+            ->limit($amostra)
             ->get();
 
         $cenarios = [];
-        $vistos = [];
 
-        foreach ($faixas as $faixa) {
-            $cnae = (string) preg_replace('/\D/', '', (string) $faixa->cnae_code);
-
-            if (isset($vistos[$cnae])) {
-                continue;
-            }
-
-            $vistos[$cnae] = true;
+        foreach ($cnaes as $cnae) {
+            $code = (string) preg_replace('/\D/', '', (string) $cnae->code);
 
             $cenarios[] = [
-                'cnae' => $cnae,
-                'cnae_formatado' => $this->formatarCnae($cnae),
-                'area' => $this->areaRepresentativa($faixa),
+                'cnae' => $code,
+                'cnae_formatado' => $this->formatarCnae($code),
+                'area' => $this->areaRepresentativa(),
                 'zona' => $zona,
             ];
-
-            if (count($cenarios) >= $amostra) {
-                break;
-            }
         }
 
         return $cenarios;
@@ -241,15 +231,12 @@ class LouosSandboxSimulationService
     }
 
     /**
-     * Área representativa de uma faixa: ponto médio entre o mínimo e o máximo, ou
-     * o mínimo + 1 quando não há teto (area_max nula).
+     * Área representativa da amostra quando não há faixa versionada: ponto
+     * técnico abaixo do corte usual de 1.250 m² da planilha.
      */
-    private function areaRepresentativa(LouosQuadro7Faixa $faixa): float
+    private function areaRepresentativa(): float
     {
-        $min = (float) $faixa->area_min;
-        $max = $faixa->area_max === null ? null : (float) $faixa->area_max;
-
-        return $max === null ? $min + 1 : ($min + $max) / 2;
+        return 50.0;
     }
 
     /**

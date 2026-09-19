@@ -7,8 +7,8 @@
         "zona": "ZPR 1"
     },
     "esperado": {
-        "quadro7_status": "identificado",
-        "quadro7_grupo": "nR1",
+        "enquadramento_status": "identificado",
+        "enquadramento_grupo": "nR1",
         "quadro10_status": "identificado",
         "quadro10_permissao": "proibido",
         "resultado": "nao_permitido"

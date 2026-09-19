@@ -22,7 +22,7 @@ class ImportLouosCsvRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'quadro' => ['required', 'string', 'in:quadro7,quadro10,quadro11a'],
+            'quadro' => ['required', 'string', 'in:quadro10,quadro11a'],
             'arquivo' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
             'substituir' => ['sometimes', 'boolean'],
         ];

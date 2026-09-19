@@ -56,13 +56,6 @@ export const PERMISSAO_OPTIONS = [
  * natural e o esquema da tabela tipada validados no StoreLouosLinhaRequest.
  */
 export const ALTERACAO_FIELDS: Record<string, AlteracaoField[]> = {
-    quadro7: [
-        { key: 'cnae_code', label: 'CNAE', kind: 'text', required: true, placeholder: '0000-0/00' },
-        { key: 'area_min', label: 'Área mínima (m²)', kind: 'number', required: true, placeholder: '0' },
-        { key: 'area_max', label: 'Área máxima (m²)', kind: 'number', placeholder: 'sem limite' },
-        { key: 'grupo', label: 'Grupo', kind: 'text', required: true, placeholder: 'ex.: nR3' },
-        { key: 'subgrupo', label: 'Subgrupo', kind: 'text', placeholder: 'ex.: nR3-99' },
-    ],
     quadro10: [
         { key: 'zona', label: 'Zona', kind: 'text', required: true, placeholder: 'ex.: ZCAL.1' },
         { key: 'grupo_uso', label: 'Grupo de uso', kind: 'text', required: true },
@@ -83,7 +76,7 @@ export function fieldsFor(
     quadro: string,
     quadro10Permissao?: { value: string; label: string }[],
 ): AlteracaoField[] {
-    const fields = ALTERACAO_FIELDS[quadro] ?? ALTERACAO_FIELDS.quadro7;
+    const fields = ALTERACAO_FIELDS[quadro] ?? ALTERACAO_FIELDS.quadro10;
 
     if (!quadro10Permissao?.length) {
         return fields;

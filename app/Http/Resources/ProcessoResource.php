@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnalysisSlaService;
 use App\Services\Analise\ProcessoQueryService;
@@ -26,6 +27,8 @@ class ProcessoResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $this->resource->loadMissing(['decision', 'encaminhamentoAnalise']);
+
         $categorias = ProcessoQueryService::categoriasDe($this->resource);
 
         return [
@@ -36,6 +39,8 @@ class ProcessoResource extends JsonResource
             'tvl_product_number' => $this->decision?->tvl_product_number,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
+            'sem_decisao_automatica' => $this->semDecisaoAutomatica(),
+            'motivo_encaminhamento' => $this->motivoEncaminhamento(),
             'origin' => $this->origin->value,
             'origin_label' => $this->origin->label(),
             'tipo_imovel' => $this->tipo_imovel,
@@ -128,6 +133,30 @@ class ProcessoResource extends JsonResource
             'status_label' => $resultado['status']->label(),
             'restante' => $resultado['restante'],
         ];
+    }
+
+    /**
+     * Em análise sem ViabilityDecision: o motor não deferiu nem indeferiu.
+     */
+    private function semDecisaoAutomatica(): bool
+    {
+        return $this->status === ViabilityRequestStatus::EmAnalise
+            && $this->decision === null;
+    }
+
+    /**
+     * Motivo gravado na transição protocolada→em_analise. Null quando houve
+     * decisão automática ou quando a transição não registrou motivo.
+     */
+    private function motivoEncaminhamento(): ?string
+    {
+        if (! $this->semDecisaoAutomatica()) {
+            return null;
+        }
+
+        $motivo = $this->encaminhamentoAnalise?->reason;
+
+        return is_string($motivo) && $motivo !== '' ? $motivo : null;
     }
 
     /**

@@ -3,12 +3,13 @@
 namespace App\Services\Louos;
 
 use App\Services\Geo\TerritoryResult;
+use App\Services\Risco\TipoImovel;
 use Carbon\CarbonInterface;
 
 /**
  * Entrada imutável do motor de enquadramento da LOUOS (HU-038 a HU-045),
  * espelhando RiscoInput: reúne tudo que o motor precisa para aplicar os Quadros
- * 7/10/11/11A — a área pretendida, o CNAE principal e os secundários, o
+ * 10/11A e o ramo da planilha — a área utilizada, o CNAE principal e os secundários, o
  * território (de onde vêm zona e via — Fase 4, hoje indisponível/pendente
  * SEDUR) e as vagas declaradas pelo requerente (HU-042).
  *
@@ -22,6 +23,7 @@ final readonly class EnquadramentoInput
     /**
      * @param  list<string>  $cnaesSecundarios  CNAEs secundários (dígitos).
      * @param  array<string, mixed>  $vagasDeclaradas  Vagas/carga/descarga declaradas pelo requerente (HU-042).
+     * @param  array<int, bool>  $respostas  Número da pergunta da planilha → sim/não.
      * @param  array<string, string>  $versoesOverride  Mapa domínio (RuleDomain->value) → versão específica (sandbox HU-143).
      */
     public function __construct(
@@ -32,18 +34,24 @@ final readonly class EnquadramentoInput
         public array $vagasDeclaradas = [],
         public ?CarbonInterface $data = null,
         public array $versoesOverride = [],
+        public array $respostas = [],
+        public ?TipoImovel $tipoImovel = null,
     ) {}
 
     /**
      * Atalho para a consulta simples de viabilidade: área + CNAE (+ território
      * opcional), sem secundários, vagas, época ou override de versão.
      */
-    public static function paraConsulta(float $area, string $cnae, ?TerritoryResult $territory = null): self
+    /**
+     * @param  array<int, bool>  $respostas
+     */
+    public static function paraConsulta(float $area, string $cnae, ?TerritoryResult $territory = null, array $respostas = []): self
     {
         return new self(
             area: $area,
             cnaePrincipal: $cnae,
             territory: $territory,
+            respostas: $respostas,
         );
     }
 }

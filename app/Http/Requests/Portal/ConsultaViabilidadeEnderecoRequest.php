@@ -9,7 +9,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * Consulta de viabilidade por ENDEREÇO (HU-054). Rota pública (cidadão anônimo):
  * authorize true. O `cnae` é sempre exigido (a viabilidade é de uma atividade);
  * o formato livre é normalizado para dígitos pelo serviço. `area` (m²) alimenta
- * o Quadro 7 (HU-057).
+ * o enquadramento da planilha vigente.
  */
 class ConsultaViabilidadeEnderecoRequest extends FormRequest
 {
@@ -37,6 +37,8 @@ class ConsultaViabilidadeEnderecoRequest extends FormRequest
             'endereco' => ['required', 'string', 'min:3', 'max:255'],
             'cnae' => ['required', 'string', 'max:14'],
             'area' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
+            'respostas' => ['nullable', 'array'],
+            'respostas.*' => ['boolean'],
         ];
     }
 

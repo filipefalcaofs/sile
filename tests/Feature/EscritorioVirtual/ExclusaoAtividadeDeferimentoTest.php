@@ -13,7 +13,6 @@ use App\Events\ResultadoEmitido;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityDecision;
@@ -25,6 +24,7 @@ use Database\Seeders\EscritorioVirtualCnaeSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -39,6 +39,7 @@ use Tests\TestCase;
 class ExclusaoAtividadeDeferimentoTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private function service(): FluxoExpressoService
     {
@@ -73,6 +74,7 @@ class ExclusaoAtividadeDeferimentoTest extends TestCase
             'is_primary' => true,
             'intencao' => IntencaoAtividade::Excluir->value,
         ]);
+        $solicitacao->respostasTratamento = [11 => true];
 
         return $solicitacao;
     }
@@ -105,7 +107,7 @@ class ExclusaoAtividadeDeferimentoTest extends TestCase
      * Cenário comum (sem exclusão), reaproveitado do caminho de decisão
      * padrão: risco baixo + Quadro 7/10 permitidos na zona ZR-1.
      */
-    private function protocoladaComumDeferivel(string $cnae = '8888881'): ViabilityRequest
+    private function protocoladaComumDeferivel(string $cnae = '4712100'): ViabilityRequest
     {
         GeoLayer::factory()->vigente()->create(['type' => GeoLayerType::Bairro, 'version' => 'bairro-2024']);
         GeoLayer::factory()->vigente()->create(['type' => GeoLayerType::Zona, 'version' => 'zoneamento-louos-2026']);
@@ -127,20 +129,7 @@ class ExclusaoAtividadeDeferimentoTest extends TestCase
             'risco_municipal' => RiscoMunicipal::BaixoA,
         ]);
 
-        $versaoQuadro7 = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $versaoQuadro7->id,
-            'cnae_code' => $cnae,
-            'grupo' => 'nR1',
-            'subgrupo' => 'nR1-01',
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
 
         $versaoQuadro10 = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first()
             ?? RuleVersion::factory()->create([
@@ -161,6 +150,7 @@ class ExclusaoAtividadeDeferimentoTest extends TestCase
         $solicitacao = ViabilityRequest::factory()->protocoled()->create(['used_area_m2' => 120.0]);
         $cnaeModel = Cnae::factory()->create(['code' => $cnae]);
         $solicitacao->cnaes()->attach($cnaeModel->id, ['is_primary' => true]);
+        $solicitacao->respostasTratamento = [11 => true];
 
         return $solicitacao;
     }

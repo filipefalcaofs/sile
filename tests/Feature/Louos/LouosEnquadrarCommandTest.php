@@ -4,8 +4,8 @@ namespace Tests\Feature\Louos;
 
 use Database\Seeders\LouosQuadro10Seeder;
 use Database\Seeders\LouosQuadro11Seeder;
-use Database\Seeders\LouosQuadro7Seeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -22,13 +22,15 @@ use Tests\TestCase;
 class LouosEnquadrarCommandTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->seedTratamentoPlanilha();
+
         $this->seed([
-            LouosQuadro7Seeder::class,
             LouosQuadro10Seeder::class,
             LouosQuadro11Seeder::class,
         ]);
@@ -38,7 +40,11 @@ class LouosEnquadrarCommandTest extends TestCase
     {
         // 4712-1/00 (minimercado) área 200 → grupo nR1 no Quadro 7. Sem zona, o
         // Quadro 10 degrada (indisponível) e o consolidado é pendente — honesto.
-        $this->artisan('louos:enquadrar', ['cnae' => '4712100', '--area' => '200'])
+        $this->artisan('louos:enquadrar', [
+            'cnae' => '4712100',
+            '--area' => '200',
+            '--resposta' => ['11=sim'],
+        ])
             ->expectsOutputToContain('nR1')
             ->expectsOutputToContain('Pendente')
             ->assertSuccessful();
@@ -52,6 +58,7 @@ class LouosEnquadrarCommandTest extends TestCase
             'cnae' => '0161099',
             '--area' => '200',
             '--zona' => 'ZPR 1',
+            '--resposta' => ['11=sim'],
         ])
             ->expectsOutputToContain('nR1')
             ->expectsOutputToContain('Não permitido')

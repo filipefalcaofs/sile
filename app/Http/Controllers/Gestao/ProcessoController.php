@@ -136,6 +136,7 @@ class ProcessoController extends Controller
             'decision',
             'currentAnalysisRecord',
             'transitions',
+            'encaminhamentoAnalise',
         ]);
 
         // personalData: leitura do detalhe do processo de um cidadão expõe dados

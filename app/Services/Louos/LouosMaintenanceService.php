@@ -29,7 +29,7 @@ class LouosMaintenanceService
      * Retorna a versão promovida a vigente.
      *
      * @param  list<array<string, mixed>>  $alteracoes  Estrutura por Quadro; chave natural:
-     *                                                  Quadro 7 = cnae_code+area_min; Quadro 10 = zona+grupo_uso+subgrupo;
+     *                                                  Quadro 10 = zona+grupo_uso+subgrupo;
      *                                                  Quadro 11A = classe_via+grupo_uso.
      */
     public function publishNewVersion(

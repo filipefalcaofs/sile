@@ -1,0 +1,151 @@
+<?php
+
+namespace Tests\Unit\Tratamento;
+
+use App\Enums\RuleDomain;
+use App\Models\RuleVersion;
+use App\Services\Risco\TipoImovel;
+use App\Services\Risco\TipoImovelCatalog;
+use App\Services\Tratamento\TratamentoRamoInput;
+use App\Services\Tratamento\TratamentoRamoResolver;
+use App\Services\Tratamento\TratamentoRegrasImportService;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Tests\TestCase;
+
+class TratamentoRamoResolverTest extends TestCase
+{
+    use LazilyRefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $versao = RuleVersion::factory()->create([
+            'domain' => RuleDomain::RiscoTratamento,
+            'version' => 'planilha-20-08-26',
+        ]);
+
+        (new TratamentoRegrasImportService)->import($versao, database_path('data/regras-20-08-26'));
+    }
+
+    public function test_gc01_p11_nao_area_ate_1250_e_escritorio_baixo_expresso(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0111-3/01',
+            respostas: [11 => false],
+            areaUtilizada: 800.0,
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.12.13', $ramo->codigoLouos);
+        $this->assertSame('nR1-12', $ramo->subgrupo);
+        $this->assertSame('baixo', $ramo->risco);
+        $this->assertSame('expresso', $ramo->fluxo);
+    }
+
+    public function test_gc02_p11_nao_area_acima_1250_e_escritorio_medio_expresso(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0111-3/01',
+            respostas: [11 => false],
+            areaUtilizada: 1300.0,
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.12.13', $ramo->codigoLouos);
+        $this->assertSame('nR2-12', $ramo->subgrupo);
+        $this->assertSame('medio', $ramo->risco);
+        $this->assertSame('expresso', $ramo->fluxo);
+    }
+
+    public function test_gc03_p11_sim_galpao_id_e_alto_semiexpresso(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0210-1/07',
+            respostas: [11 => true],
+            areaUtilizada: 400.0,
+            tipoImovel: TipoImovel::fromRegin('GALPÃO', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('ID2-07', $ramo->subgrupo);
+        $this->assertSame('alto', $ramo->risco);
+        $this->assertSame('semiexpresso', $ramo->fluxo);
+    }
+
+    public function test_gc_cnlu_nao_resolve_e_nunca_e_expresso(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0111-3/01',
+            respostas: [11 => true],
+            areaUtilizada: 400.0,
+        ));
+
+        $this->assertSame('nao_resolvido', $ramo->status);
+        $this->assertSame('analise', $ramo->fluxo);
+        $this->assertStringContainsString('CNLU', $ramo->motivo ?? '');
+    }
+
+    public function test_pergunta_faltando_nao_resolve(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0111-3/01',
+            respostas: [],
+            areaUtilizada: 800.0,
+        ));
+
+        $this->assertSame('nao_resolvido', $ramo->status);
+        $this->assertStringContainsString('pergunta', mb_strtolower($ramo->motivo ?? ''));
+    }
+
+    public function test_cnae_sem_binding_nao_resolve(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0000-0/00',
+        ));
+
+        $this->assertSame('nao_resolvido', $ramo->status);
+        $this->assertStringContainsString('sem regra', mb_strtolower($ramo->motivo ?? ''));
+    }
+
+    public function test_area_ausente_quando_ramo_depende_nao_resolve(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0111-3/01',
+            respostas: [11 => false],
+        ));
+
+        $this->assertSame('nao_resolvido', $ramo->status);
+        $this->assertStringContainsString('área', mb_strtolower($ramo->motivo ?? ''));
+    }
+
+    public function test_tipo_ausente_quando_ramo_id_depende_nao_resolve(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0210-1/07',
+            respostas: [11 => true],
+            areaUtilizada: 400.0,
+        ));
+
+        $this->assertSame('nao_resolvido', $ramo->status);
+        $this->assertStringContainsString('tipo', mb_strtolower($ramo->motivo ?? ''));
+    }
+
+    public function test_tipo_desconhecido_quando_ramo_id_depende_nao_resolve(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0210-1/07',
+            respostas: [11 => true],
+            areaUtilizada: 400.0,
+            tipoImovel: TipoImovel::fromRegin('PALAFITA', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('nao_resolvido', $ramo->status);
+        $this->assertStringContainsString('desconhecido', mb_strtolower($ramo->motivo ?? ''));
+    }
+
+    private function resolver(): TratamentoRamoResolver
+    {
+        return new TratamentoRamoResolver;
+    }
+}

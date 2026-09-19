@@ -276,9 +276,16 @@ export default function ConsultaProcessos({
             header: 'Status',
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
-                <Badge color={statusColor(item.status)} size="sm">
-                    {item.status_label}
-                </Badge>
+                <div className="flex max-w-72 flex-col gap-1">
+                    <Badge color={statusColor(item.status)} size="sm">
+                        {item.status_label}
+                    </Badge>
+                    {item.sem_decisao_automatica && item.motivo_encaminhamento && (
+                        <span className="text-theme-xs text-gray-500 dark:text-gray-400">
+                            Sem decisão automática — {item.motivo_encaminhamento}
+                        </span>
+                    )}
+                </div>
             ),
         },
         {

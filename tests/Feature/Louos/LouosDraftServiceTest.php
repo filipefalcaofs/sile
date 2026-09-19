@@ -8,11 +8,11 @@ use App\Enums\RuleVersionStatus;
 use App\Exceptions\FourEyesViolationException;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Models\User;
+use App\Models\Zona;
 use App\Services\Louos\LouosDraftService;
-use Database\Seeders\LouosQuadro7Seeder;
+use Database\Seeders\LouosQuadro10Seeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\Models\Activity;
@@ -32,60 +32,78 @@ class LouosDraftServiceTest extends TestCase
         return app(LouosDraftService::class);
     }
 
+    private function cadastrarZonasDoRascunho(RuleVersion $draft): void
+    {
+        LouosQuadro10Permissao::query()
+            ->where('rule_version_id', $draft->id)
+            ->pluck('zona')
+            ->unique()
+            ->each(function (string $zona): void {
+                if (Zona::query()->where('codigo', $zona)->doesntExist()) {
+                    Zona::factory()->create(['codigo' => $zona]);
+                }
+            });
+    }
+
     public function test_abrir_rascunho_materializa_linhas_da_vigente(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
-        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first();
-        $totalVigente = LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count();
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first();
+        $totalVigente = LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count();
 
         $user = User::factory()->create();
-        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-rascunho-v1', $user->id);
+        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-rascunho-v1', $user->id);
 
         $this->assertSame(RuleVersionStatus::Rascunho, $draft->status);
         $this->assertSame(
             $totalVigente,
-            LouosQuadro7Faixa::query()->where('rule_version_id', $draft->id)->count(),
+            LouosQuadro10Permissao::query()->where('rule_version_id', $draft->id)->count(),
         );
 
         // Vigente intacta
         $this->assertSame(RuleVersionStatus::Vigente, $vigente->fresh()->status);
-        $this->assertSame($totalVigente, LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count());
+        $this->assertSame($totalVigente, LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count());
     }
 
     public function test_retomar_rascunho_aberto_e_idempotente(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
         $user = User::factory()->create();
 
-        $draft1 = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-rascunho-v1', $user->id);
-        $contagem = LouosQuadro7Faixa::query()->where('rule_version_id', $draft1->id)->count();
+        $draft1 = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-rascunho-v1', $user->id);
+        $contagem = LouosQuadro10Permissao::query()->where('rule_version_id', $draft1->id)->count();
 
-        $draft2 = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-rascunho-v2', $user->id);
+        $draft2 = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-rascunho-v2', $user->id);
 
         $this->assertSame($draft1->id, $draft2->id);
-        $this->assertSame($contagem, LouosQuadro7Faixa::query()->where('rule_version_id', $draft1->id)->count());
+        $this->assertSame($contagem, LouosQuadro10Permissao::query()->where('rule_version_id', $draft1->id)->count());
     }
 
     public function test_inserir_alterar_e_excluir_linha_so_no_rascunho(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
-        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first();
-        $contagemVigente = LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count();
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first();
+        $contagemVigente = LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count();
 
         $user = User::factory()->create();
-        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-rascunho-v1', $user->id);
+        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-rascunho-v1', $user->id);
 
-        $dados = ['cnae_code' => '9999-9/99', 'area_min' => 0, 'area_max' => 500, 'grupo' => 'nR1', 'subgrupo' => 'nR1-99'];
+        $dados = [
+            'zona' => 'ZPR-TESTE',
+            'grupo_uso' => 'nR1',
+            'subgrupo' => '',
+            'permissao' => Quadro10Permissao::Permitido->value,
+        ];
 
         $linha = $this->service()->inserirLinha($draft, $dados);
         $this->assertSame($draft->id, $linha->rule_version_id);
-        $this->assertDatabaseHas('louos_quadro7_faixas', ['rule_version_id' => $draft->id, 'cnae_code' => '9999999']);
+        $this->assertDatabaseHas('louos_quadro10_permissoes', ['rule_version_id' => $draft->id, 'zona' => 'ZPR-TESTE']);
 
         // Vigente não muda
-        $this->assertSame($contagemVigente, LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count());
+        $this->assertSame($contagemVigente, LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count());
 
         // Chave duplicada lança ValidationException
         try {
@@ -96,19 +114,21 @@ class LouosDraftServiceTest extends TestCase
         }
 
         // Alterar a linha
-        $this->service()->alterarLinha($draft, $linha->id, array_merge($dados, ['grupo' => 'nR2']));
+        $this->service()->alterarLinha($draft, $linha->id, array_merge($dados, [
+            'permissao' => Quadro10Permissao::Proibido->value,
+        ]));
         $linha->refresh();
-        $this->assertSame('nR2', $linha->grupo);
+        $this->assertSame(Quadro10Permissao::Proibido, $linha->permissao);
 
         // Vigente ainda intacta
-        $this->assertSame($contagemVigente, LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count());
+        $this->assertSame($contagemVigente, LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count());
 
         // Excluir a linha
         $this->service()->excluirLinha($draft, $linha->id);
-        $this->assertDatabaseMissing('louos_quadro7_faixas', ['id' => $linha->id]);
+        $this->assertDatabaseMissing('louos_quadro10_permissoes', ['id' => $linha->id]);
 
         // Vigente preservada
-        $this->assertSame($contagemVigente, LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count());
+        $this->assertSame($contagemVigente, LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count());
     }
 
     public function test_crud_quadro10_e_quadro11a(): void
@@ -188,29 +208,29 @@ class LouosDraftServiceTest extends TestCase
 
     public function test_operacao_fora_de_rascunho_e_rejeitada(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
-        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first();
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first();
 
         $this->expectException(\DomainException::class);
 
         $this->service()->inserirLinha($vigente, [
-            'cnae_code' => '9999-9/99',
-            'area_min' => 0,
-            'area_max' => 500,
-            'grupo' => 'nR1',
+            'zona' => 'ZPR-X',
+            'grupo_uso' => 'nR1',
+            'subgrupo' => '',
+            'permissao' => Quadro10Permissao::Permitido->value,
         ]);
     }
 
     public function test_diff_conta_novas_alteradas_e_excluidas(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
         $user = User::factory()->create();
-        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-diff-v1', $user->id);
+        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-diff-v1', $user->id);
 
         // Pegar as duas primeiras linhas do rascunho para alterar e excluir
-        $linhas = LouosQuadro7Faixa::query()
+        $linhas = LouosQuadro10Permissao::query()
             ->where('rule_version_id', $draft->id)
             ->orderBy('id')
             ->take(2)
@@ -221,19 +241,17 @@ class LouosDraftServiceTest extends TestCase
 
         // Inserir uma nova (novas++)
         $this->service()->inserirLinha($draft, [
-            'cnae_code' => '9999-9/99',
-            'area_min' => 0,
-            'area_max' => 500,
-            'grupo' => 'nR1',
+            'zona' => 'ZPR-DIFF',
+            'grupo_uso' => 'nR1',
+            'subgrupo' => '',
+            'permissao' => Quadro10Permissao::Permitido->value,
         ]);
 
-        // Alterar uma existente (alteradas++) — mudar grupo não altera a chave natural
         $this->service()->alterarLinha($draft, $linhaAlterar->id, [
-            'cnae_code' => $linhaAlterar->cnae_code,
-            'area_min' => (float) $linhaAlterar->area_min,
-            'area_max' => $linhaAlterar->area_max !== null ? (float) $linhaAlterar->area_max : null,
-            'grupo' => $linhaAlterar->grupo.'_alterado',
+            'zona' => $linhaAlterar->zona,
+            'grupo_uso' => $linhaAlterar->grupo_uso,
             'subgrupo' => $linhaAlterar->subgrupo,
+            'permissao' => Quadro10Permissao::Proibido->value,
         ]);
 
         // Excluir uma existente (excluidas++)
@@ -248,17 +266,18 @@ class LouosDraftServiceTest extends TestCase
 
     public function test_publicar_exige_quatro_olhos_e_promove_rascunho(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
-        $vigenteAntiga = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first();
-        $contagemOriginal = LouosQuadro7Faixa::query()->where('rule_version_id', $vigenteAntiga->id)->count();
+        $vigenteAntiga = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first();
+        $contagemOriginal = LouosQuadro10Permissao::query()->where('rule_version_id', $vigenteAntiga->id)->count();
 
         $autor = User::factory()->create();
-        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-pub-v1', $autor->id);
+        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-pub-v1', $autor->id);
 
         // Excluir uma linha do rascunho
-        $faixaExcluida = LouosQuadro7Faixa::query()->where('rule_version_id', $draft->id)->first();
+        $faixaExcluida = LouosQuadro10Permissao::query()->where('rule_version_id', $draft->id)->first();
         $this->service()->excluirLinha($draft, $faixaExcluida->id);
+        $this->cadastrarZonasDoRascunho($draft);
 
         // Quatro olhos: autor igual ao publicador → exceção
         $this->expectException(FourEyesViolationException::class);
@@ -267,19 +286,20 @@ class LouosDraftServiceTest extends TestCase
 
     public function test_publicar_com_publicador_distinto_promove_rascunho(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
-        $vigenteAntiga = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first();
-        $contagemOriginal = LouosQuadro7Faixa::query()->where('rule_version_id', $vigenteAntiga->id)->count();
+        $vigenteAntiga = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first();
+        $contagemOriginal = LouosQuadro10Permissao::query()->where('rule_version_id', $vigenteAntiga->id)->count();
 
         $autor = User::factory()->create();
         $publicador = User::factory()->create();
 
-        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-pub-v1', $autor->id);
+        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-pub-v1', $autor->id);
 
         // Excluir uma linha do rascunho
-        $faixaExcluida = LouosQuadro7Faixa::query()->where('rule_version_id', $draft->id)->first();
+        $faixaExcluida = LouosQuadro10Permissao::query()->where('rule_version_id', $draft->id)->first();
         $this->service()->excluirLinha($draft, $faixaExcluida->id);
+        $this->cadastrarZonasDoRascunho($draft);
 
         $novaVigente = $this->service()->publicar($draft, $publicador->id);
 
@@ -293,9 +313,9 @@ class LouosDraftServiceTest extends TestCase
         // Linha excluída não existe na nova vigente
         $this->assertSame(
             $contagemOriginal - 1,
-            LouosQuadro7Faixa::query()->where('rule_version_id', $novaVigente->id)->count(),
+            LouosQuadro10Permissao::query()->where('rule_version_id', $novaVigente->id)->count(),
         );
-        $this->assertDatabaseMissing('louos_quadro7_faixas', ['id' => $faixaExcluida->id]);
+        $this->assertDatabaseMissing('louos_quadro10_permissoes', ['id' => $faixaExcluida->id]);
 
         // Auditoria registra o evento de publicação
         $this->assertDatabaseHas('activity_log', ['log_name' => 'louos', 'event' => 'rascunho-publicado']);
@@ -303,65 +323,62 @@ class LouosDraftServiceTest extends TestCase
 
     public function test_descartar_remove_rascunho_e_preserva_vigente(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
-        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first();
-        $contagemVigente = LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count();
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first();
+        $contagemVigente = LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count();
 
         $user = User::factory()->create();
-        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-descartar-v1', $user->id);
+        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-descartar-v1', $user->id);
         $draftId = $draft->id;
 
         $this->service()->descartar($draft);
 
         // Rascunho e suas linhas removidos
         $this->assertDatabaseMissing('rule_versions', ['id' => $draftId]);
-        $this->assertSame(0, LouosQuadro7Faixa::query()->where('rule_version_id', $draftId)->count());
+        $this->assertSame(0, LouosQuadro10Permissao::query()->where('rule_version_id', $draftId)->count());
 
         // Vigente intacta
         $this->assertSame(RuleVersionStatus::Vigente, $vigente->fresh()->status);
-        $this->assertSame($contagemVigente, LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count());
+        $this->assertSame($contagemVigente, LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count());
     }
 
     public function test_importar_csv_no_rascunho_retorna_relatorio(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
-        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first();
-        $contagemVigente = LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count();
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first();
+        $contagemVigente = LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count();
 
         $user = User::factory()->create();
-        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-import-v1', $user->id);
+        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-import-v1', $user->id);
 
-        // CSV: 2 linhas válidas (mesmo CNAE, faixas contíguas) + 1 inválida (CNAE sem 7 dígitos)
         $csv = implode("\n", [
-            'cnae,grupo,subgrupo,area_min,area_max,observacao',
-            '9999-9/99,nR1,nR1-01,0,350,',
-            '9999-9/99,nR2,,350,,',
-            '9999-x/99,nR1,,0,350,',
+            'zona,grupo_uso,subgrupo,permissao,condicionante_ref,base_legal',
+            'ZPR-IMP,nR1,,permitido,,',
+            'ZPR-IMP,nR2,,proibido,,',
+            'ZPR-IMP,,,valor-invalido,,',
         ]);
         $tmpFile = tempnam(sys_get_temp_dir(), 'louos_test_').'.csv';
         file_put_contents($tmpFile, $csv);
 
         try {
-            $relatorio = $this->service()->importarCsv($draft, $tmpFile, 'planilha-quadro7.csv');
+            $relatorio = $this->service()->importarCsv($draft, $tmpFile, 'planilha-quadro10.csv');
 
             $this->assertSame(2, $relatorio['importados']);
             $this->assertCount(1, $relatorio['rejeitados']);
 
-            // Linhas caem no rascunho
             $this->assertSame(
                 2,
-                LouosQuadro7Faixa::query()->where('rule_version_id', $draft->id)->where('cnae_code', '9999999')->count(),
+                LouosQuadro10Permissao::query()->where('rule_version_id', $draft->id)->where('zona', 'ZPR-IMP')->count(),
             );
 
-            // Vigente intacta: não tem CNAE 9999999 (CNAE sintético)
-            $this->assertDatabaseMissing('louos_quadro7_faixas', ['rule_version_id' => $vigente->id, 'cnae_code' => '9999999']);
+            $this->assertDatabaseMissing('louos_quadro10_permissoes', ['rule_version_id' => $vigente->id, 'zona' => 'ZPR-IMP']);
         } finally {
             unlink($tmpFile);
         }
 
-        $this->assertSame($contagemVigente, LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count());
+        $this->assertSame($contagemVigente, LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count());
 
         $this->assertDatabaseHas('activity_log', ['log_name' => 'louos', 'event' => 'rascunho-importacao']);
 
@@ -370,24 +387,24 @@ class LouosDraftServiceTest extends TestCase
             ->where('event', 'rascunho-importacao')
             ->latest()
             ->first();
-        $this->assertSame('planilha-quadro7.csv', $activity->properties['arquivo']);
+        $this->assertSame('planilha-quadro10.csv', $activity->properties['arquivo']);
     }
 
     public function test_importar_csv_substituindo_apaga_linhas_anteriores_do_rascunho(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
-        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first();
-        $contagemVigente = LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count();
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first();
+        $contagemVigente = LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count();
 
         $user = User::factory()->create();
-        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-import-replace-v1', $user->id);
+        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-import-replace-v1', $user->id);
 
-        $this->assertGreaterThan(0, LouosQuadro7Faixa::query()->where('rule_version_id', $draft->id)->count());
+        $this->assertGreaterThan(0, LouosQuadro10Permissao::query()->where('rule_version_id', $draft->id)->count());
 
         $csv = implode("\n", [
-            'cnae,grupo,subgrupo,area_min,area_max,observacao',
-            '8888-8/88,nR1,nR1-01,0,350,carga oficial',
+            'zona,grupo_uso,subgrupo,permissao,condicionante_ref,base_legal',
+            'ZPR-SUB,nR1,,permitido,,',
         ]);
         $tmpFile = tempnam(sys_get_temp_dir(), 'louos_replace_').'.csv';
         file_put_contents($tmpFile, $csv);
@@ -399,14 +416,14 @@ class LouosDraftServiceTest extends TestCase
         }
 
         $this->assertSame(1, $relatorio['importados']);
-        $this->assertSame(1, LouosQuadro7Faixa::query()->where('rule_version_id', $draft->id)->count());
+        $this->assertSame(1, LouosQuadro10Permissao::query()->where('rule_version_id', $draft->id)->count());
         $this->assertTrue(
-            LouosQuadro7Faixa::query()
+            LouosQuadro10Permissao::query()
                 ->where('rule_version_id', $draft->id)
-                ->where('cnae_code', '8888888')
+                ->where('zona', 'ZPR-SUB')
                 ->exists(),
         );
-        $this->assertSame($contagemVigente, LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count());
+        $this->assertSame($contagemVigente, LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count());
     }
 
     public function test_normaliza_grupo_uso_nulo_no_quadro10(): void
@@ -447,26 +464,26 @@ class LouosDraftServiceTest extends TestCase
 
     public function test_auditoria_registra_mutacoes(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
         $user = User::factory()->create();
-        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro7, '2026-audit-v1', $user->id);
+        $draft = $this->service()->abrirOuRetomar(RuleDomain::LouosQuadro10, '2026-audit-v1', $user->id);
 
         $this->assertDatabaseHas('activity_log', ['log_name' => 'louos', 'event' => 'rascunho-aberto']);
 
         $linha = $this->service()->inserirLinha($draft, [
-            'cnae_code' => '9999-9/99',
-            'area_min' => 0,
-            'area_max' => 500,
-            'grupo' => 'nR1',
+            'zona' => 'ZPR-AUD',
+            'grupo_uso' => 'nR1',
+            'subgrupo' => '',
+            'permissao' => Quadro10Permissao::Permitido->value,
         ]);
         $this->assertDatabaseHas('activity_log', ['log_name' => 'louos', 'event' => 'rascunho-linha-inserida']);
 
         $this->service()->alterarLinha($draft, $linha->id, [
-            'cnae_code' => '9999-9/99',
-            'area_min' => 0,
-            'area_max' => 500,
-            'grupo' => 'nR2',
+            'zona' => 'ZPR-AUD',
+            'grupo_uso' => 'nR1',
+            'subgrupo' => '',
+            'permissao' => Quadro10Permissao::Proibido->value,
         ]);
         $this->assertDatabaseHas('activity_log', ['log_name' => 'louos', 'event' => 'rascunho-linha-alterada']);
 

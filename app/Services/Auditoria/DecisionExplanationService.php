@@ -10,7 +10,7 @@ use App\Services\Decisao\DecisionTextCatalog;
  * Explicabilidade passo a passo das decisões (HU-099 RN-004/RN-005) como
  * PROJEÇÃO PURA: LÊ o decision_trace gravado na 12-02 (+ rules_versions +
  * fundamentacao) e devolve a visualização ordenada por CNAE (entrada → risco →
- * LOUOS Quadro 7/10/11/11A → consolidação → desfecho), refletindo
+ * LOUOS enquadramento de uso / 10 / 11A → consolidação → desfecho), refletindo
  * motivo/versao_regra exatamente como o motor gravou.
  *
  * REGRA ANTI-FACHADA (RN-005): NUNCA instancia nem chama o motor (resolver,
@@ -173,7 +173,7 @@ final class DecisionExplanationService
         $passos = [
             $this->passoEntradaLegado($item),
             $this->passoNaoRegistrado('risco', $this->textos->get('explicacao.titulo.risco'), $this->textos->get('explicacao.motivo.risco_nao_registrado')),
-            $this->passoNaoRegistrado('louos.quadro7', $this->textos->get('explicacao.titulo.quadro7'), $this->textos->get('explicacao.motivo.quadro7_nao_registrado')),
+            $this->passoNaoRegistrado('louos.enquadramento', $this->textos->get('explicacao.titulo.enquadramento'), $this->textos->get('explicacao.motivo.enquadramento_nao_registrado')),
             $this->passoNaoRegistrado('louos.quadro10', $this->textos->get('explicacao.titulo.quadro10'), $this->textos->get('explicacao.motivo.quadro10_nao_registrado')),
             $this->passoNaoRegistrado('louos.quadro11a', $this->textos->get('explicacao.titulo.quadro11a'), $this->textos->get('explicacao.motivo.quadro11a_nao_registrado')),
             $temVeredito
@@ -285,8 +285,10 @@ final class DecisionExplanationService
     private function motivoConsolidacaoLegado(array $item, array $fundamentacao): ?string
     {
         $texto = implode(' ', array_map(strval(...), $fundamentacao));
-        $citaQuadro7 = str_contains($texto, 'Quadro 7');
         $citaQuadro10 = str_contains($texto, 'Quadro 10');
+        $citaEnquadramento = str_contains($texto, 'enquadramento')
+            || str_contains($texto, 'Quadro 7')
+            || (str_contains($texto, '(LOUOS)') && ! $citaQuadro10);
         $tendencia = is_string($item['tendencia'] ?? null) ? $item['tendencia'] : '';
 
         $permitido = in_array($tendencia, [
@@ -294,8 +296,8 @@ final class DecisionExplanationService
             ResultadoViabilidade::PermitidoComCondicoes->value,
         ], true);
 
-        if ($permitido && $citaQuadro7 && ! $citaQuadro10) {
-            return $this->textos->get('explicacao.motivo.permitido_so_quadro7');
+        if ($permitido && $citaEnquadramento && ! $citaQuadro10) {
+            return $this->textos->get('explicacao.motivo.permitido_so_enquadramento');
         }
 
         if ($permitido && $citaQuadro10) {

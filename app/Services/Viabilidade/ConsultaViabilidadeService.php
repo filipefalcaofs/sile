@@ -33,7 +33,7 @@ use App\Support\Audit\AuditService;
  * indisponível degrada para a via CNAE — JAMAIS inventa um ponto.
  *
  * Há três entradas honestas (HU-054/055/056): endereço (pipeline completo),
- * CNAE (risco + Quadro 7 por área, sem território) e inscrição imobiliária (via
+ * CNAE (risco + enquadramento da planilha por área, sem território) e inscrição imobiliária (via
  * contrato PropertyRegistryLookup — resolve quando a base oficial existir,
  * degrada com aviso enquanto pendente SEDUR).
  */
@@ -57,23 +57,29 @@ class ConsultaViabilidadeService
      * o controller (07-06) traduzir em mensagem honesta — endereço não
      * localizado/serviço indisponível NUNCA vira resultado falso (sem fachada).
      */
-    public function consultarPorEndereco(string $endereco, string $cnae, ?float $area = null): ConsultaViabilidadeResult
+    /**
+     * @param  array<int, bool>  $respostas
+     */
+    public function consultarPorEndereco(string $endereco, string $cnae, ?float $area = null, array $respostas = []): ConsultaViabilidadeResult
     {
         $geocode = $this->geocoder->geocode($endereco);
 
-        $input = ConsultaViabilidadeInput::paraEndereco($endereco, $cnae, $area);
+        $input = ConsultaViabilidadeInput::paraEndereco($endereco, $cnae, $area, $respostas);
 
         return $this->consultarPorPonto($geocode->latitude, $geocode->longitude, $input, $geocode);
     }
 
     /**
-     * Consulta por CNAE (HU-056): risco real e, quando há área, Quadro 7 — SEM
-     * território (sem ponto, sem zona/via). O veredito locacional fica pendente
+     * Consulta por CNAE (HU-056): risco real e, quando há área, enquadramento
+     * da planilha — SEM território (sem ponto, sem zona/via). O veredito locacional fica pendente
      * (o motor degrada sozinho) e a consulta avisa que não avalia o local.
      */
-    public function consultarPorCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null): ConsultaViabilidadeResult
+    /**
+     * @param  array<int, bool>  $respostas
+     */
+    public function consultarPorCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): ConsultaViabilidadeResult
     {
-        $input = ConsultaViabilidadeInput::paraCnae($cnae, $area, $tipoImovel);
+        $input = ConsultaViabilidadeInput::paraCnae($cnae, $area, $tipoImovel, $respostas);
 
         return $this->consultarPorCnaeComEntrada($input, [$this->textos->get('consulta.aviso.cnae_sem_local')]);
     }
@@ -84,9 +90,12 @@ class ConsultaViabilidadeService
      * (igual ao endereço, mas sem geocode); indisponível (pendente SEDUR), degrada
      * para a análise por CNAE + área com aviso — JAMAIS inventa um ponto.
      */
-    public function consultarPorInscricao(string $inscricao, string $cnae, ?float $area = null): ConsultaViabilidadeResult
+    /**
+     * @param  array<int, bool>  $respostas
+     */
+    public function consultarPorInscricao(string $inscricao, string $cnae, ?float $area = null, array $respostas = []): ConsultaViabilidadeResult
     {
-        $input = ConsultaViabilidadeInput::paraInscricao($inscricao, $cnae, $area);
+        $input = ConsultaViabilidadeInput::paraInscricao($inscricao, $cnae, $area, $respostas);
 
         try {
             $ponto = $this->propertyRegistry->resolve($inscricao);
@@ -115,9 +124,12 @@ class ConsultaViabilidadeService
      * veredito do motor LOUOS — sem lógica de decisão paralela (RN-001). Não
      * altera o comportamento das três entradas públicas (endereço/CNAE/inscrição).
      */
-    public function consultarPorPontoConhecido(float $lat, float $lng, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null): ConsultaViabilidadeResult
+    /**
+     * @param  array<int, bool>  $respostas
+     */
+    public function consultarPorPontoConhecido(float $lat, float $lng, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): ConsultaViabilidadeResult
     {
-        $input = ConsultaViabilidadeInput::paraPonto($cnae, $area, $tipoImovel);
+        $input = ConsultaViabilidadeInput::paraPonto($cnae, $area, $tipoImovel, $respostas);
 
         return $this->consultarPorPonto($lat, $lng, $input, null);
     }
@@ -126,7 +138,7 @@ class ConsultaViabilidadeService
      * Análise por CNAE + área SEM território, reutilizada pela via CNAE pura
      * (HU-056) e pela inscrição degradada (HU-055, quando a base de lotes está
      * indisponível): enquadra com território NULL (Quadro 10 indisponível →
-     * consolidado pendente; Quadro 7 por área roda) e classifica o risco real.
+     * consolidado pendente; o enquadramento da planilha por área roda) e classifica o risco real.
      * Os avisos comunicam a degradação específica de cada caminho.
      *
      * @param  list<string>  $avisos
@@ -134,7 +146,12 @@ class ConsultaViabilidadeService
     private function consultarPorCnaeComEntrada(ConsultaViabilidadeInput $input, array $avisos): ConsultaViabilidadeResult
     {
         $enquadramento = $this->louos->enquadrar(
-            EnquadramentoInput::paraConsulta((float) ($input->area ?? 0.0), $input->cnae, null),
+            new EnquadramentoInput(
+                area: (float) ($input->area ?? 0.0),
+                cnaePrincipal: $input->cnae,
+                respostas: $input->respostas,
+                tipoImovel: $input->tipoImovel,
+            ),
         );
         $risco = $this->risco->classify($this->riscoInput($input));
 
@@ -158,7 +175,13 @@ class ConsultaViabilidadeService
         }
 
         $enquadramento = $this->louos->enquadrar(
-            EnquadramentoInput::paraConsulta((float) ($input->area ?? 0.0), $input->cnae, $territory),
+            new EnquadramentoInput(
+                area: (float) ($input->area ?? 0.0),
+                cnaePrincipal: $input->cnae,
+                territory: $territory,
+                respostas: $input->respostas,
+                tipoImovel: $input->tipoImovel,
+            ),
         );
         $risco = $this->risco->classify($this->riscoInput($input));
 
@@ -230,6 +253,7 @@ class ConsultaViabilidadeService
             cnaeCode: $input->cnae,
             areaUtilizada: $input->area,
             tipoImovel: $input->tipoImovel,
+            respostasTratamento: $input->respostas,
         );
     }
 

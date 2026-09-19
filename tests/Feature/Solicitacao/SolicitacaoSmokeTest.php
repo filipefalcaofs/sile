@@ -15,7 +15,6 @@ use App\Models\ViabilityServiceType;
 use App\Services\Geo\SpatialRepository;
 use App\Services\Solicitacao\DocumentRequirementResolver;
 use Database\Seeders\DocumentRequirementSeeder;
-use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
@@ -26,6 +25,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -46,6 +46,7 @@ use Tests\TestCase;
 class SolicitacaoSmokeTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private const CNAE_MINIMERCADO = '4712100';
 
@@ -53,10 +54,11 @@ class SolicitacaoSmokeTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedTratamentoPlanilha();
+
         $this->seed([
             RolesAndPermissionsSeeder::class,
             ParameterSeeder::class,
-            LouosQuadro7Seeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
             ViabilityServiceTypeSeeder::class,

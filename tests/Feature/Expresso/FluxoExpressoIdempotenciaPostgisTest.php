@@ -11,7 +11,6 @@ use App\Events\ResultadoEmitido;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\TvlSequence;
@@ -24,6 +23,7 @@ use Illuminate\Support\Facades\Event;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 
 /**
  * Idempotência da emissão da decisão sob Postgres REAL (HU-076): duas chamadas
@@ -46,6 +46,8 @@ use Tests\Support\Geo\FakeSpatialRepository;
 #[Group('postgis')]
 class FluxoExpressoIdempotenciaPostgisTest extends PostgisTestCase
 {
+    use SeedsTratamentoPlanilha;
+
     public function test_duas_decisoes_da_mesma_solicitacao_geram_uma_decisao_um_tvl_um_evento(): void
     {
         // Evento fakeado para isolar a concorrência da emissão; a transição
@@ -86,7 +88,7 @@ class FluxoExpressoIdempotenciaPostgisTest extends PostgisTestCase
      * Solicitação protocolada DEFERÍVEL: CNAE de baixo risco (expresso) permitido
      * na zona (Quadro 7/10), com território injetado por fake (bairro + zona).
      */
-    private function protocoladaDeferivel(string $cnae = '8888881'): ViabilityRequest
+    private function protocoladaDeferivel(string $cnae = '4712100'): ViabilityRequest
     {
         GeoLayer::factory()->vigente()->create(['type' => GeoLayerType::Bairro, 'version' => 'bairro-2024']);
         GeoLayer::factory()->vigente()->create(['type' => GeoLayerType::Zona, 'version' => 'zoneamento-louos-2026']);
@@ -108,20 +110,7 @@ class FluxoExpressoIdempotenciaPostgisTest extends PostgisTestCase
             'risco_municipal' => RiscoMunicipal::BaixoA,
         ]);
 
-        $versaoQuadro7 = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $versaoQuadro7->id,
-            'cnae_code' => $cnae,
-            'grupo' => 'nR1',
-            'subgrupo' => 'nR1-01',
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
 
         $versaoQuadro10 = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first()
             ?? RuleVersion::factory()->create([
@@ -142,6 +131,7 @@ class FluxoExpressoIdempotenciaPostgisTest extends PostgisTestCase
         $solicitacao = ViabilityRequest::factory()->protocoled()->create(['used_area_m2' => 120.0]);
         $cnaeModel = Cnae::factory()->create(['code' => $cnae]);
         $solicitacao->cnaes()->attach($cnaeModel->id, ['is_primary' => true]);
+        $solicitacao->respostasTratamento = [11 => true];
 
         return $solicitacao;
     }

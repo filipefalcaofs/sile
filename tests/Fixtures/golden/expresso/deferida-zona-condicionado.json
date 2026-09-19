@@ -1,9 +1,9 @@
 {
     "nome": "deferida-zona-condicionado",
     "descricao": "Permitido condicionado na zona (RN-006) → permitido_com_condicoes → DEFERE com TVL (as condicionantes vão na fundamentação, não bloqueiam).",
-    "cnae": "8888882",
-    "grupo": "nR2",
-    "subgrupo": "nR2-01",
+    "cnae": "4712100",
+    "grupo": "nR1",
+    "subgrupo": "nR1-01",
     "risco": "baixo_b",
     "zona": "ZR-1",
     "permissao": "permitido_condicionado",

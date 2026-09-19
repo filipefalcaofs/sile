@@ -8,7 +8,7 @@ namespace App\Services\Auditoria;
  * ::toArray) e/ou da ficha de análise, assembla o snapshot passo a passo da
  * decisão por CNAE, na ORDEM canônica:
  *
- *   entrada → risco → LOUOS Quadro 7 → 10 → 11A → consolidação → desfecho
+ *   entrada → risco → LOUOS enquadramento de uso → 10 → 11A → consolidação → desfecho
  *   (+ decisão do analista, no fluxo humano).
  *
  * NÃO consulta banco, NÃO chama motor, NÃO inventa dado: só REORGANIZA o que já
@@ -67,7 +67,7 @@ final class DecisionTraceBuilder
             $passos = [
                 $this->passoEntradaManual($fichaItem, $meta),
                 $this->passoNaoRegistrado('risco', 'Classificação de risco'),
-                $this->passoNaoRegistrado('louos.quadro7', 'LOUOS — Quadro 7 (classificação do uso)'),
+                $this->passoNaoRegistrado('louos.enquadramento', 'LOUOS — Enquadramento de uso'),
                 $this->passoNaoRegistrado('louos.quadro10', 'LOUOS — Quadro 10 (permissão na zona)'),
                 $this->passoNaoRegistrado('louos.quadro11a', 'LOUOS — Quadro 11-A (condições pela via)'),
                 $this->passoNaoRegistrado('consolidacao', 'Consolidação do veredito locacional'),
@@ -86,7 +86,7 @@ final class DecisionTraceBuilder
 
     /**
      * Passos do motor na ordem canônica, montados do consulta_array (entrada →
-     * risco → Quadro 7 → 10 → 11A → consolidação → desfecho).
+     * risco → enquadramento de uso → 10 → 11A → consolidação → desfecho).
      *
      * @param  array<string, mixed>  $consultaArray
      * @param  array<string, mixed>  $meta
@@ -102,7 +102,7 @@ final class DecisionTraceBuilder
         return [
             $this->passoEntrada($entrada, $meta),
             $this->passoRisco($risco),
-            $this->passoLouos('louos.quadro7', 'LOUOS — Quadro 7 (classificação do uso)', $this->quadro($enquadramento, 'quadro7'), ['cnae' => $cnae, 'area_m2' => $entrada['area'] ?? null]),
+            $this->passoLouos('louos.enquadramento', 'LOUOS — Enquadramento de uso', $this->quadro($enquadramento, 'enquadramento'), ['cnae' => $cnae, 'area_m2' => $entrada['area'] ?? null]),
             $this->passoLouos('louos.quadro10', 'LOUOS — Quadro 10 (permissão na zona)', $this->quadro($enquadramento, 'quadro10'), ['cnae' => $cnae]),
             $this->passoLouos('louos.quadro11a', 'LOUOS — Quadro 11-A (condições pela via)', $this->quadro($enquadramento, 'quadro11a'), ['cnae' => $cnae]),
             $this->passoConsolidacao($consultaArray),

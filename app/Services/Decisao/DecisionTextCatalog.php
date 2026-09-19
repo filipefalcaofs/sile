@@ -110,28 +110,30 @@ final class DecisionTextCatalog
 
             // LOUOS — motivos das dimensões e do consolidado
             // (LouosEnquadramentoService, constantes das linhas 38-62).
-            'louos.motivo.sem_enquadramento_consolidado' => 'Atividade sem enquadramento no Quadro 7 — segue para análise técnica',
+            'louos.motivo.sem_enquadramento_consolidado' => 'Atividade sem enquadramento na planilha vigente — segue para análise técnica',
             'louos.motivo.proibido' => 'Atividade proibida na zona pelo Quadro 10',
             'louos.motivo.permitido' => 'Atividade permitida na zona, sem condicionantes incidentes',
             'louos.motivo.permitido_com_condicoes' => 'Atividade permitida na zona mediante observância das condicionantes',
             'louos.motivo.zona_pendente' => 'Permissão por zona pendente da base oficial (SEDUR)',
-            'louos.motivo.sem_enquadramento' => 'Sem enquadramento (Quadro 7) não há permissão a verificar',
+            'louos.motivo.sem_enquadramento' => 'Sem enquadramento de uso não há permissão a verificar',
             'louos.motivo.quadro10_sem_versao' => 'Quadro 10 sem versão vigente',
             'louos.motivo.zona_sem_regra' => 'Combinação zona × grupo de uso sem regra no Quadro 10 vigente',
             'louos.motivo.via_pendente' => 'Condições pela via dependem da classificação viária LOUOS (pendente SEDUR)',
             'louos.motivo.via_sem_atributo' => 'Via identificada, porém sem o atributo de classificação viária LOUOS (pendente SEDUR)',
             'louos.motivo.via_sem_versao' => 'Quadro de condições pela via sem versão vigente',
             'louos.motivo.via_sem_regra' => 'Classe viária × grupo de uso sem regra no quadro de via vigente',
+            'louos.motivo.via_vedada' => 'Uso vedado na classe da via pelo Quadro 11A da LOUOS',
+            'louos.motivo.via_cnlu' => 'Quadro 11A encaminha à CNLU (R)',
 
             // LOUOS — templates dos motivos compostos (sprintf → :nome; a
             // formatação de CNAE/área/faixa permanece em código). O template
             // pai carrega o ponto final da :condicao — o motor aplica
             // rtrim(..., '.') ao embutir o motivo, exatamente como hoje.
-            'louos.template.quadro7' => 'O CNAE :cnae com área :area m² classifica-se no grupo :grupo:subgrupo do Quadro 7 da LOUOS:faixa. O Quadro 7 não autoriza o uso na zona — só define o grupo.',
+            'louos.template.enquadramento' => 'O CNAE :cnae com área :area m² enquadra-se no grupo :grupo:subgrupo da LOUOS (:codigo_louos). O enquadramento não autoriza o uso na zona — só define o grupo.',
             'louos.template.quadro10' => 'O grupo :grupo é :permissao na zona :zona segundo o Quadro 10 da LOUOS — é este quadro que permite ou proíbe o uso no território.',
-            'louos.template.permitido' => 'Permitido: o CNAE :cnae (área :area m²) classificou-se no grupo :grupo pelo Quadro 7 e esse grupo é permitido na zona :zona pelo Quadro 10. :condicao.',
-            'louos.template.nao_permitido' => 'Não permitido: o CNAE :cnae (área :area m²) classificou-se no grupo :grupo pelo Quadro 7 e esse grupo é proibido na zona :zona pelo Quadro 10. :condicao.',
-            'louos.template.quadro_via' => 'O grupo :grupo na classe viária :classe_via tem condições de instalação pelo Quadro 11-A da LOUOS. O Quadro 11-A não permite nem proíbe o uso — só condiciona a instalação pela via.',
+            'louos.template.permitido' => 'Permitido: o CNAE :cnae (área :area m²) classificou-se no grupo :grupo pelo enquadramento da planilha vigente e esse grupo é permitido na zona :zona pelo Quadro 10. :condicao.',
+            'louos.template.nao_permitido' => 'Não permitido: o CNAE :cnae (área :area m²) classificou-se no grupo :grupo pelo enquadramento da planilha vigente e esse grupo é proibido na zona :zona pelo Quadro 10. :condicao.',
+            'louos.template.quadro_via' => 'O grupo :grupo na classe viária :classe_via tem condições de instalação pelo Quadro 11-A da LOUOS. O Quadro 11-A pode vedar o uso (Não), encaminhar à CNLU (R) ou condicionar a instalação pela via.',
 
             // Consulta pública de viabilidade (ConsultaViabilidadeService).
             'consulta.aviso.zona_pendente' => 'Veredito locacional pendente: zona urbanística pendente da base oficial (SEDUR).',
@@ -148,7 +150,7 @@ final class DecisionTextCatalog
             // Explicabilidade da decisão (DecisionExplanationService) — títulos.
             'explicacao.titulo.entrada' => 'Entrada',
             'explicacao.titulo.risco' => 'Classificação de risco',
-            'explicacao.titulo.quadro7' => 'LOUOS — Quadro 7 (classificação do uso)',
+            'explicacao.titulo.enquadramento' => 'LOUOS — Enquadramento de uso',
             'explicacao.titulo.quadro10' => 'LOUOS — Quadro 10 (permissão na zona)',
             'explicacao.titulo.quadro11a' => 'LOUOS — Quadro 11-A (condições pela via)',
             'explicacao.titulo.consolidacao' => 'Consolidação do veredito locacional',
@@ -158,10 +160,10 @@ final class DecisionTextCatalog
             // (decisão legada, sem decision_trace).
             'explicacao.motivo.nao_registrado' => 'não registrado nesta decisão',
             'explicacao.motivo.risco_nao_registrado' => 'O Decreto nº 32.636/2020 classifica o risco do CNAE e define se o processo vai ao fluxo expresso ou à análise técnica. O nível e o encaminhamento desta decisão não foram gravados.',
-            'explicacao.motivo.quadro7_nao_registrado' => 'O Quadro 7 classifica o uso (CNAE × área → grupo). O grupo e a faixa desta decisão não foram gravados.',
+            'explicacao.motivo.enquadramento_nao_registrado' => 'O enquadramento classifica o uso (CNAE × perguntas × área → grupo). O grupo desta decisão não foi gravado.',
             'explicacao.motivo.quadro10_nao_registrado' => 'O Quadro 10 permite ou proíbe o grupo na zona. A permissão e a zona desta decisão não foram gravadas.',
             'explicacao.motivo.quadro11a_nao_registrado' => 'O Quadro 11-A condiciona a instalação pela via (classe viária × grupo). Não permite nem proíbe o uso. As condições desta decisão não foram gravadas.',
-            'explicacao.motivo.permitido_so_quadro7' => 'O registro cita o Quadro 7 da LOUOS como fundamento do veredito permitido. O Quadro 7 só classifica o uso (grupo por CNAE e área). Quem permite ou proíbe na zona é o Quadro 10. Grupo, faixa de área e zona não foram gravados nesta decisão.',
+            'explicacao.motivo.permitido_so_enquadramento' => 'O registro cita o enquadramento da LOUOS como fundamento do veredito permitido. O enquadramento só classifica o uso. Quem permite ou proíbe na zona é o Quadro 10. Grupo e zona não foram gravados nesta decisão.',
             'explicacao.motivo.permitido_com_quadro10' => 'O registro cita o Quadro 10 da LOUOS (permissão do grupo na zona). Os detalhes (grupo, faixa e zona) não foram gravados nesta decisão.',
         ];
     }

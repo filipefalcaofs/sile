@@ -7,8 +7,8 @@ use App\Enums\ResultadoViabilidade;
 use App\Enums\RuleDomain;
 use App\Enums\RuleVersionStatus;
 use App\Models\Activity;
+use App\Models\Cnae;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\Parameter;
 use App\Models\RuleVersion;
 use App\Models\User;
@@ -19,6 +19,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -35,6 +36,7 @@ use Tests\TestCase;
 class LouosSandboxTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     protected function setUp(): void
     {
@@ -59,46 +61,34 @@ class LouosSandboxTest extends TestCase
     }
 
     /**
-     * Versão vigente do Quadro 7 com as faixas informadas (chave do cenário: o
-     * CNAE real da regra vigente).
+     * Planilha de tratamento + CNAEs ativos da amostra (o sandbox deriva
+     * cenários do catálogo CNAE, não de faixas do Quadro 7).
      *
-     * @param  list<array<string, mixed>>  $faixas
+     * @param  list<array<string, mixed>>  $cnaes
      */
-    private function seedQuadro7Vigente(array $faixas): RuleVersion
+    private function seedTratamentoECnaes(array $cnaes): void
     {
-        $version = RuleVersion::factory()->create([
-            'domain' => RuleDomain::LouosQuadro7,
-            'version' => 'q7-vigente',
-            'rules_version' => 'q7-vigente',
-        ]);
+        $this->seedTratamentoPlanilha();
 
-        foreach ($faixas as $faixa) {
-            LouosQuadro7Faixa::factory()->create([
-                'rule_version_id' => $version->id,
-                'cnae_code' => $faixa['cnae'],
-                'grupo' => $faixa['grupo'],
-                'subgrupo' => $faixa['subgrupo'] ?? null,
-                'area_min' => $faixa['area_min'],
-                'area_max' => $faixa['area_max'] ?? null,
+        foreach ($cnaes as $cnae) {
+            Cnae::factory()->create([
+                'code' => preg_replace('/\D/', '', (string) $cnae['cnae']),
+                'active' => true,
             ]);
         }
-
-        return $version;
     }
 
     /**
-     * Versão vigente do Quadro 10 com as permissões informadas (de onde o sandbox
-     * deriva a zona fixa dos cenários).
-     *
      * @param  list<array<string, mixed>>  $permissoes
      */
     private function seedQuadro10Vigente(array $permissoes): RuleVersion
     {
-        $version = RuleVersion::factory()->create([
-            'domain' => RuleDomain::LouosQuadro10,
-            'version' => 'q10-vigente',
-            'rules_version' => 'q10-vigente',
-        ]);
+        $version = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first()
+            ?? RuleVersion::factory()->create([
+                'domain' => RuleDomain::LouosQuadro10,
+                'version' => 'q10-vigente',
+                'rules_version' => 'q10-vigente',
+            ]);
 
         foreach ($permissoes as $permissao) {
             LouosQuadro10Permissao::factory()->create([
@@ -161,7 +151,7 @@ class LouosSandboxTest extends TestCase
         // rascunho segue rascunho e nenhuma linha da vigente muda.
         $author = User::factory()->create();
 
-        $this->seedQuadro7Vigente([
+        $this->seedTratamentoECnaes([
             ['cnae' => '4712100', 'grupo' => 'nR1', 'subgrupo' => null, 'area_min' => 0, 'area_max' => 350],
         ]);
         $q10Vigente = $this->seedQuadro10Vigente([
@@ -199,7 +189,7 @@ class LouosSandboxTest extends TestCase
         // simulado). Prova que a simulação reexecuta o motor, não imita resultado.
         $author = User::factory()->create();
 
-        $this->seedQuadro7Vigente([
+        $this->seedTratamentoECnaes([
             ['cnae' => '4712100', 'grupo' => 'nR1', 'subgrupo' => null, 'area_min' => 0, 'area_max' => 350],
         ]);
         $this->seedQuadro10Vigente([
@@ -231,7 +221,7 @@ class LouosSandboxTest extends TestCase
         // consta no resumo. Explícita tem precedência; ausente lê Settings.
         $author = User::factory()->create();
 
-        $this->seedQuadro7Vigente([
+        $this->seedTratamentoECnaes([
             ['cnae' => '4712100', 'grupo' => 'nR1', 'area_min' => 0, 'area_max' => 350],
             ['cnae' => '4721102', 'grupo' => 'nR1', 'area_min' => 0, 'area_max' => 250],
             ['cnae' => '4772500', 'grupo' => 'nR1', 'area_min' => 0, 'area_max' => null],
@@ -270,7 +260,7 @@ class LouosSandboxTest extends TestCase
 
         $author = User::factory()->create();
 
-        $this->seedQuadro7Vigente([
+        $this->seedTratamentoECnaes([
             ['cnae' => '4712100', 'grupo' => 'nR1', 'area_min' => 0, 'area_max' => 350],
         ]);
         $this->seedQuadro10Vigente([
@@ -296,7 +286,7 @@ class LouosSandboxTest extends TestCase
         // permanece intacta (a rota simula, não publica).
         $author = User::factory()->create();
 
-        $this->seedQuadro7Vigente([
+        $this->seedTratamentoECnaes([
             ['cnae' => '4712100', 'grupo' => 'nR1', 'area_min' => 0, 'area_max' => 350],
         ]);
         $q10Vigente = $this->seedQuadro10Vigente([
@@ -332,7 +322,7 @@ class LouosSandboxTest extends TestCase
         $autor = $this->administrador();
         $publicador = $this->administrador();
 
-        $this->seedQuadro7Vigente([
+        $this->seedTratamentoECnaes([
             ['cnae' => '4712100', 'grupo' => 'nR1', 'area_min' => 0, 'area_max' => 350],
         ]);
         $this->seedQuadro10Vigente([
@@ -438,14 +428,14 @@ class LouosSandboxTest extends TestCase
 
     public function test_publicar_pelo_sandbox_de_outro_dominio_nao_e_afetado_pela_guarda(): void
     {
-        // A guarda de zonas é exclusiva do Quadro 10: um rascunho do Quadro 7
+        // A guarda de zonas é exclusiva do Quadro 10: um rascunho do Quadro 11A
         // publica pelo sandbox sem nenhuma zona cadastrada.
         $autor = $this->administrador();
         $publicador = $this->administrador();
 
         RuleVersion::factory()->rascunho()->create([
-            'domain' => RuleDomain::LouosQuadro7,
-            'version' => 'q7-rascunho',
+            'domain' => RuleDomain::LouosQuadro11a,
+            'version' => 'q11a-rascunho',
             'created_by' => $autor->id,
         ]);
 
@@ -453,14 +443,14 @@ class LouosSandboxTest extends TestCase
 
         $this->actingAs($publicador, 'gestao')
             ->put('/gestao/louos/simulacao/publicar', [
-                'quadro' => 'quadro7',
-                'versao_rascunho' => 'q7-rascunho',
+                'quadro' => 'quadro11a',
+                'versao_rascunho' => 'q11a-rascunho',
             ])
             ->assertRedirect()
             ->assertSessionHas('status');
 
-        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro7)->firstOrFail();
-        $this->assertSame('q7-rascunho', $vigente->version);
+        $vigente = RuleVersion::vigente(RuleDomain::LouosQuadro11a)->firstOrFail();
+        $this->assertSame('q11a-rascunho', $vigente->version);
         $this->assertSame(RuleVersionStatus::Vigente, $vigente->status);
     }
 
@@ -470,7 +460,7 @@ class LouosSandboxTest extends TestCase
         // os Quadros mas NÃO mantém — é bloqueado (403) no sandbox.
         $author = User::factory()->create();
 
-        $this->seedQuadro7Vigente([
+        $this->seedTratamentoECnaes([
             ['cnae' => '4712100', 'grupo' => 'nR1', 'area_min' => 0, 'area_max' => 350],
         ]);
         $this->seedQuadro10Vigente([

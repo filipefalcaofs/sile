@@ -262,6 +262,18 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertSame('0010010010', $processo->property_registration);
     }
 
+    public function test_simulacao_grava_zona_urbanistica_e_nao_usa_como_bairro(): void
+    {
+        $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('53528');
+
+        $processo = ViabilityRequest::query()->find($relatorio['processo_id']);
+
+        $this->assertNotNull($processo);
+        $this->assertSame('ZCMe-1/03', $processo->zona_codigo);
+        $this->assertSame('ZCMe-1/03', $relatorio['zona']);
+        $this->assertNotSame('ZCMe-1/03', $processo->address_neighborhood);
+    }
+
     public function test_ressimular_nao_duplica_o_processo(): void
     {
         $primeiro = app(ReginProtocoloSimulacaoService::class)->simular('43747');

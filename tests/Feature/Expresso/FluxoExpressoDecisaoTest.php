@@ -12,7 +12,6 @@ use App\Events\ResultadoEmitido;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
@@ -21,6 +20,7 @@ use App\Services\Geo\SpatialRepository;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -38,6 +38,7 @@ use Tests\TestCase;
 class FluxoExpressoDecisaoTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private function service(): FluxoExpressoService
     {
@@ -55,6 +56,8 @@ class FluxoExpressoDecisaoTest extends TestCase
             $cnae = Cnae::factory()->create(['code' => $code]);
             $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => $indice === 0]);
         }
+
+        $solicitacao->respostasTratamento = [11 => true];
 
         return $solicitacao;
     }
@@ -94,23 +97,9 @@ class FluxoExpressoDecisaoTest extends TestCase
         $this->app->instance(SpatialRepository::class, $fake);
     }
 
-    private function seedQuadro7(string $cnae, string $grupo, string $subgrupo): void
+    private function seedTratamento(string $cnae = '', string $grupo = '', string $subgrupo = ''): void
     {
-        $version = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $version->id,
-            'cnae_code' => $cnae,
-            'grupo' => $grupo,
-            'subgrupo' => $subgrupo,
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     private function seedQuadro10(string $zona, string $grupo, Quadro10Permissao $permissao): void
@@ -136,11 +125,11 @@ class FluxoExpressoDecisaoTest extends TestCase
     /**
      * Setup deferível: um CNAE de baixo risco (expresso) permitido na zona.
      */
-    private function setupDeferivel(string $cnae = '8888881'): ViabilityRequest
+    private function setupDeferivel(string $cnae = '4712100'): ViabilityRequest
     {
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal($cnae, RiscoMunicipal::BaixoA);
-        $this->seedQuadro7($cnae, 'nR1', 'nR1-01');
+        $this->seedTratamento($cnae, 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         return $this->protocoladaComCnaes([$cnae]);
@@ -184,14 +173,11 @@ class FluxoExpressoDecisaoTest extends TestCase
         // caso governa: INDEFERE o processo inteiro, sem número TVL.
         Event::fake([ResultadoEmitido::class]);
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
-        $this->classificarMunicipal('8888883', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
-        $this->seedQuadro7('8888883', 'nR3', 'nR3-01');
-        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
-        $this->seedQuadro10('ZR-1', 'nR3', Quadro10Permissao::Proibido);
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Proibido);
 
-        $request = $this->protocoladaComCnaes(['8888881', '8888883']);
+        $request = $this->protocoladaComCnaes(['4712100']);
 
         $result = $this->service()->decide($request);
 
@@ -213,11 +199,11 @@ class FluxoExpressoDecisaoTest extends TestCase
         // condicoes → DEFERE (com condicionantes na fundamentação), com TVL.
         Event::fake([ResultadoEmitido::class]);
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::PermitidoCondicionado);
 
-        $request = $this->protocoladaComCnaes(['8888881']);
+        $request = $this->protocoladaComCnaes(['4712100']);
 
         $result = $this->service()->decide($request);
 
@@ -241,7 +227,7 @@ class FluxoExpressoDecisaoTest extends TestCase
 
         $this->assertCount(1, $decision->per_cnae);
         $item = $decision->per_cnae[0];
-        $this->assertSame('8888881', $item['cnae']);
+        $this->assertSame('4712100', $item['cnae']);
         $this->assertArrayHasKey('tendencia', $item);
         $this->assertArrayHasKey('fluxo', $item);
         $this->assertArrayHasKey('fundamentacao', $item);

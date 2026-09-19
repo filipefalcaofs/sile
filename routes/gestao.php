@@ -56,6 +56,7 @@ use App\Http\Controllers\Gestao\SectorController;
 use App\Http\Controllers\Gestao\StandardTextController;
 use App\Http\Controllers\Gestao\TermoLgpdController;
 use App\Http\Controllers\Gestao\TerritoryController;
+use App\Http\Controllers\Gestao\TratamentoRegrasController;
 use App\Http\Controllers\Gestao\TvlDocumentController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
@@ -255,6 +256,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // frontend não tem modo somente-leitura para a ficha (HU-011 CA-04).
         Route::middleware('permission:consultar-cnaes')->group(function () {
             Route::get('cnaes', [CnaeController::class, 'index'])->name('cnaes.index');
+            Route::get('regras-tratamento', [TratamentoRegrasController::class, 'index'])->name('regras-tratamento.index');
             // Homologação do motor: protocolos SEDUR entram como se o tipo de
             // imóvel e a área tivessem chegado do REGIN. A tela declara a
             // simulação — a integração REGIN continua stub.

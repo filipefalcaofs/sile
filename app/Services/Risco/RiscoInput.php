@@ -19,6 +19,7 @@ final readonly class RiscoInput
      * @param  list<string>  $gatilhosContexto  Valores de TipoGatilho ativos no contexto (ex.: 'zeis_especial').
      * @param  ?float  $areaUtilizada  Área onde a atividade será exercida (corte 1.250 m² da planilha 20.08.26).
      * @param  ?TipoImovel  $tipoImovel  Tipo enviado pelo REGIN; nulo = ausente.
+     * @param  array<int, bool>  $respostasTratamento  Perguntas da planilha (número → sim/não).
      * @param  ?string  $subcategoriaUso  Subcategoria do enquadramento (nR1-12, ID3-01, …).
      */
     public function __construct(
@@ -29,6 +30,7 @@ final readonly class RiscoInput
         public ?float $areaUtilizada = null,
         public ?TipoImovel $tipoImovel = null,
         public ?string $subcategoriaUso = null,
+        public array $respostasTratamento = [],
     ) {}
 
     /**

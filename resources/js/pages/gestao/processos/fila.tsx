@@ -120,9 +120,14 @@ export default function Fila({ modo, processos, contadores, visaoSetor }: FilaPr
             header: 'Etapa',
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
-                <div className="flex flex-col">
+                <div className="flex max-w-72 flex-col gap-1">
                     <span className="text-gray-700 dark:text-gray-300">{item.analysis_stage_label ?? '—'}</span>
                     <CategoriaBadges categorias={item.categorias} />
+                    {item.sem_decisao_automatica && item.motivo_encaminhamento && (
+                        <span className="text-theme-xs text-gray-500 dark:text-gray-400">
+                            Sem decisão automática — {item.motivo_encaminhamento}
+                        </span>
+                    )}
                 </div>
             ),
         },

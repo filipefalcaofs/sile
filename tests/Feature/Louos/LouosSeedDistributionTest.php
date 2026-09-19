@@ -5,12 +5,12 @@ namespace Tests\Feature\Louos;
 use App\Enums\RuleDomain;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
+use App\Models\TratamentoEnquadramento;
 use Database\Seeders\LouosQuadro10Seeder;
 use Database\Seeders\LouosQuadro11Seeder;
-use Database\Seeders\LouosQuadro7Seeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -23,66 +23,36 @@ use Tests\TestCase;
 class LouosSeedDistributionTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->seedTratamentoPlanilha();
+
         $this->seed([
-            LouosQuadro7Seeder::class,
             LouosQuadro10Seeder::class,
             LouosQuadro11Seeder::class,
         ]);
     }
 
-    public function test_quadro7_tem_versao_vigente_unica_e_faixas(): void
+    public function test_planilha_tem_versao_vigente_unica_e_enquadramentos(): void
     {
-        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro7)->count());
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoTratamento)->count());
 
-        $version = RuleVersion::vigente(RuleDomain::LouosQuadro7)->firstOrFail();
+        $version = RuleVersion::vigente(RuleDomain::RiscoTratamento)->firstOrFail();
 
-        // Âncora da ponte operacional CNAE→uso (planilha 20.08.26).
         $this->assertSame(
-            1971,
-            LouosQuadro7Faixa::query()->where('rule_version_id', $version->getKey())->count(),
-            'O total de faixas do Quadro 7 divergiu do CSV operacional 20.08.26.',
+            2850,
+            TratamentoEnquadramento::query()->where('rule_version_id', $version->getKey())->count(),
+            'O total de linhas da planilha 20.08.26 divergiu da carga oficial.',
         );
         $this->assertSame(
-            1331,
-            LouosQuadro7Faixa::query()->where('rule_version_id', $version->getKey())->distinct()->count('cnae_code'),
-            'O total de CNAEs distintos do Quadro 7 divergiu do catálogo CNAE 2.3.',
+            1332,
+            TratamentoEnquadramento::query()->where('rule_version_id', $version->getKey())->distinct()->count('cnae'),
+            'O total de CNAEs distintos da planilha 20.08.26 divergiu da carga oficial.',
         );
-    }
-
-    public function test_quadro7_nao_tem_faixas_sobrepostas_por_cnae(): void
-    {
-        $version = RuleVersion::vigente(RuleDomain::LouosQuadro7)->firstOrFail();
-
-        $faixasPorCnae = LouosQuadro7Faixa::query()
-            ->where('rule_version_id', $version->getKey())
-            ->get()
-            ->groupBy('cnae_code');
-
-        $this->assertNotEmpty($faixasPorCnae);
-
-        foreach ($faixasPorCnae as $cnae => $faixas) {
-            $ordenadas = $faixas->sortBy(fn (LouosQuadro7Faixa $faixa): float => (float) $faixa->area_min)->values();
-
-            for ($i = 1; $i < $ordenadas->count(); $i++) {
-                $anterior = $ordenadas[$i - 1];
-                $atual = $ordenadas[$i];
-
-                $this->assertNotNull(
-                    $anterior->area_max,
-                    "CNAE {$cnae}: faixa sem limite superior só pode ser a última.",
-                );
-                $this->assertGreaterThanOrEqual(
-                    (float) $anterior->area_max,
-                    (float) $atual->area_min,
-                    "CNAE {$cnae}: a faixa a partir de {$atual->area_min} invade o fim {$anterior->area_max} da anterior.",
-                );
-            }
-        }
     }
 
     public function test_quadro10_e_quadro11a_tem_versao_vigente(): void

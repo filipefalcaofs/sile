@@ -146,7 +146,7 @@ function flattenRegras(rules: RulesVersions): { label: string; value: string }[]
 /**
  * Explicabilidade passo a passo de uma decisão de viabilidade (HU-099).
  * Renderiza a projeção PURA do decision_trace por CNAE na ordem canônica
- * (entrada → risco → LOUOS Quadro 7/10/11/11A → consolidação → desfecho),
+ * (entrada → risco → enquadramento → Quadro 10/11A → consolidação → desfecho),
  * marcando honestamente os passos do legado não registrados — nunca inventa.
  * É somente apresentação: itera o shape uniforme genericamente e é defensivo
  * para não quebrar o SSR com props vazias/nulas/legadas.

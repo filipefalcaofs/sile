@@ -56,10 +56,16 @@ class ConsultaViabilidadeController extends Controller
         }
 
         try {
+            $respostas = [];
+            foreach ($request->validated('respostas') ?? [] as $numero => $valor) {
+                $respostas[(int) $numero] = (bool) $valor;
+            }
+
             $result = $this->service->consultarPorEndereco(
                 $request->validated('endereco'),
                 $request->validated('cnae'),
                 $request->validated('area') !== null ? (float) $request->validated('area') : null,
+                $respostas,
             );
         } catch (AddressNotFoundException) {
             return response()->json([
@@ -77,7 +83,7 @@ class ConsultaViabilidadeController extends Controller
     }
 
     /**
-     * Consulta por CNAE (HU-056): risco real + Quadro 7 por área, SEM território.
+     * Consulta por CNAE (HU-056): risco real + enquadramento da planilha por área, SEM território.
      * Não há geocodificação — sem AddressNotFoundException/GeocoderException a
      * tratar; o veredito locacional fica pendente e o serviço já avisa que a
      * consulta não avalia o local.
@@ -88,9 +94,16 @@ class ConsultaViabilidadeController extends Controller
             return $bloqueio;
         }
 
+        $respostas = [];
+        foreach ($request->validated('respostas') ?? [] as $numero => $valor) {
+            $respostas[(int) $numero] = (bool) $valor;
+        }
+
         $result = $this->service->consultarPorCnae(
             $request->validated('cnae'),
             $request->validated('area') !== null ? (float) $request->validated('area') : null,
+            null,
+            $respostas,
         );
 
         $this->registrarHistorico($request, $result);

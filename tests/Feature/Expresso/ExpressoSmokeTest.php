@@ -11,7 +11,6 @@ use App\Events\ResultadoEmitido;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\User;
@@ -23,6 +22,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -44,6 +44,7 @@ use Tests\TestCase;
 class ExpressoSmokeTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     /**
      * Worker REAL: o fake parcial do DecidirFluxoExpressoJob (TestCase base)
@@ -59,11 +60,11 @@ class ExpressoSmokeTest extends TestCase
         // (sem anexo) e registra a pendência Regin/SEFAZ (bloqueada — Fase 13).
         Notification::fake();
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
-        [$solicitacao, $requerente] = $this->protocolar('8888881');
+        [$solicitacao, $requerente] = $this->protocolar('4712100');
 
         $solicitacao->refresh();
         $this->assertSame(ViabilityRequestStatus::Deferida, $solicitacao->status);
@@ -106,10 +107,10 @@ class ExpressoSmokeTest extends TestCase
         Event::fake([ResultadoEmitido::class]);
         Notification::fake();
         $this->fakeBairroSemZona();
-        $this->classificarMunicipal('8888881', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
 
-        [$solicitacao] = $this->protocolar('8888881');
+        [$solicitacao] = $this->protocolar('4712100');
 
         $solicitacao->refresh();
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $solicitacao->status);
@@ -127,11 +128,11 @@ class ExpressoSmokeTest extends TestCase
         // indeferimento de forma auditável (não envia).
         Notification::fake();
         $this->fakeBairroComZona('ZR-1');
-        $this->classificarMunicipal('8888883', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('8888883', 'nR3', 'nR3-01');
-        $this->seedQuadro10('ZR-1', 'nR3', Quadro10Permissao::Proibido);
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Proibido);
 
-        [$solicitacao, $requerente] = $this->protocolar('8888883');
+        [$solicitacao, $requerente] = $this->protocolar('4712100');
 
         $solicitacao->refresh();
         $this->assertSame(ViabilityRequestStatus::Indeferida, $solicitacao->status);
@@ -173,6 +174,7 @@ class ExpressoSmokeTest extends TestCase
 
         $cnae = Cnae::factory()->create(['code' => $cnaeCode]);
         $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => true]);
+        $solicitacao->respostasTratamento = [11 => true];
 
         app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $requerente);
 
@@ -220,23 +222,9 @@ class ExpressoSmokeTest extends TestCase
         $this->app->instance(SpatialRepository::class, $fake);
     }
 
-    private function seedQuadro7(string $cnae, string $grupo, string $subgrupo): void
+    private function seedTratamento(string $cnae = '', string $grupo = '', string $subgrupo = ''): void
     {
-        $version = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $version->id,
-            'cnae_code' => $cnae,
-            'grupo' => $grupo,
-            'subgrupo' => $subgrupo,
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     private function seedQuadro10(string $zona, string $grupo, Quadro10Permissao $permissao): void

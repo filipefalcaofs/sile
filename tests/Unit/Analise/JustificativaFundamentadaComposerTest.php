@@ -33,11 +33,11 @@ class JustificativaFundamentadaComposerTest extends TestCase
         $this->assertStringContainsString('4771-7/01', $texto);
         $this->assertStringContainsString('Comércio varejista de produtos farmacêuticos', $texto);
         $this->assertStringContainsString('75', $texto);
-        $this->assertStringContainsString('Quadro 7', $texto);
+        $this->assertStringContainsString('enquadramento de uso', mb_strtolower($texto));
         $this->assertStringContainsString('nR1', $texto);
         $this->assertStringContainsString('não autoriza', mb_strtolower($texto));
         $this->assertStringContainsString('Quadro 10', $texto);
-        $this->assertStringContainsString('ZCN-1', $texto);
+        $this->assertStringContainsString('ZCMe 2', $texto);
         $this->assertStringContainsString('Comércio', $texto);
         $this->assertStringContainsString('Decreto Municipal nº 32.636/2020', $texto);
         $this->assertStringContainsString('deferimento', mb_strtolower($texto));
@@ -49,7 +49,7 @@ class JustificativaFundamentadaComposerTest extends TestCase
         $texto = app(JustificativaFundamentadaComposer::class)->paraConsulta(
             $this->consultaProibida(),
             [
-                'cnae' => '8888883',
+                'cnae' => '0111301',
                 'cnae_formatado' => '8888-8/83',
                 'is_primary' => true,
             ],
@@ -61,10 +61,10 @@ class JustificativaFundamentadaComposerTest extends TestCase
         $this->assertStringNotContainsString('manifesta-se pelo deferimento', mb_strtolower($texto));
     }
 
-    public function test_nao_sugere_desfecho_quando_nao_ha_enquadramento_no_quadro_7(): void
+    public function test_nao_sugere_desfecho_quando_nao_ha_enquadramento_na_planilha(): void
     {
         $texto = app(JustificativaFundamentadaComposer::class)->paraConsulta(
-            $this->consultaSemQuadro7(),
+            $this->consultaSemEnquadramento(),
             [
                 'cnae' => '4721104',
                 'cnae_formatado' => '4721-1/04',
@@ -72,7 +72,7 @@ class JustificativaFundamentadaComposerTest extends TestCase
             ],
         );
 
-        $this->assertStringContainsString('Quadro 7', $texto);
+        $this->assertStringContainsString('enquadramento de uso', mb_strtolower($texto));
         $this->assertStringContainsString('CNAE sem enquadramento', $texto);
         $this->assertStringNotContainsString('cNAE', $texto);
         $this->assertStringContainsString('análise técnica', mb_strtolower($texto));
@@ -88,7 +88,7 @@ class JustificativaFundamentadaComposerTest extends TestCase
             geocode: $consulta->geocode,
             territory: $consulta->territory,
             enquadramento: new EnquadramentoResult(
-                quadro7: $consulta->enquadramento->quadro7,
+                enquadramento: $consulta->enquadramento->enquadramento,
                 quadro10: $consulta->enquadramento->quadro10,
                 quadro11a: $consulta->enquadramento->quadro11a,
                 consolidado: [
@@ -133,19 +133,19 @@ class JustificativaFundamentadaComposerTest extends TestCase
     {
         return $this->consulta(
             resultado: 'permitido',
-            quadro7: [
+            enquadramento: [
                 'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
                 'grupo' => 'nR1',
                 'subgrupo' => 'nR1-01',
-                'motivo' => 'O CNAE 4771-7/01 com área 75 m² classifica-se no grupo nR1 (nR1-01) do Quadro 7 da LOUOS.',
+                'motivo' => 'O CNAE 4771-7/01 com área 75 m² enquadra-se no grupo nR1 (nR1-01) da LOUOS (07.01.05).',
             ],
             quadro10: [
                 'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
                 'permissao' => 'permitido',
-                'motivo' => 'O grupo nR1 é permitido na zona ZCN-1 segundo o Quadro 10 da LOUOS.',
+                'motivo' => 'O grupo nR1 é permitido na zona ZCMe 2 segundo o Quadro 10 da LOUOS.',
             ],
-            motivo: 'Permitido: o CNAE 4771-7/01 (área 75 m²) classificou-se no grupo nR1 pelo Quadro 7 e esse grupo é permitido na zona ZCN-1 pelo Quadro 10.',
-            zona: ['status' => 'identificado', 'nome' => 'ZCN-1'],
+            motivo: 'Permitido: o CNAE 4771-7/01 (área 75 m²) classificou-se no grupo nR1 pelo enquadramento da planilha vigente e esse grupo é permitido na zona ZCMe 2 pelo Quadro 10.',
+            zona: ['status' => 'identificado', 'nome' => 'ZCMe 2'],
         );
     }
 
@@ -153,11 +153,11 @@ class JustificativaFundamentadaComposerTest extends TestCase
     {
         return $this->consulta(
             resultado: 'nao_permitido',
-            quadro7: [
+            enquadramento: [
                 'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
                 'grupo' => 'nR3',
                 'subgrupo' => 'nR3-01',
-                'motivo' => 'O CNAE 8888-8/83 classifica-se no grupo nR3 do Quadro 7 da LOUOS.',
+                'motivo' => 'O CNAE 8888-8/83 enquadra-se no grupo nR3 da LOUOS.',
             ],
             quadro10: [
                 'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
@@ -166,41 +166,41 @@ class JustificativaFundamentadaComposerTest extends TestCase
             ],
             motivo: 'Não permitido: o grupo nR3 é proibido na zona ZR-1 pelo Quadro 10.',
             zona: ['status' => 'identificado', 'nome' => 'ZR-1'],
-            cnae: '8888883',
+            cnae: '0111301',
             area: 120.0,
         );
     }
 
-    private function consultaSemQuadro7(): ConsultaViabilidadeResult
+    private function consultaSemEnquadramento(): ConsultaViabilidadeResult
     {
         return $this->consulta(
             resultado: 'pendente',
-            quadro7: [
+            enquadramento: [
                 'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
                 'grupo' => null,
                 'subgrupo' => null,
-                'motivo' => 'CNAE sem enquadramento parametrizado no Quadro 7 vigente',
+                'motivo' => 'CNAE sem enquadramento parametrizado na planilha vigente',
             ],
             quadro10: [
                 'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
                 'permissao' => null,
-                'motivo' => 'Sem grupo do Quadro 7, o Quadro 10 não se aplica.',
+                'motivo' => 'Sem grupo de uso, o Quadro 10 não se aplica.',
             ],
-            motivo: 'CNAE sem enquadramento parametrizado no Quadro 7 vigente',
-            zona: ['status' => 'identificado', 'nome' => 'ZCN-1'],
+            motivo: 'CNAE sem enquadramento parametrizado na planilha vigente',
+            zona: ['status' => 'identificado', 'nome' => 'ZCMe 2'],
             cnae: '4721104',
             area: 75.0,
         );
     }
 
     /**
-     * @param  array<string, mixed>  $quadro7
+     * @param  array<string, mixed>  $enquadramento
      * @param  array<string, mixed>  $quadro10
      * @param  array<string, mixed>  $zona
      */
     private function consulta(
         string $resultado,
-        array $quadro7,
+        array $enquadramento,
         array $quadro10,
         string $motivo,
         array $zona,
@@ -227,7 +227,7 @@ class JustificativaFundamentadaComposerTest extends TestCase
                 restricoes: ['status' => 'nao_encontrado', 'itens' => [], 'versao_camada' => null],
             ),
             enquadramento: new EnquadramentoResult(
-                quadro7: $quadro7,
+                enquadramento: $enquadramento,
                 quadro10: $quadro10,
                 quadro11a: [
                     'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
@@ -237,14 +237,14 @@ class JustificativaFundamentadaComposerTest extends TestCase
                 consolidado: [
                     'resultado' => $resultado,
                     'fundamentacao' => [
-                        'Lei nº 9.148/2016 (LOUOS) — Quadro 7',
+                        'Lei nº 9.148/2016 (LOUOS) — nR1-01',
                         'Quadro 10 da Lei nº 9.148/2016',
                     ],
                     'condicionantes' => [],
                     'motivo' => $motivo,
                 ],
                 versoes: [
-                    'quadro7' => 'lei-9148-2016-quadro7',
+                    'risco_tratamento' => 'planilha-20-08-26',
                     'quadro10' => 'lei-9148-2016-quadro10',
                     'quadro11a' => null,
                 ],

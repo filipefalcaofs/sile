@@ -75,7 +75,7 @@ class ConsultaViabilidadeResultTest extends TestCase
         $versoes = $this->resultExemplo()->versoes();
 
         $this->assertSame(['territorio', 'louos', 'risco'], array_keys($versoes));
-        $this->assertSame('louos-q7-v1', $versoes['louos']['quadro7']);
+        $this->assertSame('planilha-20-08-26', $versoes['louos']['risco_tratamento']);
         $this->assertSame('decreto-32636-2020', $versoes['risco']['municipal']);
         $this->assertSame('bairros-v1', $versoes['territorio']['bairro']);
         $this->assertNull($versoes['territorio']['zona']);
@@ -101,7 +101,8 @@ class ConsultaViabilidadeResultTest extends TestCase
             array_keys($array),
         );
 
-        $this->assertArrayHasKey('quadro7', $array['enquadramento']);
+        $this->assertArrayHasKey('enquadramento', $array['enquadramento']);
+        $this->assertArrayNotHasKey('quadro7', $array['enquadramento']);
         $this->assertArrayHasKey('municipal', $array['risco']);
         $this->assertSame('identificado', $array['restricoes']['status']);
         $this->assertSame(ResultadoViabilidade::Pendente->value, $array['veredito_locacional']['resultado']);
@@ -122,7 +123,7 @@ class ConsultaViabilidadeResultTest extends TestCase
     {
         $fundamentacao = $this->resultExemplo()->fundamentacao();
 
-        $this->assertContains('Lei nº 9.148/2016 (LOUOS) — Quadro 7', $fundamentacao);
+        $this->assertContains('Lei nº 9.148/2016 (LOUOS) — nR1-01', $fundamentacao);
         $this->assertContains('Decreto Municipal nº 32.636/2020', $fundamentacao);
         $this->assertSame(
             array_values(array_unique($fundamentacao)),
@@ -174,12 +175,12 @@ class ConsultaViabilidadeResultTest extends TestCase
     private function enquadramentoPendente(): EnquadramentoResult
     {
         return new EnquadramentoResult(
-            quadro7: [
+            enquadramento: [
                 'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
                 'grupo' => 'nR1',
                 'subgrupo' => 'nR1-01',
                 'motivo' => null,
-                'versao_regra' => 'louos-q7-v1',
+                'versao_regra' => 'planilha-20-08-26',
             ],
             quadro10: [
                 'status' => EnquadramentoResult::STATUS_INDISPONIVEL,
@@ -197,13 +198,13 @@ class ConsultaViabilidadeResultTest extends TestCase
                 'resultado' => ResultadoViabilidade::Pendente->value,
                 'motivo' => 'Permissão por zona pendente da base oficial (SEDUR)',
                 'fundamentacao' => [
-                    'Lei nº 9.148/2016 (LOUOS) — Quadro 7',
+                    'Lei nº 9.148/2016 (LOUOS) — nR1-01',
                     'Decreto Municipal nº 32.636/2020',
                 ],
                 'condicionantes' => [],
             ],
             versoes: [
-                'quadro7' => 'louos-q7-v1',
+                'risco_tratamento' => 'planilha-20-08-26',
                 'quadro10' => null,
                 'quadro11a' => null,
             ],

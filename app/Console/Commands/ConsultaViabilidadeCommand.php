@@ -20,7 +20,7 @@ use Illuminate\Console\Command;
  * fundamentado de ponta a ponta. É a evidência da Fase 7 (HU-054 a HU-060),
  * espelhando louos:enquadrar / risco:classificar.
  *
- * Três entradas honestas: por CNAE (risco + Quadro 7 por área, sem local), por
+ * Três entradas honestas: por CNAE (risco + enquadramento de uso por área, sem local), por
  * endereço (geocodifica de verdade → território → motores) e por inscrição
  * imobiliária (resolução pendente SEDUR — degrada com aviso, NUNCA inventa
  * ponto). Sem fachada: o comando só APLICA a decisão dos motores; o veredito é
@@ -35,7 +35,7 @@ class ConsultaViabilidadeCommand extends Command
         {cnae : Subclasse CNAE em dígitos ou formatada (ex.: 4712-1/00)}
         {--endereco= : Consulta por endereço (geocodifica de verdade)}
         {--inscricao= : Consulta por inscrição imobiliária (resolução pendente SEDUR — degrada)}
-        {--area= : Área ocupada em m² (Quadro 7)}';
+        {--area= : Área ocupada em m² (enquadramento de uso)}';
 
     protected $description = 'Consulta a viabilidade prévia pelo orquestrador real (HU-054 a HU-060) — parecer fundamentado de ponta a ponta';
 
@@ -83,7 +83,7 @@ class ConsultaViabilidadeCommand extends Command
 
     /**
      * Lê e valida a área opcional (--area). `null` quando ausente (a consulta por
-     * CNAE roda sem área — o Quadro 7 só não enquadra); `false` (com erro
+     * CNAE roda sem área — o enquadramento de uso só não enquadra); `false` (com erro
      * impresso) quando presente mas não numérica ou não positiva.
      */
     private function parseArea(): float|false|null
@@ -200,17 +200,17 @@ class ConsultaViabilidadeCommand extends Command
 
     private function renderEnquadramento(EnquadramentoResult $enquadramento): void
     {
-        $this->line('ENQUADRAMENTO POR ÁREA (Quadro 7)');
+        $this->line('ENQUADRAMENTO DE USO (planilha vigente)');
 
-        $quadro7 = $enquadramento->quadro7;
+        $uso = $enquadramento->enquadramento;
 
-        if (($quadro7['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
-            $grupo = (string) ($quadro7['grupo'] ?? '—');
-            $subgrupo = $quadro7['subgrupo'] ?? null;
+        if (($uso['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
+            $grupo = (string) ($uso['grupo'] ?? '—');
+            $subgrupo = $uso['subgrupo'] ?? null;
             $this->line('  Grupo de uso: '.$grupo.(is_string($subgrupo) && $subgrupo !== '' ? " / Subgrupo: {$subgrupo}" : ''));
-            $this->line('  Faixa de área: '.$this->formatFaixa($quadro7['faixa'] ?? null));
+            $this->line('  Faixa de área: '.$this->formatFaixa($uso['faixa'] ?? null));
         } else {
-            $this->line('  Sem enquadramento parametrizado no Quadro 7 vigente para o CNAE — segue para análise técnica.');
+            $this->line('  Sem enquadramento parametrizado na planilha vigente para o CNAE — segue para análise técnica.');
         }
     }
 

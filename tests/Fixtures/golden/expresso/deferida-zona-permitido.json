@@ -1,7 +1,7 @@
 {
     "nome": "deferida-zona-permitido",
     "descricao": "CNAE de risco baixo (expresso) permitido na zona → DEFERE com número TVL e dispara o ResultadoEmitido.",
-    "cnae": "8888881",
+    "cnae": "4712100",
     "grupo": "nR1",
     "subgrupo": "nR1-01",
     "risco": "baixo_a",

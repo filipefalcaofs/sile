@@ -6,7 +6,7 @@ use App\Enums\RuleDomain;
 use App\Enums\RuleVersionStatus;
 use App\Models\RuleVersion;
 use App\Models\User;
-use Database\Seeders\LouosQuadro7Seeder;
+use Database\Seeders\LouosQuadro10Seeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -43,15 +43,15 @@ class LouosConsultaTest extends TestCase
 
     public function test_analista_consulta_quadros_vigentes(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
 
         $this->actingAs($this->analista(), 'gestao')
             ->get('/gestao/louos')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->has('quadros', 3)
-                ->where('quadroSelecionado', 'quadro7')
-                ->where('filtros.quadro', 'quadro7')
+                ->has('quadros', 2)
+                ->where('quadroSelecionado', 'quadro10')
+                ->where('filtros.quadro', 'quadro10')
                 ->has('itens.data')
                 ->has('perPageOptions'));
 
@@ -83,28 +83,28 @@ class LouosConsultaTest extends TestCase
 
     public function test_admin_publica_nova_versao_do_quadro(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
-        $anterior = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first();
+        $this->seed(LouosQuadro10Seeder::class);
+        $anterior = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first();
 
         $publisher = $this->administrador();
         $author = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($publisher, 'gestao')
             ->put('/gestao/louos/publicar', [
-                'quadro' => 'quadro7',
-                'version' => 'lei-9148-2016-quadro7-rev2',
+                'quadro' => 'quadro10',
+                'version' => 'lei-9148-2016-quadro10-rev2',
                 'author_id' => $author->id,
                 'alteracoes' => [
-                    ['cnae_code' => '4712-1/00', 'area_min' => 0, 'area_max' => 350, 'grupo' => 'nR3', 'subgrupo' => 'nR3-99'],
+                    ['zona' => 'ZPR-REV', 'grupo_uso' => 'nR1', 'subgrupo' => '', 'permissao' => 'permitido'],
                 ],
             ])
             ->assertSessionHas('status');
 
-        $nova = RuleVersion::query()->where('version', 'lei-9148-2016-quadro7-rev2')->first();
+        $nova = RuleVersion::query()->where('version', 'lei-9148-2016-quadro10-rev2')->first();
 
         $this->assertNotNull($nova);
         $this->assertSame(RuleVersionStatus::Vigente, $nova->status);
-        $this->assertSame($nova->id, RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()->id);
+        $this->assertSame($nova->id, RuleVersion::vigente(RuleDomain::LouosQuadro10)->first()->id);
 
         // A anterior foi FECHADA (substituída), nunca apagada.
         $this->assertSame(RuleVersionStatus::Substituida, $anterior->fresh()->status);
@@ -117,41 +117,41 @@ class LouosConsultaTest extends TestCase
 
     public function test_publicacao_com_autor_igual_ao_publicador_e_bloqueada(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
         $mesmo = $this->administrador();
 
         $this->actingAs($mesmo, 'gestao')
             ->put('/gestao/louos/publicar', [
-                'quadro' => 'quadro7',
-                'version' => 'lei-9148-2016-quadro7-rev2',
+                'quadro' => 'quadro10',
+                'version' => 'lei-9148-2016-quadro10-rev2',
                 'author_id' => $mesmo->id,
                 'alteracoes' => [],
             ])
             ->assertSessionHas('error');
 
         // Degradação controlada e comunicada: nada publicado, vigente preservada.
-        $this->assertNull(RuleVersion::query()->where('version', 'lei-9148-2016-quadro7-rev2')->first());
+        $this->assertNull(RuleVersion::query()->where('version', 'lei-9148-2016-quadro10-rev2')->first());
         $this->assertSame(
-            'lei-9148-2016-quadro7',
-            RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()->version,
+            'lei-9148-2016-quadro10',
+            RuleVersion::vigente(RuleDomain::LouosQuadro10)->first()->version,
         );
     }
 
     public function test_publicar_sem_permissao_manter_louos_e_bloqueado(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
+        $this->seed(LouosQuadro10Seeder::class);
         $author = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
 
         // Analista tem consultar-louos mas NÃO manter-louos.
         $this->actingAs($this->analista(), 'gestao')
             ->put('/gestao/louos/publicar', [
-                'quadro' => 'quadro7',
-                'version' => 'lei-9148-2016-quadro7-rev2',
+                'quadro' => 'quadro10',
+                'version' => 'lei-9148-2016-quadro10-rev2',
                 'author_id' => $author->id,
                 'alteracoes' => [],
             ])
             ->assertForbidden();
 
-        $this->assertNull(RuleVersion::query()->where('version', 'lei-9148-2016-quadro7-rev2')->first());
+        $this->assertNull(RuleVersion::query()->where('version', 'lei-9148-2016-quadro10-rev2')->first());
     }
 }

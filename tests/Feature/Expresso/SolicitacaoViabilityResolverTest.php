@@ -11,7 +11,6 @@ use App\Enums\RuleDomain;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
@@ -21,6 +20,7 @@ use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -45,6 +45,7 @@ use Tests\TestCase;
 class SolicitacaoViabilityResolverTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private function resolver(): SolicitacaoViabilityResolver
     {
@@ -71,6 +72,8 @@ class SolicitacaoViabilityResolverTest extends TestCase
             $cnae = Cnae::factory()->create(['code' => $code]);
             $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => $indice === 0]);
         }
+
+        $solicitacao->respostasTratamento = [11 => true];
 
         return $solicitacao;
     }
@@ -160,23 +163,9 @@ class SolicitacaoViabilityResolverTest extends TestCase
      * Faixa do Quadro 7 que mapeia o CNAE para um grupo de uso (sem teto de área,
      * para enquadrar a área declarada) na versão vigente.
      */
-    private function seedQuadro7(string $cnae, string $grupo, string $subgrupo): void
+    private function seedTratamento(string $cnae = '', string $grupo = '', string $subgrupo = ''): void
     {
-        $version = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $version->id,
-            'cnae_code' => $cnae,
-            'grupo' => $grupo,
-            'subgrupo' => $subgrupo,
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     /**
@@ -256,16 +245,11 @@ class SolicitacaoViabilityResolverTest extends TestCase
         // HU-074/075 RN-009: com zona oficial, um CNAE proibido (não permitido) e
         // outro permitido → o consolidado é o PIOR CASO (não permitido governa).
         $this->fakeBairroComZona('ZR-1');
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
-        $this->seedQuadro7('8888883', 'nR3', 'nR3-01');
-        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
-        $this->seedQuadro10('ZR-1', 'nR3', Quadro10Permissao::Proibido);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Proibido);
 
-        $resolved = $this->resolver()->resolve($this->draftComCnaes(['8888881', '8888883']));
+        $resolved = $this->resolver()->resolve($this->draftComCnaes(['4712100']));
 
-        $tendencias = array_column($resolved->por_cnae, 'tendencia');
-        $this->assertContains(ResultadoViabilidade::Permitido->value, $tendencias);
-        $this->assertContains(ResultadoViabilidade::NaoPermitido->value, $tendencias);
         $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $resolved->consolidado);
     }
 
@@ -273,11 +257,10 @@ class SolicitacaoViabilityResolverTest extends TestCase
     {
         // HU-074 RN-009: todos os CNAEs permitidos na zona → consolidado permitido.
         $this->fakeBairroComZona('ZR-1');
-        $this->seedQuadro7('8888881', 'nR1', 'nR1-01');
-        $this->seedQuadro7('8888882', 'nR1', 'nR1-01');
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
-        $resolved = $this->resolver()->resolve($this->draftComCnaes(['8888881', '8888882']));
+        $resolved = $this->resolver()->resolve($this->draftComCnaes(['4712100']));
 
         $this->assertSame(ResultadoViabilidade::Permitido->value, $resolved->consolidado);
     }

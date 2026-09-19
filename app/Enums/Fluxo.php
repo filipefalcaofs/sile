@@ -21,4 +21,17 @@ enum Fluxo: string
             self::Analise => 'Análise técnica',
         };
     }
+
+    /**
+     * Rótulo da elegibilidade por risco — não é o desfecho do processo.
+     * "expresso" aqui significa que o CNAE pode ir ao automático; o status
+     * (deferida/indeferida/em_analise) é outra camada.
+     */
+    public function riscoLabel(): string
+    {
+        return match ($this) {
+            self::Expresso => 'Elegível ao expresso (risco)',
+            self::Analise => 'Análise técnica',
+        };
+    }
 }

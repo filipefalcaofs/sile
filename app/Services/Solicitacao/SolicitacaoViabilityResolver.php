@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Collection;
  * (Fase 7) PELO PONTO da própria solicitação (centroide do polígono do imóvel —
  * sem geocodificar de novo), PROPAGANDO o veredito do motor LOUOS e o
  * encaminhamento do motor de risco por CNAE (RN-001 — nunca lógica de decisão
- * paralela). Sem polígono, degrada honesto para a via CNAE (risco + Quadro 7,
+ * paralela). Sem polígono, degrada honesto para a via CNAE (risco + enquadramento da planilha,
  * sem território → veredito pendente).
  *
  * Consolida a tendência (pior caso entre os CNAEs) e coleta as versões
@@ -64,8 +64,8 @@ class SolicitacaoViabilityResolver
 
         foreach ($this->orderedCnaes($request) as $cnae) {
             $result = $ponto === null
-                ? $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel)
-                : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area, $tipoImovel);
+                ? $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $request->respostasTratamento)
+                : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area, $tipoImovel, $request->respostasTratamento);
 
             $veredito = $result->vereditoLocacional();
 

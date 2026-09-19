@@ -24,7 +24,6 @@ class PublishLouosVersionRequest extends FormRequest
      * @var array<string, string>
      */
     public const QUADRO_DOMAINS = [
-        'quadro7' => 'louos_quadro7',
         'quadro10' => 'louos_quadro10',
         'quadro11a' => 'louos_quadro11a',
     ];
@@ -43,7 +42,7 @@ class PublishLouosVersionRequest extends FormRequest
         $domain = self::QUADRO_DOMAINS[$quadro] ?? '';
 
         return [
-            'quadro' => ['required', 'string', 'in:quadro7,quadro10,quadro11a'],
+            'quadro' => ['required', 'string', 'in:quadro10,quadro11a'],
             'version' => [
                 'required',
                 'string',

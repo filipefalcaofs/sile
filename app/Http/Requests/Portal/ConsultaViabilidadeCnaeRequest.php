@@ -7,9 +7,9 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Consulta de viabilidade por CNAE (HU-056). Rota pública (cidadão anônimo):
- * authorize true. Roda o risco real e o Quadro 7 por área, SEM território — o
+ * authorize true. Roda o risco real e o enquadramento da planilha por área, SEM território — o
  * `cnae` é exigido (formato livre normalizado para dígitos pelo serviço) e a
- * `area` (m²) alimenta o Quadro 7 (HU-057).
+ * `area` (m²) alimenta o ramo vigente.
  */
 class ConsultaViabilidadeCnaeRequest extends FormRequest
 {
@@ -26,6 +26,8 @@ class ConsultaViabilidadeCnaeRequest extends FormRequest
         return [
             'cnae' => ['required', 'string', 'max:14'],
             'area' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
+            'respostas' => ['nullable', 'array'],
+            'respostas.*' => ['boolean'],
         ];
     }
 

@@ -54,6 +54,14 @@ class ViabilityRequest extends Model
     use HasFactory;
 
     /**
+     * Respostas da planilha de tratamento (número da pergunta → sim/não).
+     * Ainda não persistidas — o resolver lê o que o fluxo/teste informar.
+     *
+     * @var array<int, bool>
+     */
+    public array $respostasTratamento = [];
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
@@ -315,6 +323,19 @@ class ViabilityRequest extends Model
     public function expressoQuedas(): HasMany
     {
         return $this->hasMany(ExpressoQueda::class);
+    }
+
+    /**
+     * Última transição para em_analise — motivo do encaminhamento quando o
+     * expresso não emitiu decisão (zona pendente, gatilho, toggle).
+     *
+     * @return HasOne<ViabilityRequestTransition, $this>
+     */
+    public function encaminhamentoAnalise(): HasOne
+    {
+        return $this->hasOne(ViabilityRequestTransition::class)
+            ->where('to_status', ViabilityRequestStatus::EmAnalise)
+            ->latestOfMany();
     }
 
     /**

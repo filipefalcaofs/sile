@@ -2,6 +2,7 @@ import { Head, Link, router, useHttp, usePage, WhenVisible } from '@inertiajs/re
 import type { GeoJsonObject } from 'geojson';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { rotuloFluxoRisco } from '@/components/analise/processo-ui';
 import PageHeader from '@/components/app/page-header';
 import { MapaSection } from '@/components/geo/mapa-section';
 import Checkbox from '@/components/form/checkbox';
@@ -1216,7 +1217,7 @@ export default function FichaAnaliseShow({
                     <Card>
                         <CardHeader
                             title="Localização / Endereço Inscrição Imobiliária"
-                            description="Dados informados na solicitação."
+                            description="Endereço da solicitação. O bairro vem da inscrição imobiliária; a zona urbanística aparece no polígono."
                         />
                         <CardContent>
                             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1510,8 +1511,8 @@ export default function FichaAnaliseShow({
                                                                 </span>
                                                             )}
                                                         </DescItem>
-                                                        <DescItem label="Fluxo">
-                                                            {item.fluxo ?? '—'}
+                                                        <DescItem label="Encaminhamento por risco">
+                                                            {rotuloFluxoRisco(item.fluxo)}
                                                         </DescItem>
                                                     </div>
 

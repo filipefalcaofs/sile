@@ -26,7 +26,7 @@ class StoreLouosLinhaRequest extends FormRequest
         $quadro = (string) ($this->input('quadro') ?? $this->route('quadro'));
 
         return [
-            'quadro' => ['required', 'string', 'in:quadro7,quadro10,quadro11a'],
+            'quadro' => ['required', 'string', 'in:quadro10,quadro11a'],
             ...LouosLinhaRules::forQuadro($quadro),
         ];
     }

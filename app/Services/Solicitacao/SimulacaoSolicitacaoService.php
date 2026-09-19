@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
  * (centroide do polígono — sem geocodificar de novo), a propagação do veredito
  * do motor LOUOS por CNAE (RN-001 — nunca lógica de decisão paralela) e a
  * consolidação do pior caso. Sem polígono, o resolver degrada honesto para a via
- * CNAE (risco + Quadro 7, sem território).
+ * CNAE (risco + enquadramento da planilha, sem território).
  *
  * Esta classe é a camada ORIENTATIVA: PERSISTE o snapshot (por CNAE) + versões +
  * resultado + simulated_at no processo (RN-003) — o protocolo (08-10) LÊ o

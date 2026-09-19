@@ -9,7 +9,7 @@
     "esperado": {
         "veredito": "pendente",
         "risco_municipal_status": "classificado",
-        "quadro7_status": "identificado",
+        "enquadramento_status": "identificado",
         "tem_territorio": false,
         "avisos_contem": "não avalia o local"
     }

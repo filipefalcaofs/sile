@@ -13,7 +13,7 @@ use Illuminate\Console\Command;
 
 /**
  * Enquadra um CNAE + área pelo motor de regras REAL da LOUOS
- * (LouosEnquadramentoService) sobre o seed oficial dos Quadros 7/10/11/11A,
+ * (LouosEnquadramentoService) sobre o seed oficial da planilha vigente e dos Quadros 10/11/11A,
  * imprimindo o parecer fundamentado — evidência de ponta a ponta da Fase 5
  * (HU-038 a HU-046), espelhando o padrão dos comandos auditados
  * (risco:classificar / cnae:importar / redesim:importar).
@@ -23,7 +23,7 @@ use Illuminate\Console\Command;
  * a base oficial de zona segue pendente SEDUR; sem --zona o parecer é
  * honestamente `pendente` (o Quadro 10 degrada, o motor jamais inventa
  * permissão). CNAE de formato inválido ou área ausente/inválida saem com erro
- * (exit 1); CNAE válido sem regra no Quadro 7 NÃO é erro — segue pendente
+ * (exit 1); CNAE válido sem regra na planilha vigente NÃO é erro — segue pendente
  * (exit 0), nunca inventa enquadramento.
  */
 class LouosEnquadrarCommand extends Command
@@ -32,7 +32,8 @@ class LouosEnquadrarCommand extends Command
         {cnae : Subclasse CNAE em dígitos ou formatada (ex.: 4712-1/00)}
         {--area= : Área ocupada em m² (obrigatória)}
         {--zona= : Zona urbanística hipotética — ENTRADA EXPLÍCITA do operador (a base oficial pende SEDUR)}
-        {--restricao=* : Restrição territorial incidente como entrada explícita (ex.: ZEIS)}';
+        {--restricao=* : Restrição territorial incidente como entrada explícita (ex.: ZEIS)}
+        {--resposta=* : Pergunta da planilha no formato N=sim|nao (ex.: --resposta=11=sim)}';
 
     protected $description = 'Enquadra um CNAE + área pelo motor real da LOUOS (HU-038 a HU-046) — parecer fundamentado de ponta a ponta';
 
@@ -57,6 +58,7 @@ class LouosEnquadrarCommand extends Command
             area: $area,
             cnaePrincipal: $cnae,
             territory: $this->montaTerritorio(),
+            respostas: $this->parseRespostas(),
         ));
 
         $this->renderParecer($cnae, $area, $result);
@@ -66,7 +68,7 @@ class LouosEnquadrarCommand extends Command
 
     /**
      * Lê e valida a área obrigatória (--area). Null (com erro impresso) quando
-     * ausente, não numérica ou não positiva — sem área o Quadro 7 não se aplica.
+     * ausente, não numérica ou não positiva — sem área o enquadramento de uso não se aplica.
      */
     private function parseArea(): ?float
     {
@@ -95,6 +97,34 @@ class LouosEnquadrarCommand extends Command
         }
 
         return $area;
+    }
+
+    /**
+     * @return array<int, bool>
+     */
+    private function parseRespostas(): array
+    {
+        $respostas = [];
+
+        /** @var list<string> $pares */
+        $pares = (array) $this->option('resposta');
+
+        foreach ($pares as $par) {
+            if (! str_contains($par, '=')) {
+                continue;
+            }
+
+            [$chave, $valor] = explode('=', $par, 2);
+            $numero = (int) trim($chave);
+
+            if ($numero <= 0) {
+                continue;
+            }
+
+            $respostas[$numero] = in_array(mb_strtolower(trim($valor)), ['1', 'true', 'sim', 's', 'yes'], true);
+        }
+
+        return $respostas;
     }
 
     /**
@@ -185,7 +215,7 @@ class LouosEnquadrarCommand extends Command
         $this->line('Área pretendida: '.$this->formatArea($area).' m²');
         $this->newLine();
 
-        $this->renderEnquadramento($result->quadro7, $result->versoes());
+        $this->renderEnquadramento($result->enquadramento, $result->versoes());
         $this->newLine();
         $this->renderPermissao($result->quadro10, $result->versoes());
         $this->newLine();
@@ -199,25 +229,25 @@ class LouosEnquadrarCommand extends Command
     }
 
     /**
-     * @param  array<string, mixed>  $quadro7
+     * @param  array<string, mixed>  $enquadramento
      * @param  array<string, ?string>  $versoes
      */
-    private function renderEnquadramento(array $quadro7, array $versoes): void
+    private function renderEnquadramento(array $enquadramento, array $versoes): void
     {
-        $this->line('Enquadramento por área (Quadro 7):');
+        $this->line('Enquadramento de uso (planilha vigente):');
 
-        if (($quadro7['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
-            $grupo = (string) ($quadro7['grupo'] ?? '—');
-            $subgrupo = $quadro7['subgrupo'] ?? null;
+        if (($enquadramento['status'] ?? null) === EnquadramentoResult::STATUS_IDENTIFICADO) {
+            $grupo = (string) ($enquadramento['grupo'] ?? '—');
+            $subgrupo = $enquadramento['subgrupo'] ?? null;
 
             $this->line('  Grupo de uso: '.$grupo.($subgrupo !== null && $subgrupo !== '' ? " / Subgrupo: {$subgrupo}" : ''));
-            $this->line('  Faixa de área: '.$this->formatFaixa($quadro7['faixa'] ?? null));
+            $this->line('  Faixa de área: '.$this->formatFaixa($enquadramento['faixa'] ?? null));
         } else {
-            $this->line('  Sem enquadramento parametrizado no Quadro 7 vigente para o CNAE — segue para análise técnica.');
-            $this->lineMotivo($quadro7['motivo'] ?? null);
+            $this->line('  Sem enquadramento parametrizado na planilha vigente para o CNAE — segue para análise técnica.');
+            $this->lineMotivo($enquadramento['motivo'] ?? null);
         }
 
-        $this->line('  Versão de regras: '.($versoes['quadro7'] ?? '—'));
+        $this->line('  Versão de regras: '.($versoes['risco_tratamento'] ?? '—'));
     }
 
     /**
@@ -327,7 +357,7 @@ class LouosEnquadrarCommand extends Command
     private function renderVersoes(array $versoes): void
     {
         $this->line('Versões de regras aplicadas:');
-        $this->line('  Quadro 7: '.($versoes['quadro7'] ?? '—')
+        $this->line('  Enquadramento de uso: '.($versoes['risco_tratamento'] ?? '—')
             .' | Quadro 10: '.($versoes['quadro10'] ?? '—')
             .' | Quadro 11A: '.($versoes['quadro11a'] ?? '—'));
     }

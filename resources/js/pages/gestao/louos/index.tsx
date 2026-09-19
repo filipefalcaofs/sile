@@ -61,16 +61,12 @@ interface LouosIndexProps {
 
 /**
  * Metadados de UX por Quadro. `operacional` distingue o que já aplica de ponta a
- * ponta (Quadro 7 — faixa de área) do que está MODELADO a partir da Lei nº
+ * ponta do que está MODELADO a partir da Lei nº
  * 9.148/2016 mas depende de base territorial ainda pendente da SEDUR (Quadros 10
  * e 11A — zona urbanística e classificação viária). O aviso é honesto: a
  * regra existe e é versionada, mas não finge operação plena sem o insumo oficial.
  */
 const QUADROS_META: Record<string, { descricao: string; operacional: boolean; nota?: string }> = {
-    quadro7: {
-        descricao: 'Faixas de área por CNAE — aplica integralmente no enquadramento.',
-        operacional: true,
-    },
     quadro10: {
         descricao: 'Permissão de uso por zona urbanística.',
         operacional: false,
@@ -95,7 +91,7 @@ interface QuadroSelectorCardProps {
  * acionado, troca o Quadro consultado (param `quadro`).
  */
 function QuadroSelectorCard({ resumo, selected, onSelect }: QuadroSelectorCardProps) {
-    const meta = QUADROS_META[resumo.quadro] ?? QUADROS_META.quadro7;
+    const meta = QUADROS_META[resumo.quadro] ?? QUADROS_META.quadro10;
     const vigenciaDesde = formatarData(resumo.valid_from);
 
     return (
@@ -210,7 +206,7 @@ export default function LouosIndex({
     const [versaoParaAtivar, setVersaoParaAtivar] = useState<QuadroVersao | null>(null);
 
     const selecionado = quadros.find((quadro) => quadro.quadro === quadroSelecionado) ?? quadros[0];
-    const meta = QUADROS_META[quadroSelecionado] ?? QUADROS_META.quadro7;
+    const meta = QUADROS_META[quadroSelecionado] ?? QUADROS_META.quadro10;
     const columns = getColumns(quadroSelecionado);
     const filtering = table.search.trim() !== '';
 

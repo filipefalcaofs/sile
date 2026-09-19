@@ -252,7 +252,7 @@ class ReginProtocoloSimulacaoService
             'used_area_m2' => $relatorio['area_utilizada'] ?? 1.0,
             'address_street' => $contingencia === self::CONTINGENCIA ? 'Simulação REGIN' : 'REGIN',
             'address_number' => 's/n',
-            'address_neighborhood' => (string) ($protocolo['zona'] ?? 'Salvador'),
+            'address_neighborhood' => null,
             'address_zip' => '40000000',
             'property_registration' => $this->inscricaoDoCatalogo($protocolo),
             'property_polygon_geojson' => self::POLIGONO_HOMOLOGACAO,
@@ -264,6 +264,12 @@ class ReginProtocoloSimulacaoService
             'contingency_reason' => $contingencia,
             'external_reference' => (string) $protocolo['processo'],
         ]);
+
+        $zona = is_string($protocolo['zona'] ?? null) ? trim((string) $protocolo['zona']) : '';
+
+        if ($zona !== '') {
+            $solicitacao->forceFill(['zona_codigo' => $zona])->save();
+        }
 
         foreach (array_values($protocolo['atividades'] ?? []) as $indice => $atividade) {
             $cnae = $this->cnaeDoCatalogo((string) ($atividade['cnae'] ?? ''));

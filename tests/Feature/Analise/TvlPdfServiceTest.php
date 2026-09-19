@@ -204,7 +204,7 @@ class TvlPdfServiceTest extends TestCase
                     'cnae_formatado' => '4712-1/00',
                     'status_sugerido' => 'deferida',
                     'status_escolhido' => 'deferida',
-                    'fundamentacao' => ['Lei nº 9.148/2016 (LOUOS) — Quadro 7'],
+                    'fundamentacao' => ['Lei nº 9.148/2016 (LOUOS) — nR1-01'],
                 ],
             ],
         );
@@ -218,7 +218,7 @@ class TvlPdfServiceTest extends TestCase
         $this->assertStringContainsString('4712-1/00', $html);
         $this->assertStringContainsString('Comércio varejista de mercadorias em geral', $html);
         $this->assertStringContainsString('Manter acesso independente para o público.', $html);
-        $this->assertStringContainsString('Lei nº 9.148/2016 (LOUOS) — Quadro 7', $html);
+        $this->assertStringContainsString('Lei nº 9.148/2016 (LOUOS) — nR1-01', $html);
         $this->assertStringContainsString('TVL-COD-VERIFICACAO', $html);
         // CA-02 — relatório administrativo interno (não vai ao cidadão).
         $this->assertStringContainsString('interno', $html);

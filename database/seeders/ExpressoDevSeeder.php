@@ -67,7 +67,7 @@ class ExpressoDevSeeder extends Seeder
             ?? ViabilityServiceType::query()->where('active', true)->orderBy('id')->first();
 
         // Minimercado (4712-1/00): risco baixo real (Decreto 32.636/2020 → fluxo
-        // expresso) e enquadramento por área no Quadro 7 — coerente com ZCN-1.
+        // expresso) e enquadramento na planilha vigente — coerente com ZCMe 2.
         $cnae = Cnae::query()->where('code', '4712100')->first()
             ?? Cnae::query()->where('active', true)->orderBy('code')->first();
 

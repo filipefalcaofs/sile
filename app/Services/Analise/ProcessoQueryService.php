@@ -62,7 +62,7 @@ class ProcessoQueryService
     public function filtered(array $filtros): Builder
     {
         return ViabilityRequest::query()
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision'])
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise'])
             ->when($this->valor($filtros, 'grupo'), fn (Builder $q, string $grupo) => $this->aplicarGrupo($q, $grupo))
             ->when($this->valor($filtros, 'status'), fn (Builder $q, string $status) => $q->where('status', $status))
             ->when($this->valor($filtros, 'analysis_status'), fn (Builder $q, string $s) => $q->where('analysis_status', $s))
@@ -95,7 +95,7 @@ class ProcessoQueryService
     public function fila(User $user, string $modo): Builder
     {
         return $this->escopo($user, $modo)
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision'])
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise'])
             ->whereIn('status', self::STATUS_FILA)
             ->orderBy('analysis_due_at')
             ->orderBy('id');

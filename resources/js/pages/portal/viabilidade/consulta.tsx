@@ -359,7 +359,7 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                                 onChange={(event) => setArea(event.target.value)}
                                                 placeholder="Opcional"
                                                 disabled={!consultaEnabled}
-                                                hint="Usada no enquadramento por faixa de área (Quadro 7)."
+                                                hint="Usada no enquadramento pela planilha vigente (área utilizada)."
                                             />
                                         </div>
 

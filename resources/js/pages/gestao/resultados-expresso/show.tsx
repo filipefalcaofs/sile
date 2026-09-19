@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { rotuloFluxoRisco } from '@/components/analise/processo-ui';
 import DecisionExplanation, { type DecisionExplanationData } from '@/components/auditoria/decision-explanation';
 import PageHeader from '@/components/app/page-header';
 import { ArrowRightIcon, InfoIcon } from '@/components/icons';
@@ -277,7 +278,7 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                                             )}
                                             {item.fluxo && (
                                                 <span className="text-theme-xs text-gray-400 dark:text-gray-500">
-                                                    Fluxo: {item.fluxo}
+                                                    Encaminhamento por risco: {rotuloFluxoRisco(item.fluxo)}
                                                 </span>
                                             )}
                                         </div>

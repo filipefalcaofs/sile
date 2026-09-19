@@ -9,7 +9,6 @@ use App\Http\Requests\Gestao\OpenLouosDraftRequest;
 use App\Http\Requests\Gestao\StoreLouosLinhaRequest;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Models\User;
 use App\Services\Louos\LouosDraftService;
@@ -34,19 +33,16 @@ class LouosDraftController extends Controller
     private const PER_PAGE_OPTIONS = [10, 15, 25, 50];
 
     private const QUADRO_LABELS = [
-        'quadro7' => 'Quadro 7 — Enquadramento por área',
         'quadro10' => 'Quadro 10 — Permissões por zona',
         'quadro11a' => 'Quadro 11A — Condições por classe de via',
     ];
 
     private const CSV_HEADERS = [
-        'quadro7' => 'cnae,grupo,subgrupo,area_min,area_max,observacao',
         'quadro10' => 'zona,grupo_uso,subgrupo,permissao,condicionante_ref,base_legal',
         'quadro11a' => 'classe_via,grupo_uso,condicoes,base_legal',
     ];
 
     private const CSV_EXEMPLOS = [
-        'quadro7' => '4712-1/00,nR1,nR1-02,0,350,Minimercado',
         'quadro10' => 'ZPR 1,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10',
         'quadro11a' => 'VL,nR1-01,Sim,Lei nº 9.148/2016 — Quadro 11A',
     ];
@@ -58,7 +54,7 @@ class LouosDraftController extends Controller
         $quadro = $request->string('quadro')->toString();
 
         if (! array_key_exists($quadro, LouosDraftService::QUADRO_DOMAINS)) {
-            $quadro = 'quadro7';
+            $quadro = 'quadro10';
         }
 
         $domain = LouosDraftService::QUADRO_DOMAINS[$quadro];
@@ -111,7 +107,7 @@ class LouosDraftController extends Controller
         $quadro = $request->string('quadro')->toString();
 
         if (! array_key_exists($quadro, LouosDraftService::QUADRO_DOMAINS)) {
-            $quadro = 'quadro7';
+            $quadro = 'quadro10';
         }
 
         return Inertia::render('gestao/louos/manual', [
@@ -310,33 +306,6 @@ class LouosDraftController extends Controller
         $versionId = $draft->id;
 
         return match ($quadro) {
-            'quadro7' => LouosQuadro7Faixa::query()
-                ->where('rule_version_id', $versionId)
-                ->when($search !== '', function ($query) use ($search) {
-                    $digits = preg_replace('/\D/', '', $search);
-
-                    $query->where(function ($inner) use ($search, $digits) {
-                        if ($digits !== '') {
-                            $inner->where('cnae_code', 'like', "{$digits}%");
-                        }
-
-                        $inner->orWhereLike('grupo', "%{$search}%", caseSensitive: false);
-                    });
-                })
-                ->orderBy('cnae_code')
-                ->orderBy('area_min')
-                ->paginate($perPage)
-                ->withQueryString()
-                ->through(fn (LouosQuadro7Faixa $faixa) => [
-                    'id' => $faixa->id,
-                    'cnae_code' => $faixa->cnae_code,
-                    'formatted_code' => (string) preg_replace('/^(\d{4})(\d)(\d{2})$/', '$1-$2/$3', $faixa->cnae_code),
-                    'grupo' => $faixa->grupo,
-                    'subgrupo' => $faixa->subgrupo,
-                    'area_min' => (float) $faixa->area_min,
-                    'area_max' => $faixa->area_max === null ? null : (float) $faixa->area_max,
-                    'observacao' => $faixa->observacao,
-                ]),
             'quadro10' => LouosQuadro10Permissao::query()
                 ->where('rule_version_id', $versionId)
                 ->when($search !== '', fn ($query) => $query->where(function ($inner) use ($search) {

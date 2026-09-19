@@ -35,9 +35,9 @@ class DatabaseSeeder extends Seeder
             // Sem esta carga o banco está alcançável e VAZIO: todo valor do
             // REGIN vira desconhecido e o processo degrada para análise.
             PropertyTypeSeeder::class,
-            LouosQuadro7Seeder::class,
             LouosQuadro10Seeder::class,
             LouosQuadro11Seeder::class,
+            TratamentoRegrasSeeder::class,
             // Zonas urbanísticas da LOUOS (parametrização 3.3): nascem dos
             // valores distintos de `zona` do Quadro 10 VIGENTE — por isso
             // roda APÓS os seeders LOUOS. Sem quadro vigente, fica vazio

@@ -46,7 +46,7 @@ interface ImportacaoRelatorio {
     importados: number;
     atualizados: number;
     rejeitados: string[];
-    // Campos extras por quadro (ex.: quadro7 traz cnaes_distintos/total_faixas)
+    // Campos extras por quadro (ex.: quadro10 traz total de permissões)
     [key: string]: unknown;
 }
 
@@ -526,7 +526,7 @@ function AbrirRascunhoCard({
                                 type="text"
                                 value={data.version}
                                 onChange={(event) => setData('version', event.target.value)}
-                                placeholder="ex.: quadro7-rev3"
+                                placeholder="ex.: quadro10-rev3"
                                 error={!!errors.version}
                                 hint={errors.version}
                             />

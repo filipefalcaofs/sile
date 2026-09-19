@@ -8,9 +8,9 @@ use App\Services\Louos\EnquadramentoResult;
 use App\Services\Louos\LouosEnquadramentoService;
 use Database\Seeders\LouosQuadro10Seeder;
 use Database\Seeders\LouosQuadro11Seeder;
-use Database\Seeders\LouosQuadro7Seeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -34,15 +34,17 @@ use Tests\TestCase;
 class LouosGoldenCaseTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->seedTratamentoPlanilha();
+
         // Seed OFICIAL: os golden cases batem contra o dado real (Quadros
         // versionados da Lei 9.148/2016), não fixtures sintéticos (anti-fachada).
         $this->seed([
-            LouosQuadro7Seeder::class,
             LouosQuadro10Seeder::class,
             LouosQuadro11Seeder::class,
         ]);
@@ -96,11 +98,15 @@ class LouosGoldenCaseTest extends TestCase
         /** @var array<string, mixed> $vagas */
         $vagas = $input['vagas_declaradas'] ?? [];
 
+        /** @var array<int, bool> $respostas */
+        $respostas = $input['respostas'] ?? [11 => true];
+
         return new EnquadramentoInput(
             area: (float) $input['area'],
             cnaePrincipal: (string) $input['cnae'],
             territory: $this->montaTerritorio($input),
             vagasDeclaradas: $vagas,
+            respostas: $respostas,
         );
     }
 
@@ -185,9 +191,9 @@ class LouosGoldenCaseTest extends TestCase
     private function assertGolden(string $nome, string $chave, mixed $esperado, EnquadramentoResult $result): void
     {
         $atual = match ($chave) {
-            'quadro7_status' => $result->quadro7['status'] ?? null,
-            'quadro7_grupo' => $result->quadro7['grupo'] ?? null,
-            'quadro7_subgrupo' => $result->quadro7['subgrupo'] ?? null,
+            'enquadramento_status' => $result->enquadramento['status'] ?? null,
+            'enquadramento_grupo' => $result->enquadramento['grupo'] ?? null,
+            'enquadramento_subgrupo' => $result->enquadramento['subgrupo'] ?? null,
             'quadro10_status' => $result->quadro10['status'] ?? null,
             'quadro10_permissao' => $result->quadro10['permissao'] ?? null,
             'quadro11a_status' => $result->quadro11a['status'] ?? null,

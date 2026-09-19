@@ -3,7 +3,6 @@
 namespace Tests\Feature\Louos;
 
 use App\Models\User;
-use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -40,32 +39,20 @@ class LouosUiTest extends TestCase
 
     public function test_pagina_de_quadros_renderiza_componente_e_props(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
-
         $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/louos')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/louos/index')
-                ->has('quadros', 3)
-                ->where('quadroSelecionado', 'quadro7')
-                ->where('quadros.0.quadro', 'quadro7')
-                ->where('quadros.0.version', 'lei-9148-2016-quadro7')
-                ->where('filtros.quadro', 'quadro7')
-                ->has('itens.data.0', fn (Assert $item) => $item
-                    ->has('id')
-                    ->has('cnae_code')
-                    ->has('formatted_code')
-                    ->has('grupo')
-                    ->has('area_min')
-                    ->etc())
+                ->has('quadros', 2)
+                ->where('quadroSelecionado', 'quadro10')
+                ->where('quadros.0.quadro', 'quadro10')
+                ->where('filtros.quadro', 'quadro10')
                 ->has('perPageOptions'));
     }
 
     public function test_admin_ve_acao_de_publicar_e_analista_nao(): void
     {
-        $this->seed(LouosQuadro7Seeder::class);
-
         // O administrador tem manter-louos: a página renderiza com a permissão
         // que habilita as ações de atualização via rascunho (auth.permissions partilhado).
         $this->actingAs($this->administrador(), 'gestao')
@@ -87,11 +74,11 @@ class LouosUiTest extends TestCase
     public function test_listagem_aponta_publicacao_para_o_rascunho_nao_para_alteracao_manual(): void
     {
         $this->actingAs($this->administrador(), 'gestao')
-            ->get('/gestao/louos?quadro=quadro7')
+            ->get('/gestao/louos?quadro=quadro10')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/louos/index')
-                ->where('urlRascunho', '/gestao/louos/rascunho?quadro=quadro7')
+                ->where('urlRascunho', '/gestao/louos/rascunho?quadro=quadro10')
                 ->missing('publishForm'));
     }
 
@@ -100,16 +87,16 @@ class LouosUiTest extends TestCase
         // Verificação via rota: o mantenedor (manter-louos) acessa a página de rascunho;
         // o consultor (consultar-louos) recebe 403.
         $this->actingAs($this->administrador(), 'gestao')
-            ->get('/gestao/louos/rascunho?quadro=quadro7')
+            ->get('/gestao/louos/rascunho?quadro=quadro10')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/louos/rascunho')
-                ->where('quadro', 'quadro7')
+                ->where('quadro', 'quadro10')
                 ->has('draft')
                 ->has('canPublish'));
 
         $this->actingAs($this->analista(), 'gestao')
-            ->get('/gestao/louos/rascunho?quadro=quadro7')
+            ->get('/gestao/louos/rascunho?quadro=quadro10')
             ->assertForbidden();
     }
 
@@ -135,11 +122,11 @@ class LouosUiTest extends TestCase
     public function test_listagem_e_rascunho_apontam_para_o_manual_de_csv(): void
     {
         $this->actingAs($this->administrador(), 'gestao')
-            ->get('/gestao/louos?quadro=quadro7')
+            ->get('/gestao/louos?quadro=quadro10')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/louos/index')
-                ->where('urlManual', '/gestao/louos/manual?quadro=quadro7'));
+                ->where('urlManual', '/gestao/louos/manual?quadro=quadro10'));
 
         $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/louos/rascunho?quadro=quadro11a')

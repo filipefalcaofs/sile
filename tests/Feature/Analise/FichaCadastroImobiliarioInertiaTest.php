@@ -143,6 +143,53 @@ class FichaCadastroImobiliarioInertiaTest extends TestCase
                 ->where('cadastroImobiliario.campos.quadra', '0181'));
     }
 
+    public function test_bairro_da_localizacao_vem_da_inscricao_e_zona_nao_aparece_como_bairro(): void
+    {
+        $this->fakeCadastroComBairro('CABULA');
+
+        $processo = $this->processoComFicha([
+            'property_registration' => '0010010010',
+            'address_neighborhood' => 'ZCMe-1/03',
+            'simulation_snapshot' => ['zona' => 'ZCMe-1/03', 'via' => 'VE'],
+        ]);
+        $processo->forceFill(['zona_codigo' => 'ZCMe-1/03'])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/ficha-analise/show')
+                ->where('localizacao.bairro', 'CABULA')
+                ->where('localizacao.zona', 'ZCMe-1/03')
+                ->where('localizacao.via', 'VE'));
+    }
+
+    public function test_sem_cadastro_nao_repete_a_zona_no_campo_bairro(): void
+    {
+        $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
+        {
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                throw new PropertyRegistryUnavailableException($inscricao);
+            }
+        });
+
+        $processo = $this->processoComFicha([
+            'property_registration' => '0010010010',
+            'address_neighborhood' => 'ZCMe-1/03',
+            'simulation_snapshot' => ['zona' => 'ZCMe-1/03'],
+        ]);
+        $processo->forceFill(['zona_codigo' => 'ZCMe-1/03'])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/ficha-analise/show')
+                ->where('localizacao.bairro', null)
+                ->where('localizacao.zona', 'ZCMe-1/03'));
+    }
+
     public function test_auditoria_da_consulta_ao_cadastro_nao_inclui_dados_sensiveis(): void
     {
         $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
@@ -238,5 +285,50 @@ class FichaCadastroImobiliarioInertiaTest extends TestCase
             'event' => 'ficha-cadastro-consulta',
             'subject_id' => $processo->id,
         ]);
+    }
+
+    private function fakeCadastroComBairro(string $bairro): void
+    {
+        $this->app->instance(PropertyRegistryLookup::class, new class($bairro) implements PropertyRegistryLookup
+        {
+            public function __construct(private string $bairro) {}
+
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                return new PropertyRegistryResult(
+                    latitude: -12.97,
+                    longitude: -38.50,
+                    inscricao: $inscricao,
+                    source: 'fake-cadastro',
+                    raw: [],
+                    cadastro: new PropertyCadastroCampos(
+                        inscricao: $inscricao,
+                        endereco: 'Rua Martiniano Bonfim',
+                        numero_metrico: '224',
+                        loteamento: null,
+                        quadra: '0181',
+                        lote: '0043',
+                        conjunto_edificio: null,
+                        bloco: null,
+                        sub_unidade: null,
+                        numero_sub_unidade: null,
+                        bairro: $this->bairro,
+                        cep: null,
+                        area_construida_m2: null,
+                        tipo_imovel: null,
+                        data_lancamento: null,
+                        situacao_cadastral: null,
+                        contribuinte: null,
+                        cpf_cnpj: null,
+                        numero_porta: null,
+                        area_terreno_m2: null,
+                        valor_venal_iptu: null,
+                        logradouro_tributario: null,
+                        situacao_fiscal: null,
+                        data_emissao_certidao: null,
+                    ),
+                );
+            }
+        });
     }
 }

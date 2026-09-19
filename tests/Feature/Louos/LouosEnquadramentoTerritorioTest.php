@@ -6,13 +6,13 @@ use App\Enums\Quadro10Permissao;
 use App\Enums\RuleDomain;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Services\Geo\TerritoryResult;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Louos\LouosEnquadramentoService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -29,6 +29,7 @@ use Tests\TestCase;
 class LouosEnquadramentoTerritorioTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private function service(): LouosEnquadramentoService
     {
@@ -39,35 +40,18 @@ class LouosEnquadramentoTerritorioTest extends TestCase
      * Versão vigente do Quadro 7 + uma faixa para o CNAE, controlando o grupo de
      * uso que o Quadro 10 vai casar.
      */
-    private function quadro7Faixa(string $cnae, string $grupo, string $subgrupo): void
+    private function enquadramentoFaixa(string $cnae, string $grupo, string $subgrupo): void
     {
-        $version = RuleVersion::factory()->create([
-            'domain' => RuleDomain::LouosQuadro7,
-            'version' => 'lei-9148-2016-quadro7',
-            'rules_version' => 'lei-9148-2016-quadro7',
-        ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $version->id,
-            'cnae_code' => $cnae,
-            'grupo' => $grupo,
-            'subgrupo' => $subgrupo,
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     /**
      * Versão vigente do Quadro 7 SEM faixa para o CNAE — força o Quadro 7 a
      * nao_encontrado (pré-condição do Quadro 10).
      */
-    private function quadro7SemFaixa(): void
+    private function enquadramentoSemFaixa(): void
     {
-        RuleVersion::factory()->create([
-            'domain' => RuleDomain::LouosQuadro7,
-            'version' => 'lei-9148-2016-quadro7',
-            'rules_version' => 'lei-9148-2016-quadro7',
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     /**
@@ -230,12 +214,12 @@ class LouosEnquadramentoTerritorioTest extends TestCase
         // Quadro 7 identificado (enquadramento por área existe) E há permissão no
         // Quadro 10 que CASARIA se a tabela fosse consultada — a prova de que a
         // zona indisponível NÃO consulta a tabela nem inventa permissão.
-        $this->quadro7Faixa('4712100', 'nR1', 'nR1-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10Permissao('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComZona(
             $this->zonaIndisponivel('Base de zoneamento pendente SEDUR'),
-        ));
+        ), [11 => true]);
 
         $quadro10 = $this->service()->enquadrar($input)->quadro10;
 
@@ -249,13 +233,12 @@ class LouosEnquadramentoTerritorioTest extends TestCase
 
     public function test_territorio_nulo_degrada_quadro10(): void
     {
-        $this->quadro7Faixa('4712100', 'nR1', 'nR1-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10Permissao('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         // Consulta sem ponto (território nulo): não há zona a avaliar.
         $quadro10 = $this->service()->enquadrar(
-            EnquadramentoInput::paraConsulta(100, '4712-1/00'),
-        )->quadro10;
+            EnquadramentoInput::paraConsulta(100, '4712-1/00', null, [11 => true]))->quadro10;
 
         $this->assertSame(EnquadramentoResult::STATUS_INDISPONIVEL, $quadro10['status']);
         $this->assertNull($quadro10['permissao']);
@@ -264,12 +247,12 @@ class LouosEnquadramentoTerritorioTest extends TestCase
 
     public function test_zona_identificada_retorna_permissao_permitido(): void
     {
-        $this->quadro7Faixa('4712100', 'nR1', 'nR1-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10Permissao('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComZona(
             $this->zonaIdentificada('ZR-1'),
-        ));
+        ), [11 => true]);
 
         $quadro10 = $this->service()->enquadrar($input)->quadro10;
 
@@ -286,12 +269,12 @@ class LouosEnquadramentoTerritorioTest extends TestCase
     {
         // RN-005: permissão proibida na zona (o consolidado vira nao_permitido no
         // 05-05). Aqui o Quadro 10 só precisa devolver 'proibido' fielmente.
-        $this->quadro7Faixa('4712100', 'nR3', 'nR3-01');
-        $this->quadro10Permissao('ZPAM', 'nR3', Quadro10Permissao::Proibido);
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
+        $this->quadro10Permissao('ZPAM', 'nR1', Quadro10Permissao::Proibido);
 
         $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComZona(
             $this->zonaIdentificada('ZPAM'),
-        ));
+        ), [11 => true]);
 
         $quadro10 = $this->service()->enquadrar($input)->quadro10;
 
@@ -303,12 +286,12 @@ class LouosEnquadramentoTerritorioTest extends TestCase
     {
         // Versão do Quadro 10 existe, mas sem linha para (zona, grupo de uso): o
         // motor NÃO inventa permissão — devolve nao_encontrado com a versão.
-        $this->quadro7Faixa('4712100', 'nR1', 'nR1-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10Permissao('ZR-1', 'nR2', Quadro10Permissao::Permitido);
 
         $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComZona(
             $this->zonaIdentificada('ZR-1'),
-        ));
+        ), [11 => true]);
 
         $quadro10 = $this->service()->enquadrar($input)->quadro10;
 
@@ -317,11 +300,11 @@ class LouosEnquadramentoTerritorioTest extends TestCase
         $this->assertSame('lei-9148-2016-quadro10', $quadro10['versao_regra']);
     }
 
-    public function test_sem_enquadramento_quadro7_nao_avalia_quadro10(): void
+    public function test_sem_enquadramento_nao_avalia_quadro10(): void
     {
-        // Mesmo com zona identificada e permissão cadastrada, sem enquadramento
-        // (Quadro 7 nao_encontrado) não há grupo de uso para verificar permissão.
-        $this->quadro7SemFaixa();
+        // Mesmo com zona identificada e permissão cadastrada, sem ramo
+        // resolvido não há grupo de uso para verificar permissão.
+        $this->enquadramentoSemFaixa();
         $this->quadro10Permissao('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         $input = EnquadramentoInput::paraConsulta(100, '9999-9/99', $this->territorioComZona(
@@ -332,7 +315,7 @@ class LouosEnquadramentoTerritorioTest extends TestCase
 
         $this->assertSame(EnquadramentoResult::STATUS_INDISPONIVEL, $quadro10['status']);
         $this->assertNull($quadro10['permissao']);
-        $this->assertSame('Sem enquadramento (Quadro 7) não há permissão a verificar', $quadro10['motivo']);
+        $this->assertSame('Sem enquadramento de uso não há permissão a verificar', $quadro10['motivo']);
     }
 
     public function test_via_sem_atributo_louos_degrada_quadro11a(): void
@@ -340,12 +323,12 @@ class LouosEnquadramentoTerritorioTest extends TestCase
         // Cenário atual (anti-fachada): a geometria viária existe (Fase 4), mas a
         // via NÃO traz o atributo de classificação viária LOUOS (pendente SEDUR).
         // Mesmo com condição cadastrada que casaria, o motor não inventa a classe.
-        $this->quadro7Faixa('4712100', 'nR2', 'nR2-01');
-        $this->quadro11Condicao(RuleDomain::LouosQuadro11a, 'lei-9148-2016-quadro11a', 'via_local', 'nR2', ['recuo_frontal_m' => 5]);
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
+        $this->quadro11Condicao(RuleDomain::LouosQuadro11a, 'lei-9148-2016-quadro11a', 'via_local', 'nR1', ['recuo_frontal_m' => 5]);
 
         $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComVia(
             $this->viaIdentificada(['NOME_LOGRADOURO' => 'Rua das Laranjeiras']),
-        ));
+        ), [11 => true]);
 
         $quadro11a = $this->service()->enquadrar($input)->quadro11a;
 
@@ -357,11 +340,11 @@ class LouosEnquadramentoTerritorioTest extends TestCase
 
     public function test_via_indisponivel_degrada_quadro11a(): void
     {
-        $this->quadro7Faixa('4712100', 'nR2', 'nR2-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
 
         $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComVia(
             $this->viaIndisponivel('Eixo viário sem classificação LOUOS (pendente SEDUR)'),
-        ));
+        ), [11 => true]);
 
         $result = $this->service()->enquadrar($input);
 
@@ -374,12 +357,12 @@ class LouosEnquadramentoTerritorioTest extends TestCase
     {
         // Quando a via traz a classe viária LOUOS, o motor aplica as condições
         // reais do Quadro 11A — não existe Quadro 11 na lei publicada.
-        $this->quadro7Faixa('4712100', 'nR2', 'nR2-01');
-        $this->quadro11Condicao(RuleDomain::LouosQuadro11a, 'lei-9148-2016-quadro11a', 'via_local', 'nR2', ['recuo_frontal_m' => 3]);
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
+        $this->quadro11Condicao(RuleDomain::LouosQuadro11a, 'lei-9148-2016-quadro11a', 'via_local', 'nR1', ['recuo_frontal_m' => 3]);
 
         $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComVia(
             $this->viaIdentificada(['NOME_LOGRADOURO' => 'Rua das Laranjeiras', 'CLASSE_VIA_LOUOS' => 'via_local']),
-        ));
+        ), [11 => true]);
 
         $result = $this->service()->enquadrar($input);
 

@@ -11,7 +11,7 @@ import {
 import DecisionExplanation, { type DecisionExplanationData } from '@/components/auditoria/decision-explanation';
 import PageHeader from '@/components/app/page-header';
 import { MapaSection } from '@/components/geo/mapa-section';
-import { ArrowRightIcon, MapPinIcon } from '@/components/icons';
+import { AlertIcon, ArrowRightIcon, MapPinIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
@@ -154,6 +154,19 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
                                     </Badge>
                                     <CategoriaBadges categorias={processo.categorias} />
                                 </div>
+                                {processo.sem_decisao_automatica && (
+                                    <div
+                                        role="status"
+                                        className="flex items-start gap-2 rounded-lg border border-warning-200 bg-warning-50 p-3 dark:border-warning-500/30 dark:bg-warning-500/15"
+                                    >
+                                        <AlertIcon className="mt-0.5 size-4 shrink-0 fill-current text-warning-500" />
+                                        <p className="text-theme-sm text-gray-700 dark:text-gray-200">
+                                            {processo.motivo_encaminhamento
+                                                ? `Sem decisão automática — ${processo.motivo_encaminhamento}`
+                                                : 'Sem decisão automática. O motor não deferiu nem indeferiu; o processo foi encaminhado à análise técnica.'}
+                                        </p>
+                                    </div>
+                                )}
                                 <div>
                                     <p className="text-lg font-semibold text-gray-800 dark:text-white/90">
                                         {processo.empresa ?? 'Empresa não informada'}

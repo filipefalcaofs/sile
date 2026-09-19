@@ -28,6 +28,7 @@ class EnquadramentoResultTest extends TestCase
         $this->assertSame([], $input->vagasDeclaradas);
         $this->assertNull($input->data);
         $this->assertSame([], $input->versoesOverride);
+        $this->assertSame([], $input->respostas);
     }
 
     public function test_enquadramento_input_carrega_territorio_e_overrides(): void
@@ -40,14 +41,16 @@ class EnquadramentoResultTest extends TestCase
             cnaesSecundarios: ['4729699'],
             territory: $territory,
             vagasDeclaradas: ['estacionamento' => 10],
-            versoesOverride: ['louos_quadro7' => 'louos-quadro7-v2'],
+            versoesOverride: ['risco_tratamento' => 'planilha-20-08-26'],
         );
 
         $this->assertSame(800.0, $input->area);
         $this->assertSame(['4729699'], $input->cnaesSecundarios);
         $this->assertSame($territory, $input->territory);
         $this->assertSame(['estacionamento' => 10], $input->vagasDeclaradas);
-        $this->assertSame(['louos_quadro7' => 'louos-quadro7-v2'], $input->versoesOverride);
+        $this->assertSame(['risco_tratamento' => 'planilha-20-08-26'], $input->versoesOverride);
+        $this->assertSame([], $input->respostas);
+        $this->assertNull($input->tipoImovel);
     }
 
     public function test_to_array_e_versoes_expoem_o_contrato(): void
@@ -55,18 +58,18 @@ class EnquadramentoResultTest extends TestCase
         $array = $this->resultExemplo()->toArray();
 
         $this->assertSame(
-            ['quadro7', 'quadro10', 'quadro11a', 'consolidado', 'versoes'],
+            ['enquadramento', 'quadro10', 'quadro11a', 'consolidado', 'versoes'],
             array_keys($array),
         );
 
-        $this->assertArrayHasKey('versao_regra', $array['quadro7']);
+        $this->assertArrayHasKey('versao_regra', $array['enquadramento']);
         $this->assertArrayHasKey('status', $array['quadro10']);
         $this->assertSame(EnquadramentoResult::STATUS_INDISPONIVEL, $array['quadro10']['status']);
         $this->assertArrayHasKey('fundamentacao', $array['consolidado']);
         $this->assertArrayHasKey('condicionantes', $array['consolidado']);
 
         $this->assertSame(
-            ['quadro7' => 'louos-quadro7-v1', 'quadro10' => null, 'quadro11a' => 'louos-quadro11a-v1'],
+            ['risco_tratamento' => 'planilha-20-08-26', 'quadro10' => null, 'quadro11a' => 'louos-quadro11a-v1'],
             $this->resultExemplo()->versoes(),
         );
     }
@@ -91,12 +94,12 @@ class EnquadramentoResultTest extends TestCase
     private function resultExemplo(string $resultado = ResultadoViabilidade::PermitidoComCondicoes->value): EnquadramentoResult
     {
         return new EnquadramentoResult(
-            quadro7: [
+            enquadramento: [
                 'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
                 'grupo' => 'nR1',
                 'subgrupo' => 'nR1-01',
                 'motivo' => null,
-                'versao_regra' => 'louos-quadro7-v1',
+                'versao_regra' => 'planilha-20-08-26',
             ],
             quadro10: [
                 'status' => EnquadramentoResult::STATUS_INDISPONIVEL,
@@ -112,12 +115,12 @@ class EnquadramentoResultTest extends TestCase
             ],
             consolidado: [
                 'resultado' => $resultado,
-                'fundamentacao' => ['Quadro 7 da Lei nº 9.148/2016'],
+                'fundamentacao' => ['Lei nº 9.148/2016 — nR1-01'],
                 'condicionantes' => [],
                 'motivo' => 'Permissão por zona pendente (Quadro 10 indisponível)',
             ],
             versoes: [
-                'quadro7' => 'louos-quadro7-v1',
+                'risco_tratamento' => 'planilha-20-08-26',
                 'quadro10' => null,
                 'quadro11a' => 'louos-quadro11a-v1',
             ],

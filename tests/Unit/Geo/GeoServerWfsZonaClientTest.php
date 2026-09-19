@@ -46,13 +46,25 @@ class GeoServerWfsZonaClientTest extends TestCase
         $hit = app(GeoServerWfsZonaClient::class)->identificar(-12.97, -38.51);
 
         $this->assertSame('identificado', $hit->status);
-        $this->assertSame('ZPR-3', $hit->codigo);
+        $this->assertSame('ZPR 3', $hit->codigo);
         $this->assertSame('ZPR 3', $hit->properties['SUBZONA']);
         $this->assertSame('louos_zpr3:VM_L_Z_USO_ZPR_3', $hit->typeName);
         $this->assertNull($hit->motivo);
 
         Http::assertSent(fn ($request): bool => str_contains($request->url(), 'SRID%3D4326')
             || str_contains(urldecode($request->url()), 'SRID=4326'));
+    }
+
+    public function test_subzona_com_hifen_gis_vira_grafia_do_quadro_10(): void
+    {
+        Http::fake([
+            '*typeName=louos_zpr3*' => Http::response($this->featureCollection('ZPR-3'), 200),
+        ]);
+
+        $hit = app(GeoServerWfsZonaClient::class)->identificar(-12.97, -38.51);
+
+        $this->assertSame('identificado', $hit->status);
+        $this->assertSame('ZPR 3', $hit->codigo);
     }
 
     public function test_ponto_fora_de_qualquer_camada_e_nao_encontrado(): void

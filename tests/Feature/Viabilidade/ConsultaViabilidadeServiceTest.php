@@ -12,11 +12,11 @@ use App\Services\Geo\SpatialRepository;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
-use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -36,6 +36,7 @@ use Tests\TestCase;
 class ConsultaViabilidadeServiceTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private const CNAE_MINIMERCADO = '4712-1/00';
 
@@ -51,11 +52,12 @@ class ConsultaViabilidadeServiceTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedTratamentoPlanilha();
+
         // Carga REAL dos motores: Quadro 7 (enquadramento por área) e risco
         // municipal/sanitário (dimensões separadas). A lógica processa dados
         // reais — muda a carga, nunca o comportamento.
         $this->seed([
-            LouosQuadro7Seeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
         ]);
@@ -122,6 +124,7 @@ class ConsultaViabilidadeServiceTest extends TestCase
             'Praça Municipal, Centro, Salvador',
             self::CNAE_MINIMERCADO,
             120.0,
+            [11 => true],
         );
 
         // Geocodificou (ponto real injetado) e identificou o bairro.
@@ -130,7 +133,7 @@ class ConsultaViabilidadeServiceTest extends TestCase
 
         // Risco real classificado (Decreto 32.636/2020) e Quadro 7 enquadrado por área.
         $this->assertSame('classificado', $result->risco->municipal['status']);
-        $this->assertSame('identificado', $result->enquadramento->quadro7['status']);
+        $this->assertSame('identificado', $result->enquadramento->enquadramento['status']);
 
         // Veredito PROPAGADO do motor: sem zona → pendente (nunca recomputado aqui).
         $this->assertSame('pendente', $result->vereditoLocacional()['resultado']);
@@ -145,7 +148,7 @@ class ConsultaViabilidadeServiceTest extends TestCase
         $this->fakeTerritorioBairroSemZona();
 
         $veredito = $this->service()
-            ->consultarPorEndereco('Praça Municipal, Salvador', self::CNAE_MINIMERCADO, 120.0)
+            ->consultarPorEndereco('Praça Municipal, Salvador', self::CNAE_MINIMERCADO, 120.0, [11 => true])
             ->vereditoLocacional();
 
         // Anti-fachada central: sem zona o motor JAMAIS declara permitido/não
@@ -165,7 +168,7 @@ class ConsultaViabilidadeServiceTest extends TestCase
         $this->fakeGeocoder();
         $this->fakeTerritorioBairroSemZona();
 
-        $this->service()->consultarPorEndereco('Praça Municipal, Salvador', self::CNAE_MINIMERCADO, 120.0);
+        $this->service()->consultarPorEndereco('Praça Municipal, Salvador', self::CNAE_MINIMERCADO, 120.0, [11 => true]);
 
         $activity = Activity::query()
             ->where('log_name', 'viabilidade')
@@ -208,7 +211,7 @@ class ConsultaViabilidadeServiceTest extends TestCase
     {
         // HU-056/CA-01: sem endereço/inscrição não há ponto — o risco e o Quadro
         // 7 por área rodam REAIS; o veredito locacional fica pendente (sem zona).
-        $result = $this->service()->consultarPorCnae(self::CNAE_MINIMERCADO, 120.0);
+        $result = $this->service()->consultarPorCnae(self::CNAE_MINIMERCADO, 120.0, null, [11 => true]);
 
         // Sem ponto: nenhum geocode e nenhum território (não inventa local).
         $this->assertNull($result->geocode);
@@ -216,7 +219,7 @@ class ConsultaViabilidadeServiceTest extends TestCase
 
         // Risco real classificado e Quadro 7 enquadrado por área.
         $this->assertSame('classificado', $result->risco->municipal['status']);
-        $this->assertSame('identificado', $result->enquadramento->quadro7['status']);
+        $this->assertSame('identificado', $result->enquadramento->enquadramento['status']);
 
         // Veredito pendente (sem local) + aviso de que a consulta não avalia o local.
         $this->assertSame('pendente', $result->vereditoLocacional()['resultado']);
@@ -229,8 +232,8 @@ class ConsultaViabilidadeServiceTest extends TestCase
         // nao_encontrado (não inventa grupo) e o veredito fica pendente.
         $result = $this->service()->consultarPorCnae(self::CNAE_FORA_QUADRO7, null);
 
-        $this->assertSame('nao_encontrado', $result->enquadramento->quadro7['status']);
-        $this->assertNull($result->enquadramento->quadro7['grupo']);
+        $this->assertSame('nao_encontrado', $result->enquadramento->enquadramento['status']);
+        $this->assertNull($result->enquadramento->enquadramento['grupo']);
 
         $this->assertSame('pendente', $result->vereditoLocacional()['resultado']);
     }
@@ -268,7 +271,7 @@ class ConsultaViabilidadeServiceTest extends TestCase
         });
         $this->fakeTerritorioBairroSemZona();
 
-        $result = $this->service()->consultarPorInscricao('123456789', self::CNAE_MINIMERCADO, 120.0);
+        $result = $this->service()->consultarPorInscricao('123456789', self::CNAE_MINIMERCADO, 120.0, [11 => true]);
 
         // Rodou a identificação a partir do ponto resolvido (território real).
         $this->assertSame('inscricao', $result->entrada['tipo']);
@@ -277,14 +280,14 @@ class ConsultaViabilidadeServiceTest extends TestCase
 
         // Risco e Quadro 7 reais (pipeline completa).
         $this->assertSame('classificado', $result->risco->municipal['status']);
-        $this->assertSame('identificado', $result->enquadramento->quadro7['status']);
+        $this->assertSame('identificado', $result->enquadramento->enquadramento['status']);
     }
 
     public function test_inscricao_indisponivel_degrada_para_cnae_com_aviso_e_nunca_inventa_ponto(): void
     {
         // HU-055/CA-03: com o binding REAL (base de lotes pendente SEDUR), a
         // resolução do ponto degrada para a via CNAE — NUNCA inventa coordenada.
-        $result = $this->service()->consultarPorInscricao('123456789', self::CNAE_MINIMERCADO, 120.0);
+        $result = $this->service()->consultarPorInscricao('123456789', self::CNAE_MINIMERCADO, 120.0, [11 => true]);
 
         // Sem ponto inventado: nenhum geocode e nenhum território.
         $this->assertNull($result->geocode);

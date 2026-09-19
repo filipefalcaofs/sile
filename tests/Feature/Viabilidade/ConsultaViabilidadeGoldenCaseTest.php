@@ -9,12 +9,12 @@ use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\SpatialRepository;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
-use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -36,16 +36,18 @@ use Tests\TestCase;
 class ConsultaViabilidadeGoldenCaseTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->seedTratamentoPlanilha();
+
         // Seed OFICIAL: os golden cases batem contra o dado real (Quadro 7 da Lei
         // 9.148/2016 e risco do Decreto 32.636/2020 + VISA), não fixtures
         // sintéticos do dado (anti-fachada).
         $this->seed([
-            LouosQuadro7Seeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
         ]);
@@ -112,9 +114,9 @@ class ConsultaViabilidadeGoldenCaseTest extends TestCase
         $service = app(ConsultaViabilidadeService::class);
 
         return match ($tipo) {
-            'endereco' => $service->consultarPorEndereco((string) $input['endereco'], $cnae, $area),
-            'inscricao' => $service->consultarPorInscricao((string) $input['inscricao'], $cnae, $area),
-            default => $service->consultarPorCnae($cnae, $area),
+            'endereco' => $service->consultarPorEndereco((string) $input['endereco'], $cnae, $area, [11 => true]),
+            'inscricao' => $service->consultarPorInscricao((string) $input['inscricao'], $cnae, $area, [11 => true]),
+            default => $service->consultarPorCnae($cnae, $area, null, [11 => true]),
         };
     }
 
@@ -144,8 +146,8 @@ class ConsultaViabilidadeGoldenCaseTest extends TestCase
                 $this->assertSame($esperado, $result->risco->municipal['status'] ?? null, $contexto);
                 break;
 
-            case 'quadro7_status':
-                $this->assertSame($esperado, $result->enquadramento->quadro7['status'] ?? null, $contexto);
+            case 'enquadramento_status':
+                $this->assertSame($esperado, $result->enquadramento->enquadramento['status'] ?? null, $contexto);
                 break;
 
             case 'tem_geocode':

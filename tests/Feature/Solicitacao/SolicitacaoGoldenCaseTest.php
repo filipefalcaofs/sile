@@ -13,7 +13,6 @@ use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\SimulacaoSolicitacaoService;
 use App\Services\Solicitacao\SolicitacaoIncompletaException;
 use Database\Seeders\DocumentRequirementSeeder;
-use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
@@ -21,6 +20,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\ViabilityServiceTypeSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -40,17 +40,19 @@ use Tests\TestCase;
 class SolicitacaoGoldenCaseTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->seedTratamentoPlanilha();
 
         // Seed OFICIAL do domínio: catálogos-base da fase + motores reais (Quadro
         // 7 e risco). Os golden batem contra o dado real, não fixtures sintéticos.
         $this->seed([
             RolesAndPermissionsSeeder::class,
             ParameterSeeder::class,
-            LouosQuadro7Seeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
             ViabilityServiceTypeSeeder::class,

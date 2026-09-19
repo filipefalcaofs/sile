@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\PublishLouosVersionRequest;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Services\Louos\LouosMaintenanceService;
 use App\Services\Rules\RuleVersionService;
@@ -23,10 +22,10 @@ use Inertia\Response;
 
 /**
  * Consulta e manutenção dos Quadros da LOUOS no console SEDUR (HU-015..018 /
- * HU-046). A consulta lista a versão vigente de cada Quadro (resumo dos 4 +
+ * HU-046). A consulta lista a versão vigente de cada Quadro (resumo +
  * listagem paginada do selecionado, com busca/auditoria); a publicação gera uma
  * NOVA versão por quatro olhos (LouosMaintenanceService), preservando a anterior
- * — nunca edição destrutiva. Os Quadros vigentes são 7, 10 e 11A. Espelha o
+ * — nunca edição destrutiva. Os Quadros vigentes são 10 e 11A. Espelha o
  * RiscoController (server-driven). Gate cross-guard via permission: nas rotas.
  */
 class LouosController extends Controller
@@ -44,7 +43,6 @@ class LouosController extends Controller
      * @var array<string, RuleDomain>
      */
     private const QUADRO_DOMAINS = [
-        'quadro7' => RuleDomain::LouosQuadro7,
         'quadro10' => RuleDomain::LouosQuadro10,
         'quadro11a' => RuleDomain::LouosQuadro11a,
     ];
@@ -60,7 +58,7 @@ class LouosController extends Controller
         $quadro = $request->string('quadro')->toString();
 
         if (! array_key_exists($quadro, self::QUADRO_DOMAINS)) {
-            $quadro = 'quadro7';
+            $quadro = 'quadro10';
         }
 
         $domain = self::QUADRO_DOMAINS[$quadro];
@@ -195,7 +193,7 @@ class LouosController extends Controller
     }
 
     /**
-     * Resumo das versões vigentes dos 4 Quadros (visão geral da consulta).
+     * Resumo das versões vigentes dos Quadros 10 e 11A (visão geral da consulta).
      *
      * @return list<array{quadro: string, label: string, version: string|null, valid_from: string|null, total: int}>
      */
@@ -228,7 +226,6 @@ class LouosController extends Controller
         }
 
         return match ($quadro) {
-            'quadro7' => LouosQuadro7Faixa::query()->where('rule_version_id', $vigente->id)->count(),
             'quadro10' => LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count(),
             default => LouosQuadro11CondicaoVia::query()->where('rule_version_id', $vigente->id)->count(),
         };
@@ -245,33 +242,6 @@ class LouosController extends Controller
         $versionId = $vigente?->id ?? 0;
 
         return match ($quadro) {
-            'quadro7' => LouosQuadro7Faixa::query()
-                ->where('rule_version_id', $versionId)
-                ->when($search !== '', function ($query) use ($search) {
-                    $digits = preg_replace('/\D/', '', $search);
-
-                    $query->where(function ($inner) use ($search, $digits) {
-                        if ($digits !== '') {
-                            $inner->where('cnae_code', 'like', "{$digits}%");
-                        }
-
-                        $inner->orWhereLike('grupo', "%{$search}%", caseSensitive: false);
-                    });
-                })
-                ->orderBy('cnae_code')
-                ->orderBy('area_min')
-                ->paginate($perPage)
-                ->withQueryString()
-                ->through(fn (LouosQuadro7Faixa $faixa) => [
-                    'id' => $faixa->id,
-                    'cnae_code' => $faixa->cnae_code,
-                    'formatted_code' => $this->formatCnae($faixa->cnae_code),
-                    'grupo' => $faixa->grupo,
-                    'subgrupo' => $faixa->subgrupo,
-                    'area_min' => (float) $faixa->area_min,
-                    'area_max' => $faixa->area_max === null ? null : (float) $faixa->area_max,
-                    'observacao' => $faixa->observacao,
-                ]),
             'quadro10' => LouosQuadro10Permissao::query()
                 ->where('rule_version_id', $versionId)
                 ->when($search !== '', fn ($query) => $query->where(function ($inner) use ($search) {
@@ -310,14 +280,5 @@ class LouosController extends Controller
                     'base_legal' => $condicao->base_legal,
                 ]),
         };
-    }
-
-    /**
-     * Código no formato oficial DDDD-D/SS (espelha Cnae::formatted_code para as
-     * faixas, cujo cnae_code é guardado em dígitos).
-     */
-    private function formatCnae(string $code): string
-    {
-        return (string) preg_replace('/^(\d{4})(\d)(\d{2})$/', '$1-$2/$3', $code);
     }
 }

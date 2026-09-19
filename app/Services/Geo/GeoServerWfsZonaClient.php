@@ -3,6 +3,7 @@
 namespace App\Services\Geo;
 
 use App\Models\GeoServerLayer;
+use App\Support\Louos\Quadro10Zona;
 use App\Support\Settings;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\Pool;
@@ -201,11 +202,11 @@ class GeoServerWfsZonaClient
         }
 
         if (preg_match('/ZPR_(\d+)$/', $typeName, $match) === 1) {
-            return 'ZPR-'.$match[1];
+            return Quadro10Zona::oficializar('ZPR '.$match[1]);
         }
 
         if (preg_match('/ZDE_(\d+)$/', $typeName, $match) === 1) {
-            return 'ZDE-'.$match[1];
+            return Quadro10Zona::oficializar('ZDE '.$match[1]);
         }
 
         if (str_contains($typeName, 'ZPAM')) {
@@ -221,12 +222,6 @@ class GeoServerWfsZonaClient
 
     public static function normalizarCodigo(string $raw): string
     {
-        $texto = trim(preg_replace('/\s+/', ' ', $raw) ?? $raw);
-
-        if (preg_match('/^([A-Za-z]{2,})\s+(\d+)$/', $texto, $match) === 1) {
-            return strtoupper($match[1]).'-'.$match[2];
-        }
-
-        return $texto;
+        return Quadro10Zona::oficializar($raw) ?? trim($raw);
     }
 }

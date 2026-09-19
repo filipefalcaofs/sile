@@ -5,13 +5,13 @@ namespace Tests\Feature\Louos;
 use App\Enums\Quadro10Permissao;
 use App\Enums\RuleDomain;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Services\Geo\TerritoryResult;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Louos\LouosEnquadramentoService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -22,28 +22,16 @@ use Tests\TestCase;
 class ZonaNomeAtributosTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private function service(): LouosEnquadramentoService
     {
         return app(LouosEnquadramentoService::class);
     }
 
-    private function quadro7Faixa(string $cnae, string $grupo, string $subgrupo): void
+    private function enquadramentoFaixa(string $cnae, string $grupo, string $subgrupo): void
     {
-        $version = RuleVersion::factory()->create([
-            'domain' => RuleDomain::LouosQuadro7,
-            'version' => 'lei-9148-2016-quadro7',
-            'rules_version' => 'lei-9148-2016-quadro7',
-        ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $version->id,
-            'cnae_code' => $cnae,
-            'grupo' => $grupo,
-            'subgrupo' => $subgrupo,
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     private function quadro10Permissao(string $zona, string $grupoUso, Quadro10Permissao $permissao): void
@@ -98,12 +86,12 @@ class ZonaNomeAtributosTest extends TestCase
         // o parâmetro e o motor passa a ler, sem deploy.
         config(['sile.geo.zona.atributos_nome' => ['NM_ZONA']]);
 
-        $this->quadro7Faixa('4712100', 'nR1', 'nR1-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10Permissao('ZR-9', 'nR1', Quadro10Permissao::Permitido);
 
         $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComZonaSemNome(
             ['NM_ZONA' => 'ZR-9'],
-        ));
+        ), [11 => true]);
 
         $quadro10 = $this->service()->enquadrar($input)->quadro10;
 
@@ -116,12 +104,12 @@ class ZonaNomeAtributosTest extends TestCase
     {
         // Sem configuração customizada, o fallback (config/sile.php) mantém os
         // 4 atributos atuais: ZONA, zona, SIGLA_ZONA, SUBZONA.
-        $this->quadro7Faixa('4712100', 'nR1', 'nR1-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10Permissao('ZPAM', 'nR1', Quadro10Permissao::Proibido);
 
         $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComZonaSemNome(
             ['SIGLA_ZONA' => 'ZPAM'],
-        ));
+        ), [11 => true]);
 
         $quadro10 = $this->service()->enquadrar($input)->quadro10;
 

@@ -7,12 +7,12 @@ use App\Enums\ResultadoViabilidade;
 use App\Enums\RuleDomain;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Services\Geo\TerritoryResult;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\LouosEnquadramentoService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -27,43 +27,26 @@ use Tests\TestCase;
 class LouosTextosByteIdenticosTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private function service(): LouosEnquadramentoService
     {
         return app(LouosEnquadramentoService::class);
     }
 
-    private function quadro7Faixa(
+    private function enquadramentoFaixa(
         string $cnae,
         string $grupo,
         string $subgrupo,
         float $areaMin = 0,
         ?float $areaMax = null,
     ): void {
-        $version = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $version->id,
-            'cnae_code' => $cnae,
-            'grupo' => $grupo,
-            'subgrupo' => $subgrupo,
-            'area_min' => $areaMin,
-            'area_max' => $areaMax,
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
-    private function quadro7SemFaixa(): void
+    private function enquadramentoSemFaixa(): void
     {
-        RuleVersion::factory()->create([
-            'domain' => RuleDomain::LouosQuadro7,
-            'version' => 'lei-9148-2016-quadro7',
-            'rules_version' => 'lei-9148-2016-quadro7',
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     private function quadro10Permissao(string $zona, string $grupoUso, Quadro10Permissao $permissao): void
@@ -189,19 +172,20 @@ class LouosTextosByteIdenticosTest extends TestCase
 
     public function test_permitido_emite_os_textos_exatos(): void
     {
-        $this->quadro7Faixa('4712100', 'nR1', 'nR1-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10Permissao('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
             100,
             '4712-1/00',
             $this->territorio(zona: $this->zonaIdentificada('ZR-1')),
+            [11 => true],
         ));
 
         $this->assertSame(ResultadoViabilidade::Permitido->value, $result->resultado());
         $this->assertSame(
-            'O CNAE 4712-1/00 com área 100 m² classifica-se no grupo nR1 (nR1-01) do Quadro 7 da LOUOS (faixa a partir de 0 m²). O Quadro 7 não autoriza o uso na zona — só define o grupo.',
-            $result->quadro7['motivo'],
+            'O CNAE 4712-1/00 com área 100 m² enquadra-se no grupo nR1 (nR1-01) da LOUOS (07.01.05). O enquadramento não autoriza o uso na zona — só define o grupo.',
+            $result->enquadramento['motivo'],
         );
         $this->assertSame(
             'O grupo nR1 é permitido na zona ZR-1 segundo o Quadro 10 da LOUOS — é este quadro que permite ou proíbe o uso no território.',
@@ -212,24 +196,25 @@ class LouosTextosByteIdenticosTest extends TestCase
             $result->quadro11a['motivo'],
         );
         $this->assertSame(
-            'Permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR1 pelo Quadro 7 e esse grupo é permitido na zona ZR-1 pelo Quadro 10. Atividade permitida na zona, sem condicionantes incidentes.',
+            'Permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR1 pelo enquadramento da planilha vigente e esse grupo é permitido na zona ZR-1 pelo Quadro 10. Atividade permitida na zona, sem condicionantes incidentes.',
             $result->consolidado['motivo'],
         );
         $this->assertSame(
-            ['Lei nº 9.148/2016 (LOUOS) — Quadro 7', 'Lei nº 9.148/2016 (LOUOS) — Quadro 10'],
+            ['Lei nº 9.148/2016 (LOUOS) — nR1-01', 'Lei nº 9.148/2016 (LOUOS) — Quadro 10'],
             $result->consolidado['fundamentacao'],
         );
     }
 
     public function test_permitido_com_condicoes_emite_os_textos_exatos(): void
     {
-        $this->quadro7Faixa('4712100', 'nR1', 'nR1-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10Permissao('ZR-1', 'nR1', Quadro10Permissao::PermitidoCondicionado);
 
         $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
             100,
             '4712-1/00',
             $this->territorio(zona: $this->zonaIdentificada('ZR-1')),
+            [11 => true],
         ));
 
         $this->assertSame(ResultadoViabilidade::PermitidoComCondicoes->value, $result->resultado());
@@ -238,74 +223,76 @@ class LouosTextosByteIdenticosTest extends TestCase
             $result->quadro10['motivo'],
         );
         $this->assertSame(
-            'Permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR1 pelo Quadro 7 e esse grupo é permitido na zona ZR-1 pelo Quadro 10. Atividade permitida na zona mediante observância das condicionantes.',
+            'Permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR1 pelo enquadramento da planilha vigente e esse grupo é permitido na zona ZR-1 pelo Quadro 10. Atividade permitida na zona mediante observância das condicionantes.',
             $result->consolidado['motivo'],
         );
     }
 
     public function test_nao_permitido_emite_os_textos_exatos(): void
     {
-        $this->quadro7Faixa('4712100', 'nR3', 'nR3-01');
-        $this->quadro10Permissao('ZPAM', 'nR3', Quadro10Permissao::Proibido);
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
+        $this->quadro10Permissao('ZPAM', 'nR1', Quadro10Permissao::Proibido);
 
         $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
             100,
             '4712-1/00',
             $this->territorio(zona: $this->zonaIdentificada('ZPAM')),
+            [11 => true],
         ));
 
         $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
         $this->assertSame(
-            'O grupo nR3 é proibido na zona ZPAM segundo o Quadro 10 da LOUOS — é este quadro que permite ou proíbe o uso no território.',
+            'O grupo nR1 é proibido na zona ZPAM segundo o Quadro 10 da LOUOS — é este quadro que permite ou proíbe o uso no território.',
             $result->quadro10['motivo'],
         );
         $this->assertSame(
-            'Não permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR3 pelo Quadro 7 e esse grupo é proibido na zona ZPAM pelo Quadro 10. Atividade proibida na zona pelo Quadro 10.',
+            'Não permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR1 pelo enquadramento da planilha vigente e esse grupo é proibido na zona ZPAM pelo Quadro 10. Atividade proibida na zona pelo Quadro 10.',
             $result->consolidado['motivo'],
         );
         $this->assertSame(
-            ['Lei nº 9.148/2016 (LOUOS) — Quadro 7', 'Lei nº 9.148/2016 (LOUOS) — Quadro 10'],
+            ['Lei nº 9.148/2016 (LOUOS) — nR1-01', 'Lei nº 9.148/2016 (LOUOS) — Quadro 10'],
             $result->consolidado['fundamentacao'],
         );
     }
 
     public function test_sem_enquadramento_emite_os_textos_exatos(): void
     {
-        $this->quadro7SemFaixa();
+        $this->enquadramentoSemFaixa();
         $this->quadro10Permissao('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
             100,
             '9999-9/99',
             $this->territorio(zona: $this->zonaIdentificada('ZR-1')),
+            [11 => true],
         ));
 
         $this->assertSame(ResultadoViabilidade::Pendente->value, $result->resultado());
         $this->assertSame(
-            'CNAE sem enquadramento parametrizado no Quadro 7 vigente',
-            $result->quadro7['motivo'],
+            'CNAE sem regra de tratamento vigente',
+            $result->enquadramento['motivo'],
         );
         $this->assertSame(
-            'Sem enquadramento (Quadro 7) não há permissão a verificar',
+            'Sem enquadramento de uso não há permissão a verificar',
             $result->quadro10['motivo'],
         );
         $this->assertSame(
-            'Atividade sem enquadramento no Quadro 7 — segue para análise técnica',
+            'Atividade sem enquadramento na planilha vigente — segue para análise técnica',
             $result->consolidado['motivo'],
         );
         $this->assertSame(
-            ['Atividade sem enquadramento no Quadro 7 — segue para análise técnica'],
+            ['Atividade sem enquadramento na planilha vigente — segue para análise técnica'],
             $result->consolidado['fundamentacao'],
         );
     }
 
     public function test_zona_pendente_emite_os_textos_exatos(): void
     {
-        $this->quadro7Faixa('4712100', 'nR1', 'nR1-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10Permissao('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         // Consulta sem território: não há zona a avaliar — degradação honesta.
-        $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(100, '4712-1/00'));
+        $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(100, '4712-1/00', null, [11 => true]));
 
         $this->assertSame(ResultadoViabilidade::Pendente->value, $result->resultado());
         $this->assertSame(
@@ -317,20 +304,21 @@ class LouosTextosByteIdenticosTest extends TestCase
             $result->consolidado['motivo'],
         );
         $this->assertSame(
-            ['Lei nº 9.148/2016 (LOUOS) — Quadro 7', 'Permissão por zona pendente da base oficial (SEDUR)'],
+            ['Lei nº 9.148/2016 (LOUOS) — nR1-01', 'Permissão por zona pendente da base oficial (SEDUR)'],
             $result->consolidado['fundamentacao'],
         );
     }
 
     public function test_zona_sem_regra_emite_os_textos_exatos(): void
     {
-        $this->quadro7Faixa('4712100', 'nR1', 'nR1-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro10SemRegraParaACombinacao();
 
         $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
             100,
             '4712-1/00',
             $this->territorio(zona: $this->zonaIdentificada('ZR-1')),
+            [11 => true],
         ));
 
         $this->assertSame(ResultadoViabilidade::Pendente->value, $result->resultado());
@@ -346,31 +334,33 @@ class LouosTextosByteIdenticosTest extends TestCase
 
     public function test_quadro10_sem_versao_emite_os_textos_exatos(): void
     {
-        $this->quadro7Faixa('4712100', 'nR1', 'nR1-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
 
         $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
             100,
             '4712-1/00',
             $this->territorio(zona: $this->zonaIdentificada('ZR-1')),
+            [11 => true],
         ));
 
         $this->assertSame(ResultadoViabilidade::Pendente->value, $result->resultado());
         $this->assertSame('Quadro 10 sem versão vigente', $result->quadro10['motivo']);
         $this->assertSame('Quadro 10 sem versão vigente', $result->consolidado['motivo']);
         $this->assertSame(
-            ['Lei nº 9.148/2016 (LOUOS) — Quadro 7', 'Quadro 10 sem versão vigente'],
+            ['Lei nº 9.148/2016 (LOUOS) — nR1-01', 'Quadro 10 sem versão vigente'],
             $result->consolidado['fundamentacao'],
         );
     }
 
     public function test_via_sem_atributo_emite_o_texto_exato(): void
     {
-        $this->quadro7Faixa('4712100', 'nR2', 'nR2-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
 
         $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
             100,
             '4712-1/00',
             $this->territorio(via: $this->viaIdentificada(['NOME_LOGRADOURO' => 'Rua das Laranjeiras'])),
+            [11 => true],
         ));
 
         $this->assertSame(
@@ -381,12 +371,13 @@ class LouosTextosByteIdenticosTest extends TestCase
 
     public function test_via_sem_versao_emite_o_texto_exato(): void
     {
-        $this->quadro7Faixa('4712100', 'nR2', 'nR2-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
 
         $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
             100,
             '4712-1/00',
             $this->territorio(via: $this->viaIdentificada(['CLASSE_VIA_LOUOS' => 'via_local'])),
+            [11 => true],
         ));
 
         $this->assertSame(
@@ -397,13 +388,14 @@ class LouosTextosByteIdenticosTest extends TestCase
 
     public function test_via_sem_regra_emite_o_texto_exato(): void
     {
-        $this->quadro7Faixa('4712100', 'nR2', 'nR2-01');
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
         $this->quadro11aSemRegraParaACombinacao();
 
         $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
             100,
             '4712-1/00',
             $this->territorio(via: $this->viaIdentificada(['CLASSE_VIA_LOUOS' => 'via_local'])),
+            [11 => true],
         ));
 
         $this->assertSame(
@@ -414,30 +406,31 @@ class LouosTextosByteIdenticosTest extends TestCase
 
     public function test_via_identificada_emite_o_template_exato_do_quadro_via(): void
     {
-        $this->quadro7Faixa('4712100', 'nR2', 'nR2-01');
-        $this->quadro11aCondicao('via_local', 'nR2', ['recuo_frontal_m' => 3]);
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
+        $this->quadro11aCondicao('via_local', 'nR1', ['recuo_frontal_m' => 3]);
 
         $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(
             100,
             '4712-1/00',
             $this->territorio(via: $this->viaIdentificada(['CLASSE_VIA_LOUOS' => 'via_local'])),
+            [11 => true],
         ));
 
         $this->assertSame(
-            'O grupo nR2 na classe viária via_local tem condições de instalação pelo Quadro 11-A da LOUOS. O Quadro 11-A não permite nem proíbe o uso — só condiciona a instalação pela via.',
+            'O grupo nR1 na classe viária via_local tem condições de instalação pelo Quadro 11-A da LOUOS. O Quadro 11-A pode vedar o uso (Não), encaminhar à CNLU (R) ou condicionar a instalação pela via.',
             $result->quadro11a['motivo'],
         );
     }
 
-    public function test_quadro7_com_faixa_limitada_sem_subgrupo_e_area_decimal(): void
+    public function test_enquadramento_com_area_decimal(): void
     {
-        $this->quadro7Faixa('4712100', 'nR1', '', 50, 200);
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
 
-        $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(100.5, '4712-1/00'));
+        $result = $this->service()->enquadrar(EnquadramentoInput::paraConsulta(100.5, '4712-1/00', null, [11 => true]));
 
         $this->assertSame(
-            'O CNAE 4712-1/00 com área 100,50 m² classifica-se no grupo nR1 do Quadro 7 da LOUOS (faixa 50 a 200 m²). O Quadro 7 não autoriza o uso na zona — só define o grupo.',
-            $result->quadro7['motivo'],
+            'O CNAE 4712-1/00 com área 100,50 m² enquadra-se no grupo nR1 (nR1-01) da LOUOS (07.01.05). O enquadramento não autoriza o uso na zona — só define o grupo.',
+            $result->enquadramento['motivo'],
         );
     }
 }

@@ -12,6 +12,9 @@ use App\Models\RiskTrigger;
 use App\Models\RuleVersion;
 use App\Models\SanitaryRiskClassification;
 use App\Services\Decisao\DecisionTextCatalog;
+use App\Services\Tratamento\TratamentoRamoInput;
+use App\Services\Tratamento\TratamentoRamoResolver;
+use App\Services\Tratamento\TratamentoRamoResult;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Carbon\CarbonInterface;
@@ -37,6 +40,7 @@ class RiscoClassificationService
     public function __construct(
         private AuditService $audit,
         private DecisionTextCatalog $textos,
+        private TratamentoRamoResolver $ramoResolver,
     ) {}
 
     /**
@@ -53,12 +57,18 @@ class RiscoClassificationService
 
         $municipal = $this->classifyMunicipal($cnae, $input->data);
         $sanitario = $this->classifySanitario($cnae, $input);
+        $ramo = $this->resolverTratamento($input);
 
-        $encaminhamento = $this->resolveEncaminhamento($municipal, $sanitario, $input);
+        if ($ramo?->resolvido()) {
+            $municipal = $this->municipalDoRamo($municipal, $ramo);
+        }
+
+        $encaminhamento = $this->resolveEncaminhamento($municipal, $sanitario, $input, $ramo);
 
         $versoes = [
             'municipal' => $municipal['versao_regras'] ?? null,
             'sanitario' => $sanitario['versao_regras'] ?? null,
+            'risco_tratamento' => $ramo?->versaoRegra,
         ];
 
         $result = new RiscoResult(
@@ -207,28 +217,48 @@ class RiscoClassificationService
      * @param  array<string, mixed>  $sanitario
      * @return array<string, mixed>
      */
-    private function resolveEncaminhamento(array $municipal, array $sanitario, RiscoInput $input): array
+    private function resolveEncaminhamento(array $municipal, array $sanitario, RiscoInput $input, ?TratamentoRamoResult $ramo): array
     {
         $dimensaoDecisiva = (string) Settings::get('risco.dimensao_tvl', 'municipal');
 
-        if ($dimensaoDecisiva === 'sanitario') {
+        if ($ramo?->resolvido()) {
+            $fluxo = $ramo->fluxo === 'expresso' ? Fluxo::Expresso->value : Fluxo::Analise->value;
+            $motivo = $fluxo === Fluxo::Expresso->value
+                ? "Nível {$ramo->risco} (planilha vigente) elegível ao fluxo expresso"
+                : "Nível {$ramo->risco} (planilha vigente) encaminhado para análise técnica";
+            $tll = $ramo->tll;
+        } elseif ($dimensaoDecisiva === 'sanitario') {
             $statusDecisivo = $sanitario['status'];
             $nivelDecisivo = $sanitario['nivel_final'] ?? null;
+            $tll = null;
+
+            if ($statusDecisivo === RiscoResult::STATUS_NAO_CLASSIFICADO || $nivelDecisivo === null) {
+                $fluxo = Fluxo::Analise->value;
+                $motivo = 'Classificação de risco não parametrizada para o CNAE';
+            } else {
+                /** @var array<string, string> $mapa */
+                $mapa = Settings::get('risco.mapa_encaminhamento', []);
+                $fluxo = $mapa[$nivelDecisivo] ?? Fluxo::Analise->value;
+                $motivo = $fluxo === Fluxo::Analise->value
+                    ? "Nível {$nivelDecisivo} ({$dimensaoDecisiva}) encaminhado para análise técnica"
+                    : "Nível {$nivelDecisivo} ({$dimensaoDecisiva}) elegível ao fluxo expresso";
+            }
         } else {
             $statusDecisivo = $municipal['status'];
             $nivelDecisivo = $municipal['nivel'] ?? null;
-        }
+            $tll = null;
 
-        if ($statusDecisivo === RiscoResult::STATUS_NAO_CLASSIFICADO || $nivelDecisivo === null) {
-            $fluxo = Fluxo::Analise->value;
-            $motivo = 'Classificação de risco não parametrizada para o CNAE';
-        } else {
-            /** @var array<string, string> $mapa */
-            $mapa = Settings::get('risco.mapa_encaminhamento', []);
-            $fluxo = $mapa[$nivelDecisivo] ?? Fluxo::Analise->value;
-            $motivo = $fluxo === Fluxo::Analise->value
-                ? "Nível {$nivelDecisivo} ({$dimensaoDecisiva}) encaminhado para análise técnica"
-                : "Nível {$nivelDecisivo} ({$dimensaoDecisiva}) elegível ao fluxo expresso";
+            if ($statusDecisivo === RiscoResult::STATUS_NAO_CLASSIFICADO || $nivelDecisivo === null) {
+                $fluxo = Fluxo::Analise->value;
+                $motivo = 'Classificação de risco não parametrizada para o CNAE';
+            } else {
+                /** @var array<string, string> $mapa */
+                $mapa = Settings::get('risco.mapa_encaminhamento', []);
+                $fluxo = $mapa[$nivelDecisivo] ?? Fluxo::Analise->value;
+                $motivo = $fluxo === Fluxo::Analise->value
+                    ? "Nível {$nivelDecisivo} ({$dimensaoDecisiva}) encaminhado para análise técnica"
+                    : "Nível {$nivelDecisivo} ({$dimensaoDecisiva}) elegível ao fluxo expresso";
+            }
         }
 
         $gatilhosAcionados = $this->applyGatilhos($input);
@@ -240,10 +270,42 @@ class RiscoClassificationService
 
         return [
             'fluxo' => $fluxo,
-            'dimensao_decisiva' => $dimensaoDecisiva,
+            'dimensao_decisiva' => $ramo?->resolvido() ? 'risco_tratamento' : $dimensaoDecisiva,
             'motivo' => $motivo,
             'gatilhos_acionados' => $gatilhosAcionados,
+            'tll' => $tll ?? null,
         ];
+    }
+
+    private function resolverTratamento(RiscoInput $input): ?TratamentoRamoResult
+    {
+        $digitos = (string) preg_replace('/\D/', '', $input->cnaeCode);
+
+        if (strlen($digitos) !== 7) {
+            return null;
+        }
+
+        return $this->ramoResolver->resolver(new TratamentoRamoInput(
+            cnae: substr($digitos, 0, 4).'-'.substr($digitos, 4, 1).'/'.substr($digitos, 5, 2),
+            respostas: $input->respostasTratamento,
+            areaUtilizada: $input->areaUtilizada,
+            tipoImovel: $input->tipoImovel,
+            data: $input->data,
+        ));
+    }
+
+    /**
+     * @param  array<string, mixed>  $municipal
+     * @return array<string, mixed>
+     */
+    private function municipalDoRamo(array $municipal, TratamentoRamoResult $ramo): array
+    {
+        $municipal['status'] = RiscoResult::STATUS_CLASSIFICADO;
+        $municipal['nivel'] = $ramo->risco;
+        $municipal['nivel_label'] = $ramo->risco;
+        $municipal['versao_regras'] = $ramo->versaoRegra;
+
+        return $municipal;
     }
 
     /**

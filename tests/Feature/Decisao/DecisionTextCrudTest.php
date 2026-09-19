@@ -7,7 +7,6 @@ use App\Enums\ResultadoViabilidade;
 use App\Enums\RuleDomain;
 use App\Models\DecisionText;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RuleVersion;
 use App\Models\User;
 use App\Services\Geo\TerritoryResult;
@@ -18,6 +17,7 @@ use Database\Seeders\DecisionTextSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -35,6 +35,7 @@ use Tests\TestCase;
 class DecisionTextCrudTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     protected function setUp(): void
     {
@@ -114,7 +115,7 @@ class DecisionTextCrudTest extends TestCase
 
         $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
         $this->assertSame(
-            'Não permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR3 pelo Quadro 7 e esse grupo é proibido na zona ZPAM pelo Quadro 10. Uso vedado na zona pelo Quadro 10 da LOUOS.',
+            'Não permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR1 pelo enquadramento da planilha vigente e esse grupo é proibido na zona ZPAM pelo Quadro 10. Uso vedado na zona pelo Quadro 10 da LOUOS.',
             $result->consolidado['motivo'],
         );
     }
@@ -165,26 +166,12 @@ class DecisionTextCrudTest extends TestCase
     }
 
     /**
-     * Cenário não permitido do motor LOUOS (mesmo arranjo do golden
-     * LouosTextosByteIdenticosTest): Quadro 7 classifica o CNAE no grupo nR3
-     * e o Quadro 10 proíbe o grupo na zona ZPAM.
+     * Cenário não permitido do motor LOUOS: a planilha enquadra o CNAE no
+     * grupo nR1 e o Quadro 10 proíbe o grupo na zona ZPAM.
      */
     private function enquadrarNaoPermitido(): EnquadramentoResult
     {
-        $quadro7 = RuleVersion::factory()->create([
-            'domain' => RuleDomain::LouosQuadro7,
-            'version' => 'lei-9148-2016-quadro7',
-            'rules_version' => 'lei-9148-2016-quadro7',
-        ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $quadro7->id,
-            'cnae_code' => '4712100',
-            'grupo' => 'nR3',
-            'subgrupo' => 'nR3-01',
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
 
         $quadro10 = RuleVersion::factory()->create([
             'domain' => RuleDomain::LouosQuadro10,
@@ -195,7 +182,7 @@ class DecisionTextCrudTest extends TestCase
         LouosQuadro10Permissao::factory()->create([
             'rule_version_id' => $quadro10->id,
             'zona' => 'ZPAM',
-            'grupo_uso' => 'nR3',
+            'grupo_uso' => 'nR1',
             'subgrupo' => '',
             'permissao' => Quadro10Permissao::Proibido,
             'condicionante_ref' => null,
@@ -225,7 +212,7 @@ class DecisionTextCrudTest extends TestCase
         );
 
         return app(LouosEnquadramentoService::class)->enquadrar(
-            EnquadramentoInput::paraConsulta(100, '4712-1/00', $territorio),
+            EnquadramentoInput::paraConsulta(100, '4712-1/00', $territorio, [11 => true]),
         );
     }
 }

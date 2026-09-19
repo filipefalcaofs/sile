@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import { rotuloFluxoRisco } from '@/components/analise/processo-ui';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -20,11 +21,11 @@ export interface VereditoLocacional {
     motivo: string | null;
 }
 
-export interface Quadro7 {
+export interface EnquadramentoUso {
     status: DimensaoStatus;
     grupo: string | null;
     subgrupo: string | null;
-    faixa: { area_min: number; area_max: number | null } | null;
+    codigo_louos?: string | null;
     motivo?: string | null;
     versao_regra?: string | null;
 }
@@ -37,7 +38,7 @@ export interface ConsolidadoEnquadramento {
 }
 
 export interface Enquadramento {
-    quadro7: Quadro7;
+    enquadramento: EnquadramentoUso;
     quadro10: Record<string, unknown>;
     quadro11a: Record<string, unknown>;
     consolidado: ConsolidadoEnquadramento;
@@ -175,17 +176,6 @@ function corPorNivel(nivel: string | null): 'success' | 'warning' | 'error' | 'l
     return 'success';
 }
 
-function faixaLabel(faixa: Quadro7['faixa']): string | null {
-    if (faixa === null) {
-        return null;
-    }
-    if (faixa.area_max === null) {
-        return `a partir de ${faixa.area_min} m²`;
-    }
-
-    return `de ${faixa.area_min} a ${faixa.area_max} m²`;
-}
-
 /** Linha de uma dimensão territorial: real quando identificada, honesta quando indisponível. */
 function DimensaoItem({ rotulo, dimensao }: { rotulo: string; dimensao: DimensaoTerritorial }) {
     return (
@@ -229,7 +219,7 @@ export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) 
     const veredito = result.veredito_locacional;
     const estilo = VEREDITO_STYLES[veredito.resultado];
     const { municipal, sanitario, encaminhamento } = result.risco;
-    const { quadro7 } = result.enquadramento;
+    const { enquadramento } = result.enquadramento;
     const motivoVeredito =
         veredito.motivo ??
         (veredito.resultado === 'pendente' ? 'Depende de análise técnica da SEDUR.' : null);
@@ -278,11 +268,9 @@ export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) 
                             <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.02]">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Encaminhamento</span>
-                                    {encaminhamento.fluxo === 'expresso' ? (
-                                        <Badge color="success">Fluxo expresso</Badge>
-                                    ) : (
-                                        <Badge color="warning">Análise técnica</Badge>
-                                    )}
+                                    <Badge color={encaminhamento.fluxo === 'expresso' ? 'success' : 'warning'}>
+                                        {rotuloFluxoRisco(encaminhamento.fluxo)}
+                                    </Badge>
                                 </div>
                                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{encaminhamento.motivo}</p>
                             </div>
@@ -291,40 +279,43 @@ export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) 
                 </Card>
 
                 <Card>
-                    <CardHeader title="Enquadramento de uso (Quadro 7)" description="Grupo de uso da LOUOS pela faixa de área da atividade." />
+                    <CardHeader title="Enquadramento de uso" description="Grupo de uso da LOUOS pelo ramo vigente da planilha de regras." />
                     <CardContent>
-                        {quadro7.status === 'identificado' && (
+                        {enquadramento.status === 'identificado' && (
                             <div className="flex flex-col gap-3">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Grupo de uso</span>
                                     <span className="text-right text-sm text-gray-800 dark:text-white/90">
-                                        {quadro7.grupo ?? 'Identificado'}
-                                        {quadro7.subgrupo && (
-                                            <span className="text-gray-500 dark:text-gray-400"> · {quadro7.subgrupo}</span>
+                                        {enquadramento.grupo ?? 'Identificado'}
+                                        {enquadramento.subgrupo && (
+                                            <span className="text-gray-500 dark:text-gray-400"> · {enquadramento.subgrupo}</span>
                                         )}
                                     </span>
                                 </div>
-                                {faixaLabel(quadro7.faixa) && (
+                                {enquadramento.codigo_louos && (
                                     <div className="flex flex-wrap items-center justify-between gap-2">
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Faixa de área</span>
-                                        <span className="text-sm text-gray-800 dark:text-white/90">{faixaLabel(quadro7.faixa)}</span>
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Código LOUOS</span>
+                                        <span className="text-sm text-gray-800 dark:text-white/90">{enquadramento.codigo_louos}</span>
                                     </div>
+                                )}
+                                {enquadramento.versao_regra && (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Versão {enquadramento.versao_regra}</p>
                                 )}
                             </div>
                         )}
-                        {quadro7.status === 'nao_encontrado' && (
+                        {enquadramento.status === 'nao_encontrado' && (
                             <div className="flex flex-col items-start gap-2">
                                 <Badge color="light">Sem enquadramento</Badge>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    {quadro7.motivo ?? 'CNAE sem enquadramento no Quadro 7 — segue para análise técnica.'}
+                                    {enquadramento.motivo ?? 'CNAE sem ramo na planilha vigente — segue para análise técnica.'}
                                 </p>
                             </div>
                         )}
-                        {quadro7.status === 'indisponivel' && (
+                        {enquadramento.status === 'indisponivel' && (
                             <div className="flex flex-col items-start gap-2">
                                 <Badge color="warning">Indisponível</Badge>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    {quadro7.motivo ?? 'Quadro 7 indisponível — base pendente SEDUR.'}
+                                    {enquadramento.motivo ?? 'Planilha de tratamento indisponível.'}
                                 </p>
                             </div>
                         )}

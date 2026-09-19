@@ -64,6 +64,8 @@ class FluxoExpressoElegibilidadeTest extends TestCase
             $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => $indice === 0]);
         }
 
+        $solicitacao->respostasTratamento = [11 => true];
+
         return $solicitacao;
     }
 

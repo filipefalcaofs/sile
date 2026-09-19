@@ -12,7 +12,6 @@ use App\Events\ResultadoEmitido;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
@@ -22,11 +21,13 @@ use App\Services\Geo\SpatialRepository;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 class GatilhoSedeTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     public function test_aplica_quando_cnae_8211_e_quer_ser_sede(): void
     {
@@ -99,20 +100,7 @@ class GatilhoSedeTest extends TestCase
             'risco_municipal' => RiscoMunicipal::BaixoA,
         ]);
 
-        $versaoQuadro7 = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $versaoQuadro7->id,
-            'cnae_code' => $cnae,
-            'grupo' => 'nR1',
-            'subgrupo' => 'nR1-01',
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
 
         $versaoQuadro10 = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first()
             ?? RuleVersion::factory()->create([
@@ -136,6 +124,7 @@ class GatilhoSedeTest extends TestCase
         ]);
         $cnaeModel = Cnae::factory()->create(['code' => $cnae]);
         $solicitacao->cnaes()->attach($cnaeModel->id, ['is_primary' => true]);
+        $solicitacao->respostasTratamento = [4 => true, 5 => true];
 
         return $solicitacao;
     }

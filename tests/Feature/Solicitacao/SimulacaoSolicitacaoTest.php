@@ -11,12 +11,12 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\SpatialRepository;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
-use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -36,6 +36,7 @@ use Tests\TestCase;
 class SimulacaoSolicitacaoTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     private const CNAE_MINIMERCADO = '4712-1/00';
 
@@ -47,13 +48,14 @@ class SimulacaoSolicitacaoTest extends TestCase
     {
         parent::setUp();
 
+        $this->seedTratamentoPlanilha();
+
         // Carga REAL dos motores da Fase 7 (mesma versão de regras do fluxo
         // oficial — RN-001): Quadro 7 (enquadramento por área), risco
         // municipal/sanitário (dimensões separadas) e papéis/permissões
         // (cidadão + termo LGPD do portal).
         $this->seed([
             RolesAndPermissionsSeeder::class,
-            LouosQuadro7Seeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
         ]);
@@ -121,7 +123,7 @@ class SimulacaoSolicitacaoTest extends TestCase
         $this->fakeTerritorioBairroSemZona();
 
         $result = app(ConsultaViabilidadeService::class)
-            ->consultarPorPontoConhecido(-12.9710, -38.5107, self::CNAE_MINIMERCADO, 120.0);
+            ->consultarPorPontoConhecido(-12.9710, -38.5107, self::CNAE_MINIMERCADO, 120.0, null, [11 => true]);
 
         // Identificou o território a partir do ponto, sem geocodificar.
         $this->assertNull($result->geocode);
@@ -131,7 +133,7 @@ class SimulacaoSolicitacaoTest extends TestCase
         // Risco real (Decreto 32.636/2020) + Quadro 7 por área; veredito
         // PROPAGADO (pendente sem zona — nunca recomputado aqui).
         $this->assertSame('classificado', $result->risco->municipal['status']);
-        $this->assertSame('identificado', $result->enquadramento->quadro7['status']);
+        $this->assertSame('identificado', $result->enquadramento->enquadramento['status']);
         $this->assertSame('pendente', $result->vereditoLocacional()['resultado']);
         $this->assertSame('ponto', $result->entrada['tipo']);
     }

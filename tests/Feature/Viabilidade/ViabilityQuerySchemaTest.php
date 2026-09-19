@@ -23,7 +23,7 @@ class ViabilityQuerySchemaTest extends TestCase
         $query = ViabilityQuery::factory()->create([
             'input' => ['endereco' => 'Praça Municipal, 1', 'cnae' => '4712100', 'area' => 120.0],
             'result' => ['veredito_locacional' => ['resultado' => 'pendente']],
-            'rules_versions' => ['louos' => ['quadro7' => 'v1'], 'risco' => ['municipal' => 'v2'], 'territorio' => []],
+            'rules_versions' => ['louos' => ['risco_tratamento' => 'v1'], 'risco' => ['municipal' => 'v2'], 'territorio' => []],
         ]);
 
         $recarregada = $query->fresh();
@@ -33,7 +33,7 @@ class ViabilityQuerySchemaTest extends TestCase
         $this->assertIsArray($recarregada->rules_versions);
         $this->assertSame('4712100', $recarregada->input['cnae']);
         $this->assertSame('pendente', $recarregada->result['veredito_locacional']['resultado']);
-        $this->assertSame('v1', $recarregada->rules_versions['louos']['quadro7']);
+        $this->assertSame('v1', $recarregada->rules_versions['louos']['risco_tratamento']);
     }
 
     public function test_consulta_anonima_grava_sem_dono(): void

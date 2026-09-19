@@ -5,11 +5,11 @@ namespace Tests\Feature\Seeders;
 use App\Enums\Quadro10Permissao;
 use App\Enums\ResultadoViabilidade;
 use App\Models\DecisionText;
-use App\Models\LouosQuadro7Faixa;
 use App\Services\Analise\JustificativaFundamentadaComposer;
 use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\LouosEnquadramentoService;
+use App\Services\Tratamento\TratamentoRamoResult;
 use Database\Seeders\DecisionTextSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use ReflectionMethod;
@@ -131,27 +131,28 @@ class DecisionTextSeederTest extends TestCase
         $this->assertSame($atual, $doCatalogo);
     }
 
-    public function test_paridade_do_template_do_quadro7(): void
+    public function test_paridade_do_template_do_enquadramento(): void
     {
         $this->seed(DecisionTextSeeder::class);
 
         $service = app(LouosEnquadramentoService::class);
-        $motivo = new ReflectionMethod($service, 'motivoQuadro7');
-        $faixa = new LouosQuadro7Faixa([
-            'grupo' => 'A1',
-            'subgrupo' => 'nR1-01',
-            'area_min' => 0,
-            'area_max' => 200,
-        ]);
+        $motivo = new ReflectionMethod($service, 'motivoEnquadramento');
+        $ramo = new TratamentoRamoResult(
+            status: 'resolvido',
+            grupo: 'nR1',
+            subgrupo: 'nR1-01',
+            codigoLouos: '07.01.05',
+        );
+        $input = new EnquadramentoInput(area: 100.0, cnaePrincipal: '4712100', respostas: [11 => true]);
 
-        $atual = $motivo->invoke($service, '4711301', 100.0, $faixa);
+        $atual = $motivo->invoke($service, $ramo, $input);
 
-        $doCatalogo = (new DecisionTextCatalog)->render('louos.template.quadro7', [
-            ':cnae' => '4711-3/01',
+        $doCatalogo = (new DecisionTextCatalog)->render('louos.template.enquadramento', [
+            ':cnae' => '4712-1/00',
             ':area' => '100',
-            ':grupo' => 'A1',
+            ':grupo' => 'nR1',
             ':subgrupo' => ' (nR1-01)',
-            ':faixa' => ' (faixa 0 a 200 m²)',
+            ':codigo_louos' => '07.01.05',
         ]);
 
         $this->assertSame($atual, $doCatalogo);

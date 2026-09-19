@@ -2,6 +2,7 @@ import { router, useHttp, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { SearchIcon } from '@/components/icons';
 import { Modal } from '@/components/ui/modal';
+import { destinosComando } from '@/navigation/gestao-nav';
 import type { SharedProps } from '@/types';
 
 interface ResultadoBusca {
@@ -11,57 +12,16 @@ interface ResultadoBusca {
     link: string;
 }
 
-/** Destino de navegação rápida do Cmd+K, gated pela permissão correspondente. */
-interface DestinoComando {
-    label: string;
-    grupo: string;
-    href: string;
-    permissao: string;
-}
-
-/**
- * Destinos das superfícies de gestão (auditoria/compliance HU-098/100/149 e
- * relatórios do EP15) — os mesmos da sidebar. Cada um exige a permissão
- * correspondente: quem não tem, não vê o item (gating espelhando o do layout).
- */
-const DESTINOS: DestinoComando[] = [
-    { label: 'Trilha de auditoria', grupo: 'Auditoria e compliance', href: '/gestao/auditoria', permissao: 'consultar-auditoria' },
-    { label: 'Alertas de abuso', grupo: 'Auditoria e compliance', href: '/gestao/abuso', permissao: 'gerenciar-alertas-abuso' },
-    { label: 'Auditoria preditiva', grupo: 'Auditoria e compliance', href: '/gestao/auditoria-preditiva', permissao: 'gerenciar-alertas-abuso' },
-    { label: 'Indicadores de viabilidade', grupo: 'Relatórios', href: '/gestao/relatorios/indicadores', permissao: 'consultar-relatorios' },
-    { label: 'Tempo de análise', grupo: 'Relatórios', href: '/gestao/relatorios/tempo', permissao: 'consultar-relatorios' },
-    { label: 'Produtividade', grupo: 'Relatórios', href: '/gestao/relatorios/produtividade', permissao: 'consultar-relatorios' },
-    { label: 'Quedas do expresso', grupo: 'Relatórios', href: '/gestao/relatorios/quedas', permissao: 'consultar-relatorios' },
-    { label: 'Painel por bairro', grupo: 'Relatórios', href: '/gestao/relatorios/geo-bairro', permissao: 'consultar-relatorios' },
-    { label: 'Saturação locacional', grupo: 'Relatórios', href: '/gestao/relatorios/saturacao', permissao: 'consultar-relatorios' },
-    { label: 'Escritório virtual (sede × abrigados)', grupo: 'Relatórios', href: '/gestao/relatorios/escritorio-virtual', permissao: 'consultar-relatorios' },
-    { label: 'Tempo de emissão de TVL', grupo: 'Relatórios', href: '/gestao/relatorios/tempo-emissao-tvl', permissao: 'consultar-relatorios' },
-    { label: 'SLA e vencimentos', grupo: 'Relatórios', href: '/gestao/relatorios/sla', permissao: 'consultar-relatorios' },
-    { label: 'Pendências e exigências', grupo: 'Relatórios', href: '/gestao/relatorios/pendencias', permissao: 'consultar-relatorios' },
-    { label: 'Trilha por processo', grupo: 'Relatórios', href: '/gestao/relatorios/trilha', permissao: 'consultar-relatorios' },
-    { label: 'Atendimento em contingência', grupo: 'Relatórios', href: '/gestao/relatorios/contingencia', permissao: 'consultar-relatorios' },
-    { label: 'Falhas de comunicação', grupo: 'Relatórios', href: '/gestao/relatorios/comunicacoes-falhas', permissao: 'consultar-relatorios' },
-    { label: 'Feriados', grupo: 'Relatórios', href: '/gestao/feriados', permissao: 'manter-parametros' },
-    { label: 'API REGIN', grupo: 'Administração', href: '/gestao/config-regin', permissao: 'manter-parametros' },
-    { label: 'API de inscrição imobiliária', grupo: 'Administração', href: '/gestao/config-inscricao-imobiliaria', permissao: 'manter-parametros' },
-    { label: 'Servidores de e-mail', grupo: 'Administração', href: '/gestao/config-email', permissao: 'manter-config-email' },
-    { label: 'Configuração de IA', grupo: 'Administração', href: '/gestao/config-ia', permissao: 'manter-config-ia' },
-];
-
 /**
  * Busca global da retaguarda (HU-082 RN-009): atalho Cmd/Ctrl+K + gatilho
- * flutuante (mobile/descoberta) que abre um modal. Consulta o endpoint leve
- * `gestao.processos.busca` (10-14, debounce) para levar direto ao processo (só
- * para quem tem consultar-solicitacoes) e oferece destinos rápidos para as
- * superfícies de auditoria/compliance, cada um gated por permissão. Montado no
- * gestao-layout; o atalho/modal aparece para quem tem QUALQUER acesso relevante
- * (degradação controlada — quem não tem nenhum não vê o atalho).
+ * flutuante. Destinos rápidos vêm de `destinosComando()` (mesmo catálogo da
+ * sidebar). A busca de processos exige `consultar-solicitacoes`.
  */
 export default function CommandSearch() {
     const { auth } = usePage<SharedProps>().props;
     const permissions = Array.isArray(auth?.permissions) ? auth.permissions : [];
     const podeConsultar = permissions.includes('consultar-solicitacoes');
-    const destinos = DESTINOS.filter((destino) => permissions.includes(destino.permissao));
+    const destinos = destinosComando(permissions);
     const temAcesso = podeConsultar || destinos.length > 0;
 
     const [open, setOpen] = useState(false);

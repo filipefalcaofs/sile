@@ -13,7 +13,6 @@ use App\Models\AnalysisRecord;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\Sector;
@@ -30,6 +29,7 @@ use App\Services\Geo\SpatialRepository;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -50,6 +50,7 @@ use Tests\TestCase;
 class AnaliseSmokeTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     public function test_fluxo_humano_defere_com_divergencia_e_emite_tvl(): void
     {
@@ -62,11 +63,11 @@ class AnaliseSmokeTest extends TestCase
         $this->fakeBairroComZona('ZR-1');
 
         $this->classificarMunicipal('4712100', RiscoMunicipal::Alto); // alto risco → semi-expresso
-        $this->seedQuadro7('4712100', 'nR1', 'nR1-01');
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         $this->classificarMunicipal('4731800', RiscoMunicipal::BaixoA);
-        $this->seedQuadro7('4731800', 'nR3', 'nR3-01');
+        $this->seedTratamento('4731800', 'nR3', 'nR3-01');
         $this->seedQuadro10('ZR-1', 'nR3', Quadro10Permissao::Proibido);
 
         $request = $this->protocoladaComCnaes(['4712100', '4731800']);
@@ -154,7 +155,7 @@ class AnaliseSmokeTest extends TestCase
         Notification::fake();
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4731800', RiscoMunicipal::Alto); // alto → semi-expresso
-        $this->seedQuadro7('4731800', 'nR3', 'nR3-01');
+        $this->seedTratamento('4731800', 'nR3', 'nR3-01');
         $this->seedQuadro10('ZR-1', 'nR3', Quadro10Permissao::Proibido);
 
         $request = $this->protocoladaComCnaes(['4731800']);
@@ -341,6 +342,8 @@ class AnaliseSmokeTest extends TestCase
             $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => $indice === 0]);
         }
 
+        $solicitacao->respostasTratamento = [11 => true];
+
         return $solicitacao;
     }
 
@@ -385,23 +388,9 @@ class AnaliseSmokeTest extends TestCase
         $this->app->instance(SpatialRepository::class, $fake);
     }
 
-    private function seedQuadro7(string $cnae, string $grupo, string $subgrupo): void
+    private function seedTratamento(string $cnae = '', string $grupo = '', string $subgrupo = ''): void
     {
-        $version = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $version->id,
-            'cnae_code' => $cnae,
-            'grupo' => $grupo,
-            'subgrupo' => $subgrupo,
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     private function seedQuadro10(string $zona, string $grupo, Quadro10Permissao $permissao): void

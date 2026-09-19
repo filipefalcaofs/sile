@@ -7,11 +7,11 @@ use App\Models\GeoLayer;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\SpatialRepository;
-use Database\Seeders\LouosQuadro7Seeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -29,15 +29,17 @@ use Tests\TestCase;
 class ConsultaViabilidadeCommandTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->seedTratamentoPlanilha();
+
         // Carga REAL dos motores: a lógica processa o dado oficial — muda a
         // carga, nunca o comportamento (anti-fachada).
         $this->seed([
-            LouosQuadro7Seeder::class,
             RiscoMunicipalSeeder::class,
             RiscoSanitarioSeeder::class,
         ]);

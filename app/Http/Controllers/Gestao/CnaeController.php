@@ -11,7 +11,6 @@ use App\Http\Requests\Gestao\StoreRiscoCondicionanteRequest;
 use App\Http\Requests\Gestao\UpdateCnaeRequest;
 use App\Http\Requests\Gestao\UpdateRiscoCondicionanteRequest;
 use App\Models\Cnae;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
@@ -331,7 +330,6 @@ class CnaeController extends Controller
             RiskClassification::class,
             SanitaryRiskClassification::class,
             RiskCondicionante::class,
-            LouosQuadro7Faixa::class,
             VirtualOfficeActivityCnae::class,
         ] as $model) {
             $model::query()->where('cnae_code', $from)->update(['cnae_code' => $to]);

@@ -13,7 +13,6 @@ use App\Jobs\DecidirFluxoExpressoJob;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
@@ -26,6 +25,7 @@ use Illuminate\Support\Facades\Event;
 use Mockery;
 use RuntimeException;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -42,6 +42,7 @@ use Tests\TestCase;
 class DecidirFluxoExpressoJobTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     /**
      * @param  list<string>  $cnaeCodes
@@ -54,6 +55,8 @@ class DecidirFluxoExpressoJobTest extends TestCase
             $cnae = Cnae::factory()->create(['code' => $code]);
             $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => $indice === 0]);
         }
+
+        $solicitacao->respostasTratamento = [11 => true];
 
         return $solicitacao;
     }
@@ -89,23 +92,9 @@ class DecidirFluxoExpressoJobTest extends TestCase
         $this->app->instance(SpatialRepository::class, $fake);
     }
 
-    private function seedQuadro7(string $cnae, string $grupo, string $subgrupo): void
+    private function seedTratamento(string $cnae = '', string $grupo = '', string $subgrupo = ''): void
     {
-        $version = RuleVersion::vigente(RuleDomain::LouosQuadro7)->first()
-            ?? RuleVersion::factory()->create([
-                'domain' => RuleDomain::LouosQuadro7,
-                'version' => 'lei-9148-2016-quadro7',
-                'rules_version' => 'lei-9148-2016-quadro7',
-            ]);
-
-        LouosQuadro7Faixa::factory()->create([
-            'rule_version_id' => $version->id,
-            'cnae_code' => $cnae,
-            'grupo' => $grupo,
-            'subgrupo' => $subgrupo,
-            'area_min' => 0,
-            'area_max' => null,
-        ]);
+        $this->seedTratamentoPlanilha();
     }
 
     private function seedQuadro10(string $zona, string $grupo, Quadro10Permissao $permissao): void
@@ -131,11 +120,11 @@ class DecidirFluxoExpressoJobTest extends TestCase
     /**
      * Setup deferível: um CNAE de baixo risco (expresso) permitido na zona.
      */
-    private function setupDeferivel(string $cnae = '8888881'): ViabilityRequest
+    private function setupDeferivel(string $cnae = '4712100'): ViabilityRequest
     {
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal($cnae, RiscoMunicipal::BaixoA);
-        $this->seedQuadro7($cnae, 'nR1', 'nR1-01');
+        $this->seedTratamento($cnae, 'nR1', 'nR1-01');
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         return $this->protocoladaComCnaes([$cnae]);

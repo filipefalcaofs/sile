@@ -12,7 +12,6 @@ interface ManualProps {
 }
 
 const QUADROS = [
-    { id: 'quadro7', label: 'Quadro 7' },
     { id: 'quadro10', label: 'Quadro 10' },
     { id: 'quadro11a', label: 'Quadro 11A' },
 ] as const;
@@ -129,12 +128,6 @@ export default function LouosManual({ quadro, urlModeloCsv, urlRascunho }: Manua
                             headers={['Quadro', 'O que o motor usa', 'Fontes', 'Cabeçalho']}
                             rows={[
                                 [
-                                    '7',
-                                    'CNAE + área → grupo/subgrupo',
-                                    'PDF do Quadro 7 e planilha CNAE→uso',
-                                    <code key="h7">cnae,grupo,subgrupo,area_min,area_max,observacao</code>,
-                                ],
-                                [
                                     '10',
                                     'Zona × uso → S / N / S(c)',
                                     'Matriz do Quadro 10 da Lei nº 9.148/2016',
@@ -142,14 +135,15 @@ export default function LouosManual({ quadro, urlModeloCsv, urlRascunho }: Manua
                                 ],
                                 [
                                     '11A',
-                                    'Via × uso → condição',
+                                    'Via × uso → Sim / Não / R',
                                     'Matriz do Quadro 11A',
                                     <code key="h11">classe_via,grupo_uso,condicoes,base_legal</code>,
                                 ],
                             ]}
                         />
                         <p className="text-theme-sm text-gray-700 dark:text-gray-300">
-                            O PDF do Quadro 7 não tem CNAE. Sem a planilha de enquadramento, o CSV do 7 não se monta.
+                            O enquadramento de uso (grupo, subgrupo, código LOUOS) vem da planilha de
+                            tratamento, no grupo Regras — não destes Quadros.
                         </p>
                     </CardContent>
                 </Card>
@@ -174,45 +168,6 @@ export default function LouosManual({ quadro, urlModeloCsv, urlRascunho }: Manua
                         </p>
                     </CardContent>
                 </Card>
-
-                <section id="secao-quadro7" className="scroll-mt-24" aria-label="Quadro 7 — CNAE e faixa de área">
-                    <Card>
-                        <CardHeader title="Quadro 7 — CNAE e faixa de área" />
-                        <CardContent className="space-y-4">
-                            <p className="text-theme-sm text-gray-700 dark:text-gray-300">
-                                O CNAE escolhe as linhas; a área escolhe a faixa. area_min é inclusivo; area_max vazio
-                                significa sem teto. Faixas do mesmo CNAE não podem se cruzar — o CNAE inteiro é
-                                rejeitado.
-                            </p>
-                            <CodeBlock>
-                                {`cnae,grupo,subgrupo,area_min,area_max,observacao
-4712-1/00,nR1,nR1-01,0,350,07.01.05
-4712-1/00,nR2,nR2-01,350.01,,07.01.05
-0161-0/99,nR1,nR1-08,0,500,07.08.07
-0161-0/99,nR2,nR2-08,500.01,5000,07.08.07
-0161-0/99,nR3,nR3-08,5000.01,,07.08.07`}
-                            </CodeBlock>
-                            <ManualTable
-                                caption="Colunas do CSV do Quadro 7"
-                                headers={['Coluna', 'Obrigatório', 'Regra']}
-                                rows={[
-                                    ['cnae', 'Sim', 'Máscara 4712-1/00 ou sete dígitos.'],
-                                    ['grupo', 'Sim', 'nR1, nR2, nRa, ID1…'],
-                                    ['subgrupo', 'Não', 'nR1-01. Vazio vira nulo.'],
-                                    ['area_min', 'Sim', 'Número.'],
-                                    ['area_max', 'Não', 'Número ou vazio. Não menor que area_min.'],
-                                    ['observacao', 'Não', 'Código da planilha. Reimportação não sobrescreve.'],
-                                ]}
-                            />
-                            <p className="text-theme-sm text-gray-700 dark:text-gray-300">
-                                A planilha operacional (hoje 20.08.26) liga cada CNAE a um código LOUOS e às faixas.
-                                Descarte o escritório genérico 07.12.13 quando houver uso específico; 9900-8/00 fica de
-                                fora. Se a lei mudou o teto e a planilha não, republica-se a planilha — não invente o
-                                CNAE a partir do PDF.
-                            </p>
-                        </CardContent>
-                    </Card>
-                </section>
 
                 <section id="secao-quadro10" className="scroll-mt-24" aria-label="Quadro 10 — permissão por zona">
                     <Card>
@@ -279,8 +234,8 @@ VA I,ID2-05,Objeto de análise particularizada pela CNLU,Lei nº 9.148/2016 — 
                             <li>Publicação por usuário diferente do autor.</li>
                         </ul>
                         <p className="text-theme-sm text-gray-700 dark:text-gray-300">
-                            Não anexe o PDF esperando os três CSVs. Não monte o 7 só com o PDF. Não use a planilha
-                            20.08.26 para os Quadros 10 e 11A. Não publique com rejeições sem ler.
+                            Não anexe o PDF esperando os CSVs. Não use a planilha 20.08.26 para os Quadros 10 e 11A.
+                            Não publique com rejeições sem ler.
                         </p>
                         <div className="flex flex-wrap gap-2">
                             <a href={urlModeloCsv} download className={LINK_OUTLINE}>

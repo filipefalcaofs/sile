@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\DB;
  * A carga oficial de zoneamento (Quadro 10/SEDUR — SIGIS/CA 2000) está bloqueada;
  * sem ela o motor degrada honestamente para `em_analise` (a maioria dos casos).
  * Para DEMONSTRAR o core value sem fachada, carregamos uma feição de ZONA sobre
- * um polígono do Centro de Salvador com um CÓDIGO de zona que o Quadro 10 real já
- * conhece (ZCN-1 → permitido para nR1) — assim o motor REAL defere de verdade.
+ * um polígono do Centro de Salvador com um CÓDIGO oficial do Quadro 10
+ * (ZCMe 2 → nR1 permitido no PDF) — assim o motor REAL defere de verdade.
  *
  * Entrega-funcional: muda só a CARGA (o polígono fictício e sua proveniência),
  * nunca a LÓGICA. Em produção este seeder é um NO-OP (gate de ambiente abaixo) —
@@ -37,11 +37,10 @@ class ZonaFicticiaDevSeeder extends Seeder
     public const VERSION = 'zona-ficticia-dev';
 
     /**
-     * Código de zona REAL do Quadro 10 (ZCN-1: Zona de Comércio e Negócios) —
-     * permite o grupo nR1 (minimercado e afins). É a carga que o motor lê; a
-     * proveniência fictícia vive na versão/origem/propriedades, não no código.
+     * Código oficial do Quadro 10 (ZCMe 2 — centralidade metropolitana).
+     * Permite nR1 no PDF. A geometria é de demo; a regra é a matriz oficial.
      */
-    public const ZONA_CODE = 'ZCN-1';
+    public const ZONA_CODE = 'ZCMe 2';
 
     public function run(): void
     {
