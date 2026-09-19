@@ -330,6 +330,7 @@ return [
             'url_producao' => 'http://regin.prefeitura.juceb.ba.gov.br:8080/api_integracao',
             'usuario' => 'sedur_integracao',
             'senha' => '',
+            'cnpj_prefeitura' => '13927801000149',
             'timeout' => 8,
         ],
     ],

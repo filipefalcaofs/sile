@@ -16,7 +16,6 @@ use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
-use App\Models\LouosQuadro7Faixa;
 use App\Models\Parameter;
 use App\Models\PropertyType;
 use App\Models\PropertyTypeAlias;
@@ -26,6 +25,7 @@ use App\Models\RuleVersion;
 use App\Models\SanitaryRiskClassification;
 use App\Models\Sector;
 use App\Models\StandardText;
+use App\Models\TratamentoEnquadramento;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -92,7 +92,7 @@ class DatabaseSeederTest extends TestCase
         // item 3.4: geo.zona.atributos_nome).
         // + 3 da Fase 5 (janela de duplicidade + pesos e cortes da auditoria
         // preditiva).
-        $this->assertSame(121, Parameter::query()->count());
+        $this->assertSame(122, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -123,21 +123,22 @@ class DatabaseSeederTest extends TestCase
                 ->exists()
         );
 
-        // Quadros da LOUOS: cada Quadro publica uma versão vigente própria; o
-        // Quadro 7 cobre as 1.331 subclasses (planilha 20.08.26) e a importação
-        // é auditada (RN-002). Quadros 10/11A modelados no seed (carga oficial
-        // via CSV em database/data/louos/oficial/). Quadro 11 não existe na lei.
-        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro7)->count());
+        // Quadros territoriais da LOUOS + planilha de tratamento: cada domínio
+        // publica uma versão vigente própria. A planilha 20.08.26 (1.332 CNAEs /
+        // 2.850 linhas) substitui o Quadro 7 como fonte do enquadramento.
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoTratamento)->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
         $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro11']);
+        $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro7']);
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
-        $this->assertSame(1971, LouosQuadro7Faixa::query()->count());
+        $this->assertSame(1332, TratamentoEnquadramento::query()->distinct()->count('cnae'));
+        $this->assertSame(2850, TratamentoEnquadramento::query()->count());
         $this->assertGreaterThan(0, LouosQuadro10Permissao::query()->count());
         $this->assertGreaterThan(0, LouosQuadro11CondicaoVia::query()->count());
         $this->assertTrue(
             Activity::query()
-                ->where('log_name', 'louos')
-                ->where('event', 'importacao-quadro7')
+                ->where('log_name', 'tratamento')
+                ->where('event', 'importacao-planilha')
                 ->exists()
         );
 
@@ -362,17 +363,19 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(4, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(121, Parameter::query()->count());
+        $this->assertSame(122, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
         $this->assertSame(261, SanitaryRiskClassification::query()->count());
         $this->assertSame(67, RiskCondicionante::query()->count());
-        $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro7)->count());
+        $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoTratamento)->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
         $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro11']);
+        $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro7']);
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro11a)->count());
-        $this->assertSame(1971, LouosQuadro7Faixa::query()->count());
+        $this->assertSame(1332, TratamentoEnquadramento::query()->distinct()->count('cnae'));
+        $this->assertSame(2850, TratamentoEnquadramento::query()->count());
         // Tipos de imóvel estáveis no re-seed (updateOrCreate por code,
         // firstOrCreate por alias) — nem duplica nem perde o catálogo.
         $this->assertSame(5, PropertyType::query()->count());

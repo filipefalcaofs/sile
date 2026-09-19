@@ -731,6 +731,13 @@ class ParameterSeeder extends Seeder
                 'requires_connection_test' => true,
                 'description' => 'Senha da API REGIN/JUCEB (armazenada criptografada, nunca reexibida)',
             ],
+            'integrations.regin.cnpj_prefeitura' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => '13927801000149',
+                'validation_rules' => ['required', 'string', 'size:14'],
+                'description' => 'CNPJ da Prefeitura (somente dígitos) usado como origem/destino nos envelopes da API REGIN',
+            ],
             // Auditoria e compliance (EP12). O toggle de detecção de abuso
             // (HU-149) nasce DESLIGADO (nunca pune — só registra alerta e
             // encaminha à malha fina). Paginação da trilha fica em config/sile.php.

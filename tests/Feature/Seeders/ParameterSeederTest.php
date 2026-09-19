@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(121, Parameter::query()->count());
+        $this->assertSame(122, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -158,6 +158,19 @@ class ParameterSeederTest extends TestCase
         $this->assertTrue($senha->sensitive);
         $this->assertNull($senha->default_value);
         $this->assertTrue($senha->requires_connection_test);
+    }
+
+    public function test_seeder_registra_cnpj_da_prefeitura_regin(): void
+    {
+        $this->seed(ParameterSeeder::class);
+
+        $cnpj = Parameter::query()->where('key', 'integrations.regin.cnpj_prefeitura')->first();
+
+        $this->assertNotNull($cnpj);
+        $this->assertSame('integracoes', $cnpj->group);
+        $this->assertSame('string', $cnpj->type);
+        $this->assertSame('13927801000149', $cnpj->default_value);
+        $this->assertSame(['required', 'string', 'size:14'], $cnpj->validation_rules);
     }
 
     public function test_seeder_registra_parametros_do_georreferenciamento(): void
@@ -972,6 +985,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(121, Parameter::query()->count());
+        $this->assertSame(122, Parameter::query()->count());
     }
 }
