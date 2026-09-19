@@ -5,14 +5,15 @@ namespace Tests\Feature\Expresso;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\BapRegistry;
+use App\Services\Regin\HttpReginParecerNotifier;
 use App\Services\Regin\ReginParecerNotifier;
 use App\Services\Regin\ReginUnavailableException;
 use App\Services\Regin\UnavailableBapRegistry;
-use App\Services\Regin\UnavailableReginParecerNotifier;
 use App\Services\Sefaz\SefazUnavailableException;
 use App\Services\Sefaz\SefazViabilidadeGateway;
 use App\Services\Sefaz\UnavailableSefazViabilidadeGateway;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
@@ -43,17 +44,23 @@ class BlockedIntegrationContractsTest extends TestCase
         return [$request, $decision];
     }
 
-    public function test_binding_do_parecer_regin_resolve_o_provider_indisponivel(): void
+    public function test_binding_do_parecer_regin_resolve_o_provider_http(): void
     {
         $this->assertInstanceOf(
-            UnavailableReginParecerNotifier::class,
+            HttpReginParecerNotifier::class,
             app(ReginParecerNotifier::class),
         );
     }
 
-    public function test_parecer_regin_indisponivel_lanca_excecao_em_vez_de_simular(): void
+    public function test_parecer_regin_falho_lanca_excecao_em_vez_de_simular(): void
     {
+        Http::fake([
+            '*/acesso/auth' => Http::response(['token' => 'jwt-1']),
+            '*/recebe' => Http::response('erro', 500),
+        ]);
+
         [$request, $decision] = $this->requestComDecisao();
+        $request->forceFill(['external_reference' => '43747'])->save();
 
         $this->expectException(ReginUnavailableException::class);
 
