@@ -30,8 +30,13 @@ export default function TratamentoIndex({ versao, contagens, perguntas }: Tratam
             <Head title="Planilha de regras" />
             <PageHeader
                 title="Planilha de regras"
-                description="Ramos de tratamento vigentes (perguntas, enquadramento, risco e TLL). Quem permite ou proíbe na zona continua sendo o Quadro 10; na via, o Quadro 11A."
+                breadcrumbs={[{ label: 'Painel', href: '/gestao' }, { label: 'Regras' }]}
             />
+
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+                Ramos de tratamento vigentes (perguntas, enquadramento, risco e TLL). Quem permite ou proíbe na zona
+                continua sendo o Quadro 10; na via, o Quadro 11A.
+            </p>
 
             {versao === null ? (
                 <EmptyState

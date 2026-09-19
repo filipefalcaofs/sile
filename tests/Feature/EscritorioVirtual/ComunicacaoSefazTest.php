@@ -12,7 +12,6 @@ use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use App\Notifications\AbrigadoDesvinculadoNotification;
 use App\Services\EscritorioVirtual\DesvincularInscricaoService;
-use App\Services\Sefaz\SefazUnavailableException;
 use App\Services\Sefaz\SefazViabilidadeGateway;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
@@ -147,7 +146,7 @@ class ComunicacaoSefazTest extends TestCase
         // A SEFAZ volta: gateway forjado que aceita o envio.
         $this->app->bind(SefazViabilidadeGateway::class, fn () => new class implements SefazViabilidadeGateway
         {
-            public function sendViabilidade(ViabilityRequest $request, \App\Models\ViabilityDecision $decision): void {}
+            public function sendViabilidade(ViabilityRequest $request, ViabilityDecision $decision): void {}
 
             public function sendEventoEscritorioVirtual(SefazNotification $notification): void {}
         });
