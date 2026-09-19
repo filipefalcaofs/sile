@@ -64,6 +64,37 @@ class ReginHttpClient
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $resposta
+     */
+    public function homologar(array $resposta): void
+    {
+        $this->postarComJwt('/teste/validaResposta', $resposta);
+        $this->postarComJwt('/teste/testeRecebimento', $resposta);
+    }
+
+    /**
+     * @param  array<string, mixed>  $corpo
+     */
+    private function postarComJwt(string $caminho, array $corpo): void
+    {
+        $token = $this->token();
+
+        try {
+            $response = Http::timeout($this->timeout())
+                ->acceptJson()
+                ->asJson()
+                ->withHeaders(['JWT' => $token])
+                ->post($this->settings->baseUrl().$caminho, $corpo);
+        } catch (ConnectionException) {
+            throw new ReginUnavailableException(motivo: "REGIN indisponível em {$caminho}.");
+        }
+
+        if (! $response->successful()) {
+            throw new ReginUnavailableException(motivo: "REGIN rejeitou a homologação em {$caminho}.");
+        }
+    }
+
     private function timeout(): int
     {
         return (int) config('sile.integrations.regin.timeout', 8);
