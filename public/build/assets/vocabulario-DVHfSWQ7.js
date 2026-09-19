@@ -1,0 +1,1 @@
+function e(e,t,n){return t==null||t===``?n??`—`:e?.find(e=>e.value===t)?.label??n??t}export{e as t};
