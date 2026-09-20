@@ -337,16 +337,75 @@ class JustificativaFundamentadaComposer
     private function conclusao(array $fatos): string
     {
         $resultado = (string) ($fatos['consolidado']['resultado'] ?? '');
-        $zona = $fatos['zona'] ?? 'a zona identificada';
 
         $chave = match ($resultado) {
             ResultadoViabilidade::Permitido->value => 'justificativa.conclusao.permitido',
             ResultadoViabilidade::PermitidoComCondicoes->value => 'justificativa.conclusao.permitido_com_condicoes',
-            ResultadoViabilidade::NaoPermitido->value => 'justificativa.conclusao.nao_permitido',
+            ResultadoViabilidade::NaoPermitido->value => $this->chaveConclusaoNaoPermitido($fatos),
             default => 'justificativa.conclusao.padrao',
         };
 
-        return $this->textos->render($chave, [':zona' => $zona]);
+        return $this->textos->render($chave, [
+            ':zona' => $fatos['zona'] ?? 'a zona identificada',
+            ':classe_via' => $this->classeVia($fatos),
+        ]);
+    }
+
+    /**
+     * Atribui o indeferimento ao quadro que de fato vedou, espelhando a
+     * precedência do motor: o Quadro 10 proibindo na zona decide primeiro; só
+     * quando ele permite é que o veto pode vir da via (Quadro 11-A).
+     *
+     * @param  array<string, mixed>  $fatos
+     */
+    private function chaveConclusaoNaoPermitido(array $fatos): string
+    {
+        if (($fatos['quadro10']['permissao'] ?? null) === Quadro10Permissao::Proibido->value) {
+            return 'justificativa.conclusao.nao_permitido';
+        }
+
+        if ($this->viaVedada($fatos['quadro11a'])) {
+            return 'justificativa.conclusao.nao_permitido_via';
+        }
+
+        return 'justificativa.conclusao.nao_permitido';
+    }
+
+    /**
+     * A via veda o uso quando o Quadro 11-A responde "Não" para a combinação
+     * classe viária × grupo (matriz oficial: Não veda, R vai à CNLU).
+     *
+     * @param  array<string, mixed>  $quadro11a
+     */
+    private function viaVedada(array $quadro11a): bool
+    {
+        if (($quadro11a['status'] ?? null) !== 'identificado') {
+            return false;
+        }
+
+        foreach (($quadro11a['condicoes'] ?? []) as $condicao) {
+            if (! is_string($condicao)) {
+                continue;
+            }
+
+            $norm = strtr(mb_strtolower(trim($condicao)), ['ã' => 'a', 'á' => 'a']);
+
+            if ($norm === 'nao') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array<string, mixed>  $fatos
+     */
+    private function classeVia(array $fatos): string
+    {
+        $classeVia = $this->texto($fatos['quadro11a']['classe_via'] ?? null);
+
+        return $classeVia ?? 'identificada';
     }
 
     /**

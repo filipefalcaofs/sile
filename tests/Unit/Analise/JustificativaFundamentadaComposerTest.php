@@ -61,6 +61,25 @@ class JustificativaFundamentadaComposerTest extends TestCase
         $this->assertStringNotContainsString('manifesta-se pelo deferimento', mb_strtolower($texto));
     }
 
+    public function test_atribui_o_indeferimento_ao_quadro_11a_quando_a_via_veda(): void
+    {
+        // Cenário do processo 4: o Quadro 10 PERMITE o grupo na zona, mas o
+        // Quadro 11-A VEDA o uso na classe da via. A conclusão não pode atribuir
+        // o indeferimento à proibição na zona (Quadro 10) — o veto é da via.
+        $texto = app(JustificativaFundamentadaComposer::class)->paraConsulta(
+            $this->consultaVedadaNaVia(),
+            [
+                'cnae' => '6202300',
+                'cnae_formatado' => '6202-3/00',
+                'is_primary' => true,
+            ],
+        );
+
+        $this->assertStringContainsString('indeferimento', mb_strtolower($texto));
+        $this->assertStringContainsString('Quadro 11', $texto);
+        $this->assertStringNotContainsString('proibido na zona', mb_strtolower($texto));
+    }
+
     public function test_nao_sugere_desfecho_quando_nao_ha_enquadramento_na_planilha(): void
     {
         $texto = app(JustificativaFundamentadaComposer::class)->paraConsulta(
@@ -193,10 +212,39 @@ class JustificativaFundamentadaComposerTest extends TestCase
         );
     }
 
+    private function consultaVedadaNaVia(): ConsultaViabilidadeResult
+    {
+        return $this->consulta(
+            resultado: 'nao_permitido',
+            enquadramento: [
+                'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
+                'grupo' => 'nR2',
+                'subgrupo' => 'nR2-12',
+                'motivo' => 'O CNAE 6202-3/00 com área 834 m² enquadra-se no grupo nR2 (nR2-12) da LOUOS (07.12.11).',
+            ],
+            quadro10: [
+                'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
+                'permissao' => 'permitido',
+                'motivo' => 'O grupo nR2 é permitido na zona ZPR 3 segundo o Quadro 10 da LOUOS.',
+            ],
+            motivo: 'Uso vedado na classe da via pelo Quadro 11A da LOUOS',
+            zona: ['status' => 'identificado', 'nome' => 'ZPR 3'],
+            cnae: '6202300',
+            area: 834.0,
+            quadro11a: [
+                'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
+                'condicoes' => ['Não'],
+                'classe_via' => 'VL',
+                'motivo' => 'O grupo nR2 na classe viária VL tem o uso vedado pelo Quadro 11-A da LOUOS.',
+            ],
+        );
+    }
+
     /**
      * @param  array<string, mixed>  $enquadramento
      * @param  array<string, mixed>  $quadro10
      * @param  array<string, mixed>  $zona
+     * @param  array<string, mixed>|null  $quadro11a
      */
     private function consulta(
         string $resultado,
@@ -206,6 +254,7 @@ class JustificativaFundamentadaComposerTest extends TestCase
         array $zona,
         string $cnae = '4771701',
         float $area = 75.0,
+        ?array $quadro11a = null,
     ): ConsultaViabilidadeResult {
         $formatado = strlen($cnae) === 7
             ? substr($cnae, 0, 4).'-'.substr($cnae, 4, 1).'/'.substr($cnae, 5, 2)
@@ -229,7 +278,7 @@ class JustificativaFundamentadaComposerTest extends TestCase
             enquadramento: new EnquadramentoResult(
                 enquadramento: $enquadramento,
                 quadro10: $quadro10,
-                quadro11a: [
+                quadro11a: $quadro11a ?? [
                     'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
                     'condicoes' => [],
                     'motivo' => null,
