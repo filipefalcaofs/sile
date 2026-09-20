@@ -247,6 +247,42 @@ class FluxoExpressoDecisaoTest extends TestCase
         Event::assertNotDispatched(ResultadoEmitido::class);
     }
 
+    public function test_medio_risco_permitido_nos_dois_quadros_defere_automaticamente(): void
+    {
+        // RN-041-C: Quadro 10 e 11A liberando, o deferimento automático vale
+        // para baixo E médio risco. Aqui o médio vem da faixa de área da
+        // planilha (0111-3/01 escritório acima de 1.250 m² → nR2-12, médio).
+        Event::fake([ResultadoEmitido::class]);
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('0111301', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('0111301', 'nR2', 'nR2-12');
+        $this->seedQuadro10('ZR-1', 'nR2', Quadro10Permissao::Permitido);
+
+        $request = $this->protocoladaComCnaes(['0111301']);
+        $request->respostasTratamento = [11 => false];
+        $request->forceFill(['used_area_m2' => 1300.0])->save();
+
+        $fresco = $request->fresh();
+        $fresco->respostasTratamento = [11 => false];
+        $resolvido = app(SolicitacaoViabilityResolver::class)->resolve($fresco);
+        $this->assertSame('permitido', $resolvido->consolidado);
+        $this->assertSame(
+            'medio',
+            $resolvido->por_cnae[0]['consulta']->risco->encaminhamento['nivel'],
+            'A premissa do teste é o nível MÉDIO (faixa acima de 1.250 m²).',
+        );
+
+        $result = $this->service()->decide($request);
+
+        $this->assertSame(ViabilityRequestStatus::Deferida, $result->status);
+        $this->assertTrue($result->emitted);
+
+        $decision = $request->fresh()->decision;
+        $this->assertSame(DecisionOutcome::Deferida, $decision->outcome);
+        $this->assertNotNull($decision->tvl_product_number);
+        Event::assertDispatched(ResultadoEmitido::class);
+    }
+
     public function test_alto_risco_por_pergunta_condicional_vai_para_analise_mesmo_com_veto_locacional(): void
     {
         // RN-041-B: o Decreto classifica o CNAE como baixo_a, mas a pergunta

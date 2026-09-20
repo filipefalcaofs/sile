@@ -41,6 +41,18 @@ decisivo: ramo da planilha, Decreto ou nível sanitário reclassificado);
 do veto. Gatilhos não contaminam o nível — `dados_do_processo` (galpão) muda o
 fluxo, não o `nivel`.
 
+## 1.2 RN-041-C — Liberado nos dois quadros, baixo/médio defere automaticamente
+
+Fechado na mesma conversa: Quadro 10 e 11A liberando, o deferimento automático
+vale para **baixo e médio** risco. Já era o comportamento — o "médio
+operacional" da SEDUR é o `baixo_b` do Decreto (expresso no mapa
+`risco.mapa_encaminhamento`) e o médio da planilha (ex.: nR2 acima de
+1.250 m²) sai com fluxo expresso. O teste
+`test_medio_risco_permitido_nos_dois_quadros_defere_automaticamente` trava a
+regra. Exceções que continuam indo à análise mesmo com os dois quadros
+liberando: alto risco (RN-041-B), gatilhos ativos (galpão, ZEIS, sede virtual
+8211) e veredito pendente.
+
 ## 2. Por quê
 
 A análise humana deve receber só o que ainda pode ser deferido. Impedimento no 10 ou no 11A é decisão de lei, não de rito. Avaliar risco primeiro mandava o 43747 (galpão + 11A `Não` na VL) para a fila.
@@ -60,6 +72,8 @@ A análise humana deve receber só o que ainda pode ser deferido. Impedimento no
 **CA-06** — DADO alto risco pelo CNAE (0210-1/07 no local → ID2-07) e Quadro 10 proibido, QUANDO decide, ENTÃO `em_analise`, sem decisão e sem evento.
 
 **CA-07** — DADO baixo/médio risco com veto locacional, QUANDO decide, ENTÃO indeferimento automático (RN-041-A inalterada para não-alto).
+
+**CA-08** — DADO médio risco (faixa de área da planilha → nR2) permitido nos dois quadros, QUANDO decide, ENTÃO deferimento automático com TVL (RN-041-C).
 
 ## 4. Fora de escopo
 
