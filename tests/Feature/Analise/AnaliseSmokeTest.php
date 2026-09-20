@@ -67,8 +67,8 @@ class AnaliseSmokeTest extends TestCase
         $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
 
         $this->classificarMunicipal('4731800', RiscoMunicipal::BaixoA);
-        $this->seedTratamento('4731800', 'nR3', 'nR3-01');
-        $this->seedQuadro10('ZR-1', 'nR3', Quadro10Permissao::Proibido);
+        $this->seedTratamento('4731800', 'nR2', 'nR2-04');
+        $this->seedQuadro10('ZR-1', 'nR2', Quadro10Permissao::Proibido);
 
         $request = $this->protocoladaComCnaes(['4712100', '4731800']);
 
@@ -155,8 +155,8 @@ class AnaliseSmokeTest extends TestCase
         Notification::fake();
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4731800', RiscoMunicipal::Alto); // alto → semi-expresso
-        $this->seedTratamento('4731800', 'nR3', 'nR3-01');
-        $this->seedQuadro10('ZR-1', 'nR3', Quadro10Permissao::Proibido);
+        $this->seedTratamento('4731800', 'nR2', 'nR2-04');
+        $this->seedQuadro10('ZR-1', 'nR2', Quadro10Permissao::Proibido);
 
         $request = $this->protocoladaComCnaes(['4731800']);
 
@@ -251,16 +251,17 @@ class AnaliseSmokeTest extends TestCase
 
     public function test_degradacao_sem_motor_o_humano_decide_em_modo_manual(): void
     {
-        // FA-01: sem a zona oficial (Quadro 10 pendente SEDUR) a ficha nasce em
-        // modo MANUAL (engine_available=false) — e o analista DECIDE assim mesmo
+        // Sem a zona oficial (Quadro 10 pendente SEDUR) o veredito fica pendente e
+        // a ficha nasce pré-preenchida com o que o motor sabe, mas SEM sugestão de
+        // desfecho (status_sugerido null) — e o analista DECIDE assim mesmo
         // (defere o caso pendente com fundamentação própria). É o caso que exige
         // o humano.
         $request = $this->emAnaliseSemZona('2222222');
 
         $ficha = $request->currentAnalysisRecord()->first();
         $this->assertNotNull($ficha);
-        $this->assertFalse($ficha->engine_available, 'Sem zona, a ficha nasce em modo manual.');
-        $this->assertNull($ficha->per_cnae);
+        $this->assertTrue($ficha->engine_available, 'Sem zona, a ficha traz o que o motor sabe.');
+        $this->assertNull($this->sugestao($ficha, '2222222'), 'Sem zona, o motor não sugere desfecho.');
 
         [$sector, $analista] = $this->analistaNoSetor();
         $request->forceFill(['sector_id' => $sector->id])->save();

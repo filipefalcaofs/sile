@@ -15,9 +15,10 @@ use Illuminate\Validation\Rule;
  * `analysis_reasons` ainda é aceito no payload por compatibilidade, mas o
  * serviço ignora: o motivo é preenchido pelo sistema, não pelo analista.
  *
- * O status escolhido por CNAE usa o MESMO vocabulário da sugestão do motor
- * (DecisionOutcome deferida/indeferida + 'analise' para encaminhar), permitindo
- * a comparação sugerido×escolhido que materializa as divergências (HU-140).
+ * O status por CNAE é a DECISÃO do analista: deferida ou indeferida. "Em
+ * análise" é status do PROCESSO, não do CNAE — por isso não é opção aqui.
+ * Null é aceito enquanto o analista não escolheu (a conclusão do processo
+ * exige escolha explícita — AnaliseTecnicaDecisionService).
  */
 class AnalysisRecordRequest extends FormRequest
 {
@@ -34,13 +35,12 @@ class AnalysisRecordRequest extends FormRequest
         $statusEscolhido = [
             DecisionOutcome::Deferida->value,
             DecisionOutcome::Indeferida->value,
-            'analise',
         ];
 
         return [
             'per_cnae' => ['sometimes', 'array'],
             'per_cnae.*.cnae' => ['required', 'string'],
-            'per_cnae.*.status_escolhido' => ['required', Rule::in($statusEscolhido)],
+            'per_cnae.*.status_escolhido' => ['nullable', Rule::in($statusEscolhido)],
             'per_cnae.*.justificativa' => ['nullable', 'string'],
             'per_cnae.*.condicionantes' => ['sometimes', 'array'],
             'conditions' => ['sometimes', 'array'],

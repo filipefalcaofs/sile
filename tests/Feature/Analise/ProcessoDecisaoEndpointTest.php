@@ -200,12 +200,12 @@ class ProcessoDecisaoEndpointTest extends TestCase
         $this->assertNull($processo->fresh()->decision?->tvl_product_number);
     }
 
-    public function test_concluir_processo_recusa_cnae_ainda_em_analise(): void
+    public function test_concluir_processo_recusa_cnae_sem_escolha_do_analista(): void
     {
         Event::fake([ResultadoEmitido::class]);
 
         $processo = $this->processoComFicha(
-            [['cnae' => '4712100', 'status_sugerido' => 'analise', 'status_escolhido' => 'analise']],
+            [['cnae' => '4712100', 'status_sugerido' => null, 'status_escolhido' => null]],
             ['status' => AnalysisRecordStatus::Rascunho, 'finalized_at' => null],
         );
 

@@ -217,18 +217,21 @@ class AnaliseTecnicaDecisionService
      * @param  list<array<string, mixed>>  $perCnae
      */
     /**
-     * Sem zona o motor deixa status=analise. Concluir isso indefere por omissão.
-     * O analista precisa escolher deferida ou indeferida em cada CNAE.
+     * Guarda da conclusão: todo CNAE precisa de escolha explícita do analista
+     * (deferida/indeferida). "Em análise" é status do PROCESSO, nunca do CNAE —
+     * um CNAE sem escolha (null ou o legado 'analise') bloqueia a conclusão.
+     * Anti-fachada: nunca defere nem indefere por omissão de escolha.
      *
      * @param  list<array<string, mixed>>  $perCnae
      */
     public function recusarSeAindaEmAnalise(array $perCnae): void
     {
         foreach ($perCnae as $item) {
-            if (($item['status_escolhido'] ?? null) === ViabilityRequestStatus::EmAnalise->value
-                || ($item['status_escolhido'] ?? null) === 'analise') {
+            $escolhido = $item['status_escolhido'] ?? null;
+
+            if (! in_array($escolhido, [DecisionOutcome::Deferida->value, DecisionOutcome::Indeferida->value], true)) {
                 throw new DomainException(
-                    'Há atividade ainda em análise (zona ou enquadramento pendente). Escolha deferir ou indeferir em cada CNAE antes de concluir.',
+                    'Há atividade sem decisão do analista. Escolha deferir ou indeferir em cada CNAE antes de concluir.',
                 );
             }
         }

@@ -19,7 +19,7 @@ import { Modal } from '@/components/ui/modal';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
 
-type StatusFicha = 'deferida' | 'indeferida' | 'analise';
+type StatusFicha = 'deferida' | 'indeferida';
 
 interface PerCnae {
     cnae: string;
@@ -38,6 +38,12 @@ interface PerCnae {
     fundamentacao?: string[] | null;
     condicionantes?: string[] | null;
     justificativa?: string | null;
+    pergunta_local?: {
+        numero?: number | null;
+        pergunta: string;
+        resposta: string | null;
+        pendente: boolean;
+    } | null;
 }
 
 interface Parking {
@@ -232,7 +238,6 @@ interface IaFicha {
 const STATUS_OPCOES: { value: StatusFicha; label: string }[] = [
     { value: 'deferida', label: 'Deferida' },
     { value: 'indeferida', label: 'Indeferida' },
-    { value: 'analise', label: 'Em análise' },
 ];
 
 /** A minuta (HU-118) roda em fila (assíncrona): após solicitar, sondamos a prop
@@ -685,7 +690,7 @@ export default function FichaAnaliseShow({
     const [saveState, setSaveState] = useState<'idle' | 'salvando' | 'salvo' | 'erro'>('idle');
 
     const autosave = useHttp<{
-        per_cnae: Array<{ cnae: string; status_escolhido: string; justificativa: string | null; condicionantes: string[] }>;
+        per_cnae: Array<{ cnae: string; status_escolhido: string | null; justificativa: string | null; condicionantes: string[] }>;
         conditions: string[];
         parking: Parking;
         parecer: string | null;
@@ -755,7 +760,7 @@ export default function FichaAnaliseShow({
         () => ({
             per_cnae: perCnae.map((item) => ({
                 cnae: item.cnae,
-                status_escolhido: (item.status_escolhido ?? item.status_sugerido ?? 'analise') as string,
+                status_escolhido: item.status_escolhido === 'analise' ? null : (item.status_escolhido ?? null),
                 justificativa: item.justificativa ?? null,
                 condicionantes: item.condicionantes ?? [],
             })),
@@ -1479,11 +1484,19 @@ export default function FichaAnaliseShow({
 
                                                     <div className="mt-3 rounded-lg bg-gray-50 p-3 dark:bg-white/5">
                                                         <p className="text-theme-xs font-medium text-gray-500 dark:text-gray-400">
-                                                            Pergunta: A atividade será desenvolvida no local?
+                                                            Pergunta: {item.pergunta_local?.pergunta ?? 'A atividade será desenvolvida no local?'}
                                                         </p>
-                                                        <p className="mt-0.5 text-theme-xs text-gray-400 dark:text-gray-500">
-                                                            Resposta: Pendente — requerente ainda não respondeu esta pergunta no
-                                                            formulário de solicitação.
+                                                        <p
+                                                            className={`mt-0.5 text-theme-xs ${
+                                                                item.pergunta_local && !item.pergunta_local.pendente
+                                                                    ? 'text-gray-700 dark:text-gray-200'
+                                                                    : 'text-gray-400 dark:text-gray-500'
+                                                            }`}
+                                                        >
+                                                            Resposta:{' '}
+                                                            {item.pergunta_local && !item.pergunta_local.pendente
+                                                                ? item.pergunta_local.resposta
+                                                                : 'Pendente — requerente ainda não respondeu esta pergunta no formulário de solicitação.'}
                                                         </p>
                                                     </div>
 

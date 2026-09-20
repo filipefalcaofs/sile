@@ -111,6 +111,7 @@ class ProdutoAbrigadoTest extends TestCase
         ]);
         $cnaeModel = Cnae::factory()->create(['code' => $cnae]);
         $solicitacao->cnaes()->attach($cnaeModel->id, ['is_primary' => true]);
+        $solicitacao->respostasTratamento = [11 => true];
 
         return $solicitacao;
     }

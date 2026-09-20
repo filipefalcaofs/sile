@@ -57,6 +57,32 @@ class AnalysisRecordAutosaveTest extends TestCase
         ]);
     }
 
+    public function test_autosave_recusa_status_analise_no_cnae(): void
+    {
+        $ficha = $this->fichaRascunho();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->patchJson("/gestao/processos/{$ficha->viability_request_id}/ficha", [
+                'per_cnae' => [
+                    ['cnae' => '4712100', 'status_escolhido' => 'analise'],
+                ],
+            ])
+            ->assertSessionHasErrors(['per_cnae.0.status_escolhido']);
+    }
+
+    public function test_autosave_aceita_cnae_sem_escolha_ainda(): void
+    {
+        $ficha = $this->fichaRascunho();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->patchJson("/gestao/processos/{$ficha->viability_request_id}/ficha", [
+                'per_cnae' => [
+                    ['cnae' => '4712100', 'status_escolhido' => null],
+                ],
+            ])
+            ->assertOk();
+    }
+
     public function test_show_exige_analisar_processos_e_audita_o_403(): void
     {
         $semPermissao = User::factory()->withAcceptedLgpdTerm()->create();
