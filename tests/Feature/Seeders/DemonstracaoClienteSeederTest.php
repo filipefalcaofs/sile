@@ -5,6 +5,7 @@ namespace Tests\Feature\Seeders;
 use App\Models\GeoServerLayer;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\PropertyType;
+use App\Models\TratamentoCnaeBinding;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\Zona;
@@ -148,6 +149,24 @@ class DemonstracaoClienteSeederTest extends TestCase
             'Esperava uma zona cadastrada por zona distinta da vigente do Quadro 10.',
         );
         $this->assertGreaterThan(0, Zona::query()->count());
+    }
+
+    /**
+     * Sem a planilha 20.08.26 no seed de homologação, o simulador REGIN não
+     * pede as perguntas de tratamento e o ramo fica nulo — o motor cai em
+     * pendência locacional genérica (caso 33072 em produção).
+     */
+    public function test_carrega_a_planilha_de_tratamento(): void
+    {
+        config(['sile.demo_data' => true]);
+
+        $this->seed(DemonstracaoClienteSeeder::class);
+
+        $this->assertSame(
+            2850,
+            TratamentoCnaeBinding::query()->count(),
+            'Esperava os vínculos CNAE da planilha 20.08.26 no seed de homologação.',
+        );
     }
 
     public function test_rotaciona_senhas_dos_usuarios_dev_para_a_senha_demo(): void

@@ -31,6 +31,10 @@ class TratamentoRegrasSeeder extends Seeder
             $version = $rules->publish($draft);
         }
 
+        if (TratamentoEnquadramento::query()->where('rule_version_id', $version->getKey())->exists()) {
+            return;
+        }
+
         TratamentoPergunta::query()->where('rule_version_id', $version->getKey())->delete();
         TratamentoRegra::query()->where('rule_version_id', $version->getKey())->delete();
         TratamentoEnquadramento::query()->where('rule_version_id', $version->getKey())->delete();
