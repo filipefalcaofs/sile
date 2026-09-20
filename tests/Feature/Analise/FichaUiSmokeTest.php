@@ -118,6 +118,50 @@ class FichaUiSmokeTest extends TestCase
                 ->where('localizacao.poligono', null));
     }
 
+    public function test_ficha_expoe_o_checklist_dos_quadros_lido_do_snapshot(): void
+    {
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocol_number' => 'VIA-'.now()->year.'-000125',
+            'protocoled_at' => now(),
+        ]);
+
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+            'per_cnae' => [[
+                'cnae' => '6202300',
+                'cnae_formatado' => '6202-3/00',
+                'status_escolhido' => 'indeferida',
+            ]],
+            'engine_snapshot' => [
+                'por_cnae' => [[
+                    'cnae' => '6202300',
+                    'consulta' => [
+                        'enquadramento' => [
+                            'enquadramento' => ['status' => 'identificado', 'grupo' => 'nR2', 'subgrupo' => 'nR2-12'],
+                            'quadro10' => ['status' => 'identificado', 'permissao' => 'permitido'],
+                            'quadro11a' => ['status' => 'identificado', 'condicoes' => ['Não'], 'classe_via' => 'VL'],
+                        ],
+                        'territorio' => ['zona' => ['status' => 'identificado', 'nome' => 'ZPR 3']],
+                    ],
+                ]],
+            ],
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/ficha-analise/show')
+                ->has('ficha.per_cnae.0.quadros', 2)
+                ->where('ficha.per_cnae.0.quadros.0.key', 'quadro10')
+                ->where('ficha.per_cnae.0.quadros.0.estado', 'permitido')
+                ->where('ficha.per_cnae.0.quadros.1.key', 'quadro11a')
+                ->where('ficha.per_cnae.0.quadros.1.estado', 'nao_permitido'));
+    }
+
     public function test_ficha_expoe_is_public_area_e_tramitacao(): void
     {
         $processo = ViabilityRequest::factory()->create([

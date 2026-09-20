@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\AnalysisRecord;
 use App\Services\Analise\JustificativaFundamentadaComposer;
 use App\Services\Analise\PerguntaLocalFicha;
+use App\Services\Analise\QuadrosFichaChecklist;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -60,13 +61,14 @@ class AnalysisRecordResource extends JsonResource
         $itens = array_values((array) ($this->per_cnae ?? []));
         $composer = app(JustificativaFundamentadaComposer::class);
         $local = app(PerguntaLocalFicha::class);
+        $quadros = app(QuadrosFichaChecklist::class);
         $this->resource->loadMissing('viabilityRequest');
         $solicitacao = $this->viabilityRequest;
         $porCnae = is_array($this->engine_snapshot['por_cnae'] ?? null)
             ? $this->engine_snapshot['por_cnae']
             : [];
 
-        return array_map(function (array $item) use ($composer, $porCnae, $local, $solicitacao): array {
+        return array_map(function (array $item) use ($composer, $porCnae, $local, $solicitacao, $quadros): array {
             if ($solicitacao !== null) {
                 $item['pergunta_local'] = $local->para($solicitacao, (string) ($item['cnae'] ?? ''));
             }
@@ -76,6 +78,9 @@ class AnalysisRecordResource extends JsonResource
             if ($consulta === null) {
                 return $item;
             }
+
+            // Checklist ilustrativo dos quadros (Q10 × Q11-A) lido do snapshot.
+            $item['quadros'] = $quadros->para($consulta);
 
             $atual = trim((string) ($item['justificativa'] ?? ''));
             $motivoCurto = trim((string) ($consulta['enquadramento']['consolidado']['motivo']
