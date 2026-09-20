@@ -213,6 +213,15 @@ return [
         // não decisão de negócio.
         'autosave' => ['debounce_ms' => 1500],
     ],
+    // Espelha os parâmetros HU-014 da TLL (tll.*). Settings::get lê
+    // config("sile.tll.*") no fallback (banco indisponível). O fator
+    // multiplicador do DAM (HU-071 RN-004) nasce administrável no
+    // ParameterSeeder; aqui é só o espelho.
+    'tll' => [
+        // Fator multiplicador aplicado ao valor do DAM quando o CNAE tem
+        // exige_fator_multiplicador (HU-071 RN-004). 1.0 = neutro.
+        'fator_multiplicador' => 1.0,
+    ],
     // Espelha os parâmetros HU-014 notificacoes.* da comunicação multicanal
     // (EP11). Settings::get lê config("sile.notificacoes.*") no fallback (banco
     // indisponível). mapa_canais e escalonamento.tratamento são os ARRAYS já

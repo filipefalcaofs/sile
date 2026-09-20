@@ -7,6 +7,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisRecord;
 use App\Models\ExpressoQueda;
 use App\Models\StandardText;
+use App\Models\TllValor;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -160,6 +161,68 @@ class FichaUiSmokeTest extends TestCase
                 ->where('ficha.per_cnae.0.quadros.0.estado', 'permitido')
                 ->where('ficha.per_cnae.0.quadros.1.key', 'quadro11a')
                 ->where('ficha.per_cnae.0.quadros.1.estado', 'nao_permitido'));
+    }
+
+    public function test_ficha_resolve_o_valor_tll_do_exercicio_corrente(): void
+    {
+        TllValor::factory()->create([
+            'codigo_tll' => '1.01',
+            'exercicio' => (int) now()->year,
+            'valor' => 1111.78,
+        ]);
+
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocol_number' => 'VIA-'.now()->year.'-000126',
+            'protocoled_at' => now(),
+        ]);
+
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+            'per_cnae' => [[
+                'cnae' => '6202300',
+                'cnae_formatado' => '6202-3/00',
+                'codigo_tll' => '1.01',
+                'status_escolhido' => 'deferida',
+            ]],
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/ficha-analise/show')
+                ->where('ficha.per_cnae.0.valor_tll', '1111.78'));
+    }
+
+    public function test_ficha_sem_valor_tll_parametrizado_mostra_pendente(): void
+    {
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocol_number' => 'VIA-'.now()->year.'-000127',
+            'protocoled_at' => now(),
+        ]);
+
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+            'per_cnae' => [[
+                'cnae' => '6202300',
+                'cnae_formatado' => '6202-3/00',
+                'codigo_tll' => '1.01',
+                'status_escolhido' => 'deferida',
+            ]],
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/ficha-analise/show')
+                ->where('ficha.per_cnae.0.valor_tll', null));
     }
 
     public function test_ficha_expoe_is_public_area_e_tramitacao(): void

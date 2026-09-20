@@ -294,6 +294,15 @@ function formatarDataHora(iso: string | null): string {
     });
 }
 
+const moedaFormat = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+/** Formata o valor TLL (string/number) como moeda brasileira (R$). */
+function formatarMoeda(valor: number | string): string {
+    const numero = typeof valor === 'number' ? valor : Number.parseFloat(String(valor));
+
+    return Number.isNaN(numero) ? String(valor) : moedaFormat.format(numero);
+}
+
 export function escapeHtml(valor: string): string {
     return valor
         .replace(/&/g, '&amp;')
@@ -1574,7 +1583,7 @@ export default function FichaAnaliseShow({
                                                         </DescItem>
                                                         <DescItem label="Valor TLL">
                                                             {item.valor_tll != null && item.valor_tll !== '' ? (
-                                                                <span>{String(item.valor_tll)}</span>
+                                                                <span>{formatarMoeda(item.valor_tll)}</span>
                                                             ) : (
                                                                 <span className="text-gray-400 dark:text-gray-500">
                                                                     Pendente (tabela de taxas/DAM)

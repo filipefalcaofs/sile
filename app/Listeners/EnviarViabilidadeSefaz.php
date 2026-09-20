@@ -3,6 +3,10 @@
 namespace App\Listeners;
 
 use App\Events\ResultadoEmitido;
+use App\Models\Cnae;
+use App\Models\ViabilityDecision;
+use App\Services\Analise\TllCalculo;
+use App\Services\Analise\TllCalculoService;
 use App\Services\Sefaz\SefazUnavailableException;
 use App\Services\Sefaz\SefazViabilidadeGateway;
 use App\Support\Audit\AuditService;
@@ -69,6 +73,7 @@ class EnviarViabilidadeSefaz implements ShouldQueue
                     'viability_request_id' => $request->id,
                     'protocol_number' => $request->protocol_number,
                     'outcome' => $decision->outcome->value,
+                    'taxa' => $this->taxaParaAuditoria($decision),
                 ],
                 result: 'sucesso',
                 subject: $request,
@@ -76,7 +81,9 @@ class EnviarViabilidadeSefaz implements ShouldQueue
         } catch (SefazUnavailableException) {
             // Transmissão pendente (Fase 13): degrada honesto — audita a
             // pendência, jamais um sucesso fictício. Não relança: a decisão já
-            // está efetivada e não falha pela integração bloqueada.
+            // está efetivada e não falha pela integração bloqueada. A taxa da
+            // TLL (RN-004) é calculada e registrada — pronta para o envio
+            // quando a SEFAZ liberar o endpoint.
             $this->audit->log(
                 'integracoes',
                 'sefaz-viabilidade',
@@ -85,10 +92,58 @@ class EnviarViabilidadeSefaz implements ShouldQueue
                     'viability_request_id' => $request->id,
                     'protocol_number' => $request->protocol_number,
                     'outcome' => $decision->outcome->value,
+                    'taxa' => $this->taxaParaAuditoria($decision),
                 ],
                 result: 'bloqueado',
                 subject: $request,
             );
         }
+    }
+
+    /**
+     * Taxa da TLL calculada (HU-071 RN-004) a partir do per_cnae da decisão
+     * (codigo_tll da planilha + exige_fator_multiplicador do CNAE) — sem
+     * recomputar o motor. Null quando não há valor parametrizado para o
+     * exercício (degradação honesta, nunca valor inventado).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function taxaParaAuditoria(ViabilityDecision $decision): ?array
+    {
+        $itens = [];
+
+        foreach ($decision->per_cnae ?? [] as $item) {
+            $codigoTll = $item['codigo_tll'] ?? null;
+
+            if (! is_string($codigoTll) || $codigoTll === '') {
+                continue;
+            }
+
+            $cnae = Cnae::query()->where('code', (string) ($item['cnae'] ?? ''))->first();
+
+            $itens[] = [
+                'codigo_tll' => $codigoTll,
+                'exige_fator_multiplicador' => (bool) ($cnae?->exige_fator_multiplicador ?? false),
+            ];
+        }
+
+        $calculo = app(TllCalculoService::class)->calcular($itens, (int) now()->year);
+
+        return $calculo === null ? null : $this->taxaArray($calculo);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function taxaArray(TllCalculo $calculo): array
+    {
+        return [
+            'valor' => $calculo->valor,
+            'codigo_tll' => $calculo->codigo_tll,
+            'valor_tll' => $calculo->valor_tll,
+            'taxa_servico' => $calculo->taxa_servico,
+            'fator_aplicado' => $calculo->fator_aplicado,
+            'exercicio' => $calculo->exercicio,
+        ];
     }
 }

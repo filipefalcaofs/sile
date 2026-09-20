@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\AnalysisRecord;
+use App\Models\TllValor;
 use App\Services\Analise\JustificativaFundamentadaComposer;
 use App\Services\Analise\PerguntaLocalFicha;
 use App\Services\Analise\QuadrosFichaChecklist;
@@ -73,6 +74,11 @@ class AnalysisRecordResource extends JsonResource
                 $item['pergunta_local'] = $local->para($solicitacao, (string) ($item['cnae'] ?? ''));
             }
 
+            // Valor TLL do exercício corrente, resolvido da tabela de valores
+            // (HU-071) pelo código TLL da planilha. Null = pendente (nunca
+            // inventado) — a ficha mostra a pendência.
+            $item['valor_tll'] = $this->valorTll($item['codigo_tll'] ?? null);
+
             $consulta = $this->consultaSnapshotDoCnae($porCnae, (string) ($item['cnae'] ?? ''));
 
             if ($consulta === null) {
@@ -95,6 +101,24 @@ class AnalysisRecordResource extends JsonResource
 
             return $item;
         }, $itens);
+    }
+
+    /**
+     * Valor da TLL do exercício corrente para o código TLL da planilha (HU-071).
+     * Null quando não parametrizado — degradação honesta, nunca valor inventado.
+     */
+    private function valorTll(mixed $codigoTll): ?string
+    {
+        if (! is_string($codigoTll) || $codigoTll === '') {
+            return null;
+        }
+
+        $tll = TllValor::query()
+            ->active()
+            ->paraExercicio($codigoTll, (int) now()->year)
+            ->first();
+
+        return $tll === null ? null : (string) $tll->valor;
     }
 
     /**

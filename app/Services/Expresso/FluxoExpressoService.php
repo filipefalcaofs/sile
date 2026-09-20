@@ -745,6 +745,9 @@ class FluxoExpressoService
             'tendencia' => $item['tendencia'],
             'tendencia_label' => $item['tendencia_label'],
             'fluxo' => $item['fluxo'],
+            // Código TLL da planilha (ramo resolvido) — insumo do cálculo do DAM
+            // (HU-071 RN-004) no envio à SEFAZ, sem recomputar o motor.
+            'codigo_tll' => $item['consulta']->risco->encaminhamento['tll'] ?? null,
             'fundamentacao' => $item['consulta']->fundamentacao(),
         ], $resolved->por_cnae);
     }

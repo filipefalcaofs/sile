@@ -245,6 +245,7 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
         items: [
             { name: 'Parâmetros', href: '/gestao/parametros', icon: 'plugin', permission: 'manter-parametros' },
             { name: 'Feriados', href: '/gestao/feriados', icon: 'tag', permission: 'manter-parametros' },
+            { name: 'Valores TLL', href: '/gestao/tll', icon: 'tag', permission: 'manter-parametros' },
             { name: 'Termos legais', href: '/gestao/termos-legais', icon: 'file', permission: 'manter-parametros' },
             { name: 'Textos decisórios', href: '/gestao/textos-decisao', icon: 'file', permission: 'manter-parametros' },
             { name: 'Minutas e textos-padrão', href: '/gestao/textos-padrao', icon: 'table', permission: 'manter-parametros' },

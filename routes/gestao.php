@@ -56,6 +56,7 @@ use App\Http\Controllers\Gestao\SectorController;
 use App\Http\Controllers\Gestao\StandardTextController;
 use App\Http\Controllers\Gestao\TermoLgpdController;
 use App\Http\Controllers\Gestao\TerritoryController;
+use App\Http\Controllers\Gestao\TllValorController;
 use App\Http\Controllers\Gestao\TratamentoRegrasController;
 use App\Http\Controllers\Gestao\TvlDocumentController;
 use App\Http\Controllers\Gestao\UserManagementController;
@@ -535,6 +536,21 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [HolidayController::class, 'store'])->name('store');
             Route::put('{holiday}', [HolidayController::class, 'update'])->name('update');
             Route::put('{holiday}/ativacao', [HolidayController::class, 'toggleActivation'])->name('ativacao.update');
+        });
+
+        // Tabela de valores TLL por exercício (HU-071/HU-014): dado versionado
+        // que o TllCalculoService usa no cálculo do DAM (RN-004) e que alimenta
+        // o bloco `taxas` enviado à SEFAZ. O CRUD reusa manter-parametros (como
+        // feriados — sem permissão nova). A chave (código TLL, exercício) é
+        // única; NÃO há destroy — inativar preserva o histórico/auditoria. Toda
+        // alteração é auditada (RN-002 via HasAuditoria); o 403 é auditado no
+        // ponto único (bootstrap/app.php). As rotas estáticas vêm ANTES do
+        // wildcard {tll_valor}.
+        Route::middleware('permission:manter-parametros')->prefix('tll')->name('tll.')->group(function () {
+            Route::get('/', [TllValorController::class, 'index'])->name('index');
+            Route::post('/', [TllValorController::class, 'store'])->name('store');
+            Route::put('{tllValor}', [TllValorController::class, 'update'])->name('update');
+            Route::put('{tllValor}/ativacao', [TllValorController::class, 'toggleActivation'])->name('ativacao.update');
         });
 
         // Registro em contingência (HU-148): canal de operador na retaguarda e o

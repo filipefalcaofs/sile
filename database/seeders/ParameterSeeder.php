@@ -478,6 +478,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['nullable', 'integer', 'exists:sectors,id'],
                 'description' => 'Setor cuja caixa recebe os processos que o motor encaminha à análise técnica; vazio, o processo fica sem caixa até a atribuição manual (roteamento por CNAE/território é pendência SEDUR)',
             ],
+            'tll.fator_multiplicador' => [
+                'group' => 'tll',
+                'type' => 'decimal',
+                'default_value' => '1.0',
+                'validation_rules' => ['required', 'numeric', 'min:0'],
+                'description' => 'Fator multiplicador aplicado ao valor do DAM da TLL quando o CNAE de maior valor exige fator multiplicador (HU-071 RN-004); 1.0 é neutro',
+            ],
             'analise.pendencia.prazo_resposta_dias' => [
                 'group' => 'analise',
                 'type' => 'integer',

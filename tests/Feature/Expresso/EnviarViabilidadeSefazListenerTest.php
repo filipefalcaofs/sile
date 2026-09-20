@@ -4,6 +4,7 @@ namespace Tests\Feature\Expresso;
 
 use App\Events\ResultadoEmitido;
 use App\Models\Activity;
+use App\Models\TllValor;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Sefaz\SefazViabilidadeGateway;
@@ -106,5 +107,43 @@ class EnviarViabilidadeSefazListenerTest extends TestCase
         $this->assertSame(1, $this->auditoriasSefaz('ignorado'));
         $this->assertSame(0, $this->auditoriasSefaz('sucesso'));
         $this->assertSame(0, $this->auditoriasSefaz('bloqueado'));
+    }
+
+    public function test_deferimento_registra_a_taxa_tll_calculada_na_auditoria(): void
+    {
+        // HU-071/HU-110: ao deferir, o listener calcula a taxa da TLL (RN-004)
+        // a partir do per_cnae da decisão (codigo_tll da planilha) e a registra
+        // na auditoria — o valor fica pronto para o envio quando a SEFAZ
+        // liberar o endpoint (Fase 13). A transmissão segue bloqueada.
+        TllValor::factory()->create([
+            'codigo_tll' => '1.01',
+            'exercicio' => (int) now()->year,
+            'valor' => 1000.00,
+            'taxa_servico' => 50.00,
+        ]);
+
+        [$request, $decision] = $this->deferida();
+        $decision->forceFill([
+            'per_cnae' => [[
+                'cnae' => '4712100',
+                'cnae_formatado' => '4712-1/00',
+                'is_primary' => true,
+                'tendencia' => 'permitido',
+                'codigo_tll' => '1.01',
+            ]],
+        ])->save();
+
+        event(new ResultadoEmitido($request, $decision));
+
+        $audit = Activity::query()
+            ->where('log_name', 'integracoes')
+            ->where('event', 'sefaz-viabilidade')
+            ->where('result', 'bloqueado')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($audit);
+        $this->assertSame('1050.00', $audit->properties['taxa']['valor'] ?? null);
+        $this->assertSame('1.01', $audit->properties['taxa']['codigo_tll'] ?? null);
     }
 }
