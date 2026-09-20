@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { CheckCircleIcon, InfoIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
+import { paresLegiveis } from '@/components/auditoria/valor-legivel';
 
 type BadgeColor = 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark';
 
@@ -57,16 +58,6 @@ const ORIGEM_LABEL: Record<string, string> = {
     analista: 'Decisão de analista',
 };
 
-/**
- * Rótulos de exibição de chaves do snapshot que fogem da humanização genérica
- * (rotular). Nomenclatura da SEDUR (relatório de teste 09/07/2026): a escolha
- * final registrada é apresentada como "Conclusão". O snapshot gravado mantém a
- * chave crua `status_escolhido` — só a exibição muda (auditoria intacta).
- */
-const CHAVE_LABEL: Record<string, string> = {
-    status_escolhido: 'Conclusão',
-};
-
 function outcomeColor(outcome: string | null): BadgeColor {
     if (outcome === 'deferida') {
         return 'success';
@@ -77,42 +68,6 @@ function outcomeColor(outcome: string | null): BadgeColor {
     }
 
     return 'light';
-}
-
-/** Coage um valor do snapshot a texto legível, sem despejar estruturas cruas. */
-function valorLegivel(valor: unknown): string {
-    if (valor === null || valor === undefined || valor === '') {
-        return '—';
-    }
-
-    if (typeof valor === 'boolean') {
-        return valor ? 'sim' : 'não';
-    }
-
-    if (typeof valor === 'string' || typeof valor === 'number') {
-        return String(valor);
-    }
-
-    if (Array.isArray(valor)) {
-        const itens = valor.filter((item) => typeof item === 'string' || typeof item === 'number');
-
-        if (itens.length === valor.length) {
-            return itens.join(', ');
-        }
-    }
-
-    try {
-        return JSON.stringify(valor);
-    } catch {
-        return '—';
-    }
-}
-
-/** Humaniza a chave (snake_case → texto) para os rótulos de entrada/resultado. */
-function rotular(chave: string): string {
-    const texto = chave.replace(/_/g, ' ');
-
-    return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
 /** Normaliza um valor a um registro chave→valor, ou null se não for objeto. */
@@ -333,7 +288,7 @@ function PassoView({ passo }: { passo: Passo }) {
 
 /** Pares chave→valor de um trecho do snapshot (entrada/resultado), legíveis. */
 function ParesChaveValor({ titulo, dados }: { titulo: string; dados: Record<string, unknown> }): ReactNode {
-    const entradas = Object.entries(dados).filter(([, valor]) => valor !== null && valor !== undefined && valor !== '');
+    const entradas = paresLegiveis(dados);
 
     if (entradas.length === 0) {
         return null;
@@ -343,12 +298,10 @@ function ParesChaveValor({ titulo, dados }: { titulo: string; dados: Record<stri
         <div>
             <span className="text-theme-xs font-medium text-gray-400 dark:text-gray-500">{titulo}</span>
             <dl className="mt-1 grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
-                {entradas.map(([chave, valor]) => (
-                    <div key={chave} className="flex gap-1.5 text-theme-xs">
-                        <dt className="font-medium text-gray-500 dark:text-gray-400">
-                            {CHAVE_LABEL[chave] ?? rotular(chave)}:
-                        </dt>
-                        <dd className="text-gray-700 dark:text-gray-300">{valorLegivel(valor)}</dd>
+                {entradas.map((par) => (
+                    <div key={par.label} className="flex gap-1.5 text-theme-xs">
+                        <dt className="font-medium text-gray-500 dark:text-gray-400">{par.label}:</dt>
+                        <dd className="text-gray-700 dark:text-gray-300">{par.value}</dd>
                     </div>
                 ))}
             </dl>
