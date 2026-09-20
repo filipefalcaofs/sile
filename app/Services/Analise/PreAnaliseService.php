@@ -45,12 +45,6 @@ class PreAnaliseService
      */
     private const REVISAO_INICIAL = 1;
 
-    /**
-     * Status sugerido quando o motor não consegue propor um desfecho (veredito
-     * pendente por CNAE) — encaminha à análise humana, jamais decide.
-     */
-    private const SUGESTAO_ANALISE = 'analise';
-
     public function __construct(
         private readonly SolicitacaoViabilityResolver $resolver,
         private readonly AuditService $audit,
@@ -122,8 +116,8 @@ class PreAnaliseService
                     'consolidado' => $resolved->consolidado,
                 ],
                 'engine_rules_versions' => $resolved->rules_versions,
-                'per_cnae' => $this->perCnae($resolved),
-                'conditions' => $this->conditions($resolved),
+                'per_cnae' => $this->perCnae($resolved, $request),
+                'conditions' => $this->conditions($resolved, $request),
                 'parking' => $this->parking($resolved),
                 'parecer' => $this->parecerRascunho($request, $resolved),
                 'analysis_reasons' => $this->motivosDaQueda($request, $resolved),
@@ -201,9 +195,9 @@ class PreAnaliseService
      *
      * @return list<array<string, mixed>>
      */
-    private function perCnae(ResolvedViability $resolved): array
+    private function perCnae(ResolvedViability $resolved, ViabilityRequest $request): array
     {
-        return array_map(function (array $item): array {
+        return array_map(function (array $item) use ($request): array {
             $status = $this->statusSugerido((string) $item['tendencia']);
             $consulta = $item['consulta'];
             $enquadramentoUso = $consulta->enquadramento->enquadramento;
@@ -231,6 +225,7 @@ class PreAnaliseService
                 'codigo_tll' => is_string($consulta->risco->encaminhamento['tll'] ?? null) && $consulta->risco->encaminhamento['tll'] !== ''
                     ? $consulta->risco->encaminhamento['tll']
                     : null,
+                'pergunta_local' => app(PerguntaLocalFicha::class)->para($request, (string) $item['cnae']),
             ];
         }, $resolved->por_cnae);
     }
@@ -240,11 +235,11 @@ class PreAnaliseService
      *
      * @return list<string>
      */
-    private function conditions(ResolvedViability $resolved): array
+    private function conditions(ResolvedViability $resolved, ViabilityRequest $request): array
     {
         $textos = [];
 
-        foreach ($this->perCnae($resolved) as $item) {
+        foreach ($this->perCnae($resolved, $request) as $item) {
             foreach ($item['condicionantes'] as $texto) {
                 $textos[] = $texto;
             }
@@ -396,15 +391,16 @@ class PreAnaliseService
      * Mapeia a tendência locacional do motor para o status SUGERIDO ao analista
      * com a MESMA semântica da decisão (RN-001 — sugestão, não decisão):
      * permitido(_com_condicoes) → deferida; não permitido → indeferida; pendente
-     * → análise (o humano decide o caso sem zona oficial).
+     * → SEM sugestão (null): "em análise" é status do processo, nunca do CNAE —
+     * o analista escolhe deferida ou indeferida explicitamente.
      */
-    private function statusSugerido(string $tendencia): string
+    private function statusSugerido(string $tendencia): ?string
     {
         return match ($tendencia) {
             ResultadoViabilidade::Permitido->value,
             ResultadoViabilidade::PermitidoComCondicoes->value => DecisionOutcome::Deferida->value,
             ResultadoViabilidade::NaoPermitido->value => DecisionOutcome::Indeferida->value,
-            default => self::SUGESTAO_ANALISE,
+            default => null,
         };
     }
 

@@ -302,8 +302,8 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertTrue($record->engine_available);
         $this->assertNotEmpty($record->per_cnae);
         $this->assertSame('pendente', $record->per_cnae[0]['tendencia']);
-        $this->assertSame('analise', $record->per_cnae[0]['status_sugerido']);
-        $this->assertSame('analise', $record->per_cnae[0]['status_escolhido']);
+        $this->assertNull($record->per_cnae[0]['status_sugerido']);
+        $this->assertNull($record->per_cnae[0]['status_escolhido']);
         $this->assertSame('pendente', $record->engine_snapshot['consolidado']);
         $this->assertNotEmpty($record->parecer);
         $this->assertStringContainsString('pendente', mb_strtolower((string) $record->parecer));
@@ -371,6 +371,63 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertNotEmpty($record->per_cnae);
         $this->assertSame('07.01.05', $record->per_cnae[0]['codigo_louos']);
         $this->assertSame('2.02', $record->per_cnae[0]['codigo_tll']);
+    }
+
+    public function test_per_cnae_traz_a_resposta_da_pergunta_desenvolvida_no_local(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $request = $this->emAnaliseComCnaes(['4712100']);
+        $request->respostasTratamento = [11 => true];
+
+        $record = $this->service()->preAnalisar($request);
+        $local = $record->per_cnae[0]['pergunta_local'] ?? null;
+
+        $this->assertIsArray($local);
+        $this->assertFalse($local['pendente']);
+        $this->assertSame(11, $local['numero']);
+        $this->assertStringContainsString('desenvolvida no local', mb_strtolower((string) $local['pergunta']));
+        $this->assertSame('Sim, a atividade será desenvolvida no local.', $local['resposta']);
+    }
+
+    public function test_ficha_repete_a_resposta_da_simulacao_mesmo_em_registro_antigo(): void
+    {
+        $this->seedTratamentoPlanilha();
+
+        $request = ViabilityRequest::factory()->protocoled()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'simulation_snapshot' => [
+                'respostas_tratamento_por_cnae' => [
+                    '6622300' => [11 => false],
+                ],
+            ],
+        ]);
+        $cnae = Cnae::factory()->create(['code' => '6622300']);
+        $request->cnaes()->attach($cnae->id, ['is_primary' => true]);
+
+        $record = AnalysisRecord::factory()->create([
+            'viability_request_id' => $request->id,
+            'revision' => 1,
+            'per_cnae' => [[
+                'cnae' => '6622300',
+                'cnae_formatado' => '6622-3/00',
+                'status_sugerido' => 'deferida',
+                'status_escolhido' => 'deferida',
+            ]],
+        ]);
+        $record->load('viabilityRequest');
+        $record->viabilityRequest->respostasTratamento = [];
+
+        $payload = (new AnalysisRecordResource($record))->resolve();
+        $local = $payload['per_cnae'][0]['pergunta_local'] ?? null;
+
+        $this->assertIsArray($local);
+        $this->assertFalse($local['pendente']);
+        $this->assertSame(11, $local['numero']);
+        $this->assertSame('Não, no local funcionará o escritório da empresa.', $local['resposta']);
     }
 
     public function test_refaz_rascunho_vazio_degradado_com_o_motor(): void

@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\AnalysisRecord;
 use App\Services\Analise\JustificativaFundamentadaComposer;
+use App\Services\Analise\PerguntaLocalFicha;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -58,11 +59,18 @@ class AnalysisRecordResource extends JsonResource
     {
         $itens = array_values((array) ($this->per_cnae ?? []));
         $composer = app(JustificativaFundamentadaComposer::class);
+        $local = app(PerguntaLocalFicha::class);
+        $this->resource->loadMissing('viabilityRequest');
+        $solicitacao = $this->viabilityRequest;
         $porCnae = is_array($this->engine_snapshot['por_cnae'] ?? null)
             ? $this->engine_snapshot['por_cnae']
             : [];
 
-        return array_map(function (array $item) use ($composer, $porCnae): array {
+        return array_map(function (array $item) use ($composer, $porCnae, $local, $solicitacao): array {
+            if ($solicitacao !== null) {
+                $item['pergunta_local'] = $local->para($solicitacao, (string) ($item['cnae'] ?? ''));
+            }
+
             $consulta = $this->consultaSnapshotDoCnae($porCnae, (string) ($item['cnae'] ?? ''));
 
             if ($consulta === null) {
