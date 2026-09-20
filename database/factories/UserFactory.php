@@ -98,6 +98,14 @@ class UserFactory extends Factory
     }
 
     /**
+     * Assign the apoio role (role must be seeded first).
+     */
+    public function apoio(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('apoio'));
+    }
+
+    /**
      * Assign the gestor role (role must be seeded first).
      */
     public function gestor(): static

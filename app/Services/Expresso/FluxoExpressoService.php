@@ -15,6 +15,7 @@ use App\Events\EncaminhadoParaAnalise;
 use App\Events\ResultadoEmitido;
 use App\Models\Cnae;
 use App\Models\ExpressoQueda;
+use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -319,8 +320,10 @@ class FluxoExpressoService
      * APÓS o commit, dispara EncaminhadoParaAnalise (gatilho da pré-análise
      * HU-140, 10-08 — listener AUTO-DESCOBERTO): só encaminhamentos efetivados
      * geram efeitos. A auditoria autoritativa já está gravada na transação e NÃO
-     * depende do evento (lição das Fases 8/9). O setor/analista ficam nulos — a
-     * distribuição (HU-080/081) é uma ação posterior na caixa do setor.
+     * depende do evento (lição das Fases 8/9). O processo cai na caixa do setor
+     * de triagem parametrizado (analise.setor_triagem_id — elo motor → caixa);
+     * o ANALISTA fica nulo — a distribuição (HU-080/081) é uma ação humana
+     * posterior na caixa do setor (apoio/gestor distribui, analista assume).
      */
     private function encaminharAnalise(
         ViabilityRequest $request,
@@ -341,6 +344,7 @@ class FluxoExpressoService
             // Colunas fora do fillable → forceFill (escrita controlada pelo serviço).
             $startedAt = now();
             $request->forceFill([
+                'sector_id' => $this->setorTriagemId(),
                 'analysis_stage' => AnalysisStage::Distribuicao,
                 'analysis_stage_started_at' => $startedAt,
                 'analysis_due_at' => $this->sla->dueAtFor(AnalysisStage::Distribuicao, $startedAt),
@@ -356,6 +360,7 @@ class FluxoExpressoService
                     'protocol_number' => $request->protocol_number,
                     'resultado' => 'analise',
                     'motivo' => $reason,
+                    'sector_id' => $request->sector_id,
                     'consolidado' => $resolved?->consolidado,
                     'por_cnae' => $resolved !== null ? $this->perCnaeResumo($resolved) : [],
                 ],
@@ -372,6 +377,29 @@ class FluxoExpressoService
         EncaminhadoParaAnalise::dispatch($request);
 
         return DecisionResult::paraAnalise($reason);
+    }
+
+    /**
+     * Setor de entrada da análise técnica (HU-014 — analise.setor_triagem_id):
+     * enquanto o roteamento automático por CNAE/território não é definido pela
+     * SEDUR, o motor deposita o processo na caixa do setor parametrizado. Sem
+     * parâmetro — ou apontando para setor inexistente/inativo — o processo
+     * segue SEM caixa (degradação honesta: nunca cair numa caixa inválida; a
+     * atribuição manual na caixa do setor continua valendo).
+     */
+    private function setorTriagemId(): ?int
+    {
+        $id = Settings::get('analise.setor_triagem_id');
+
+        if ($id === null) {
+            return null;
+        }
+
+        $id = (int) $id;
+
+        return Sector::query()->whereKey($id)->where('active', true)->exists()
+            ? $id
+            : null;
     }
 
     /**

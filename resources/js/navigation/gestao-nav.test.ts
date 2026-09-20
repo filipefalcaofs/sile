@@ -34,6 +34,19 @@ describe('IA da sidebar de Gestão', () => {
         expect(groupOfHref('/gestao/processos/fila')?.id).toBe('operacao');
         expect(groupOfHref('/gestao/processos')?.id).toBe('operacao');
         expect(groupOfHref('/gestao/atendimento')?.id).toBe('operacao');
+        expect(groupOfHref('/gestao/caixa-setor')?.id).toBe('operacao');
+    });
+
+    it('mostra a caixa do setor para quem analisa ou tramita (apoio)', () => {
+        const doAnalista = filterGestaoNav(['analisar-processos']);
+        const doApoio = filterGestaoNav(['distribuir-processos']);
+
+        const hrefsDe = (groups: ReturnType<typeof filterGestaoNav>) =>
+            groups.flatMap((group) => group.items.map((item) => item.href));
+
+        expect(hrefsDe(doAnalista)).toContain('/gestao/caixa-setor');
+        expect(hrefsDe(doApoio)).toContain('/gestao/caixa-setor');
+        expect(hrefsDe(filterGestaoNav(['consultar-solicitacoes']))).not.toContain('/gestao/caixa-setor');
     });
 
     it('coloca a planilha de regras no grupo Regras, antes das simulações', () => {

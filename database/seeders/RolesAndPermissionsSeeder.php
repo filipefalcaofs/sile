@@ -72,6 +72,17 @@ class RolesAndPermissionsSeeder extends Seeder
                 'emitir-tvl',
                 'enviar-tvl-analise',
             ]);
+        // Apoio (tramitação): distribui os processos da caixa do setor para um
+        // analista específico, sem analisar — a tramitação é dele, a análise não.
+        Role::firstOrCreate(['name' => 'apoio', 'guard_name' => 'web'])
+            ->givePermissionTo([
+                'acessar-gestao',
+                'consultar-cnaes',
+                'consultar-territorio',
+                'consultar-louos',
+                'consultar-solicitacoes',
+                'distribuir-processos',
+            ]);
         Role::firstOrCreate(['name' => 'gestor', 'guard_name' => 'web'])
             ->givePermissionTo([
                 'acessar-gestao',

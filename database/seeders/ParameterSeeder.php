@@ -471,6 +471,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:99'],
                 'description' => 'Percentual do prazo a partir do qual o semáforo do SLA fica amarelo',
             ],
+            'analise.setor_triagem_id' => [
+                'group' => 'analise',
+                'type' => 'integer',
+                'default_value' => null,
+                'validation_rules' => ['nullable', 'integer', 'exists:sectors,id'],
+                'description' => 'Setor cuja caixa recebe os processos que o motor encaminha à análise técnica; vazio, o processo fica sem caixa até a atribuição manual (roteamento por CNAE/território é pendência SEDUR)',
+            ],
             'analise.pendencia.prazo_resposta_dias' => [
                 'group' => 'analise',
                 'type' => 'integer',

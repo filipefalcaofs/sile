@@ -44,6 +44,14 @@ class CaixaSetorTest extends TestCase
         return $analista;
     }
 
+    private function apoioDoSetor(Sector $sector): User
+    {
+        $apoio = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+        $apoio->sectors()->attach($sector);
+
+        return $apoio;
+    }
+
     private function processoNaCaixa(Sector $sector): ViabilityRequest
     {
         $request = ViabilityRequest::factory()->create();
@@ -119,9 +127,64 @@ class CaixaSetorTest extends TestCase
         $props = $response->viewData('page')['props'];
 
         $this->assertTrue($props['podeDistribuir'], 'O gestor (distribuir-processos) deve poder distribuir.');
+        $this->assertTrue($props['podeAssumir'], 'O gestor (analisar-processos) também pode assumir.');
 
         $analistaIds = collect($props['analistas'])->pluck('id')->all();
         $this->assertContains($analista->id, $analistaIds, 'A lista de analistas do setor deve alimentar o seletor de distribuição.');
+    }
+
+    public function test_apoio_ve_a_caixa_e_distribui_mas_nao_assume(): void
+    {
+        // Perfil Apoio (tramitação): vê a caixa do setor e distribui a um
+        // analista específico, mas NÃO assume — assumir é de quem analisa.
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analista = $this->analistaDoSetor($setor);
+        $processo = $this->processoNaCaixa($setor);
+
+        $response = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertOk();
+
+        $props = $response->viewData('page')['props'];
+
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+        $this->assertContains($processo->id, $ids, 'O apoio deve ver os processos da caixa do seu setor.');
+        $this->assertTrue($props['podeDistribuir'], 'O apoio (distribuir-processos) deve poder distribuir.');
+        $this->assertFalse($props['podeAssumir'], 'O apoio (sem analisar-processos) não assume processos.');
+
+        $analistaIds = collect($props['analistas'])->pluck('id')->all();
+        $this->assertContains($analista->id, $analistaIds, 'O seletor de distribuição do apoio lista os analistas do setor.');
+    }
+
+    public function test_apoio_distribui_processo_a_um_analista_do_setor(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analista = $this->analistaDoSetor($setor);
+        $processo = $this->processoNaCaixa($setor);
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $analista->id,
+            ])
+            ->assertSessionHas('status');
+
+        $this->assertSame($analista->id, $processo->fresh()->assigned_user_id);
+    }
+
+    public function test_apoio_nao_pode_assumir_processo(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $processo = $this->processoNaCaixa($setor);
+
+        $this->actingAs($apoio, 'gestao')
+            ->post("/gestao/caixa-setor/{$processo->id}/assumir")
+            ->assertForbidden();
+
+        $this->assertNull($processo->fresh()->assigned_user_id);
     }
 
     public function test_index_do_analista_nao_expoe_distribuicao(): void
@@ -137,12 +200,14 @@ class CaixaSetorTest extends TestCase
         $props = $response->viewData('page')['props'];
 
         $this->assertFalse($props['podeDistribuir'], 'O analista (sem distribuir-processos) não distribui — só assume.');
+        $this->assertTrue($props['podeAssumir'], 'O analista (analisar-processos) pode assumir.');
         $this->assertSame([], $props['analistas'], 'Sem distribuição, não há lista de analistas no payload (minimização).');
     }
 
-    public function test_index_exige_analisar_processos_e_audita_o_403(): void
+    public function test_index_exige_analisar_ou_distribuir_processos_e_audita_o_403(): void
     {
-        // Usuário acessa a gestão mas NÃO tem analisar-processos (CA-04).
+        // Usuário acessa a gestão mas NÃO tem analisar-processos nem
+        // distribuir-processos (CA-04) — a caixa é de quem analisa ou tramita.
         $semPermissao = User::factory()->withAcceptedLgpdTerm()->create();
         $semPermissao->givePermissionTo('acessar-gestao');
 

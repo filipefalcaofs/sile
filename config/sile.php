@@ -172,6 +172,10 @@ return [
             'analise_dias' => 10,
             'semaforo' => ['amarelo_percentual' => 80],
         ],
+        // Setor cuja caixa recebe os processos encaminhados à análise pelo
+        // motor (HU-014 — analise.setor_triagem_id). Null = sem caixa
+        // automática; a atribuição manual do gestor/apoio segue valendo.
+        'setor_triagem_id' => null,
         'pendencia' => ['prazo_resposta_dias' => 15, 'prazo_resposta_horas_uteis' => 48],
         'escritorio_virtual' => [
             'cnae_gatilho_sede' => '8211-3/00',

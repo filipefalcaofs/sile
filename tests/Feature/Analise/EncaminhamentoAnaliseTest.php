@@ -14,8 +14,10 @@ use App\Models\Activity;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
+use App\Models\Parameter;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
+use App\Models\Sector;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
@@ -175,11 +177,69 @@ class EncaminhamentoAnaliseTest extends TestCase
             Carbon::now()->addDays(2)->toDateTimeString(),
             $fresh->analysis_due_at->toDateTimeString(),
         );
-        // A distribuição (setor/analista) é a Task 2 — ainda não atribuído.
+        // Sem setor de triagem parametrizado (analise.setor_triagem_id), o
+        // processo fica sem caixa — a atribuição manual segue valendo. O
+        // analista só é fixado depois, na distribuição/assunção (HU-080/081).
         $this->assertNull($fresh->sector_id);
         $this->assertNull($fresh->assigned_user_id);
 
         Carbon::setTestNow();
+    }
+
+    public function test_encaminhamento_atribui_o_setor_de_triagem_parametrizado(): void
+    {
+        // Elo motor → caixa do setor: com analise.setor_triagem_id configurado
+        // (HU-014), o encaminhamento deposita o processo na caixa do setor —
+        // é daí que o Apoio tramita para um analista específico. O analista
+        // NÃO é atribuído pelo motor: a distribuição é humana.
+        Event::fake([EncaminhadoParaAnalise::class]);
+
+        $setorTriagem = Sector::factory()->create(['active' => true]);
+        Parameter::factory()->create([
+            'key' => 'analise.setor_triagem_id',
+            'group' => 'analise',
+            'type' => 'integer',
+            'value' => (string) $setorTriagem->id,
+            'default_value' => null,
+            'validation_rules' => ['nullable', 'integer', 'exists:sectors,id'],
+        ]);
+
+        $this->fakeBairroSemZona();
+        $this->classificarMunicipal('2222222', RiscoMunicipal::BaixoA);
+        $request = $this->protocoladaComCnaes(['2222222']);
+
+        $this->service()->decide($request);
+
+        $fresh = $request->fresh();
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $fresh->status);
+        $this->assertSame($setorTriagem->id, $fresh->sector_id);
+        $this->assertNull($fresh->assigned_user_id);
+    }
+
+    public function test_encaminhamento_ignora_setor_parametrizado_inexistente_ou_inativo(): void
+    {
+        // Degradação honesta: parâmetro apontando para setor inexistente ou
+        // inativo NÃO joga o processo numa caixa inválida — fica sem caixa,
+        // como quando não há parâmetro.
+        Event::fake([EncaminhadoParaAnalise::class]);
+
+        $setorInativo = Sector::factory()->create(['active' => false]);
+        Parameter::factory()->create([
+            'key' => 'analise.setor_triagem_id',
+            'group' => 'analise',
+            'type' => 'integer',
+            'value' => (string) $setorInativo->id,
+            'default_value' => null,
+            'validation_rules' => ['nullable', 'integer', 'exists:sectors,id'],
+        ]);
+
+        $this->fakeBairroSemZona();
+        $this->classificarMunicipal('2222222', RiscoMunicipal::BaixoA);
+        $request = $this->protocoladaComCnaes(['2222222']);
+
+        $this->service()->decide($request);
+
+        $this->assertNull($request->fresh()->sector_id);
     }
 
     public function test_encaminhamento_dispara_evento_e_mantem_auditoria_sincrona(): void

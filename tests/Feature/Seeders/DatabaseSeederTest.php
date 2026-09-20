@@ -46,7 +46,7 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        $this->assertSame(4, Role::query()->count());
+        $this->assertSame(5, Role::query()->count());
         // 33 permissões (HU-013): as 17 base (sem consultar-risco/manter-risco,
         // consolidadas em consultar-cnaes/manter-cnaes) + as 5 da análise técnica
         // (analisar-processos, distribuir-processos, emitir-tvl,
@@ -92,7 +92,9 @@ class DatabaseSeederTest extends TestCase
         // item 3.4: geo.zona.atributos_nome).
         // + 3 da Fase 5 (janela de duplicidade + pesos e cortes da auditoria
         // preditiva).
-        $this->assertSame(122, Parameter::query()->count());
+        // + 1 do setor de triagem da análise (analise.setor_triagem_id — elo
+        // motor → caixa do setor, 2026-09-20).
+        $this->assertSame(123, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -329,6 +331,21 @@ class DatabaseSeederTest extends TestCase
         $this->assertTrue($gestor->hasRole('gestor'));
         $this->assertTrue($gestor->sectors()->whereKey($setor->id)->exists());
 
+        // Apoio dev (tramitação): distribui da caixa do setor ao analista,
+        // sem analisar — torna o fluxo motor → caixa → apoio → analista
+        // navegável de ponta a ponta no dev.
+        $apoio = User::query()->where('email', 'apoio@sile.dev')->first();
+        $this->assertNotNull($apoio, 'Esperava o apoio dev (apoio@sile.dev).');
+        $this->assertTrue($apoio->hasRole('apoio'));
+        $this->assertFalse($apoio->hasPermissionTo('analisar-processos'));
+        $this->assertTrue($apoio->sectors()->whereKey($setor->id)->exists());
+
+        // Elo motor → caixa: em dev o setor padrão é o setor de triagem
+        // parametrizado (em produção o administrador aponta pela interface).
+        $triagem = Parameter::query()->where('key', 'analise.setor_triagem_id')->first();
+        $this->assertNotNull($triagem);
+        $this->assertSame((string) $setor->id, $triagem->value);
+
         // Biblioteca de textos-padrão do parecer (HU-085): exemplos por categoria
         // (deferimento/indeferimento/condicionante/pendência), ativos e na versão
         // inicial — substituíveis pela SEDUR sem deploy (dados versionados).
@@ -349,6 +366,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, Sector::query()->where('name', 'Análise Locacional')->count());
         $this->assertSame(1, User::query()->where('email', 'analista@sile.dev')->count());
         $this->assertSame(1, User::query()->where('email', 'gestor@sile.dev')->count());
+        $this->assertSame(1, User::query()->where('email', 'apoio@sile.dev')->count());
         $analistaId = User::query()->where('email', 'analista@sile.dev')->value('id');
         $setorId = Sector::query()->where('name', 'Análise Locacional')->value('id');
         $this->assertSame(
@@ -361,9 +379,9 @@ class DatabaseSeederTest extends TestCase
 
         $this->assertSame(1, User::query()->where('email', 'admin@sile.dev')->count());
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
-        $this->assertSame(4, Role::query()->count());
+        $this->assertSame(5, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(122, Parameter::query()->count());
+        $this->assertSame(123, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

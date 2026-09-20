@@ -35,7 +35,7 @@ class ManageRolesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/perfis/index')
-                ->has('roles', 4)
+                ->has('roles', 5)
                 ->has('roles.0', fn (Assert $item) => $item
                     ->hasAll(['id', 'name', 'permissions', 'users_count', 'structural']))
                 ->where('roles.0.name', 'administrador')

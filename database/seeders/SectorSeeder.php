@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
+use App\Models\Parameter;
 use App\Models\Sector;
 use App\Models\User;
 use App\Support\DemoMode;
@@ -44,10 +45,20 @@ class SectorSeeder extends Seeder
 
         $analista = $this->seedGestaoUser('analista@sile.dev', 'Analista Viabiliza', '39053344705', 'analista');
         $gestor = $this->seedGestaoUser('gestor@sile.dev', 'Gestor Viabiliza', '48795515006', 'gestor');
+        $apoio = $this->seedGestaoUser('apoio@sile.dev', 'Apoio Viabiliza', '71602913013', 'apoio');
 
-        // Vincula ambos ao setor (HU-138 RN-005): o gestor distribui e o analista
-        // assume os processos da caixa.
-        $sector->analysts()->syncWithoutDetaching([$analista->id, $gestor->id]);
+        // Vincula os três ao setor (HU-138 RN-005): o apoio/gestor distribuem e
+        // o analista assume os processos da caixa.
+        $sector->analysts()->syncWithoutDetaching([$analista->id, $gestor->id, $apoio->id]);
+
+        // Elo motor → caixa do setor (analise.setor_triagem_id): em dev o setor
+        // padrão recebe os processos que o motor encaminha à análise, tornando o
+        // fluxo caixa → apoio → analista navegável. Só preenche quando VAZIO —
+        // valor administrado pela interface (HU-014) é preservado no re-seed.
+        Parameter::query()
+            ->where('key', 'analise.setor_triagem_id')
+            ->whereNull('value')
+            ->update(['value' => (string) $sector->id]);
     }
 
     /**

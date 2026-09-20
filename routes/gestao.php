@@ -600,14 +600,18 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         });
 
         // Caixa do setor (HU-080/081): a fila da distribuição da análise técnica.
-        // O analista vê e ASSUME os processos em_analise do(s) seu(s) setor(es)
-        // (analisar-processos); o gestor DISTRIBUI — single ou lote (RN-007) — a
-        // um analista do setor (distribuir-processos). A caixa NÃO tira o processo
-        // do setor (RN-004) e o 403 é auditado no ponto único (bootstrap/app.php).
-        // Telas em 10-16; ÚNICO editor de rotas da Wave 3.
+        // Veem a caixa quem ANALISA (analisar-processos) e quem TRAMITA
+        // (distribuir-processos — gestor e apoio). O analista ASSUME os
+        // processos em_analise do(s) seu(s) setor(es); o gestor/apoio DISTRIBUI
+        // — single ou lote (RN-007) — a um analista do setor. A caixa NÃO tira
+        // o processo do setor (RN-004) e o 403 é auditado no ponto único
+        // (bootstrap/app.php). Telas em 10-16; ÚNICO editor de rotas da Wave 3.
         Route::prefix('caixa-setor')->name('caixa-setor.')->group(function () {
-            Route::middleware('permission:analisar-processos')->group(function () {
+            Route::middleware('permission:analisar-processos|distribuir-processos')->group(function () {
                 Route::get('/', [CaixaSetorController::class, 'index'])->name('index');
+            });
+
+            Route::middleware('permission:analisar-processos')->group(function () {
                 Route::post('{viabilityRequest}/assumir', [CaixaSetorController::class, 'assumir'])->name('assumir');
             });
 

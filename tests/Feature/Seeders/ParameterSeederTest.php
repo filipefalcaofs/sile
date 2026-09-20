@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(122, Parameter::query()->count());
+        $this->assertSame(123, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'ui'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -610,6 +610,17 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('imagem', $modo->default_value);
         $this->assertSame(['required', 'in:imagem,nenhuma'], $modo->validation_rules);
         $this->assertNull($modo->value);
+
+        // Elo motor → caixa do setor: nasce SEM valor (o admin aponta o setor
+        // de triagem pela interface); vazio, o encaminhamento não atribui caixa.
+        $triagem = Parameter::query()->where('key', 'analise.setor_triagem_id')->first();
+        $this->assertNotNull($triagem);
+        $this->assertSame('analise', $triagem->group);
+        $this->assertSame('integer', $triagem->type);
+        $this->assertNull($triagem->default_value);
+        $this->assertSame(['nullable', 'integer', 'exists:sectors,id'], $triagem->validation_rules);
+        $this->assertNull($triagem->value);
+        $this->assertNull($triagem->typedValue());
     }
 
     public function test_seeder_registra_parametros_do_envio_para_analise(): void
@@ -985,6 +996,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(122, Parameter::query()->count());
+        $this->assertSame(123, Parameter::query()->count());
     }
 }

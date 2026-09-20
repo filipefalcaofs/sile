@@ -49,6 +49,7 @@ interface CaixaSetorIndexProps {
     };
     perPageOptions: number[];
     podeDistribuir: boolean;
+    podeAssumir: boolean;
     analistas: Analista[];
 }
 
@@ -78,6 +79,7 @@ export default function CaixaSetorIndex({
     filtros,
     perPageOptions,
     podeDistribuir,
+    podeAssumir,
     analistas,
 }: CaixaSetorIndexProps) {
     const linhas = Array.isArray(processos?.data) ? processos.data : [];
@@ -182,13 +184,15 @@ export default function CaixaSetorIndex({
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <div className="flex justify-end gap-2">
-                    <TableAction
-                        tone="brand"
-                        onClick={() => assumir(item)}
-                        disabled={assumindoId === item.id}
-                        icon={<UserCircleIcon className="size-4.5" />}
-                        label="Assumir processo"
-                    />
+                    {podeAssumir && (
+                        <TableAction
+                            tone="brand"
+                            onClick={() => assumir(item)}
+                            disabled={assumindoId === item.id}
+                            icon={<UserCircleIcon className="size-4.5" />}
+                            label="Assumir processo"
+                        />
+                    )}
                     {podeDistribuir && (
                         <TableAction
                             tone="neutral"
@@ -216,7 +220,7 @@ export default function CaixaSetorIndex({
             <Card>
                 <CardHeader
                     title="Processos para distribuição"
-                    description="Processos em análise dos seus setores, priorizados por prazo. O analista assume um processo; o gestor distribui a um analista do setor. Assumir ou distribuir fixa o responsável — não retira o processo do setor."
+                    description="Processos em análise dos seus setores, priorizados por prazo. O analista assume um processo; o apoio ou o gestor distribui a um analista do setor. Assumir ou distribuir fixa o responsável — não retira o processo do setor."
                 />
                 <CardContent>
                     <div className="space-y-5">

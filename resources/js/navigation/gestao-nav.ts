@@ -24,8 +24,13 @@ export interface GestaoNavItem {
     name: string;
     href: string;
     icon: GestaoNavIcon;
-    /** `null` = visível para qualquer usuário autenticado na gestão. */
-    permission: string | null;
+    /**
+     * `null` = visível para qualquer usuário autenticado na gestão.
+     * Array = visível para quem tem QUALQUER uma das permissões (anyOf) —
+     * ex.: a caixa do setor é de quem analisa (analisar-processos) e de
+     * quem tramita (distribuir-processos — gestor/apoio).
+     */
+    permission: string | string[] | null;
 }
 
 export interface GestaoNavGroup {
@@ -38,7 +43,7 @@ export interface DestinoComando {
     label: string;
     grupo: string;
     href: string;
-    permissao: string | null;
+    permissao: string | string[] | null;
 }
 
 export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
@@ -48,6 +53,12 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
         items: [
             { name: 'Painel', href: '/gestao', icon: 'grid', permission: null },
             { name: 'Fila de trabalho', href: '/gestao/processos/fila', icon: 'list', permission: 'analisar-processos' },
+            {
+                name: 'Caixa do setor',
+                href: '/gestao/caixa-setor',
+                icon: 'group',
+                permission: ['analisar-processos', 'distribuir-processos'],
+            },
             { name: 'Processos', href: '/gestao/processos', icon: 'file', permission: 'consultar-solicitacoes' },
             { name: 'Atendimento presencial', href: '/gestao/atendimento', icon: 'user', permission: 'atendimento-presencial' },
             {
@@ -268,10 +279,21 @@ export function groupOfHref(href: string): GestaoNavGroup | undefined {
     return GESTAO_NAV_GROUPS.find((group) => group.items.some((item) => item.href === href));
 }
 
+/** Item visível quando o usuário tem a permissão — ou QUALQUER uma da lista (anyOf). */
+function permiteItem(item: GestaoNavItem, permissions: readonly string[]): boolean {
+    if (item.permission === null) {
+        return true;
+    }
+
+    const exigidas = Array.isArray(item.permission) ? item.permission : [item.permission];
+
+    return exigidas.some((permission) => permissions.includes(permission));
+}
+
 export function filterGestaoNav(permissions: readonly string[]): GestaoNavGroup[] {
     return GESTAO_NAV_GROUPS.map((group) => ({
         ...group,
-        items: group.items.filter((item) => item.permission === null || permissions.includes(item.permission)),
+        items: group.items.filter((item) => permiteItem(item, permissions)),
     })).filter((group) => group.items.length > 0);
 }
 
@@ -331,6 +353,12 @@ export function assertGestaoNavHealth(groups: readonly GestaoNavGroup[] = GESTAO
 
     if (fila?.id !== 'operacao') {
         erros.push('Fila de trabalho deve ficar em Operação.');
+    }
+
+    const caixaSetor = groupOfHref('/gestao/caixa-setor');
+
+    if (caixaSetor?.id !== 'operacao') {
+        erros.push('Caixa do setor deve ficar em Operação.');
     }
 
     for (const group of groups) {

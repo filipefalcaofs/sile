@@ -19,12 +19,12 @@ use Inertia\Response;
 /**
  * Caixa do setor da análise técnica (HU-080/081): a fila da distribuição. O
  * analista vê e ASSUME os processos em_analise do(s) seu(s) setor(es)
- * (analisar-processos); o gestor DISTRIBUI — single ou lote (RN-007) — a um
- * analista do setor (distribuir-processos). A caixa NÃO tira o processo do setor
- * (RN-004): distribuir/assumir só fixam o responsável. A delegação real é do
- * DistribuicaoService (SLA recalculado + auditoria síncrona por processo); 403
- * é auditado no ponto único (bootstrap/app.php). Index server-driven espelhando
- * o ResultadoExpressoController; a tela é construída em 10-16.
+ * (analisar-processos); o gestor e o apoio (tramitação) DISTRIBUEM — single ou
+ * lote (RN-007) — a um analista do setor (distribuir-processos). A caixa NÃO
+ * tira o processo do setor (RN-004): distribuir/assumir só fixam o responsável.
+ * A delegação real é do DistribuicaoService (SLA recalculado + auditoria
+ * síncrona por processo); 403 é auditado no ponto único (bootstrap/app.php).
+ * Index server-driven espelhando o ResultadoExpressoController; a tela é 10-16.
  */
 class CaixaSetorController extends Controller
 {
@@ -73,10 +73,13 @@ class CaixaSetorController extends Controller
                 'analysis_due_at' => $processo->analysis_due_at?->toIso8601String(),
             ]);
 
-        // Só o gestor (distribuir-processos) distribui — e só para ele faz sentido
-        // carregar a lista de analistas do(s) setor(es) que alimenta o seletor. O
-        // analista apenas assume, então recebe a lista vazia (minimização do payload).
+        // Só quem tramita (distribuir-processos — gestor/apoio) distribui — e só
+        // para ele faz sentido carregar a lista de analistas do(s) setor(es) que
+        // alimenta o seletor. O analista apenas assume, então recebe a lista
+        // vazia (minimização do payload). Assumir é de quem analisa
+        // (analisar-processos) — o apoio tramita, mas não assume.
         $podeDistribuir = $request->user()->can('distribuir-processos');
+        $podeAssumir = $request->user()->can('analisar-processos');
 
         $analistas = $podeDistribuir
             ? User::query()
@@ -102,6 +105,7 @@ class CaixaSetorController extends Controller
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'podeDistribuir' => $podeDistribuir,
+            'podeAssumir' => $podeAssumir,
             'analistas' => $analistas,
         ]);
     }

@@ -17,7 +17,7 @@ class RolesAndPermissionsSeederTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        foreach (['cidadao', 'analista', 'gestor', 'administrador'] as $role) {
+        foreach (['cidadao', 'analista', 'apoio', 'gestor', 'administrador'] as $role) {
             $this->assertSame($role, Role::findByName($role, 'web')->name);
         }
 
@@ -185,8 +185,46 @@ class RolesAndPermissionsSeederTest extends TestCase
 
         $this->assertTrue(User::factory()->cidadao()->create()->hasRole('cidadao'));
         $this->assertTrue(User::factory()->analista()->create()->hasRole('analista'));
+        $this->assertTrue(User::factory()->apoio()->create()->hasRole('apoio'));
         $this->assertTrue(User::factory()->gestor()->create()->hasRole('gestor'));
         $this->assertTrue(User::factory()->administrador()->create()->hasRole('administrador'));
+    }
+
+    public function test_papel_apoio_tramita_sem_analisar(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        // Apoio (tramitação): distribui os processos da caixa do setor para um
+        // analista específico, mas NÃO analisa — sem analisar-processos, emitir
+        // TVL, malha fina ou manutenção de setores.
+        $apoio = Role::findByName('apoio', 'web');
+
+        foreach ([
+            'acessar-gestao',
+            'consultar-cnaes',
+            'consultar-territorio',
+            'consultar-louos',
+            'consultar-solicitacoes',
+            'distribuir-processos',
+        ] as $permission) {
+            $this->assertTrue(
+                $apoio->hasPermissionTo($permission),
+                "O papel apoio deve ter {$permission}.",
+            );
+        }
+
+        foreach ([
+            'analisar-processos',
+            'emitir-tvl',
+            'encaminhar-malha-fina',
+            'enviar-tvl-analise',
+            'manter-setores',
+        ] as $permission) {
+            $this->assertFalse(
+                $apoio->hasPermissionTo($permission),
+                "O papel apoio não deve ter {$permission}.",
+            );
+        }
     }
 
     public function test_papeis_recebem_permissoes_da_analise_tecnica(): void
@@ -415,7 +453,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        $this->assertSame(4, Role::query()->count());
+        $this->assertSame(5, Role::query()->count());
         $this->assertSame(33, Permission::query()->count());
     }
 
