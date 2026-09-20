@@ -318,6 +318,33 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertSame(0, ViabilityRequest::query()->count());
     }
 
+    public function test_43747_com_11a_vedado_indefere_mesmo_com_galpao(): void
+    {
+        $this->seedPlanilhaTratamento();
+        $this->seed([LouosQuadro10Seeder::class, LouosQuadro11Seeder::class]);
+
+        $entrada = $this->entradaQueFechaPendencias('43747');
+
+        $this->post('/gestao/risco/simulacao-regin', $entrada)
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/risco/simulacao-regin')
+                ->where('pendencias', null)
+                ->where('relatorio.codigo', '43747')
+                ->where('relatorio.status', ViabilityRequestStatus::Indeferida->value)
+                ->where('relatorio.tvl', null));
+
+        $processo = ViabilityRequest::query()->first();
+
+        $this->assertNotNull($processo);
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $processo->status);
+        $this->assertNull($processo->decision?->tvl_product_number);
+        $this->assertSame(
+            ResultadoViabilidade::NaoPermitido->value,
+            app(SolicitacaoViabilityResolver::class)->resolve($processo)->consolidado,
+        );
+    }
+
     public function test_33072_com_resposta_e_territorio_do_catalogo_defere(): void
     {
         $this->seedPlanilhaTratamento();

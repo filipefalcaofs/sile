@@ -220,6 +220,7 @@ class RiscoClassificationService
     private function resolveEncaminhamento(array $municipal, array $sanitario, RiscoInput $input, ?TratamentoRamoResult $ramo): array
     {
         $dimensaoDecisiva = (string) Settings::get('risco.dimensao_tvl', 'municipal');
+        $nivel = null;
 
         if ($ramo?->resolvido()) {
             $fluxo = $ramo->fluxo === 'expresso' ? Fluxo::Expresso->value : Fluxo::Analise->value;
@@ -227,10 +228,12 @@ class RiscoClassificationService
                 ? "Nível {$ramo->risco} (planilha vigente) elegível ao fluxo expresso"
                 : "Nível {$ramo->risco} (planilha vigente) encaminhado para análise técnica";
             $tll = $ramo->tll;
+            $nivel = $ramo->risco;
         } elseif ($dimensaoDecisiva === 'sanitario') {
             $statusDecisivo = $sanitario['status'];
             $nivelDecisivo = $sanitario['nivel_final'] ?? null;
             $tll = null;
+            $nivel = $nivelDecisivo;
 
             if ($statusDecisivo === RiscoResult::STATUS_NAO_CLASSIFICADO || $nivelDecisivo === null) {
                 $fluxo = Fluxo::Analise->value;
@@ -247,6 +250,7 @@ class RiscoClassificationService
             $statusDecisivo = $municipal['status'];
             $nivelDecisivo = $municipal['nivel'] ?? null;
             $tll = null;
+            $nivel = $nivelDecisivo;
 
             if ($statusDecisivo === RiscoResult::STATUS_NAO_CLASSIFICADO || $nivelDecisivo === null) {
                 $fluxo = Fluxo::Analise->value;
@@ -270,6 +274,7 @@ class RiscoClassificationService
 
         return [
             'fluxo' => $fluxo,
+            'nivel' => $nivel,
             'dimensao_decisiva' => $ramo?->resolvido() ? 'risco_tratamento' : $dimensaoDecisiva,
             'motivo' => $motivo,
             'gatilhos_acionados' => $gatilhosAcionados,

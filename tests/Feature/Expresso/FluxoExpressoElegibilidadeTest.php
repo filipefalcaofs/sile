@@ -29,7 +29,7 @@ use Tests\TestCase;
  *
  *  - toggle features.fluxo_expresso desligado → em_analise (comunicado);
  *  - algum CNAE encaminhado à análise (semi-expresso) → em_analise (motivo
- *    auditado), independentemente do veredito locacional;
+ *    auditado), depois de o enquadramento locacional já ter sido permitido;
  *  - CRÍTICO/anti-fachada: CNAE expresso porém SEM zona (veredito consolidado
  *    pendente) → em_analise, SEM criar ViabilityDecision e SEM disparar
  *    ResultadoEmitido — o motor NÃO defere/indefere sem a base oficial (Quadro
@@ -130,9 +130,8 @@ class FluxoExpressoElegibilidadeTest extends TestCase
 
     public function test_cnae_em_analise_encaminha_semi_expresso_auditado_sem_evento(): void
     {
-        // HU-073 RN-008: basta um CNAE de alto risco (encaminhado à análise) para
-        // o conjunto sair do expresso (semi-expresso) — motivo auditado, sem
-        // decisão e sem evento.
+        // HU-073 RN-008: CNAE de alto risco, sem veto locacional (zona
+        // ausente = pendente), sai do expresso — motivo auditado, sem decisão.
         $this->fakeBairroSemZona();
         $this->classificarMunicipal('3333333', RiscoMunicipal::Alto);
         Event::fake([ResultadoEmitido::class]);

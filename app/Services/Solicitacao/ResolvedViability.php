@@ -57,6 +57,26 @@ final readonly class ResolvedViability
     }
 
     /**
+     * RN-041-B: verdadeiro quando algum CNAE consolidou nível ALTO de risco —
+     * pelo CNAE (Decreto/planilha) ou por pergunta condicional que o eleve.
+     * Alto risco nunca é decidido automaticamente: vai à análise mesmo com
+     * veredito locacional permitido ou não permitido. Gatilhos não contam:
+     * o nível é o do ramo/dimensão decisiva, não o fluxo roteado.
+     */
+    public function temAltoRisco(): bool
+    {
+        foreach ($this->por_cnae as $item) {
+            $consulta = $item['consulta'] ?? null;
+
+            if (($consulta?->risco->encaminhamento['nivel'] ?? null) === 'alto') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Snapshot orientativo no shape EXATO que a simulação (Fase 8) persiste:
      * `ponto`, `area_m2` e `por_cnae` com a `consulta` serializada (toArray). O
      * objeto ConsultaViabilidadeResult fica fora do registro — ele só serve à

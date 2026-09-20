@@ -5,6 +5,7 @@ namespace Tests\Feature\Expresso;
 use App\Enums\DecisionOutcome;
 use App\Enums\GeoLayerType;
 use App\Enums\Quadro10Permissao;
+use App\Enums\ResultadoViabilidade;
 use App\Enums\RiscoMunicipal;
 use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestStatus;
@@ -17,6 +18,9 @@ use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Solicitacao\SolicitacaoViabilityResolver;
+use Database\Seeders\PropertyTypeSeeder;
+use Database\Seeders\RiskTriggerSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\Geo\FakeSpatialRepository;
@@ -191,6 +195,123 @@ class FluxoExpressoDecisaoTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::Indeferida, $request->fresh()->status);
 
         Event::assertDispatched(ResultadoEmitido::class);
+    }
+
+    public function test_nao_permitido_indefere_mesmo_quando_gatilho_mandaria_para_analise(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $this->seed([RiskTriggerSeeder::class, PropertyTypeSeeder::class]);
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Proibido);
+
+        $request = $this->protocoladaComCnaes(['4712100']);
+        $request->forceFill([
+            'tipo_imovel' => 'Galpão',
+            'tipo_imovel_normalized' => 'galpao',
+        ])->save();
+
+        $result = $this->service()->decide($request);
+
+        $this->assertTrue($result->emitted);
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $result->status);
+
+        $decision = $request->fresh()->decision;
+        $this->assertSame(DecisionOutcome::Indeferida, $decision->outcome);
+        $this->assertSame('nao_permitido', $decision->consolidated_result);
+        $this->assertNull($decision->tvl_product_number);
+        Event::assertDispatched(ResultadoEmitido::class);
+    }
+
+    public function test_permitido_com_galpao_continua_na_analise(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $this->seed([RiskTriggerSeeder::class, PropertyTypeSeeder::class]);
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $request = $this->protocoladaComCnaes(['4712100']);
+        $request->forceFill([
+            'tipo_imovel' => 'Galpão',
+            'tipo_imovel_normalized' => 'galpao',
+        ])->save();
+
+        $result = $this->service()->decide($request);
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $result->status);
+        $this->assertFalse($result->emitted);
+        $this->assertDatabaseCount('viability_decisions', 0);
+        Event::assertNotDispatched(ResultadoEmitido::class);
+    }
+
+    public function test_alto_risco_por_pergunta_condicional_vai_para_analise_mesmo_com_veto_locacional(): void
+    {
+        // RN-041-B: o Decreto classifica o CNAE como baixo_a, mas a pergunta
+        // condicional P3 (artesanal) eleva o ramo a ID3-11 — ALTO na planilha.
+        // Alto risco nunca é decidido automaticamente: mesmo com o Quadro 10
+        // proibindo o grupo na zona, o processo vai à análise com o veto
+        // locacional fundamentado, sem decisão e sem evento.
+        Event::fake([ResultadoEmitido::class]);
+        $this->seed([RiskTriggerSeeder::class, PropertyTypeSeeder::class]);
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('1340501', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('1340501', 'ID3', 'ID3-11');
+        $this->seedQuadro10('ZR-1', 'ID3', Quadro10Permissao::Proibido);
+
+        $request = $this->protocoladaComCnaes(['1340501']);
+        $request->respostasTratamento = [2 => true, 3 => true];
+        $request->forceFill([
+            'tipo_imovel' => 'Edificação Comercial',
+            'tipo_imovel_normalized' => 'edificacao_comercial',
+        ])->save();
+
+        $fresco = $request->fresh();
+        $fresco->respostasTratamento = [2 => true, 3 => true];
+        $this->assertSame(
+            ResultadoViabilidade::NaoPermitido->value,
+            app(SolicitacaoViabilityResolver::class)->resolve($fresco)->consolidado,
+            'O veto locacional (Quadro 10) precisa estar presente para a prova valer.',
+        );
+
+        $result = $this->service()->decide($request);
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $result->status);
+        $this->assertNull($result->decision);
+        $this->assertFalse($result->emitted);
+        $this->assertDatabaseCount('viability_decisions', 0);
+        Event::assertNotDispatched(ResultadoEmitido::class);
+    }
+
+    public function test_alto_risco_do_cnae_vai_para_analise_mesmo_com_veto_locacional(): void
+    {
+        // RN-041-B: CNAE cuja atividade no local é ALTO por natureza na
+        // planilha (0210-1/07 → ID2-07). Mesmo com o Quadro 10 proibindo o
+        // grupo na zona, vai à análise — o indeferimento automático é
+        // reservado a baixo/médio risco.
+        Event::fake([ResultadoEmitido::class]);
+        $this->seed([RiskTriggerSeeder::class, PropertyTypeSeeder::class]);
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('0210107', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('0210107', 'ID2', 'ID2-07');
+        $this->seedQuadro10('ZR-1', 'ID2', Quadro10Permissao::Proibido);
+
+        $request = $this->protocoladaComCnaes(['0210107']);
+        $request->respostasTratamento = [11 => true];
+        $request->forceFill([
+            'tipo_imovel' => 'Edificação Comercial',
+            'tipo_imovel_normalized' => 'edificacao_comercial',
+        ])->save();
+
+        $result = $this->service()->decide($request);
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $result->status);
+        $this->assertNull($result->decision);
+        $this->assertFalse($result->emitted);
+        $this->assertDatabaseCount('viability_decisions', 0);
+        Event::assertNotDispatched(ResultadoEmitido::class);
     }
 
     public function test_permitido_com_condicoes_defere(): void

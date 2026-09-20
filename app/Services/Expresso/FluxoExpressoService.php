@@ -208,6 +208,20 @@ class FluxoExpressoService
         // Reexecução FRESCA dos motores — a decisão é autoritativa, não o snapshot.
         $resolved = $this->resolver->resolve($request);
 
+        // RN-041-B: alto risco — determinado pelo CNAE ou por pergunta
+        // condicional que o eleve — nunca é decidido automaticamente, nem
+        // deferido nem indeferido. Vai à análise com a fundamentação do
+        // motor, inclusive o veto locacional quando houver.
+        if ($resolved->temAltoRisco()) {
+            return $this->encaminharAnalise($request, 'atividade de alto risco — análise técnica', $actor, $resolved);
+        }
+
+        // RN-041-A: Quadro 10 ou Quadro 11A vedam o uso no local. Isso
+        // independe do risco — a análise só recebe o que ainda pode deferir.
+        if ($resolved->consolidado === ResultadoViabilidade::NaoPermitido->value) {
+            return $this->emitir($request, $resolved, $actor);
+        }
+
         if (! $resolved->elegivelExpresso()) {
             return $this->encaminharAnalise($request, 'atividade fora do fluxo expresso (análise técnica)', $actor, $resolved);
         }
