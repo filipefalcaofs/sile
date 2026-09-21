@@ -1,6 +1,15 @@
 export const gestaoLoginDisplayFont = "font-['Archivo',system-ui,sans-serif]";
 export const gestaoLoginMonoFont = "font-[ui-monospace,'SF_Mono',Menlo,monospace]";
 
+export const gestaoLoginBrandForeground = 'text-[oklch(96%_0.008_250)]';
+
+export const gestaoLoginBrandStageClasses = [
+    'relative hidden flex-col overflow-hidden',
+    gestaoLoginBrandForeground,
+    "bg-[linear-gradient(180deg,oklch(12.5%_0.03_255_/_0.55)_0%,oklch(12.5%_0.03_255_/_0.2)_38%,oklch(12.5%_0.032_255_/_0.86)_100%),linear-gradient(100deg,oklch(12.5%_0.032_255_/_0.9)_0%,oklch(12.5%_0.03_255_/_0.42)_60%,oklch(12.5%_0.03_255_/_0.18)_100%),url('/images/salvador-hero.jpg')]",
+    'bg-cover bg-center px-[clamp(28px,5vw,96px)] py-[clamp(28px,3.5vw,56px)] min-[1101px]:flex',
+].join(' ');
+
 export const gestaoLoginShellClasses = [
     'grid min-h-screen grid-cols-1 bg-gray-50',
     "font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','Segoe_UI',system-ui,sans-serif]",

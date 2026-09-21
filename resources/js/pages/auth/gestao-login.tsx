@@ -7,6 +7,8 @@ import { ArrowRightIcon, EyeCloseIcon, EyeIcon, MoonIcon, SunIcon } from '@/comp
 import { ThemeProvider, useTheme } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
 import {
+    gestaoLoginBrandForeground,
+    gestaoLoginBrandStageClasses,
     gestaoLoginDisplayFont,
     gestaoLoginDividerClasses,
     gestaoLoginFaintClasses,
@@ -98,10 +100,7 @@ function ZoneMap() {
 
 function BrandStage() {
     return (
-        <section
-            className="relative hidden flex-col overflow-hidden bg-[linear-gradient(180deg,oklch(12.5%_0.03_255_/_0.55)_0%,oklch(12.5%_0.03_255_/_0.2)_38%,oklch(12.5%_0.032_255_/_0.86)_100%),linear-gradient(100deg,oklch(12.5%_0.032_255_/_0.9)_0%,oklch(12.5%_0.03_255_/_0.42)_60%,oklch(12.5%_0.03_255_/_0.18)_100%),url('/images/salvador-hero.jpg')] bg-cover bg-center px-[clamp(28px,5vw,96px)] py-[clamp(28px,3.5vw,56px)] min-[1101px]:flex"
-            aria-label="Apresentação do console"
-        >
+        <section className={gestaoLoginBrandStageClasses} aria-label="Apresentação do console">
             <ZoneMap />
 
             <header className="relative z-1 flex items-center justify-between gap-4">
@@ -110,7 +109,7 @@ function BrandStage() {
                         <LogoMark className="size-[23px] text-white" />
                     </span>
                     <span>
-                        <span className={`${displayFont} block text-[17px] leading-[1.1] font-extrabold tracking-[0.06em]`}>
+                        <span className={`${displayFont} ${gestaoLoginBrandForeground} block text-[17px] leading-[1.1] font-extrabold tracking-[0.06em]`}>
                             VIABILIZA
                         </span>
                         <span className={`${monoFont} block text-[10.5px] leading-normal font-medium tracking-[0.08em] text-[oklch(67%_0.025_250)] uppercase`}>
@@ -133,7 +132,7 @@ function BrandStage() {
                     Gestão de licenciamento eletrônico
                 </p>
                 <h1
-                    className={`${displayFont} text-[clamp(34px,3.2vw,54px)] leading-[1.04] font-extrabold tracking-[-0.02em] text-balance uppercase`}
+                    className={`${displayFont} ${gestaoLoginBrandForeground} text-[clamp(34px,3.2vw,54px)] leading-[1.04] font-extrabold tracking-[-0.02em] text-balance uppercase`}
                 >
                     A cidade,
                     <br />
@@ -155,8 +154,8 @@ function BrandStage() {
                             <dd
                                 className={
                                     stat.mono
-                                        ? `${monoFont} text-sm leading-[1.3] font-semibold tabular-nums`
-                                        : 'text-[14.5px] leading-[1.3] font-semibold'
+                                        ? `${monoFont} ${gestaoLoginBrandForeground} text-sm leading-[1.3] font-semibold tabular-nums`
+                                        : `${gestaoLoginBrandForeground} text-[14.5px] leading-[1.3] font-semibold`
                                 }
                             >
                                 {stat.value}

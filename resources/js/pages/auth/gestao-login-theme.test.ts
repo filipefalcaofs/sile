@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    gestaoLoginBrandStageClasses,
     gestaoLoginInputClasses,
     gestaoLoginLabelClasses,
     gestaoLoginPanelClasses,
@@ -31,5 +32,10 @@ describe('Tema do login da gestão', () => {
 
     it('rótulos acompanham o tema', () => {
         hasLightAndDark(gestaoLoginLabelClasses, 'text-gray-500');
+    });
+
+    it('palco institucional mantém texto claro no fundo escuro, independente do tema', () => {
+        expect(gestaoLoginBrandStageClasses).toContain('text-[oklch(96%_0.008_250)]');
+        expect(gestaoLoginBrandStageClasses).not.toContain('text-gray-900');
     });
 });
