@@ -27,6 +27,7 @@ use App\Support\Settings;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -135,7 +136,7 @@ class AnalysisRecordController extends Controller
         try {
             $record = $this->records->autosave($record, $request->validated());
         } catch (AnalysisRecordImutavelException $e) {
-            abort(422, $e->getMessage());
+            throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
         }
 
         $this->audit->log(
@@ -166,7 +167,7 @@ class AnalysisRecordController extends Controller
         try {
             $record = $this->records->finalizar($record, $request->user());
         } catch (AnalysisRecordImutavelException $e) {
-            abort(422, $e->getMessage());
+            throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
         }
 
         return response()->json([
@@ -188,14 +189,16 @@ class AnalysisRecordController extends Controller
         try {
             $this->decisao->recusarSeAindaEmAnalise($record->per_cnae ?? []);
         } catch (DomainException $e) {
-            abort(422, $e->getMessage());
+            // Erro acionável na própria tela (relatório SEDUR 21/09, item 07):
+            // o useHttp lê errors.ficha e o analista vê quais CNAEs faltam.
+            throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
         }
 
         if (! $record->isFinalizada()) {
             try {
                 $record = $this->records->finalizar($record, $request->user());
             } catch (AnalysisRecordImutavelException $e) {
-                abort(422, $e->getMessage());
+                throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
             }
         }
 
@@ -206,7 +209,7 @@ class AnalysisRecordController extends Controller
         try {
             $result = $this->decisao->decide($record->fresh() ?? $record, $analista);
         } catch (DomainException $e) {
-            abort(422, $e->getMessage());
+            throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
         }
 
         $processo = $viabilityRequest->fresh();

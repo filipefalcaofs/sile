@@ -9,6 +9,7 @@ use App\Services\Analise\AnaliseTecnicaDecisionService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Decisão técnica do analista (HU-086/087/088/089) — deferir/indeferir/encerrar.
@@ -27,12 +28,18 @@ class ProcessoDecisaoController extends Controller
     {
         $record = $viabilityRequest->currentAnalysisRecord;
 
-        abort_if($record === null, 422, 'A ficha de análise ainda não foi criada para este processo.');
+        if ($record === null) {
+            throw ValidationException::withMessages([
+                'decisao' => 'A ficha de análise ainda não foi criada para este processo.',
+            ]);
+        }
 
         try {
             $result = $this->decision->decide($record, $request->user());
         } catch (DomainException $e) {
-            abort(422, $e->getMessage());
+            // Erro acionável na própria tela (relatório SEDUR 21/09, item 07) —
+            // nunca a página genérica de 422.
+            throw ValidationException::withMessages(['decisao' => $e->getMessage()]);
         }
 
         $mensagem = $result->outcome === DecisionOutcome::Deferida

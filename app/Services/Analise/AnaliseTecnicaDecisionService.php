@@ -220,20 +220,33 @@ class AnaliseTecnicaDecisionService
      * Guarda da conclusão: todo CNAE precisa de escolha explícita do analista
      * (deferida/indeferida). "Em análise" é status do PROCESSO, nunca do CNAE —
      * um CNAE sem escolha (null ou o legado 'analise') bloqueia a conclusão.
-     * Anti-fachada: nunca defere nem indefere por omissão de escolha.
+     * Anti-fachada: nunca defere nem indefere por omissão de escolha. A mensagem
+     * LISTA as atividades pendentes (relatório SEDUR 21/09, item 07) — o erro
+     * tem que ser acionável, nunca uma tela genérica.
      *
      * @param  list<array<string, mixed>>  $perCnae
      */
     public function recusarSeAindaEmAnalise(array $perCnae): void
     {
+        $pendentes = [];
+
         foreach ($perCnae as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
             $escolhido = $item['status_escolhido'] ?? null;
 
             if (! in_array($escolhido, [DecisionOutcome::Deferida->value, DecisionOutcome::Indeferida->value], true)) {
-                throw new DomainException(
-                    'Há atividade sem decisão do analista. Escolha deferir ou indeferir em cada CNAE antes de concluir.',
-                );
+                $rotulo = trim((string) ($item['cnae_formatado'] ?? $item['cnae'] ?? ''));
+                $pendentes[] = $rotulo !== '' ? $rotulo : 'atividade sem código';
             }
+        }
+
+        if ($pendentes !== []) {
+            throw new DomainException(
+                'Atividade sem decisão do analista: '.implode(', ', $pendentes).'. Escolha deferir ou indeferir em cada CNAE antes de concluir.',
+            );
         }
     }
 

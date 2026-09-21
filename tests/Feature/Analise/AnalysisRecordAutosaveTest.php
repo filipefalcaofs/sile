@@ -67,7 +67,8 @@ class AnalysisRecordAutosaveTest extends TestCase
                     ['cnae' => '4712100', 'status_escolhido' => 'analise'],
                 ],
             ])
-            ->assertSessionHasErrors(['per_cnae.0.status_escolhido']);
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['per_cnae.0.status_escolhido']);
     }
 
     public function test_autosave_aceita_cnae_sem_escolha_ainda(): void

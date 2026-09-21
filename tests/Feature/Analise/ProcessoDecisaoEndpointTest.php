@@ -137,10 +137,11 @@ class ProcessoDecisaoEndpointTest extends TestCase
         Event::assertDispatched(ResultadoEmitido::class);
     }
 
-    public function test_recusa_decidir_quando_a_ficha_esta_em_rascunho_com_422(): void
+    public function test_recusa_decidir_quando_a_ficha_esta_em_rascunho_com_erro_inline(): void
     {
-        // HU-086 CA-03: ficha em rascunho não decide — 422 (DomainException do
-        // serviço traduzida pelo controller); nada gravado, status preservado.
+        // HU-086 CA-03 + relatório SEDUR 21/09 (item 07): ficha em rascunho não
+        // decide — o erro volta INLINE (error bag da sessão), nunca a tela "Oops
+        // / 422"; nada gravado, status preservado.
         Event::fake([ResultadoEmitido::class]);
 
         $processo = $this->processoComFicha(
@@ -150,7 +151,7 @@ class ProcessoDecisaoEndpointTest extends TestCase
 
         $this->actingAs($this->analista(), 'gestao')
             ->post("/gestao/processos/{$processo->id}/decidir")
-            ->assertStatus(422);
+            ->assertSessionHasErrors(['decisao']);
 
         $this->assertDatabaseCount('viability_decisions', 0);
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
@@ -202,17 +203,46 @@ class ProcessoDecisaoEndpointTest extends TestCase
 
     public function test_concluir_processo_recusa_cnae_sem_escolha_do_analista(): void
     {
+        // Relatório SEDUR 21/09 (item 07): o 422 vira erro de validação ACIONÁVEL
+        // — o corpo lista quais CNAEs ficaram sem decisão, nunca a tela "Oops".
         Event::fake([ResultadoEmitido::class]);
 
         $processo = $this->processoComFicha(
-            [['cnae' => '4712100', 'status_sugerido' => null, 'status_escolhido' => null]],
+            [['cnae' => '4712100', 'cnae_formatado' => '4712-1/00', 'status_sugerido' => null, 'status_escolhido' => null]],
             ['status' => AnalysisRecordStatus::Rascunho, 'finalized_at' => null],
         );
 
-        $this->actingAs($this->analista(), 'gestao')
+        $response = $this->actingAs($this->analista(), 'gestao')
             ->postJson("/gestao/processos/{$processo->id}/ficha/concluir-processo")
             ->assertStatus(422)
-            ->assertSee('ainda em análise', false);
+            ->assertJsonValidationErrors(['ficha']);
+
+        $this->assertStringContainsString('4712-1/00', (string) $response->json('errors.ficha.0'));
+
+        $this->assertDatabaseCount('viability_decisions', 0);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
+        Event::assertNotDispatched(ResultadoEmitido::class);
+    }
+
+    public function test_decidir_com_cnae_sem_escolha_volta_com_erro_inline_e_nao_pagina_de_erro(): void
+    {
+        // Relatório SEDUR 21/09 (item 07): decidir com atividade sem escolha não
+        // pode devolver a tela "Oops / 422" — o analista recebe o erro na própria
+        // tela (error bag da sessão) com a atividade pendente identificada.
+        Event::fake([ResultadoEmitido::class]);
+
+        $processo = $this->processoComFicha([
+            ['cnae' => '8211300', 'cnae_formatado' => '8211-3/00', 'status_sugerido' => null, 'status_escolhido' => null],
+        ]);
+
+        $response = $this->actingAs($this->analista(), 'gestao')
+            ->post("/gestao/processos/{$processo->id}/decidir");
+
+        $response->assertSessionHasErrors(['decisao']);
+        $this->assertStringContainsString(
+            '8211-3/00',
+            (string) session('errors')->getBag('default')->first('decisao'),
+        );
 
         $this->assertDatabaseCount('viability_decisions', 0);
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);

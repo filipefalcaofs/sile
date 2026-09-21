@@ -65,12 +65,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // Endpoints JSON do portal (ex.: consulta de CNPJ — HU-021) precisam de
         // respostas JSON para erros (401/422/404), não redirect. api/* mantém o
         // comportamento existente; o portal só renderiza JSON quando o cliente
-        // explicitamente o pede (Accept: application/json / XHR).
+        // explicitamente o pede (Accept: application/json / XHR). A ficha de
+        // análise (gestao/processos/*) idem — sem isso o 422 vira a página
+        // genérica "Oops" em vez de erro inline (relatório SEDUR 21/09, item 07).
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*')
                 || ($request->is('portal/empresas/consultar-cnpj') && $request->expectsJson())
                 || ($request->is('portal/viabilidade/*') && $request->expectsJson())
-                || ($request->is('gestao/territorio/*') && $request->expectsJson()),
+                || ($request->is('gestao/territorio/*') && $request->expectsJson())
+                || ($request->is('gestao/processos/*') && $request->expectsJson()),
         );
 
         // CA-04 transversal: todo 403 de autorização é auditado num ponto único.

@@ -741,6 +741,11 @@ export default function FichaAnaliseShow({
     const editavel = ficha.editavel;
 
     const [perCnae, setPerCnae] = useState<PerCnae[]>(() => ficha.per_cnae ?? []);
+    // Guarda do relatório SEDUR 21/09 (item 07): sem decisão em cada CNAE, o
+    // processo não conclui — o botão fica desabilitado e a pendência visível.
+    const cnaesPendentes = perCnae.filter(
+        (item) => item.status_escolhido !== 'deferida' && item.status_escolhido !== 'indeferida',
+    );
     const [conditions, setConditions] = useState<string[]>(() => ficha.conditions ?? []);
     const [parecer, setParecer] = useState<string>(() => ficha.parecer ?? '');
     const [parking, setParking] = useState<Parking>(() => ficha.parking ?? {});
@@ -805,6 +810,7 @@ export default function FichaAnaliseShow({
 
     const [showFinalizar, setShowFinalizar] = useState(false);
     const [showDecidir, setShowDecidir] = useState(false);
+    const [erroAcao, setErroAcao] = useState<string | null>(null);
     const [showPendencia, setShowPendencia] = useState(false);
     const [descricaoPendencia, setDescricaoPendencia] = useState('');
     const [showCancelarConvite, setShowCancelarConvite] = useState(false);
@@ -918,12 +924,19 @@ export default function FichaAnaliseShow({
     }
 
     function finalizarFicha() {
+        setErroAcao(null);
+
         if (!editavel) {
             acao.post(`${fichaUrl}/concluir-processo`, {
                 onSuccess: () => {
                     setShowFinalizar(false);
                     router.reload();
                 },
+                onError: (erros) =>
+                    setErroAcao(
+                        (erros as Record<string, string>).ficha ??
+                            'Não foi possível concluir o processo. Revise a ficha e tente novamente.',
+                    ),
                 onHttpException: () => false,
             });
 
@@ -938,6 +951,11 @@ export default function FichaAnaliseShow({
                         setShowFinalizar(false);
                         router.reload();
                     },
+                    onError: (erros) =>
+                        setErroAcao(
+                            (erros as Record<string, string>).ficha ??
+                                'Não foi possível concluir o processo. Revise a ficha e tente novamente.',
+                        ),
                     onHttpException: () => false,
                 });
             },
@@ -958,12 +976,18 @@ export default function FichaAnaliseShow({
     }
 
     function decidirProcesso() {
+        setErroAcao(null);
         router.post(
             `/gestao/processos/${processo.id}/decidir`,
             {},
             {
                 preserveScroll: true,
-                onFinish: () => setShowDecidir(false),
+                onSuccess: () => setShowDecidir(false),
+                onError: (erros) =>
+                    setErroAcao(
+                        (erros as Record<string, string>).decisao ??
+                            'Não foi possível concluir a decisão. Revise a ficha e tente novamente.',
+                    ),
             },
         );
     }
@@ -1957,9 +1981,19 @@ export default function FichaAnaliseShow({
                                             <Button onClick={salvarRascunho} variant="outline" size="sm">
                                                 Salvar Ficha
                                             </Button>
-                                            <Button onClick={() => setShowFinalizar(true)} size="sm">
+                                            <Button
+                                                onClick={() => setShowFinalizar(true)}
+                                                size="sm"
+                                                disabled={cnaesPendentes.length > 0}
+                                            >
                                                 Finalizar processo
                                             </Button>
+                                            {cnaesPendentes.length > 0 && (
+                                                <p className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                    Falta decidir:{' '}
+                                                    {cnaesPendentes.map((i) => i.cnae_formatado ?? i.cnae).join(', ')}
+                                                </p>
+                                            )}
                                         </>
                                     ) : (
                                         <>
@@ -2026,21 +2060,46 @@ export default function FichaAnaliseShow({
                 isOpen={showFinalizar}
                 variant="info"
                 title="Finalizar processo?"
-                description="A ficha fica imutável e o processo é concluído conforme a decisão do analista em cada CNAE."
+                description={
+                    <>
+                        A ficha fica imutável e o processo é concluído conforme a decisão do analista em cada CNAE.
+                        {erroAcao && (
+                            <span className="mt-2 block font-medium text-error-600 dark:text-error-500">
+                                {erroAcao}
+                            </span>
+                        )}
+                    </>
+                }
                 confirmLabel="Finalizar processo"
                 processing={acao.processing}
                 onConfirm={finalizarFicha}
-                onClose={() => setShowFinalizar(false)}
+                onClose={() => {
+                    setShowFinalizar(false);
+                    setErroAcao(null);
+                }}
             />
 
             <ConfirmDialog
                 isOpen={showDecidir}
                 variant="warning"
                 title="Concluir a decisão do processo?"
-                description="O resultado (deferir/indeferir) é construído a partir da ficha finalizada e o processo é encerrado. A ação é auditada e dispara as comunicações cabíveis."
+                description={
+                    <>
+                        O resultado (deferir/indeferir) é construído a partir da ficha finalizada e o processo é
+                        encerrado. A ação é auditada e dispara as comunicações cabíveis.
+                        {erroAcao && (
+                            <span className="mt-2 block font-medium text-error-600 dark:text-error-500">
+                                {erroAcao}
+                            </span>
+                        )}
+                    </>
+                }
                 confirmLabel="Decidir"
                 onConfirm={decidirProcesso}
-                onClose={() => setShowDecidir(false)}
+                onClose={() => {
+                    setShowDecidir(false);
+                    setErroAcao(null);
+                }}
             />
 
             {showPendencia && (
