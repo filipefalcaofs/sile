@@ -105,3 +105,10 @@ Schedule::command('ia:auditoria-preditiva')
     ->weekly()
     ->withoutOverlapping()
     ->onOneServer();
+
+// Tabela TLL (HU-071): alerta gestores em dez/jan quando o exercício corrente
+// ou o seguinte não tem versão vigente. SÓ notifica (nunca grava/publica).
+Schedule::command('tll:alertar-exercicio')
+    ->dailyAt('07:30')
+    ->withoutOverlapping()
+    ->onOneServer();
