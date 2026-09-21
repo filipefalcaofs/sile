@@ -7,11 +7,14 @@ use App\Models\RuleVersion;
 use App\Models\TratamentoCnaeBinding;
 use App\Models\TratamentoPergunta;
 use App\Models\ViabilityRequest;
+use Illuminate\Support\Collection;
 
 /**
- * Projeta a pergunta "A atividade será desenvolvida no local?" na ficha,
- * lendo a resposta já gravada na simulação/planilha. Nunca inventa: sem
- * resposta, a ficha marca pendente.
+ * Projeta na ficha a pergunta do PRÓPRIO CNAE cadastrada na planilha de
+ * tratamento (relatório SEDUR 21/09/2026, item 02): o vínculo do CNAE manda —
+ * para o 8211-3/00 é a P4 (escritório virtual/coworking). CNAE sem vínculo
+ * cai no comportamento legado (pergunta preferida já respondida na simulação).
+ * Nunca inventa: sem resposta, a ficha marca pendente.
  */
 final class PerguntaLocalFicha
 {
@@ -40,37 +43,66 @@ final class PerguntaLocalFicha
         return [
             'numero' => $numero,
             'pergunta' => $this->titulo($numero),
-            'resposta' => $valor === null ? null : ($valor ? self::SIM : self::NAO),
+            'resposta' => $valor === null ? null : $this->rotuloResposta($numero, $valor),
             'pendente' => $valor === null,
         ];
     }
 
     /**
+     * A pergunta é a do próprio CNAE: vínculo da planilha vigente primeiro
+     * (respondida, senão a de menor número); sem vínculo, o legado das
+     * preferidas já respondidas.
+     *
      * @param  array<int, bool>  $respostas
      */
     private function numeroDaPergunta(string $cnae, array $respostas): ?int
     {
-        $versao = RuleVersion::vigente(RuleDomain::RiscoTratamento)->first();
+        $vinculadas = $this->perguntasVinculadas($cnae);
 
-        $perguntas = $versao === null
-            ? collect()
-            : TratamentoCnaeBinding::query()
-                ->where('rule_version_id', $versao->getKey())
-                ->where('cnae', $this->formatarCnae($cnae))
-                ->pluck('perguntas')
-                ->flatten()
-                ->map(fn (mixed $numero): int => (int) $numero)
-                ->filter()
-                ->unique()
-                ->values();
+        if ($vinculadas->isNotEmpty()) {
+            return $vinculadas->first(fn (int $numero): bool => array_key_exists($numero, $respostas))
+                ?? $vinculadas->first();
+        }
 
         foreach (self::PREFERIDAS as $numero) {
-            if ($perguntas->contains($numero) || array_key_exists($numero, $respostas)) {
+            if (array_key_exists($numero, $respostas)) {
                 return $numero;
             }
         }
 
         return null;
+    }
+
+    /**
+     * @return Collection<int, int>
+     */
+    private function perguntasVinculadas(string $cnae): Collection
+    {
+        $versao = RuleVersion::vigente(RuleDomain::RiscoTratamento)->first();
+
+        if ($versao === null) {
+            return collect();
+        }
+
+        return TratamentoCnaeBinding::query()
+            ->where('rule_version_id', $versao->getKey())
+            ->where('cnae', $this->formatarCnae($cnae))
+            ->pluck('perguntas')
+            ->flatten()
+            ->map(fn (mixed $numero): int => (int) $numero)
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+    }
+
+    private function rotuloResposta(?int $numero, bool $valor): string
+    {
+        if ($numero === 11) {
+            return $valor ? self::SIM : self::NAO;
+        }
+
+        return $valor ? 'Sim.' : 'Não.';
     }
 
     private function titulo(?int $numero): string
