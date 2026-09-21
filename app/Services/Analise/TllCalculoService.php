@@ -2,6 +2,8 @@
 
 namespace App\Services\Analise;
 
+use App\Enums\RuleDomain;
+use App\Models\RuleVersion;
 use App\Models\TllValor;
 use App\Support\Settings;
 
@@ -23,6 +25,15 @@ class TllCalculoService
      */
     public function calcular(array $itens, int $exercicio): ?TllCalculo
     {
+        $versaoVigente = RuleVersion::query()
+            ->vigente(RuleDomain::TllValores)
+            ->where('version', (string) $exercicio)
+            ->exists();
+
+        if (! $versaoVigente) {
+            return null;
+        }
+
         $melhor = null;
 
         foreach ($itens as $item) {

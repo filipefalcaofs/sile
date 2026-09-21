@@ -3,9 +3,12 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisRecordStatus;
+use App\Enums\RuleDomain;
+use App\Enums\RuleVersionStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisRecord;
 use App\Models\ExpressoQueda;
+use App\Models\RuleVersion;
 use App\Models\StandardText;
 use App\Models\TllValor;
 use App\Models\User;
@@ -165,9 +168,16 @@ class FichaUiSmokeTest extends TestCase
 
     public function test_ficha_resolve_o_valor_tll_do_exercicio_corrente(): void
     {
+        $ano = (int) now()->year;
+        RuleVersion::factory()->create([
+            'domain' => RuleDomain::TllValores,
+            'version' => (string) $ano,
+            'status' => RuleVersionStatus::Vigente,
+            'valid_to' => null,
+        ]);
         TllValor::factory()->create([
             'codigo_tll' => '1.01',
-            'exercicio' => (int) now()->year,
+            'exercicio' => $ano,
             'valor' => 1111.78,
         ]);
 

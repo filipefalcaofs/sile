@@ -2,7 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\RuleDomain;
 use App\Models\AnalysisRecord;
+use App\Models\RuleVersion;
 use App\Models\TllValor;
 use App\Services\Analise\JustificativaFundamentadaComposer;
 use App\Services\Analise\PerguntaLocalFicha;
@@ -113,9 +115,19 @@ class AnalysisRecordResource extends JsonResource
             return null;
         }
 
+        $exercicio = (int) now()->year;
+        $versaoVigente = RuleVersion::query()
+            ->vigente(RuleDomain::TllValores)
+            ->where('version', (string) $exercicio)
+            ->exists();
+
+        if (! $versaoVigente) {
+            return null;
+        }
+
         $tll = TllValor::query()
             ->active()
-            ->paraExercicio($codigoTll, (int) now()->year)
+            ->paraExercicio($codigoTll, $exercicio)
             ->first();
 
         return $tll === null ? null : (string) $tll->valor;

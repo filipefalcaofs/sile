@@ -2,6 +2,9 @@
 
 namespace Tests\Unit\Analise;
 
+use App\Enums\RuleDomain;
+use App\Enums\RuleVersionStatus;
+use App\Models\RuleVersion;
 use App\Models\TllValor;
 use App\Services\Analise\TllCalculoService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -19,6 +22,7 @@ class TllCalculoServiceTest extends TestCase
 
     public function test_um_cnae_valor_e_taxa_de_servico(): void
     {
+        $this->publicarExercicio(2026);
         TllValor::factory()->create([
             'codigo_tll' => '1.01',
             'exercicio' => 2026,
@@ -38,6 +42,7 @@ class TllCalculoServiceTest extends TestCase
 
     public function test_varios_cnaes_usa_a_atividade_de_maior_valor(): void
     {
+        $this->publicarExercicio(2026);
         TllValor::factory()->create(['codigo_tll' => '1.01', 'exercicio' => 2026, 'valor' => 1000.00, 'taxa_servico' => 50.00]);
         TllValor::factory()->create(['codigo_tll' => '2.02', 'exercicio' => 2026, 'valor' => 2000.00, 'taxa_servico' => 80.00]);
 
@@ -53,6 +58,7 @@ class TllCalculoServiceTest extends TestCase
     public function test_aplica_o_fator_multiplicador_quando_o_cnae_exige(): void
     {
         config(['sile.tll.fator_multiplicador' => 2.0]);
+        $this->publicarExercicio(2026);
 
         TllValor::factory()->create(['codigo_tll' => '1.01', 'exercicio' => 2026, 'valor' => 1000.00, 'taxa_servico' => 50.00]);
 
@@ -75,6 +81,7 @@ class TllCalculoServiceTest extends TestCase
 
     public function test_cnae_sem_codigo_tll_e_ignorado_no_calculo(): void
     {
+        $this->publicarExercicio(2026);
         TllValor::factory()->create(['codigo_tll' => '1.01', 'exercicio' => 2026, 'valor' => 1000.00, 'taxa_servico' => 0]);
 
         $calculo = app(TllCalculoService::class)->calcular([
@@ -84,5 +91,31 @@ class TllCalculoServiceTest extends TestCase
 
         $this->assertNotNull($calculo);
         $this->assertSame('1.01', $calculo->codigo_tll);
+    }
+
+    public function test_exercicio_sem_versao_vigente_degrada_para_pendente(): void
+    {
+        TllValor::factory()->create([
+            'codigo_tll' => '2.02',
+            'exercicio' => 2027,
+            'valor' => '554.32',
+            'active' => true,
+        ]);
+
+        $resultado = app(TllCalculoService::class)->calcular([
+            ['codigo_tll' => '2.02'],
+        ], 2027);
+
+        $this->assertNull($resultado);
+    }
+
+    private function publicarExercicio(int $ano): void
+    {
+        RuleVersion::factory()->create([
+            'domain' => RuleDomain::TllValores,
+            'version' => (string) $ano,
+            'status' => RuleVersionStatus::Vigente,
+            'valid_to' => null,
+        ]);
     }
 }

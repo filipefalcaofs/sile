@@ -2,8 +2,11 @@
 
 namespace Tests\Feature\Expresso;
 
+use App\Enums\RuleDomain;
+use App\Enums\RuleVersionStatus;
 use App\Events\ResultadoEmitido;
 use App\Models\Activity;
+use App\Models\RuleVersion;
 use App\Models\TllValor;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -115,9 +118,16 @@ class EnviarViabilidadeSefazListenerTest extends TestCase
         // a partir do per_cnae da decisão (codigo_tll da planilha) e a registra
         // na auditoria — o valor fica pronto para o envio quando a SEFAZ
         // liberar o endpoint (Fase 13). A transmissão segue bloqueada.
+        $ano = (int) now()->year;
+        RuleVersion::factory()->create([
+            'domain' => RuleDomain::TllValores,
+            'version' => (string) $ano,
+            'status' => RuleVersionStatus::Vigente,
+            'valid_to' => null,
+        ]);
         TllValor::factory()->create([
             'codigo_tll' => '1.01',
-            'exercicio' => (int) now()->year,
+            'exercicio' => $ano,
             'valor' => 1000.00,
             'taxa_servico' => 50.00,
         ]);
