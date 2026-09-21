@@ -16,6 +16,7 @@ use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
 /**
@@ -30,6 +31,7 @@ use Tests\TestCase;
 class FichaUiSmokeTest extends TestCase
 {
     use LazilyRefreshDatabase;
+    use SeedsTratamentoPlanilha;
 
     protected function setUp(): void
     {
@@ -97,6 +99,53 @@ class FichaUiSmokeTest extends TestCase
                 ->has('dadosTvl')
                 ->has('iaFicha')
                 ->where('iaFicha.resumo_disponivel', false));
+    }
+
+    public function test_ficha_expoe_opcoes_de_enquadramento_da_planilha_por_cnae(): void
+    {
+        // Relatório de usabilidade SEDUR 19/09 (item 23): o enquadramento é
+        // seleção pré-preenchida — a ficha entrega as opções da planilha
+        // vigente por CNAE (código LOUOS × código TLL × valor do exercício).
+        $this->seedTratamentoPlanilha();
+
+        $exercicio = (int) now()->year;
+        RuleVersion::factory()->create([
+            'domain' => RuleDomain::TllValores,
+            'version' => (string) $exercicio,
+            'rules_version' => (string) $exercicio,
+        ]);
+        TllValor::factory()->create([
+            'codigo_tll' => '2.02',
+            'exercicio' => $exercicio,
+            'valor' => 123.45,
+            'active' => true,
+        ]);
+
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocol_number' => 'VIA-'.now()->year.'-000125',
+            'protocoled_at' => now(),
+        ]);
+
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+            'per_cnae' => [
+                ['cnae' => '4712100', 'cnae_formatado' => '4712-1/00', 'status_escolhido' => null],
+            ],
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/ficha-analise/show')
+                ->where('enquadramentoOpcoes.4712100', fn ($opcoes): bool => collect($opcoes)->contains(
+                    fn ($opcao): bool => $opcao['codigo_louos'] === '07.01.05'
+                        && $opcao['codigo_tll'] === '2.02'
+                        && $opcao['valor_tll'] === '123.45',
+                )));
     }
 
     public function test_ficha_sem_poligono_entrega_localizacao_nula_sem_inventar(): void

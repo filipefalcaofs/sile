@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Enums\DecisionOutcome;
+use App\Enums\RuleDomain;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\AnalysisRecordRequest;
 use App\Http\Resources\AnalysisRecordResource;
 use App\Models\AiSuggestion;
 use App\Models\AnalysisRecord;
+use App\Models\RuleVersion;
+use App\Models\Sector;
 use App\Models\StandardText;
+use App\Models\TllValor;
+use App\Models\TratamentoEnquadramento;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
@@ -104,6 +109,9 @@ class AnalysisRecordController extends Controller
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
             'cadastroImobiliario' => $cadastro,
             'tramitacao' => $this->tramitacao($viabilityRequest),
+            'enquadramentoOpcoes' => $this->enquadramentoOpcoes($record),
+            // Setores ativos para o popup de vistoria (usabilidade SEDUR item 22).
+            'setores' => Sector::query()->where('active', true)->orderBy('name')->get(['id', 'name']),
             // Escritório virtual (T02): flag do gatilho (RN-EV-01), a inscrição e o
             // painel de abrigados quando a solicitação é a SEDE ativa da inscrição.
             'escritorioVirtual' => $this->escritorioVirtual($viabilityRequest, $record),
@@ -434,6 +442,81 @@ class AnalysisRecordController extends Controller
         $texto = trim((string) $valor);
 
         return $texto === '' ? null : $texto;
+    }
+
+    /**
+     * Opções de enquadramento da planilha de tratamento vigente para cada CNAE
+     * da ficha (código LOUOS × código TLL × valor TLL do exercício vigente) —
+     * seleção pré-preenchida que o analista valida ou troca (relatório de
+     * usabilidade SEDUR 19/09/2026, item 23). Sem versão vigente, devolve
+     * vazio e a ficha mostra a pendência — nunca inventa opção.
+     *
+     * @return array<string, list<array{codigo_louos: string, denominacao_louos: string|null, codigo_tll: string|null, especificacao_tll: string|null, valor_tll: string|null}>>
+     */
+    private function enquadramentoOpcoes(AnalysisRecord $record): array
+    {
+        $cnaes = collect($record->per_cnae ?? [])
+            ->pluck('cnae')
+            ->filter()
+            ->map(fn (mixed $cnae): string => (string) preg_replace('/\D/', '', (string) $cnae))
+            ->filter(fn (string $cnae): bool => strlen($cnae) === 7)
+            ->unique()
+            ->values();
+
+        $versao = RuleVersion::vigente(RuleDomain::RiscoTratamento)->first();
+
+        if ($cnaes->isEmpty() || $versao === null) {
+            return [];
+        }
+
+        $exercicio = (int) now()->year;
+        $exercicioVigente = RuleVersion::query()
+            ->vigente(RuleDomain::TllValores)
+            ->where('version', (string) $exercicio)
+            ->exists();
+
+        $linhas = TratamentoEnquadramento::query()
+            ->where('rule_version_id', $versao->getKey())
+            ->get(['cnae', 'codigo_louos', 'denominacao_louos', 'codigo_tll', 'especificacao_tll']);
+
+        $opcoes = [];
+
+        foreach ($cnaes as $cnae) {
+            $mascarado = substr($cnae, 0, 4).'-'.substr($cnae, 4, 1).'/'.substr($cnae, 5, 2);
+
+            $opcoes[$cnae] = $linhas
+                ->where('cnae', $mascarado)
+                ->unique(fn (TratamentoEnquadramento $linha): string => $linha->codigo_louos.'|'.(string) $linha->codigo_tll)
+                ->map(fn (TratamentoEnquadramento $linha): array => [
+                    'codigo_louos' => $linha->codigo_louos,
+                    'denominacao_louos' => $linha->denominacao_louos,
+                    'codigo_tll' => $linha->codigo_tll,
+                    'especificacao_tll' => $linha->especificacao_tll,
+                    'valor_tll' => $this->valorTllVigente($linha->codigo_tll, $exercicio, $exercicioVigente),
+                ])
+                ->values()
+                ->all();
+        }
+
+        return $opcoes;
+    }
+
+    /**
+     * Valor TLL do exercício vigente para o código (HU-071) — null quando o
+     * exercício não tem tabela publicada ou o código não tem valor ativo.
+     */
+    private function valorTllVigente(?string $codigoTll, int $exercicio, bool $exercicioVigente): ?string
+    {
+        if (! $exercicioVigente || $codigoTll === null || $codigoTll === '') {
+            return null;
+        }
+
+        $tll = TllValor::query()
+            ->active()
+            ->paraExercicio($codigoTll, $exercicio)
+            ->first();
+
+        return $tll === null ? null : (string) $tll->valor;
     }
 
     /**

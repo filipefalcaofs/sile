@@ -3,6 +3,7 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -54,6 +55,32 @@ class MalhaFinaEndpointTest extends TestCase
         ]);
 
         return $request->fresh();
+    }
+
+    public function test_encaminhar_para_vistoria_com_setor_atribui_o_setor_de_tramitacao(): void
+    {
+        // Relatório de usabilidade SEDUR 19/09 (item 22): o popup de vistoria
+        // escolhe o setor de tramitação — o processo passa a tramitar nele,
+        // além de ligar a flag de vistoria (malha fina, ortogonal ao status).
+        $processo = $this->processo();
+        $setor = Sector::factory()->create(['name' => 'Vistoria']);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->post('/gestao/processos/malha-fina', [
+                'request_id' => $processo->id,
+                'motivo' => 'Vistoriar o imóvel antes do desfecho.',
+                'sector_id' => $setor->id,
+            ])
+            ->assertRedirect();
+
+        $processo->refresh();
+        $this->assertTrue($processo->in_fine_mesh);
+        $this->assertSame($setor->id, $processo->sector_id);
+
+        $this->assertDatabaseHas('fine_mesh_referrals', [
+            'viability_request_id' => $processo->id,
+            'reason' => 'Vistoriar o imóvel antes do desfecho.',
+        ]);
     }
 
     public function test_sem_permissao_encaminhar_malha_fina_recebe_403_auditado(): void

@@ -28,7 +28,13 @@ class MalhaFinaController extends Controller
             ->get();
 
         try {
-            $resumo = $this->malhaFina->encaminharLote($processos, $request->user(), $request->validated('motivo'));
+            $setorId = $request->validated('sector_id');
+            $resumo = $this->malhaFina->encaminharLote(
+                $processos,
+                $request->user(),
+                $request->validated('motivo'),
+                $setorId !== null ? (int) $setorId : null,
+            );
         } catch (MalhaFinaException $e) {
             abort(422, $e->getMessage());
         }

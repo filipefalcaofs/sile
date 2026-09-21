@@ -270,7 +270,8 @@ class AnalysisRecordService
 
     /**
      * Funde a escolha do analista (status_escolhido/justificativa/condicionantes
-     * por CNAE) na lista vigente, casando por `cnae` e PRESERVANDO os campos do
+     * e o enquadramento validado — codigo_louos/codigo_tll, usabilidade SEDUR
+     * item 23) na lista vigente, casando por `cnae` e PRESERVANDO os campos do
      * motor (status_sugerido, tendência, fundamentação). CNAEs ausentes na ficha
      * (modo manual) entram como novos itens.
      *
@@ -295,7 +296,7 @@ class AnalysisRecordService
             $cnae = (string) $item['cnae'];
             $atual = $base[$cnae] ?? ['cnae' => $cnae];
 
-            foreach (['status_escolhido', 'justificativa', 'condicionantes'] as $campo) {
+            foreach (['status_escolhido', 'justificativa', 'condicionantes', 'codigo_louos', 'codigo_tll'] as $campo) {
                 if (array_key_exists($campo, $item)) {
                     $atual[$campo] = $item[$campo];
                 }

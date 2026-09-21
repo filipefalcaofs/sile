@@ -37,6 +37,8 @@ interface PerCnae {
     fundamentacao?: string[] | null;
     condicionantes?: string[] | null;
     justificativa?: string | null;
+    risco_municipal?: string | null;
+    risco_sanitario?: string | null;
     pergunta_local?: {
         numero?: number | null;
         pergunta: string;
@@ -219,6 +221,14 @@ interface EscritorioVirtual {
     flag_analise_sede: string;
 }
 
+interface EnquadramentoOpcao {
+    codigo_louos: string;
+    denominacao_louos: string | null;
+    codigo_tll: string | null;
+    especificacao_tll: string | null;
+    valor_tll: string | null;
+}
+
 interface FichaAnaliseShowProps {
     ficha: Ficha;
     processo: Processo;
@@ -226,6 +236,10 @@ interface FichaAnaliseShowProps {
     dadosTvl: DadosTvl;
     cadastroImobiliario: CadastroImobiliario;
     tramitacao: TramitacaoItem[];
+    /** Opções da planilha vigente por CNAE (dígitos) — seleção do enquadramento. */
+    enquadramentoOpcoes: Record<string, EnquadramentoOpcao[]>;
+    /** Setores ativos — escolha do setor de tramitação no popup de vistoria. */
+    setores: { id: number; name: string }[];
     escritorioVirtual: EscritorioVirtual;
     textosPadrao: TextoPadrao[];
     autosaveDebounceMs: number;
@@ -420,11 +434,13 @@ function valorOuTraco(valor: string | null | undefined): string {
     return valor && valor.trim() !== '' ? valor : '—';
 }
 
-/** Campos da certidão cadastral que o usuário marcou como destaque (design 2026-07-22, seção 4.1). */
-const CAMPOS_IPTU_MARCADOS = [
+/**
+ * Campos da certidão cadastral exibidos na ficha. Sem destaque âmbar e sem
+ * repetir endereço/bairro/CEP — esses ficam no bloco Localização, logo acima
+ * (relatório de usabilidade SEDUR 19/09/2026, itens 14, 16 e 20).
+ */
+const CAMPOS_IPTU = [
     'inscricao',
-    'endereco',
-    'numero_metrico',
     'loteamento',
     'quadra',
     'lote',
@@ -432,16 +448,10 @@ const CAMPOS_IPTU_MARCADOS = [
     'bloco',
     'sub_unidade',
     'numero_sub_unidade',
-    'bairro',
-    'cep',
     'area_construida_m2',
     'tipo_imovel',
     'data_lancamento',
     'situacao_cadastral',
-] as const;
-
-/** Demais campos da certidão (seção 4.2 do design), exibidos sem destaque. */
-const CAMPOS_IPTU_DEMAIS = [
     'numero_porta',
     'area_terreno_m2',
     'valor_venal_iptu',
@@ -478,19 +488,13 @@ const LABELS_CADASTRO_IMOBILIARIO: Record<string, string> = {
 };
 
 /**
- * Campo da certidão cadastral: só leitura, com destaque acessível (fundo âmbar
- * nos campos marcados pelo usuário — design 2026-07-22, seção 4.1).
+ * Campo da certidão cadastral: só leitura, sem destaque visual (relatório de
+ * usabilidade SEDUR 19/09/2026, itens 14 e 16).
  */
-function CampoCadastroImobiliario({ chave, valor, marcado }: { chave: string; valor: string | null | undefined; marcado: boolean }) {
+function CampoCadastroImobiliario({ chave, valor }: { chave: string; valor: string | null | undefined }) {
     return (
-        <div
-            className={
-                marcado
-                    ? 'rounded-lg bg-warning-50 p-2 ring-1 ring-warning-200 dark:bg-warning-500/10 dark:ring-warning-500/30'
-                    : undefined
-            }
-        >
-            <dt className="flex items-center gap-1.5 text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+        <div>
+            <dt className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
                 {LABELS_CADASTRO_IMOBILIARIO[chave] ?? chave}
             </dt>
             <dd className="mt-1 text-theme-sm text-gray-800 dark:text-white/90">{valorOuTraco(valor)}</dd>
@@ -523,14 +527,8 @@ function CadastroImobiliarioPanel({ cadastro }: { cadastro: CadastroImobiliario 
             )}
 
             <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {CAMPOS_IPTU_MARCADOS.map((chave) => (
-                    <CampoCadastroImobiliario key={chave} chave={chave} valor={cadastro.campos[chave]} marcado />
-                ))}
-            </dl>
-
-            <dl className="mt-4 grid grid-cols-1 gap-4 border-t border-gray-100 pt-4 sm:grid-cols-2 dark:border-gray-800">
-                {CAMPOS_IPTU_DEMAIS.map((chave) => (
-                    <CampoCadastroImobiliario key={chave} chave={chave} valor={cadastro.campos[chave]} marcado={false} />
+                {CAMPOS_IPTU.map((chave) => (
+                    <CampoCadastroImobiliario key={chave} chave={chave} valor={cadastro.campos[chave]} />
                 ))}
             </dl>
         </div>
@@ -546,6 +544,35 @@ function DescItem({ label, children }: { label: string; children: ReactNode }) {
             <dd className="mt-1 text-theme-sm text-gray-800 dark:text-white/90">{children}</dd>
         </div>
     );
+}
+
+/** Severidade para o risco do estabelecimento (usabilidade SEDUR item 24). */
+function riscoRank(valor: string | null | undefined): number {
+    const normalizado = (valor ?? '').toLowerCase();
+
+    if (normalizado === 'alto') {
+        return 3;
+    }
+
+    if (normalizado.startsWith('médio') || normalizado.startsWith('medio')) {
+        return 2;
+    }
+
+    if (normalizado.startsWith('baixo')) {
+        return 1;
+    }
+
+    return 0;
+}
+
+function rotuloRiscoSanitario(valor: string | null | undefined): string | null {
+    if (valor == null || valor === '') {
+        return null;
+    }
+
+    const mapa: Record<string, string> = { baixo: 'Baixo', medio: 'Médio Risco', alto: 'Alto' };
+
+    return mapa[valor.toLowerCase()] ?? valor;
 }
 
 /** Textarea no padrão visual do design system (sem componente dedicado no kit). */
@@ -722,6 +749,8 @@ export default function FichaAnaliseShow({
     dadosTvl,
     cadastroImobiliario,
     tramitacao,
+    enquadramentoOpcoes,
+    setores,
     escritorioVirtual,
     textosPadrao,
     autosaveDebounceMs,
@@ -812,6 +841,7 @@ export default function FichaAnaliseShow({
     const [cancelarConviteProcessing, setCancelarConviteProcessing] = useState(false);
     const [showMalhaFina, setShowMalhaFina] = useState(false);
     const [motivoMalhaFina, setMotivoMalhaFina] = useState('');
+    const [setorVistoria, setSetorVistoria] = useState('');
     const [pickerParaParecer, setPickerParaParecer] = useState(false);
     const [pickerParaCondicao, setPickerParaCondicao] = useState(false);
 
@@ -824,6 +854,8 @@ export default function FichaAnaliseShow({
                 status_escolhido: item.status_escolhido === 'analise' ? null : (item.status_escolhido ?? null),
                 justificativa: item.justificativa ?? null,
                 condicionantes: item.condicionantes ?? [],
+                codigo_louos: item.codigo_louos ?? null,
+                codigo_tll: item.codigo_tll ?? null,
             })),
             conditions,
             parking,
@@ -1021,7 +1053,11 @@ export default function FichaAnaliseShow({
     function encaminharMalhaFina() {
         router.post(
             '/gestao/processos/malha-fina',
-            { request_ids: [processo.id], motivo: motivoMalhaFina },
+            {
+                request_ids: [processo.id],
+                motivo: motivoMalhaFina,
+                sector_id: setorVistoria === '' ? null : Number(setorVistoria),
+            },
             {
                 preserveScroll: true,
                 onStart: () => setMalhaFinaProcessing(true),
@@ -1029,6 +1065,7 @@ export default function FichaAnaliseShow({
                 onSuccess: () => {
                     setShowMalhaFina(false);
                     setMotivoMalhaFina('');
+                    setSetorVistoria('');
                 },
             },
         );
@@ -1379,7 +1416,7 @@ export default function FichaAnaliseShow({
                             <DescItem label="Complemento">{valorOuTraco(dadosTvl.complemento)}</DescItem>
                         </dl>
                         <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
-                            A marcação de sede de escritório virtual é editada no parecer técnico, abaixo.
+                            A marcação de sede de escritório virtual é editada no card da atividade CNAE gatilho, abaixo.
                         </p>
                     </CardContent>
                 </Card>
@@ -1460,6 +1497,161 @@ export default function FichaAnaliseShow({
                             </div>
                         </WhenVisible>
 
+                        {/* Motivo de Análise — logo após o Resumo, no topo e fora
+                            da ficha (relatório de usabilidade SEDUR 19/09, itens 28-29).
+                            Preenchido pelo sistema; o analista não edita. */}
+                        <Card>
+                            <CardHeader
+                                title="Motivo de Análise"
+                                description="Registrado automaticamente pelo sistema quando o processo exige análise humana. O analista não edita este campo."
+                            />
+                            <CardContent>
+                                {analysisReasons.length > 0 ? (
+                                    <ul className="space-y-2">
+                                        {analysisReasons.map((motivo, indice) => (
+                                            <li
+                                                key={`${motivo}-${indice}`}
+                                                className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-800"
+                                            >
+                                                <span className="text-theme-sm text-gray-700 dark:text-gray-300">{motivo}</span>
+                                                <Badge color="light" size="sm">
+                                                    Sistema
+                                                </Badge>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                        Nenhum motivo registrado pelo sistema.
+                                    </p>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Justificativa do processo — consolidada no início, fora da
+                            ficha (relatório de usabilidade SEDUR 19/09, item 24):
+                            atividades com LOUOS × TLL × valor, risco do
+                            estabelecimento com o CNAE que elevou e só a
+                            fundamentação legal vigente. */}
+                        {perCnae.length > 0 && (
+                            <Card>
+                                <CardHeader
+                                    title="Justificativa"
+                                    description="Enquadramento e risco por atividade, com a fundamentação legal vigente."
+                                />
+                                <CardContent>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-theme-sm">
+                                            <thead>
+                                                <tr className="border-b border-gray-200 text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:border-gray-800 dark:text-gray-500">
+                                                    <th className="py-2 pr-4">Atividade</th>
+                                                    <th className="py-2 pr-4">LOUOS</th>
+                                                    <th className="py-2 pr-4">TLL</th>
+                                                    <th className="py-2 pr-4">Valor TLL</th>
+                                                    <th className="py-2">Risco</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {perCnae.map((item, indice) => (
+                                                    <tr
+                                                        key={`justificativa-${item.cnae}-${indice}`}
+                                                        className="border-b border-gray-100 last:border-0 dark:border-gray-800"
+                                                    >
+                                                        <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">
+                                                            {item.cnae_formatado ?? item.cnae}
+                                                        </td>
+                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                                                            {item.codigo_louos ?? '—'}
+                                                        </td>
+                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                                                            {item.codigo_tll ?? '—'}
+                                                        </td>
+                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                                                            {item.valor_tll != null && item.valor_tll !== ''
+                                                                ? formatarMoeda(item.valor_tll)
+                                                                : '—'}
+                                                        </td>
+                                                        <td className="py-2 text-gray-600 dark:text-gray-400">
+                                                            {[item.risco_municipal, rotuloRiscoSanitario(item.risco_sanitario)]
+                                                                .filter(Boolean)
+                                                                .join(' · ') || '—'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {(() => {
+                                        const maisRestritivo = perCnae.reduce<(typeof perCnae)[number] | null>(
+                                            (maior, item) => {
+                                                const rank = Math.max(
+                                                    riscoRank(item.risco_municipal),
+                                                    riscoRank(rotuloRiscoSanitario(item.risco_sanitario)),
+                                                );
+                                                const rankMaior =
+                                                    maior === null
+                                                        ? 0
+                                                        : Math.max(
+                                                              riscoRank(maior.risco_municipal),
+                                                              riscoRank(rotuloRiscoSanitario(maior.risco_sanitario)),
+                                                          );
+
+                                                return rank > rankMaior ? item : maior;
+                                            },
+                                            null,
+                                        );
+
+                                        if (maisRestritivo === null) {
+                                            return null;
+                                        }
+
+                                        const riscoEstabelecimento = [
+                                            maisRestritivo.risco_municipal,
+                                            rotuloRiscoSanitario(maisRestritivo.risco_sanitario),
+                                        ]
+                                            .filter(Boolean)
+                                            .join(' · ');
+
+                                        return (
+                                            <p className="mt-4 text-theme-sm text-gray-700 dark:text-gray-300">
+                                                Risco do estabelecimento: <strong>{riscoEstabelecimento}</strong>
+                                                {perCnae.length > 1 && (
+                                                    <>
+                                                        {' '}
+                                                        — elevado pelo CNAE{' '}
+                                                        {maisRestritivo.cnae_formatado ?? maisRestritivo.cnae} (mais
+                                                        restritivo da solicitação)
+                                                    </>
+                                                )}
+                                                .
+                                            </p>
+                                        );
+                                    })()}
+
+                                    {(() => {
+                                        const fundamentacao = [
+                                            ...new Set(
+                                                perCnae.flatMap((item) => item.fundamentacao ?? []),
+                                            ),
+                                        ];
+
+                                        if (fundamentacao.length === 0) {
+                                            return null;
+                                        }
+
+                                        return (
+                                            <ul className="mt-3 list-inside list-disc text-theme-xs text-gray-500 dark:text-gray-400">
+                                                {fundamentacao.map((ref) => (
+                                                    <li key={ref}>{ref}</li>
+                                                ))}
+                                            </ul>
+                                        );
+                                    })()}
+                                </CardContent>
+                            </Card>
+                        )}
+
                         {/* Enquadramento por CNAE (espelha a ficha SAPS) */}
                         <Card>
                             <CardHeader
@@ -1476,6 +1668,15 @@ export default function FichaAnaliseShow({
                                     <ul className="space-y-5">
                                         {perCnae.map((item, indice) => {
                                             const escolhido = item.status_escolhido ?? null;
+                                            const opcoesCnae = enquadramentoOpcoes[item.cnae] ?? [];
+                                            const enquadramentoAtual = `${item.codigo_louos ?? ''}|${item.codigo_tll ?? ''}`;
+                                            const atualForaDaPlanilha =
+                                                item.codigo_louos != null &&
+                                                !opcoesCnae.some(
+                                                    (opcao) =>
+                                                        `${opcao.codigo_louos}|${opcao.codigo_tll ?? ''}` ===
+                                                        enquadramentoAtual,
+                                                );
 
                                             return (
                                                 <li
@@ -1572,20 +1773,71 @@ export default function FichaAnaliseShow({
                                                     </div>
 
                                                     <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                                        <DescItem label="Código LOUOS">
-                                                            {item.codigo_louos ?? (
-                                                                <span className="text-gray-400 dark:text-gray-500">
-                                                                    Pendente — tabela oficial SEDUR não entregue
-                                                                </span>
-                                                            )}
-                                                        </DescItem>
-                                                        <DescItem label="Código TLL">
-                                                            {item.codigo_tll ?? (
-                                                                <span className="text-gray-400 dark:text-gray-500">
-                                                                    Pendente — tabela oficial SEDUR não entregue
-                                                                </span>
-                                                            )}
-                                                        </DescItem>
+                                                        {editavel ? (
+                                                            <div className="sm:col-span-2">
+                                                                <Label htmlFor={`enquadramento-${indice}`} className="mb-1.5">
+                                                                    Enquadramento (LOUOS × TLL)
+                                                                </Label>
+                                                                <select
+                                                                    id={`enquadramento-${indice}`}
+                                                                    className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                                                                    value={enquadramentoAtual}
+                                                                    onChange={(e) => {
+                                                                        const opcao = opcoesCnae.find(
+                                                                            (o) =>
+                                                                                `${o.codigo_louos}|${o.codigo_tll ?? ''}` ===
+                                                                                e.target.value,
+                                                                        );
+
+                                                                        atualizarCnae(indice, {
+                                                                            codigo_louos: opcao?.codigo_louos ?? null,
+                                                                            codigo_tll: opcao?.codigo_tll ?? null,
+                                                                            valor_tll: opcao?.valor_tll ?? null,
+                                                                        });
+                                                                    }}
+                                                                >
+                                                                    <option value="|">Selecione o enquadramento…</option>
+                                                                    {opcoesCnae.map((opcao) => (
+                                                                        <option
+                                                                            key={`${opcao.codigo_louos}|${opcao.codigo_tll ?? ''}`}
+                                                                            value={`${opcao.codigo_louos}|${opcao.codigo_tll ?? ''}`}
+                                                                        >
+                                                                            {opcao.codigo_louos}
+                                                                            {opcao.denominacao_louos
+                                                                                ? ` — ${opcao.denominacao_louos}`
+                                                                                : ''}
+                                                                            {opcao.codigo_tll
+                                                                                ? ` · TLL ${opcao.codigo_tll}`
+                                                                                : ''}
+                                                                        </option>
+                                                                    ))}
+                                                                    {atualForaDaPlanilha && (
+                                                                        <option value={enquadramentoAtual}>
+                                                                            {item.codigo_louos}
+                                                                            {item.codigo_tll ? ` · TLL ${item.codigo_tll}` : ''}{' '}
+                                                                            (atual — fora da planilha vigente)
+                                                                        </option>
+                                                                    )}
+                                                                </select>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <DescItem label="Código LOUOS">
+                                                                    {item.codigo_louos ?? (
+                                                                        <span className="text-gray-400 dark:text-gray-500">
+                                                                            Pendente — tabela oficial SEDUR não entregue
+                                                                        </span>
+                                                                    )}
+                                                                </DescItem>
+                                                                <DescItem label="Código TLL">
+                                                                    {item.codigo_tll ?? (
+                                                                        <span className="text-gray-400 dark:text-gray-500">
+                                                                            Pendente — tabela oficial SEDUR não entregue
+                                                                        </span>
+                                                                    )}
+                                                                </DescItem>
+                                                            </>
+                                                        )}
                                                         <DescItem label="Valor TLL">
                                                             {item.valor_tll != null && item.valor_tll !== '' ? (
                                                                 <span>{formatarMoeda(item.valor_tll)}</span>
@@ -1876,35 +2128,6 @@ export default function FichaAnaliseShow({
                             </CardContent>
                         </Card>
 
-                        {/* Motivo de Análise — preenchido pelo sistema (queda do motor / expresso) */}
-                        <Card>
-                            <CardHeader
-                                title="Motivo de Análise"
-                                description="Registrado automaticamente pelo sistema quando o processo exige análise humana. O analista não edita este campo."
-                            />
-                            <CardContent>
-                                {analysisReasons.length > 0 ? (
-                                    <ul className="space-y-2">
-                                        {analysisReasons.map((motivo, indice) => (
-                                            <li
-                                                key={`${motivo}-${indice}`}
-                                                className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-800"
-                                            >
-                                                <span className="text-theme-sm text-gray-700 dark:text-gray-300">{motivo}</span>
-                                                <Badge color="light" size="sm">
-                                                    Sistema
-                                                </Badge>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                                        Nenhum motivo registrado pelo sistema.
-                                    </p>
-                                )}
-                            </CardContent>
-                        </Card>
-
                         {/* Tramitação (paridade com o legado, spec 2026-07-24) */}
                         <Card>
                             <CardHeader
@@ -2182,6 +2405,24 @@ export default function FichaAnaliseShow({
                             onChange={setMotivoMalhaFina}
                         />
                     </div>
+                    <div className="mt-4">
+                        <Label htmlFor="setor-vistoria" className="mb-1.5">
+                            Setor de tramitação
+                        </Label>
+                        <select
+                            id="setor-vistoria"
+                            className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                            value={setorVistoria}
+                            onChange={(e) => setSetorVistoria(e.target.value)}
+                        >
+                            <option value="">Manter o setor atual</option>
+                            {setores.map((setor) => (
+                                <option key={setor.id} value={setor.id}>
+                                    {setor.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     <div className="mt-6 flex items-center justify-end gap-3">
                         <Button variant="outline" size="sm" onClick={() => setShowMalhaFina(false)}>
                             Cancelar
@@ -2246,7 +2487,7 @@ function SugestoesIaSkeleton() {
     return (
         <div className="space-y-6">
             <Card>
-                <CardHeader title="Resumo do processo (IA — sugestão, revise)" description="Carregando o resumo da IA…" />
+                <CardHeader title="Resumo" description="Carregando o resumo da IA…" />
                 <CardContent>
                     <div className="space-y-3" aria-hidden="true">
                         <div className="h-4 w-1/2 animate-pulse rounded bg-gray-100 dark:bg-white/[0.06]" />
@@ -2298,8 +2539,8 @@ function ResumoProcessoCard({
     return (
         <Card>
             <CardHeader
-                title="Resumo do processo (IA — sugestão, revise)"
-                description="Síntese do processo (motor, enquadramento, inconsistências e pendências) gerada pela IA para apoiar a leitura. Não decide nem antecipa o desfecho."
+                title="Resumo"
+                description="Síntese do processo (sistema, enquadramento, inconsistências e pendências) gerada pela IA para apoiar a leitura. Não decide nem antecipa o desfecho."
                 actions={
                     resumos.length === 0 ? (
                         <Button

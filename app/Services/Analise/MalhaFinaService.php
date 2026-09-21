@@ -36,9 +36,9 @@ class MalhaFinaService
      * vazia (ou só espaços) lança MalhaFinaException e NADA é gravado. Funciona em
      * qualquer status (RN-001) — não valida nem transiciona o status.
      */
-    public function encaminhar(ViabilityRequest $request, User $ator, string $motivo): FineMeshReferral
+    public function encaminhar(ViabilityRequest $request, User $ator, string $motivo, ?int $sectorId = null): FineMeshReferral
     {
-        return $this->registrar($request, $ator, $this->motivoObrigatorio($motivo));
+        return $this->registrar($request, $ator, $this->motivoObrigatorio($motivo), $sectorId);
     }
 
     /**
@@ -85,7 +85,7 @@ class MalhaFinaService
      * @param  iterable<int, ViabilityRequest>  $requests
      * @return array{ok: int, falhas: list<array{viability_request_id: int, motivo: string}>}
      */
-    public function encaminharLote(iterable $requests, User $ator, string $motivo): array
+    public function encaminharLote(iterable $requests, User $ator, string $motivo, ?int $sectorId = null): array
     {
         $motivo = $this->motivoObrigatorio($motivo);
 
@@ -94,7 +94,7 @@ class MalhaFinaService
 
         foreach ($requests as $request) {
             try {
-                $this->registrar($request, $ator, $motivo);
+                $this->registrar($request, $ator, $motivo, $sectorId);
                 $ok++;
             } catch (Throwable $e) {
                 $falhas[] = [
@@ -139,10 +139,12 @@ class MalhaFinaService
      * Núcleo do encaminhamento: cria o fine_mesh_referrals e liga a flag
      * in_fine_mesh (forceFill — fora do fillable), SEM tocar no status (ortogonal),
      * auditando SÍNCRONO com o motivo e o status atual. Repetível por desenho.
+     * Com setor informado (popup de vistoria — usabilidade SEDUR item 22), o
+     * processo passa a tramitar nele e a mudança entra na mesma auditoria.
      */
-    private function registrar(ViabilityRequest $request, User $ator, string $motivo): FineMeshReferral
+    private function registrar(ViabilityRequest $request, User $ator, string $motivo, ?int $sectorId = null): FineMeshReferral
     {
-        return DB::transaction(function () use ($request, $ator, $motivo): FineMeshReferral {
+        return DB::transaction(function () use ($request, $ator, $motivo, $sectorId): FineMeshReferral {
             /** @var FineMeshReferral $referral */
             $referral = $request->fineMeshReferrals()->create([
                 'referred_by_user_id' => $ator->id,
@@ -150,7 +152,13 @@ class MalhaFinaService
                 'resolved_at' => null,
             ]);
 
-            $request->forceFill(['in_fine_mesh' => true])->save();
+            $request->forceFill(['in_fine_mesh' => true]);
+
+            if ($sectorId !== null) {
+                $request->forceFill(['sector_id' => $sectorId]);
+            }
+
+            $request->save();
 
             $this->audit->log('analise', 'malha-fina-encaminhar', "Processo encaminhado à malha fina (solicitação #{$request->id}).", [
                 'viability_request_id' => $request->id,
@@ -159,6 +167,7 @@ class MalhaFinaService
                 'status' => $request->status->value,
                 'motivo' => $motivo,
                 'ator_id' => $ator->id,
+                'sector_id' => $sectorId,
             ], $request);
 
             return $referral;

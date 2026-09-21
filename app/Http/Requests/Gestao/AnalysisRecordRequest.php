@@ -43,6 +43,8 @@ class AnalysisRecordRequest extends FormRequest
             'per_cnae.*.status_escolhido' => ['nullable', Rule::in($statusEscolhido)],
             'per_cnae.*.justificativa' => ['nullable', 'string'],
             'per_cnae.*.condicionantes' => ['sometimes', 'array'],
+            'per_cnae.*.codigo_louos' => ['nullable', 'string', 'max:16'],
+            'per_cnae.*.codigo_tll' => ['nullable', 'string', 'max:16'],
             'conditions' => ['sometimes', 'array'],
             'parking' => ['sometimes', 'array'],
             'parecer' => ['sometimes', 'nullable', 'string'],

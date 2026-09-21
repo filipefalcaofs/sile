@@ -134,6 +134,28 @@ class AnalysisRecordAutosaveTest extends TestCase
         $this->assertNotContains('Texto desativado que não deve aparecer no picker.', $conteudos);
     }
 
+    public function test_autosave_atualiza_enquadramento_louos_e_tll_do_cnae(): void
+    {
+        // Relatório de usabilidade SEDUR 19/09 (item 23): o enquadramento é
+        // seleção pré-preenchida que o analista valida ou troca — o autosave
+        // persiste codigo_louos/codigo_tll e preserva os campos do motor.
+        $ficha = $this->fichaRascunho();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->patchJson("/gestao/processos/{$ficha->viability_request_id}/ficha", [
+                'per_cnae' => [
+                    ['cnae' => '4712100', 'codigo_louos' => '07.01.06', 'codigo_tll' => '2.03'],
+                ],
+            ])
+            ->assertOk();
+
+        $item = $ficha->fresh()->per_cnae[0];
+        $this->assertSame('07.01.06', $item['codigo_louos']);
+        $this->assertSame('2.03', $item['codigo_tll']);
+        $this->assertSame('deferida', $item['status_sugerido']);
+        $this->assertSame('deferida', $item['status_escolhido']);
+    }
+
     public function test_autosave_atualiza_status_escolhido_e_parecer_no_rascunho(): void
     {
         $ficha = $this->fichaRascunho();

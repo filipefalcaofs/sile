@@ -511,6 +511,31 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertStringContainsString('deferimento', mb_strtolower($payload['per_cnae'][0]['justificativa']));
     }
 
+    public function test_resource_expoe_risco_por_cnae_lido_do_snapshot(): void
+    {
+        // Relatório de usabilidade SEDUR 19/09 (item 24): a justificativa no
+        // início mostra a classificação de risco do estabelecimento e o CNAE
+        // que elevou — a ficha precisa do nível por atividade.
+        $ficha = AnalysisRecord::factory()->create([
+            'per_cnae' => [[
+                'cnae' => '4771701',
+                'justificativa' => 'Decisão técnica do analista.',
+                'status_escolhido' => 'deferida',
+            ]],
+            'engine_snapshot' => [
+                'por_cnae' => [[
+                    'cnae' => '4771701',
+                    'consulta' => $this->consultaSnapshotPermitida(),
+                ]],
+            ],
+        ]);
+
+        $payload = (new AnalysisRecordResource($ficha))->resolve();
+
+        $this->assertSame('Baixo', $payload['per_cnae'][0]['risco_municipal']);
+        $this->assertNull($payload['per_cnae'][0]['risco_sanitario']);
+    }
+
     public function test_resource_nao_sobrescreve_justificativa_do_analista(): void
     {
         $ficha = AnalysisRecord::factory()->create([

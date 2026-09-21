@@ -40,6 +40,9 @@ class EncaminharMalhaFinaRequest extends FormRequest
             'request_ids' => ['required', 'array', 'min:1'],
             'request_ids.*' => ['integer', Rule::exists('viability_requests', 'id')],
             'motivo' => ['required', 'string', 'max:2000'],
+            // Setor de tramitação da vistoria (relatório de usabilidade SEDUR
+            // 19/09, item 22) — opcional; presente no popup da ficha.
+            'sector_id' => ['nullable', 'integer', Rule::exists('sectors', 'id')],
         ];
     }
 
@@ -52,6 +55,7 @@ class EncaminharMalhaFinaRequest extends FormRequest
             'request_ids' => 'processos',
             'request_ids.*' => 'processo',
             'motivo' => 'motivo',
+            'sector_id' => 'setor de tramitação',
         ];
     }
 }

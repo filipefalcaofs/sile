@@ -97,6 +97,18 @@ class AnalysisRecordResource extends JsonResource
             // Checklist ilustrativo dos quadros (Q10 × Q11-A) lido do snapshot.
             $item['quadros'] = $quadros->para($consulta);
 
+            // Risco por atividade lido do snapshot (usabilidade SEDUR item 24) —
+            // alimenta a justificativa consolidada no início da análise.
+            $risco = is_array($consulta['risco'] ?? null) ? $consulta['risco'] : [];
+            $municipal = is_array($risco['municipal'] ?? null) ? $risco['municipal'] : [];
+            $sanitario = is_array($risco['sanitario'] ?? null) ? $risco['sanitario'] : [];
+            $item['risco_municipal'] = ($municipal['status'] ?? null) === 'classificado'
+                ? ($municipal['nivel_label'] ?? null)
+                : null;
+            $item['risco_sanitario'] = ($sanitario['status'] ?? null) === 'classificado'
+                ? ($sanitario['nivel_final'] ?? null)
+                : null;
+
             $atual = trim((string) ($item['justificativa'] ?? ''));
             $motivoCurto = trim((string) ($consulta['enquadramento']['consolidado']['motivo']
                 ?? $consulta['veredito_locacional']['motivo']
