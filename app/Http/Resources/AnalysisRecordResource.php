@@ -15,8 +15,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Payload de leitura da ficha de análise (HU-135) para a retaguarda: a revisão
  * vigente, seu status (+rótulo) e a flag `editavel` (false na finalizada — RN-003),
- * o per_cnae com a sugestão do motor (status_sugerido) × a escolha do analista
- * (status_escolhido), as condicionantes, as vagas, o parecer e `finalized_at`.
+ * o per_cnae com a escolha do analista (status_escolhido), as condicionantes,
+ * as vagas, o parecer e `finalized_at`. A sugestão do motor (status_sugerido)
+ * NÃO sai no payload — o sistema não sugere decisão ao analista (relatório
+ * SEDUR 21/09/2026, item 02); ela permanece gravada só para a divergência
+ * auditada (HU-140 RN-002).
  * Expõe também a disponibilidade do motor (FA-01 — modo manual). SOMENTE LEITURA;
  * a escrita acontece pelo autosave/finalizar (AnalysisRecordService).
  *
@@ -72,6 +75,10 @@ class AnalysisRecordResource extends JsonResource
             : [];
 
         return array_map(function (array $item) use ($composer, $porCnae, $local, $solicitacao, $quadros): array {
+            // A sugestão do motor não sai do servidor (relatório SEDUR 21/09,
+            // item 02) — fica gravada só para a divergência auditada.
+            unset($item['status_sugerido']);
+
             if ($solicitacao !== null) {
                 $item['pergunta_local'] = $local->para($solicitacao, (string) ($item['cnae'] ?? ''));
             }

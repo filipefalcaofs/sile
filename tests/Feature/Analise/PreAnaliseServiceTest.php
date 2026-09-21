@@ -180,23 +180,23 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertSame('identificado', $zona['status']);
         $this->assertSame('ZR-1', $zona['nome']);
 
-        // per_cnae com o status sugerido por CNAE mapeado da tendência (permitido
-        // → deferida) — sugestão, não decisão (RN-001).
+        // per_cnae guarda a tendência do motor; a decisão NÃO nasce pré-marcada
+        // (relatório SEDUR 21/09, item 02): status_escolhido é null até o analista
+        // escolher. status_sugerido permanece gravado só para a divergência
+        // auditada (HU-140 RN-002) — nunca é exposto na ficha.
         $this->assertCount(1, $record->per_cnae);
         $this->assertSame('4712100', $record->per_cnae[0]['cnae']);
         $this->assertSame('permitido', $record->per_cnae[0]['tendencia']);
         $this->assertSame('deferida', $record->per_cnae[0]['status_sugerido']);
-        $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
+        $this->assertNull($record->per_cnae[0]['status_escolhido']);
         $this->assertSame('nR1', $record->per_cnae[0]['grupo_uso']);
         $this->assertNotEmpty($record->per_cnae[0]['justificativa']);
         $this->assertStringContainsString('Lei nº 9.148/2016', (string) $record->per_cnae[0]['justificativa']);
         $this->assertStringContainsString('planilha vigente', (string) $record->per_cnae[0]['justificativa']);
         $this->assertStringContainsString('Quadro 10', (string) $record->per_cnae[0]['justificativa']);
         $this->assertStringContainsString('deferimento', mb_strtolower((string) $record->per_cnae[0]['justificativa']));
-        $this->assertNotEmpty($record->parecer);
-        $this->assertStringContainsString('Quadro 10', (string) $record->parecer);
-        $this->assertStringNotContainsString('Rascunho do motor', (string) $record->parecer);
-        $this->assertStringNotContainsString('A decisão continua sendo do analista', (string) $record->parecer);
+        // Parecer nasce em branco para o analista (relatório SEDUR 21/09, item 04).
+        $this->assertNull($record->parecer);
         $this->assertSame('permitido', $record->engine_snapshot['consolidado']);
 
         // RN-005: a pré-análise é auditada (analise/pre-analise) com a versão das
@@ -230,11 +230,11 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertTrue($record->engine_available);
         $this->assertSame('nao_permitido', $record->per_cnae[0]['tendencia']);
         $this->assertSame('indeferida', $record->per_cnae[0]['status_sugerido']);
-        $this->assertSame('indeferida', $record->per_cnae[0]['status_escolhido']);
+        $this->assertNull($record->per_cnae[0]['status_escolhido']);
         $this->assertNotEmpty($record->per_cnae[0]['justificativa']);
         $this->assertStringContainsString('indeferimento', mb_strtolower((string) $record->per_cnae[0]['justificativa']));
         $this->assertStringContainsString('proibido', mb_strtolower((string) $record->per_cnae[0]['justificativa']));
-        $this->assertStringContainsString('indeferimento', mb_strtolower((string) $record->parecer));
+        $this->assertNull($record->parecer);
     }
 
     public function test_idempotente_nao_cria_duas_revisoes_1(): void
@@ -305,8 +305,7 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertNull($record->per_cnae[0]['status_sugerido']);
         $this->assertNull($record->per_cnae[0]['status_escolhido']);
         $this->assertSame('pendente', $record->engine_snapshot['consolidado']);
-        $this->assertNotEmpty($record->parecer);
-        $this->assertStringContainsString('pendente', mb_strtolower((string) $record->parecer));
+        $this->assertNull($record->parecer);
 
         $activity = Activity::query()
             ->where('log_name', 'analise')
@@ -348,7 +347,7 @@ class PreAnaliseServiceTest extends TestCase
 
         $this->assertNotNull($record);
         $this->assertSame('permitido_com_condicoes', $record->per_cnae[0]['tendencia']);
-        $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
+        $this->assertNull($record->per_cnae[0]['status_escolhido']);
         $this->assertNotEmpty($record->conditions);
         $this->assertNotEmpty($record->per_cnae[0]['condicionantes']);
         $this->assertTrue(
@@ -449,8 +448,8 @@ class PreAnaliseServiceTest extends TestCase
 
         $this->assertNotNull($record);
         $this->assertTrue($record->engine_available);
-        $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
-        $this->assertNotEmpty($record->parecer);
+        $this->assertNull($record->per_cnae[0]['status_escolhido']);
+        $this->assertNull($record->parecer);
         $this->assertSame(1, $request->analysisRecords()->count());
     }
 
@@ -538,6 +537,32 @@ class PreAnaliseServiceTest extends TestCase
         $payload = (new AnalysisRecordResource($ficha))->resolve();
 
         $this->assertSame('Decisão técnica do analista.', $payload['per_cnae'][0]['justificativa']);
+    }
+
+    public function test_payload_da_ficha_nao_expoe_sugestao_nem_pre_marca_decisao(): void
+    {
+        // Relatório SEDUR 21/09, itens 02 e 04: o sistema não sugere decisão ao
+        // analista — o payload da ficha não carrega status_sugerido, não pré-marca
+        // status_escolhido e o parecer nasce em branco. A sugestão gravada no
+        // banco continua disponível só para a divergência auditada (HU-140 RN-002).
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $request = $this->emAnaliseComCnaes(['4712100']);
+
+        $record = $this->service()->preAnalisar($request);
+        $this->assertNotNull($record);
+
+        $payload = (new AnalysisRecordResource($record->fresh()))->resolve();
+
+        $this->assertNull($payload['parecer']);
+
+        foreach ($payload['per_cnae'] as $item) {
+            $this->assertArrayNotHasKey('status_sugerido', $item);
+            $this->assertNull($item['status_escolhido']);
+        }
     }
 
     /**

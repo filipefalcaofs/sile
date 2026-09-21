@@ -27,7 +27,6 @@ interface PerCnae {
     is_primary?: boolean;
     tendencia?: string | null;
     tendencia_label?: string | null;
-    status_sugerido?: string | null;
     status_escolhido?: string | null;
     fluxo?: string | null;
     grupo_uso?: string | null;
@@ -1271,8 +1270,8 @@ export default function FichaAnaliseShow({
                         <p className="text-theme-sm text-gray-600 dark:text-gray-300">
                             <strong>Gatilho — Sede de Escritório Virtual:</strong> o processo contém o CNAE gatilho
                             ({escritorioVirtual.cnae_gatilho}) e o requerente pediu para ser sede (RN-EV-01).{' '}
-                            {escritorioVirtual.flag_analise_sede} Confirme o desfecho de sede abaixo — ao deferir
-                            como sede, a inscrição imobiliária é travada para escritório virtual (RN-EV-03).
+                            {escritorioVirtual.flag_analise_sede} Confirme o desfecho de sede no card da atividade —
+                            ao deferir como sede, a inscrição imobiliária é travada para escritório virtual (RN-EV-03).
                         </p>
                     </div>
                 )}
@@ -1458,11 +1457,7 @@ export default function FichaAnaliseShow({
                                 ) : (
                                     <ul className="space-y-5">
                                         {perCnae.map((item, indice) => {
-                                            const escolhido = item.status_escolhido ?? item.status_sugerido ?? null;
-                                            const diverge =
-                                                item.status_sugerido != null &&
-                                                escolhido != null &&
-                                                escolhido !== item.status_sugerido;
+                                            const escolhido = item.status_escolhido ?? null;
 
                                             return (
                                                 <li
@@ -1487,16 +1482,6 @@ export default function FichaAnaliseShow({
                                                                 </p>
                                                             )}
                                                         </div>
-                                                        <div className="text-right">
-                                                            <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
-                                                                Especialista sugere
-                                                            </p>
-                                                            <Badge color={statusColor(item.status_sugerido)} size="sm">
-                                                                {item.status_sugerido === 'analise' || !item.status_sugerido
-                                                                    ? 'Sem indicação de deferir/indeferir'
-                                                                    : statusLabel(item.status_sugerido)}
-                                                            </Badge>
-                                                        </div>
                                                     </div>
 
                                                     {(item.quadros?.length ?? 0) > 0 && (
@@ -1515,13 +1500,15 @@ export default function FichaAnaliseShow({
                                                         />
                                                     </div>
 
-                                                    {diverge && (
-                                                        <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning-200 bg-warning-50 p-3 dark:border-warning-500/30 dark:bg-warning-500/15">
-                                                            <AlertIcon className="size-4 shrink-0 fill-current text-warning-500" />
-                                                            <p className="text-theme-xs text-gray-600 dark:text-gray-300">
-                                                                Divergência da sugestão do motor — registre a
-                                                                justificativa (HU-140/HU-145).
-                                                            </p>
+                                                    {item.cnae.replace(/\D/g, '') ===
+                                                        escritorioVirtual.cnae_gatilho.replace(/\D/g, '') && (
+                                                        <div className="mt-3">
+                                                            <Checkbox
+                                                                label="Sede de Escritório Virtual"
+                                                                checked={sedeEscritorioVirtual}
+                                                                onChange={setSedeEscritorioVirtual}
+                                                                disabled={!editavel}
+                                                            />
                                                         </div>
                                                     )}
 
@@ -1597,7 +1584,7 @@ export default function FichaAnaliseShow({
 
                                                     <div className="mt-3">
                                                         <Label htmlFor={`justificativa-${indice}`} className="mb-1.5">
-                                                            Justificativa {diverge && <span className="text-error-500">*</span>}
+                                                            Justificativa
                                                         </Label>
                                                         <Textarea
                                                             id={`justificativa-${indice}`}
@@ -1807,7 +1794,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Parecer técnico"
-                                description="Parecer fundamentado pelo motor da LOUOS e, quando a IA está ligada, complementado pelo agente especialista. Confirme ou altere antes de finalizar."
+                                description="Em branco para o analista redigir — a fundamentação do sistema está na justificativa de cada atividade. Quando a IA está ligada, é possível pedir uma minuta para revisar."
                                 actions={
                                     editavel ? (
                                         <div className="flex flex-wrap items-center gap-2">
@@ -1828,14 +1815,6 @@ export default function FichaAnaliseShow({
                                 }
                             />
                             <CardContent>
-                                <div className="mb-4">
-                                    <Checkbox
-                                        label="Sede de Escritório Virtual"
-                                        checked={sedeEscritorioVirtual}
-                                        onChange={setSedeEscritorioVirtual}
-                                        disabled={!editavel}
-                                    />
-                                </div>
                                 <Textarea
                                     id="parecer-editor"
                                     rows={6}

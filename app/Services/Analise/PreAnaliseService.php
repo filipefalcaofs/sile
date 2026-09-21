@@ -7,7 +7,6 @@ use App\Enums\DecisionOutcome;
 use App\Enums\ResultadoViabilidade;
 use App\Models\AnalysisRecord;
 use App\Models\ViabilityRequest;
-use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Support\Audit\AuditService;
@@ -22,12 +21,14 @@ use Throwable;
  * de decisão paralela, RN-001) e cria a `analysis_records` revisão 1 (rascunho)
  * pré-preenchida: `engine_snapshot` INTEGRAL (a zona fica aninhada em
  * `por_cnae[i].consulta.territorio.zona`, conforme o PrecedentService lê),
- * `engine_rules_versions` e `per_cnae` com o status sugerido por CNAE
- * (deferida/indeferida/análise mapeado da tendência — SUGESTÃO, nunca decisão),
- * `status_escolhido` igual à sugestão (o analista só altera se divergir),
- * condicionantes, vagas e parecer-rascunho com a fundamentação dos Quadros
- * da LOUOS. Mesmo quando o processo NÃO é expresso, a ficha chega completa
- * para confirmar ou alterar — não para preencher do zero (HU-140 CA-01).
+ * `engine_rules_versions` e `per_cnae` com a tendência por CNAE. A sugestão do
+ * motor (status_sugerido) fica GRAVADA só para a divergência auditada
+ * (HU-140 RN-002) — nunca é exposta na ficha nem pré-marca a decisão:
+ * `status_escolhido` nasce null e o parecer nasce em branco (relatório SEDUR
+ * 21/09/2026, itens 02 e 04 — a decisão e o parecer são do analista).
+ * Condicionantes, vagas e justificativa fundamentada por atividade seguem
+ * pré-preenchidas. Mesmo quando o processo NÃO é expresso, a ficha chega
+ * completa para confirmar ou alterar — não para preencher do zero (HU-140 CA-01).
  *
  * Idempotente (RN-004): se a revisão 1 já existe, é no-op (retorna a existente) —
  * reabrir/reprocessar não reexecuta; recalcular é ação explícita (nova revisão,
@@ -50,7 +51,6 @@ class PreAnaliseService
         private readonly AuditService $audit,
         private readonly MotivoAnaliseComposer $motivos,
         private readonly JustificativaFundamentadaComposer $justificativas,
-        private readonly DecisionTextCatalog $textos,
     ) {}
 
     /**
@@ -119,7 +119,7 @@ class PreAnaliseService
                 'per_cnae' => $this->perCnae($resolved, $request),
                 'conditions' => $this->conditions($resolved, $request),
                 'parking' => $this->parking($resolved),
-                'parecer' => $this->parecerRascunho($request, $resolved),
+                'parecer' => null,
                 'analysis_reasons' => $this->motivosDaQueda($request, $resolved),
                 'finalized_at' => null,
             ]);
@@ -212,7 +212,7 @@ class PreAnaliseService
                 'tendencia' => $item['tendencia'],
                 'tendencia_label' => $item['tendencia_label'],
                 'status_sugerido' => $status,
-                'status_escolhido' => $status,
+                'status_escolhido' => null,
                 'fluxo' => $item['fluxo'],
                 'grupo_uso' => $grupo,
                 'gatilhos' => $this->rotulosGatilhos($consulta->risco->encaminhamento['gatilhos_acionados'] ?? []),
@@ -273,33 +273,6 @@ class PreAnaliseService
         }
 
         return [];
-    }
-
-    /**
-     * Parecer-rascunho: a mesma fundamentação por atividade da justificativa,
-     * no tom de um analista. Nunca inventa zona nem desfecho.
-     */
-    private function parecerRascunho(ViabilityRequest $request, ResolvedViability $resolved): string
-    {
-        $partes = [
-            $this->textos->render('analise.pre_analise.intro', [
-                // O rótulo do veredito continua vindo do enum (vocabulário —
-                // Fase 6, fora do escopo); o template leva só o :resultado.
-                ':resultado' => ResultadoViabilidade::from($resolved->consolidado)->label(),
-            ]),
-        ];
-
-        foreach ($resolved->por_cnae as $item) {
-            $partes[] = $this->justificativas->paraConsulta($item['consulta'], $item);
-        }
-
-        $quedas = $this->motivosDaQueda($request, $resolved) ?? [];
-
-        if ($quedas !== []) {
-            $partes[] = "Motivo do encaminhamento à análise:\n- ".implode("\n- ", $quedas);
-        }
-
-        return implode("\n\n", $partes);
     }
 
     /**

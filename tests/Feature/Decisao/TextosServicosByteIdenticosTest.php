@@ -109,8 +109,11 @@ class TextosServicosByteIdenticosTest extends TestCase
         $this->assertSame('Decreto Municipal nº 32.636/2020', $result->fundamentacao[0]);
     }
 
-    public function test_intro_do_parecer_da_pre_analise_e_byte_identica(): void
+    public function test_parecer_da_pre_analise_nasce_em_branco(): void
     {
+        // Relatório SEDUR 21/09, item 04: o parecer técnico é do analista — a
+        // pré-análise não o preenche mais. A fundamentação do motor permanece na
+        // justificativa por atividade (coberta pelos testes byte-idênticos dela).
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
         $this->seedTratamento('4712100', 'nR1', 'nR1-01');
@@ -122,13 +125,7 @@ class TextosServicosByteIdenticosTest extends TestCase
 
         $this->assertNotNull($record);
         $this->assertTrue($record->engine_available);
-
-        $intro = explode("\n\n", (string) $record->parecer)[0];
-
-        $this->assertSame(
-            'Analisa-se o requerimento à luz da Lei nº 9.148/2016 (LOUOS) e das regras de risco aplicáveis. Veredito locacional consolidado: Permitido.',
-            $intro,
-        );
+        $this->assertNull($record->parecer);
     }
 
     public function test_conclusao_de_permitido_e_byte_identica(): void
