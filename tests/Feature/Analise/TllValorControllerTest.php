@@ -138,4 +138,76 @@ class TllValorControllerTest extends TestCase
         // Não existe rota destrutiva — o histórico é preservado.
         $this->assertFalse(Route::has('gestao.tll.destroy'));
     }
+
+    public function test_gerar_exercicio_cria_rascunho_e_clona_linhas(): void
+    {
+        TllValor::factory()->create([
+            'codigo_tll' => '2.02',
+            'exercicio' => 2026,
+            'valor' => '100.00',
+            'active' => true,
+        ]);
+
+        $this->actingAs($this->administrador(), 'gestao')
+            ->post('/gestao/tll/exercicios', [
+                'exercicio_origem' => 2026,
+                'exercicio_destino' => 2027,
+                'fator' => '1.0446',
+                'decreto' => 'Decreto nº 41.304/2025',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('rule_versions', [
+            'domain' => 'tll_valores',
+            'version' => '2027',
+            'status' => 'rascunho',
+        ]);
+        $this->assertDatabaseHas('tll_valores', [
+            'codigo_tll' => '2.02',
+            'exercicio' => 2027,
+        ]);
+    }
+
+    public function test_publicar_exige_quatro_olhos(): void
+    {
+        $autor = $this->administrador();
+        $publicador = $this->administrador();
+
+        TllValor::factory()->create([
+            'codigo_tll' => '2.02',
+            'exercicio' => 2026,
+            'valor' => '100.00',
+            'active' => true,
+        ]);
+
+        $this->actingAs($autor, 'gestao')
+            ->post('/gestao/tll/exercicios', [
+                'exercicio_origem' => 2026,
+                'exercicio_destino' => 2027,
+                'fator' => '1.0446',
+                'decreto' => 'Decreto nº 41.304/2025',
+            ])
+            ->assertSessionHas('status');
+
+        $this->actingAs($autor, 'gestao')
+            ->post('/gestao/tll/exercicios/2027/publicar')
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('rule_versions', [
+            'domain' => 'tll_valores',
+            'version' => '2027',
+            'status' => 'rascunho',
+        ]);
+
+        $this->actingAs($publicador, 'gestao')
+            ->post('/gestao/tll/exercicios/2027/publicar')
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('rule_versions', [
+            'domain' => 'tll_valores',
+            'version' => '2027',
+            'status' => 'vigente',
+        ]);
+    }
 }

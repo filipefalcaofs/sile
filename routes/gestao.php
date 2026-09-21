@@ -549,6 +549,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:manter-parametros')->prefix('tll')->name('tll.')->group(function () {
             Route::get('/', [TllValorController::class, 'index'])->name('index');
             Route::post('/', [TllValorController::class, 'store'])->name('store');
+            Route::post('exercicios', [TllValorController::class, 'gerarExercicio'])->name('exercicios.store');
+            Route::post('exercicios/{exercicio}/publicar', [TllValorController::class, 'publicarExercicio'])->name('exercicios.publicar');
             Route::put('{tllValor}', [TllValorController::class, 'update'])->name('update');
             Route::put('{tllValor}/ativacao', [TllValorController::class, 'toggleActivation'])->name('ativacao.update');
         });

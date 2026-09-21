@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Exceptions\FourEyesViolationException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Gestao\PropagacaoTllRequest;
 use App\Http\Requests\Gestao\TllValorRequest;
 use App\Models\TllValor;
+use App\Services\Analise\TllPropagacaoExercicio;
+use App\Services\Analise\TllPublicacaoExercicio;
+use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -98,5 +103,33 @@ class TllValorController extends Controller
         return back()->with('status', $tllValor->active
             ? 'Valor de TLL reativado.'
             : 'Valor de TLL inativado.');
+    }
+
+    public function gerarExercicio(PropagacaoTllRequest $request): RedirectResponse
+    {
+        try {
+            app(TllPropagacaoExercicio::class)->propagar(
+                (int) $request->validated('exercicio_origem'),
+                (int) $request->validated('exercicio_destino'),
+                (string) $request->validated('fator'),
+                (string) $request->validated('decreto'),
+                (int) $request->user()->id,
+            );
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('status', 'Exercício gerado em rascunho. Revise e publique com um segundo usuário.');
+    }
+
+    public function publicarExercicio(Request $request, int $exercicio): RedirectResponse
+    {
+        try {
+            app(TllPublicacaoExercicio::class)->publicar($exercicio, (int) $request->user()->id);
+        } catch (FourEyesViolationException|DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('status', "Exercício {$exercicio} publicado.");
     }
 }
