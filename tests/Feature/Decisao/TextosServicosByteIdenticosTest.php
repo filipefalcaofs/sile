@@ -92,10 +92,13 @@ class TextosServicosByteIdenticosTest extends TestCase
 
     public function test_fundamentacao_do_risco_cita_o_decreto_byte_identico(): void
     {
+        // Relatório SEDUR 21/09 (itens 08–09): o decreto vigente citado é o
+        // 41.758/2026. A chave da versão segue a proveniência do dado; a
+        // citação legal é texto administrável (Textos decisórios).
         $version = RuleVersion::factory()->create([
             'domain' => RuleDomain::RiscoMunicipal,
-            'version' => 'decreto-32636-2020',
-            'rules_version' => 'decreto-32636-2020',
+            'version' => 'decreto-41758-2026',
+            'rules_version' => 'decreto-41758-2026',
         ]);
         RiskClassification::factory()->create([
             'rule_version_id' => $version->id,
@@ -106,7 +109,7 @@ class TextosServicosByteIdenticosTest extends TestCase
         $result = app(RiscoClassificationService::class)->classify(RiscoInput::paraCnae('1234567'));
 
         $this->assertSame('classificado', $result->municipal['status']);
-        $this->assertSame('Decreto Municipal nº 32.636/2020', $result->fundamentacao[0]);
+        $this->assertSame('Decreto Municipal nº 41.758/2026', $result->fundamentacao[0]);
     }
 
     public function test_parecer_da_pre_analise_nasce_em_branco(): void

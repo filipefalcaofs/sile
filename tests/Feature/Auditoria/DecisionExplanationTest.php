@@ -188,7 +188,7 @@ class DecisionExplanationTest extends TestCase
         $risco = $this->passo($passos, 'risco');
         $this->assertSame('Classificação de risco', $risco['titulo']);
         $this->assertSame(
-            'O Decreto nº 32.636/2020 classifica o risco do CNAE e define se o processo vai ao fluxo expresso ou à análise técnica. O nível e o encaminhamento desta decisão não foram gravados.',
+            'O Decreto nº 41.758/2026 classifica o risco do CNAE e define se o processo vai ao fluxo expresso ou à análise técnica. O nível e o encaminhamento desta decisão não foram gravados.',
             $risco['motivo'],
         );
 

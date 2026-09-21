@@ -106,7 +106,8 @@ final class DecisionTextCatalog
         return [
             // Bases legais citadas nas fundamentações.
             'base_legal.louos' => 'Lei nº 9.148/2016 (LOUOS)',
-            'base_legal.risco_municipal' => 'Decreto Municipal nº 32.636/2020',
+            // Decreto de risco vigente declarado pela SEDUR (relatório 21/09/2026).
+            'base_legal.risco_municipal' => 'Decreto Municipal nº 41.758/2026',
 
             // LOUOS — motivos das dimensões e do consolidado
             // (LouosEnquadramentoService, constantes das linhas 38-62).
@@ -160,7 +161,7 @@ final class DecisionTextCatalog
             // Explicabilidade da decisão — motivos dos passos não registrados
             // (decisão legada, sem decision_trace).
             'explicacao.motivo.nao_registrado' => 'não registrado nesta decisão',
-            'explicacao.motivo.risco_nao_registrado' => 'O Decreto nº 32.636/2020 classifica o risco do CNAE e define se o processo vai ao fluxo expresso ou à análise técnica. O nível e o encaminhamento desta decisão não foram gravados.',
+            'explicacao.motivo.risco_nao_registrado' => 'O Decreto nº 41.758/2026 classifica o risco do CNAE e define se o processo vai ao fluxo expresso ou à análise técnica. O nível e o encaminhamento desta decisão não foram gravados.',
             'explicacao.motivo.enquadramento_nao_registrado' => 'O enquadramento classifica o uso (CNAE × perguntas × área → grupo). O grupo desta decisão não foi gravado.',
             'explicacao.motivo.quadro10_nao_registrado' => 'O Quadro 10 permite ou proíbe o grupo na zona. A permissão e a zona desta decisão não foram gravadas.',
             'explicacao.motivo.quadro11a_nao_registrado' => 'O Quadro 11-A condiciona a instalação pela via (classe viária × grupo). Não permite nem proíbe o uso. As condições desta decisão não foram gravadas.',

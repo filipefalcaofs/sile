@@ -211,7 +211,7 @@ export default function CnaesCriar({ niveisMunicipais }: CnaesCriarProps) {
                         <Card>
                             <CardHeader
                                 title="Classificação de risco"
-                                description="Decreto nº 32.636/2020 e regras de responsável técnico/fator multiplicador (parametrizável por CNAE)."
+                                description="Decreto nº 41.758/2026 e regras de responsável técnico/fator multiplicador (parametrizável por CNAE)."
                             />
                             <CardContent>
                                 <RiscoMunicipalFields

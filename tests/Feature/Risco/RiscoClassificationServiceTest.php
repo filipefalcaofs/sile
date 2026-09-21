@@ -91,6 +91,37 @@ class RiscoClassificationServiceTest extends TestCase
         $this->assertNotSame($result->versoes()['municipal'], $result->versoes()['sanitario']);
     }
 
+    public function test_fundamentacao_nao_inclui_texto_da_vigilancia_sanitaria(): void
+    {
+        // Relatório SEDUR 21/09 (item 09): o texto da VISA não entra na
+        // fundamentação de nenhum CNAE — o risco sanitário já aparece no
+        // próprio card. Fundamentos de condicionante sanitária acionada
+        // continuam citados.
+        $municipal = $this->versaoMunicipal();
+        $sanitaria = $this->versaoSanitaria();
+
+        RiskClassification::factory()->create([
+            'rule_version_id' => $municipal->id,
+            'cnae_code' => '1234567',
+            'risco_municipal' => RiscoMunicipal::BaixoA,
+        ]);
+        SanitaryRiskClassification::factory()->create([
+            'rule_version_id' => $sanitaria->id,
+            'cnae_code' => '1234567',
+            'risco_sanitario' => RiscoSanitario::Alto,
+        ]);
+
+        $result = $this->service()->classify(RiscoInput::paraCnae('1234567'));
+
+        $this->assertSame('classificado', $result->sanitario['status']);
+        $this->assertFalse(
+            collect($result->fundamentacao)->contains(
+                fn (string $referencia): bool => str_contains($referencia, 'Vigilância Sanitária'),
+            ),
+            'A fundamentação não pode citar "Classificação de risco sanitário (Vigilância Sanitária)".',
+        );
+    }
+
     public function test_baixo_risco_municipal_encaminha_para_expresso(): void
     {
         $municipal = $this->versaoMunicipal();

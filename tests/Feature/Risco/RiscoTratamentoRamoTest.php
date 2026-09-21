@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Risco;
 
+use App\Enums\RiscoMunicipal;
 use App\Enums\RuleDomain;
+use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Services\Louos\LouosEnquadramentoService;
 use App\Services\Risco\RiscoClassificationService;
@@ -39,6 +41,33 @@ class RiscoTratamentoRamoTest extends TestCase
         $this->assertSame('baixo', $result->municipal['nivel']);
         $this->assertSame('expresso', $result->encaminhamento['fluxo']);
         $this->assertSame('1.01', $result->encaminhamento['tll']);
+        $this->assertSame('planilha-20-08-26', $result->versoes()['risco_tratamento']);
+    }
+
+    public function test_versao_municipal_nao_exibe_a_planilha_de_tratamento_como_decreto(): void
+    {
+        // Relatório SEDUR 21/09 (item 08): a tela rotulava "Decreto" com a
+        // versão da planilha de tratamento. A dimensão municipal guarda a
+        // versão do decreto; a da planilha fica em risco_tratamento.
+        $municipal = RuleVersion::factory()->create([
+            'domain' => RuleDomain::RiscoMunicipal,
+            'version' => 'decreto-41758-2026',
+            'rules_version' => 'decreto-41758-2026',
+        ]);
+        RiskClassification::factory()->create([
+            'rule_version_id' => $municipal->id,
+            'cnae_code' => '0111301',
+            'risco_municipal' => RiscoMunicipal::BaixoA,
+        ]);
+
+        $result = app(RiscoClassificationService::class)->classify(new RiscoInput(
+            cnaeCode: '0111-3/01',
+            areaUtilizada: 800.0,
+            respostasTratamento: [11 => false],
+        ));
+
+        $this->assertSame('decreto-41758-2026', $result->municipal['versao_regras']);
+        $this->assertSame('decreto-41758-2026', $result->versoes()['municipal']);
         $this->assertSame('planilha-20-08-26', $result->versoes()['risco_tratamento']);
     }
 

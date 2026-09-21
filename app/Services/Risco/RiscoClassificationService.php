@@ -300,6 +300,11 @@ class RiscoClassificationService
     }
 
     /**
+     * Nível municipal dirigido pelo ramo da planilha de tratamento. A versão da
+     * dimensão NÃO é sobrescrita (relatório SEDUR 21/09, item 08): o decreto
+     * permanece em versao_regras e a planilha já vai em versoes.risco_tratamento
+     * — a tela não pode rotular a planilha como "Decreto".
+     *
      * @param  array<string, mixed>  $municipal
      * @return array<string, mixed>
      */
@@ -308,7 +313,6 @@ class RiscoClassificationService
         $municipal['status'] = RiscoResult::STATUS_CLASSIFICADO;
         $municipal['nivel'] = $ramo->risco;
         $municipal['nivel_label'] = $ramo->risco;
-        $municipal['versao_regras'] = $ramo->versaoRegra;
 
         return $municipal;
     }
@@ -361,9 +365,12 @@ class RiscoClassificationService
     }
 
     /**
-     * Referências legais reais da decisão: municipal cita o Decreto 32.636/2020
-     * e as condicionantes gerais aplicáveis; sanitário cita a base da VISA e o
-     * fundamento da condicionante-pergunta efetivamente acionada.
+     * Referências legais reais da decisão: municipal cita o decreto vigente
+     * (texto administrável — Textos decisórios) e as condicionantes gerais
+     * aplicáveis; sanitário cita SÓ o fundamento da condicionante-pergunta
+     * efetivamente acionada. O texto genérico da VISA não entra na
+     * fundamentação (relatório SEDUR 21/09, item 09) — o risco sanitário já
+     * aparece no próprio card.
      *
      * @param  array<string, mixed>  $municipal
      * @param  array<string, mixed>  $sanitario
@@ -382,8 +389,6 @@ class RiscoClassificationService
         }
 
         if ($sanitario['status'] === RiscoResult::STATUS_CLASSIFICADO) {
-            $referencias[] = 'Classificação de risco sanitário (Vigilância Sanitária)';
-
             foreach ($sanitario['condicionantes_perguntas'] as $pergunta) {
                 if (($pergunta['acionou'] ?? false) && ($pergunta['fundamento'] ?? null) !== null) {
                     $referencias[] = (string) $pergunta['fundamento'];

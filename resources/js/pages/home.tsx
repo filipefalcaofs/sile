@@ -50,7 +50,7 @@ const services: ServiceItem[] = [
         icon: CheckCircleIcon,
         title: 'Fluxo expresso',
         description:
-            'Resposta automática para atividades de baixo risco, conforme a classificação de risco do Decreto nº 32.636/2020.',
+            'Resposta automática para atividades de baixo risco, conforme a classificação de risco do Decreto nº 41.758/2026.',
     },
     {
         icon: GroupIcon,
@@ -86,7 +86,7 @@ const legalBasis = [
         description: 'Lei de Ordenamento do Uso e da Ocupação do Solo do Município de Salvador.',
     },
     {
-        title: 'Decreto nº 32.636/2020',
+        title: 'Decreto nº 41.758/2026',
         description: 'Classificação de risco das atividades econômicas para fins de licenciamento.',
     },
     {

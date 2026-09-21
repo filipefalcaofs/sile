@@ -11,7 +11,8 @@ use Illuminate\Database\Seeder;
 
 /**
  * Carga oficial da classificação de risco MUNICIPAL (HU-020/HU-047): publica
- * uma versão vigente do domínio risco_municipal (Decreto nº 32.636/2020),
+ * uma versão vigente do domínio risco_municipal referenciando o Decreto nº
+ * 41.758/2026 (decreto vigente declarado pela SEDUR — relatório 21/09/2026),
  * delega o import real ao service e registra o relatório (contadores +
  * distribuição por nível) na trilha de auditoria com a versão de regras.
  *
@@ -29,8 +30,8 @@ class RiscoMunicipalSeeder extends Seeder
         if ($version === null) {
             $draft = $rules->openDraft(
                 RuleDomain::RiscoMunicipal,
-                'decreto-32636-2020',
-                'Decreto Municipal nº 32.636/2020 (redação Dec. 38.673/2024)',
+                'decreto-41758-2026',
+                'Decreto Municipal nº 41.758/2026',
             );
 
             $version = $rules->publish($draft);
@@ -44,9 +45,9 @@ class RiscoMunicipalSeeder extends Seeder
         app(AuditService::class)->log(
             logName: 'risco',
             event: 'importacao-classificacao-municipal',
-            description: 'Importação da classificação de risco municipal (Decreto 32.636/2020)',
+            description: 'Importação da classificação de risco municipal (Decreto 41.758/2026)',
             properties: $report,
-            rulesVersion: 'decreto-32636-2020',
+            rulesVersion: 'decreto-41758-2026',
         );
     }
 }

@@ -102,7 +102,7 @@ class DatabaseSeederTest extends TestCase
                 ->exists()
         );
 
-        // Classificação de risco municipal (Decreto 32.636/2020): versão
+        // Classificação de risco municipal (Decreto 41.758/2026): versão
         // vigente única + 1.331 classificações carregadas e auditadas.
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());

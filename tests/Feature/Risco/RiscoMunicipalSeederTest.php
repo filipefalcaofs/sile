@@ -12,9 +12,11 @@ use Tests\TestCase;
 
 /**
  * Carga oficial da classificação de risco municipal (HU-020/HU-047): o seeder
- * publica uma versão vigente do domínio risco_municipal e importa o Decreto
- * nº 32.636/2020 (767/328/236 = 1.331), auditando com a versão de regras. A
- * contagem é assertada sobre o CSV REAL commitado, sem fixture sintético.
+ * publica uma versão vigente do domínio risco_municipal referenciando o
+ * Decreto nº 41.758/2026 (relatório SEDUR 21/09 — decreto vigente) e importa
+ * a tabela oficial entregue pela SEDUR (767/328/236 = 1.331), auditando com a
+ * versão de regras. A contagem é assertada sobre o CSV REAL commitado, sem
+ * fixture sintético.
  */
 class RiscoMunicipalSeederTest extends TestCase
 {
@@ -27,7 +29,7 @@ class RiscoMunicipalSeederTest extends TestCase
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
 
         $vigente = RuleVersion::vigente(RuleDomain::RiscoMunicipal)->sole();
-        $this->assertSame('decreto-32636-2020', $vigente->version);
+        $this->assertSame('decreto-41758-2026', $vigente->version);
 
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(767, RiskClassification::query()->where('risco_municipal', 'baixo_a')->count());
@@ -45,7 +47,7 @@ class RiscoMunicipalSeederTest extends TestCase
             Activity::query()
                 ->where('log_name', 'risco')
                 ->where('event', 'importacao-classificacao-municipal')
-                ->where('rules_version', 'decreto-32636-2020')
+                ->where('rules_version', 'decreto-41758-2026')
                 ->exists()
         );
     }

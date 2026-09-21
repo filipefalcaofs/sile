@@ -106,7 +106,7 @@ const RISCO_FALLBACK: Record<string, string> = {
 };
 
 const FONTE_LABELS: Record<string, string> = {
-    real: 'Decreto 32.636/2020',
+    real: 'Decreto 41.758/2026',
     derivada: 'categoria derivada',
     indefinida: 'sem classificação',
 };
@@ -399,7 +399,7 @@ export default function IndicadoresViabilidade({
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardHeader title="Distribuição por risco" description="Por nível do Decreto nº 32.636/2020 (real) ou categoria derivada." />
+                        <CardHeader title="Distribuição por risco" description="Por nível do Decreto nº 41.758/2026 (real) ou categoria derivada." />
                         <CardContent>
                             {porRisco.length > 0 ? (
                                 <>

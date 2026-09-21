@@ -14,7 +14,7 @@ interface AuthLayoutProps {
 
 const institutionalHighlights = [
     'Consulta de viabilidade locacional pela LOUOS (Lei nº 9.148/2016)',
-    'Classificação de risco conforme o Decreto nº 32.636/2020',
+    'Classificação de risco conforme o Decreto nº 41.758/2026',
     'Acompanhamento do processo com transparência e auditoria',
 ];
 
