@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Valor da TLL (Taxa de Licença de Localização) por código e exercício (HU-071,
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Model;
     'codigo_servico_sefaz',
     'servico_sefaz',
     'active',
+    'rule_version_id',
 ])]
 class TllValor extends Model
 {
@@ -69,5 +71,16 @@ class TllValor extends Model
     public function scopeParaExercicio(Builder $query, string $codigoTll, int $exercicio): Builder
     {
         return $query->where('codigo_tll', $codigoTll)->where('exercicio', $exercicio);
+    }
+
+    /**
+     * Versão de regra do exercício que gerou esta linha (propagação). Null
+     * quando o valor foi cadastrado manualmente pelo CRUD.
+     *
+     * @return BelongsTo<RuleVersion, $this>
+     */
+    public function versao(): BelongsTo
+    {
+        return $this->belongsTo(RuleVersion::class, 'rule_version_id');
     }
 }

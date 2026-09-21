@@ -2,6 +2,8 @@
 
 namespace Tests\Unit\Analise;
 
+use App\Enums\RuleDomain;
+use App\Models\RuleVersion;
 use App\Models\TllValor;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -62,5 +64,26 @@ class TllValorTest extends TestCase
         $this->assertSame(1, TllValor::query()->active()->paraExercicio('1.01', 2026)->count());
         $this->assertSame(0, TllValor::query()->active()->paraExercicio('1.01', 2027)->count());
         $this->assertSame(0, TllValor::query()->active()->paraExercicio('2.02', 2026)->count(), 'O inativo não entra.');
+    }
+
+    public function test_dominio_tll_valores_existe_e_e_sensivel(): void
+    {
+        $this->assertSame('tll_valores', RuleDomain::TllValores->value);
+        $this->assertTrue(RuleDomain::TllValores->isSensitive());
+        $this->assertSame('Tabela de valores TLL por exercício', RuleDomain::TllValores->label());
+    }
+
+    public function test_linha_tll_referencia_a_versao_do_exercicio(): void
+    {
+        $versao = RuleVersion::factory()->create([
+            'domain' => RuleDomain::TllValores,
+            'version' => '2027',
+        ]);
+        $valor = TllValor::factory()->create([
+            'exercicio' => 2027,
+            'rule_version_id' => $versao->id,
+        ]);
+
+        $this->assertTrue($valor->versao->is($versao));
     }
 }

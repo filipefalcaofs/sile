@@ -27,6 +27,10 @@ enum RuleDomain: string
     case AtividadesEscritorioVirtual = 'atividades_escritorio_virtual';
     case RiscoTratamento = 'risco_tratamento';
 
+    // Tabela de valores TLL por exercício (Lei 7.186/2006, Anexo IV) — dado
+    // versionado que define valor de tributo (DAM). Sensível: quatro olhos.
+    case TllValores = 'tll_valores';
+
     public function label(): string
     {
         return match ($this) {
@@ -37,6 +41,7 @@ enum RuleDomain: string
             self::LouosQuadro11a => 'Quadro 11A da LOUOS (condições complementares pela via)',
             self::AtividadesEscritorioVirtual => 'Atividades permitidas em escritório virtual',
             self::RiscoTratamento => 'Planilha de regras de tratamento (20.08.26)',
+            self::TllValores => 'Tabela de valores TLL por exercício',
         };
     }
 
@@ -55,6 +60,7 @@ enum RuleDomain: string
             self::LouosQuadro10, self::LouosQuadro11a => true,
             self::AtividadesEscritorioVirtual => true,
             self::RiscoTratamento => true,
+            self::TllValores => true,
             self::Condicionante => false,
         };
     }
