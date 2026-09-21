@@ -126,6 +126,12 @@ class ExpressoDevSeeder extends Seeder
             'is_virtual_office' => false,
             'is_public_area' => false,
             'has_independent_access' => true,
+            // A solicitação real responde a planilha de tratamento — sem a
+            // resposta da P11 o motor não classifica o minimercado (regra 4) e
+            // degrada para análise. O snapshot é o que sobrevive ao fresh().
+            'simulation_snapshot' => [
+                'respostas_tratamento_por_cnae' => ['4712100' => [11 => true]],
+            ],
         ]);
 
         $request->cnaes()->attach($cnae->id, ['is_primary' => true]);

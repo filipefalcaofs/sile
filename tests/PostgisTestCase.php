@@ -4,6 +4,7 @@ namespace Tests;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Group;
 use Throwable;
@@ -37,6 +38,21 @@ abstract class PostgisTestCase extends TestCase
         $app['config']->set('database.default', 'pgsql_testing');
 
         return $app;
+    }
+
+    /**
+     * Isolamento entre conexões: o RefreshDatabase guarda o "já migrou" em
+     * estático de processo. Sem resetar ao sair, o teste sqlite seguinte no
+     * mesmo processo pula a própria migração (a migrada foi a pgsql_testing)
+     * e quebra com "no such table". O reset força cada teste a migrar a
+     * PRÓPRIA conexão default.
+     */
+    protected function tearDown(): void
+    {
+        RefreshDatabaseState::$migrated = false;
+        RefreshDatabaseState::$lazilyRefreshed = false;
+
+        parent::tearDown();
     }
 
     /**

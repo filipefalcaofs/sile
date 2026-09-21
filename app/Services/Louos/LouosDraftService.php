@@ -8,6 +8,7 @@ use App\Exceptions\FourEyesViolationException;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\RuleVersion;
+use App\Models\Via;
 use App\Models\Zona;
 use App\Services\Rules\RuleVersionService;
 use App\Support\Audit\AuditService;
@@ -315,6 +316,7 @@ final class LouosDraftService
     {
         $this->assertDraft($draft);
         $this->assertZonasCadastradas($draft);
+        $this->assertViasCadastradas($draft);
 
         $diffResult = $this->diff($draft);
 
@@ -373,6 +375,51 @@ final class LouosDraftService
             throw new DomainException(
                 'Publicação bloqueada: as zonas '.$ausentes->implode(', ')
                 .' não constam do cadastro de zonas ativas. Cadastre-as ou reative-as em Gestão > Zonas antes de publicar o Quadro 10.'
+            );
+        }
+    }
+
+    /**
+     * Borda de publicação do Quadro 11A (usabilidade SEDUR 19/09, item 07):
+     * a coluna `classe_via` é string livre — um typo publicado degrada a
+     * leitura da via no motor. Toda classe do rascunho precisa constar do
+     * cadastro de vias ATIVAS. A guarda é exclusiva do Quadro 11A e NÃO toca
+     * a vigente: via desativada permanece nos quadros históricos e só
+     * bloqueia publicação nova. Quando o cadastro está vazio (sem seed), a
+     * guarda não trava a publicação — bootstrap do cadastro.
+     *
+     * @throws DomainException listando as classes de via ausentes do cadastro ativo
+     */
+    private function assertViasCadastradas(RuleVersion $draft): void
+    {
+        if ($draft->domain !== RuleDomain::LouosQuadro11a) {
+            return;
+        }
+
+        if (Via::query()->count() === 0) {
+            return;
+        }
+
+        $classesRascunho = LouosQuadro11CondicaoVia::query()
+            ->where('rule_version_id', $draft->id)
+            ->distinct()
+            ->pluck('classe_via');
+
+        if ($classesRascunho->isEmpty()) {
+            return;
+        }
+
+        $cadastradas = Via::query()
+            ->ativas()
+            ->whereIn('codigo', $classesRascunho)
+            ->pluck('codigo');
+
+        $ausentes = $classesRascunho->diff($cadastradas)->sort()->values();
+
+        if ($ausentes->isNotEmpty()) {
+            throw new DomainException(
+                'Publicação bloqueada: as classes de via '.$ausentes->implode(', ')
+                .' não constam do cadastro de vias ativas. Cadastre-as ou reative-as em Gestão > Vias antes de publicar o Quadro 11A.'
             );
         }
     }

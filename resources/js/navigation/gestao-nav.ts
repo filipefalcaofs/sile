@@ -109,6 +109,7 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
             },
             { name: 'Quadros LOUOS', href: '/gestao/louos', icon: 'file', permission: 'consultar-louos' },
             { name: 'Zonas', href: '/gestao/louos/zonas', icon: 'map', permission: 'manter-louos' },
+            { name: 'Vias', href: '/gestao/louos/vias', icon: 'map', permission: 'manter-louos' },
             {
                 name: 'Requisitos documentais',
                 href: '/gestao/requisitos-documentais',

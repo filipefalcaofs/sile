@@ -30,9 +30,9 @@ class AuditoriaExportTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function gestor(): User
+    private function administrador(): User
     {
-        return User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        return User::factory()->administrador()->withAcceptedLgpdTerm()->create();
     }
 
     /**
@@ -91,7 +91,7 @@ class AuditoriaExportTest extends TestCase
 
     public function test_index_lista_atividades_e_audita_a_propria_consulta(): void
     {
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
         $this->atividade(['log_name' => 'teste', 'event' => 'consulta']);
         $this->atividade(['log_name' => 'teste', 'event' => 'updated', 'attribute_changes' => ['attributes' => ['x' => 1]]]);
 
@@ -118,7 +118,7 @@ class AuditoriaExportTest extends TestCase
 
     public function test_index_fonte_alteracoes_traz_so_registros_com_mudancas(): void
     {
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
         $comMudanca = $this->atividade(['event' => 'updated', 'attribute_changes' => ['attributes' => ['x' => 1]]]);
         $this->atividade(['event' => 'consulta']);
 
@@ -133,7 +133,7 @@ class AuditoriaExportTest extends TestCase
 
     public function test_index_fonte_acessos_lista_access_logs(): void
     {
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
         AccessLog::factory()->count(2)->create();
 
         $this->actingAs($gestor, 'gestao')
@@ -146,7 +146,7 @@ class AuditoriaExportTest extends TestCase
 
     public function test_export_csv_respeita_os_filtros_e_e_auditado(): void
     {
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
         $this->atividade(['log_name' => 'teste', 'event' => 'consulta-processos', 'description' => 'Consulta alvo']);
         $this->atividade(['log_name' => 'outro', 'event' => 'consulta', 'description' => 'Fora do filtro']);
 
@@ -172,7 +172,7 @@ class AuditoriaExportTest extends TestCase
 
     public function test_index_com_formato_csv_delega_para_o_export(): void
     {
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
         $this->atividade(['log_name' => 'teste', 'description' => 'Delegado']);
 
         $response = $this->actingAs($gestor, 'gestao')
@@ -185,7 +185,7 @@ class AuditoriaExportTest extends TestCase
 
     public function test_export_csv_da_fonte_acessos_respeita_a_fonte(): void
     {
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
         $user = User::factory()->create(['name' => 'Eduarda Acesso']);
         AccessLog::factory()->create(['user_id' => $user->id, 'email' => 'eduarda@example.test', 'event' => 'login']);
 
@@ -203,7 +203,7 @@ class AuditoriaExportTest extends TestCase
         // simula. Com max_linhas=2, o CSV traz cabeçalho + no máximo 2 linhas.
         config(['sile.auditoria.export.max_linhas' => 2]);
 
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
 
         for ($i = 0; $i < 5; $i++) {
             $this->atividade(['log_name' => 'teste', 'description' => "linha {$i}"]);

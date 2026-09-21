@@ -14,9 +14,10 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Painel humano de alertas de abuso (HU-149) — revisão, NUNCA punição. O gestor/
- * admin (gerenciar-alertas-abuso) lista os abuse_alerts com filtros (rule_key/
- * severity/status/período), vê a EFETIVIDADE = confirmados ÷ gerados (geral e por
+ * Painel humano de alertas de abuso (HU-149) — revisão, NUNCA punição. O
+ * administrador (gerenciar-alertas-abuso) lista os abuse_alerts com filtros
+ * (rule_key/severity/status/período), vê a EFETIVIDADE = confirmados ÷ gerados
+ * (geral e por
  * regra, sobre os alertas reais — RN-005) e confirma/descarta com justificativa
  * OBRIGATÓRIA, tudo auditado (RN-002/RN-003). Anti-fachada CA-02: a resolução do
  * alerta muda SÓ o status do ALERTA — NUNCA transiciona o status do PROCESSO nem
@@ -39,9 +40,9 @@ class AbusoPainelTest extends TestCase
     }
 
     /** Gestor (tem acessar-gestao + gerenciar-alertas-abuso — 12-03). */
-    private function gestor(): User
+    private function administrador(): User
     {
-        return User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        return User::factory()->administrador()->withAcceptedLgpdTerm()->create();
     }
 
     /** Acessa a gestão mas NÃO tem gerenciar-alertas-abuso (gate específico barra). */
@@ -81,7 +82,7 @@ class AbusoPainelTest extends TestCase
     {
         AbuseAlert::factory()->count(3)->create(['rule_key' => 'volume_cnpj']);
 
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
 
         $page = $this->actingAs($gestor, 'gestao')
             ->get('/gestao/abuso')
@@ -113,7 +114,7 @@ class AbusoPainelTest extends TestCase
         AbuseAlert::factory()->create(['rule_key' => 'volume_cnpj']);
         AbuseAlert::factory()->create(['rule_key' => 'volume_contador']);
 
-        $page = $this->actingAs($this->gestor(), 'gestao')
+        $page = $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/abuso?rule_key=volume_contador')
             ->assertOk()
             ->viewData('page');
@@ -129,14 +130,14 @@ class AbusoPainelTest extends TestCase
         AbuseAlert::factory()->alta()->confirmado()->create(['rule_key' => 'volume_cnpj']);
 
         // severity=alta → 2 (a aberta + a confirmada).
-        $porSeveridade = $this->actingAs($this->gestor(), 'gestao')
+        $porSeveridade = $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/abuso?severity=alta')
             ->assertOk()
             ->viewData('page');
         $this->assertCount(2, $porSeveridade['props']['alertas']['data']);
 
         // status=confirmado → 1.
-        $porStatus = $this->actingAs($this->gestor(), 'gestao')
+        $porStatus = $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/abuso?status=confirmado')
             ->assertOk()
             ->viewData('page');
@@ -149,13 +150,13 @@ class AbusoPainelTest extends TestCase
         AbuseAlert::factory()->create(['rule_key' => 'volume_cnpj', 'detected_at' => '2026-01-10 10:00:00']);
         AbuseAlert::factory()->create(['rule_key' => 'volume_cnpj', 'detected_at' => '2026-03-20 10:00:00']);
 
-        $deMarco = $this->actingAs($this->gestor(), 'gestao')
+        $deMarco = $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/abuso?data_de=2026-03-01')
             ->assertOk()
             ->viewData('page');
         $this->assertCount(1, $deMarco['props']['alertas']['data']);
 
-        $ateFevereiro = $this->actingAs($this->gestor(), 'gestao')
+        $ateFevereiro = $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/abuso?data_ate=2026-02-01')
             ->assertOk()
             ->viewData('page');
@@ -172,7 +173,7 @@ class AbusoPainelTest extends TestCase
         AbuseAlert::factory()->create(['rule_key' => 'volume_contador']);
         // Geral: 6 gerados, 2 confirmados → 33.3%
 
-        $page = $this->actingAs($this->gestor(), 'gestao')
+        $page = $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/abuso')
             ->assertOk()
             ->viewData('page');
@@ -197,7 +198,7 @@ class AbusoPainelTest extends TestCase
     public function test_efetividade_sem_alertas_nao_inventa_taxa(): void
     {
         // RN-005 anti-fachada: zero gerados → taxa null (nunca número inventado).
-        $page = $this->actingAs($this->gestor(), 'gestao')
+        $page = $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/abuso')
             ->assertOk()
             ->viewData('page');
@@ -272,7 +273,7 @@ class AbusoPainelTest extends TestCase
     {
         $alerta = AbuseAlert::factory()->create(['rule_key' => 'volume_cnpj']);
 
-        $this->actingAs($this->gestor(), 'gestao')
+        $this->actingAs($this->administrador(), 'gestao')
             ->post("/gestao/abuso/{$alerta->id}/confirmar", ['justification' => ''])
             ->assertSessionHasErrors('justification');
 
@@ -288,7 +289,7 @@ class AbusoPainelTest extends TestCase
         // Espelha o motivo obrigatório da malha fina: só espaços também é vazio.
         $alerta = AbuseAlert::factory()->create(['rule_key' => 'volume_cnpj']);
 
-        $this->actingAs($this->gestor(), 'gestao')
+        $this->actingAs($this->administrador(), 'gestao')
             ->post("/gestao/abuso/{$alerta->id}/descartar", ['justification' => '   '])
             ->assertSessionHasErrors('justification');
 
@@ -298,7 +299,7 @@ class AbusoPainelTest extends TestCase
     public function test_confirmar_grava_resolucao_e_audita(): void
     {
         $alerta = AbuseAlert::factory()->create(['rule_key' => 'volume_cnpj']);
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
 
         $this->actingAs($gestor, 'gestao')
             ->post("/gestao/abuso/{$alerta->id}/confirmar", [
@@ -323,7 +324,7 @@ class AbusoPainelTest extends TestCase
     public function test_descartar_grava_resolucao_e_audita(): void
     {
         $alerta = AbuseAlert::factory()->create(['rule_key' => 'volume_contador']);
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
 
         $this->actingAs($gestor, 'gestao')
             ->post("/gestao/abuso/{$alerta->id}/descartar", [
@@ -365,7 +366,7 @@ class AbusoPainelTest extends TestCase
             'fine_mesh_referral_id' => $referral->id,
         ]);
 
-        $this->actingAs($this->gestor(), 'gestao')
+        $this->actingAs($this->administrador(), 'gestao')
             ->post("/gestao/abuso/{$alerta->id}/confirmar", [
                 'justification' => 'Suspeita procede; manter em malha fina.',
             ])

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
- * CRUD de setores da SEDUR (HU-138): o gestor/administrador mantém a "caixa de
+ * CRUD de setores da SEDUR (HU-138): o administrador mantém a "caixa de"
  * análise" (criar/editar nome+situação) e o vínculo analista↔setor N:N pela
  * retaguarda, atrás da permissão manter-setores. Sem ela a ação é bloqueada e
  * auditada (CA-04). O setor com processos em aberto NÃO é excluído — só
@@ -31,9 +31,9 @@ class SectorCrudTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function gestor(): User
+    private function administrador(): User
     {
-        return User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        return User::factory()->administrador()->withAcceptedLgpdTerm()->create();
     }
 
     private function analista(): User
@@ -55,11 +55,11 @@ class SectorCrudTest extends TestCase
         ]);
     }
 
-    public function test_gestor_lista_setores(): void
+    public function test_administrador_lista_setores(): void
     {
         Sector::factory()->count(3)->create();
 
-        $response = $this->actingAs($this->gestor(), 'gestao')
+        $response = $this->actingAs($this->administrador(), 'gestao')
             ->get('/gestao/setores')
             ->assertOk();
 
@@ -73,7 +73,7 @@ class SectorCrudTest extends TestCase
 
     public function test_cria_setor_auditado(): void
     {
-        $this->actingAs($this->gestor(), 'gestao')
+        $this->actingAs($this->administrador(), 'gestao')
             ->post('/gestao/setores', [
                 'name' => 'Setor Centro',
                 'active' => '1',
@@ -96,7 +96,7 @@ class SectorCrudTest extends TestCase
     {
         Sector::factory()->create(['name' => 'Setor Centro']);
 
-        $this->actingAs($this->gestor(), 'gestao')
+        $this->actingAs($this->administrador(), 'gestao')
             ->post('/gestao/setores', ['name' => 'Setor Centro'])
             ->assertSessionHasErrors('name');
 
@@ -107,7 +107,7 @@ class SectorCrudTest extends TestCase
     {
         $sector = Sector::factory()->create(['name' => 'Setor Antigo', 'active' => true]);
 
-        $this->actingAs($this->gestor(), 'gestao')
+        $this->actingAs($this->administrador(), 'gestao')
             ->put("/gestao/setores/{$sector->id}", [
                 'name' => 'Setor Renomeado',
                 'active' => '0',
@@ -124,7 +124,7 @@ class SectorCrudTest extends TestCase
         // O unique ignora o próprio registro: reenviar o mesmo nome é válido.
         $sector = Sector::factory()->create(['name' => 'Setor Itapuã']);
 
-        $this->actingAs($this->gestor(), 'gestao')
+        $this->actingAs($this->administrador(), 'gestao')
             ->put("/gestao/setores/{$sector->id}", [
                 'name' => 'Setor Itapuã',
                 'active' => '1',
@@ -138,7 +138,7 @@ class SectorCrudTest extends TestCase
         $sector = Sector::factory()->create();
         $a = $this->analista();
         $b = $this->analista();
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
 
         // Vincula os dois.
         $this->actingAs($gestor, 'gestao')
@@ -173,7 +173,7 @@ class SectorCrudTest extends TestCase
         $setorA = Sector::factory()->create();
         $setorB = Sector::factory()->create();
         $analista = $this->analista();
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
 
         $this->actingAs($gestor, 'gestao')
             ->put("/gestao/setores/{$setorA->id}/analistas", ['analyst_ids' => [$analista->id]])
@@ -193,7 +193,7 @@ class SectorCrudTest extends TestCase
         // RN-004: o setor não é excluído — só inativado; permanece consultável.
         $sector = Sector::factory()->create(['active' => true]);
 
-        $this->actingAs($this->gestor(), 'gestao')
+        $this->actingAs($this->administrador(), 'gestao')
             ->put("/gestao/setores/{$sector->id}/ativacao")
             ->assertSessionHas('status');
 
@@ -222,7 +222,7 @@ class SectorCrudTest extends TestCase
             'status' => ViabilityRequestStatus::EmAnalise,
         ])->save();
 
-        $this->actingAs($this->gestor(), 'gestao')
+        $this->actingAs($this->administrador(), 'gestao')
             ->put("/gestao/setores/{$sector->id}/ativacao")
             ->assertSessionHas('status')
             ->assertSessionHas('warning');

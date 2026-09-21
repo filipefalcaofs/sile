@@ -49,9 +49,9 @@ class RetrofitCsvAuditoriaTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    private function gestor(): User
+    private function administrador(): User
     {
-        return User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        return User::factory()->administrador()->withAcceptedLgpdTerm()->create();
     }
 
     private function analista(): User
@@ -106,7 +106,7 @@ class RetrofitCsvAuditoriaTest extends TestCase
 
     public function test_export_da_trilha_em_csv_preserva_as_colunas_historicas(): void
     {
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
         $this->atividade(['log_name' => 'teste', 'description' => 'Consulta alvo']);
 
         $response = $this->actingAs($gestor, 'gestao')
@@ -122,7 +122,7 @@ class RetrofitCsvAuditoriaTest extends TestCase
 
     public function test_export_da_trilha_em_xlsx_agora_streama_planilha(): void
     {
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
         $this->atividade(['log_name' => 'teste', 'description' => 'Linha XLSX']);
 
         $response = $this->actingAs($gestor, 'gestao')
@@ -137,7 +137,7 @@ class RetrofitCsvAuditoriaTest extends TestCase
 
     public function test_export_da_trilha_em_pdf_agora_streama_documento(): void
     {
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
         $this->atividade(['log_name' => 'teste', 'description' => 'Linha PDF']);
 
         $response = $this->actingAs($gestor, 'gestao')
@@ -149,7 +149,7 @@ class RetrofitCsvAuditoriaTest extends TestCase
 
     public function test_export_da_fonte_acessos_ganha_xlsx_pelo_mesmo_formato(): void
     {
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
         $user = User::factory()->create(['name' => 'Eduarda Acesso']);
         AccessLog::factory()->create(['user_id' => $user->id, 'email' => 'eduarda@example.test', 'event' => 'login']);
 
@@ -171,7 +171,7 @@ class RetrofitCsvAuditoriaTest extends TestCase
         Queue::fake();
         config(['sile.relatorios.export.assincrono_limiar_linhas' => 1]);
 
-        $gestor = $this->gestor();
+        $gestor = $this->administrador();
         // 2 registros DENTRO do filtro (total filtrado > limiar → async) + 1 FORA.
         $alvo1 = $this->atividade(['log_name' => 'teste', 'description' => 'Dentro 1']);
         $alvo2 = $this->atividade(['log_name' => 'teste', 'description' => 'Dentro 2']);

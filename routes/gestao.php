@@ -61,6 +61,7 @@ use App\Http\Controllers\Gestao\TratamentoRegrasController;
 use App\Http\Controllers\Gestao\TvlDocumentController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
+use App\Http\Controllers\Gestao\ViaController;
 use App\Http\Controllers\Gestao\ZonaController;
 use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\Portal\CnaeSearchController;
@@ -382,6 +383,18 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
                 Route::post('/', [ZonaController::class, 'store'])->name('store');
                 Route::put('{zona}', [ZonaController::class, 'update'])->name('update');
                 Route::put('{zona}/ativacao', [ZonaController::class, 'toggleActivation'])->name('ativacao.update');
+            });
+
+            // Cadastro de classes de via da LOUOS (usabilidade SEDUR 19/09,
+            // item 07): fonte de verdade das classes do Quadro 11A — a
+            // publicação do rascunho valida que toda classe referenciada
+            // existe aqui e está ativa. Mesmo mantenedor dos quadros
+            // (manter-louos), espelhando o cadastro de zonas.
+            Route::prefix('vias')->name('vias.')->group(function () {
+                Route::get('/', [ViaController::class, 'index'])->name('index');
+                Route::post('/', [ViaController::class, 'store'])->name('store');
+                Route::put('{via}', [ViaController::class, 'update'])->name('update');
+                Route::put('{via}/ativacao', [ViaController::class, 'toggleActivation'])->name('ativacao.update');
             });
         });
 

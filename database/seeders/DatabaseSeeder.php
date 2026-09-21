@@ -43,6 +43,12 @@ class DatabaseSeeder extends Seeder
             // roda APÓS os seeders LOUOS. Sem quadro vigente, fica vazio
             // (honesto). Idempotente; preserva os campos administrados.
             ZonaSeeder::class,
+            // Classes de via da LOUOS (usabilidade SEDUR 19/09, item 07):
+            // nascem dos valores distintos de `classe_via` do Quadro 11A
+            // VIGENTE — por isso roda APÓS os seeders LOUOS. Sem quadro
+            // vigente, fica vazio (honesto). Idempotente; preserva os campos
+            // administrados.
+            ViaSeeder::class,
             ViabilityServiceTypeSeeder::class,
             DocumentRequirementSeeder::class,
             DevAdminSeeder::class,
