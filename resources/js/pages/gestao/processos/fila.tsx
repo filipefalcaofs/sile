@@ -163,8 +163,8 @@ export default function Fila({ modo, processos, contadores, visaoSetor }: FilaPr
 
     return (
         <>
-            <Head title="Fila de trabalho" />
-            <PageHeader title="Fila de trabalho" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
+            <Head title="Caixa de entrada" />
+            <PageHeader title="Caixa de entrada" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
             <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">

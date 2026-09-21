@@ -214,6 +214,9 @@ function fluxoLabel(fluxo?: string | null): string {
     if (fluxo === 'expresso') {
         return 'Expresso';
     }
+    if (fluxo === 'semi_expresso') {
+        return 'Semi-expresso';
+    }
     if (fluxo === 'analise') {
         return 'Análise técnica';
     }
@@ -275,7 +278,7 @@ export default function SimulacaoRegin({
                     variant="outline"
                     onClick={() => router.post('/gestao/risco/simulacao-regin', { codigo: row.codigo })}
                 >
-                    Simular no motor
+                    Simular no sistema
                 </Button>
             ),
         },
@@ -293,7 +296,7 @@ export default function SimulacaoRegin({
                 <Card>
                     <CardHeader
                         title="Protocolos de validação"
-                        description="O motor classifica e cria o processo: Alto vai para análise; Baixo e Médio seguem o expresso."
+                        description="O sistema classifica e cria o processo: Alto vai para análise; Baixo e Médio Risco seguem o expresso."
                     />
                     <CardContent>
                         <div className="mb-5 flex items-start gap-3 rounded-xl border border-blue-light-200 bg-blue-light-50 p-4 dark:border-blue-light-500/30 dark:bg-blue-light-500/15">
@@ -320,7 +323,7 @@ export default function SimulacaoRegin({
                     <div ref={resultadoRef} id="resultado-motor">
                         <Card>
                             <CardHeader
-                                title={`O que o motor rodou — ${relatorio.rotulo}`}
+                                title={`O que o sistema rodou — ${relatorio.rotulo}`}
                                 description={`${relatorio.processo}${relatorio.servico ? ` · ${relatorio.servico}` : ''}. O processo abaixo é real.`}
                                 actions={
                                     <Button
@@ -368,7 +371,7 @@ export default function SimulacaoRegin({
                                             numero={3 + index}
                                             titulo={`CNAE ${item.cnae}`}
                                             destaque={item.cnae === relatorio.consolidado.cnae}
-                                            destaqueLabel="CNAE mais gravoso do conjunto"
+                                            destaqueLabel="CNAE mais restritivo da solicitação"
                                         >
                                             <CnaeMotor item={item} />
                                         </PassoMotor>
@@ -378,11 +381,7 @@ export default function SimulacaoRegin({
                                         numero={3 + relatorio.por_cnae.length}
                                         titulo="Viabilidade do conjunto"
                                     >
-                                        <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                                            A empresa é classificada pelo CNAE mais gravoso. As linhas acima são a
-                                            composição, não decisões isoladas.
-                                        </p>
-                                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        <div className="flex flex-wrap items-center gap-2">
                                             <p className="font-medium text-gray-800 dark:text-white/90">
                                                 {relatorio.consolidado.cnae ?? '—'}
                                             </p>
@@ -486,7 +485,7 @@ export default function SimulacaoRegin({
                     }
                 }}
                 title="Apagar resultado e o processo?"
-                description="O relatório e o processo criado somem. O motor não muda — você pode simular de novo o mesmo protocolo."
+                description="O relatório e o processo criado somem. O sistema não muda — você pode simular de novo o mesmo protocolo."
                 confirmLabel="Apagar"
                 variant="danger"
             />
@@ -739,7 +738,7 @@ function FormularioPendencias({ pendencias }: { pendencias: PendenciasSimulacao 
         <Card>
             <CardHeader
                 title={`Falta responder — ${pendencias.rotulo}`}
-                description="O motor precisa dessas respostas da planilha (e do território, se o catálogo não trouxe) antes de criar o processo."
+                description="O sistema precisa dessas respostas da planilha (e do território, se o catálogo não trouxe) antes de criar o processo."
             />
             <CardContent>
                 <form

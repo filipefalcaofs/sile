@@ -50,7 +50,7 @@ class RiscoMunicipalImportServiceTest extends TestCase
     public function test_enum_exibe_nomenclatura_sedur_baixo_medio_alto(): void
     {
         $this->assertSame('Baixo', RiscoMunicipal::BaixoA->label());
-        $this->assertSame('Médio', RiscoMunicipal::BaixoB->label());
+        $this->assertSame('Médio Risco', RiscoMunicipal::BaixoB->label());
         $this->assertSame('Alto', RiscoMunicipal::Alto->label());
 
         foreach (RiscoMunicipal::cases() as $nivel) {

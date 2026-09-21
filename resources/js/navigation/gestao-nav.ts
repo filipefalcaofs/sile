@@ -52,14 +52,14 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
         label: 'Operação',
         items: [
             { name: 'Painel', href: '/gestao', icon: 'grid', permission: null },
-            { name: 'Fila de trabalho', href: '/gestao/processos/fila', icon: 'list', permission: 'analisar-processos' },
+            { name: 'Caixa de entrada', href: '/gestao/processos/fila', icon: 'list', permission: 'analisar-processos' },
             {
                 name: 'Caixa do setor',
                 href: '/gestao/caixa-setor',
                 icon: 'group',
                 permission: ['analisar-processos', 'distribuir-processos'],
             },
-            { name: 'Processos', href: '/gestao/processos', icon: 'file', permission: 'consultar-solicitacoes' },
+            { name: 'Consulta de processos', href: '/gestao/processos', icon: 'file', permission: 'consultar-solicitacoes' },
             { name: 'Atendimento presencial', href: '/gestao/atendimento', icon: 'user', permission: 'atendimento-presencial' },
             {
                 name: 'Nova solicitação (contingência)',

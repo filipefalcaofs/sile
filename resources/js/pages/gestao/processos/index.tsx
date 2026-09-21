@@ -268,7 +268,7 @@ export default function ConsultaProcessos({
         },
         {
             id: 'categoria',
-            header: 'Categoria',
+            header: 'Serviço',
             cell: (item) => <CategoriaBadges categorias={item.categorias} />,
         },
         {
@@ -303,7 +303,7 @@ export default function ConsultaProcessos({
         },
         {
             id: 'responsavel',
-            header: 'Responsável',
+            header: 'Analista',
             cell: (item) => (
                 <div className="flex flex-col">
                     <span className="text-gray-700 dark:text-gray-300">{item.analista ?? 'Não atribuído'}</span>
@@ -488,7 +488,7 @@ export default function ConsultaProcessos({
 
                 <Card>
                     <CardHeader
-                        title="Processos"
+                        title="Consulta de processos"
                         description="Resultado da consulta — paginado no servidor."
                         actions={
                             <a
@@ -527,7 +527,7 @@ export default function ConsultaProcessos({
                                         onClick={encaminharMalhaFina}
                                         loading={enviando}
                                     >
-                                        Encaminhar à malha fina
+                                        Encaminhar para a Vistoria
                                     </Button>
                                 </div>
                             )}

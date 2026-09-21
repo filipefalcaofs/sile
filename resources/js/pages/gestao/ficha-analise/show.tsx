@@ -478,9 +478,8 @@ const LABELS_CADASTRO_IMOBILIARIO: Record<string, string> = {
 };
 
 /**
- * Campo da certidão cadastral: só leitura, com destaque acessível (fundo âmbar +
- * selo textual "Destacado" — nunca só cor) para os campos marcados pelo
- * usuário (design 2026-07-22, seção 4.1).
+ * Campo da certidão cadastral: só leitura, com destaque acessível (fundo âmbar
+ * nos campos marcados pelo usuário — design 2026-07-22, seção 4.1).
  */
 function CampoCadastroImobiliario({ chave, valor, marcado }: { chave: string; valor: string | null | undefined; marcado: boolean }) {
     return (
@@ -493,11 +492,6 @@ function CampoCadastroImobiliario({ chave, valor, marcado }: { chave: string; va
         >
             <dt className="flex items-center gap-1.5 text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
                 {LABELS_CADASTRO_IMOBILIARIO[chave] ?? chave}
-                {marcado && (
-                    <Badge color="warning" size="sm">
-                        Destacado
-                    </Badge>
-                )}
             </dt>
             <dd className="mt-1 text-theme-sm text-gray-800 dark:text-white/90">{valorOuTraco(valor)}</dd>
         </div>
@@ -1281,7 +1275,7 @@ export default function FichaAnaliseShow({
                     <div className="flex items-start gap-3 rounded-xl border border-warning-200 bg-warning-50 p-4 dark:border-warning-500/30 dark:bg-warning-500/15">
                         <AlertIcon className="size-5 shrink-0 fill-current text-warning-500" />
                         <p className="text-theme-sm text-gray-600 dark:text-gray-300">
-                            <strong>Modo manual:</strong> o motor não pôde pré-analisar este processo (sem dado
+                            <strong>Modo manual:</strong> o sistema não pôde pré-analisar este processo (sem dado
                             confiável — ex.: zona urbanística pendente SEDUR). Os campos não têm sugestão automática;
                             a análise é integralmente humana, com fundamentação própria.
                         </p>
@@ -1371,7 +1365,7 @@ export default function FichaAnaliseShow({
                 </div>
 
                 <Card>
-                    <CardHeader title="Dados do TVL" description="Paridade com a ficha do legado (SAPS)." />
+                    <CardHeader title="Dados da Viabilidade" description="Paridade com a ficha do legado (SAPS)." />
                     <CardContent>
                         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <DescItem label="Razão Social">{valorOuTraco(dadosTvl.razao_social)}</DescItem>
@@ -1470,13 +1464,13 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Enquadramento por atividade (CNAE)"
-                                description="Pré-preenchido pelo motor (LOUOS e risco), inclusive a justificativa. Confirme ou altere. Divergência exige justificativa própria."
+                                description="Pré-preenchido pelo sistema (LOUOS e risco), inclusive a justificativa. Confirme ou altere. Divergência exige justificativa própria."
                             />
                             <CardContent>
                                 {perCnae.length === 0 ? (
                                     <EmptyState
                                         title="Sem CNAEs pré-analisados"
-                                        description="Nenhuma atividade foi pré-preenchida pelo motor para este processo."
+                                        description="Nenhuma atividade foi pré-preenchida pelo sistema para este processo."
                                     />
                                 ) : (
                                     <ul className="space-y-5">
@@ -1614,7 +1608,7 @@ export default function FichaAnaliseShow({
                                                             id={`justificativa-${indice}`}
                                                             rows={8}
                                                             disabled={!editavel}
-                                                            placeholder="Justificativa fundamentada da atividade — pré-preenchida pelo motor…"
+                                                            placeholder="Justificativa fundamentada da atividade — pré-preenchida pelo sistema…"
                                                             value={item.justificativa ?? ''}
                                                             onChange={(valor) =>
                                                                 atualizarCnae(indice, { justificativa: valor })
@@ -2001,11 +1995,11 @@ export default function FichaAnaliseShow({
                                                 Decidir processo (conforme ficha)
                                             </Button>
                                             <Button onClick={novaRevisao} variant="outline" size="sm" loading={acao.processing}>
-                                                Criar nova revisão
+                                                Criar nova ficha
                                             </Button>
                                             {podeEmitirTvl && processo.status === 'deferida' && (
                                                 <Button onClick={emitirTvl} variant="outline" size="sm" loading={tvl.processing}>
-                                                    Emitir / baixar TVL
+                                                    Visualizar Viabilidade
                                                 </Button>
                                             )}
                                             {podeEmitirTvl && processo.status === 'indeferida' && (
@@ -2017,7 +2011,7 @@ export default function FichaAnaliseShow({
                                     )}
 
                                     <Button onClick={() => setShowPendencia(true)} variant="ghost" size="sm">
-                                        Abrir convite
+                                        Colocar em Convite
                                     </Button>
 
                                     {processo.status === 'em_pendencia' && (
@@ -2028,7 +2022,7 @@ export default function FichaAnaliseShow({
 
                                     {podeMalhaFina && (
                                         <Button onClick={() => setShowMalhaFina(true)} variant="ghost" size="sm">
-                                            Encaminhar à malha fina
+                                            Encaminhar para a Vistoria
                                         </Button>
                                     )}
 
@@ -2104,7 +2098,7 @@ export default function FichaAnaliseShow({
 
             {showPendencia && (
                 <Modal isOpen onClose={() => setShowPendencia(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
-                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Abrir convite</h4>
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Colocar em Convite</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         O processo vai para “em convite” e o requerente é notificado para complementar.
                     </p>
@@ -2130,7 +2124,7 @@ export default function FichaAnaliseShow({
                             disabled={descricaoPendencia.trim() === ''}
                             loading={pendenciaProcessing}
                         >
-                            Abrir convite
+                            Colocar em Convite
                         </Button>
                     </div>
                 </Modal>
@@ -2172,18 +2166,18 @@ export default function FichaAnaliseShow({
 
             {showMalhaFina && (
                 <Modal isOpen onClose={() => setShowMalhaFina(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
-                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar à malha fina</h4>
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para a Vistoria</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        A malha fina é ortogonal ao status e pode atingir qualquer fase. Informe o motivo (obrigatório).
+                        A vistoria é ortogonal ao status e pode atingir qualquer fase. Informe o parecer (obrigatório).
                     </p>
                     <div className="mt-4">
                         <Label htmlFor="motivo-malha-fina" required>
-                            Motivo
+                            Parecer
                         </Label>
                         <Textarea
                             id="motivo-malha-fina"
                             rows={3}
-                            placeholder="Motivo do encaminhamento…"
+                            placeholder="Parecer do encaminhamento…"
                             value={motivoMalhaFina}
                             onChange={setMotivoMalhaFina}
                         />

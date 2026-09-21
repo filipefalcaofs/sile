@@ -286,7 +286,7 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
                                                 </select>
                                             </DescItem>
                                         )}
-                                        <DescItem label="Categoria">
+                                        <DescItem label="Serviço">
                                             <CategoriaBadges categorias={processo.categorias} />
                                         </DescItem>
                                         <DescItem label="Analista responsável">
@@ -390,7 +390,7 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
                                             </Badge>
                                         </DescItem>
                                         <DescItem
-                                            label={processo.escritorio_virtual.tipo === 'abrigado' ? 'End. Virtual — TVL da sede' : 'TVL da sede'}
+                                            label={processo.escritorio_virtual.tipo === 'abrigado' ? 'End. Virtual — Viabilidade da sede' : 'Viabilidade da sede'}
                                         >
                                             {processo.escritorio_virtual.tvl_sede ?? '—'}
                                         </DescItem>

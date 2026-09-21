@@ -149,7 +149,7 @@ class RiscoClassificationServiceTest extends TestCase
 
         $result = $this->service()->classify(RiscoInput::paraCnae('2222333'));
 
-        $this->assertSame('Médio', $result->municipal['nivel_label']);
+        $this->assertSame('Médio Risco', $result->municipal['nivel_label']);
         $this->assertSame('expresso', $result->encaminhamento['fluxo']);
     }
 

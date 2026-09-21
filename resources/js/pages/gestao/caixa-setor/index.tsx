@@ -166,7 +166,7 @@ export default function CaixaSetorIndex({
         },
         {
             id: 'responsavel',
-            header: 'Responsável',
+            header: 'Analista',
             cellClassName: 'whitespace-nowrap',
             cell: (item) =>
                 item.assigned_to ?? <span className="text-gray-400 dark:text-gray-500">Não atribuído</span>,

@@ -219,7 +219,7 @@ export default function RiskTriggersIndex({ gatilhos }: RiskTriggersIndexProps) 
                         emptyState={
                             <EmptyState
                                 title="Nenhum gatilho cadastrado"
-                                description="Os gatilhos conhecidos são carregados pela carga inicial do sistema (seed), vinculados ao motor de regras."
+                                description="Os gatilhos conhecidos são carregados pela carga inicial do sistema (seed), vinculados às regras do sistema."
                             />
                         }
                     />

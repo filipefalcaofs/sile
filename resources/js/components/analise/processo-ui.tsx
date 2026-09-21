@@ -71,6 +71,10 @@ export function rotuloFluxoRisco(fluxo?: string | null): string {
         return 'Elegível ao expresso (risco)';
     }
 
+    if (fluxo === 'semi_expresso') {
+        return 'Semi-expresso';
+    }
+
     if (fluxo === 'analise') {
         return 'Análise técnica';
     }
