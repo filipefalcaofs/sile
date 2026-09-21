@@ -63,6 +63,7 @@ class TllValorControllerTest extends TestCase
         $this->assertSame('gestao/tll/index', $page['component']);
         $this->assertCount(3, $page['props']['valores']['data']);
         $this->assertArrayHasKey('perPageOptions', $page['props']);
+        $this->assertArrayHasKey('exercicios', $page['props']);
     }
 
     public function test_cria_valor_auditado(): void

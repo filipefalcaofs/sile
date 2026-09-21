@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\RuleDomain;
+use App\Enums\RuleVersionStatus;
 use App\Exceptions\FourEyesViolationException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\PropagacaoTllRequest;
 use App\Http\Requests\Gestao\TllValorRequest;
+use App\Models\RuleVersion;
 use App\Models\TllValor;
 use App\Services\Analise\TllPropagacaoExercicio;
 use App\Services\Analise\TllPublicacaoExercicio;
@@ -66,8 +69,24 @@ class TllValorController extends Controller
                 'active' => $valor->active,
             ]);
 
+        $viewerId = $request->user()?->id;
+
+        $exercicios = RuleVersion::query()
+            ->where('domain', RuleDomain::TllValores->value)
+            ->orderByDesc('version')
+            ->get()
+            ->map(fn (RuleVersion $versao): array => [
+                'exercicio' => (int) $versao->version,
+                'status' => $versao->status->value,
+                'autor_id' => $versao->created_by,
+                'source' => $versao->source,
+                'pode_publicar' => $versao->status === RuleVersionStatus::Rascunho
+                    && $versao->created_by !== $viewerId,
+            ]);
+
         return Inertia::render('gestao/tll/index', [
             'valores' => $valores,
+            'exercicios' => $exercicios,
             'filters' => [
                 'search' => $request->string('search')->toString(),
                 'per_page' => $perPage,

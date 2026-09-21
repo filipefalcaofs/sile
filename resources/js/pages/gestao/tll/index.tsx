@@ -34,6 +34,14 @@ interface TllValorItem {
     active: boolean;
 }
 
+interface TllExercicio {
+    exercicio: number;
+    status: 'rascunho' | 'vigente' | 'substituida';
+    autor_id: number | null;
+    source: string | null;
+    pode_publicar: boolean;
+}
+
 interface TllIndexProps {
     valores: {
         data: TllValorItem[];
@@ -42,6 +50,7 @@ interface TllIndexProps {
         to: number | null;
         total: number;
     };
+    exercicios: TllExercicio[];
     filters: {
         search: string;
         per_page: number;
@@ -189,6 +198,88 @@ function CamposValor({ valor, errors }: { valor?: TllValorItem; errors: Record<s
     );
 }
 
+function GerarExercicioModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+    const ano = new Date().getFullYear();
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-w-[520px] overflow-y-auto p-6 lg:p-8">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Gerar exercício</h4>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Clona os valores ativos da origem, aplica o fator do decreto e grava um rascunho. A publicação exige um
+                segundo usuário.
+            </p>
+
+            <Form action={`${URL_TLL}/exercicios`} method="post" resetOnSuccess onSuccess={onClose} className="mt-6">
+                {({ errors, processing }) => (
+                    <>
+                        <div className="grid gap-5 sm:grid-cols-2">
+                            <div>
+                                <Label htmlFor="prop-origem">Exercício de origem</Label>
+                                <Input
+                                    id="prop-origem"
+                                    type="number"
+                                    name="exercicio_origem"
+                                    defaultValue={ano}
+                                    required
+                                    error={!!errors.exercicio_origem}
+                                    hint={errors.exercicio_origem}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="prop-destino">Exercício de destino</Label>
+                                <Input
+                                    id="prop-destino"
+                                    type="number"
+                                    name="exercicio_destino"
+                                    defaultValue={ano + 1}
+                                    required
+                                    error={!!errors.exercicio_destino}
+                                    hint={errors.exercicio_destino}
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                            <div>
+                                <Label htmlFor="prop-fator">Fator do decreto</Label>
+                                <Input
+                                    id="prop-fator"
+                                    type="number"
+                                    step="0.0001"
+                                    name="fator"
+                                    placeholder="Ex.: 1.0446"
+                                    required
+                                    error={!!errors.fator}
+                                    hint={errors.fator}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="prop-decreto">Decreto</Label>
+                                <Input
+                                    id="prop-decreto"
+                                    type="text"
+                                    name="decreto"
+                                    placeholder="Decreto nº 41.304/2025"
+                                    required
+                                    error={!!errors.decreto}
+                                    hint={errors.decreto}
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-6 flex items-center justify-end gap-3">
+                            <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>
+                                Cancelar
+                            </Button>
+                            <Button size="sm" type="submit" disabled={processing}>
+                                {processing ? 'Gerando...' : 'Gerar rascunho'}
+                            </Button>
+                        </div>
+                    </>
+                )}
+            </Form>
+        </Modal>
+    );
+}
+
 function CreateValorModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     return (
         <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-h-[90vh] max-w-[640px] overflow-y-auto p-6 lg:p-8">
@@ -240,9 +331,10 @@ function EditValorModal({ valor, onClose }: { valor: TllValorItem; onClose: () =
     );
 }
 
-export default function TllIndex({ valores, filters, perPageOptions }: TllIndexProps) {
+export default function TllIndex({ valores, exercicios, filters, perPageOptions }: TllIndexProps) {
     const { auth } = usePage<SharedProps>().props;
     const canMaintain = auth.permissions.includes('manter-parametros');
+    const rascunhos = exercicios.filter((item) => item.status === 'rascunho');
 
     const table = useServerTable({
         url: URL_TLL,
@@ -253,8 +345,10 @@ export default function TllIndex({ valores, filters, perPageOptions }: TllIndexP
     });
 
     const [showCreate, setShowCreate] = useState(false);
+    const [showGerar, setShowGerar] = useState(false);
     const [editing, setEditing] = useState<TllValorItem | null>(null);
     const [pendingToggle, setPendingToggle] = useState<TllValorItem | null>(null);
+    const [pendingPublish, setPendingPublish] = useState<TllExercicio | null>(null);
     const [actionProcessing, setActionProcessing] = useState(false);
 
     const filtering = table.search.trim() !== '' || table.filters.active !== '' || table.filters.exercicio !== '';
@@ -368,13 +462,43 @@ export default function TllIndex({ valores, filters, perPageOptions }: TllIndexP
                         description="Valores da Taxa de Licença de Localização por código e exercício. Alimentam o cálculo do DAM e o bloco de taxas enviado à SEFAZ. A chave (código TLL, exercício) é única; valores não são excluídos, apenas inativados."
                         actions={
                             canMaintain ? (
-                                <Button size="sm" onClick={() => setShowCreate(true)}>
-                                    Novo valor
-                                </Button>
+                                <div className="flex flex-wrap gap-2">
+                                    <Button size="sm" variant="outline" onClick={() => setShowGerar(true)}>
+                                        Gerar exercício
+                                    </Button>
+                                    <Button size="sm" onClick={() => setShowCreate(true)}>
+                                        Novo valor
+                                    </Button>
+                                </div>
                             ) : undefined
                         }
                     />
                     <CardContent>
+                        {rascunhos.length > 0 && (
+                            <div className="mb-5 rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-gray-700 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-gray-200">
+                                <p className="font-medium">Rascunho aguardando publicação</p>
+                                <ul className="mt-2 space-y-2">
+                                    {rascunhos.map((item) => (
+                                        <li key={item.exercicio} className="flex flex-wrap items-center justify-between gap-3">
+                                            <span>
+                                                Exercício {item.exercicio}
+                                                {item.source ? ` — ${item.source}` : ''}. A publicação exige um segundo
+                                                usuário.
+                                            </span>
+                                            {canMaintain && (
+                                                <Button
+                                                    size="sm"
+                                                    disabled={!item.pode_publicar}
+                                                    onClick={() => setPendingPublish(item)}
+                                                >
+                                                    Publicar
+                                                </Button>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                         <div className="space-y-5">
                             <TableToolbar
                                 search={{
@@ -449,6 +573,8 @@ export default function TllIndex({ valores, filters, perPageOptions }: TllIndexP
                 </Card>
             </div>
 
+            {canMaintain && <GerarExercicioModal isOpen={showGerar} onClose={() => setShowGerar(false)} />}
+
             {canMaintain && <CreateValorModal isOpen={showCreate} onClose={() => setShowCreate(false)} />}
 
             {editing && <EditValorModal valor={editing} onClose={() => setEditing(null)} />}
@@ -462,6 +588,30 @@ export default function TllIndex({ valores, filters, perPageOptions }: TllIndexP
                     description={confirmContent.description}
                     confirmLabel={confirmContent.confirmLabel}
                     variant={confirmContent.variant}
+                    processing={actionProcessing}
+                />
+            )}
+
+            {pendingPublish && (
+                <ConfirmDialog
+                    isOpen
+                    onClose={() => setPendingPublish(null)}
+                    onConfirm={() => {
+                        router.post(
+                            `${URL_TLL}/exercicios/${pendingPublish.exercicio}/publicar`,
+                            {},
+                            {
+                                preserveScroll: true,
+                                onStart: () => setActionProcessing(true),
+                                onFinish: () => setActionProcessing(false),
+                                onSuccess: () => setPendingPublish(null),
+                            },
+                        );
+                    }}
+                    title={`Publicar exercício ${pendingPublish.exercicio}`}
+                    description="A tabela deste exercício passa a valer no cálculo do DAM. Só um usuário diferente de quem gerou o rascunho pode publicar."
+                    confirmLabel="Publicar"
+                    variant="info"
                     processing={actionProcessing}
                 />
             )}
