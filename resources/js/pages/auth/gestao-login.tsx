@@ -3,8 +3,23 @@ import { useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { AppVersion } from '@/components/app/app-version';
 import { LogoMark } from '@/components/app/logo';
-import { ArrowRightIcon, EyeCloseIcon, EyeIcon } from '@/components/icons';
+import { ArrowRightIcon, EyeCloseIcon, EyeIcon, MoonIcon, SunIcon } from '@/components/icons';
+import { ThemeProvider, useTheme } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
+import {
+    gestaoLoginDisplayFont,
+    gestaoLoginDividerClasses,
+    gestaoLoginFaintClasses,
+    gestaoLoginInputClasses,
+    gestaoLoginLabelClasses,
+    gestaoLoginLinkClasses,
+    gestaoLoginMonoFont,
+    gestaoLoginMutedClasses,
+    gestaoLoginPanelClasses,
+    gestaoLoginShellClasses,
+    gestaoLoginSubmitClasses,
+    gestaoLoginThemeToggleClasses,
+} from './gestao-login-theme';
 
 /**
  * Login interno da retaguarda (Gestão SEDUR) — design do console Viabiliza
@@ -16,18 +31,13 @@ import type { SharedProps } from '@/types';
  * só o formulário é exibido. Sem cadastro: contas internas são administradas
  * pela SEDUR (HU-012). Toda tentativa é registrada (RN-002).
  *
- * Tokens (brand-spec.md): bg oklch(15% .034 255) · surface oklch(19% .038 255)
- * fg oklch(96% .008 250) · muted oklch(67% .025 250) · faint oklch(50% .02 250)
- * accent oklch(64% .155 250) · accent-deep oklch(47% .135 252)
+ * O palco institucional permanece escuro. A coluna do formulário segue o
+ * tema do console (ThemeProvider): claro em gray-50/white e escuro nos
+ * tokens oklch do brand-spec (bg 15% · surface 19% · fg 96%).
  */
 
-const displayFont = "font-['Archivo',system-ui,sans-serif]";
-const monoFont = "font-[ui-monospace,'SF_Mono',Menlo,monospace]";
-
-const monoLabelClasses = `${monoFont} block text-[10.5px] leading-none font-medium tracking-[0.09em] text-[oklch(67%_0.025_250)] uppercase`;
-
-const inputClasses =
-    'w-full rounded-xl border border-white/8 bg-[oklch(14%_0.03_255)] p-4 text-[15px] font-medium text-[oklch(96%_0.008_250)] transition-all duration-150 placeholder:text-[oklch(50%_0.02_250)] hover:border-white/14 focus:border-[oklch(64%_0.155_250)] focus:bg-[oklch(13%_0.03_255)] focus:shadow-[0_0_0_4px_oklch(64%_0.155_250_/_0.18)] focus:ring-0 focus:outline-none aria-invalid:border-[oklch(64%_0.19_25)]';
+const displayFont = gestaoLoginDisplayFont;
+const monoFont = gestaoLoginMonoFont;
 
 const footStats = [
     { label: 'Auditoria', value: '100% rastreável', mono: false },
@@ -172,7 +182,23 @@ function BrandStage() {
     );
 }
 
-export default function GestaoLogin({ status }: { status?: string }) {
+function ThemeToggleButton() {
+    const { toggleTheme } = useTheme();
+
+    return (
+        <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Alternar tema"
+            className={gestaoLoginThemeToggleClasses}
+        >
+            <SunIcon className="hidden dark:block" />
+            <MoonIcon className="dark:hidden" />
+        </button>
+    );
+}
+
+function GestaoLoginContent({ status }: { status?: string }) {
     const { flash } = usePage<SharedProps>().props;
     const [showPassword, setShowPassword] = useState(false);
     const [capsLockOn, setCapsLockOn] = useState(false);
@@ -184,9 +210,7 @@ export default function GestaoLogin({ status }: { status?: string }) {
     };
 
     return (
-        <main
-            className="grid min-h-screen grid-cols-1 bg-[oklch(15%_0.034_255)] font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','Segoe_UI',system-ui,sans-serif] text-[oklch(96%_0.008_250)] antialiased min-[1101px]:grid-cols-[minmax(0,1fr)_clamp(440px,34vw,580px)]"
-        >
+        <main className={gestaoLoginShellClasses}>
             <Head title="Gestão SEDUR — Acesso ao console">
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -202,29 +226,29 @@ export default function GestaoLogin({ status }: { status?: string }) {
 
             <BrandStage />
 
-            <section
-                className="flex min-h-screen flex-col bg-[oklch(19%_0.038_255)] px-[clamp(32px,4vw,72px)] py-[clamp(28px,3.5vw,56px)] min-[1101px]:min-h-0 min-[1101px]:border-l min-[1101px]:border-white/8 max-sm:px-[22px]"
-                aria-labelledby="panel-title"
-            >
+            <section className={gestaoLoginPanelClasses} aria-labelledby="panel-title">
+                <div className="flex justify-end">
+                    <ThemeToggleButton />
+                </div>
                 <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center motion-safe:animate-[sile-rise_0.6s_0.18s_cubic-bezier(0.2,0.7,0.2,1)_both]">
-                    <p className={`${monoFont} mb-3.5 text-[10.5px] leading-none font-medium tracking-[0.1em] text-[oklch(64%_0.155_250)] uppercase`}>
+                    <p className={`${monoFont} mb-3.5 text-[10.5px] leading-none font-medium tracking-[0.1em] text-brand-500 uppercase dark:text-[oklch(64%_0.155_250)]`}>
                         Acesso restrito
                     </p>
                     <h2 id="panel-title" className={`${displayFont} text-[30px] leading-[1.1] font-extrabold tracking-[-0.02em]`}>
                         Entre no console
                     </h2>
-                    <p className="mt-2.5 text-sm text-[oklch(67%_0.025_250)]">
+                    <p className={`mt-2.5 ${gestaoLoginMutedClasses}`}>
                         Use seu e-mail institucional para acessar o ambiente de gestão.
                     </p>
 
                     {status && (
-                        <p className="mt-6 rounded-xl border border-[oklch(70%_0.14_160_/_0.3)] bg-[oklch(70%_0.14_160_/_0.08)] px-4 py-3 text-sm text-[oklch(80%_0.12_160)]">
+                        <p className="mt-6 rounded-xl border border-success-500/30 bg-success-50 px-4 py-3 text-sm text-success-600 dark:border-[oklch(70%_0.14_160_/_0.3)] dark:bg-[oklch(70%_0.14_160_/_0.08)] dark:text-[oklch(80%_0.12_160)]">
                             {status}
                         </p>
                     )}
 
                     {flash.error && (
-                        <p className="mt-6 rounded-xl border border-[oklch(64%_0.19_25_/_0.35)] bg-[oklch(64%_0.19_25_/_0.1)] px-4 py-3 text-sm text-[oklch(80%_0.12_25)]">
+                        <p className="mt-6 rounded-xl border border-error-500/35 bg-error-50 px-4 py-3 text-sm text-error-600 dark:border-[oklch(64%_0.19_25_/_0.35)] dark:bg-[oklch(64%_0.19_25_/_0.1)] dark:text-[oklch(80%_0.12_25)]">
                             {flash.error}
                         </p>
                     )}
@@ -233,7 +257,7 @@ export default function GestaoLogin({ status }: { status?: string }) {
                         {({ errors, processing }) => (
                             <>
                                 <div className="mt-[26px] grid gap-2.5">
-                                    <label htmlFor="email" className={monoLabelClasses}>
+                                    <label htmlFor="email" className={gestaoLoginLabelClasses}>
                                         E-mail institucional
                                     </label>
                                     <input
@@ -246,22 +270,19 @@ export default function GestaoLogin({ status }: { status?: string }) {
                                         required
                                         placeholder="nome@salvador.ba.gov.br"
                                         aria-invalid={errors.email ? 'true' : undefined}
-                                        className={inputClasses}
+                                        className={gestaoLoginInputClasses}
                                     />
                                     {errors.email && (
-                                        <p className="text-[12.5px] text-[oklch(72%_0.16_25)]">{errors.email}</p>
+                                        <p className="text-[12.5px] text-error-600 dark:text-[oklch(72%_0.16_25)]">{errors.email}</p>
                                     )}
                                 </div>
 
                                 <div className="mt-[26px] grid gap-2.5">
                                     <div className="flex items-baseline justify-between">
-                                        <label htmlFor="password" className={monoLabelClasses}>
+                                        <label htmlFor="password" className={gestaoLoginLabelClasses}>
                                             Senha
                                         </label>
-                                        <Link
-                                            href="/gestao/forgot-password"
-                                            className="text-[12.5px] text-[oklch(67%_0.025_250)] underline underline-offset-[3px] hover:text-[oklch(96%_0.008_250)]"
-                                        >
+                                        <Link href="/gestao/forgot-password" className={gestaoLoginLinkClasses}>
                                             Esqueceu?
                                         </Link>
                                     </div>
@@ -275,14 +296,14 @@ export default function GestaoLogin({ status }: { status?: string }) {
                                             onKeyUp={handlePasswordKeyUp}
                                             onBlur={() => setCapsLockOn(false)}
                                             aria-invalid={errors.password ? 'true' : undefined}
-                                            className={`${inputClasses} pr-14`}
+                                            className={`${gestaoLoginInputClasses} pr-14`}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword((current) => !current)}
                                             aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                                             aria-pressed={showPassword}
-                                            className="absolute top-1/2 right-2 grid size-10 -translate-y-1/2 cursor-pointer place-items-center rounded-lg text-[oklch(67%_0.025_250)] transition-colors duration-150 hover:bg-white/5 hover:text-[oklch(96%_0.008_250)] focus-visible:bg-white/5 focus-visible:text-[oklch(96%_0.008_250)] focus-visible:outline-none"
+                                            className="absolute top-1/2 right-2 grid size-10 -translate-y-1/2 cursor-pointer place-items-center rounded-lg text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-800 focus-visible:bg-gray-100 focus-visible:text-gray-800 focus-visible:outline-none dark:text-[oklch(67%_0.025_250)] dark:hover:bg-white/5 dark:hover:text-[oklch(96%_0.008_250)] dark:focus-visible:bg-white/5 dark:focus-visible:text-[oklch(96%_0.008_250)]"
                                         >
                                             {showPassword ? (
                                                 <EyeIcon className="size-[18px]" />
@@ -295,17 +316,17 @@ export default function GestaoLogin({ status }: { status?: string }) {
                                         <p className="text-xs text-[oklch(78%_0.14_85)]">Caps Lock está ativado.</p>
                                     )}
                                     {errors.password && (
-                                        <p className="text-[12.5px] text-[oklch(72%_0.16_25)]">{errors.password}</p>
+                                        <p className="text-[12.5px] text-error-600 dark:text-[oklch(72%_0.16_25)]">{errors.password}</p>
                                     )}
                                 </div>
 
-                                <label className="mt-[22px] flex cursor-pointer items-center gap-2.5 text-sm text-[oklch(67%_0.025_250)] select-none">
+                                <label className={`mt-[22px] flex cursor-pointer items-center gap-2.5 ${gestaoLoginMutedClasses} select-none`}>
                                     <input
                                         id="remember"
                                         name="remember"
                                         type="checkbox"
                                         defaultChecked
-                                        className="size-4 cursor-pointer accent-[oklch(47%_0.135_252)]"
+                                        className="size-4 cursor-pointer accent-brand-600 dark:accent-[oklch(47%_0.135_252)]"
                                     />
                                     Manter conectado neste dispositivo
                                 </label>
@@ -313,7 +334,7 @@ export default function GestaoLogin({ status }: { status?: string }) {
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="group mt-7 inline-flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-[oklch(64%_0.155_250)] p-[17px] text-[15px] leading-none font-bold tracking-[0.01em] text-[oklch(13%_0.03_255)] transition-all duration-150 hover:brightness-108 hover:shadow-[0_8px_28px_oklch(64%_0.155_250_/_0.28)] focus-visible:shadow-[0_0_0_4px_oklch(64%_0.155_250_/_0.3)] focus-visible:outline-none active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-75"
+                                    className={gestaoLoginSubmitClasses}
                                 >
                                     {processing ? 'Verificando…' : 'Entrar no console'}
                                     {!processing && (
@@ -329,19 +350,27 @@ export default function GestaoLogin({ status }: { status?: string }) {
                         )}
                     </Form>
 
-                    <p className="mt-[30px] border-t border-white/8 pt-[22px] text-[12.5px] text-[oklch(50%_0.02_250)]">
+                    <p className={`mt-[30px] border-t ${gestaoLoginDividerClasses} pt-[22px] text-[12.5px] ${gestaoLoginFaintClasses}`}>
                         Acesso exclusivo para servidores autorizados pela SEDUR. Atividades nesta
                         sessão são registradas para fins de auditoria.
                     </p>
                 </div>
 
                 <div
-                    className={`${monoFont} mx-auto flex w-full max-w-[400px] flex-wrap justify-between gap-3 pt-6 text-[10px] leading-[1.7] font-medium tracking-[0.07em] text-[oklch(50%_0.02_250)] uppercase`}
+                    className={`${monoFont} mx-auto flex w-full max-w-[400px] flex-wrap justify-between gap-3 pt-6 text-[10px] leading-[1.7] font-medium tracking-[0.07em] uppercase ${gestaoLoginFaintClasses}`}
                 >
                     <span>SEDUR · VIABILIZA</span>
                     <AppVersion className="normal-case tracking-[0.04em]" />
                 </div>
             </section>
         </main>
+    );
+}
+
+export default function GestaoLogin({ status }: { status?: string }) {
+    return (
+        <ThemeProvider>
+            <GestaoLoginContent status={status} />
+        </ThemeProvider>
     );
 }
