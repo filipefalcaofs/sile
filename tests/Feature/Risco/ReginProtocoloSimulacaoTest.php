@@ -54,16 +54,53 @@ class ReginProtocoloSimulacaoTest extends TestCase
         );
     }
 
-    public function test_catalogo_traz_os_dez_protocolos_da_pasta_de_validacao(): void
+    public function test_catalogo_traz_os_protocolos_da_pasta_de_validacao(): void
     {
         $catalogo = app(ReginProtocoloCatalog::class)->todos();
 
         $codigos = array_column($catalogo, 'codigo');
 
-        $this->assertCount(10, $catalogo);
+        $this->assertCount(20, $catalogo);
         $this->assertContains('43747', $codigos);
         $this->assertContains('abrigado-2108519', $codigos);
         $this->assertContains('sede-virtual', $codigos);
+        $this->assertContains('13336', $codigos);
+        $this->assertContains('8225', $codigos);
+        $this->assertContains('61131', $codigos);
+        $this->assertContains('8195', $codigos);
+        $this->assertContains('8161', $codigos);
+        $this->assertContains('2250', $codigos);
+        $this->assertContains('855', $codigos);
+        $this->assertContains('375', $codigos);
+        $this->assertContains('244', $codigos);
+        $this->assertContains('207', $codigos);
+    }
+
+    public function test_novos_protocolos_trazem_cnae_zona_via_e_respostas_do_pdf(): void
+    {
+        $catalogo = app(ReginProtocoloCatalog::class);
+
+        $lanchonete = $catalogo->porCodigo('8225');
+        $this->assertSame('5921000030-00008225/2026', $lanchonete['processo']);
+        $this->assertSame('Edificação Comercial', $lanchonete['tipo_imovel']);
+        $this->assertSame(87.0, $lanchonete['area_utilizada']);
+        $this->assertSame('ZCMe-1/02', $lanchonete['zona']);
+        $this->assertSame('VL', $lanchonete['via']);
+        $this->assertSame('5611-2/03', $lanchonete['atividades'][0]['cnae']);
+        $this->assertTrue($lanchonete['atividades'][0]['perguntas'][0]['valor']);
+
+        $residencial = $catalogo->porCodigo('13336');
+        $this->assertSame('Edificação Residencial', $residencial['tipo_imovel']);
+        $this->assertSame(8.0, $residencial['area_utilizada']);
+        $this->assertSame('ZEIS 1', $residencial['zona']);
+        $this->assertFalse($residencial['atividades'][0]['perguntas'][0]['valor']);
+
+        $hospital = $catalogo->porCodigo('207');
+        $this->assertCount(3, $hospital['atividades']);
+        $this->assertSame('8610-1/01', $hospital['atividades'][0]['cnae']);
+        $this->assertSame('P11', $hospital['atividades'][0]['perguntas'][0]['codigo']);
+        $this->assertTrue($hospital['atividades'][0]['perguntas'][0]['valor']);
+        $this->assertFalse($hospital['atividades'][2]['perguntas'][0]['valor']);
     }
 
     public function test_galpao_do_43747_dirige_regra_e_classifica_pelo_motor_real(): void
@@ -134,7 +171,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/risco/simulacao-regin')
-                ->has('protocolos', 10)
+                ->has('protocolos', 20)
                 ->has('execucoes', 0)
                 ->where('aviso', fn ($aviso) => is_string($aviso) && str_contains($aviso, 'REGIN')));
 
@@ -485,6 +522,30 @@ class ReginProtocoloSimulacaoTest extends TestCase
                 '3314-7/10' => false,
                 '4751-2/01' => true,
                 '6202-3/00' => true,
+            ],
+            '13336' => false,
+            '8225' => true,
+            '61131' => false,
+            '8195' => false,
+            '8161' => true,
+            '2250' => [
+                '2399-1/01' => true,
+                '8211-3/00' => false,
+            ],
+            '855' => true,
+            '375' => [
+                '0161-0/01' => true,
+                '0161-0/02' => true,
+                '0161-0/03' => true,
+                '4789-0/02' => true,
+                '4930-2/02' => false,
+                '8130-3/00' => true,
+            ],
+            '244' => true,
+            '207' => [
+                '8610-1/01' => true,
+                '8610-1/02' => true,
+                '8630-5/03' => false,
             ],
         ];
 

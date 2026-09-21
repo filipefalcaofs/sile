@@ -1,5 +1,5 @@
 {
-  "origem": "Protocolos SEDUR (pasta compartilhada de validação). Campos pessoais omitidos. Tipo de imóvel e área entram no motor como se tivessem chegado do REGIN.",
+  "origem": "Protocolos SEDUR (pasta compartilhada de validação + PDFs 207, 244, 375, 855, 2250, 8161, 8195, 8225, 13336, 61131). Campos pessoais omitidos. Tipo de imóvel e área entram no motor como se tivessem chegado do REGIN.",
   "protocolos": [
     {
       "codigo": "abrigado-2108519",
@@ -153,6 +153,177 @@
         { "cnae": "3314-7/10", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
         { "cnae": "4751-2/01", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
         { "cnae": "6202-3/00", "perguntas": [{ "codigo": "P11", "texto": "Trata-se do escritório da empresa?", "resposta": "Sim, no local funcionará apenas o escritório da empresa.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "13336",
+      "rotulo": "Processo 13336",
+      "processo": "5921000030-00013336/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Residencial",
+      "area_utilizada": 8.0,
+      "zona": "ZEIS 1",
+      "via": "VL",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "2539-0/01", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "3314-7/02", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "8225",
+      "rotulo": "Processo 8225",
+      "processo": "5921000030-00008225/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 87.0,
+      "zona": "ZCMe-1/02",
+      "via": "VL",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "5611-2/03", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "61131",
+      "rotulo": "Processo 61131",
+      "processo": "5921000030-00061131/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 104.0,
+      "zona": "ZEIS 1",
+      "via": "VC-II",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1351-1/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "1359-6/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "4120-4/00", "perguntas": [] },
+        { "cnae": "4399-1/01", "perguntas": [] },
+        { "cnae": "4649-4/02", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "4754-7/03", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "4759-8/99", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "5811-5/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "5819-1/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "7410-2/02", "perguntas": [] },
+        { "cnae": "7410-2/03", "perguntas": [] },
+        { "cnae": "8130-3/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "8599-6/04", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "9529-1/05", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "8195",
+      "rotulo": "Processo 8195",
+      "processo": "5921000030-00008195/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 561.0,
+      "zona": "ZPR 3",
+      "via": "VA-II",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "2391-5/03", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "4744-0/06", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "8161",
+      "rotulo": "Processo 8161",
+      "processo": "5921000030-00008161/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 100.0,
+      "zona": "ZPR 3",
+      "via": "VC-II",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "5611-2/03", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "5611-2/04", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "2250",
+      "rotulo": "Processo 2250",
+      "processo": "5921000030-00002250/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 133900.0,
+      "zona": "ZCMe-1/02",
+      "via": "VL",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "2399-1/01", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "8211-3/00", "perguntas": [
+          { "codigo": "P4", "texto": "Irá prestar serviço de escritório virtual, centro de negócios ou coworking?", "resposta": "Não", "valor": false },
+          { "texto": "Informar quais dos serviços citados a seguir a empresa desenvolve no caso da empresa não ser prestadora de serviço de escritório virtual:", "resposta": "Serviços de arquivamento de documentos" }
+        ] }
+      ]
+    },
+    {
+      "codigo": "855",
+      "rotulo": "Processo 855",
+      "processo": "5921000030-00000855/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 100.0,
+      "zona": "ZCLMu",
+      "via": "VC-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "8511-2/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "8512-1/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "8513-9/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "375",
+      "rotulo": "Processo 375",
+      "processo": "5921000030-00000375/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 50.0,
+      "zona": "ZPR 1",
+      "via": "VC-II",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "0161-0/01", "perguntas": [] },
+        { "cnae": "0161-0/02", "perguntas": [] },
+        { "cnae": "0161-0/03", "perguntas": [] },
+        { "cnae": "4789-0/02", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "4930-2/02", "perguntas": [{ "codigo": "P11", "texto": "Trata-se do escritório da empresa?", "resposta": "Não", "valor": false }] },
+        { "cnae": "8130-3/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "244",
+      "rotulo": "Processo 244",
+      "processo": "5921000030-00000244/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 222.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "7319-0/02", "perguntas": [] },
+        { "cnae": "8593-7/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "8599-6/04", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "207",
+      "rotulo": "Processo 207",
+      "processo": "5921000030-00000207/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZPR 3",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "8610-1/01", "perguntas": [{ "codigo": "P11", "texto": "Trata-se do escritório da empresa?", "resposta": "Sim, no local funcionará apenas o escritório da empresa.", "valor": true }] },
+        { "cnae": "8610-1/02", "perguntas": [{ "codigo": "P11", "texto": "Trata-se do escritório da empresa?", "resposta": "Sim, no local funcionará apenas o escritório da empresa.", "valor": true }] },
+        { "cnae": "8630-5/03", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
       ]
     }
   ]
