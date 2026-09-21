@@ -255,11 +255,13 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->assertFalse($analista->hasPermissionTo('distribuir-processos'));
         $this->assertFalse($analista->hasPermissionTo('manter-setores'));
 
-        // Gestor distribui, administra setores e também analisa/emite TVL.
+        // Gestor distribui e também analisa/emite TVL. Setores ficam só com o
+        // administrador (relatório de usabilidade SEDUR 19/09, itens 03-04).
         $gestor = Role::findByName('gestor', 'web');
-        foreach ($novas as $permission) {
+        foreach (['analisar-processos', 'distribuir-processos', 'emitir-tvl', 'encaminhar-malha-fina'] as $permission) {
             $this->assertTrue($gestor->hasPermissionTo($permission));
         }
+        $this->assertFalse($gestor->hasPermissionTo('manter-setores'));
 
         // Administrador recebe as cinco (administra tudo).
         $administrador = Role::findByName('administrador', 'web');
@@ -312,12 +314,13 @@ class RolesAndPermissionsSeederTest extends TestCase
             );
         }
 
-        // Consultar a trilha (HU-097..101) e gerenciar alertas de abuso (HU-149):
-        // gestor e administrador.
-        foreach (['gestor', 'administrador'] as $role) {
-            $this->assertTrue(Role::findByName($role, 'web')->hasPermissionTo('consultar-auditoria'));
-            $this->assertTrue(Role::findByName($role, 'web')->hasPermissionTo('gerenciar-alertas-abuso'));
-        }
+        // Consultar a trilha (HU-097..101) e gerenciar alertas de abuso
+        // (HU-149): só o administrador — o grupo Auditoria sai do menu do
+        // gestor (relatório de usabilidade SEDUR 19/09, item 06).
+        $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('consultar-auditoria'));
+        $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('gerenciar-alertas-abuso'));
+        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('consultar-auditoria'));
+        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('gerenciar-alertas-abuso'));
 
         // Painel LGPD (HU-102; DPO/admin): só o administrador.
         $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('monitorar-lgpd'));

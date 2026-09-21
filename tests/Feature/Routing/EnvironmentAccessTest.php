@@ -146,9 +146,12 @@ class EnvironmentAccessTest extends TestCase
 
     public function test_analista_acessa_gestao(): void
     {
+        // A home do analista é a Caixa de entrada (usabilidade SEDUR 19/09,
+        // item 03) — acessar /gestao redireciona para a fila de trabalho.
         $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($analista, 'gestao')->get('/gestao')->assertOk();
+        $this->actingAs($analista, 'gestao')->get('/gestao')->assertRedirect('/gestao/processos/fila');
+        $this->actingAs($analista, 'gestao')->get('/gestao/processos/fila')->assertOk();
     }
 
     public function test_logout_da_gestao_volta_ao_login_interno_e_registra(): void

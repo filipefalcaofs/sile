@@ -61,6 +61,12 @@ class CaixaSetorController extends Controller
             ->through(fn (ViabilityRequest $processo): array => [
                 'id' => $processo->id,
                 'protocol_number' => $processo->protocol_number,
+                // Processo SEDUR e endereço (usabilidade SEDUR 19/09, item 05).
+                'bap' => $processo->external_reference,
+                'imovel' => implode(' - ', array_filter([
+                    trim(implode(', ', array_filter([$processo->address_street, $processo->address_number]))),
+                    $processo->address_neighborhood,
+                ])),
                 'empresa' => $processo->company?->trade_name ?: $processo->company?->legal_name,
                 'cnpj' => $processo->company?->formatted_cnpj,
                 'status' => $processo->status->value,

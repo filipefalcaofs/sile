@@ -39,15 +39,23 @@ class GestaoDashboardKpisTest extends TestCase
                 ->has('kpis.operacao'));
     }
 
-    public function test_analista_recebe_operacao_nula(): void
+    public function test_analista_cai_na_caixa_de_entrada(): void
     {
+        // Relatório de usabilidade SEDUR 19/09 (item 03): a tela inicial do
+        // analista é a Caixa de entrada, não o painel de indicadores.
         $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($analista, 'gestao')
             ->get('/gestao')
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('kpis.operacao', null)
-                ->missing('kpis.cnaes'));
+            ->assertRedirect('/gestao/processos/fila');
+    }
+
+    public function test_apoio_cai_na_caixa_do_setor(): void
+    {
+        $apoio = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($apoio, 'gestao')
+            ->get('/gestao')
+            ->assertRedirect('/gestao/caixa-setor');
     }
 }

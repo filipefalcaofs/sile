@@ -101,9 +101,6 @@ class RolesAndPermissionsSeeder extends Seeder
                 'encaminhar-malha-fina',
                 'emitir-tvl',
                 'enviar-tvl-analise',
-                'manter-setores',
-                'consultar-auditoria',
-                'gerenciar-alertas-abuso',
                 'consultar-relatorios',
                 'relatorios.produtividade.nominal',
             ]);

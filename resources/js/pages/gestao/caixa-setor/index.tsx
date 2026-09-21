@@ -17,6 +17,8 @@ import GestaoLayout from '@/layouts/gestao-layout';
 interface ProcessoItem {
     id: number;
     protocol_number: string | null;
+    bap: string | null;
+    imovel: string;
     empresa: string | null;
     cnpj: string | null;
     status: string;
@@ -134,28 +136,23 @@ export default function CaixaSetorIndex({
 
     const columns: ColumnDef<ProcessoItem>[] = [
         {
-            id: 'processo',
-            header: 'Processo',
+            id: 'processo_sedur',
+            header: 'Processo SEDUR',
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <div className="flex flex-col">
-                    <span className="font-medium text-gray-800 dark:text-white/90">
-                        {item.protocol_number ?? '—'}
-                    </span>
+                    <span className="font-medium text-gray-800 dark:text-white/90">{item.bap ?? '—'}</span>
                     <span className="text-theme-xs text-gray-400 dark:text-gray-500">
-                        {item.sector ?? 'sem setor'}
+                        {item.protocol_number ?? 'sem protocolo'}
                     </span>
                 </div>
             ),
         },
         {
-            id: 'empresa',
-            header: 'Empresa',
+            id: 'endereco',
+            header: 'Endereço',
             cell: (item) => (
-                <div className="flex flex-col">
-                    <span className="text-gray-700 dark:text-gray-300">{item.empresa ?? '—'}</span>
-                    {item.cnpj && <span className="text-theme-xs text-gray-400 dark:text-gray-500">{item.cnpj}</span>}
-                </div>
+                <span className="text-gray-700 dark:text-gray-300">{item.imovel !== '' ? item.imovel : '—'}</span>
             ),
         },
         {

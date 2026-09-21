@@ -98,6 +98,9 @@ class DashboardKpisTest extends TestCase
     #[Test]
     public function operacao_e_null_sem_consultar_relatorios(): void
     {
+        // Sem consultar-relatorios E sem caixa operacional (analisar/distribuir),
+        // a home entrega o painel sem KPIs. Analista/apoio nem passam aqui: caem
+        // na caixa de trabalho (redirect — GestaoDashboardKpisTest).
         $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
 
         ViabilityRequest::factory()->create([
@@ -108,10 +111,7 @@ class DashboardKpisTest extends TestCase
 
         $this->actingAs($analista, 'gestao')
             ->get('/gestao')
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('gestao/dashboard')
-                ->where('kpis.operacao', null));
+            ->assertRedirect('/gestao/processos/fila');
     }
 
     #[Test]

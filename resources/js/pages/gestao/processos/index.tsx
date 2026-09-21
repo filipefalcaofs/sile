@@ -243,27 +243,31 @@ export default function ConsultaProcessos({
               ]
             : []),
         {
-            id: 'processo',
-            header: 'Processo',
+            id: 'processo_sedur',
+            header: 'Processo SEDUR',
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <div className="flex flex-col">
-                    <span className="font-medium text-gray-800 dark:text-white/90">{item.protocol_number ?? '—'}</span>
-                    <span className="text-theme-xs text-gray-400 dark:text-gray-500">
-                        {item.bap ? `BAP ${item.bap}` : 'sem BAP'}
-                        {item.tvl_product_number ? ` · TVL ${item.tvl_product_number}` : ''}
-                    </span>
+                    <span className="font-medium text-gray-800 dark:text-white/90">{item.bap ?? '—'}</span>
+                    {item.tvl_product_number && (
+                        <span className="text-theme-xs text-gray-400 dark:text-gray-500">
+                            Viabilidade {item.tvl_product_number}
+                        </span>
+                    )}
                 </div>
             ),
         },
         {
-            id: 'empresa',
-            header: 'Empresa',
+            id: 'protocolo',
+            header: 'Protocolo JUCEB/REGIN',
+            cellClassName: 'whitespace-nowrap',
+            cell: (item) => item.protocol_number ?? '—',
+        },
+        {
+            id: 'endereco',
+            header: 'Endereço',
             cell: (item) => (
-                <div className="flex flex-col">
-                    <span className="text-gray-700 dark:text-gray-300">{item.empresa ?? '—'}</span>
-                    {item.cnpj && <span className="text-theme-xs text-gray-400 dark:text-gray-500">{item.cnpj}</span>}
-                </div>
+                <span className="text-gray-700 dark:text-gray-300">{item.imovel !== '' ? item.imovel : '—'}</span>
             ),
         },
         {

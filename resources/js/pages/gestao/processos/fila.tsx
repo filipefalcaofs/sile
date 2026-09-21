@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import {
     CategoriaBadges,
-    formatarDataHora,
     type ProcessoItem,
     SemaforoBadge,
 } from '@/components/analise/processo-ui';
@@ -50,7 +49,7 @@ const ABAS: { value: 'meus' | 'setor'; label: string }[] = [
     { value: 'setor', label: 'Caixa do setor' },
 ];
 
-export default function Fila({ modo, processos, contadores, visaoSetor }: FilaProps) {
+export default function Fila({ modo, processos, contadores }: FilaProps) {
     function trocarModo(proximo: 'meus' | 'setor') {
         if (proximo === modo) {
             return;
@@ -92,27 +91,23 @@ export default function Fila({ modo, processos, contadores, visaoSetor }: FilaPr
 
     const columns: ColumnDef<ProcessoItem>[] = [
         {
-            id: 'processo',
-            header: 'Processo',
+            id: 'processo_sedur',
+            header: 'Processo SEDUR',
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <div className="flex flex-col">
-                    <span className="font-medium text-gray-800 dark:text-white/90">{item.protocol_number ?? '—'}</span>
+                    <span className="font-medium text-gray-800 dark:text-white/90">{item.bap ?? '—'}</span>
                     <span className="text-theme-xs text-gray-400 dark:text-gray-500">
-                        {item.bap ? `BAP ${item.bap}` : 'sem BAP'}
-                        {item.tvl_product_number ? ` · TVL ${item.tvl_product_number}` : ''}
+                        {item.protocol_number ?? 'sem protocolo'}
                     </span>
                 </div>
             ),
         },
         {
-            id: 'empresa',
-            header: 'Empresa',
+            id: 'endereco',
+            header: 'Endereço',
             cell: (item) => (
-                <div className="flex flex-col">
-                    <span className="text-gray-700 dark:text-gray-300">{item.empresa ?? '—'}</span>
-                    {item.cnpj && <span className="text-theme-xs text-gray-400 dark:text-gray-500">{item.cnpj}</span>}
-                </div>
+                <span className="text-gray-700 dark:text-gray-300">{item.imovel !== '' ? item.imovel : '—'}</span>
             ),
         },
         {
@@ -130,12 +125,6 @@ export default function Fila({ modo, processos, contadores, visaoSetor }: FilaPr
                     )}
                 </div>
             ),
-        },
-        {
-            id: 'prazo',
-            header: 'Prazo',
-            cellClassName: 'whitespace-nowrap',
-            cell: (item) => formatarDataHora(item.analysis_due_at),
         },
         {
             id: 'semaforo',
@@ -179,60 +168,10 @@ export default function Fila({ modo, processos, contadores, visaoSetor }: FilaPr
                     ))}
                 </div>
 
-                {visaoSetor && (
-                    <Card>
-                        <CardHeader
-                            title="Visão do setor"
-                            description="Carga por analista e processos vencidos nas caixas que você coordena."
-                        />
-                        <CardContent>
-                            <div className="grid gap-6 lg:grid-cols-3">
-                                <div className="lg:col-span-2">
-                                    <h4 className="mb-3 text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
-                                        Carga por analista
-                                    </h4>
-                                    {visaoSetor.carga.length === 0 ? (
-                                        <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                                            Nenhum processo atribuído nas caixas do setor.
-                                        </p>
-                                    ) : (
-                                        <ul className="space-y-2">
-                                            {visaoSetor.carga.map((carga) => (
-                                                <li
-                                                    key={carga.analista_id}
-                                                    className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-4 py-2.5 dark:border-gray-800"
-                                                >
-                                                    <span className="text-theme-sm text-gray-700 dark:text-gray-300">
-                                                        {carga.analista}
-                                                    </span>
-                                                    <span className="text-theme-sm font-semibold text-gray-800 dark:text-white/90">
-                                                        {numberFormat.format(carga.total)}
-                                                    </span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-4 rounded-2xl border border-error-200 bg-error-50 p-5 dark:border-error-500/30 dark:bg-error-500/15">
-                                    <AlertIcon className="size-8 shrink-0 fill-current text-error-500" />
-                                    <div>
-                                        <span className="block text-sm text-error-600 dark:text-error-400">
-                                            Processos vencidos
-                                        </span>
-                                        <h4 className="mt-0.5 text-2xl font-bold tracking-tight text-error-700 dark:text-error-300">
-                                            {numberFormat.format(visaoSetor.vermelhos)}
-                                        </h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
                 <Card>
                     <CardHeader
                         title="Processos a tratar"
-                        description="Trabalho priorizado por prazo (SLA). O semáforo sinaliza o tempo restante: verde no prazo, amarelo em alerta, vermelho vencido."
+                        description="Fila de trabalho do analista."
                     />
                     <CardContent>
                         <div className="space-y-5">
