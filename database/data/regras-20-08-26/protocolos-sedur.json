@@ -1,5 +1,5 @@
 {
-  "origem": "Protocolos SEDUR (pasta compartilhada de validação + PDFs 207, 244, 375, 855, 2250, 8161, 8195, 8225, 13336, 61131). Campos pessoais omitidos. Tipo de imóvel e área entram no motor como se tivessem chegado do REGIN.",
+  "origem": "Protocolos SEDUR (pasta compartilhada de validação + PDFs 207, 244, 375, 855, 2250, 8161, 8195, 8225, 13336, 61131) e oito processos sintéticos de teste (dupla-r*) com dois CNAEs de regras distintas da planilha 20.08.26. Campos pessoais omitidos. Tipo de imóvel e área entram no motor como se tivessem chegado do REGIN.",
   "protocolos": [
     {
       "codigo": "abrigado-2108519",
@@ -324,6 +324,366 @@
         { "cnae": "8610-1/01", "perguntas": [{ "codigo": "P11", "texto": "Trata-se do escritório da empresa?", "resposta": "Sim, no local funcionará apenas o escritório da empresa.", "valor": true }] },
         { "cnae": "8610-1/02", "perguntas": [{ "codigo": "P11", "texto": "Trata-se do escritório da empresa?", "resposta": "Sim, no local funcionará apenas o escritório da empresa.", "valor": true }] },
         { "cnae": "8630-5/03", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "dupla-r1-r20",
+      "rotulo": "Dupla teste R1 + R20",
+      "processo": "5921000030-00990001/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1011-2/01", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "4721-1/03", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "dupla-r8-r15",
+      "rotulo": "Dupla teste R8 + R15",
+      "processo": "5921000030-00990002/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "4713-0/04", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "8591-1/00", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "dupla-r21-r22",
+      "rotulo": "Dupla teste R21 + R22",
+      "processo": "5921000030-00990003/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "4520-0/01", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "1731-1/00", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "dupla-r46-r47",
+      "rotulo": "Dupla teste R46 + R47",
+      "processo": "5921000030-00990004/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "8122-2/00", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "1041-4/00", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "dupla-r24-r48",
+      "rotulo": "Dupla teste R24/25 + R48",
+      "processo": "5921000030-00990005/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1063-5/00", "perguntas": [
+          { "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true },
+          { "codigo": "P3", "texto": "A atividade será desenvolvida de modo artesanal?", "resposta": "Não", "valor": false }
+        ] },
+        { "cnae": "5620-1/01", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "dupla-r6-r23",
+      "rotulo": "Dupla teste R6/7 + R23",
+      "processo": "5921000030-00990006/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1020-1/01", "perguntas": [
+          { "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true },
+          { "codigo": "P3", "texto": "A atividade será desenvolvida de modo artesanal?", "resposta": "Não", "valor": false }
+        ] },
+        { "cnae": "3811-4/00", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "dupla-r38-r4",
+      "rotulo": "Dupla teste R38 + R4",
+      "processo": "5921000030-00990007/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "8411-6/00", "perguntas": [{ "codigo": "P7", "texto": "Trata-se de Órgão Público?", "resposta": "Sim, trata-se de órgão da Administração pública.", "valor": true }] },
+        { "cnae": "1822-9/01", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "dupla-r49-r50",
+      "rotulo": "Dupla teste R49 + R50",
+      "processo": "5921000030-00990008/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "4639-7/02", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "8630-5/02", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "regra-1-escritorio",
+      "rotulo": "Isolado R1 — escritório (P11 não)",
+      "processo": "5921000030-00990009/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "4511-1/01", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "regra-1-nr",
+      "rotulo": "Isolado R1 — atividade nR (P11 sim)",
+      "processo": "5921000030-00990010/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "4511-1/01", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "regra-1-id",
+      "rotulo": "Isolado R1 — atividade ID (P11 sim)",
+      "processo": "5921000030-00990011/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1013-9/01", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "regra-1-galpao",
+      "rotulo": "Isolado R1 — galpão dirige regra (P11 sim)",
+      "processo": "5921000030-00990012/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Galpão",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "4511-1/01", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] }
+      ]
+    },
+    {
+      "codigo": "regra-24",
+      "rotulo": "Isolado R24 — P2 não (escritório)",
+      "processo": "5921000030-00990013/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1064-3/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "regra-25-artesanal",
+      "rotulo": "Isolado R25 — P2 sim e P3 sim (artesanal)",
+      "processo": "5921000030-00990014/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1064-3/00", "perguntas": [
+          { "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true },
+          { "codigo": "P3", "texto": "A atividade será desenvolvida de modo artesanal?", "resposta": "Sim", "valor": true }
+        ] }
+      ]
+    },
+    {
+      "codigo": "regra-25-industrial",
+      "rotulo": "Isolado R25 — P2 sim e P3 não (industrial)",
+      "processo": "5921000030-00990015/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1099-6/05", "perguntas": [
+          { "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true },
+          { "codigo": "P3", "texto": "A atividade será desenvolvida de modo artesanal?", "resposta": "Não", "valor": false }
+        ] }
+      ]
+    },
+    {
+      "codigo": "regra-26",
+      "rotulo": "Isolado R26 — P19 não (escritório)",
+      "processo": "5921000030-00990016/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "4789-0/04", "perguntas": [{ "codigo": "P19", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "regra-27",
+      "rotulo": "Isolado R27 — P19 sim (atividade no local)",
+      "processo": "5921000030-00990017/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "4789-0/04", "perguntas": [
+          { "codigo": "P19", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true },
+          { "codigo": "P20", "texto": "Informe o que será comercializado:", "resposta": "Comércio varejista de artigos e acessórios para animais domésticos", "valor": true }
+        ] }
+      ]
+    },
+    {
+      "codigo": "regra-51",
+      "rotulo": "Isolado R51 — P2 não (escritório)",
+      "processo": "5921000030-00990018/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1032-5/01", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "regra-52-artesanal",
+      "rotulo": "Isolado R52 — P2 sim e P3 sim (artesanal)",
+      "processo": "5921000030-00990019/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1032-5/01", "perguntas": [
+          { "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true },
+          { "codigo": "P3", "texto": "A atividade será desenvolvida de modo artesanal?", "resposta": "Sim", "valor": true }
+        ] }
+      ]
+    },
+    {
+      "codigo": "regra-52-industrial",
+      "rotulo": "Isolado R52 — P2 sim e P3 não (industrial)",
+      "processo": "5921000030-00990020/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1053-8/00", "perguntas": [
+          { "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true },
+          { "codigo": "P3", "texto": "A atividade será desenvolvida de modo artesanal?", "resposta": "Não", "valor": false }
+        ] }
+      ]
+    },
+    {
+      "codigo": "dupla-r1-r24",
+      "rotulo": "Dupla teste R1 + R24",
+      "processo": "5921000030-00990021/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "4530-7/03", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true }] },
+        { "cnae": "1064-3/00", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "dupla-r25-r52",
+      "rotulo": "Dupla teste R25 + R52",
+      "processo": "5921000030-00990022/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "1099-6/05", "perguntas": [
+          { "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true },
+          { "codigo": "P3", "texto": "A atividade será desenvolvida de modo artesanal?", "resposta": "Não", "valor": false }
+        ] },
+        { "cnae": "1032-5/01", "perguntas": [
+          { "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Sim, a atividade será desenvolvida no local.", "valor": true },
+          { "codigo": "P3", "texto": "A atividade será desenvolvida de modo artesanal?", "resposta": "Não", "valor": false }
+        ] }
+      ]
+    },
+    {
+      "codigo": "dupla-r26-r51",
+      "rotulo": "Dupla teste R26 + R51",
+      "processo": "5921000030-00990023/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 80.0,
+      "zona": "ZCMe-1/01",
+      "via": "VA-I",
+      "inscricao_imobiliaria": "0010010010",
+      "atividades": [
+        { "cnae": "4789-0/04", "perguntas": [{ "codigo": "P19", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
+        { "cnae": "1061-9/02", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
       ]
     }
   ]
