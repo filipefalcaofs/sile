@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'referred_by_user_id',
     'reason',
     'resolved_at',
+    'resolved_by_user_id',
+    'resolution_note',
 ])]
 class FineMeshReferral extends Model
 {
@@ -58,5 +60,15 @@ class FineMeshReferral extends Model
     public function referredBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'referred_by_user_id');
+    }
+
+    /**
+     * Usuário que deu baixa no encaminhamento (null enquanto aberto).
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function resolvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'resolved_by_user_id');
     }
 }

@@ -108,15 +108,23 @@ class MalhaFinaService
     }
 
     /**
-     * Dá baixa em um encaminhamento (resolved_at = agora) SEM mexer no status. Ao
-     * resolver o ÚLTIMO encaminhamento aberto do processo, baixa a flag
-     * in_fine_mesh — mantendo o invariante "in_fine_mesh = existe encaminhamento
-     * aberto". A baixa também é auditada por processo.
+     * Dá baixa em um encaminhamento (resolved_at = agora) SEM mexer no status,
+     * registrando QUEM baixou (resolved_by_user_id) e a observação OPCIONAL da
+     * conclusão (resolution_note — só quando há informação complementar da
+     * análise). Ao resolver o ÚLTIMO encaminhamento aberto do processo, baixa
+     * a flag in_fine_mesh — mantendo o invariante "in_fine_mesh = existe
+     * encaminhamento aberto". A baixa também é auditada por processo.
      */
-    public function resolver(FineMeshReferral $referral, User $ator): void
+    public function resolver(FineMeshReferral $referral, User $ator, ?string $observacao = null): void
     {
-        DB::transaction(function () use ($referral, $ator): void {
-            $referral->forceFill(['resolved_at' => now()])->save();
+        $observacao = $this->observacaoNormalizada($observacao);
+
+        DB::transaction(function () use ($referral, $ator, $observacao): void {
+            $referral->forceFill([
+                'resolved_at' => now(),
+                'resolved_by_user_id' => $ator->id,
+                'resolution_note' => $observacao,
+            ])->save();
 
             $request = $referral->viabilityRequest;
 
@@ -131,8 +139,37 @@ class MalhaFinaService
                 'fine_mesh_referral_id' => $referral->id,
                 'in_fine_mesh' => $request->in_fine_mesh,
                 'ator_id' => $ator->id,
+                'observacao' => $observacao,
             ], $request);
         });
+    }
+
+    /**
+     * Baixa TODOS os encaminhamentos abertos do processo (a Caixa de Malha
+     * Fina lista processos, não encaminhamentos) com a mesma observação
+     * opcional — cada baixa é auditada individualmente e a flag desliga na
+     * última. Retorna quantos encaminhamentos foram baixados (0 = o processo
+     * não estava na malha fina).
+     */
+    public function resolverAbertos(ViabilityRequest $request, User $ator, ?string $observacao = null): int
+    {
+        $abertos = $request->fineMeshReferrals()->whereNull('resolved_at')->get();
+
+        foreach ($abertos as $referral) {
+            $this->resolver($referral, $ator, $observacao);
+        }
+
+        return $abertos->count();
+    }
+
+    /**
+     * Observação opcional da baixa: só espaços em branco vira null.
+     */
+    private function observacaoNormalizada(?string $observacao): ?string
+    {
+        $observacao = $observacao !== null ? trim($observacao) : null;
+
+        return $observacao === '' ? null : $observacao;
     }
 
     /**

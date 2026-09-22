@@ -35,6 +35,7 @@ class FineMeshReferralFactory extends Factory
     {
         return $this->state(fn () => [
             'resolved_at' => now(),
+            'resolved_by_user_id' => User::factory(),
         ]);
     }
 }
