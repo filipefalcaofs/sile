@@ -3,6 +3,7 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStage;
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Sector;
 use App\Models\User;
@@ -287,5 +288,67 @@ class CaixaSetorTest extends TestCase
 
         $this->assertSame($analista->id, $processo->fresh()->assigned_user_id);
         $this->assertSame(AnalysisStage::Analise, $processo->fresh()->analysis_stage);
+    }
+
+    public function test_visao_padrao_lista_apenas_processos_sem_responsavel(): void
+    {
+        // Aba "Para distribuir" (padrão): só o que ainda não tem analista.
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analista = $this->analistaDoSetor($setor);
+
+        $livre = $this->processoNaCaixa($setor);
+        $atribuido = $this->processoNaCaixa($setor);
+        $atribuido->forceFill(['assigned_user_id' => $analista->id, 'assigned_at' => now()])->save();
+
+        $response = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertOk();
+
+        $props = $response->viewData('page')['props'];
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($livre->id, $ids);
+        $this->assertNotContains($atribuido->id, $ids, 'Processo já distribuído não aparece na aba Para distribuir.');
+        $this->assertSame('para_distribuir', $props['visao']);
+        $this->assertSame(1, $props['contadores']['para_distribuir']);
+        $this->assertSame(1, $props['contadores']['distribuidos']);
+    }
+
+    public function test_visao_distribuidos_lista_atribuidos_com_flag_de_redistribuicao(): void
+    {
+        // Aba "Distribuídos": só atribuídos; pode_redistribuir é falso após a
+        // conclusão da análise (regra única AnalysisStatus::permiteRedistribuicao).
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analista = $this->analistaDoSetor($setor);
+
+        $emAnalise = $this->processoNaCaixa($setor);
+        $emAnalise->forceFill([
+            'assigned_user_id' => $analista->id,
+            'assigned_at' => now(),
+            'analysis_status' => AnalysisStatus::EmAnalise,
+        ])->save();
+
+        $concluido = $this->processoNaCaixa($setor);
+        $concluido->forceFill([
+            'assigned_user_id' => $analista->id,
+            'assigned_at' => now(),
+            'analysis_status' => AnalysisStatus::AnaliseConcluida,
+        ])->save();
+
+        $livre = $this->processoNaCaixa($setor);
+
+        $response = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?visao=distribuidos')
+            ->assertOk();
+
+        $props = $response->viewData('page')['props'];
+        $itens = collect($props['processos']['data']);
+
+        $this->assertSame('distribuidos', $props['visao']);
+        $this->assertFalse($itens->contains('id', $livre->id), 'Processo sem responsável não aparece na aba Distribuídos.');
+        $this->assertTrue($itens->firstWhere('id', $emAnalise->id)['pode_redistribuir']);
+        $this->assertFalse($itens->firstWhere('id', $concluido->id)['pode_redistribuir']);
     }
 }

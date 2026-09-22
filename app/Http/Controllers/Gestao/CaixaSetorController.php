@@ -38,8 +38,10 @@ class CaixaSetorController extends Controller
 
     /**
      * Lista os processos em_analise dos setores do usuário (RN-004 — visibilidade
-     * por setor), ordenados pelo prazo (analysis_due_at, índice de 10-02) e
-     * paginados no servidor. A consulta é auditada (RN-002).
+     * por setor), em duas visões: "para_distribuir" (padrão — sem responsável) e
+     * "distribuidos" (já atribuídos, com a flag pode_redistribuir). Ordenados
+     * pelo prazo (analysis_due_at) e paginados no servidor. A consulta é
+     * auditada (RN-002).
      */
     public function index(Request $request): Response
     {
@@ -50,9 +52,25 @@ class CaixaSetorController extends Controller
 
         $sectorIds = $request->user()->sectors()->pluck('sectors.id');
 
-        $processos = ViabilityRequest::query()
+        // Visões da caixa (abas): "para_distribuir" (padrão — sem responsável)
+        // e "distribuidos" (acompanhamento, com a analista atribuída).
+        $visao = $request->input('visao') === 'distribuidos' ? 'distribuidos' : 'para_distribuir';
+
+        $base = ViabilityRequest::query()
             ->whereIn('sector_id', $sectorIds)
-            ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->where('status', ViabilityRequestStatus::EmAnalise->value);
+
+        $contadores = [
+            'para_distribuir' => (clone $base)->whereNull('assigned_user_id')->count(),
+            'distribuidos' => (clone $base)->whereNotNull('assigned_user_id')->count(),
+        ];
+
+        $processos = $base
+            ->when(
+                $visao === 'para_distribuir',
+                fn ($query) => $query->whereNull('assigned_user_id'),
+                fn ($query) => $query->whereNotNull('assigned_user_id'),
+            )
             ->with(['company', 'sector:id,name', 'assignedTo:id,name'])
             ->orderBy('analysis_due_at')
             ->orderBy('id')
@@ -77,6 +95,9 @@ class CaixaSetorController extends Controller
                 'assigned_user_id' => $processo->assigned_user_id,
                 'assigned_to' => $processo->assignedTo?->name,
                 'analysis_due_at' => $processo->analysis_due_at?->toIso8601String(),
+                // Redistribuir só antes da conclusão (regra única do enum).
+                'pode_redistribuir' => $processo->assigned_user_id !== null
+                    && ($processo->analysis_status?->permiteRedistribuicao() ?? false),
             ]);
 
         // Só quem tramita (distribuir-processos — gestor/apoio) distribui — e só
@@ -106,6 +127,8 @@ class CaixaSetorController extends Controller
 
         return Inertia::render('gestao/caixa-setor/index', [
             'processos' => $processos,
+            'visao' => $visao,
+            'contadores' => $contadores,
             'filtros' => [
                 'per_page' => $perPage,
             ],
