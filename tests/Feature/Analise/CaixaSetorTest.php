@@ -600,4 +600,61 @@ class CaixaSetorTest extends TestCase
         $this->assertContains($alvo->id, $ids);
         $this->assertNotContains($outro->id, $ids);
     }
+
+    public function test_central_lista_processos_selecionados_e_carga_dos_analistas(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analista = $this->analistaDoSetor($setor);
+
+        $p1 = $this->processoNaCaixa($setor);
+        $p2 = $this->processoNaCaixa($setor);
+
+        // Carga pré-existente do analista (1 processo já atribuído no setor).
+        $jaAtribuido = $this->processoNaCaixa($setor);
+        $jaAtribuido->forceFill(['assigned_user_id' => $analista->id, 'analysis_status' => AnalysisStatus::EmAnalise])->save();
+
+        $props = $this->actingAs($apoio, 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$p1->id},{$p2->id}")
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $idsProcessos = collect($props['processos'])->pluck('id')->all();
+        $this->assertContains($p1->id, $idsProcessos);
+        $this->assertContains($p2->id, $idsProcessos);
+        $this->assertSame(2, $props['totalSelecionados']);
+
+        $linha = collect($props['analistas'])->firstWhere('analista_id', $analista->id);
+        $this->assertSame(1, $linha['total'], 'A carga atual do analista aparece na Central.');
+    }
+
+    public function test_central_exige_distribuir_processos(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $p = $this->processoNaCaixa($setor);
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$p->id}")
+            ->assertForbidden();
+    }
+
+    public function test_central_ignora_ids_fora_dos_setores_do_usuario(): void
+    {
+        $setorA = Sector::factory()->create();
+        $setorB = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setorA);
+
+        $doA = $this->processoNaCaixa($setorA);
+        $doB = $this->processoNaCaixa($setorB);
+
+        $props = $this->actingAs($apoio, 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$doA->id},{$doB->id}")
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $ids = collect($props['processos'])->pluck('id')->all();
+        $this->assertContains($doA->id, $ids);
+        $this->assertNotContains($doB->id, $ids, 'Processo de setor alheio não entra na Central.');
+    }
 }

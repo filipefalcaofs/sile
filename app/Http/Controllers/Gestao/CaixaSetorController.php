@@ -9,6 +9,7 @@ use App\Http\Requests\Gestao\DistribuirProcessoRequest;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
+use App\Services\Analise\CargaAnalistaService;
 use App\Services\Analise\DistribuicaoException;
 use App\Services\Analise\DistribuicaoService;
 use App\Services\Analise\ProcessoQueryService;
@@ -38,6 +39,7 @@ class CaixaSetorController extends Controller
         private DistribuicaoService $distribuicao,
         private AuditService $audit,
         private ProcessoQueryService $processos,
+        private CargaAnalistaService $carga,
     ) {}
 
     /**
@@ -166,6 +168,68 @@ class CaixaSetorController extends Controller
             'podeAssumir' => $podeAssumir,
             'analistas' => $analistas,
             'vistoriadores' => $vistoriadores,
+        ]);
+    }
+
+    /**
+     * Central de Distribuição (Fase 2): a partir dos processos selecionados na
+     * caixa (ids), mostra a carga ativa de cada analista do(s) setor(es) desses
+     * processos para o Apoio decidir a distribuição. Só processos EM ANÁLISE, sem
+     * responsável, do(s) setor(es) do usuário (RN-004). A gravação é o POST
+     * distribuir já existente. A decisão do destinatário é do Apoio — aqui só se
+     * mede a carga (nunca se sugere). A consulta é auditada.
+     */
+    public function central(Request $request): Response
+    {
+        $sectorIds = $request->user()->sectors()->pluck('sectors.id');
+
+        $ids = collect(explode(',', (string) $request->string('ids')))
+            ->map(fn ($id): int => (int) trim($id))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $processos = ViabilityRequest::query()
+            ->whereIn('id', $ids)
+            ->whereIn('sector_id', $sectorIds)
+            ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->whereNull('assigned_user_id')
+            ->with(['sector:id,name'])
+            ->orderBy('analysis_due_at')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (ViabilityRequest $processo): array => [
+                'id' => $processo->id,
+                'bap' => $processo->external_reference,
+                'protocol_number' => $processo->protocol_number,
+                'imovel' => implode(' - ', array_filter([
+                    trim(implode(', ', array_filter([$processo->address_street, $processo->address_number]))),
+                    $processo->address_neighborhood,
+                ])),
+                'analysis_stage_label' => $processo->analysis_stage?->label(),
+            ])
+            ->all();
+
+        // Setores efetivos dos processos válidos (interseção com os do usuário).
+        $setoresDosProcessos = ViabilityRequest::query()
+            ->whereIn('id', collect($processos)->pluck('id'))
+            ->pluck('sector_id')
+            ->unique()
+            ->values();
+
+        $analistas = $this->carga->cargaDosSetores($setoresDosProcessos);
+        $totalEmAnalise = collect($analistas)->sum('total');
+
+        $this->audit->log('analise', 'consulta-central', 'Consulta da central de distribuição', [
+            'setores' => $setoresDosProcessos->all(),
+            'processos' => collect($processos)->pluck('id')->all(),
+        ]);
+
+        return Inertia::render('gestao/caixa-setor/central', [
+            'processos' => $processos,
+            'analistas' => $analistas,
+            'totalSelecionados' => count($processos),
+            'totalEmAnalise' => $totalEmAnalise,
         ]);
     }
 
