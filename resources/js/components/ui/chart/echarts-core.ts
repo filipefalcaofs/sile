@@ -5,6 +5,8 @@ import {
     DatasetComponent,
     GridComponent,
     LegendComponent,
+    MarkLineComponent,
+    MarkPointComponent,
     TitleComponent,
     TooltipComponent,
 } from 'echarts/components';
@@ -30,6 +32,8 @@ echarts.use([
     GridComponent,
     TooltipComponent,
     LegendComponent,
+    MarkLineComponent,
+    MarkPointComponent,
     TitleComponent,
     DatasetComponent,
     CanvasRenderer,

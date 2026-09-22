@@ -3,11 +3,18 @@ import type { EChartsType } from 'echarts/core';
 import { echarts } from './echarts-core';
 import type { EChartsOption } from './echarts-core';
 
+export interface ChartClickParams {
+    name?: string;
+    dataIndex?: number;
+}
+
 export interface ChartImplProps {
     /** Configuração do gráfico (restrita aos módulos de echarts-core). */
     option: EChartsOption;
     /** Classe do contêiner — define a altura (mesma do skeleton). */
     className?: string;
+    /** Clique numa série — o gráfico já montado encaminha o evento. */
+    onClick?: (params: ChartClickParams) => void;
 }
 
 /**
@@ -24,11 +31,13 @@ function isDarkMode(): boolean {
  * resize do contêiner e a troca de tema do DS, reaplicando tema/opção sem
  * recriar o gráfico; faz `dispose` no unmount.
  */
-export function ChartImpl({ option, className }: ChartImplProps) {
+export function ChartImpl({ option, className, onClick }: ChartImplProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<EChartsType | null>(null);
     const optionRef = useRef(option);
+    const onClickRef = useRef(onClick);
     optionRef.current = option;
+    onClickRef.current = onClick;
 
     useEffect(() => {
         const container = containerRef.current;
@@ -54,9 +63,15 @@ export function ChartImpl({ option, className }: ChartImplProps) {
             attributeFilter: ['class'],
         });
 
+        const aoClicar = (params: ChartClickParams) => {
+            onClickRef.current?.(params);
+        };
+        chart.on('click', aoClicar);
+
         return () => {
             resizeObserver.disconnect();
             themeObserver.disconnect();
+            chart.off('click', aoClicar);
             chart.dispose();
             chartRef.current = null;
         };
