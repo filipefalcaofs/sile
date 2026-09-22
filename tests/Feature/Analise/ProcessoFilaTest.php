@@ -252,4 +252,39 @@ class ProcessoFilaTest extends TestCase
         $this->assertArrayHasKey('links', $props['processos']);
         $this->assertSame(3, $props['processos']['total']);
     }
+
+    public function test_contadores_ignoram_os_filtros_da_lista(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $alvo = $this->processo(['assigned_user_id' => $analista->id]);
+        $alvo->forceFill(['external_reference' => 'BAP-KPI-1'])->save();
+
+        $outro = $this->processo(['assigned_user_id' => $analista->id]);
+        $outro->forceFill(['external_reference' => 'BAP-KPI-2'])->save();
+
+        $props = $this->filaProps($analista, 'meus', 'bap=KPI-1');
+
+        $this->assertCount(1, $props['processos']['data']);
+        $this->assertSame(2, $props['contadores']['em_analise']);
+    }
+
+    public function test_consulta_fila_com_filtro_e_auditada(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $alvo = $this->processo(['assigned_user_id' => $analista->id]);
+        $alvo->forceFill(['external_reference' => 'BAP-AUD-1'])->save();
+
+        $this->filaProps($analista, 'meus', 'bap=AUD-1');
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'analise',
+            'event' => 'consulta-fila',
+            'result' => 'sucesso',
+            'causer_id' => $analista->id,
+        ]);
+    }
 }
