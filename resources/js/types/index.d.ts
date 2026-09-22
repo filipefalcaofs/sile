@@ -14,6 +14,7 @@ export interface SharedProps extends PageProps {
     flash: {
         status?: string;
         error?: string | null;
+        warning?: string | null;
     };
     appVersion: string;
     appRevision: string;

@@ -42,6 +42,11 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                         <Alert variant="success" title="Sucesso" message={flash.status} />
                     </div>
                 )}
+                {flash.warning && (
+                    <div className="mb-6">
+                        <Alert variant="warning" title="Atenção" message={flash.warning} />
+                    </div>
+                )}
                 {flash.error && (
                     <div className="mb-6">
                         <Alert variant="error" title="Ação bloqueada" message={flash.error} />

@@ -179,7 +179,7 @@ class CaixaSetorController extends Controller
      * distribuir já existente. A decisão do destinatário é do Apoio — aqui só se
      * mede a carga (nunca se sugere). A consulta é auditada.
      */
-    public function central(Request $request): Response
+    public function central(Request $request): Response|RedirectResponse
     {
         $sectorIds = $request->user()->sectors()->pluck('sectors.id');
 
@@ -217,6 +217,10 @@ class CaixaSetorController extends Controller
             ->unique()
             ->values();
 
+        if ($setoresDosProcessos->count() > 1) {
+            return redirect('/gestao/caixa-setor')->with('error', 'Selecione processos de um único setor por vez para distribuir.');
+        }
+
         $analistas = $this->carga->cargaDosSetores($setoresDosProcessos);
         $totalEmAnalise = collect($analistas)->sum('total');
 
@@ -235,19 +239,30 @@ class CaixaSetorController extends Controller
 
     /**
      * Distribui um ou mais processos (lote — RN-007) a um analista do setor. A
-     * validação estrutural é do DistribuirProcessoRequest; o vínculo de setor de
-     * cada item é regra do DistribuicaoService, que isola falhas no lote (uma
-     * atribuição inválida não derruba as demais).
+     * validação estrutural é do DistribuirProcessoRequest. O lote inteiro é
+     * rejeitado se algum item não estiver disponível na caixa do ator; falhas de
+     * regra do destinatário permanecem isoladas no DistribuicaoService.
      */
     public function distribuir(DistribuirProcessoRequest $request): RedirectResponse
     {
         /** @var User $analista */
         $analista = User::query()->findOrFail($request->integer('analista_id'));
 
+        $sectorIds = $request->user()->sectors()->pluck('sectors.id');
+        $pedidos = collect($request->input('request_ids'))
+            ->map(fn ($id): int => (int) $id)
+            ->unique();
+
         $processos = ViabilityRequest::query()
-            ->whereIn('id', $request->input('request_ids'))
+            ->whereIn('id', $pedidos)
+            ->whereIn('sector_id', $sectorIds)
             ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->whereNull('assigned_user_id')
             ->get();
+
+        if ($processos->count() !== $pedidos->count()) {
+            return back()->with('error', 'Alguns processos não estão disponíveis para distribuição na sua caixa.');
+        }
 
         $resumo = $this->distribuicao->distribuirLote($processos, $analista, $request->user());
 
@@ -274,8 +289,11 @@ class CaixaSetorController extends Controller
         /** @var User $analista */
         $analista = User::query()->findOrFail($request->integer('analista_id'));
 
+        $sectorIds = $request->user()->sectors()->pluck('sectors.id');
+
         $processo = ViabilityRequest::query()
             ->whereIn('id', $request->input('request_ids'))
+            ->whereIn('sector_id', $sectorIds)
             ->where('status', ViabilityRequestStatus::EmAnalise->value)
             ->firstOrFail();
 

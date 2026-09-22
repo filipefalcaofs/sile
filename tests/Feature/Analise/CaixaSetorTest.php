@@ -340,6 +340,7 @@ class CaixaSetorTest extends TestCase
     {
         $setor = Sector::factory()->create();
         $gestor = $this->gestor();
+        $gestor->sectors()->attach($setor);
         $analista = $this->analistaDoSetor($setor);
         $processo = $this->processoNaCaixa($setor);
 
@@ -357,6 +358,7 @@ class CaixaSetorTest extends TestCase
     {
         $setor = Sector::factory()->create();
         $gestor = $this->gestor();
+        $gestor->sectors()->attach($setor);
         $analista = $this->analistaDoSetor($setor);
         $p1 = $this->processoNaCaixa($setor);
         $p2 = $this->processoNaCaixa($setor);
@@ -370,6 +372,26 @@ class CaixaSetorTest extends TestCase
 
         $this->assertSame($analista->id, $p1->fresh()->assigned_user_id);
         $this->assertSame($analista->id, $p2->fresh()->assigned_user_id);
+    }
+
+    public function test_distribuir_rejeita_processo_de_setor_alheio(): void
+    {
+        $setorA = Sector::factory()->create();
+        $setorB = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setorA);
+        $analistaDoSetorB = $this->analistaDoSetor($setorB);
+        $processoDoSetorA = $this->processoNaCaixa($setorA);
+        $processoDoSetorB = $this->processoNaCaixa($setorB);
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processoDoSetorA->id, $processoDoSetorB->id],
+                'analista_id' => $analistaDoSetorB->id,
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertNull($processoDoSetorA->fresh()->assigned_user_id);
+        $this->assertNull($processoDoSetorB->fresh()->assigned_user_id);
     }
 
     public function test_analista_assume_processo_da_sua_caixa(): void
@@ -469,6 +491,30 @@ class CaixaSetorTest extends TestCase
             ->assertSessionHas('status');
 
         $this->assertSame($analistaB->id, $processo->fresh()->assigned_user_id);
+    }
+
+    public function test_redistribuir_rejeita_processo_de_setor_alheio(): void
+    {
+        $setorA = Sector::factory()->create();
+        $setorB = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setorA);
+        $analistaDoSetorB = $this->analistaDoSetor($setorB);
+        $novoAnalistaDoSetorB = $this->analistaDoSetor($setorB);
+        $processo = $this->processoNaCaixa($setorB);
+        $processo->forceFill([
+            'assigned_user_id' => $analistaDoSetorB->id,
+            'assigned_at' => now(),
+            'analysis_status' => AnalysisStatus::EmAnalise,
+        ])->save();
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/redistribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $novoAnalistaDoSetorB->id,
+            ])
+            ->assertNotFound();
+
+        $this->assertSame($analistaDoSetorB->id, $processo->fresh()->assigned_user_id);
     }
 
     public function test_redistribuir_retorna_erro_controlado_quando_a_analise_ja_foi_concluida(): void
@@ -637,6 +683,21 @@ class CaixaSetorTest extends TestCase
         $this->actingAs($analista, 'gestao')
             ->get("/gestao/caixa-setor/central?ids={$p->id}")
             ->assertForbidden();
+    }
+
+    public function test_central_bloqueia_selecao_de_multiplos_setores(): void
+    {
+        $setorA = Sector::factory()->create();
+        $setorB = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setorA);
+        $apoio->sectors()->attach($setorB);
+        $processoDoSetorA = $this->processoNaCaixa($setorA);
+        $processoDoSetorB = $this->processoNaCaixa($setorB);
+
+        $this->actingAs($apoio, 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$processoDoSetorA->id},{$processoDoSetorB->id}")
+            ->assertRedirect('/gestao/caixa-setor')
+            ->assertSessionHas('error');
     }
 
     public function test_central_ignora_ids_fora_dos_setores_do_usuario(): void

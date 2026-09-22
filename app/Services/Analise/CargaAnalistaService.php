@@ -45,7 +45,13 @@ class CargaAnalistaService
         // Contagem ativa por analista e status (uma query), restrita aos setores.
         $contagens = ViabilityRequest::query()
             ->whereIn('sector_id', $ids)
-            ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->whereIn('status', [
+                ViabilityRequestStatus::EmAnalise->value,
+                ViabilityRequestStatus::EmPendencia->value,
+            ])
+            ->where(fn ($query) => $query
+                ->whereNull('analysis_status')
+                ->orWhere('analysis_status', '!=', AnalysisStatus::AnaliseConcluida->value))
             ->whereNotNull('assigned_user_id')
             ->groupBy('assigned_user_id', 'analysis_status')
             ->get([

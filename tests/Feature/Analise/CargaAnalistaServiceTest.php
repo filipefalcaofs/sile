@@ -30,13 +30,17 @@ class CargaAnalistaServiceTest extends TestCase
         return $analista;
     }
 
-    private function processoAtribuido(Sector $sector, User $analista, AnalysisStatus $status): ViabilityRequest
-    {
-        $request = ViabilityRequest::factory()->create(['status' => ViabilityRequestStatus::EmAnalise]);
+    private function processoAtribuido(
+        Sector $sector,
+        User $analista,
+        AnalysisStatus $analysisStatus,
+        ViabilityRequestStatus $status = ViabilityRequestStatus::EmAnalise,
+    ): ViabilityRequest {
+        $request = ViabilityRequest::factory()->create(['status' => $status]);
         $request->forceFill([
             'sector_id' => $sector->id,
             'assigned_user_id' => $analista->id,
-            'analysis_status' => $status,
+            'analysis_status' => $analysisStatus,
         ])->save();
 
         return $request;
@@ -56,6 +60,38 @@ class CargaAnalistaServiceTest extends TestCase
 
         $this->assertSame(3, $linha['total']);
         $this->assertSame(2, $linha['por_grupo']['Análise']);
+        $this->assertSame(1, $linha['por_grupo']['Convite']);
+    }
+
+    public function test_carga_nao_conta_analise_concluida(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $this->processoAtribuido($setor, $analista, AnalysisStatus::AnaliseConcluida);
+
+        $carga = app(CargaAnalistaService::class)->cargaDosSetores([$setor->id]);
+        $linha = collect($carga)->firstWhere('analista_id', $analista->id);
+
+        $this->assertSame(0, $linha['total']);
+    }
+
+    public function test_carga_conta_convite_real_no_grupo_convite(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $this->processoAtribuido(
+            $setor,
+            $analista,
+            AnalysisStatus::EmConvite,
+            ViabilityRequestStatus::EmPendencia,
+        );
+
+        $carga = app(CargaAnalistaService::class)->cargaDosSetores([$setor->id]);
+        $linha = collect($carga)->firstWhere('analista_id', $analista->id);
+
+        $this->assertSame(1, $linha['total']);
         $this->assertSame(1, $linha['por_grupo']['Convite']);
     }
 
