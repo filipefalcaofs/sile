@@ -60,8 +60,9 @@ class DatabaseSeederTest extends TestCase
         // gatilhos de risco (manter-gatilhos-risco — parametrização dos
         // gatilhos semi-expresso) + a de território (manter-territorio —
         // catálogo administrável de camadas do GeoServer) + a da ficha de
-        // vistoria (preencher-ficha-vistoria).
-        $this->assertSame(34, Permission::query()->count());
+        // vistoria (preencher-ficha-vistoria) + a da caixa de malha fina
+        // (analisar-malha-fina — consulta e baixa, distinta de encaminhar).
+        $this->assertSame(35, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
         // 100 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
