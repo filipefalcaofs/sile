@@ -1,5 +1,6 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { type ReactNode, useState } from 'react';
+import ProcessoFiltros, { type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
 import PageHeader from '@/components/app/page-header';
 import Select from '@/components/form/select';
 import { ArrowRightIcon, GroupIcon, UserCircleIcon } from '@/components/icons';
@@ -59,9 +60,10 @@ interface CaixaSetorIndexProps {
     processos: Paginado<ProcessoItem>;
     visao: Visao;
     contadores: Record<Visao, number>;
-    filtros: {
-        per_page: number;
-    };
+    filtros: ProcessoFiltrosValores & { per_page: number };
+    servicoOptions: { value: string; label: string }[];
+    analysisStatusOptions: { value: string; label: string }[];
+    categoriaOptions: { value: string; label: string }[];
     perPageOptions: number[];
     podeDistribuir: boolean;
     podeAssumir: boolean;
@@ -105,6 +107,9 @@ export default function CaixaSetorIndex({
     visao,
     contadores,
     filtros,
+    servicoOptions,
+    analysisStatusOptions,
+    categoriaOptions,
     perPageOptions,
     podeDistribuir,
     podeAssumir,
@@ -143,11 +148,18 @@ export default function CaixaSetorIndex({
         modal !== null && linhas.some((linha) => modal.ids.includes(linha.id) && emVistoria(linha));
     const opcoesDoModal = modalEmVistoria ? opcoesVistoriador : opcoesAnalista;
 
-    function navegar(params: { visao?: Visao; per_page?: number }) {
+    const { per_page: _perPage, ...filtrosDeCampo } = filtros;
+
+    function navegar(params: { visao?: Visao; per_page?: number; filtros?: ProcessoFiltrosValores }) {
         setSelecionados([]);
+        const filtrosAtuais = params.filtros ?? filtrosDeCampo;
         router.get(
             '/gestao/caixa-setor',
-            { visao: params.visao ?? visao, per_page: params.per_page ?? filtros.per_page },
+            {
+                visao: params.visao ?? visao,
+                per_page: params.per_page ?? filtros.per_page,
+                ...Object.fromEntries(Object.entries(filtrosAtuais).filter(([, v]) => v !== '')),
+            },
             { preserveScroll: true, preserveState: false },
         );
     }
@@ -324,6 +336,31 @@ export default function CaixaSetorIndex({
                 />
                 <CardContent>
                     <div className="space-y-5">
+                        <ProcessoFiltros
+                            valores={filtrosDeCampo}
+                            servicoOptions={servicoOptions}
+                            analysisStatusOptions={analysisStatusOptions}
+                            categoriaOptions={categoriaOptions}
+                            onAplicar={(valores) => navegar({ filtros: valores })}
+                            onLimpar={() =>
+                                navegar({
+                                    filtros: {
+                                        ...filtrosDeCampo,
+                                        analysis_status: '',
+                                        servico: '',
+                                        protocolo: '',
+                                        bap: '',
+                                        data_de: '',
+                                        data_ate: '',
+                                        nome: '',
+                                        cnpj: '',
+                                        bairro: '',
+                                        categoria: '',
+                                    },
+                                })
+                            }
+                        />
+
                         <div role="tablist" aria-label="Visões da caixa do setor" className="flex border-b border-gray-200 dark:border-gray-800">
                             {ABAS.map((aba) => {
                                 const ativa = aba.id === visao;
