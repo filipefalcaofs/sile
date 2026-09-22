@@ -36,6 +36,7 @@ use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\LouosController;
 use App\Http\Controllers\Gestao\LouosDraftController;
 use App\Http\Controllers\Gestao\LouosSandboxController;
+use App\Http\Controllers\Gestao\MalhaFinaCaixaController;
 use App\Http\Controllers\Gestao\MalhaFinaController;
 use App\Http\Controllers\Gestao\MetadataController;
 use App\Http\Controllers\Gestao\ParameterController;
@@ -659,11 +660,16 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             ->middleware('permission:preencher-ficha-vistoria')
             ->name('vistorias.index');
 
-        // Conclusão da malha fina pela caixa dedicada (a listagem GET chega na
-        // task da caixa). Baixa os encaminhamentos abertos SEM mexer no status.
-        Route::post('malha-fina/{viabilityRequest}/concluir', [MalhaFinaController::class, 'concluir'])
-            ->middleware('permission:analisar-malha-fina')
-            ->name('malha-fina.concluir');
+        // Caixa de Malha Fina: a fila do revisor — processos com in_fine_mesh
+        // (ortogonal ao status, HU-136). A consulta (GET) lista com os filtros
+        // das caixas (ProcessoQueryService) e audita; a conclusão (POST) dá
+        // baixa nos encaminhamentos abertos SEM mexer no status, com
+        // observação opcional. Gated por analisar-malha-fina — quem só
+        // encaminha (encaminhar-malha-fina) não opera a caixa.
+        Route::middleware('permission:analisar-malha-fina')->prefix('malha-fina')->name('malha-fina.')->group(function () {
+            Route::get('/', MalhaFinaCaixaController::class)->name('index');
+            Route::post('{viabilityRequest}/concluir', [MalhaFinaController::class, 'concluir'])->name('concluir');
+        });
 
         // Ficha de análise técnica (HU-135/140/142): a superfície da análise
         // humana. Abre a revisão vigente (pré-analisada em 10-08), faz autosave do
