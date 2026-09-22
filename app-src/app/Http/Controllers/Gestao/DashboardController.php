@@ -3,10 +3,7 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
-use App\Services\Relatorios\ExpressoQuedaService;
-use App\Services\Relatorios\IndicadoresViabilidadeService;
-use App\Services\Relatorios\ReportFilters;
-use App\Services\Relatorios\SlaVencimentosService;
+use App\Services\Relatorios\PainelOperacaoService;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,12 +18,8 @@ class DashboardController extends Controller
      * painel (relatório de usabilidade SEDUR 19/09/2026, item 03): analista cai
      * na Caixa de entrada; apoio (tramitação) cai na Caixa do setor.
      */
-    public function __invoke(
-        Request $request,
-        IndicadoresViabilidadeService $indicadores,
-        ExpressoQuedaService $quedas,
-        SlaVencimentosService $sla,
-    ): Response|RedirectResponse {
+    public function __invoke(Request $request, PainelOperacaoService $painel): Response|RedirectResponse
+    {
         $user = $request->user();
 
         if (! $user->can('consultar-relatorios')) {
@@ -42,43 +35,20 @@ class DashboardController extends Controller
         return Inertia::render('gestao/dashboard', [
             'kpis' => [
                 'operacao' => $user->can('consultar-relatorios')
-                    ? $this->operacao($indicadores, $quedas, $sla)
+                    ? $painel->montar($this->janelaDias($request), $user->can('relatorios.produtividade.nominal'))
                     : null,
             ],
         ]);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function operacao(
-        IndicadoresViabilidadeService $indicadores,
-        ExpressoQuedaService $quedas,
-        SlaVencimentosService $sla,
-    ): array {
-        $janelaDias = (int) Settings::get('relatorios.dashboard.janela_dias', 30);
-        $dataDe = now()->subDays($janelaDias)->format('Y-m-d');
-        $dataAte = now()->format('Y-m-d');
-        $filtros = ReportFilters::fromArray([
-            'data_de' => $dataDe,
-            'data_ate' => $dataAte,
-        ]);
-        $estoqueFiltros = ReportFilters::fromArray([]);
-        $expressa = $quedas->taxaRespostaExpressa($filtros);
-        $decisoes = $indicadores->decisoesPorFlow($filtros);
+    private function janelaDias(Request $request): int
+    {
+        $pedida = $request->integer('janela');
 
-        return [
-            'janela_dias' => $janelaDias,
-            'data_de' => $dataDe,
-            'data_ate' => $dataAte,
-            'protocolos' => $indicadores->volumeProtocolos($filtros),
-            'decisoes' => $decisoes,
-            'estoque_total' => $sla->estoqueTotal(),
-            'atrasados' => $sla->resumo($estoqueFiltros)['vencidos'],
-            'taxa_expressa' => $expressa['taxa'],
-            'meta_expressa' => $expressa['meta'],
-            'serie_fluxo' => $indicadores->serieFluxo($filtros),
-            'estoque_por_status' => $sla->estoquePorStatus(),
-        ];
+        if (in_array($pedida, PainelOperacaoService::JANELAS, true)) {
+            return $pedida;
+        }
+
+        return (int) Settings::get('relatorios.dashboard.janela_dias', 30);
     }
 }

@@ -20,8 +20,9 @@ use Tests\TestCase;
 /**
  * KPIs operacionais da home (HU-122): `kpis.operacao` condicionado a
  * `consultar-relatorios`. Os números vêm dos serviços route-free sobre dado
- * real da janela. Sem série histórica persistida o bloco NÃO traz `delta`
- * (anti-fachada CA-03); sem permissão é null; sem dados no período degrada
+ * real da janela. A variação de protocolos só existe quando o período anterior
+ * de mesmo tamanho tem base (senão null — anti-fachada CA-03); o bloco não
+ * traz `delta` solto. Sem permissão é null; sem dados no período degrada
  * honesto (taxa null, volume 0), nunca um número fabricado.
  */
 class DashboardKpisTest extends TestCase
@@ -133,7 +134,96 @@ class DashboardKpisTest extends TestCase
                 ->where('kpis.operacao.taxa_expressa', null)
                 ->where('kpis.operacao.serie_fluxo', [])
                 ->where('kpis.operacao.estoque_total', 0)
-                ->where('kpis.operacao.atrasados', 0));
+                ->where('kpis.operacao.atrasados', 0)
+                ->where('kpis.operacao.variacao_protocolos', null)
+                ->where('kpis.operacao.saldo_periodo', 0)
+                ->where('kpis.operacao.pico_entrada', null)
+                ->where('kpis.operacao.tempo_decisao.media_minutos', null)
+                ->has('kpis.operacao.acoes', 5)
+                ->has('kpis.operacao.etapas', 4)
+                ->has('kpis.operacao.aging', 4)
+                ->has('kpis.operacao.carga.setores', 0)
+                ->where('kpis.operacao.carga.nominal', true));
+    }
+
+    #[Test]
+    public function janela_da_query_recorte_o_periodo_e_valor_invalido_cai_no_parametro(): void
+    {
+        Carbon::setTestNow(self::AGORA);
+
+        $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao?janela=7')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kpis.operacao.janela_dias', 7)
+                ->where('kpis.operacao.data_de', '2026-06-08')
+                ->where('kpis.operacao.data_ate', '2026-06-15'));
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao?janela=15')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kpis.operacao.janela_dias', 30)
+                ->where('kpis.operacao.data_de', '2026-05-16'));
+    }
+
+    #[Test]
+    public function variacao_de_protocolos_compara_a_janela_anterior_real(): void
+    {
+        Carbon::setTestNow(self::AGORA);
+
+        $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        $this->protocolada('2026-04-20 09:00:00');
+        $this->protocolada('2026-06-10 09:00:00');
+        $this->protocolada('2026-06-10 10:00:00');
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kpis.operacao.protocolos', 2)
+                ->where('kpis.operacao.protocolos_periodo_anterior', 1)
+                ->where('kpis.operacao.variacao_protocolos', fn ($variacao) => (float) $variacao === 100.0)
+                ->missing('kpis.operacao.delta'));
+    }
+
+    #[Test]
+    public function acoes_e_aging_contam_estoque_real(): void
+    {
+        Carbon::setTestNow(self::AGORA);
+
+        $gestor = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+
+        ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'assigned_user_id' => null,
+            'protocoled_at' => Carbon::parse('2026-06-13 09:00:00'),
+        ]);
+
+        ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::Protocolada,
+            'protocol_number' => null,
+            'protocoled_at' => Carbon::parse('2026-05-01 09:00:00'),
+        ]);
+
+        $this->actingAs($gestor, 'gestao')
+            ->get('/gestao')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('kpis.operacao.acoes', function ($acoes): bool {
+                    $porChave = collect($acoes)->keyBy('chave');
+
+                    return ($porChave['distribuir']['valor'] ?? null) === 1
+                        && ($porChave['atrasados']['valor'] ?? null) === 0;
+                })
+                ->where('kpis.operacao.aging', function ($faixas): bool {
+                    $porFaixa = collect($faixas)->keyBy('faixa');
+
+                    return ($porFaixa['0_5']['total'] ?? null) === 1
+                        && ($porFaixa['acima_20']['total'] ?? null) === 1;
+                }));
     }
 
     #[Test]
