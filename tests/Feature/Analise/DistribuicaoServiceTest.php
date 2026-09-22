@@ -398,4 +398,60 @@ class DistribuicaoServiceTest extends TestCase
 
         $this->assertSame($analistaA->id, $request->fresh()->assigned_user_id);
     }
+
+    public function test_distribui_multiplo_atribui_cada_grupo_ao_seu_analista(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $setor = Sector::factory()->create();
+        $analistaA = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $analistaA->sectors()->attach($setor);
+        $analistaB = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $analistaB->sectors()->attach($setor);
+        $ator = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        $ator->sectors()->attach($setor);
+
+        $p1 = $this->processoNaCaixa($setor);
+        $p2 = $this->processoNaCaixa($setor);
+        $p3 = $this->processoNaCaixa($setor);
+
+        $service = app(DistribuicaoService::class);
+        $resumo = $service->distribuirMultiplo([
+            ['analista' => $analistaA, 'requests' => collect([$p1, $p2])],
+            ['analista' => $analistaB, 'requests' => collect([$p3])],
+        ], $ator);
+
+        $this->assertSame(3, $resumo['ok']);
+        $this->assertSame([], $resumo['falhas']);
+        $this->assertSame($analistaA->id, $p1->fresh()->assigned_user_id);
+        $this->assertSame($analistaA->id, $p2->fresh()->assigned_user_id);
+        $this->assertSame($analistaB->id, $p3->fresh()->assigned_user_id);
+    }
+
+    public function test_distribui_multiplo_isola_falha_de_grupo(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $setor = Sector::factory()->create();
+        $outroSetor = Sector::factory()->create();
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $analista->sectors()->attach($setor);
+        $foraDoSetor = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $foraDoSetor->sectors()->attach($outroSetor);
+        $ator = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+
+        $ok = $this->processoNaCaixa($setor);
+        $falho = $this->processoNaCaixa($setor);
+
+        $service = app(DistribuicaoService::class);
+        $resumo = $service->distribuirMultiplo([
+            ['analista' => $analista, 'requests' => collect([$ok])],
+            ['analista' => $foraDoSetor, 'requests' => collect([$falho])], // analista de outro setor
+        ], $ator);
+
+        $this->assertSame(1, $resumo['ok']);
+        $this->assertCount(1, $resumo['falhas']);
+        $this->assertSame($analista->id, $ok->fresh()->assigned_user_id);
+        $this->assertNull($falho->fresh()->assigned_user_id);
+    }
 }
