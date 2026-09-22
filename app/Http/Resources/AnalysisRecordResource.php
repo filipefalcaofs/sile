@@ -86,7 +86,10 @@ class AnalysisRecordResource extends JsonResource
             // Valor TLL do exercício corrente, resolvido da tabela de valores
             // (HU-071) pelo código TLL da planilha. Null = pendente (nunca
             // inventado) — a ficha mostra a pendência.
-            $item['valor_tll'] = $this->valorTll($item['codigo_tll'] ?? null);
+            $item['valor_tll'] = $this->valorTll(
+                $item['codigo_tll'] ?? null,
+                is_string($item['especificacao_tll'] ?? null) ? $item['especificacao_tll'] : null,
+            );
 
             $consulta = $this->consultaSnapshotDoCnae($porCnae, (string) ($item['cnae'] ?? ''));
 
@@ -128,7 +131,7 @@ class AnalysisRecordResource extends JsonResource
      * Valor da TLL do exercício corrente para o código TLL da planilha (HU-071).
      * Null quando não parametrizado — degradação honesta, nunca valor inventado.
      */
-    private function valorTll(mixed $codigoTll): ?string
+    private function valorTll(mixed $codigoTll, ?string $especificacao = null): ?string
     {
         if (! is_string($codigoTll) || $codigoTll === '') {
             return null;
@@ -144,10 +147,7 @@ class AnalysisRecordResource extends JsonResource
             return null;
         }
 
-        $tll = TllValor::query()
-            ->active()
-            ->paraExercicio($codigoTll, $exercicio)
-            ->first();
+        $tll = TllValor::resolver($codigoTll, $exercicio, $especificacao);
 
         return $tll === null ? null : (string) $tll->valor;
     }

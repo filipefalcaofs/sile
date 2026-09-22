@@ -25,6 +25,7 @@ import type { SharedProps } from '@/types';
 interface TllValorItem {
     id: number;
     codigo_tll: string;
+    especificacao: string;
     exercicio: number;
     valor: string;
     taxa_servico: string;
@@ -102,6 +103,18 @@ function CamposValor({ valor, errors }: { valor?: TllValorItem; errors: Record<s
                         placeholder="Ex.: 1.01"
                         error={!!errors.codigo_tll}
                         hint={errors.codigo_tll}
+                    />
+                </div>
+                <div>
+                    <Label htmlFor={valor ? `edit-espec-${valor.id}` : 'create-espec'}>Especificação</Label>
+                    <Input
+                        id={valor ? `edit-espec-${valor.id}` : 'create-espec'}
+                        type="text"
+                        name="especificacao"
+                        defaultValue={valor?.especificacao ?? ''}
+                        placeholder="Ex.: Comércio Varejista"
+                        error={!!errors.especificacao}
+                        hint={errors.especificacao}
                     />
                 </div>
                 <div>
@@ -359,6 +372,12 @@ export default function TllIndex({ valores, exercicios, filters, perPageOptions 
             header: 'Código TLL',
             cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
             cell: (valor) => valor.codigo_tll,
+        },
+        {
+            id: 'especificacao',
+            header: 'Especificação',
+            cellClassName: 'text-gray-500 dark:text-gray-400',
+            cell: (valor) => valor.especificacao || '—',
         },
         {
             id: 'exercicio',

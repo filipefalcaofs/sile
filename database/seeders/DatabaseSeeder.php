@@ -38,6 +38,10 @@ class DatabaseSeeder extends Seeder
             LouosQuadro10Seeder::class,
             LouosQuadro11Seeder::class,
             TratamentoRegrasSeeder::class,
+            // Tabela oficial TLL 2026 (Simplifica): valores + hash SEFAZ,
+            // exercício vigente do domínio tll_valores. Sem esta carga o DAM
+            // fica pendente (honesto) — o motor já existe.
+            TllValoresSeeder::class,
             // Zonas urbanísticas da LOUOS (parametrização 3.3): nascem dos
             // valores distintos de `zona` do Quadro 10 VIGENTE — por isso
             // roda APÓS os seeders LOUOS. Sem quadro vigente, fica vazio

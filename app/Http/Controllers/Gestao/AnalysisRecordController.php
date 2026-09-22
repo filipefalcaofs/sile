@@ -492,7 +492,7 @@ class AnalysisRecordController extends Controller
                     'denominacao_louos' => $linha->denominacao_louos,
                     'codigo_tll' => $linha->codigo_tll,
                     'especificacao_tll' => $linha->especificacao_tll,
-                    'valor_tll' => $this->valorTllVigente($linha->codigo_tll, $exercicio, $exercicioVigente),
+                    'valor_tll' => $this->valorTllVigente($linha->codigo_tll, $linha->especificacao_tll, $exercicio, $exercicioVigente),
                 ])
                 ->values()
                 ->all();
@@ -505,16 +505,13 @@ class AnalysisRecordController extends Controller
      * Valor TLL do exercício vigente para o código (HU-071) — null quando o
      * exercício não tem tabela publicada ou o código não tem valor ativo.
      */
-    private function valorTllVigente(?string $codigoTll, int $exercicio, bool $exercicioVigente): ?string
+    private function valorTllVigente(?string $codigoTll, ?string $especificacao, int $exercicio, bool $exercicioVigente): ?string
     {
         if (! $exercicioVigente || $codigoTll === null || $codigoTll === '') {
             return null;
         }
 
-        $tll = TllValor::query()
-            ->active()
-            ->paraExercicio($codigoTll, $exercicio)
-            ->first();
+        $tll = TllValor::resolver($codigoTll, $exercicio, $especificacao);
 
         return $tll === null ? null : (string) $tll->valor;
     }

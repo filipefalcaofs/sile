@@ -22,7 +22,8 @@ use Inertia\Response;
  * CRUD administrável da tabela de valores TLL por exercício (HU-071/HU-014) —
  * dado versionado que o TllCalculoService usa ao calcular o DAM (RN-004) e que
  * alimenta o bloco `taxas` enviado à SEFAZ. O administrador cria/edita/ativa-
- * inativa o valor pela retaguarda; a chave (código TLL, exercício) é única e a
+ * inativa o valor pela retaguarda; a chave (código TLL, exercício, especificação)
+ * é única — o 6.00 oficial tem ISENTA e residual — e a
  * inativação preserva o histórico (sem destroy). Listagem server-driven
  * espelhando o HolidayController; a auditoria (RN-002) é automática via
  * HasAuditoria do model. Gated por manter-parametros (reuso — como feriados;
@@ -48,6 +49,8 @@ class TllValorController extends Controller
 
                 $query->where(function ($q) use ($term): void {
                     $q->whereLike('codigo_tll', "%{$term}%", caseSensitive: false)
+                        ->orWhereLike('especificacao', "%{$term}%", caseSensitive: false)
+                        ->orWhereLike('codigo_tll_sefaz', "%{$term}%", caseSensitive: false)
                         ->orWhereLike('servico_sefaz', "%{$term}%", caseSensitive: false);
                 });
             })
@@ -55,11 +58,13 @@ class TllValorController extends Controller
             ->when($exercicio !== '' && ctype_digit($exercicio), fn ($query) => $query->where('exercicio', (int) $exercicio))
             ->orderByDesc('exercicio')
             ->orderBy('codigo_tll')
+            ->orderBy('especificacao')
             ->paginate($perPage)
             ->withQueryString()
             ->through(fn (TllValor $valor): array => [
                 'id' => $valor->id,
                 'codigo_tll' => $valor->codigo_tll,
+                'especificacao' => $valor->especificacao,
                 'exercicio' => $valor->exercicio,
                 'valor' => (string) $valor->valor,
                 'taxa_servico' => (string) $valor->taxa_servico,

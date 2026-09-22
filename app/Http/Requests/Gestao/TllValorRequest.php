@@ -9,7 +9,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * Validação do CRUD da tabela de valores TLL por exercício (HU-071/HU-014).
- * Serve store e update: a chave (código TLL, exercício) é única e, no update, o
+ * Serve store e update: a chave (código TLL, exercício, especificação) é única e, no update, o
  * unique ignora o próprio registro. A autorização é o middleware
  * permission:manter-parametros da rota.
  */
@@ -27,6 +27,7 @@ class TllValorRequest extends FormRequest
     {
         $this->merge([
             'active' => $this->has('active') ? $this->boolean('active') : true,
+            'especificacao' => (string) $this->input('especificacao', ''),
         ]);
     }
 
@@ -45,8 +46,10 @@ class TllValorRequest extends FormRequest
                 'max:20',
                 Rule::unique('tll_valores', 'codigo_tll')
                     ->where('exercicio', $this->input('exercicio'))
+                    ->where('especificacao', (string) $this->input('especificacao', ''))
                     ->ignore($tllValorId),
             ],
+            'especificacao' => ['nullable', 'string', 'max:255'],
             'exercicio' => ['required', 'integer', 'min:2000', 'max:2200'],
             'valor' => ['required', 'numeric', 'min:0'],
             'taxa_servico' => ['nullable', 'numeric', 'min:0'],
@@ -64,6 +67,7 @@ class TllValorRequest extends FormRequest
     {
         return [
             'codigo_tll' => 'código TLL',
+            'especificacao' => 'especificação',
             'exercicio' => 'exercício',
             'valor' => 'valor',
             'taxa_servico' => 'taxa de serviço',
@@ -80,7 +84,7 @@ class TllValorRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'codigo_tll.unique' => 'Já existe um valor cadastrado para este código TLL neste exercício.',
+            'codigo_tll.unique' => 'Já existe um valor cadastrado para este código TLL, exercício e especificação.',
         ];
     }
 }

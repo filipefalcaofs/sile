@@ -19,6 +19,7 @@ class TllValorFactory extends Factory
     {
         return [
             'codigo_tll' => fake()->unique()->numerify('#.##'),
+            'especificacao' => '',
             'exercicio' => (int) now()->year,
             'valor' => fake()->randomFloat(2, 100, 2000),
             'taxa_servico' => 0,

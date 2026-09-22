@@ -52,12 +52,18 @@ class TllPropagacaoExercicio
             $versao->update(['source' => $decreto]);
         }
 
-        $codigos = $ativas->pluck('codigo_tll')->all();
+        $chaves = $ativas->map(
+            fn (TllValor $linha): string => $linha->codigo_tll."\0".$linha->especificacao,
+        )->all();
 
-        DB::transaction(function () use ($ativas, $destino, $fatorFloat, $versao, $codigos): void {
+        DB::transaction(function () use ($ativas, $destino, $fatorFloat, $versao, $chaves): void {
             foreach ($ativas as $linha) {
                 TllValor::query()->updateOrCreate(
-                    ['codigo_tll' => $linha->codigo_tll, 'exercicio' => $destino],
+                    [
+                        'codigo_tll' => $linha->codigo_tll,
+                        'exercicio' => $destino,
+                        'especificacao' => $linha->especificacao,
+                    ],
                     [
                         'valor' => number_format((float) $linha->valor * $fatorFloat, 2, '.', ''),
                         'taxa_servico' => number_format((float) $linha->taxa_servico * $fatorFloat, 2, '.', ''),
@@ -73,8 +79,14 @@ class TllPropagacaoExercicio
             TllValor::query()
                 ->where('exercicio', $destino)
                 ->where('rule_version_id', $versao->id)
-                ->whereNotIn('codigo_tll', $codigos)
-                ->update(['active' => false]);
+                ->get()
+                ->each(function (TllValor $linha) use ($chaves): void {
+                    $chave = $linha->codigo_tll."\0".$linha->especificacao;
+
+                    if (! in_array($chave, $chaves, true)) {
+                        $linha->update(['active' => false]);
+                    }
+                });
         });
 
         $this->audit->log(

@@ -43,7 +43,8 @@ class TllCalculoService
                 continue;
             }
 
-            $tll = TllValor::query()->active()->paraExercicio($codigoTll, $exercicio)->first();
+            $especificacao = is_string($item['especificacao_tll'] ?? null) ? $item['especificacao_tll'] : null;
+            $tll = TllValor::resolver($codigoTll, $exercicio, $especificacao);
 
             if ($tll === null) {
                 continue;

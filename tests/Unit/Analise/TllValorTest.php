@@ -37,13 +37,41 @@ class TllValorTest extends TestCase
         $this->assertTrue($valor->active);
     }
 
-    public function test_codigo_e_exercicio_sao_unicos(): void
+    public function test_codigo_exercicio_e_especificacao_sao_unicos(): void
     {
-        TllValor::factory()->create(['codigo_tll' => '1.01', 'exercicio' => 2026]);
+        TllValor::factory()->create([
+            'codigo_tll' => '6.00',
+            'exercicio' => 2026,
+            'especificacao' => 'ISENTA',
+        ]);
 
         $this->expectException(QueryException::class);
 
-        TllValor::factory()->create(['codigo_tll' => '1.01', 'exercicio' => 2026]);
+        TllValor::factory()->create([
+            'codigo_tll' => '6.00',
+            'exercicio' => 2026,
+            'especificacao' => 'ISENTA',
+        ]);
+    }
+
+    public function test_mesmo_codigo_e_exercicio_com_especificacao_distinta_e_permitido(): void
+    {
+        TllValor::factory()->create([
+            'codigo_tll' => '6.00',
+            'exercicio' => 2026,
+            'especificacao' => 'ISENTA',
+            'valor' => 0,
+            'codigo_tll_sefaz' => 'T45026667',
+        ]);
+        TllValor::factory()->create([
+            'codigo_tll' => '6.00',
+            'exercicio' => 2026,
+            'especificacao' => 'Estabelecimentos não Classificados nos Itens 3.00 a 5.00',
+            'valor' => 833.06,
+            'codigo_tll_sefaz' => 'T44992336',
+        ]);
+
+        $this->assertSame(2, TllValor::query()->where('codigo_tll', '6.00')->where('exercicio', 2026)->count());
     }
 
     public function test_mesmo_codigo_em_exercicios_distintos_e_permitido(): void

@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 #[Fillable([
     'codigo_tll',
+    'especificacao',
     'exercicio',
     'valor',
     'taxa_servico',
@@ -71,6 +72,37 @@ class TllValor extends Model
     public function scopeParaExercicio(Builder $query, string $codigoTll, int $exercicio): Builder
     {
         return $query->where('codigo_tll', $codigoTll)->where('exercicio', $exercicio);
+    }
+
+    /**
+     * Resolve a linha ativa do exercício. Quando o código tem mais de uma
+     * especificação (6.00 ISENTA vs residual), a isenção só entra se o
+     * enquadramento pedir `especificacao_tll = ISENTA`. Sem especificação,
+     * usa a residual — nunca escolhe a isenta por acaso.
+     */
+    public static function resolver(string $codigoTll, int $exercicio, ?string $especificacao = null): ?self
+    {
+        $candidatos = static::query()->active()->paraExercicio($codigoTll, $exercicio)->get();
+
+        if ($candidatos->isEmpty()) {
+            return null;
+        }
+
+        if (is_string($especificacao) && $especificacao !== '') {
+            $exato = $candidatos->firstWhere('especificacao', $especificacao);
+
+            if ($exato instanceof self) {
+                return $exato;
+            }
+        }
+
+        if ($candidatos->count() === 1) {
+            return $candidatos->first();
+        }
+
+        return $candidatos->first(
+            fn (self $linha): bool => $linha->especificacao !== 'ISENTA',
+        );
     }
 
     /**
