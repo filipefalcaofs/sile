@@ -62,7 +62,23 @@ class ProcessoQueryService
     public function filtered(array $filtros): Builder
     {
         $query = ViabilityRequest::query()
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name'])
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name']);
+
+        return $this->aplicarOrdem($this->aplicarFiltros($query, $filtros), $this->valor($filtros, 'ordem'));
+    }
+
+    /**
+     * Aplica os filtros de campo (SAPS + analista + categoria) a um Builder já
+     * escopado. Cada filtro só entra quando informado. Reutilizado pela consulta
+     * (filtered), pela caixa do setor e pela fila do analista.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     * @param  array<string, mixed>  $filtros
+     * @return Builder<ViabilityRequest>
+     */
+    public function aplicarFiltros(Builder $query, array $filtros): Builder
+    {
+        return $query
             ->when($this->valor($filtros, 'grupo'), fn (Builder $q, string $grupo) => $this->aplicarGrupo($q, $grupo))
             ->when($this->valor($filtros, 'status'), fn (Builder $q, string $status) => $q->where('status', $status))
             ->when($this->valor($filtros, 'analysis_status'), fn (Builder $q, string $s) => $q->where('analysis_status', $s))
@@ -83,8 +99,6 @@ class ProcessoQueryService
             ->when($this->data($filtros, 'data_de'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '>=', $d))
             ->when($this->data($filtros, 'data_ate'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '<=', $d))
             ->when($this->categoria($filtros), fn (Builder $q, string $cat) => $this->aplicarCategoria($q, $cat));
-
-        return $this->aplicarOrdem($query, $this->valor($filtros, 'ordem'));
     }
 
     /**
