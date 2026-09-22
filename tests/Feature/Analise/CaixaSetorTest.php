@@ -803,4 +803,28 @@ class CaixaSetorTest extends TestCase
 
         $this->assertNull($p->fresh()->assigned_user_id);
     }
+
+    public function test_central_expoe_historico_de_distribuicoes(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $a = $this->analistaDoSetor($setor);
+        $p1 = $this->processoNaCaixa($setor);
+        $p2 = $this->processoNaCaixa($setor);
+        $alvo = $this->processoNaCaixa($setor);
+
+        // Uma distribuição em lote para gerar histórico.
+        $this->actingAs($apoio, 'gestao')->post('/gestao/caixa-setor/distribuir-lote', [
+            'alocacoes' => [['analista_id' => $a->id, 'request_ids' => [$p1->id, $p2->id]]],
+        ])->assertSessionHas('status');
+
+        $props = $this->actingAs($apoio, 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$alvo->id}")
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertNotEmpty($props['historico']);
+        $this->assertSame($a->name, $props['historico'][0]['analista']);
+        $this->assertSame(2, $props['historico'][0]['qtd']);
+    }
 }

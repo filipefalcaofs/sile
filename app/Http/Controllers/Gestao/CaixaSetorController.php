@@ -7,6 +7,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\DistribuirEmLoteRequest;
 use App\Http\Requests\Gestao\DistribuirProcessoRequest;
+use App\Models\Activity;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
@@ -225,6 +226,23 @@ class CaixaSetorController extends Controller
         $analistas = $this->carga->cargaDosSetores($setoresDosProcessos);
         $totalEmAnalise = collect($analistas)->sum('total');
 
+        $setoresHistorico = $setoresDosProcessos->isNotEmpty() ? $setoresDosProcessos : $sectorIds;
+
+        $historico = Activity::query()
+            ->where('log_name', 'analise')
+            ->where('event', 'distribuir-lote')
+            ->whereIn('properties->sector_id', $setoresHistorico->map(fn ($id): int => (int) $id)->all())
+            ->latest()
+            ->limit(15)
+            ->get()
+            ->map(fn (Activity $a): array => [
+                'em' => $a->created_at?->toIso8601String(),
+                'ator' => (string) ($a->properties['ator_nome'] ?? optional($a->causer)->name ?? '—'),
+                'analista' => (string) ($a->properties['analista_nome'] ?? '—'),
+                'qtd' => (int) ($a->properties['qtd'] ?? 0),
+            ])
+            ->all();
+
         $this->audit->log('analise', 'consulta-central', 'Consulta da central de distribuição', [
             'setores' => $setoresDosProcessos->all(),
             'processos' => collect($processos)->pluck('id')->all(),
@@ -235,6 +253,7 @@ class CaixaSetorController extends Controller
             'analistas' => $analistas,
             'totalSelecionados' => count($processos),
             'totalEmAnalise' => $totalEmAnalise,
+            'historico' => $historico,
         ]);
     }
 
