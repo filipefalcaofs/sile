@@ -764,6 +764,8 @@ export default function FichaAnaliseShow({
     const { auth } = usePage<SharedProps>().props;
     // Encaminhar à vistoria é ação do analista (handoff ao setor de vistoria).
     const podeEncaminharVistoria = auth.permissions.includes('analisar-processos');
+    // Malha fina é caixa à parte para alterar o processo (HU-136) — permissão própria.
+    const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
     const podeEmitirTvl = auth.permissions.includes('emitir-tvl');
     const podeVistoria = auth.permissions.includes('preencher-ficha-vistoria');
 
@@ -803,7 +805,10 @@ export default function FichaAnaliseShow({
     const acao = useHttp<Record<string, never>>({});
     const tvl = useHttp<Record<string, never>, { download_url?: string; url?: string }>({});
     const [pendenciaProcessing, setPendenciaProcessing] = useState(false);
+    const [vistoriaProcessing, setVistoriaProcessing] = useState(false);
+    const [erroEncaminhar, setErroEncaminhar] = useState<string | null>(null);
     const [malhaFinaProcessing, setMalhaFinaProcessing] = useState(false);
+    const [erroMalhaFina, setErroMalhaFina] = useState<string | null>(null);
     const precedentes = useHttp<Record<string, never>, PrecedentesResponse>({});
     const diff = useHttp<{ de: number; para: number }, DiffResponse>({ de: 0, para: 0 });
 
@@ -860,9 +865,12 @@ export default function FichaAnaliseShow({
     const [showCancelarConvite, setShowCancelarConvite] = useState(false);
     const [parecerCancelamento, setParecerCancelamento] = useState('');
     const [cancelarConviteProcessing, setCancelarConviteProcessing] = useState(false);
+    const [showVistoria, setShowVistoria] = useState(false);
+    const [motivoVistoria, setMotivoVistoria] = useState('');
+    const [setorVistoria, setSetorVistoria] = useState('');
     const [showMalhaFina, setShowMalhaFina] = useState(false);
     const [motivoMalhaFina, setMotivoMalhaFina] = useState('');
-    const [setorVistoria, setSetorVistoria] = useState('');
+    const [setorMalhaFina, setSetorMalhaFina] = useState('');
     const [pickerParaParecer, setPickerParaParecer] = useState(false);
     const [pickerParaCondicao, setPickerParaCondicao] = useState(false);
 
@@ -1071,12 +1079,51 @@ export default function FichaAnaliseShow({
         );
     }
 
-    function encaminharMalhaFina() {
+    function encaminharVistoria() {
+        setErroEncaminhar(null);
+
         router.post(
             `/gestao/processos/${processo.id}/vistoria/encaminhar`,
             {
-                motivo: motivoMalhaFina,
+                motivo: motivoVistoria,
                 setor_vistoria_id: Number(setorVistoria),
+            },
+            {
+                preserveScroll: true,
+                onStart: () => setVistoriaProcessing(true),
+                onFinish: () => setVistoriaProcessing(false),
+                onSuccess: () => {
+                    setShowVistoria(false);
+                    setMotivoVistoria('');
+                    setSetorVistoria('');
+                    setErroEncaminhar(null);
+                },
+                onError: (erros) => {
+                    const mensagens = Object.values(erros).filter((mensagem): mensagem is string => typeof mensagem === 'string' && mensagem !== '');
+
+                    setErroEncaminhar(mensagens[0] ?? 'Não foi possível encaminhar o processo à vistoria.');
+                },
+                onHttpException: () => {
+                    setErroEncaminhar('Não foi possível encaminhar o processo à vistoria. Tente novamente.');
+
+                    return false;
+                },
+                onNetworkError: () => {
+                    setErroEncaminhar('Não foi possível encaminhar o processo à vistoria. Verifique a conexão e tente novamente.');
+                },
+            },
+        );
+    }
+
+    function encaminharMalhaFina() {
+        setErroMalhaFina(null);
+
+        router.post(
+            '/gestao/processos/malha-fina',
+            {
+                request_ids: [processo.id],
+                motivo: motivoMalhaFina,
+                sector_id: setorMalhaFina === '' ? null : Number(setorMalhaFina),
             },
             {
                 preserveScroll: true,
@@ -1085,7 +1132,21 @@ export default function FichaAnaliseShow({
                 onSuccess: () => {
                     setShowMalhaFina(false);
                     setMotivoMalhaFina('');
-                    setSetorVistoria('');
+                    setSetorMalhaFina('');
+                    setErroMalhaFina(null);
+                },
+                onError: (erros) => {
+                    const mensagens = Object.values(erros).filter((mensagem): mensagem is string => typeof mensagem === 'string' && mensagem !== '');
+
+                    setErroMalhaFina(mensagens[0] ?? 'Não foi possível encaminhar o processo à malha fina.');
+                },
+                onHttpException: () => {
+                    setErroMalhaFina('Não foi possível encaminhar o processo à malha fina. Tente novamente.');
+
+                    return false;
+                },
+                onNetworkError: () => {
+                    setErroMalhaFina('Não foi possível encaminhar o processo à malha fina. Verifique a conexão e tente novamente.');
                 },
             },
         );
@@ -2382,8 +2443,14 @@ export default function FichaAnaliseShow({
                                         </Button>
                                     )}
 
-                                    {podeEncaminharVistoria && (
+                                    {podeMalhaFina && (
                                         <Button onClick={() => setShowMalhaFina(true)} variant="ghost" size="sm">
+                                            Encaminhar para a malha fina
+                                        </Button>
+                                    )}
+
+                                    {podeEncaminharVistoria && (
+                                        <Button onClick={() => setShowVistoria(true)} variant="ghost" size="sm">
                                             Encaminhar para a Vistoria
                                         </Button>
                                     )}
@@ -2535,8 +2602,15 @@ export default function FichaAnaliseShow({
                 </Modal>
             )}
 
-            {showMalhaFina && (
-                <Modal isOpen onClose={() => setShowMalhaFina(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
+            {showVistoria && (
+                <Modal
+                    isOpen
+                    onClose={() => {
+                        setShowVistoria(false);
+                        setErroEncaminhar(null);
+                    }}
+                    className="m-4 max-w-[560px] p-6 lg:p-8"
+                >
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para a Vistoria</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         O processo vai para a caixa do setor de vistoria, sem responsável, para o apoio distribuir a
@@ -2561,22 +2635,34 @@ export default function FichaAnaliseShow({
                         </Label>
                         <select
                             id="setor-vistoria"
-                            className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                            className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark dark:focus:border-brand-800"
                             value={setorVistoria}
                             onChange={(e) => setSetorVistoria(e.target.value)}
                         >
-                            <option value="" disabled>
+                            <option value="" disabled className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
                                 Selecione o setor de vistoria
                             </option>
                             {setores.map((setor) => (
-                                <option key={setor.id} value={setor.id}>
+                                <option key={setor.id} value={setor.id} className="text-gray-700 dark:bg-gray-900 dark:text-gray-200">
                                     {setor.name}
                                 </option>
                             ))}
                         </select>
                     </div>
+                    {erroEncaminhar && (
+                        <p className="mt-4 text-sm font-medium text-error-600 dark:text-error-500" role="alert">
+                            {erroEncaminhar}
+                        </p>
+                    )}
                     <div className="mt-6 flex items-center justify-end gap-3">
-                        <Button variant="outline" size="sm" onClick={() => setShowMalhaFina(false)}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                setShowMalhaFina(false);
+                                setErroEncaminhar(null);
+                            }}
+                        >
                             Cancelar
                         </Button>
                         <Button
