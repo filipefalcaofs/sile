@@ -1,0 +1,18 @@
+{
+    "nome": "Baixo Risco A municipal segue para o fluxo expresso",
+    "descricao": "CNAE 0111-3/01 (Cultivo de arroz) é Baixo Risco A no Decreto 32.636/2020. Dimensão decisiva municipal (default) + mapa default => fluxo expresso, sem gatilhos.",
+    "input": {
+        "cnae_code": "0111301",
+        "respostas_condicionantes": {},
+        "gatilhos_contexto": [],
+        "data": null
+    },
+    "esperado": {
+        "municipal_status": "classificado",
+        "municipal_nivel": "baixo_a",
+        "sanitario_reclassificado": false,
+        "fluxo": "expresso",
+        "dimensao_decisiva": "municipal",
+        "gatilhos_acionados": []
+    }
+}

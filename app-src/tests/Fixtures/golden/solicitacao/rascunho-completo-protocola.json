@@ -1,0 +1,13 @@
+{
+    "nome": "rascunho-completo-protocola",
+    "descricao": "Rascunho instruído (empresa, imóvel/polígono, área e atividade principal) com a foto da fachada anexada → o ProtocolarSolicitacaoService gera um número único VIA-AAAA-NNNNNN e transiciona para protocolada. Prova o caminho feliz de ponta a ponta sobre o seed oficial.",
+    "cenario": "instruido",
+    "cnae": "4712100",
+    "is_public_area": false,
+    "anexar_fachada": true,
+    "acao": "protocolar",
+    "esperado": {
+        "status": "protocolada",
+        "protocolo_regex": "^VIA-\\d{4}-\\d{6}$"
+    }
+}

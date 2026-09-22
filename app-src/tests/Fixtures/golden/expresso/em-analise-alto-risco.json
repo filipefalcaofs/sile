@@ -1,0 +1,16 @@
+{
+    "nome": "em-analise-alto-risco",
+    "descricao": "SEMI-EXPRESSO (HU-073/RN-008): CNAE de risco ALTO é encaminhado à análise pelo motor de risco — mesmo com a zona permitindo, é INELEGÍVEL ao expresso → em_analise SEM decisão e SEM evento.",
+    "cnae": "8888884",
+    "grupo": "nR1",
+    "subgrupo": "nR1-01",
+    "risco": "alto",
+    "zona": "ZR-1",
+    "permissao": "permitido",
+    "esperado": {
+        "status": "em_analise",
+        "outcome": null,
+        "tem_tvl": false,
+        "evento_emitido": false
+    }
+}

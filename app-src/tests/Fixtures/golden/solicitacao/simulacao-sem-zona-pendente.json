@@ -1,0 +1,14 @@
+{
+    "nome": "simulacao-sem-zona-pendente",
+    "descricao": "Simulação pré-protocolo de CNAE de risco baixo (4712-1/00) SEM zona oficial: o motor de risco real classifica e encaminha para o fluxo expresso, mas a tendência locacional consolidada fica PENDENTE (propagada do motor LOUOS — sem zona nunca é permitido/não permitido). Prova a degradação honesta da simulação orientativa.",
+    "cenario": "instruido_sem_poligono",
+    "cnae": "4712100",
+    "is_public_area": false,
+    "anexar_fachada": false,
+    "acao": "simular",
+    "esperado": {
+        "simulacao_resultado": "pendente",
+        "risco_municipal_status": "classificado",
+        "encaminhamento_fluxo": "expresso"
+    }
+}

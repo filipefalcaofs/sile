@@ -1,0 +1,218 @@
+<?php
+
+namespace App\Providers;
+
+use App\Enums\Fluxo;
+use App\Enums\RiscoMunicipal;
+use App\Notifications\Channels\WhatsAppChannel;
+use App\Services\Abuso\AbuseDetectionService;
+use App\Services\Abuso\Detectors\CondicionanteEvasaoDetector;
+use App\Services\Abuso\Detectors\InscricaoAtividadesIncompativeisDetector;
+use App\Services\Abuso\Detectors\PoligonoRepetidoDetector;
+use App\Services\Abuso\Detectors\VolumeCnpjDetector;
+use App\Services\Abuso\Detectors\VolumeContadorDetector;
+use App\Services\Ai\AiProviderClient;
+use App\Services\Ai\OpenAiCompatibleClient;
+use App\Services\Analise\MalhaFinaService;
+use App\Services\Analise\PostgisPrecedentRepository;
+use App\Services\Analise\PrecedentRepository;
+use App\Services\Cnpj\BrasilApiCnpjLookup;
+use App\Services\Cnpj\CnpjLookup;
+use App\Services\Expresso\DatabaseHolidayProvider;
+use App\Services\Expresso\HolidayProvider;
+use App\Services\Geo\Geocoder;
+use App\Services\Geo\NominatimGeocoder;
+use App\Services\Geo\PostgisSpatialRepository;
+use App\Services\Geo\SpatialRepository;
+use App\Services\GovBr\GovBrIdTokenValidator;
+use App\Services\GovBr\GovBrProvider;
+use App\Services\Realty\PropertyRegistryLookup;
+use App\Services\Realty\SedurSefazPropertyRegistryLookup;
+use App\Services\Regin\BapRegistry;
+use App\Services\Regin\HttpReginParecerNotifier;
+use App\Services\Regin\ReginParecerNotifier;
+use App\Services\Regin\UnavailableBapRegistry;
+use App\Services\Sefaz\SefazViabilidadeGateway;
+use App\Services\Sefaz\UnavailableSefazViabilidadeGateway;
+use App\Services\Whatsapp\UnavailableWhatsAppGateway;
+use App\Services\Whatsapp\WhatsAppGateway;
+use App\Support\Audit\AuditService;
+use App\Support\PasswordPolicy;
+use App\Support\Representation\CurrentRepresentation;
+use App\Support\Settings;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\ServiceProvider;
+use Laravel\Socialite\Facades\Socialite;
+
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        $this->app->scoped(CurrentRepresentation::class);
+
+        // Cliente de provedor de IA (Fase 14, Onda 0): por ora só o teste de
+        // conexão REAL via HTTP OpenAI-compatible. A ponte de runtime do SDK
+        // (laravel/ai) entra na Onda 1 trocando SÓ este binding, sem tocar os
+        // consumidores. NÃO instalar o SDK agora (decisão do arquiteto-técnico).
+        $this->app->bind(AiProviderClient::class, OpenAiCompatibleClient::class);
+
+        // Provider público inicial (BrasilAPI / dados abertos RFB). A Fase 13
+        // (HU-105) troca este binding pelo provider conveniado da Receita
+        // Federal sem tocar controllers ou telas.
+        $this->app->bind(CnpjLookup::class, BrasilApiCnpjLookup::class);
+
+        // Geocodificação pública inicial (Nominatim/OSM). A Fase 13 troca este
+        // binding por self-host ou pela base geográfica da SEDUR sem tocar
+        // controllers ou telas (HU-029).
+        $this->app->bind(Geocoder::class, NominatimGeocoder::class);
+
+        // SQL espacial real (PostGIS) atrás de contrato (HU-031 a HU-035): o
+        // TerritoryService e o motor da Fase 5 dependem da interface, não do
+        // SQL — os testes dos consumidores usam um fake em memória.
+        $this->app->bind(SpatialRepository::class, PostgisSpatialRepository::class);
+
+        // Precedentes da análise técnica (HU-142) atrás de contrato, espelhando
+        // o SpatialRepository: o PrecedentService depende da interface, não do
+        // SQL espacial (ST_Intersects sobre property_polygon). Binding
+        // INCONDICIONAL → PostgisPrecedentRepository; os testes SQLite injetam um
+        // fake em memória via $this->app->instance, nunca o fake no container de
+        // produção.
+        $this->app->bind(PrecedentRepository::class, PostgisPrecedentRepository::class);
+
+        // Resolução por inscrição imobiliária (HU-055) atrás de contrato: BFF
+        // SEDUR/SEFAZ. Toggle features.cadastro_imobiliario desligado degrada
+        // honesto (nunca inventa ponto).
+        $this->app->bind(PropertyRegistryLookup::class, SedurSefazPropertyRegistryLookup::class);
+
+        // Fonte de feriados (HU-137) atrás de contrato: o BusinessDeadlineCalculator
+        // (HU-129) desconta os feriados ativos via este provider para medir
+        // duração em tempo útil. Singleton porque a lista é cacheada (TTL técnico).
+        // Sem feriado municipal cadastrado, degrada honesto (hasOfficialCalendar
+        // = false) — nunca inventa feriado. A lista oficial é pendência SEDUR.
+        $this->app->singleton(HolidayProvider::class, DatabaseHolidayProvider::class);
+
+        // Parecer ao Regin/Junta: provider HTTP real (api_integracao, header JWT).
+        // SEFAZ e BAP continuam bloqueados honestos — o Unavailable lança e o
+        // listener audita pendência; nunca simula sucesso.
+        $this->app->bind(ReginParecerNotifier::class, HttpReginParecerNotifier::class);
+        $this->app->bind(SefazViabilidadeGateway::class, UnavailableSefazViabilidadeGateway::class);
+        $this->app->bind(BapRegistry::class, UnavailableBapRegistry::class);
+
+        // Canal de notificação por WhatsApp (HU-095) BLOQUEADO honesto: não há
+        // provedor/credencial (API comercial) — o binding default LANÇA
+        // WhatsAppUnavailableException (a transmissão não ocorre), nunca simula. O
+        // toggle features.notificacao_whatsapp nasce OFF (11-02). A Fase 13 troca SÓ
+        // este binding pelo adaptador HTTP real (integrations.whatsapp.*), sem tocar
+        // o WhatsAppChannel que o consome.
+        $this->app->bind(WhatsAppGateway::class, UnavailableWhatsAppGateway::class);
+
+        // Detectores de abuso (HU-149) registrados por TAG ADITIVA: o
+        // AbuseDetectionService recebe iterable<AbuseDetector> resolvido por ela.
+        // A 12-06 registrou os 2 de volume; a 12-08 ACRESCENTA os 3 estruturais à
+        // MESMA tag sem tocar o serviço (passa a iterar 5). Todos determinísticos
+        // sobre dado real (queries Eloquent, SEM IA). O EscritorioVirtualEncadeado
+        // fica para a 2ª onda (depende de marcação estruturada — HU-139 texto livre).
+        $this->app->tag([
+            VolumeCnpjDetector::class,
+            VolumeContadorDetector::class,
+            PoligonoRepetidoDetector::class,
+            InscricaoAtividadesIncompativeisDetector::class,
+            CondicionanteEvasaoDetector::class,
+        ], 'abuse.detectors');
+
+        // O motor de detecção consome os detectores resolvidos pela tag (iterable
+        // não auto-injetável): bind explícito com $app->tagged('abuse.detectors').
+        $this->app->bind(AbuseDetectionService::class, fn ($app): AbuseDetectionService => new AbuseDetectionService(
+            $app->tagged('abuse.detectors'),
+            $app->make(MalhaFinaService::class),
+            $app->make(AuditService::class),
+        ));
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        // Os listeners em app/Listeners são registrados pela auto-descoberta de
+        // eventos do Laravel (cada um faz type-hint do evento no handle): a poda
+        // de retenção (ModelsPruned → AuditModelsPruned, RN-002/SC#1), o envio de
+        // notificação (NotificationSent → LogNotificationSent) e o PRIMEIRO evento
+        // de domínio (SolicitacaoProtocolada → RegistrarTrilhaProtocolo, HU-068,
+        // que grava o marco da timeline e a auditoria de alto nível). NÃO registrar
+        // manualmente aqui: o Event::listen duplicaria o registro (auditoria 2×).
+        // Fases futuras só ADICIONAM classes de listener ao mesmo evento
+        // (notificação EP11, elegibilidade EP09, resposta Regin EP13).
+
+        // Canal de notificação por WhatsApp (HU-095): driver customizado resolvido
+        // pelo container (injeta WhatsAppGateway + AuditService). É o dono único da
+        // linha communications do canal whatsapp — marca enviado/bloqueado e audita
+        // o bloqueio quando o provedor está indisponível (Fase 13).
+        Notification::extend('whatsapp', fn ($app): WhatsAppChannel => $app->make(WhatsAppChannel::class));
+
+        PasswordPolicy::configureDefaults();
+
+        // Regra nomeada para o catálogo HU-014: as validation_rules são
+        // persistidas em JSON (cast array do Parameter), onde closures NÃO
+        // serializam — a validação estrutural de parâmetros json precisa ser
+        // referenciável por string. Garante JSON de lista não vazia de strings
+        // (ex.: geo.zona.atributos_nome).
+        Validator::extend(
+            'json_string_list',
+            function (string $attribute, mixed $value): bool {
+                $decoded = json_decode((string) $value, true);
+
+                return is_array($decoded)
+                    && $decoded !== []
+                    && array_is_list($decoded)
+                    && ! array_any($decoded, fn ($item) => ! is_string($item) || $item === '');
+            },
+            'O campo :attribute deve ser um JSON com uma lista não vazia de textos.',
+        );
+
+        Validator::extend(
+            'json_fluxo_map',
+            function (string $attribute, mixed $value): bool {
+                $decoded = json_decode((string) $value, true);
+
+                if (! is_array($decoded) || array_is_list($decoded)) {
+                    return false;
+                }
+
+                $expected = collect(RiscoMunicipal::cases())->map->value->sort()->values()->all();
+                $keys = collect(array_keys($decoded))->sort()->values()->all();
+
+                if ($keys !== $expected) {
+                    return false;
+                }
+
+                $fluxos = collect(Fluxo::cases())->map->value->all();
+
+                return ! array_any($decoded, fn ($item) => ! is_string($item) || ! in_array($item, $fluxos, true));
+            },
+            'O mapa de encaminhamento deve ter as chaves baixo_a, baixo_b e alto com valores expresso ou analise.',
+        );
+
+        config(['auth.passwords.users.expire' => (int) Settings::get('security.password_reset_expire', 60)]);
+
+        // Driver Socialite do Login Único (HU-151). Credenciais e URL são
+        // lidas dos parâmetros administráveis A CADA resolução do driver —
+        // trocar staging/produção ou rotacionar credencial não exige deploy.
+        Socialite::extend('govbr', function ($app): GovBrProvider {
+            $provider = new GovBrProvider(
+                $app['request'],
+                (string) Settings::get('integrations.govbr.client_id', ''),
+                (string) Settings::get('integrations.govbr.client_secret', ''),
+                route('portal.govbr.callback'),
+            );
+
+            return $provider
+                ->withBaseUrl((string) Settings::get('integrations.govbr.base_url'))
+                ->withIdTokenValidator($app->make(GovBrIdTokenValidator::class));
+        });
+    }
+}

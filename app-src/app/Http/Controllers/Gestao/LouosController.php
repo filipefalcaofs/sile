@@ -1,0 +1,284 @@
+<?php
+
+namespace App\Http\Controllers\Gestao;
+
+use App\Enums\RuleDomain;
+use App\Enums\RuleVersionStatus;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Gestao\PublishLouosVersionRequest;
+use App\Models\LouosQuadro10Permissao;
+use App\Models\LouosQuadro11CondicaoVia;
+use App\Models\RuleVersion;
+use App\Services\Louos\LouosMaintenanceService;
+use App\Services\Rules\RuleVersionService;
+use App\Support\Audit\AuditService;
+use App\Support\Settings;
+use DomainException;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+/**
+ * Consulta e manutenção dos Quadros da LOUOS no console SEDUR (HU-015..018 /
+ * HU-046). A consulta lista a versão vigente de cada Quadro (resumo +
+ * listagem paginada do selecionado, com busca/auditoria); a publicação gera uma
+ * NOVA versão por quatro olhos (LouosMaintenanceService), preservando a anterior
+ * — nunca edição destrutiva. Os Quadros vigentes são 10 e 11A. Espelha o
+ * RiscoController (server-driven). Gate cross-guard via permission: nas rotas.
+ */
+class LouosController extends Controller
+{
+    /**
+     * Tamanhos de página aceitos (whitelist técnica). O padrão reusa
+     * ui.cnaes.per_page (a listagem do console compartilha a preferência, sem
+     * inflar o catálogo de parâmetros) — precedente do RiscoController.
+     */
+    private const PER_PAGE_OPTIONS = [10, 15, 25, 50];
+
+    /**
+     * Param `quadro` → domínio de regra versionada do Quadro.
+     *
+     * @var array<string, RuleDomain>
+     */
+    private const QUADRO_DOMAINS = [
+        'quadro10' => RuleDomain::LouosQuadro10,
+        'quadro11a' => RuleDomain::LouosQuadro11a,
+    ];
+
+    public function __construct(
+        private LouosMaintenanceService $maintenance,
+        private RuleVersionService $ruleVersions,
+        private AuditService $audit,
+    ) {}
+
+    public function index(Request $request): Response
+    {
+        $quadro = $request->string('quadro')->toString();
+
+        if (! array_key_exists($quadro, self::QUADRO_DOMAINS)) {
+            $quadro = 'quadro10';
+        }
+
+        $domain = self::QUADRO_DOMAINS[$quadro];
+
+        $perPage = (int) $request->input('per_page');
+        $perPage = in_array($perPage, self::PER_PAGE_OPTIONS, true)
+            ? $perPage
+            : (int) Settings::get('ui.cnaes.per_page', 15);
+
+        $search = $request->string('search')->trim()->toString();
+
+        $vigente = RuleVersion::vigente($domain)->first();
+
+        $itens = $this->listarQuadro($quadro, $vigente, $search, $perPage);
+
+        $this->audit->log(
+            logName: 'louos',
+            event: 'consulta-quadros',
+            description: 'Consulta dos Quadros vigentes da LOUOS no console',
+            properties: [
+                'quadro' => $quadro,
+                'versao' => $vigente?->version,
+                'busca' => $search !== '' ? $search : null,
+            ],
+            result: 'sucesso',
+            rulesVersion: $vigente?->version,
+        );
+
+        return Inertia::render('gestao/louos/index', [
+            'quadros' => $this->resumoQuadros(),
+            'quadroSelecionado' => $quadro,
+            'itens' => $itens,
+            'versoes' => $this->historicoVersoes($quadro, $domain),
+            'filtros' => [
+                'quadro' => $quadro,
+                'search' => $search,
+                'per_page' => $perPage,
+            ],
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+            'urlRascunho' => route('gestao.louos.rascunho.show', ['quadro' => $quadro], false),
+            'urlManual' => route('gestao.louos.manual', ['quadro' => $quadro], false),
+        ]);
+    }
+
+    /**
+     * Publicar um Quadro gera uma NOVA versão (HU-046): a regra dos quatro olhos
+     * exige autor distinto do publicador (usuário autenticado). Autor igual ao
+     * publicador em domínio sensível é bloqueado e comunicado (flash.error) —
+     * degradação controlada, nunca silenciosa.
+     */
+    public function publish(PublishLouosVersionRequest $request): RedirectResponse
+    {
+        $publisherId = (int) $request->user()->id;
+        $authorId = (int) $request->validated('author_id');
+
+        if ($authorId === $publisherId) {
+            return back()->with(
+                'error',
+                'A publicação por quatro olhos exige que o autor da nova versão seja diferente de quem publica.',
+            );
+        }
+
+        $domain = self::QUADRO_DOMAINS[$request->validated('quadro')];
+
+        $versao = $this->maintenance->publishNewVersion(
+            $domain,
+            (string) $request->validated('version'),
+            $request->validated('alteracoes', []),
+            $authorId,
+            $publisherId,
+        );
+
+        return back()->with('status', "Nova versão {$versao->version} do {$domain->label()} publicada.");
+    }
+
+    /**
+     * Ativa uma versão já publicada do Quadro selecionado, fechando a vigente
+     * sem apagá-la. Rascunho não pode ser ativado (precisa da publicação).
+     */
+    public function activate(Request $request, RuleVersion $versao): RedirectResponse
+    {
+        $quadro = (string) $request->input('quadro', '');
+
+        if (! array_key_exists($quadro, self::QUADRO_DOMAINS)) {
+            abort(422, 'Quadro inválido ou ausente.');
+        }
+
+        $domain = self::QUADRO_DOMAINS[$quadro];
+
+        if ($versao->domain !== $domain) {
+            abort(422, 'A versão não pertence ao Quadro selecionado.');
+        }
+
+        try {
+            $ativada = $this->ruleVersions->activate($versao);
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('gestao.louos.index', ['quadro' => $quadro])
+            ->with('status', "Versão {$ativada->version} ativada e em uso.");
+    }
+
+    /**
+     * Histórico das versões publicadas do Quadro (vigente + substituídas).
+     *
+     * @return list<array{id: int, version: string, status: string, status_label: string, valid_from: string|null, valid_to: string|null, source: string|null, total: int, vigente: bool}>
+     */
+    private function historicoVersoes(string $quadro, RuleDomain $domain): array
+    {
+        return RuleVersion::query()
+            ->where('domain', $domain->value)
+            ->where('status', '!=', RuleVersionStatus::Rascunho->value)
+            ->orderByRaw('case when status = ? then 0 else 1 end', [RuleVersionStatus::Vigente->value])
+            ->orderByDesc('valid_from')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (RuleVersion $versao): array => [
+                'id' => $versao->id,
+                'version' => $versao->version,
+                'status' => $versao->status->value,
+                'status_label' => $versao->status->label(),
+                'valid_from' => $versao->valid_from?->toDateString(),
+                'valid_to' => $versao->valid_to?->toDateString(),
+                'source' => $versao->source,
+                'total' => $this->contarLinhas($quadro, $versao),
+                'vigente' => $versao->status === RuleVersionStatus::Vigente,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Resumo das versões vigentes dos Quadros 10 e 11A (visão geral da consulta).
+     *
+     * @return list<array{quadro: string, label: string, version: string|null, valid_from: string|null, total: int}>
+     */
+    private function resumoQuadros(): array
+    {
+        $resumo = [];
+
+        foreach (self::QUADRO_DOMAINS as $quadro => $domain) {
+            $vigente = RuleVersion::vigente($domain)->first();
+
+            $resumo[] = [
+                'quadro' => $quadro,
+                'label' => $domain->label(),
+                'version' => $vigente?->version,
+                'valid_from' => $vigente?->valid_from?->toDateString(),
+                'total' => $this->contarLinhas($quadro, $vigente),
+            ];
+        }
+
+        return $resumo;
+    }
+
+    /**
+     * Total de linhas da tabela tipada do Quadro na versão vigente.
+     */
+    private function contarLinhas(string $quadro, ?RuleVersion $vigente): int
+    {
+        if ($vigente === null) {
+            return 0;
+        }
+
+        return match ($quadro) {
+            'quadro10' => LouosQuadro10Permissao::query()->where('rule_version_id', $vigente->id)->count(),
+            default => LouosQuadro11CondicaoVia::query()->where('rule_version_id', $vigente->id)->count(),
+        };
+    }
+
+    /**
+     * Listagem paginada do Quadro selecionado na versão vigente, com busca. As
+     * linhas são mapeadas para o contrato consumido pela tela (05-07).
+     *
+     * @return LengthAwarePaginator<int, array<string, mixed>>
+     */
+    private function listarQuadro(string $quadro, ?RuleVersion $vigente, string $search, int $perPage): LengthAwarePaginator
+    {
+        $versionId = $vigente?->id ?? 0;
+
+        return match ($quadro) {
+            'quadro10' => LouosQuadro10Permissao::query()
+                ->where('rule_version_id', $versionId)
+                ->when($search !== '', fn ($query) => $query->where(function ($inner) use ($search) {
+                    $inner->whereLike('zona', "%{$search}%", caseSensitive: false)
+                        ->orWhereLike('grupo_uso', "%{$search}%", caseSensitive: false);
+                }))
+                ->orderBy('zona')
+                ->orderBy('grupo_uso')
+                ->paginate($perPage)
+                ->withQueryString()
+                ->through(fn (LouosQuadro10Permissao $permissao) => [
+                    'id' => $permissao->id,
+                    'zona' => $permissao->zona,
+                    'grupo_uso' => $permissao->grupo_uso,
+                    'subgrupo' => $permissao->subgrupo,
+                    'permissao' => $permissao->permissao->value,
+                    'permissao_label' => $permissao->permissao->label(),
+                    'condicionante_ref' => $permissao->condicionante_ref,
+                    'base_legal' => $permissao->base_legal,
+                ]),
+            default => LouosQuadro11CondicaoVia::query()
+                ->where('rule_version_id', $versionId)
+                ->when($search !== '', fn ($query) => $query->where(function ($inner) use ($search) {
+                    $inner->whereLike('classe_via', "%{$search}%", caseSensitive: false)
+                        ->orWhereLike('grupo_uso', "%{$search}%", caseSensitive: false);
+                }))
+                ->orderBy('classe_via')
+                ->orderBy('grupo_uso')
+                ->paginate($perPage)
+                ->withQueryString()
+                ->through(fn (LouosQuadro11CondicaoVia $condicao) => [
+                    'id' => $condicao->id,
+                    'classe_via' => $condicao->classe_via,
+                    'grupo_uso' => $condicao->grupo_uso,
+                    'condicoes' => $condicao->condicoes,
+                    'base_legal' => $condicao->base_legal,
+                ]),
+        };
+    }
+}

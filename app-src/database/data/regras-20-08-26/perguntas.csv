@@ -1,0 +1,199 @@
+numero,texto,referencia,observacao
+1,Identifique entre as opções a seguir os serviços ou as atividades que serão prestado(a)s/desenvolvido (a)s:,"CNAE 2610-8/00, CNAE 2621-3/00, CNAE 2740-6/02, CNAE 3250-7/05, CNAE 3299-0/99, CNAE 3311-2/00, CNAE 3314-7/10, CNAE 3511-5/01, CNAE 3701-1/00, CNAE 3831-9/01, CNAE 3831-9/99, CNAE 3832-7/00, CNAE 3839-4/99, CNAE 5612-1/00, CNAE 6010-1/00, CNAE 7319-0/99, CNAE 8230-0/01, CNAE 9329-8/99, CNAE 9491-0/00, CNAE 9609-2/05, CNAE 9609-2/07, CNAE 9609-2/99",
+2,"A atividade será desenvolvida no local?
+
+1. Sim, a atividade será desenvolvida no local.
+2. Não, no local funcionará  o escritório da empresa.","Atividades com modalidade artesanal: 
+CNAE 1020-1/01, CNAE 1020-1/02, CNAE 1031-7/00, CNAE 1032-5/01, CNAE 1032-5/99, CNAE 1033-3/01, CNAE 1033-3/02, CNAE 1051-1/00, CNAE 1052-0/00, CNAE 1053-8/00, CNAE 1061-9/02, CNAE 1063-5/00, CNAE 1064-3/00, CNAE 1066-0/00, CNAE 1091-1/02, CNAE 1092-9/00, CNAE 1093-7/01, CNAE 1093-7/02, CNAE 1094-5/00, CNAE 1095-3/00, CNAE 1096-1/00, CNAE 1099-6/04, CNAE 1099-6/05, CNAE 1111-9/01, CNAE 1111-9/02, CNAE 1112-7/00, CNAE 1113-5/01, CNAE 1113-5/02,  CNAE 1122-4/02, CNAE 1321-9/00, CNAE 1322-7/00, CNAE 1323-5/00, CNAE 1340-5/01, CNAE 1340-5/99, CNAE 1351-1/00, CNAE 1352-9/00, CNAE 1353-7/00, CNAE 1354-5/00, CNAE 1359-6/00, CNAE 1411-8/01, CNAE 1411-8/02, CNAE 1412-6/01, CNAE 1412-6/02, CNAE 1412-6/03, CNAE 1413-4/01, CNAE 1413-4/02, CNAE 1413-4/03, CNAE 1414-2/00, CNAE 1421-5/00, CNAE 1422-3/00, CNAE 1521-1/00, CNAE 1529-7/00, CNAE 1531-9/01, CNAE 1531-9/02, CNAE 1533-5/00, CNAE 1539-4/00, CNAE 1540-8/00,  CNAE 1622-6/02, CNAE 1622-6/99, CNAE 1623-4/00, CNAE 3211-6/01, CNAE 3211-6/02, CNAE 3211-6/03, CNAE 3212-4/00, CNAE 3220-5/00,  CNAE 3240-0/02, CNAE 3240-0/03, CNAE 3240-0/99",
+3,"EXIBIR APENAS SE RESPONDIDO ""SIM"" na pergunta 2:
+
+A atividade será desenvolvida de modo artesanal?
+1. Sim 
+2. Não","Atividades com modalidade artesanal: 
+CNAE 1020-1/01, CNAE 1020-1/02, CNAE 1031-7/00, CNAE 1032-5/01, CNAE 1032-5/99, CNAE 1033-3/01, CNAE 1033-3/02, CNAE 1051-1/00, CNAE 1052-0/00, CNAE 1053-8/00, CNAE 1061-9/02, CNAE 1063-5/00, CNAE 1064-3/00, CNAE 1066-0/00, CNAE 1091-1/02, CNAE 1092-9/00, CNAE 1093-7/01, CNAE 1093-7/02, CNAE 1094-5/00, CNAE 1095-3/00, CNAE 1096-1/00, CNAE 1099-6/04, CNAE 1099-6/05, CNAE 1111-9/01, CNAE 1111-9/02, CNAE 1112-7/00, CNAE 1113-5/01, CNAE 1113-5/02,  CNAE 1122-4/02, CNAE 1321-9/00, CNAE 1322-7/00, CNAE 1323-5/00, CNAE 1340-5/01, CNAE 1340-5/99, CNAE 1351-1/00, CNAE 1352-9/00, CNAE 1353-7/00, CNAE 1354-5/00, CNAE 1359-6/00, CNAE 1411-8/01, CNAE 1411-8/02, CNAE 1412-6/01, CNAE 1412-6/02, CNAE 1412-6/03, CNAE 1413-4/01, CNAE 1413-4/02, CNAE 1413-4/03, CNAE 1414-2/00, CNAE 1421-5/00, CNAE 1422-3/00, CNAE 1521-1/00, CNAE 1529-7/00, CNAE 1531-9/01, CNAE 1531-9/02, CNAE 1533-5/00, CNAE 1539-4/00, CNAE 1540-8/00,  CNAE 1622-6/02, CNAE 1622-6/99, CNAE 1623-4/00, CNAE 3211-6/01, CNAE 3211-6/02, CNAE 3211-6/03, CNAE 3212-4/00, CNAE 3220-5/00,  CNAE 3240-0/02, CNAE 3240-0/03, CNAE 3240-0/99",
+4,"O estabelecimento prestará o serviço de escritório virtual ou centro de negócios (sede de escritório virtual)?
+
+1. Sim
+2. Não",CNAE 8211-3/00,Atualização da pergunta em 14/08/2026
+5,"Exibir apenas SE RESPONDIDO ""NÃO"" na pergunta 4:
+
+Caso o estabelecimento não seja uma sede de escritório virtual, selecione quais das atividades abaixo serão exercidas no local:
+
+1. Serviços de arquivamento de documentos; 
+2. Serviços de organização de arquivo de documentos no local do contratante 
+3. Serviços de organização de arquivos; 
+4. Serviços de preparo de folha de pagamento;
+5. Coworking",CNAE 8211-3/00,Atualização da pergunta em 14/08/2026
+6,"Trata-se de  Serviço de administração terceirizada de penitenciárias? 
+1. Sim
+2. Não",CNAE 8423-0/00,
+7,"Trata-se de Órgão Público? 
+1. Sim, trata-se de órgão da Administração pública.  
+2. Não.","8411-6/00,  8412-4/00,  8413-2/00, 8421-3/00, 8422-1/00, 8424-8/00, 8425-6/00,8430-2/00",
+8,"A atividade será desenvolvida no local? 
+1. Sim, a atividade será desenvolvida no local.
+2. Não, no local funcionará  o escritório da empresa.",CNAE 9319-1/99,2025-04-07
+9,"Exibir apenas SE RESPONDIDO ""SIM"" na pergunta 8:
+
+Identifique entre as opções a seguir os serviços ou as atividades que serão prestados/desenvolvidas:
+ 
+1. Atividades de atletas esportivos por conta própria: jogadores de futebol, vôlei, basquete, profissionais de e-sports (gamers); pilotos profissionais de automobilismo;
+2. Serviços de júris, jurados esportivos, árbitros e juízes esportivos por conta própria;
+3. Atividades de treinadores esportivos por conta própria
+4. Serviços de cronometragem para competições esportivas
+5.Operação de estábulos de hipódromos; atividade de pesca esportiva e de lazer, exploração de caça esportiva, clube de alpinismo  
+6. Aluguel de baias, picadeiros e semoventes",CNAE 9319-1/99,2025-04-07
+10,"Identifique entre as opções a seguir os serviço ou as atividades que serão prestados/desenvolvidas:
+
+1. Comércio varejista de artigos religiosos e de culto ou de artigos esotéricos 
+2. Comércio varejista de artigos eróticos (sex shop) 
+3. Comércio varejista de artigos funerários 
+4. Comércio varejista de artigos para festas e/ou fantasias 
+5. Comércio varejista de plantas, flores e frutos artificiais para ornamentação 
+6. Comércio varejista de perucas 
+7. Comércio varejista de artigos para bebê 
+8. Comércio varejista de rede de dormir, sacos de lixo, espanadores, escovas, lanternas, velas 
+(cera) para iluminação 
+9. Comércio varejista de carvão e lenha 
+10. Comércio varejista de extintores (exceto para veículos) e/ou de cargas e preparados para 
+incêndio 
+11. Comércio varejista de cartões telefônicos 
+12. Comércio varejista de molduras e quadros 
+13. Comércio varejista de retroprojetores 
+14. Comércio varejista de quinquilharias para uso agrícola 
+15. Comércio varejista de embalagens em geral (exceto de papel e papelão) 
+16. Comércio varejista de placas e plaquetas para veículos",CNAE 4789-0/99,
+11,"A atividade será desenvolvida no local?
+
+1. Sim, a atividade será desenvolvida no local.
+2. Não, no local funcionará  o escritório da empresa.",,
+12,"Quais produtos serão armazenados pela empresa? 
+1. Produtos inflamáveis, combustíveis, álcool, inseticidas, lubrificantes, resinas, gomas, tintas e vernizes ou outros produtos químicos perigosos 
+2. Produtos em geral, exceto inflamáveis, perigosos","CNAE 5211-7/01, CNAE 5211-7/99",
+13,"A atividade será desenvolvida no local? 
+
+1. Sim, a atividade será desenvolvida no local.
+2. Não, no local funcionará  o escritório da empresa.",CNAE 5223-1/00,
+14,"Exibir apenas SE RESPONDIDO ""SIM"" na pergunta 13:
+
+No local funcionará:
+1. Estacionamento de veículos leves
+2. Edifício garagem
+3. Estacionamento e garagem de veículos pesados, máquinas, ônibus, veículos de socorro, de reboque, ambulância, táxis",CNAE 5223-1/00,
+15,"A atividade será desenvolvida no local?
+
+1. Sim, a atividade será desenvolvida no local.
+2. Não, no local funcionará  o escritório da empresa.",CNAE 9499-5/00,
+16,"Exibir apenas SE RESPONDIDO ""SIM"" na pergunta 15:
+
+Identifique a seguir o tipo de associação/organização a ser desenvolvida:
+
+1. Associação comunitária
+2. Associação de bairros
+3. Associação de bombeiros voluntários, de escoteiros, organização das bandeirantes
+4. Associação de mulheres
+5. Associação de pais de alunos
+6. Associação de proteção de animais,sociedade de animais, sociedade protetora dos animais
+7. Associação de veteranos, dos ex-combatentes
+8. Associação e clube estudantil, clube de ciências, de astronomia
+9. Atividades de centro acadêmicos, de diretório estudantil
+10.Fraternidades, organização de caridade, organização social, civil, fraternal
+11. Associação de consumidores
+12. Fã clubes
+13. Associação voluntária de saúde
+14. Rotary club",CNAE 9499-5/00,
+17,"A atividade será desenvolvida no local?
+
+1. Sim, a atividade será desenvolvida no local.
+2. Não, no local funcionará  o escritório da empresa.",CNAE 4754-7/02,
+18,"Exibir apenas SE RESPONDIDO ""SIM"" na pergunta 17:
+
+O que irá funcionar no local?
+1. O comércio varejista de colchões e/ou de travesseiros, almofadas, artigos de colchoaria
+2. Depósito para colchões e/ou de travesseiros, almofadas, artigos de colchoaria",CNAE 4754-7/02,
+19,"A atividade será desenvolvida no local?
+
+1. Sim, a atividade será desenvolvida no local.
+2. Não, no local funcionará  o escritório da empresa.",CNAE 4789-0/04,
+20,"Exibir apenas SE RESPONDIDO ""SIM"" na pergunta 19:
+
+Informe o que será comercializado:
+1. Comércio varejista de artigos e acessórios para animais domésticos (exemplo: brinquedos, coleiras, focinheiras, selas,etc.)
+2. Comércio varejista de rações para animais domésticos    
+3. Comércio varejista de animais vivos para criação doméstica (cães, gatos, passarinhos, peixes ornamentais, etc)
+4.  Comércio varejista de produtos veterinários (exceto medicamentos).",CNAE 4789-0/04,
+21,"A atividade será desenvolvida no local? 
+
+1. Sim, a atividade será desenvolvida no local.
+2. Não, no local funcionará  o escritório da empresa.",CNAE 9601-7/01,
+22,"Exibir apenas SE RESPONDIDO ""SIM"" na pergunta 21:
+
+No local funcionará:
+1. Lavanderia  Industrial
+2. Lavanderia não industrial",CNAE 9601-7/01,
+23,"A atividade será desenvolvida no local? 
+
+1. Sim, a atividade será desenvolvida no local.
+2. Não, no local funcionará  o escritório da empresa.",CNAE 9601-7/03,
+24,"Exibir apenas SE RESPONDIDO ""SIM"" na pergunta 23:
+
+No local funcionará:
+1. Toalheiro  Industrial
+2. Toalheiro não industrial",CNAE 9601-7/03,
+25,"A atividade será desenvolvida no local?
+
+1. Sim, a atividade será desenvolvida no local.
+2. Não, no local funcionará o escritório da empresa.","4682-6/00 - Comércio atacadista de gás liqüefeito de petróleo (GLP)
+ 4784-9/00 - Comércio varejista de gás liquefeito de petróleo (GLP)",
+26,"Se respondido SIM na pergunta 25, exibir a pergunta a seguir: 
+
+Trata-se de revenda de GLP Multiclasse? 
+1. Sim
+2. Não","4682-6/00 - Comércio atacadista de gás liqüefeito de petróleo (GLP)
+ 4784-9/00 - Comércio varejista de gás liquefeito de petróleo (GLP)",
+27,"Se respondido SIM na pergunta 26, exibir a pergunta seguinte:
+
+Quantas plataformas têm o estabelecimento?
+A. 2 plataformas 
+B. 3 plataformas","4682-6/00 - Comércio atacadista de gás liqüefeito de petróleo (GLP)
+ 4784-9/00 - Comércio varejista de gás liquefeito de petróleo (GLP)",
+28,"Se respondido SIM na pergunta 26, exibir a pergunta seguinte:
+
+Qual a capacidade de cada plataforma existente no empreendimento?
+
+1. Até 520 Kg / 40 botijões de 13Kg
+2. Até 1.560 Kg / 120 botijões de 13kg 
+3. Até 6.240 Kg / 480 botijões de 13kg
+4. Até 12.480 kg / 960 botijões de 13kg
+5. Até 24.960 Kg / 1.920 botijões de 13kg 
+6. Até 49.920 Kg / 3.840 botijões de 13kg
+7. Até 99.840 Kg/ 7.680 botijões de 13kg
+8. Mais de 99.840 kg (Classe Especial)","4682-6/00 - Comércio atacadista de gás liqüefeito de petróleo (GLP)
+ 4784-9/00 - Comércio varejista de gás liquefeito de petróleo (GLP)",
+29,"Se respondido Não na pergunta 26, exibir a pergunta seguinte:
+
+Qual a capacidade de armazenamento?  
+
+1. Até 520 Kg / 40 botijões de 13Kg
+2. Até 1.560 Kg / 120 botijões de 13kg 
+3. Até 6.240 Kg / 480 botijões de 13kg
+4. Até 12.480 kg / 960 botijões de 13kg
+5. Até 24.960 Kg / 1.920 botijões de 13kg 
+6. Até 49.920 Kg / 3.840 botijões de 13kg
+7. Até 99.840 Kg/ 7.680 botijões de 13kg
+8. Mais de 99.840 kg (Classe Especial)","4682-6/00 - Comércio atacadista de gás liqüefeito de petróleo (GLP)
+ 4784-9/00 - Comércio varejista de gás liquefeito de petróleo (GLP)",
+30,"Trata-se de caixa escolar e/ou conselho escolar para administrar recursos financeiros destinados às escolas públicas?
+
+1. Sim, trata-se de  caixa escolar e/ou conselho escolar.
+2. Não",CNAE 8550-3/01,
+31,"A atividade será desenvolvida no local?
+
+1. Sim, a atividade será desenvolvida no local.
+2. Não, no local funcionará  o escritório da empresa.",CNAE 3514-0/00,
+32,"Identifique o serviço prestado:
+
+1. Medição de consumo de eletricidade, manutenção de medidores de eletricidade, de redes de distribuição de  eletricidade e  de redes de eletricidade quando executada por empresas de distribuição de energia elétrica (concessionária)
+2. Operação de sistemas de distribuição de energia elétrica  
+3. Operação de estações de carregamento (recarga) para veículos elétricos 
+4. Operação de sistemas de transmissão de energia elétrica que transportam a eletricidade recebida dos sistema de geração ou transmissão para o consumidor final",CNAE 3514-0/00,

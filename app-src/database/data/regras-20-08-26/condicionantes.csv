@@ -1,0 +1,33 @@
+numero,texto,observacao,usar_em_predio_comercial
+1,Para funcionamento deverá dispor do número de vagas para estacionamento conforme legislação em vigor. Mínimo: _____.,,
+2,Trata-se de escritório da empresa. O TVL viabiliza apenas o escritório administrativo da empresa neste endereço. A prestação de serviços e o comércio realizados em outros endereços estão condicionados à análise e concessão de novo TVL referente ao local onde serão exercidos.,"(quando o requerente escolher a opção 2 das perguntas 2, 3,",
+3,Para funcionamento deverá atender a Lei Municipal nº 5.354 de 1998 e suas alterações (Poluição Sonora).,,
+4,Para funcionamento deverá obter licença ou dispensa ambiental conforme Anexo Único da Resolução CEPRAM nº 4579/2018 e Anexos I e IX do Decreto 29.921/2018.,Exibir obrigatoriamente para imóveis com área superior 750m²,
+5,Para funcionamento deverá obter parecer da Delegacia Regional do Ministério da Agricultura ou da ADAB,,
+6,Para funcionamento deverá obter Licença da Vigilância Sanitária/Alvára de Saúde,,
+7,Para funcionamento deverá dispor de vagas para carga e descarga conforme Quadro 11B da Lei Municipal nº 9.148/2016 (LOUOS),,
+8,Para funcionamento deverá dispor de pátio para carga e descarga conforme Quadro 11B da Lei Municipal nº 9.148/2016 (LOUOS),,
+9,Para funcionamento deverá dispor de área para embarque e desembarque de passageiros conforme Quadro 11B da Lei Municipal nº 9.148/2016 (LOUOS),,
+10,Para funcionamento deverá obter Auto de Vistoria do Corpo de Bombeiros (AVCB),,
+11,"Para a CNAE 7319-0/99 não está autorizada a prestação de serviços de publicidade em carro de som, alto-falantes os quais não são permitidos pela Legislação Municipal nº 5.354/98.",,
+12,Só poderá comercializar produtos permitidos pela legislação vigente.,Farmácia,
+13,Para funcionamento deverá obter Autorização do órgão competente.,"Transporte escolar,  sistemas de rádio e televisão",
+14,"Para comercializar areia, brita, cal, tijolos e similares deverá possuir área de carga e descarga. Estes materiais devem ser armazenados em silos e não poderá ocupar área pública ou vaga de estacionamento.",,Não
+15,Para funcionamento deverá obter Autorização da Anatel.,,
+16,Para funcionamento deverá obter Autorização da Polícia Federal.,Vigilância armada,
+17,Vigilância desarmada,Vigilância desarmada,
+18,Não poderá expor mercadorias em área pública.,Comércio em  geral (exceto em prédio comercial),Não
+19,CNAE 4723-7/00 refere-se apenas ao comércio de bebidas sem o consumo no local e não contempla o serviço de bar.,4723-7/00,
+20,Só poderá comercializar os animais permitidos por lei federal e deverá atender as condições de conforto e higiene dos animais. Deverão ser atendidas as disposições da resolução vigente do Conselho Federal de Medicina Veterinária (CFMV).,Comércio de ração e animais,
+21,Apenas poderão ser comercializados produtos saneantes registrados pela vigilância sanitária.,comércio de produtos saneantes,
+22,TVL Pré-operacional. Não permite requerer o Alvará de Funcionamento. Renovação condicionada a apresentação do Habite-se referente ao Alvará de Construção nº_____.,TVL Pré-operacional só pode ser feito no fluxo semi- expresso.,
+23,"Os serviços constantes na CNAE 8211-3/00 referem-se aos serviços de apoio administrativo, não estando autorizada a prestação de serviço de escritório virtual.",Quando não se tratar de sede de escritório virtual,
+24,Prestação de serviços de escritório virtual.,Escritório virtual – sede,
+25,Para funcionamento deverá instalar tela ou grade de proteção em janelas e/ou áreas abertas como sacada/varanda;,Estabelecimento de ensino (não usar em prédio comercial),Não
+26,Para funcionamento deverá instalar corrimão em escadas,Estabelecimento de ensino (não usar em prédio comercial),Não
+27,Para funcionamento deverá dispor de piscinas cercadas por grade e protegida por tela,Estabelecimento de ensino (não usar em prédio comercial),Não
+28,"Para funcionamento deverá atender a Lei n° 5.733/2000 que proíbe a exposição de urnas mortuárias e adereços para velórios na frente das lojas e obriga o uso de portas de vidro na cor fumê, devendo permanecer sempre fechadas com livre acesso.",Funerária,Não
+29,Para o funcionamento deverá instalar porta eletrônica de segurança individualizada de acordo com a lei n° 4.759/93 obrigatória nas agências e postos bancários. Deverá também instalar divisórias opacas nos caixas de atendimento da agência bancária de acordo com a lei nº 8.025/2011 e atender as disposições contidas na Lei nº 8.029/2011 (instalação de guarda volumes nas entradas das agências e postos de atendimento) e na Lei nº 8.042/2011 (instalação de sistema de segurança e monitoramento por câmera de vídeo).,Banco,
+30,"Trata-se escritório da empresa. Para desenvolver atividades de cultivo, criação, extração, beneficiamento, fabricação, produção, captação, distribuição e/ou tratamento em território nacional deverá obter licenças e/ou autorizações dos órgãos afins.","Escritório atividades de cultivo, criação, extração",Sim
+31,Trata-se de escritório para a atividade de Food Truck. Deverá solicitar licença específica no órgão competente para o local do funcionamento.,Food Truck,Sim
+32,"Para funcionamento deverá obter licenças e/ou autorizações dos órgãos  afins para desenvolver atividades de beneficiamento, produção, captação, distribuição e/ou tratamento.",Atividades industriais etc.,Sim

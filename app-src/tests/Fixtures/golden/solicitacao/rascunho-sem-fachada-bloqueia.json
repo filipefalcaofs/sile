@@ -1,0 +1,14 @@
+{
+    "nome": "rascunho-sem-fachada-bloqueia",
+    "descricao": "Rascunho instruído mas SEM a foto da fachada (requisito-base sempre obrigatório no seed oficial) → o protocolo é BLOQUEADO pelo DocumentRequirementResolver real; o status continua rascunho e nenhum número é consumido. Degradação honesta (anti-fachada).",
+    "cenario": "instruido",
+    "cnae": "4712100",
+    "is_public_area": false,
+    "anexar_fachada": false,
+    "acao": "protocolar",
+    "esperado": {
+        "bloqueio": "documental",
+        "status": "rascunho",
+        "sem_numero": true
+    }
+}

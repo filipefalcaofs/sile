@@ -1,0 +1,16 @@
+{
+    "nome": "Inscrição imobiliária indisponível degrada honesto sem inventar ponto",
+    "descricao": "CASO CHAVE anti-fachada (regressão de domínio da consulta): consulta por inscrição imobiliária com a base de lotes pendente SEDUR (binding real UnavailablePropertyRegistryLookup). A resolução do ponto degrada para a via CNAE com aviso honesto — sem geocode (tem_geocode false), sem território (tem_territorio false), NUNCA uma coordenada inventada. O risco continua real e o veredito é pendente. Trava a degradação honesta da inscrição: se algum dia o orquestrador inventar um ponto para a inscrição, este caso falha.",
+    "input": {
+        "tipo": "inscricao",
+        "cnae": "4712-1/00",
+        "area": 120,
+        "inscricao": "123456"
+    },
+    "esperado": {
+        "veredito": "pendente",
+        "tem_geocode": false,
+        "tem_territorio": false,
+        "avisos_contem": "Resolução por inscrição imobiliária indisponível"
+    }
+}

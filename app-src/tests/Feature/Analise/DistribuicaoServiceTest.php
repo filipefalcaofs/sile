@@ -1,0 +1,401 @@
+<?php
+
+namespace Tests\Feature\Analise;
+
+use App\Enums\AnalysisStage;
+use App\Enums\AnalysisStatus;
+use App\Enums\ViabilityRequestStatus;
+use App\Models\Activity;
+use App\Models\Sector;
+use App\Models\User;
+use App\Models\ViabilityRequest;
+use App\Services\Analise\DistribuicaoException;
+use App\Services\Analise\DistribuicaoService;
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
+use Tests\TestCase;
+
+/**
+ * Caixa do setor (HU-080/081): a distribuição (gestor) e a assunção (analista)
+ * dos processos em análise. O processo é atribuído a um analista do setor SEM
+ * sair da caixa (RN-004 — sector_id intacto, status em_analise), recalculando o
+ * SLA para a etapa de análise (HU-144) e auditando por processo de forma
+ * SÍNCRONA (RN-006 — não depende de evento). Só analista VINCULADO ao setor pode
+ * ser distribuído/assumir; o lote (RN-007) audita item a item e isola falhas.
+ */
+class DistribuicaoServiceTest extends TestCase
+{
+    use LazilyRefreshDatabase;
+
+    private function service(): DistribuicaoService
+    {
+        return app(DistribuicaoService::class);
+    }
+
+    /**
+     * Processo na caixa de um setor: em_analise, etapa de distribuição com o SLA
+     * inicial (como sai do encaminhamento — Task 1).
+     */
+    private function processoNaCaixa(Sector $sector): ViabilityRequest
+    {
+        $request = ViabilityRequest::factory()->create();
+
+        $request->forceFill([
+            'sector_id' => $sector->id,
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'analysis_stage' => AnalysisStage::Distribuicao,
+            'analysis_stage_started_at' => now(),
+            'analysis_due_at' => now()->addDays(2),
+        ])->save();
+
+        return $request;
+    }
+
+    private function analistaDoSetor(Sector $sector): User
+    {
+        $analista = User::factory()->create();
+        $analista->sectors()->attach($sector);
+
+        return $analista;
+    }
+
+    public function test_distribuir_atribui_analista_vinculado_e_recalcula_o_sla_sem_sair_da_caixa(): void
+    {
+        // HU-080 RN-004 + HU-144: atribui o analista, recalcula o prazo para a
+        // etapa de análise (≈ +10 dias) e NÃO altera sector_id nem o status.
+        Carbon::setTestNow('2026-03-10 09:00:00');
+
+        $sector = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($sector);
+        $gestor = User::factory()->create();
+        $request = $this->processoNaCaixa($sector);
+
+        $this->service()->distribuir($request, $analista, $gestor);
+
+        $fresh = $request->fresh();
+        $this->assertSame($analista->id, $fresh->assigned_user_id);
+        $this->assertNotNull($fresh->assigned_at);
+        $this->assertSame(AnalysisStage::Analise, $fresh->analysis_stage);
+        $this->assertSame(
+            Carbon::now()->addDays(10)->toDateTimeString(),
+            $fresh->analysis_due_at->toDateTimeString(),
+        );
+        // Não saiu da caixa (RN-004) nem mudou o status.
+        $this->assertSame($sector->id, $fresh->sector_id);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $fresh->status);
+
+        // RN-006: histórico de atribuição auditado SÍNCRONO com o setor.
+        $activity = Activity::query()
+            ->where('log_name', 'analise')
+            ->where('event', 'distribuir')
+            ->where('subject_id', $request->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($activity);
+        $this->assertSame($sector->id, $activity->properties['sector_id']);
+        $this->assertSame($analista->id, $activity->properties['assigned_user_id']);
+        $this->assertSame($gestor->id, $activity->properties['ator_id']);
+
+        Carbon::setTestNow();
+    }
+
+    /**
+     * Processo na caixa E no eixo operacional de vistoria (Vistoriar).
+     */
+    private function processoEmVistoria(Sector $sector): ViabilityRequest
+    {
+        $request = $this->processoNaCaixa($sector);
+        $request->forceFill(['analysis_status' => AnalysisStatus::Vistoriar])->save();
+
+        return $request;
+    }
+
+    /**
+     * Membro do setor SEM a permissão de vistoria (só analisar-processos) —
+     * o papel analista passou a incluir preencher-ficha-vistoria, então o
+     * não-vistoriador é montado permissão a permissão.
+     */
+    private function analistaSemVistoria(Sector $sector): User
+    {
+        $analista = User::factory()->create();
+        $analista->givePermissionTo('analisar-processos');
+        $analista->sectors()->attach($sector);
+
+        return $analista;
+    }
+
+    private function vistoriadorDoSetor(Sector $sector): User
+    {
+        $vistoriador = User::factory()->create();
+        $vistoriador->givePermissionTo(['analisar-processos', 'preencher-ficha-vistoria']);
+        $vistoriador->sectors()->attach($sector);
+
+        return $vistoriador;
+    }
+
+    public function test_processo_em_vistoria_so_pode_ser_distribuido_a_vistoriador(): void
+    {
+        // Regra da vistoria: com o processo em Vistoriar, a distribuição é
+        // específica — só usuário com preencher-ficha-vistoria recebe.
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $sector = Sector::factory()->create();
+        $request = $this->processoEmVistoria($sector);
+        $naoVistoriador = $this->analistaSemVistoria($sector);
+
+        try {
+            $this->service()->distribuir($request, $naoVistoriador);
+            $this->fail('Esperava DistribuicaoException para não-vistoriador em processo de vistoria.');
+        } catch (DistribuicaoException) {
+            // esperado
+        }
+
+        $this->assertNull($request->fresh()->assigned_user_id);
+    }
+
+    public function test_processo_em_vistoria_distribuido_a_vistoriador_funciona(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $sector = Sector::factory()->create();
+        $request = $this->processoEmVistoria($sector);
+        $vistoriador = $this->vistoriadorDoSetor($sector);
+
+        $this->service()->distribuir($request, $vistoriador);
+
+        $this->assertSame($vistoriador->id, $request->fresh()->assigned_user_id);
+    }
+
+    public function test_assumir_processo_em_vistoria_exige_permissao_de_vistoriador(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $sector = Sector::factory()->create();
+        $request = $this->processoEmVistoria($sector);
+        $naoVistoriador = $this->analistaSemVistoria($sector);
+
+        try {
+            $this->service()->assumir($request, $naoVistoriador);
+            $this->fail('Esperava DistribuicaoException ao assumir vistoria sem permissão.');
+        } catch (DistribuicaoException) {
+            // esperado
+        }
+
+        $this->assertNull($request->fresh()->assigned_user_id);
+    }
+
+    public function test_processo_fora_de_vistoria_nao_exige_permissao_de_vistoriador(): void
+    {
+        // Fora do eixo de vistoria, a regra atual permanece: qualquer analista
+        // vinculado ao setor recebe — a permissão de vistoria não é exigida.
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $sector = Sector::factory()->create();
+        $request = $this->processoNaCaixa($sector);
+        $request->forceFill(['analysis_status' => AnalysisStatus::EmAnalise])->save();
+        $analista = $this->analistaSemVistoria($sector);
+
+        $this->service()->distribuir($request, $analista);
+
+        $this->assertSame($analista->id, $request->fresh()->assigned_user_id);
+    }
+
+    public function test_analista_nao_vinculado_ao_setor_nao_e_distribuido(): void
+    {
+        // RN-004/HU-081: só analista vinculado ao setor recebe o processo.
+        $sector = Sector::factory()->create();
+        $request = $this->processoNaCaixa($sector);
+        $forasteiro = User::factory()->create();
+
+        try {
+            $this->service()->distribuir($request, $forasteiro);
+            $this->fail('Esperava DistribuicaoException para analista fora do setor.');
+        } catch (DistribuicaoException) {
+            // esperado
+        }
+
+        $this->assertNull($request->fresh()->assigned_user_id);
+        $this->assertDatabaseMissing('activity_log', [
+            'log_name' => 'analise',
+            'event' => 'distribuir',
+            'subject_id' => $request->id,
+        ]);
+    }
+
+    public function test_distribuir_em_lote_atribui_e_audita_por_processo(): void
+    {
+        // RN-007: lote distribui N processos a um analista, auditando cada item.
+        $sector = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($sector);
+        $gestor = User::factory()->create();
+
+        $requests = collect(range(1, 3))->map(fn () => $this->processoNaCaixa($sector));
+
+        $resumo = $this->service()->distribuirLote($requests, $analista, $gestor);
+
+        $this->assertSame(3, $resumo['ok']);
+        $this->assertSame([], $resumo['falhas']);
+
+        foreach ($requests as $request) {
+            $this->assertSame($analista->id, $request->fresh()->assigned_user_id);
+        }
+
+        $this->assertSame(
+            3,
+            Activity::query()->where('log_name', 'analise')->where('event', 'distribuir')->count(),
+        );
+    }
+
+    public function test_lote_isola_falha_de_analista_fora_do_setor(): void
+    {
+        // RN-007: uma falha (analista não vinculado a um dos setores) não aborta
+        // os demais — o resumo registra ok e falhas por item.
+        $setorA = Sector::factory()->create();
+        $setorB = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setorA);
+
+        $valido = $this->processoNaCaixa($setorA);
+        $invalido = $this->processoNaCaixa($setorB); // analista não pertence ao setor B
+
+        $resumo = $this->service()->distribuirLote([$valido, $invalido], $analista);
+
+        $this->assertSame(1, $resumo['ok']);
+        $this->assertCount(1, $resumo['falhas']);
+        $this->assertSame($invalido->id, $resumo['falhas'][0]['viability_request_id']);
+        $this->assertSame($analista->id, $valido->fresh()->assigned_user_id);
+        $this->assertNull($invalido->fresh()->assigned_user_id);
+    }
+
+    public function test_assumir_pelo_analista_do_setor_atribui_a_si_e_audita(): void
+    {
+        // HU-081: o analista vinculado pega o processo da caixa para si.
+        $sector = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($sector);
+        $request = $this->processoNaCaixa($sector);
+
+        $this->service()->assumir($request, $analista);
+
+        $fresh = $request->fresh();
+        $this->assertSame($analista->id, $fresh->assigned_user_id);
+        $this->assertSame(AnalysisStage::Analise, $fresh->analysis_stage);
+        $this->assertSame($sector->id, $fresh->sector_id);
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'analise',
+            'event' => 'assumir',
+            'subject_id' => $request->id,
+        ]);
+    }
+
+    public function test_assumir_por_analista_fora_do_setor_e_bloqueado(): void
+    {
+        // HU-081: quem não está no setor não pode assumir o processo.
+        $sector = Sector::factory()->create();
+        $request = $this->processoNaCaixa($sector);
+        $forasteiro = User::factory()->create();
+
+        try {
+            $this->service()->assumir($request, $forasteiro);
+            $this->fail('Esperava DistribuicaoException ao assumir fora do setor.');
+        } catch (DistribuicaoException) {
+            // esperado
+        }
+
+        $this->assertNull($request->fresh()->assigned_user_id);
+    }
+
+    /**
+     * Processo já atribuído a uma analista, em etapa de análise com prazo
+     * corrente — o estado de onde a redistribuição parte.
+     */
+    private function processoAtribuido(Sector $sector, User $analista, AnalysisStatus $status = AnalysisStatus::EmAnalise): ViabilityRequest
+    {
+        $request = $this->processoNaCaixa($sector);
+
+        $request->forceFill([
+            'assigned_user_id' => $analista->id,
+            'assigned_at' => now()->subDay(),
+            'analysis_stage' => AnalysisStage::Analise,
+            'analysis_stage_started_at' => now()->subDay(),
+            'analysis_due_at' => now()->addDays(9),
+            'analysis_status' => $status,
+        ])->save();
+
+        return $request;
+    }
+
+    public function test_redistribuir_troca_a_analista_mantendo_o_prazo_e_audita_a_troca(): void
+    {
+        // O prazo é do processo, não da pessoa: a troca NÃO recalcula o SLA.
+        Carbon::setTestNow('2026-03-10 09:00:00');
+
+        $sector = Sector::factory()->create();
+        $analistaA = $this->analistaDoSetor($sector);
+        $analistaB = $this->analistaDoSetor($sector);
+        $apoio = User::factory()->create();
+        $request = $this->processoAtribuido($sector, $analistaA);
+        $prazoOriginal = $request->analysis_due_at->toDateTimeString();
+
+        $this->service()->redistribuir($request, $analistaB, $apoio);
+
+        $fresh = $request->fresh();
+        $this->assertSame($analistaB->id, $fresh->assigned_user_id);
+        $this->assertSame($prazoOriginal, $fresh->analysis_due_at->toDateTimeString(), 'A redistribuição não recalcula o SLA.');
+        $this->assertSame($sector->id, $fresh->sector_id, 'O processo não sai da caixa do setor (RN-004).');
+
+        $activity = Activity::query()
+            ->where('log_name', 'analise')
+            ->where('event', 'redistribuir')
+            ->where('subject_id', $request->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($activity, 'A redistribuição deve ser auditada de forma síncrona (RN-006).');
+        $this->assertSame($analistaA->id, $activity->properties['analista_anterior_id']);
+        $this->assertSame($analistaB->id, $activity->properties['assigned_user_id']);
+        $this->assertSame($apoio->id, $activity->properties['ator_id']);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_redistribuir_e_bloqueada_apos_a_conclusao_da_analise(): void
+    {
+        $sector = Sector::factory()->create();
+        $analistaA = $this->analistaDoSetor($sector);
+        $analistaB = $this->analistaDoSetor($sector);
+        $request = $this->processoAtribuido($sector, $analistaA, AnalysisStatus::AnaliseConcluida);
+
+        try {
+            $this->service()->redistribuir($request, $analistaB, User::factory()->create());
+            $this->fail('Esperava DistribuicaoException para análise concluída.');
+        } catch (DistribuicaoException) {
+            // esperado
+        }
+
+        $this->assertSame($analistaA->id, $request->fresh()->assigned_user_id);
+        $this->assertDatabaseMissing('activity_log', [
+            'log_name' => 'analise',
+            'event' => 'redistribuir',
+            'subject_id' => $request->id,
+        ]);
+    }
+
+    public function test_redistribuir_exige_analista_vinculada_ao_setor(): void
+    {
+        $sector = Sector::factory()->create();
+        $analistaA = $this->analistaDoSetor($sector);
+        $forasteiro = User::factory()->create();
+        $request = $this->processoAtribuido($sector, $analistaA);
+
+        try {
+            $this->service()->redistribuir($request, $forasteiro, User::factory()->create());
+            $this->fail('Esperava DistribuicaoException para analista fora do setor.');
+        } catch (DistribuicaoException) {
+            // esperado
+        }
+
+        $this->assertSame($analistaA->id, $request->fresh()->assigned_user_id);
+    }
+}

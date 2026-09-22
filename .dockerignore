@@ -1,0 +1,12 @@
+.git
+app-src/node_modules
+app-src/vendor
+app-src/.env
+app-src/.env.*
+!app-src/.env.example
+app-src/storage/app/*
+app-src/storage/logs/*
+app-src/bootstrap/cache/*
+app-src/tests
+app-src/docker/postgres
+**/*.md

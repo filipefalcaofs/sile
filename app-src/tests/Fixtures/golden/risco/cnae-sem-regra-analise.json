@@ -1,0 +1,17 @@
+{
+    "nome": "CNAE sem classificação vigente segue para análise (FA-02)",
+    "descricao": "CNAE 9999999 não existe em nenhuma versão vigente do seed. A dimensão decisiva fica nao_classificado e o motor degrada com segurança para análise — nunca inventa um nível inexistente.",
+    "input": {
+        "cnae_code": "9999999",
+        "respostas_condicionantes": {},
+        "gatilhos_contexto": [],
+        "data": null
+    },
+    "esperado": {
+        "municipal_status": "nao_classificado",
+        "municipal_nivel": null,
+        "dimensao_decisiva": "municipal",
+        "fluxo": "analise",
+        "gatilhos_acionados": []
+    }
+}

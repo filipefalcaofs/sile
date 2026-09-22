@@ -1,0 +1,322 @@
+import { Form, Head } from '@inertiajs/react';
+import type { ReactNode } from 'react';
+import { useState } from 'react';
+import PageHeader from '@/components/app/page-header';
+import Input from '@/components/form/input';
+import Label from '@/components/form/label';
+import Switch from '@/components/form/switch';
+import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
+import TableAction from '@/components/ui/table-action';
+import GestaoLayout from '@/layouts/gestao-layout';
+
+interface PendingProposal {
+    proposed_value: string;
+    created_by: number;
+    author_name: string | null;
+}
+
+interface ParameterItem {
+    key: string;
+    type: string;
+    description: string;
+    sensitive: boolean;
+    requires_connection_test: boolean;
+    default_value: string | null;
+    value: string | null;
+    has_admin_value: boolean;
+    updated_at: string | null;
+    governance: 'operational' | 'decision';
+    pending_proposal: PendingProposal | null;
+    can_approve: boolean;
+}
+
+interface ParametersIndexProps {
+    groups: Record<string, ParameterItem[]>;
+}
+
+const GROUP_LABELS: Record<string, string> = {
+    seguranca: 'Segurança',
+    ui: 'Interface',
+    features: 'Funcionalidades',
+    integracoes: 'Integrações',
+};
+
+function groupLabel(group: string): string {
+    return GROUP_LABELS[group] ?? group.charAt(0).toUpperCase() + group.slice(1);
+}
+
+const textareaStyles =
+    'w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800';
+
+function FieldError({ message }: { message?: string }) {
+    if (!message) {
+        return null;
+    }
+
+    return <p className="mt-1.5 text-theme-xs text-error-500">{message}</p>;
+}
+
+function BooleanField({ item, error }: { item: ParameterItem; error?: string }) {
+    const initial = item.value ?? item.default_value ?? '';
+    const initialChecked = initial !== '0';
+    const [checked, setChecked] = useState(initialChecked);
+
+    return (
+        <div>
+            <Label>Valor</Label>
+            <input type="hidden" name="value" value={checked ? '1' : '0'} />
+            <Switch
+                label={checked ? 'Ativado' : 'Desativado'}
+                defaultChecked={initialChecked}
+                onChange={setChecked}
+            />
+            <FieldError message={error} />
+        </div>
+    );
+}
+
+function ValueField({ item, error }: { item: ParameterItem; error?: string }) {
+    const fieldId = `value-${item.key}`;
+    const initial = item.value ?? item.default_value ?? '';
+
+    if (item.sensitive) {
+        return (
+            <div>
+                <Label htmlFor={fieldId}>Novo valor</Label>
+                <div className="w-full sm:max-w-sm">
+                    <Input
+                        id={fieldId}
+                        type="password"
+                        name="value"
+                        defaultValue=""
+                        placeholder="••••••"
+                        autoComplete="new-password"
+                        error={!!error}
+                        hint={error}
+                    />
+                </div>
+                <p className="mt-1.5 text-theme-xs text-gray-400 dark:text-gray-500">
+                    Deixe em branco para manter o valor atual. O valor gravado nunca é exibido.
+                </p>
+            </div>
+        );
+    }
+
+    if (item.type === 'boolean') {
+        return <BooleanField item={item} error={error} />;
+    }
+
+    if (item.type === 'integer' || item.type === 'decimal') {
+        return (
+            <div>
+                <Label htmlFor={fieldId}>Valor</Label>
+                <div className="w-full sm:max-w-sm">
+                    <Input
+                        id={fieldId}
+                        type="number"
+                        name="value"
+                        defaultValue={initial}
+                        step={item.type === 'decimal' ? 'any' : 1}
+                        error={!!error}
+                        hint={error}
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    if (item.type === 'text' || item.type === 'json') {
+        return (
+            <div>
+                <Label htmlFor={fieldId}>Valor</Label>
+                <textarea
+                    id={fieldId}
+                    name="value"
+                    defaultValue={initial}
+                    rows={4}
+                    className={`${textareaStyles} sm:max-w-xl`}
+                />
+                <FieldError message={error} />
+            </div>
+        );
+    }
+
+    return (
+        <div>
+            <Label htmlFor={fieldId}>Valor</Label>
+            <div className="w-full sm:max-w-sm">
+                <Input
+                    id={fieldId}
+                    type="text"
+                    name="value"
+                    defaultValue={initial}
+                    error={!!error}
+                    hint={error}
+                />
+            </div>
+        </div>
+    );
+}
+
+function ParameterSection({ item }: { item: ParameterItem }) {
+    return (
+        <div>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                            {item.description}
+                        </h4>
+                        {item.has_admin_value && <Badge size="sm">Administrado</Badge>}
+                        {item.governance === 'decision' && <Badge size="sm">Decisório</Badge>}
+                    </div>
+                    <p className="mt-1 font-mono text-theme-xs text-gray-400 dark:text-gray-500">{item.key}</p>
+                    <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
+                        Padrão: {item.default_value ?? '—'}
+                    </p>
+                    {item.governance === 'decision' && (
+                        <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
+                            Alteração decisória: o valor vigente só muda após aprovação de um segundo usuário.
+                        </p>
+                    )}
+                </div>
+                <TableAction tone="brand" href={`/gestao/parametros/${item.key}/historico`}>
+                    Histórico
+                </TableAction>
+            </div>
+
+            {item.pending_proposal && (
+                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-theme-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-500/10 dark:text-amber-200">
+                    Proposta pendente de {item.pending_proposal.author_name ?? 'outro usuário'}:{' '}
+                    <span className="font-mono">{item.pending_proposal.proposed_value}</span>
+                </div>
+            )}
+
+            <Form action={`/gestao/parametros/${item.key}`} method="put" className="mt-5">
+                {({ errors, processing }) => (
+                    <div className="flex flex-col gap-4">
+                        <ValueField item={item} error={errors.value} />
+                        <div>
+                            <Button size="sm" type="submit" disabled={processing}>
+                                {processing
+                                    ? 'Salvando...'
+                                    : item.governance === 'decision'
+                                      ? 'Propor alteração'
+                                      : 'Salvar'}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Form>
+
+            {item.pending_proposal && item.can_approve && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                    <Form action={`/gestao/parametros/${item.key}/aprovar`} method="post">
+                        {({ processing }) => (
+                            <Button size="sm" type="submit" disabled={processing}>
+                                Aprovar
+                            </Button>
+                        )}
+                    </Form>
+                    <Form action={`/gestao/parametros/${item.key}/rejeitar`} method="post">
+                        {({ processing }) => (
+                            <Button size="sm" type="submit" disabled={processing}>
+                                Rejeitar
+                            </Button>
+                        )}
+                    </Form>
+                </div>
+            )}
+
+            {item.pending_proposal && !item.can_approve && (
+                <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
+                    Aguardando segundo aprovador.
+                </p>
+            )}
+
+            {item.requires_connection_test && (
+                <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
+                    Teste de conexão disponível quando a integração for configurada (Fase 13).
+                </p>
+            )}
+        </div>
+    );
+}
+
+export default function ParametersIndex({ groups }: ParametersIndexProps) {
+    const groupKeys = Object.keys(groups);
+    const [activeGroup, setActiveGroup] = useState(groupKeys[0] ?? '');
+    const activeItems = groups[activeGroup] ?? [];
+
+    return (
+        <>
+            <Head title="Parâmetros do sistema" />
+            <PageHeader title="Parâmetros do sistema" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
+
+            <div className="flex flex-col gap-4 md:gap-6">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Alterações operacionais valem imediatamente, sem novo deploy. Parâmetros decisórios exigem
+                    aprovação de um segundo usuário (quatro olhos) e ficam registrados no histórico auditado.
+                </p>
+
+                <div className="border-b border-gray-200 dark:border-gray-800">
+                    <nav role="tablist" aria-label="Grupos de parâmetros" className="-mb-px flex flex-wrap gap-1">
+                        {groupKeys.map((group) => {
+                            const selected = group === activeGroup;
+
+                            return (
+                                <button
+                                    key={group}
+                                    type="button"
+                                    role="tab"
+                                    id={`tab-${group}`}
+                                    aria-selected={selected}
+                                    aria-controls={`panel-${group}`}
+                                    onClick={() => setActiveGroup(group)}
+                                    className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                                        selected
+                                            ? 'border-brand-500 text-brand-600 dark:border-brand-400 dark:text-brand-400'
+                                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    {groupLabel(group)}
+                                    <span
+                                        className={`rounded-full px-2 py-0.5 text-theme-xs font-medium ${
+                                            selected
+                                                ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400'
+                                                : 'bg-gray-100 text-gray-500 dark:bg-white/[0.06] dark:text-gray-400'
+                                        }`}
+                                    >
+                                        {groups[group].length}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </nav>
+                </div>
+
+                <section
+                    key={activeGroup}
+                    role="tabpanel"
+                    id={`panel-${activeGroup}`}
+                    aria-labelledby={`tab-${activeGroup}`}
+                    className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
+                >
+                    {activeItems.map((item, index) => (
+                        <div
+                            key={item.key}
+                            className={`p-4 sm:p-6 ${
+                                index > 0 ? 'border-t border-gray-100 dark:border-gray-800' : ''
+                            }`}
+                        >
+                            <ParameterSection item={item} />
+                        </div>
+                    ))}
+                </section>
+            </div>
+        </>
+    );
+}
+
+ParametersIndex.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;

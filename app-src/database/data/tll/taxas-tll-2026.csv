@@ -1,0 +1,30 @@
+codigo,especificacao,hash_atividade,valor
+1.01,"Administração, Organização e Planejamento",T45011062,1111.78
+1.02,Comunicação e Propaganda,T45014183,1111.78
+1.03,Conservação e Higienização,T45007941,1111.78
+1.04,Construção Civil,T45017304,1111.78
+1.05,Estabelecimentos de diversões públicas e Lazer,T44970489,1647.57
+1.06,Estabelecimentos de Ensino,T44973610,1647.57
+1.06.1,"Creches e Escolas de Ensino Infantil, de natureza confessional, filantròpica ou comunitária",T46434238,185.82
+1.07,"Engenharia, Arquitetura e Afins",T45004820,554.33
+1.08,"Estabelecimento financeiro, de Seguros e capitalização, inclusive Autorizados pelo Banco Central",T45036030,1647.57
+1.09,"Estabelecimentos fotográficos, de Produção Cinematográfica e Afins",T44979852,833.06
+1.10,Estabelecimentos de Higiene Pessoal e Condicionamento Físico,T45023546,554.33
+1.11,Estabelecimentos Hoteleiros,T44995457,1111.78
+1.12,"Estabelecimentos de Instalação, Reparos e Manutenção de Máquinas, Motores e Aparelhos e Equipamentos",T44976731,1111.78
+1.13,Estabelecimentos de Reparos e Conservação de Bens Móveis,T46421754,1111.78
+1.14,Estabelecimentos de Intermediação e Representação,T44964247,833.06
+1.15,Estabelecimento de Locação e Guarda de Bens,T45001699,2201.90
+1.16,Estabelecimentos de Saúde,T45029788,1647.57
+1.17,Estabelecimentos de Transportes e afins,T44982973,1647.57
+1.18,Estabelecimentos não Classificados nos Itens 1.01 a 1.18,T44998578,833.06
+2.01,Comércio Atacadista,T45032909,1111.78
+2.02,Comércio Varejista,T45020425,554.33
+2.03,Exportação e Importação de Produtos,T46427996,833.06
+2.04,Estabelecimentos não classificados nos Itens 2.01 a 2.03,T45039151,833.06
+3.00,Estabelecimentos Industriais,T44989215,2759.35
+4.00,Estabelecimentos e Entidades Regidos pelo Direito Público,T44967368,833.06
+5.00,"Fundações, Associações e Sociedades de Fins Não Lucrativos, regidas pelo Direito Público",T46431117,833.06
+6.00,ISENTA,T45026667,0.00
+6.00,Estabelecimentos não Classificados nos Itens 3.00 a 5.00,T44992336,833.06
+7.01,Profissional Liberal - Nivel Superior,T44986094,167.23

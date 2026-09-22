@@ -1,0 +1,318 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    /*
+     * Diferente do TailAdmin, não resetamos --font-* com initial:
+     * páginas existentes usam font-mono (chaves de parâmetros) e o
+     * blade raiz usa font-sans — ambos seguem funcionando, com
+     * font-sans apontando para Outfit.
+     */
+    --font-outfit: Outfit, sans-serif;
+    --font-sans: Outfit, ui-sans-serif, system-ui, sans-serif;
+
+    --breakpoint-*: initial;
+    --breakpoint-2xsm: 375px;
+    --breakpoint-xsm: 425px;
+    --breakpoint-3xl: 2000px;
+    --breakpoint-sm: 640px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 1024px;
+    --breakpoint-xl: 1280px;
+    --breakpoint-2xl: 1536px;
+
+    /* Escala de títulos enxugada: 2xl (72px) e xl (60px) do TailAdmin
+       foram removidos por não terem uso em sistema administrativo. */
+    --text-title-lg: 48px;
+    --text-title-lg--line-height: 60px;
+    --text-title-md: 36px;
+    --text-title-md--line-height: 44px;
+    --text-title-sm: 30px;
+    --text-title-sm--line-height: 38px;
+    --text-theme-xl: 20px;
+    --text-theme-xl--line-height: 30px;
+    --text-theme-sm: 14px;
+    --text-theme-sm--line-height: 20px;
+    --text-theme-xs: 12px;
+    --text-theme-xs--line-height: 18px;
+
+    --color-current: currentColor;
+    --color-transparent: transparent;
+    --color-white: #ffffff;
+    --color-black: #101828;
+
+    /*
+     * Escala brand alinhada ao azul institucional gov.br
+     * (blue-warm-vivid do Design System gov.br). brand-500 = #1351b4,
+     * o azul oficial usado em ações primárias e no Login Único.
+     */
+    --color-brand-25: #f5f9ff;
+    --color-brand-50: #edf5ff;
+    --color-brand-100: #d4e5ff;
+    --color-brand-200: #adcdff;
+    --color-brand-300: #81aefc;
+    --color-brand-400: #5992ed;
+    --color-brand-500: #1351b4;
+    --color-brand-600: #0c326f;
+    --color-brand-700: #092456;
+    --color-brand-800: #071d41;
+    --color-brand-900: #051433;
+    --color-brand-950: #030d22;
+
+    --color-blue-light-25: #f5fbff;
+    --color-blue-light-50: #f0f9ff;
+    --color-blue-light-100: #e0f2fe;
+    --color-blue-light-200: #b9e6fe;
+    --color-blue-light-300: #7cd4fd;
+    --color-blue-light-400: #36bffa;
+    --color-blue-light-500: #0ba5ec;
+    --color-blue-light-600: #0086c9;
+    --color-blue-light-700: #026aa2;
+    --color-blue-light-800: #065986;
+    --color-blue-light-900: #0b4a6f;
+    --color-blue-light-950: #062c41;
+
+    --color-gray-25: #fcfcfd;
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f2f4f7;
+    --color-gray-200: #e4e7ec;
+    --color-gray-300: #d0d5dd;
+    --color-gray-400: #98a2b3;
+    --color-gray-500: #667085;
+    --color-gray-600: #475467;
+    --color-gray-700: #344054;
+    --color-gray-800: #1d2939;
+    --color-gray-900: #101828;
+    --color-gray-950: #0c111d;
+    --color-gray-dark: #1a2231;
+
+    --color-orange-25: #fffaf5;
+    --color-orange-50: #fff6ed;
+    --color-orange-100: #ffead5;
+    --color-orange-200: #fddcab;
+    --color-orange-300: #feb273;
+    --color-orange-400: #fd853a;
+    --color-orange-500: #fb6514;
+    --color-orange-600: #ec4a0a;
+    --color-orange-700: #c4320a;
+    --color-orange-800: #9c2a10;
+    --color-orange-900: #7e2410;
+    --color-orange-950: #511c10;
+
+    --color-success-25: #f6fef9;
+    --color-success-50: #ecfdf3;
+    --color-success-100: #d1fadf;
+    --color-success-200: #a6f4c5;
+    --color-success-300: #6ce9a6;
+    --color-success-400: #32d583;
+    --color-success-500: #12b76a;
+    --color-success-600: #039855;
+    --color-success-700: #027a48;
+    --color-success-800: #05603a;
+    --color-success-900: #054f31;
+    --color-success-950: #053321;
+
+    --color-error-25: #fffbfa;
+    --color-error-50: #fef3f2;
+    --color-error-100: #fee4e2;
+    --color-error-200: #fecdca;
+    --color-error-300: #fda29b;
+    --color-error-400: #f97066;
+    --color-error-500: #f04438;
+    --color-error-600: #d92d20;
+    --color-error-700: #b42318;
+    --color-error-800: #912018;
+    --color-error-900: #7a271a;
+    --color-error-950: #55160c;
+
+    --color-warning-25: #fffcf5;
+    --color-warning-50: #fffaeb;
+    --color-warning-100: #fef0c7;
+    --color-warning-200: #fedf89;
+    --color-warning-300: #fec84b;
+    --color-warning-400: #fdb022;
+    --color-warning-500: #f79009;
+    --color-warning-600: #dc6803;
+    --color-warning-700: #b54708;
+    --color-warning-800: #93370d;
+    --color-warning-900: #7a2e0e;
+    --color-warning-950: #4e1d09;
+
+    --shadow-theme-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.1),
+        0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+    --shadow-theme-lg: 0px 12px 16px -4px rgba(16, 24, 40, 0.08),
+        0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+    --shadow-theme-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1),
+        0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+    --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+    --shadow-theme-xl: 0px 20px 24px -4px rgba(16, 24, 40, 0.08),
+        0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+    --shadow-focus-ring: 0px 0px 0px 4px rgba(19, 81, 180, 0.12);
+
+    /* Tokens herdados do TailAdmin sem uso no projeto foram removidos:
+       theme-pink/purple, shadow-datepicker/slider/tooltip, drop-shadow-4xl
+       e z-index-999999. Reintroduzir apenas quando houver consumidor. */
+    --z-index-1: 1;
+    --z-index-9: 9;
+    --z-index-99: 99;
+    --z-index-999: 999;
+    --z-index-9999: 9999;
+    --z-index-99999: 99999;
+}
+
+/*
+  A cor de borda padrão mudou para currentColor no Tailwind CSS v4;
+  estilos de compatibilidade do TailAdmin para manter o visual v3.
+
+  ATENÇÃO: este seletor global faz com que `border` sem classe de cor
+  renderize gray-200 (e não currentColor, o padrão do v4). É intencional
+  — todo o design system assume esse comportamento. Quem precisar do
+  padrão v4 em um elemento específico deve declarar a cor explicitamente
+  (ex.: `border-current`).
+*/
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+    button:not(:disabled),
+    [role='button']:not(:disabled) {
+        cursor: pointer;
+    }
+    body {
+        @apply relative font-normal font-outfit z-1 bg-gray-50 dark:bg-gray-900;
+        font-synthesis: none;
+    }
+}
+
+@utility menu-item {
+    @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+}
+
+@utility menu-item-active {
+    @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+}
+
+@utility menu-item-inactive {
+    @apply text-gray-700 hover:bg-gray-100 group-hover:text-gray-700 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
+}
+
+@utility menu-item-icon {
+    @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400;
+}
+
+@utility menu-item-icon-active {
+    @apply text-brand-500 dark:text-brand-400;
+}
+
+@utility menu-item-icon-size {
+    & svg {
+        @apply !size-6;
+    }
+}
+
+@utility menu-item-icon-inactive {
+    @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+}
+
+@utility no-scrollbar {
+    /* Chrome, Safari e Opera */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none; /* IE e Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+@utility custom-scrollbar {
+    &::-webkit-scrollbar {
+        @apply size-1.5;
+    }
+
+    &::-webkit-scrollbar-track {
+        @apply rounded-full;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        @apply bg-gray-200 rounded-full dark:bg-gray-700;
+    }
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #344054;
+}
+
+/* Acessibilidade — alto contraste (eMAG), acionado pela AccessibilityBar
+   via classe na raiz do documento.
+
+   Implementado como tema real: remapeia os tokens de cor do @theme
+   (que as utilities do Tailwind v4 leem via var()) para fundo escuro
+   com texto claro e destaque amarelo, no padrão do modo de contraste
+   do gov.br. Evita o filter: invert() na raiz, que criava um novo
+   containing block (quebrando todo position: fixed — modais, dropdowns,
+   a própria barra) e distorcia sombras, mídias e cores semânticas. */
+html.acc-contrast {
+    /* Neutros: escala de cinza invertida, sem preto/branco puros. */
+    --color-white: #0f0f0f;
+    --color-black: #f5f5f5;
+    --color-gray-25: #0a0a0a;
+    --color-gray-50: #121212;
+    --color-gray-100: #1c1c1c;
+    --color-gray-200: #2e2e2e;
+    --color-gray-300: #444444;
+    --color-gray-400: #9a9a9a;
+    --color-gray-500: #b4b4b4;
+    --color-gray-600: #cccccc;
+    --color-gray-700: #e0e0e0;
+    --color-gray-800: #ececec;
+    --color-gray-900: #f5f5f5;
+    --color-gray-950: #fafafa;
+    --color-gray-dark: #ececec;
+
+    /* Brand vira amarelo de alto contraste (links/ações no padrão
+       gov.br contraste). text-white resolve para escuro, então botões
+       primários ficam amarelo + texto escuro — contraste ~13:1. */
+    --color-brand-25: #1a1600;
+    --color-brand-50: #261f00;
+    --color-brand-100: #403500;
+    --color-brand-200: #665500;
+    --color-brand-300: #997f00;
+    --color-brand-400: #ccaa00;
+    --color-brand-500: #ffcc00;
+    --color-brand-600: #ffd633;
+    --color-brand-700: #ffe066;
+    --color-brand-800: #ffeb99;
+    --color-brand-900: #fff5cc;
+    --color-brand-950: #fffae5;
+
+    /* Semânticos clareados para fundo escuro. */
+    --color-success-50: #06281a;
+    --color-success-500: #2fe28a;
+    --color-success-600: #5ce9a4;
+    --color-error-50: #2e0b07;
+    --color-error-500: #ff6b5e;
+    --color-error-600: #ff8a80;
+    --color-warning-50: #2b1d02;
+    --color-warning-500: #ffb020;
+    --color-warning-600: #ffc14d;
+    --color-blue-light-50: #06222e;
+    --color-blue-light-500: #4cc5f5;
+    --color-blue-light-600: #79d4f8;
+
+    /* Sombras não fazem sentido sobre fundo escuro. */
+    --shadow-theme-xs: none;
+    --shadow-theme-sm: none;
+    --shadow-theme-md: none;
+    --shadow-theme-lg: none;
+    --shadow-theme-xl: none;
+    --shadow-focus-ring: 0px 0px 0px 4px rgba(255, 204, 0, 0.3);
+
+    background: var(--color-gray-50);
+    color-scheme: dark;
+}

@@ -1,0 +1,162 @@
+<?php
+
+namespace App\Http\Resources;
+
+use App\Enums\RuleDomain;
+use App\Models\AnalysisRecord;
+use App\Models\RuleVersion;
+use App\Models\TllValor;
+use App\Services\Analise\PerguntaLocalFicha;
+use App\Services\Analise\QuadrosFichaChecklist;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/**
+ * Payload de leitura da ficha de análise (HU-135) para a retaguarda: a revisão
+ * vigente, seu status (+rótulo) e a flag `editavel` (false na finalizada — RN-003),
+ * o per_cnae com a escolha do analista (status_escolhido), as condicionantes,
+ * as vagas, o parecer e `finalized_at`. A sugestão do motor (status_sugerido)
+ * NÃO sai no payload — o sistema não sugere decisão ao analista (relatório
+ * SEDUR 21/09/2026, item 02); ela permanece gravada só para a divergência
+ * auditada (HU-140 RN-002).
+ * Expõe também a disponibilidade do motor (FA-01 — modo manual). SOMENTE LEITURA;
+ * a escrita acontece pelo autosave/finalizar (AnalysisRecordService).
+ *
+ * Consumido como prop do Inertia: o controller chama ->resolve() para entregar o
+ * array puro (sem o wrapper "data" do JsonResource). A página é construída em 10-17.
+ *
+ * @mixin AnalysisRecord
+ */
+class AnalysisRecordResource extends JsonResource
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'viability_request_id' => $this->viability_request_id,
+            'revision' => $this->revision,
+            'status' => $this->status->value,
+            'status_label' => $this->status->label(),
+            'editavel' => ! $this->isFinalizada(),
+            'engine_available' => $this->engine_available,
+            'per_cnae' => $this->perCnaeComJustificativaDoMotor(),
+            'conditions' => array_values((array) ($this->conditions ?? [])),
+            'parking' => $this->parking ?? [],
+            'parecer' => $this->parecer,
+            'is_virtual_office_hq' => $this->is_virtual_office_hq,
+            'analysis_reasons' => $this->motivosSistema(),
+            'address_confirmed' => $this->address_confirmed,
+            'analyst' => $this->analyst?->name,
+            'finalized_at' => $this->finalized_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Per-CNAE da ficha: pergunta do CNAE, valor TLL do exercício, checklist
+     * dos quadros e risco lidos do snapshot. A justificativa NUNCA é
+     * completada pelo sistema (regra SEDUR 22/09/2026, item 6) — vazia ou do
+     * analista, passa como está.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function perCnaeComJustificativaDoMotor(): array
+    {
+        $itens = array_values((array) ($this->per_cnae ?? []));
+        $local = app(PerguntaLocalFicha::class);
+        $quadros = app(QuadrosFichaChecklist::class);
+        $this->resource->loadMissing('viabilityRequest');
+        $solicitacao = $this->viabilityRequest;
+        $porCnae = is_array($this->engine_snapshot['por_cnae'] ?? null)
+            ? $this->engine_snapshot['por_cnae']
+            : [];
+
+        return array_map(function (array $item) use ($porCnae, $local, $solicitacao, $quadros): array {
+            // A sugestão do motor não sai do servidor (relatório SEDUR 21/09,
+            // item 02) — fica gravada só para a divergência auditada.
+            unset($item['status_sugerido']);
+
+            if ($solicitacao !== null) {
+                $item['pergunta_local'] = $local->para($solicitacao, (string) ($item['cnae'] ?? ''));
+            }
+
+            // Valor TLL do exercício corrente, resolvido da tabela de valores
+            // (HU-071) pelo código TLL da planilha. Null = pendente (nunca
+            // inventado) — a ficha mostra a pendência.
+            $item['valor_tll'] = $this->valorTll(
+                $item['codigo_tll'] ?? null,
+                is_string($item['especificacao_tll'] ?? null) ? $item['especificacao_tll'] : null,
+            );
+
+            $consulta = $this->consultaSnapshotDoCnae($porCnae, (string) ($item['cnae'] ?? ''));
+
+            if ($consulta === null) {
+                return $item;
+            }
+
+            // Checklist ilustrativo dos quadros (Q10 × Q11-A) lido do snapshot.
+            $item['quadros'] = $quadros->para($consulta);
+
+            // Risco por atividade lido do snapshot (usabilidade SEDUR item 24) —
+            // alimenta a justificativa consolidada no início da análise.
+            $risco = is_array($consulta['risco'] ?? null) ? $consulta['risco'] : [];
+            $municipal = is_array($risco['municipal'] ?? null) ? $risco['municipal'] : [];
+            $sanitario = is_array($risco['sanitario'] ?? null) ? $risco['sanitario'] : [];
+            $item['risco_municipal'] = ($municipal['status'] ?? null) === 'classificado'
+                ? ($municipal['nivel_label'] ?? null)
+                : null;
+            $item['risco_sanitario'] = ($sanitario['status'] ?? null) === 'classificado'
+                ? ($sanitario['nivel_final'] ?? null)
+                : null;
+
+            // Justificativa NUNCA completada pelo sistema (regra SEDUR
+            // 22/09/2026, item 6): vazia ou do analista, passa como está.
+            return $item;
+        }, $itens);
+    }
+
+    /**
+     * Valor da TLL do exercício corrente para o código TLL da planilha (HU-071).
+     * Null quando não parametrizado — degradação honesta, nunca valor inventado.
+     */
+    private function valorTll(mixed $codigoTll, ?string $especificacao = null): ?string
+    {
+        if (! is_string($codigoTll) || $codigoTll === '') {
+            return null;
+        }
+
+        $exercicio = (int) now()->year;
+        $versaoVigente = RuleVersion::query()
+            ->vigente(RuleDomain::TllValores)
+            ->where('version', (string) $exercicio)
+            ->exists();
+
+        if (! $versaoVigente) {
+            return null;
+        }
+
+        $tll = TllValor::resolver($codigoTll, $exercicio, $especificacao);
+
+        return $tll === null ? null : (string) $tll->valor;
+    }
+
+    /**
+     * @param  list<mixed>  $porCnae
+     * @return array<string, mixed>|null
+     */
+    private function consultaSnapshotDoCnae(array $porCnae, string $cnae): ?array
+    {
+        foreach ($porCnae as $item) {
+            if (! is_array($item) || (string) ($item['cnae'] ?? '') !== $cnae) {
+                continue;
+            }
+
+            return is_array($item['consulta'] ?? null) ? $item['consulta'] : null;
+        }
+
+        return null;
+    }
+}
