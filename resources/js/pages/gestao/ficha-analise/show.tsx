@@ -1832,7 +1832,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Enquadramento por atividade (CNAE)"
-                                description="Pré-preenchido pelo sistema (LOUOS e risco). Justificativa e parecer são do analista — nascem em branco."
+                                description="Pré-preenchido pelo sistema (LOUOS e risco): a decisão nasce marcada conforme os Quadros 10/11-A — confirme ou altere. Justificativa e parecer são do analista."
                             />
                             <CardContent>
                                 {perCnae.length === 0 ? (
