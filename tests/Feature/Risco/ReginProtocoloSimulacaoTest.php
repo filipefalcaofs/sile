@@ -220,8 +220,12 @@ class ReginProtocoloSimulacaoTest extends TestCase
         }
     }
 
-    public function test_artesanal_das_regras_25_e_52_fica_pendente_no_quadro_10(): void
+    public function test_artesanal_das_regras_25_e_52_resolve_permitido_no_quadro_10(): void
     {
+        // Regra 25/52 da planilha: P3 = SIM (modo artesanal) → 07.09.02
+        // (confecção artesanal, baixo risco) — permitido na ZCMe-1/01 pelo
+        // Quadro 10. O veredito pendente anterior era o rastro da inversão
+        // SIM/NÃO da P3 (relatório SEDUR 21/09).
         $this->seedPlanilhaTratamento();
         $this->seed([LouosQuadro10Seeder::class, LouosQuadro11Seeder::class]);
 
@@ -243,7 +247,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
 
             $resolvido = app(SolicitacaoViabilityResolver::class)->resolve($processo);
 
-            $this->assertSame(ResultadoViabilidade::Pendente->value, $resolvido->consolidado, $codigo);
+            $this->assertSame(ResultadoViabilidade::Permitido->value, $resolvido->consolidado, $codigo);
         }
     }
 
@@ -556,9 +560,19 @@ class ReginProtocoloSimulacaoTest extends TestCase
 
         $codigos = array_column(app(ReginProtocoloCatalog::class)->todos(), 'codigo');
         $linhas = [];
+        // Com a P3 corrigida (NÃO = industrial), o 1063-5/00 da dupla enquadra
+        // em ID3-02 — sem regra para esse subgrupo na ZCMe-1/01 do Quadro 10,
+        // o veredito honesto é pendente (análise). Se a SEDUR confirmar que
+        // quadro sem regra = indeferimento expresso, este caso sai da exceção.
+        // O mesmo vale para a dupla-r6-r23 (1020-1/01 → ID3-02): antes da
+        // correção da P3 ela era DEFERIDA indevidamente (relatório SEDUR
+        // 21/09, item 16 — gravíssimo).
         $pendentesQuadro10PorChaveDeSubgrupo = [
-            'regra-25-artesanal',
-            'regra-52-artesanal',
+            'dupla-r24-r48',
+            'dupla-r6-r23',
+            'regra-25-industrial',
+            'regra-52-industrial',
+            'dupla-r25-r52',
         ];
 
         foreach ($codigos as $codigo) {

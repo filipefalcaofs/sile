@@ -200,18 +200,23 @@ class TratamentoRamoResolver
 
         $artesanal = array_key_exists(3, $respostas) ? (bool) $respostas[3] : null;
 
+        // P3 = "modo artesanal?" (planilha de tratamento, regras 3/7/19/25/52/57/59):
+        // SIM = artesanal → linha de serviço (07.09.xx, fora da família ID);
+        // NÃO = produção em série/industrial → linha ID/CNLU/ALTO (09.xx).
+        // Os predicados já estiveram invertidos (relatório SEDUR 21/09 — deferimento
+        // indevido do 990006/2026): não trocar sem reler a planilha.
         if ($artesanal === true) {
             return $outros->first(
-                fn (TratamentoEnquadramento $linha): bool => $this->eFamiliaId((string) $linha->subcategoria)
-                    || $this->eCnlu((string) $linha->risco)
-                    || str_contains(mb_strtoupper((string) $linha->risco), 'ALTO'),
+                fn (TratamentoEnquadramento $linha): bool => ! $this->eFamiliaId((string) $linha->subcategoria)
+                    && ! $this->eCnlu((string) $linha->risco),
             ) ?? $outros->first();
         }
 
         if ($artesanal === false) {
             return $outros->first(
-                fn (TratamentoEnquadramento $linha): bool => ! $this->eFamiliaId((string) $linha->subcategoria)
-                    && ! $this->eCnlu((string) $linha->risco),
+                fn (TratamentoEnquadramento $linha): bool => $this->eFamiliaId((string) $linha->subcategoria)
+                    || $this->eCnlu((string) $linha->risco)
+                    || str_contains(mb_strtoupper((string) $linha->risco), 'ALTO'),
             ) ?? $outros->first();
         }
 

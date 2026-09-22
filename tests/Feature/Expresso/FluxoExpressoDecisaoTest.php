@@ -286,10 +286,11 @@ class FluxoExpressoDecisaoTest extends TestCase
     public function test_alto_risco_por_pergunta_condicional_vai_para_analise_mesmo_com_veto_locacional(): void
     {
         // RN-041-B: o Decreto classifica o CNAE como baixo_a, mas a pergunta
-        // condicional P3 (artesanal) eleva o ramo a ID3-11 — ALTO na planilha.
-        // Alto risco nunca é decidido automaticamente: mesmo com o Quadro 10
-        // proibindo o grupo na zona, o processo vai à análise com o veto
-        // locacional fundamentado, sem decisão e sem evento.
+        // condicional P3 (modo artesanal = NÃO) eleva o ramo a ID3-11 — ALTO
+        // na planilha (industrial). Alto risco nunca é decidido
+        // automaticamente: mesmo com o Quadro 10 proibindo o grupo na zona, o
+        // processo vai à análise com o veto locacional fundamentado, sem
+        // decisão e sem evento.
         Event::fake([ResultadoEmitido::class]);
         $this->seed([RiskTriggerSeeder::class, PropertyTypeSeeder::class]);
         $this->fakeBairroComZona('ZR-1');
@@ -298,14 +299,14 @@ class FluxoExpressoDecisaoTest extends TestCase
         $this->seedQuadro10('ZR-1', 'ID3', Quadro10Permissao::Proibido);
 
         $request = $this->protocoladaComCnaes(['1340501']);
-        $request->respostasTratamento = [2 => true, 3 => true];
+        $request->respostasTratamento = [2 => true, 3 => false];
         $request->forceFill([
             'tipo_imovel' => 'Edificação Comercial',
             'tipo_imovel_normalized' => 'edificacao_comercial',
         ])->save();
 
         $fresco = $request->fresh();
-        $fresco->respostasTratamento = [2 => true, 3 => true];
+        $fresco->respostasTratamento = [2 => true, 3 => false];
         $this->assertSame(
             ResultadoViabilidade::NaoPermitido->value,
             app(SolicitacaoViabilityResolver::class)->resolve($fresco)->consolidado,

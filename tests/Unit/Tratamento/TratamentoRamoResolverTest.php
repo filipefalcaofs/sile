@@ -86,21 +86,28 @@ class TratamentoRamoResolverTest extends TestCase
         $this->assertStringContainsString('CNLU', $ramo->motivo ?? '');
     }
 
-    public function test_1340_no_local_sem_artesanal_nao_cai_no_id(): void
+    public function test_1340_no_local_sem_artesanal_enquadra_industrial(): void
     {
+        // Planilha de tratamento (regra 3): P3 = "modo artesanal?" — NÃO significa
+        // produção em série/industrial: enquadra na família ID (09.11.20), nunca
+        // no 07.09.xx artesanal. (Relatório SEDUR 21/09 — gravíssimo: os ramos
+        // SIM/NÃO estavam invertidos no resolver.)
         $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
             cnae: '1340-5/01',
             respostas: [2 => true, 3 => false],
             areaUtilizada: 53.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
         ));
 
         $this->assertSame('resolvido', $ramo->status);
-        $this->assertSame('07.09.17', $ramo->codigoLouos);
-        $this->assertSame('nR1-09', $ramo->subgrupo);
+        $this->assertSame('09.11.20', $ramo->codigoLouos);
+        $this->assertSame('ID3-11', $ramo->subgrupo);
     }
 
-    public function test_1340_no_local_artesanal_enquadra_id(): void
+    public function test_1340_no_local_artesanal_enquadra_servico_artesanal(): void
     {
+        // P3 = SIM (artesanal): enquadra no 07.09.xx de serviço artesanal
+        // (baixo risco), nunca na família ID industrial.
         $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
             cnae: '1340-5/01',
             respostas: [2 => true, 3 => true],
@@ -109,8 +116,8 @@ class TratamentoRamoResolverTest extends TestCase
         ));
 
         $this->assertSame('resolvido', $ramo->status);
-        $this->assertSame('09.11.20', $ramo->codigoLouos);
-        $this->assertSame('ID3-11', $ramo->subgrupo);
+        $this->assertSame('07.09.17', $ramo->codigoLouos);
+        $this->assertSame('nR1-09', $ramo->subgrupo);
     }
 
     public function test_pergunta_faltando_nao_resolve(): void
