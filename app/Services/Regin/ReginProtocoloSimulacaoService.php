@@ -515,11 +515,7 @@ class ReginProtocoloSimulacaoService
             }
 
             $nivel = $municipal['nivel'] ?? null;
-            $severidade = 4;
-
-            if (is_string($nivel)) {
-                $severidade = RiscoMunicipal::tryFrom($nivel)?->severity() ?? 4;
-            }
+            $severidade = $this->severidadeDe(is_string($nivel) ? $nivel : null);
 
             if ($severidade > $maior) {
                 $maior = $severidade;
@@ -544,6 +540,33 @@ class ReginProtocoloSimulacaoService
             'fluxo' => $fluxo,
             'motivo' => $motivo,
         ];
+    }
+
+    /**
+     * Severidade numérica do nível na MESMA escala dos dois mundos: o enum do
+     * decreto (baixo_a/baixo_b/alto) e o rótulo da planilha de tratamento
+     * (baixo/medio/alto). Sem classificação ou nível desconhecido NUNCA governa
+     * o conjunto (0) — o fallback anterior (?? 4) fazia qualquer nível da
+     * planilha vencer o alto risco (relatório SEDUR 21/09, itens 04 e 06-14).
+     */
+    private function severidadeDe(?string $nivel): int
+    {
+        if ($nivel === null || $nivel === '') {
+            return 0;
+        }
+
+        $doEnum = RiscoMunicipal::tryFrom($nivel);
+
+        if ($doEnum !== null) {
+            return $doEnum->severity();
+        }
+
+        return match (mb_strtolower($nivel)) {
+            'baixo' => 1,
+            'medio' => 2,
+            'alto' => 3,
+            default => 0,
+        };
     }
 
     /**

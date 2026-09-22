@@ -251,6 +251,21 @@ class ReginProtocoloSimulacaoTest extends TestCase
         }
     }
 
+    public function test_conjunto_e_governado_pelo_cnae_de_maior_risco_real(): void
+    {
+        // Relatório SEDUR 21/09 (itens 04, 06-11 e 14): o CNAE mais restritivo
+        // era escolhido por fallback numérico — o nível da planilha ('medio'/
+        // 'baixo') caía fora do enum do decreto e vencia o 'alto'. No 990001
+        // (dupla-r1-r20) o 1011-2/01 é ALTO e o 4721-1/03 é MÉDIO: quem governa
+        // é o 1011-2/01.
+        $this->seedPlanilhaTratamento();
+        $this->seed([LouosQuadro10Seeder::class, LouosQuadro11Seeder::class]);
+
+        $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('dupla-r1-r20');
+
+        $this->assertSame('1011-2/01', $relatorio['consolidado']['cnae'] ?? null);
+    }
+
     public function test_galpao_do_43747_dirige_regra_e_classifica_pelo_motor_real(): void
     {
         $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('43747');
