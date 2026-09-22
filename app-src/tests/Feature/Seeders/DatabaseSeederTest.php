@@ -87,14 +87,13 @@ class DatabaseSeederTest extends TestCase
         // + 1 da pergunta vinculada de intenção de sede no passo de
         // atividades do portal (SDD escritorio-virtual-telas-portal, Tarefa 3:
         // analise.escritorio_virtual.pergunta_vinculada)
-        // + 1 da flag de homologação do motor (removida da entrega institucional).
         // + 1 dos atributos de nome da zona na feição (Fase 3 parametrização,
         // item 3.4: geo.zona.atributos_nome).
         // + 3 da Fase 5 (janela de duplicidade + pesos e cortes da auditoria
         // preditiva).
         // + 1 do setor de triagem da análise (analise.setor_triagem_id — elo
         // motor → caixa do setor, 2026-09-20).
-        $this->assertSame(125, Parameter::query()->count());
+        $this->assertSame(124, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -300,12 +299,7 @@ class DatabaseSeederTest extends TestCase
         // tornando a explicabilidade (HU-099) navegável no dev mesmo em SQLite.
         $this->assertSame(2, ViabilityDecision::query()->count());
 
-        // Driver-aware: a camada de zona fictícia (geometria) não é carregada em
-        // SQLite — a zona segue como pendente_fonte (degradação honesta).
-        $this->assertSame(
-            0,
-            GeoLayer::query()->where('version', 'zona-ficticia-dev')->count(),
-        );
+        $this->assertSame(0, GeoLayer::query()->where('version', 'zona-ficticia-dev')->count());
     }
 
     public function test_seed_prepara_setores_textos_padrao_e_usuarios_da_analise(): void
@@ -382,7 +376,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(5, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(125, Parameter::query()->count());
+        $this->assertSame(124, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

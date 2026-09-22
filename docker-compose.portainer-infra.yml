@@ -1,7 +1,12 @@
 # Infraestrutura do Viabiliza no Portainer — PostgreSQL + PostGIS + Redis.
 #
 # Pré-requisito: buildar a imagem PostGIS no servidor (uma vez):
-#   docker build -t sile/pgsql:16-postgis-pgvector -f app-src/docker/postgres/Dockerfile app-src/docker/postgres
+#   docker build -t sile/pgsql:16-postgis-pgvector -f docker/postgres/Dockerfile docker/postgres
+#
+# Portainer → Stacks → Add stack → Repository
+#   Repository URL:  https://github.com/filipefalcaofs/sile.git
+#   Compose path:    docker-compose.portainer-infra.yml
+#   Branch:          main
 #
 # Cria a rede sile_net compartilhada com docker-compose.portainer-full.yml.
 

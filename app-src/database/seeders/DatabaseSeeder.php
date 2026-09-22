@@ -60,8 +60,6 @@ class DatabaseSeeder extends Seeder
             // zona que viviam hardcoded em config/sile.php — zona nova passa a
             // entrar por cadastro (manter-territorio), sem deploy.
             GeoServerLayerSeeder::class,
-            // Análise técnica SEDUR (EP10). Catálogos (setor + textos-padrão):
-            // o setor inicial evita distribuição bloqueada.
             SectorSeeder::class,
             StandardTextSeeder::class,
         ]);

@@ -1,7 +1,13 @@
-# Stack da aplicação Viabiliza.
-# O build usa o Dockerfile da raiz (contexto do repositório). Tag local: sile:git.
-# pull_policy: build refaz a imagem quando o código muda.
-# Os assets de frontend ficam em app-src/public/build.
+# Stack da aplicação Viabiliza — Portainer clona a branch main e faz o build no host.
+#
+# Fluxo:
+#   git push em main (GitLab Softwell) → auto-update (~5 min) → docker compose build + up
+#
+# A imagem NÃO vem do GHCR. Tag local: sile:git
+# pull_policy: build obriga rebuild quando o Git muda (compose up sozinho reusa cache).
+#
+# Frontend: public/build precisa estar no git (já é o combinado do Dockerfile).
+# Alteração só em React/TSX: npm run build e commit de public/build antes do push.
 
 name: sile-app
 
@@ -23,6 +29,7 @@ x-app-env: &app-env
   APP_URL: ${APP_URL:?defina APP_URL}
   APP_LOCALE: pt_BR
   APP_FALLBACK_LOCALE: pt_BR
+  SILE_DEMO_DATA: ${SILE_DEMO_DATA:-false}
   LOG_CHANNEL: stderr
   LOG_LEVEL: ${LOG_LEVEL:-info}
   DB_CONNECTION: pgsql
@@ -77,11 +84,17 @@ services:
     entrypoint: ['/bin/sh', '-ce']
     command:
       - |
-        echo "[seed] carregando catálogos oficiais..."
-        php artisan db:seed --force --no-interaction -vvv
+        if [ "${SILE_DEMO_DATA:-false}" != "true" ]; then
+          echo "[seed] SILE_DEMO_DATA nao esta true — pulando seed de demonstracao."
+          exit 0
+        fi
+        echo "[seed] executando seed de demonstracao..."
+        php artisan db:seed --class=DemonstracaoClienteSeeder --force --no-interaction -vvv \
+          || php artisan db:seed --force --no-interaction -vvv
     environment:
       APP_KEY: ${APP_KEY:?defina APP_KEY}
       APP_ENV: production
+      SILE_DEMO_DATA: ${SILE_DEMO_DATA:-false}
       LOG_CHANNEL: stderr
       CACHE_STORE: array
       DB_CONNECTION: pgsql

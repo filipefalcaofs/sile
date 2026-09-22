@@ -53,7 +53,7 @@ class ReginProcessoProtocolador
             'address_neighborhood' => $endereco['neighborhood'],
             'address_zip' => $endereco['zip'],
             'property_registration' => $this->inscricao($rowset),
-            'contingency_reason' => 'regin_recebe',
+            'contingency_reason' => null,
             'external_reference' => $recebimento->protocolo,
         ]);
 
