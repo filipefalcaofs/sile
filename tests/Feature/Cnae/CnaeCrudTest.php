@@ -7,7 +7,6 @@ use App\Models\Activity;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\RiskClassification;
-use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -232,7 +231,7 @@ class CnaeCrudTest extends TestCase
         $this->assertSame('0111301', $cnae->refresh()->code);
     }
 
-    public function test_pagina_de_edicao_carrega_classificacao_e_perguntas_vigentes(): void
+    public function test_pagina_de_edicao_carrega_classificacao_vigente(): void
     {
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
         $cnae = Cnae::factory()->create(['code' => '0111301']);
@@ -242,13 +241,6 @@ class CnaeCrudTest extends TestCase
             'rule_version_id' => $municipal->id,
             'cnae_code' => '0111301',
             'risco_municipal' => 'alto',
-        ]);
-
-        $sanitaria = RuleVersion::factory()->create(['domain' => RuleDomain::RiscoSanitario]);
-        RiskCondicionante::factory()->create([
-            'rule_version_id' => $sanitaria->id,
-            'cnae_code' => '0111301',
-            'pergunta' => 'O produto é artesanal?',
         ]);
 
         $this->actingAs($admin, 'gestao')
@@ -261,9 +253,7 @@ class CnaeCrudTest extends TestCase
                 ->where('cnae.section_code', $cnae->section_code)
                 ->where('cnae.division_code', $cnae->division_code)
                 ->where('cnae.group_code', $cnae->group_code)
-                ->where('cnae.class_code', $cnae->class_code)
-                ->has('condicionantes', 1)
-                ->where('condicionantes.0.pergunta', 'O produto é artesanal?'));
+                ->where('cnae.class_code', $cnae->class_code));
     }
 
     /**

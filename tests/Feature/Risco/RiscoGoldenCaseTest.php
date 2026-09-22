@@ -2,9 +2,6 @@
 
 namespace Tests\Feature\Risco;
 
-use App\Enums\RuleDomain;
-use App\Models\RiskCondicionante;
-use App\Models\RuleVersion;
 use App\Services\Risco\RiscoClassificationService;
 use App\Services\Risco\RiscoInput;
 use App\Services\Risco\RiscoResult;
@@ -80,57 +77,19 @@ class RiscoGoldenCaseTest extends TestCase
     }
 
     /**
-     * Monta o RiscoInput a partir do bloco `input` do fixture. Quando o caso
-     * pede `responder_condicionantes_gatilho`, o harness resolve a condicionante
-     * do CNAE pela versão sanitária vigente e injeta a própria `resposta_gatilho`
-     * do seed — chave estável que não depende do id auto-increment.
+     * Monta o RiscoInput a partir do bloco `input` do fixture. Sem respostas de
+     * condicionantes: o e-mail SEDUR de 21/09/2026 (item 4) retirou a
+     * reclassificação VISA do motor — o nível final é sempre o da tabela.
      *
      * @param  array<string, mixed>  $input
      */
     private function montaInput(array $input): RiscoInput
     {
-        $respostas = $input['respostas_condicionantes'] ?? [];
-
-        if ($input['responder_condicionantes_gatilho'] ?? false) {
-            $respostas = $this->respostasGatilhoDoCnae((string) $input['cnae_code']) + $respostas;
-        }
-
         return new RiscoInput(
             cnaeCode: (string) $input['cnae_code'],
-            respostasCondicionantes: $respostas,
             gatilhosContexto: $input['gatilhos_contexto'] ?? [],
             data: isset($input['data']) ? Carbon::parse($input['data']) : null,
         );
-    }
-
-    /**
-     * Respostas que disparam a reclassificação de TODAS as condicionantes do
-     * CNAE na versão sanitária vigente (resposta == resposta_gatilho do seed).
-     *
-     * @return array<int, bool>
-     */
-    private function respostasGatilhoDoCnae(string $cnaeCode): array
-    {
-        $cnae = (string) preg_replace('/\D/', '', $cnaeCode);
-        $version = RuleVersion::vigente(RuleDomain::RiscoSanitario)->first();
-
-        if ($version === null) {
-            return [];
-        }
-
-        $respostas = [];
-
-        $condicionantes = RiskCondicionante::query()
-            ->where('rule_version_id', $version->getKey())
-            ->where('cnae_code', $cnae)
-            ->get();
-
-        foreach ($condicionantes as $condicionante) {
-            $regra = $condicionante->regra_reclassificacao ?? [];
-            $respostas[$condicionante->id] = $regra['resposta_gatilho'] ?? true;
-        }
-
-        return $respostas;
     }
 
     /**

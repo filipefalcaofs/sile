@@ -760,6 +760,7 @@ export default function FichaAnaliseShow({
     const { auth } = usePage<SharedProps>().props;
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
     const podeEmitirTvl = auth.permissions.includes('emitir-tvl');
+    const podeVistoria = auth.permissions.includes('preencher-ficha-vistoria');
 
     const editavel = ficha.editavel;
 
@@ -1073,21 +1074,6 @@ export default function FichaAnaliseShow({
 
     function emitirTvl() {
         tvl.post(`/gestao/processos/${processo.id}/tvl`, {
-            onSuccess: (resposta) => {
-                const url = resposta?.download_url ?? resposta?.url ?? null;
-
-                if (url) {
-                    window.open(url, '_blank', 'noopener');
-                } else {
-                    router.reload();
-                }
-            },
-            onHttpException: () => false,
-        });
-    }
-
-    function emitirIndeferimento() {
-        tvl.post(`/gestao/processos/${processo.id}/indeferimento`, {
             onSuccess: (resposta) => {
                 const url = resposta?.download_url ?? resposta?.url ?? null;
 
@@ -1942,12 +1928,6 @@ export default function FichaAnaliseShow({
                                 )}
 
                                 {editavel && (
-                                    <div className="mt-4">
-                                        <CondicionanteAutocomplete onSelect={adicionarCondicao} disabled={!editavel} />
-                                    </div>
-                                )}
-
-                                {editavel && (
                                     <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
                                         <div className="flex-1">
                                             <Label htmlFor="nova-condicao">Adicionar condicionante (texto livre)</Label>
@@ -2225,11 +2205,6 @@ export default function FichaAnaliseShow({
                                                     Visualizar Viabilidade
                                                 </Button>
                                             )}
-                                            {podeEmitirTvl && processo.status === 'indeferida' && (
-                                                <Button onClick={emitirIndeferimento} variant="outline" size="sm" loading={tvl.processing}>
-                                                    Emitir / baixar documento de indeferimento
-                                                </Button>
-                                            )}
                                         </>
                                     )}
 
@@ -2247,6 +2222,15 @@ export default function FichaAnaliseShow({
                                         <Button onClick={() => setShowMalhaFina(true)} variant="ghost" size="sm">
                                             Encaminhar para a Vistoria
                                         </Button>
+                                    )}
+
+                                    {podeVistoria && (
+                                        <Link
+                                            href={`/gestao/processos/${processo.id}/vistoria`}
+                                            className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm text-gray-700 transition hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-300"
+                                        >
+                                            Ficha de vistoria
+                                        </Link>
                                     )}
 
                                     {ficha.revision > 1 && (
@@ -2903,109 +2887,6 @@ function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
                 </p>
             </CardContent>
         </Card>
-    );
-}
-
-/**
- * Autocomplete de condicionantes do cadastro VERSIONADO VIGENTE (T02 — CA-F-02).
- * Busca em /gestao/condicionantes/autocomplete os itens da versão vigente e, ao
- * selecionar, adiciona a condicionante à ficha. É auxílio: o analista pode
- * digitar texto livre (campo abaixo) — o autocomplete nunca bloqueia a digitação.
- */
-function CondicionanteAutocomplete({
-    onSelect,
-    disabled,
-}: {
-    onSelect: (label: string) => void;
-    disabled?: boolean;
-}) {
-    const [termo, setTermo] = useState('');
-    const [itens, setItens] = useState<{ id: number; label: string; cnae_code: string | null }[]>([]);
-    const [aberto, setAberto] = useState(false);
-    const [carregando, setCarregando] = useState(false);
-
-    useEffect(() => {
-        const t = termo.trim();
-
-        if (t.length < 2) {
-            setItens([]);
-            setAberto(false);
-
-            return;
-        }
-
-        const controller = new AbortController();
-        const timer = window.setTimeout(() => {
-            setCarregando(true);
-
-            fetch(`/gestao/condicionantes/autocomplete?q=${encodeURIComponent(t)}`, {
-                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin',
-                signal: controller.signal,
-            })
-                .then((resposta) => (resposta.ok ? resposta.json() : { data: [] }))
-                .then((json: { data?: { id: number; label: string; cnae_code: string | null }[] }) => {
-                    setItens(Array.isArray(json.data) ? json.data : []);
-                    setAberto(true);
-                })
-                .catch(() => {
-                    // Silencioso: o autocomplete é auxílio, não bloqueia o texto livre.
-                })
-                .finally(() => setCarregando(false));
-        }, 250);
-
-        return () => {
-            controller.abort();
-            window.clearTimeout(timer);
-        };
-    }, [termo]);
-
-    function selecionar(label: string) {
-        onSelect(label);
-        setTermo('');
-        setItens([]);
-        setAberto(false);
-    }
-
-    return (
-        <div className="relative">
-            <Label htmlFor="condicionante-autocomplete">Buscar no cadastro vigente</Label>
-            <Input
-                id="condicionante-autocomplete"
-                type="text"
-                value={termo}
-                disabled={disabled}
-                placeholder="Digite para buscar condicionantes do cadastro versionado…"
-                onChange={(event) => setTermo(event.target.value)}
-                onKeyDown={(event) => {
-                    if (event.key === 'Enter' && termo.trim() !== '') {
-                        event.preventDefault();
-                        selecionar(termo.trim());
-                    }
-                }}
-            />
-            {aberto && itens.length > 0 && (
-                <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-theme-lg dark:border-gray-700 dark:bg-gray-900">
-                    {itens.map((item) => (
-                        <li key={item.id}>
-                            <button
-                                type="button"
-                                onClick={() => selecionar(item.label)}
-                                className="flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left text-theme-sm text-gray-700 transition hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-white/5"
-                            >
-                                <span>{item.label}</span>
-                                {item.cnae_code && (
-                                    <span className="text-theme-xs text-gray-400 dark:text-gray-500">
-                                        CNAE {item.cnae_code}
-                                    </span>
-                                )}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            )}
-            {carregando && <p className="mt-1 text-theme-xs text-gray-400 dark:text-gray-500">Buscando…</p>}
-        </div>
     );
 }
 

@@ -3,6 +3,7 @@
 namespace Tests;
 
 use App\Jobs\DecidirFluxoExpressoJob;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Queue;
 
@@ -16,6 +17,18 @@ abstract class TestCase extends BaseTestCase
 
     protected function setUp(): void
     {
+        // Isolamento sqlite × pgsql_testing: o RefreshDatabase guarda o "já
+        // migrou" num estático de processo, sem registrar a conexão. Se um teste
+        // do grupo postgis migrou a pgsql_testing, o teste sqlite seguinte
+        // pularia a própria migração (:memory:) e quebraria com "no such table".
+        // O reset acontece só na borda postgis → sqlite; entre testes postgis a
+        // base migrada é reutilizada normalmente.
+        if (! $this instanceof PostgisTestCase && PostgisTestCase::$migrouPgsql) {
+            RefreshDatabaseState::$migrated = false;
+            RefreshDatabaseState::$lazilyRefreshed = false;
+            PostgisTestCase::$migrouPgsql = false;
+        }
+
         parent::setUp();
 
         $this->withoutVite();

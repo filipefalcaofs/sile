@@ -59,8 +59,9 @@ class DatabaseSeederTest extends TestCase
         // imóvel (manter-tipos-imovel — parametrização do motor REGIN) + a de
         // gatilhos de risco (manter-gatilhos-risco — parametrização dos
         // gatilhos semi-expresso) + a de território (manter-territorio —
-        // catálogo administrável de camadas do GeoServer).
-        $this->assertSame(33, Permission::query()->count());
+        // catálogo administrável de camadas do GeoServer) + a da ficha de
+        // vistoria (preencher-ficha-vistoria).
+        $this->assertSame(34, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
         // 100 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
@@ -114,10 +115,11 @@ class DatabaseSeederTest extends TestCase
         );
 
         // Classificação de risco sanitário (VISA): dimensão SEPARADA, versão
-        // vigente própria + 261 classificações e 67 condicionantes-pergunta.
+        // vigente própria + 261 classificações. Sem condicionantes-pergunta
+        // (e-mail SEDUR 21/09/2026, item 4).
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
         $this->assertSame(261, SanitaryRiskClassification::query()->count());
-        $this->assertSame(67, RiskCondicionante::query()->count());
+        $this->assertSame(0, RiskCondicionante::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'risco')
@@ -386,7 +388,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
         $this->assertSame(261, SanitaryRiskClassification::query()->count());
-        $this->assertSame(67, RiskCondicionante::query()->count());
+        $this->assertSame(0, RiskCondicionante::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoTratamento)->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::LouosQuadro10)->count());
         $this->assertDatabaseMissing('rule_versions', ['domain' => 'louos_quadro11']);

@@ -7,7 +7,6 @@ use App\Enums\RuleDomain;
 use App\Enums\TipoGatilho;
 use App\Enums\TipoImovelReconhecimento;
 use App\Models\RiskClassification;
-use App\Models\RiskCondicionante;
 use App\Models\RiskTrigger;
 use App\Models\RuleVersion;
 use App\Models\SanitaryRiskClassification;
@@ -75,7 +74,7 @@ class RiscoClassificationService
             municipal: $municipal,
             sanitario: $sanitario,
             encaminhamento: $encaminhamento,
-            fundamentacao: $this->buildFundamentacao($municipal, $sanitario),
+            fundamentacao: $this->buildFundamentacao($municipal),
             versoes: $versoes,
         );
 
@@ -135,10 +134,12 @@ class RiscoClassificationService
     }
 
     /**
-     * Dimensão SANITÁRIA (VISA), SEPARADA da municipal: busca a classificação e,
-     * para cada condicionante-pergunta do CNAE, aplica a reclassificação quando
-     * a resposta do requerente bate com `resposta_gatilho` e há
-     * `reclassifica_para` (mecanismo "DI"). Ausente → 'nao_classificado'.
+     * Dimensão SANITÁRIA (VISA), SEPARADA da municipal: busca a classificação
+     * do CNAE na tabela vigente. Ausente → 'nao_classificado'.
+     *
+     * SEM reclassificação por condicionante-pergunta: o e-mail SEDUR de
+     * 21/09/2026 (item 4) retirou do Viabiliza toda validação de
+     * condicionantes da VISA — o nível final é sempre o da tabela.
      *
      * @return array<string, mixed>
      */
@@ -159,49 +160,14 @@ class RiscoClassificationService
             return $this->dimensaoSanitariaNaoClassificada($version->version);
         }
 
-        $nivelOriginal = $classification->risco_sanitario->value;
-        $nivelFinal = $nivelOriginal;
-        $reclassificado = false;
-        $perguntas = [];
-
-        $condicionantes = RiskCondicionante::query()
-            ->where('rule_version_id', $version->getKey())
-            ->where('cnae_code', $cnae)
-            ->get();
-
-        foreach ($condicionantes as $condicionante) {
-            $regra = $condicionante->regra_reclassificacao ?? [];
-            $resposta = $input->respostasCondicionantes[$condicionante->id]
-                ?? $input->respostasCondicionantes[$condicionante->pergunta]
-                ?? null;
-
-            $acionou = $resposta !== null
-                && array_key_exists('resposta_gatilho', $regra)
-                && $resposta === $regra['resposta_gatilho'];
-
-            $reclassificaPara = $regra['reclassifica_para'] ?? null;
-
-            if ($acionou && $reclassificaPara !== null) {
-                $nivelFinal = $reclassificaPara;
-                $reclassificado = true;
-            }
-
-            $perguntas[] = [
-                'condicionante_id' => $condicionante->id,
-                'pergunta' => $condicionante->pergunta,
-                'resposta' => $resposta,
-                'acionou' => $acionou,
-                'reclassifica_para' => $reclassificaPara,
-                'fundamento' => $regra['fundamento'] ?? null,
-            ];
-        }
+        $nivel = $classification->risco_sanitario->value;
 
         return [
             'status' => RiscoResult::STATUS_CLASSIFICADO,
-            'nivel_original' => $nivelOriginal,
-            'nivel_final' => $nivelFinal,
-            'reclassificado' => $reclassificado,
-            'condicionantes_perguntas' => $perguntas,
+            'nivel_original' => $nivel,
+            'nivel_final' => $nivel,
+            'reclassificado' => false,
+            'condicionantes_perguntas' => [],
             'versao_regras' => $version->version,
         ];
     }
@@ -367,16 +333,13 @@ class RiscoClassificationService
     /**
      * Referências legais reais da decisão: municipal cita o decreto vigente
      * (texto administrável — Textos decisórios) e as condicionantes gerais
-     * aplicáveis; sanitário cita SÓ o fundamento da condicionante-pergunta
-     * efetivamente acionada. O texto genérico da VISA não entra na
-     * fundamentação (relatório SEDUR 21/09, item 09) — o risco sanitário já
-     * aparece no próprio card.
+     * aplicáveis. Nada da VISA entra na fundamentação (relatório SEDUR 21/09,
+     * item 09, e e-mail item 4) — o risco sanitário aparece no próprio card.
      *
      * @param  array<string, mixed>  $municipal
-     * @param  array<string, mixed>  $sanitario
      * @return list<string>
      */
-    private function buildFundamentacao(array $municipal, array $sanitario): array
+    private function buildFundamentacao(array $municipal): array
     {
         $referencias = [];
 
@@ -385,14 +348,6 @@ class RiscoClassificationService
 
             foreach ($municipal['condicionantes'] as $condicionante) {
                 $referencias[] = (string) $condicionante;
-            }
-        }
-
-        if ($sanitario['status'] === RiscoResult::STATUS_CLASSIFICADO) {
-            foreach ($sanitario['condicionantes_perguntas'] as $pergunta) {
-                if (($pergunta['acionou'] ?? false) && ($pergunta['fundamento'] ?? null) !== null) {
-                    $referencias[] = (string) $pergunta['fundamento'];
-                }
             }
         }
 

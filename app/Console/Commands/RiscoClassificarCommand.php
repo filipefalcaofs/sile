@@ -24,7 +24,6 @@ class RiscoClassificarCommand extends Command
 {
     protected $signature = 'risco:classificar
         {cnae : CNAE de subclasse em dígitos ou formatado (ex.: 0111-3/01)}
-        {--resposta=* : Resposta de condicionante no formato chave=valor (chave = id ou pergunta; valor = sim/nao)}
         {--gatilho=* : Código de gatilho ativo no contexto (ex.: zeis_especial)}';
 
     protected $description = 'Classifica um CNAE pelo motor de risco real sobre o seed oficial (HU-047 a HU-053) — evidência fundamentada de ponta a ponta';
@@ -42,48 +41,12 @@ class RiscoClassificarCommand extends Command
 
         $result = $service->classify(new RiscoInput(
             cnaeCode: $cnae,
-            respostasCondicionantes: $this->parseRespostas(),
             gatilhosContexto: $this->parseGatilhos(),
         ));
 
         $this->renderRelatorio($cnae, $result);
 
         return self::SUCCESS;
-    }
-
-    /**
-     * Respostas às condicionantes-pergunta no formato chave=valor. A chave é o
-     * id da condicionante ou o texto da pergunta (o motor aceita ambos); o valor
-     * é interpretado como booleano (sim/nao). Chaves numéricas viram int
-     * naturalmente em PHP, casando com o lookup por condicionante_id do motor.
-     *
-     * @return array<int|string, bool>
-     */
-    private function parseRespostas(): array
-    {
-        $respostas = [];
-
-        /** @var list<string> $pares */
-        $pares = (array) $this->option('resposta');
-
-        foreach ($pares as $par) {
-            if (! str_contains($par, '=')) {
-                $this->warn("Resposta ignorada (formato esperado chave=valor): {$par}");
-
-                continue;
-            }
-
-            [$chave, $valor] = explode('=', $par, 2);
-            $chave = trim($chave);
-
-            if ($chave === '') {
-                continue;
-            }
-
-            $respostas[$chave] = $this->parseBool($valor);
-        }
-
-        return $respostas;
     }
 
     /**
@@ -158,20 +121,9 @@ class RiscoClassificarCommand extends Command
         $this->line('Risco sanitário (Vigilância Sanitária):');
 
         if (($sanitario['status'] ?? null) === RiscoResult::STATUS_CLASSIFICADO) {
-            $original = $this->labelSanitario($sanitario['nivel_original'] ?? null);
             $final = $this->labelSanitario($sanitario['nivel_final'] ?? null);
 
-            if ($sanitario['reclassificado'] ?? false) {
-                $this->line("  Nível: {$original} → {$final} (reclassificado por condicionante-pergunta)");
-            } else {
-                $this->line("  Nível: {$final}");
-            }
-
-            foreach ($sanitario['condicionantes_perguntas'] ?? [] as $pergunta) {
-                if ($pergunta['acionou'] ?? false) {
-                    $this->line("    - Condicionante acionada: {$pergunta['pergunta']}");
-                }
-            }
+            $this->line("  Nível: {$final}");
         } else {
             $this->line('  Não classificado na versão vigente.');
         }

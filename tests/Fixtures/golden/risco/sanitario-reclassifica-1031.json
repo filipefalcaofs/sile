@@ -1,6 +1,6 @@
 {
-    "nome": "Condicionante-pergunta reclassifica o risco sanitário do CNAE 1031-7/00",
-    "descricao": "CNAE 1031-7/00 (Fabricação de conservas de frutas): base sanitária Baixo na planilha VISA; a condicionante-pergunta 'produto diferente de artesanal?' respondida com a resposta-gatilho reclassifica para Alto (golden case real da VISA). O harness resolve a condicionante pelo cnae_code (responder_condicionantes_gatilho) e injeta a resposta_gatilho do próprio seed — sem depender de id auto-increment. A dimensão decisiva é a municipal (1031-7/00 é Baixo Risco A no Decreto), então o encaminhamento segue expresso: a reclassificação sanitária é registrada, mas não governa o fluxo (dimensões separadas, RN-009).",
+    "nome": "Condicionante-pergunta NÃO reclassifica o risco sanitário do CNAE 1031-7/00",
+    "descricao": "CNAE 1031-7/00 (Fabricação de conservas de frutas): base sanitária Baixo na planilha VISA. E-mail SEDUR 21/09/2026 (item 4): nenhuma condicionante da VISA faz parte das validações do Viabiliza — a resposta-gatilho NÃO reclassifica mais; o nível final é sempre o da tabela. O harness resolve a condicionante pelo cnae_code (responder_condicionantes_gatilho) e injeta a resposta_gatilho do próprio seed — sem depender de id auto-increment. A dimensão decisiva é a municipal (1031-7/00 é Baixo Risco A no Decreto), então o encaminhamento segue expresso (dimensões separadas, RN-009).",
     "input": {
         "cnae_code": "1031700",
         "respostas_condicionantes": {},
@@ -12,8 +12,8 @@
         "municipal_nivel": "baixo_a",
         "sanitario_status": "classificado",
         "sanitario_nivel_original": "baixo",
-        "sanitario_nivel_final": "alto",
-        "sanitario_reclassificado": true,
+        "sanitario_nivel_final": "baixo",
+        "sanitario_reclassificado": false,
         "dimensao_decisiva": "municipal",
         "fluxo": "expresso"
     }

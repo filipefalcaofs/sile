@@ -86,58 +86,9 @@ class RiscoSanitarioImportServiceTest extends TestCase
         $this->assertSame(120, SanitaryRiskClassification::query()->where('risco_sanitario', 'medio')->count());
         $this->assertSame(58, SanitaryRiskClassification::query()->where('risco_sanitario', 'alto')->count());
 
-        // 67 condicionantes-pergunta reais da planilha.
-        $this->assertSame(67, $report['condicionantes']);
-        $this->assertSame(67, RiskCondicionante::query()->count());
-    }
-
-    public function test_import_cria_condicionante_pergunta_para_1031(): void
-    {
-        $version = $this->versaoSanitaria();
-
-        $this->service()->import($version, $this->csvOficial());
-
-        // Golden case VISA: 1031-7/00 (fabricação de conservas de frutas) nasce
-        // Baixo, mas a condicionante-pergunta reclassifica para Alto quando o
-        // produto não é artesanal (mecanismo "DI").
-        $classificacao = SanitaryRiskClassification::query()
-            ->where('rule_version_id', $version->id)
-            ->where('cnae_code', '1031700')
-            ->sole();
-
-        $this->assertSame(RiscoSanitario::Baixo, $classificacao->risco_sanitario);
-
-        $condicionantes = RiskCondicionante::query()
-            ->where('rule_version_id', $version->id)
-            ->where('cnae_code', '1031700')
-            ->get();
-
-        $this->assertCount(1, $condicionantes);
-
-        $condicionante = $condicionantes->sole();
-        $this->assertStringContainsString('artesanal', $condicionante->pergunta);
-        $this->assertSame('booleano_sim_nao', $condicionante->tipo_resposta->value);
-
-        $regra = $condicionante->regra_reclassificacao;
-        $this->assertTrue($regra['resposta_gatilho']);
-        $this->assertSame('alto', $regra['reclassifica_para']);
-        $this->assertStringContainsString('Alto Risco', $regra['fundamento']);
-    }
-
-    public function test_import_reclassifica_para_medio_quando_a_planilha_indica(): void
-    {
-        $version = $this->versaoSanitaria();
-
-        $this->service()->import($version, $this->csvOficial());
-
-        // 8112-5/00: a condicionante diz "Caso haja ... será considerado Médio
-        // Risco" — o nível-alvo é DERIVADO do texto, nunca fixado em 'alto'.
-        $condicionante = RiskCondicionante::query()
-            ->where('rule_version_id', $version->id)
-            ->where('cnae_code', '8112500')
-            ->sole();
-
-        $this->assertSame('medio', $condicionante->regra_reclassificacao['reclassifica_para']);
+        // E-mail SEDUR 21/09/2026 (item 4): o import não grava mais
+        // condicionantes-pergunta da VISA — só a classificação.
+        $this->assertSame(0, RiskCondicionante::query()->count());
     }
 
     public function test_import_mantem_nivel_mais_restritivo_em_cnae_duplicado(): void
@@ -167,11 +118,8 @@ class RiscoSanitarioImportServiceTest extends TestCase
         $this->service()->import($version, $this->csvOficial());
         $segundo = $this->service()->import($version, $this->csvOficial());
 
-        // Re-import não duplica classificações (upsert) nem condicionantes
-        // (firstOrCreate por rule_version_id + cnae_code + pergunta).
+        // Re-import não duplica classificações (upsert por rule_version + CNAE).
         $this->assertSame(261, SanitaryRiskClassification::query()->count());
-        $this->assertSame(67, RiskCondicionante::query()->count());
         $this->assertSame(261, $segundo['classificacoes']);
-        $this->assertSame(67, $segundo['condicionantes']);
     }
 }

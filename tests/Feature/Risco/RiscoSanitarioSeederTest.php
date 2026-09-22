@@ -34,17 +34,14 @@ class RiscoSanitarioSeederTest extends TestCase
         $this->assertSame('visa-unificada-2026-04-30', $vigente->version);
 
         $this->assertSame(261, SanitaryRiskClassification::query()->count());
-        $this->assertSame(67, RiskCondicionante::query()->count());
+        // E-mail SEDUR 21/09/2026 (item 4): sem condicionantes VISA no seed.
+        $this->assertSame(0, RiskCondicionante::query()->count());
 
         // Toda a carga aponta para a versão vigente (dado versionado).
         $this->assertSame(
             261,
             SanitaryRiskClassification::query()->where('rule_version_id', $vigente->id)->count(),
         );
-
-        // Golden case da VISA presente após o seed (reclassifica para alto).
-        $golden = RiskCondicionante::query()->where('cnae_code', '1031700')->sole();
-        $this->assertSame('alto', $golden->regra_reclassificacao['reclassifica_para']);
 
         // Carga auditada com a versão de regras (RN-002).
         $this->assertTrue(
@@ -91,6 +88,6 @@ class RiscoSanitarioSeederTest extends TestCase
 
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
         $this->assertSame(261, SanitaryRiskClassification::query()->count());
-        $this->assertSame(67, RiskCondicionante::query()->count());
+        $this->assertSame(0, RiskCondicionante::query()->count());
     }
 }

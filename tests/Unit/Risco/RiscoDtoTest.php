@@ -19,12 +19,11 @@ use Tests\TestCase;
  */
 class RiscoDtoTest extends TestCase
 {
-    public function test_risco_input_para_cnae_inicializa_sem_respostas_nem_gatilhos(): void
+    public function test_risco_input_para_cnae_inicializa_sem_gatilhos(): void
     {
         $input = RiscoInput::paraCnae('6201500');
 
         $this->assertSame('6201500', $input->cnaeCode);
-        $this->assertSame([], $input->respostasCondicionantes);
         $this->assertSame([], $input->gatilhosContexto);
         $this->assertNull($input->data);
         $this->assertNull($input->areaUtilizada);

@@ -120,6 +120,25 @@ class TratamentoRamoResolverTest extends TestCase
         $this->assertSame('nR1-09', $ramo->subgrupo);
     }
 
+    public function test_tipo_residencial_eleva_ramo_fora_do_id_para_medio(): void
+    {
+        // Planilha (regras 1, 5, 24, 51…): galpão/container/edificação residencial
+        // fora da família ID eleva o ramo a MÉDIO e remete à crítica do analista.
+        // (Relatório SEDUR 21/09, item 01 — o 13336/2026 classificou baixo no
+        // escritório com edificação residencial.)
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '2539-0/01',
+            respostas: [11 => false],
+            areaUtilizada: 8.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Residencial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.12.13', $ramo->codigoLouos);
+        $this->assertSame('medio', $ramo->risco);
+        $this->assertSame('semiexpresso', $ramo->fluxo);
+    }
+
     public function test_pergunta_faltando_nao_resolve(): void
     {
         $ramo = $this->resolver()->resolver(new TratamentoRamoInput(

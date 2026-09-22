@@ -551,9 +551,6 @@ function CnaeMotor({ item }: { item: ClassificacaoCnae }) {
     const encaminhamento = item.risco.encaminhamento;
     const fundamentacao = Array.isArray(item.risco.fundamentacao) ? item.risco.fundamentacao : [];
     const gatilhos = Array.isArray(encaminhamento.gatilhos_acionados) ? encaminhamento.gatilhos_acionados : [];
-    const perguntasSanitarias = Array.isArray(sanitario.condicionantes_perguntas)
-        ? sanitario.condicionantes_perguntas
-        : [];
 
     return (
         <div className="space-y-5">
@@ -585,11 +582,6 @@ function CnaeMotor({ item }: { item: ClassificacaoCnae }) {
                                 ? sanitarioLabel(sanitario.nivel_final)
                                 : sanitario.status}
                         </Badge>
-                        {sanitario.reclassificado && (
-                            <Badge color="warning" size="sm">
-                                reclassificado de {sanitarioLabel(sanitario.nivel_original)}
-                            </Badge>
-                        )}
                     </div>
                     {sanitario.versao_regras && (
                         <p className="mt-2 text-theme-xs text-gray-400 dark:text-gray-500">
@@ -632,29 +624,6 @@ function CnaeMotor({ item }: { item: ClassificacaoCnae }) {
                                     {pergunta.texto}
                                 </span>
                                 <span className="text-gray-500"> — {pergunta.resposta}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {perguntasSanitarias.length > 0 && (
-                <div>
-                    <p className="text-theme-xs tracking-wide text-gray-400 uppercase dark:text-gray-500">
-                        Condicionantes sanitárias aplicadas
-                    </p>
-                    <ul className="mt-2 space-y-2">
-                        {perguntasSanitarias.map((pergunta, index) => (
-                            <li key={`${pergunta.pergunta ?? 's'}-${index}`} className="text-theme-sm text-gray-600 dark:text-gray-300">
-                                {pergunta.pergunta ?? 'Condicionante'}
-                                {pergunta.resposta !== null && pergunta.resposta !== undefined && (
-                                    <span> — resposta {String(pergunta.resposta)}</span>
-                                )}
-                                {pergunta.acionou && (
-                                    <Badge color="warning" size="sm">
-                                        acionou
-                                    </Badge>
-                                )}
                             </li>
                         ))}
                     </ul>

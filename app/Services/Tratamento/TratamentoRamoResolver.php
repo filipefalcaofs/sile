@@ -108,6 +108,12 @@ class TratamentoRamoResolver
 
         if ($this->eFamiliaId($subgrupo) && $this->tipoDirige($input->tipoImovel)) {
             $risco = 'alto';
+        } elseif ($this->tipoDirige($input->tipoImovel) && $risco === 'baixo') {
+            // Planilha (regras 1, 5, 24, 51…): galpão/container/edificação
+            // residencial fora da família ID eleva o ramo a MÉDIO e remete à
+            // crítica do analista (o fluxoDe já marca semiexpresso). Relatório
+            // SEDUR 21/09, item 01.
+            $risco = 'medio';
         }
 
         $fluxo = $this->fluxoDe($linha->codigo_louos, $subgrupo, $risco, $noLocal, $input->tipoImovel);
@@ -246,12 +252,16 @@ class TratamentoRamoResolver
 
     private function fluxoDe(string $codigoLouos, string $subgrupo, string $risco, ?bool $noLocal, ?TipoImovel $tipo): string
     {
-        if ($codigoLouos === '07.12.13' && $noLocal === false) {
-            return 'expresso';
-        }
-
+        // O tipo que dirige regra (galpão/container/edificação residencial) vem
+        // ANTES do atalho do escritório: pela planilha (regras 1, 5, 24, 51…),
+        // "não no local" + esses tipos remete à crítica do analista
+        // (semiexpresso), não ao expresso. Relatório SEDUR 21/09, item 01.
         if ($this->eFamiliaId($subgrupo) || ($tipo?->dirigeRegra() ?? false)) {
             return 'semiexpresso';
+        }
+
+        if ($codigoLouos === '07.12.13' && $noLocal === false) {
+            return 'expresso';
         }
 
         if ($risco === 'alto') {

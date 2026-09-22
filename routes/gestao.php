@@ -10,7 +10,6 @@ use App\Http\Controllers\Gestao\AuditoriaController;
 use App\Http\Controllers\Gestao\AuditoriaPreditivaController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
-use App\Http\Controllers\Gestao\CondicionanteAutocompleteController;
 use App\Http\Controllers\Gestao\Conta\PasswordController as ContaPasswordController;
 use App\Http\Controllers\Gestao\Conta\ProfileController as ContaProfileController;
 use App\Http\Controllers\Gestao\ContingenciaController;
@@ -30,6 +29,7 @@ use App\Http\Controllers\Gestao\GeoServerLayerController;
 use App\Http\Controllers\Gestao\HolidayController;
 use App\Http\Controllers\Gestao\IndeferimentoDocumentController;
 use App\Http\Controllers\Gestao\InscricaoImobiliariaIntegrationController;
+use App\Http\Controllers\Gestao\InspectionController;
 use App\Http\Controllers\Gestao\LegalTermController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
 use App\Http\Controllers\Gestao\LoginController;
@@ -274,9 +274,6 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('cnaes/{cnae}', [CnaeController::class, 'update'])->name('cnaes.update');
             Route::put('cnaes/{cnae}/situacao', [CnaeController::class, 'updateSituacao'])->name('cnaes.situacao.update');
             Route::delete('cnaes/{cnae}', [CnaeController::class, 'destroy'])->name('cnaes.destroy');
-            Route::post('cnaes/{cnae}/condicionantes', [CnaeController::class, 'storeCondicionante'])->name('cnaes.condicionantes.store');
-            Route::put('cnaes/{cnae}/condicionantes/{condicionante}', [CnaeController::class, 'updateCondicionante'])->name('cnaes.condicionantes.update');
-            Route::delete('cnaes/{cnae}/condicionantes/{condicionante}', [CnaeController::class, 'destroyCondicionante'])->name('cnaes.condicionantes.destroy');
         });
 
         Route::middleware('permission:manter-usuarios')->group(function () {
@@ -675,13 +672,21 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('precedentes', [PrecedenteController::class, 'show'])->name('precedentes');
         });
 
-        // Autocomplete de condicionantes do cadastro VERSIONADO VIGENTE (T02 EV) —
-        // consumido pela ficha de análise; itens da RuleVersion sanitária vigente
-        // (RN-005). Não é por-processo, então fica fora do grupo processos/{...};
-        // gated pela mesma permissão analisar-processos (403 auditado no ponto único).
-        Route::middleware('permission:analisar-processos')
-            ->get('condicionantes/autocomplete', CondicionanteAutocompleteController::class)
-            ->name('condicionantes.autocomplete');
+        // Ficha de vistoria do processo: abertura com identificação automática
+        // (tipo, data, vistoriador) e snapshot da localização, rascunho parcial,
+        // redesenho/validação do polígono, anexos (disk parametrizado, streaming
+        // autenticado — nunca URL pública) e conclusão com parecer OBRIGATÓRIO
+        // (ficha concluída é imutável). Gated por preencher-ficha-vistoria e
+        // auditado (RN-002); o 403 é auditado no ponto único (bootstrap/app.php).
+        Route::middleware('permission:preencher-ficha-vistoria')->prefix('processos/{viabilityRequest}/vistoria')->name('processos.vistoria.')->group(function () {
+            Route::get('/', [InspectionController::class, 'show'])->name('show');
+            Route::patch('/', [InspectionController::class, 'update'])->name('update');
+            Route::post('concluir', [InspectionController::class, 'concluir'])->name('concluir');
+            Route::post('poligono', [InspectionController::class, 'validarPoligono'])->name('poligono');
+            Route::post('anexos', [InspectionController::class, 'storeAnexo'])->name('anexos.store');
+            Route::get('anexos/{attachment}', [InspectionController::class, 'downloadAnexo'])->name('anexos.download');
+            Route::delete('anexos/{attachment}', [InspectionController::class, 'destroyAnexo'])->name('anexos.destroy');
+        });
 
         // Ações do analista sobre o processo (Wave 7 — HU-083/086/087/088/089/
         // 132/136): os endpoints HTTP FINOS que expõem os serviços já testados das

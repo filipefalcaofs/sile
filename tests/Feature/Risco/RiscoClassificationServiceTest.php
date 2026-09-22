@@ -168,15 +168,18 @@ class RiscoClassificationServiceTest extends TestCase
         $this->assertTrue($result->encaminhadoParaAnalise());
     }
 
-    public function test_condicionante_pergunta_reclassifica_sanitario(): void
+    public function test_condicionante_visa_nao_reclassifica_mais_o_sanitario(): void
     {
+        // E-mail SEDUR 21/09/2026 (item 4): nenhuma condicionante da VISA faz
+        // parte das validações do Viabiliza — mesmo com a pergunta respondida
+        // com a resposta-gatilho, o nível final é sempre o da tabela.
         $sanitaria = $this->versaoSanitaria();
         SanitaryRiskClassification::factory()->create([
             'rule_version_id' => $sanitaria->id,
             'cnae_code' => '1031700',
             'risco_sanitario' => RiscoSanitario::Baixo,
         ]);
-        $condicionante = RiskCondicionante::factory()->create([
+        RiskCondicionante::factory()->create([
             'rule_version_id' => $sanitaria->id,
             'cnae_code' => '1031700',
             'pergunta' => 'O resultado do exercício da atividade econômica será diferente de produto artesanal?',
@@ -187,22 +190,12 @@ class RiscoClassificationServiceTest extends TestCase
             ],
         ]);
 
-        // Resposta "Sim" (produto não artesanal) reclassifica de Baixo para Alto.
-        $reclassificado = $this->service()->classify(
-            new RiscoInput('1031700', [$condicionante->id => true]),
-        );
+        $result = $this->service()->classify(RiscoInput::paraCnae('1031700'));
 
-        $this->assertSame('baixo', $reclassificado->sanitario['nivel_original']);
-        $this->assertSame('alto', $reclassificado->sanitario['nivel_final']);
-        $this->assertTrue($reclassificado->sanitario['reclassificado']);
-
-        // Resposta "Não": permanece no nível original (a regra é real, não fixa).
-        $mantido = $this->service()->classify(
-            new RiscoInput('1031700', [$condicionante->id => false]),
-        );
-
-        $this->assertSame('baixo', $mantido->sanitario['nivel_final']);
-        $this->assertFalse($mantido->sanitario['reclassificado']);
+        $this->assertSame('baixo', $result->sanitario['nivel_original']);
+        $this->assertSame('baixo', $result->sanitario['nivel_final']);
+        $this->assertFalse($result->sanitario['reclassificado']);
+        $this->assertSame([], $result->sanitario['condicionantes_perguntas']);
     }
 
     public function test_gatilho_ativo_derruba_baixo_risco_para_analise(): void
@@ -218,7 +211,7 @@ class RiscoClassificationServiceTest extends TestCase
 
         // Sem o gatilho, baixo_a iria para expresso; o gatilho derruba para análise.
         $result = $this->service()->classify(
-            new RiscoInput('4444444', [], [TipoGatilho::EnquadramentoAusente->value]),
+            new RiscoInput(cnaeCode: '4444444', gatilhosContexto: [TipoGatilho::EnquadramentoAusente->value]),
         );
 
         $this->assertSame('analise', $result->encaminhamento['fluxo']);
@@ -240,7 +233,7 @@ class RiscoClassificationServiceTest extends TestCase
         ]);
 
         $result = $this->service()->classify(
-            new RiscoInput('5555555', [], [TipoGatilho::ZeisEspecial->value]),
+            new RiscoInput(cnaeCode: '5555555', gatilhosContexto: [TipoGatilho::ZeisEspecial->value]),
         );
 
         $this->assertSame('analise', $result->encaminhamento['fluxo']);

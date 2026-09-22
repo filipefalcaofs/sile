@@ -255,13 +255,11 @@ class ReginProtocoloSimulacaoService
 
         foreach ($protocolo['atividades'] ?? [] as $atividade) {
             $cnae = (string) ($atividade['cnae'] ?? '');
-            $respostas = $this->respostas($atividade['perguntas'] ?? []);
             $respostasTratamento = $this->respostasPlanilha($cnae, $atividade, $entrada);
             $respostasPorCnae[$this->digitosCnae($cnae)] = $respostasTratamento;
 
             $result = $this->risco->classify(new RiscoInput(
                 cnaeCode: $cnae,
-                respostasCondicionantes: $respostas,
                 respostasTratamento: $respostasTratamento,
                 areaUtilizada: $area,
                 tipoImovel: $tipo,
@@ -583,31 +581,6 @@ class ReginProtocoloSimulacaoService
         $digitos = preg_replace('/\D/', '', $bruta) ?? '';
 
         return $digitos === '' ? null : $digitos;
-    }
-
-    /**
-     * @param  list<array<string, mixed>>  $perguntas
-     * @return array<int|string, bool>
-     */
-    private function respostas(array $perguntas): array
-    {
-        $mapa = [];
-
-        foreach ($perguntas as $pergunta) {
-            if (! array_key_exists('valor', $pergunta) || ! is_bool($pergunta['valor'])) {
-                continue;
-            }
-
-            if (! empty($pergunta['codigo'])) {
-                $mapa[(string) $pergunta['codigo']] = $pergunta['valor'];
-            }
-
-            if (! empty($pergunta['texto'])) {
-                $mapa[(string) $pergunta['texto']] = $pergunta['valor'];
-            }
-        }
-
-        return $mapa;
     }
 
     /**

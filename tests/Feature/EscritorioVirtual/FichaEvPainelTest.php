@@ -3,12 +3,10 @@
 namespace Tests\Feature\EscritorioVirtual;
 
 use App\Enums\AnalysisRecordStatus;
-use App\Enums\RuleDomain;
 use App\Models\AnalysisRecord;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\Parameter;
-use App\Models\RiskCondicionante;
 use App\Models\RuleVersion;
 use App\Models\User;
 use App\Models\ViabilityDecision;
@@ -206,52 +204,5 @@ class FichaEvPainelTest extends TestCase
                 ->where('escritorioVirtual.gatilho', false)
                 ->where('escritorioVirtual.is_sede', false)
                 ->has('escritorioVirtual.abrigados', 0));
-    }
-
-    public function test_autocomplete_condicionantes_retorna_itens_do_cadastro_vigente(): void
-    {
-        // Versão sanitária VIGENTE com uma condicionante.
-        $vigente = RuleVersion::factory()->create([
-            'domain' => RuleDomain::RiscoSanitario,
-            'version' => 'sanitario-ev-vigente',
-            'rules_version' => 'sanitario-ev-vigente',
-        ]);
-        RiskCondicionante::factory()->create([
-            'rule_version_id' => $vigente->id,
-            'cnae_code' => '8211300',
-            'pergunta' => 'Possui AVCB do corpo de bombeiros?',
-            'texto_parecer' => 'Apresentar AVCB válido do corpo de bombeiros.',
-        ]);
-
-        // Versão SUBSTITUÍDA (fora de vigência): seus itens NÃO podem aparecer.
-        $antiga = RuleVersion::factory()->substituida()->create([
-            'domain' => RuleDomain::RiscoSanitario,
-            'version' => 'sanitario-ev-antiga',
-            'rules_version' => 'sanitario-ev-antiga',
-        ]);
-        RiskCondicionante::factory()->create([
-            'rule_version_id' => $antiga->id,
-            'cnae_code' => '8211300',
-            'pergunta' => 'Condicionante antiga fora de vigência?',
-            'texto_parecer' => 'Texto de condicionante ANTIGA que não deve aparecer.',
-        ]);
-
-        $response = $this->actingAs($this->analista(), 'gestao')
-            ->getJson('/gestao/condicionantes/autocomplete?q=AVCB')
-            ->assertOk();
-
-        $labels = collect($response->json('data'))->pluck('label')->all();
-        $this->assertContains('Apresentar AVCB válido do corpo de bombeiros.', $labels);
-        $this->assertNotContains('Texto de condicionante ANTIGA que não deve aparecer.', $labels);
-    }
-
-    public function test_autocomplete_condicionantes_exige_analisar_processos(): void
-    {
-        $semPermissao = User::factory()->withAcceptedLgpdTerm()->create();
-        $semPermissao->givePermissionTo('acessar-gestao');
-
-        $this->actingAs($semPermissao, 'gestao')
-            ->getJson('/gestao/condicionantes/autocomplete?q=x')
-            ->assertForbidden();
     }
 }
