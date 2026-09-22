@@ -6,9 +6,12 @@ use App\Enums\Fluxo;
 use App\Enums\ResultadoViabilidade;
 use App\Models\Cnae;
 use App\Models\ViabilityRequest;
+use App\Services\Geo\TerritoryResult;
+use App\Services\Louos\EnquadramentoResult;
 use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
+use App\Support\Louos\Quadro10Zona;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
@@ -64,10 +67,15 @@ class SolicitacaoViabilityResolver
 
         foreach ($this->orderedCnaes($request) as $cnae) {
             $respostas = $request->respostasDaPlanilha($cnae->code);
+            $territorio = self::territorioDoSnapshot(
+                is_array($request->simulation_snapshot) ? $request->simulation_snapshot : [],
+            );
 
-            $result = $ponto === null
-                ? $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $respostas)
-                : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area, $tipoImovel, $respostas);
+            $result = $territorio !== null
+                ? $this->consulta->consultarComTerritorio($territorio, $cnae->code, $area, $tipoImovel, $respostas)
+                : ($ponto === null
+                    ? $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $respostas)
+                    : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area, $tipoImovel, $respostas));
 
             $veredito = $result->vereditoLocacional();
 
@@ -122,6 +130,61 @@ class SolicitacaoViabilityResolver
             ->orderByPivot('is_primary', 'desc')
             ->orderBy('code')
             ->get();
+    }
+
+    /**
+     * Território a partir do snapshot da solicitação: zona e via declaradas,
+     * com a classe viária explícita — sem consultar camada territorial. Sem
+     * zona no snapshot, devolve null e o chamador degrada para o ponto/via
+     * CNAE (veredito pendente, nunca inventado).
+     *
+     * @param  array<string, mixed>  $snapshot
+     */
+    private static function territorioDoSnapshot(array $snapshot): ?TerritoryResult
+    {
+        $zona = Quadro10Zona::oficializar(isset($snapshot['zona']) ? (string) $snapshot['zona'] : null);
+        $viaBruta = isset($snapshot['via']) ? trim((string) preg_replace('/[\s_-]+/', ' ', (string) $snapshot['via'])) : '';
+        $via = $viaBruta !== '' ? $viaBruta : null;
+
+        if ($zona === null) {
+            return null;
+        }
+
+        $vazia = [
+            'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
+            'nome' => null,
+            'propriedades' => null,
+            'motivo' => null,
+            'versao_camada' => null,
+        ];
+
+        return new TerritoryResult(
+            bairro: $vazia,
+            via: $via === null
+                ? $vazia + ['distancia_m' => null]
+                : [
+                    'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
+                    'nome' => $via,
+                    'propriedades' => ['CLASSE_VIA_LOUOS' => $via],
+                    'motivo' => null,
+                    'versao_camada' => 'snapshot-solicitacao',
+                    'distancia_m' => null,
+                ],
+            zona: [
+                'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
+                'nome' => $zona,
+                'propriedades' => ['NOME' => $zona],
+                'motivo' => null,
+                'versao_camada' => 'snapshot-solicitacao',
+            ],
+            lote: $vazia,
+            restricoes: [
+                'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
+                'itens' => [],
+                'motivo' => null,
+                'versao_camada' => null,
+            ],
+        );
     }
 
     /**

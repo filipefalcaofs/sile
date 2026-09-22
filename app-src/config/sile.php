@@ -1,6 +1,10 @@
 <?php
 
 return [
+    // Massa de demonstração para validação SEDUR (Portainer/staging).
+    // Nunca ligar em produção real — só no ambiente de apresentação ao cliente.
+    'demo_data' => env('SILE_DEMO_DATA', false),
+
     'security' => [
         'password' => [
             'min_length' => 8,
@@ -38,6 +42,7 @@ return [
         // processo nascido do simulador com veredito pendente (zona oficial
         // pendente SEDUR) emite TVL como permitido. DESLIGADO por default —
         // NUNCA ligar em produção; remoção definitiva antes do go-live.
+        'simulacao_protocolo' => false,
         'notificacao_resultado_expresso' => true,
         'analise_tecnica' => true,
         // Toggles de canal da comunicação multicanal (EP11). E-mail e in-app

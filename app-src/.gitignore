@@ -20,8 +20,9 @@ desktop.ini
 credentials.json
 secrets.json
 
+# GSD — .planning/ é versionado neste projeto (fonte de verdade da gestão)
 # Artefatos temporários de debug/handoff ficam de fora
-
+.planning/debug/
 
 # Logs e temporários genéricos
 *.log
@@ -181,6 +182,7 @@ _ide_helper_models.php
 .vscode/
 .DS_Store
 Thumbs.db
+.playwright-cli/
 output/
 .worktrees/
 

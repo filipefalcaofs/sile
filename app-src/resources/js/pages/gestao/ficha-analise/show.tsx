@@ -762,7 +762,8 @@ export default function FichaAnaliseShow({
     iaFicha,
 }: FichaAnaliseShowProps) {
     const { auth } = usePage<SharedProps>().props;
-    const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
+    // Encaminhar à vistoria é ação do analista (handoff ao setor de vistoria).
+    const podeEncaminharVistoria = auth.permissions.includes('analisar-processos');
     const podeEmitirTvl = auth.permissions.includes('emitir-tvl');
     const podeVistoria = auth.permissions.includes('preencher-ficha-vistoria');
 
@@ -1072,11 +1073,10 @@ export default function FichaAnaliseShow({
 
     function encaminharMalhaFina() {
         router.post(
-            '/gestao/processos/malha-fina',
+            `/gestao/processos/${processo.id}/vistoria/encaminhar`,
             {
-                request_ids: [processo.id],
                 motivo: motivoMalhaFina,
-                sector_id: setorVistoria === '' ? null : Number(setorVistoria),
+                setor_vistoria_id: Number(setorVistoria),
             },
             {
                 preserveScroll: true,
@@ -2382,7 +2382,7 @@ export default function FichaAnaliseShow({
                                         </Button>
                                     )}
 
-                                    {podeMalhaFina && (
+                                    {podeEncaminharVistoria && (
                                         <Button onClick={() => setShowMalhaFina(true)} variant="ghost" size="sm">
                                             Encaminhar para a Vistoria
                                         </Button>
@@ -2539,7 +2539,9 @@ export default function FichaAnaliseShow({
                 <Modal isOpen onClose={() => setShowMalhaFina(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para a Vistoria</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        A vistoria é ortogonal ao status e pode atingir qualquer fase. Informe o parecer (obrigatório).
+                        O processo vai para a caixa do setor de vistoria, sem responsável, para o apoio distribuir a
+                        um vistoriador — e o status de análise muda para Vistoriar. Quando a ficha for concluída, o
+                        processo retorna automaticamente para você. Informe o parecer (obrigatório).
                     </p>
                     <div className="mt-4">
                         <Label htmlFor="motivo-malha-fina" required>
@@ -2554,8 +2556,8 @@ export default function FichaAnaliseShow({
                         />
                     </div>
                     <div className="mt-4">
-                        <Label htmlFor="setor-vistoria" className="mb-1.5">
-                            Setor de tramitação
+                        <Label htmlFor="setor-vistoria" className="mb-1.5" required>
+                            Setor de vistoria
                         </Label>
                         <select
                             id="setor-vistoria"
@@ -2563,7 +2565,9 @@ export default function FichaAnaliseShow({
                             value={setorVistoria}
                             onChange={(e) => setSetorVistoria(e.target.value)}
                         >
-                            <option value="">Manter o setor atual</option>
+                            <option value="" disabled>
+                                Selecione o setor de vistoria
+                            </option>
                             {setores.map((setor) => (
                                 <option key={setor.id} value={setor.id}>
                                     {setor.name}
@@ -2578,7 +2582,7 @@ export default function FichaAnaliseShow({
                         <Button
                             size="sm"
                             onClick={encaminharMalhaFina}
-                            disabled={motivoMalhaFina.trim() === ''}
+                            disabled={motivoMalhaFina.trim() === '' || setorVistoria === ''}
                             loading={malhaFinaProcessing}
                         >
                             Encaminhar
