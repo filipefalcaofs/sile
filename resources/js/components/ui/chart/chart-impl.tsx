@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { EChartsType } from 'echarts/core';
-import { echarts } from './echarts-core';
+import { CHART_DARK_THEME, echarts } from './echarts-core';
 import type { EChartsOption } from './echarts-core';
 
 export interface ChartClickParams {
@@ -25,6 +25,15 @@ function isDarkMode(): boolean {
     return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 }
 
+function temaAtual(): string | null {
+    return isDarkMode() ? CHART_DARK_THEME : null;
+}
+
+/** O fundo fica no cartão. O tema escuro do ECharts não pode pintar um retângulo próprio. */
+function opcaoDoTema(option: EChartsOption): EChartsOption {
+    return { ...option, backgroundColor: 'transparent' };
+}
+
 /**
  * Inicialização do ECharts que toca o DOM (`echarts.init`) — montada apenas no
  * cliente via `Chart` (lazy + mounted). Mantém uma única instância: observa o
@@ -45,8 +54,8 @@ export function ChartImpl({ option, className, onClick }: ChartImplProps) {
             return;
         }
 
-        const chart = echarts.init(container, isDarkMode() ? 'dark' : null);
-        chart.setOption(optionRef.current);
+        const chart = echarts.init(container, temaAtual());
+        chart.setOption(opcaoDoTema(optionRef.current));
         chartRef.current = chart;
 
         const resizeObserver = new ResizeObserver(() => chart.resize());
@@ -55,8 +64,8 @@ export function ChartImpl({ option, className, onClick }: ChartImplProps) {
         // Acompanha a classe `dark` do <html>: troca o tema na instância viva
         // (setTheme do ECharts 6) e reaplica a opção, sem recriar o gráfico.
         const themeObserver = new MutationObserver(() => {
-            chart.setTheme(isDarkMode() ? 'dark' : 'default');
-            chart.setOption(optionRef.current);
+            chart.setTheme(isDarkMode() ? CHART_DARK_THEME : 'default');
+            chart.setOption(opcaoDoTema(optionRef.current), true);
         });
         themeObserver.observe(document.documentElement, {
             attributes: true,
@@ -78,7 +87,7 @@ export function ChartImpl({ option, className, onClick }: ChartImplProps) {
     }, []);
 
     useEffect(() => {
-        chartRef.current?.setOption(option, true);
+        chartRef.current?.setOption(opcaoDoTema(option), true);
     }, [option]);
 
     return <div ref={containerRef} className={className ?? 'h-80 w-full'} />;
