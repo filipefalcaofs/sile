@@ -167,6 +167,30 @@ class CaixaSetorController extends Controller
     }
 
     /**
+     * Redistribui um processo já atribuído para outra analista do setor (apoio/
+     * gestor). O service bloqueia após a conclusão da análise e mantém o prazo
+     * original; a falha volta como aviso controlado, nunca silenciosa.
+     */
+    public function redistribuir(DistribuirProcessoRequest $request): RedirectResponse
+    {
+        /** @var User $analista */
+        $analista = User::query()->findOrFail($request->integer('analista_id'));
+
+        $processo = ViabilityRequest::query()
+            ->whereIn('id', $request->input('request_ids'))
+            ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->firstOrFail();
+
+        try {
+            $this->distribuicao->redistribuir($processo, $analista, $request->user());
+        } catch (DistribuicaoException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('status', "Processo redistribuído para {$analista->name}.");
+    }
+
+    /**
      * O analista assume um processo da caixa do seu setor (HU-081). Fora dos seus
      * setores, a ação é negada de forma controlada (aviso), nunca silenciosa.
      */

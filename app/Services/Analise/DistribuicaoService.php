@@ -77,6 +77,41 @@ class DistribuicaoService
     }
 
     /**
+     * Redistribuição (apoio/gestor troca a analista responsável): só ANTES da
+     * conclusão da análise e SEM recalcular o SLA — o prazo é do processo, não
+     * da pessoa; trocar o responsável não zera atraso. Audita a troca com a
+     * analista anterior e a nova.
+     */
+    public function redistribuir(ViabilityRequest $request, User $novaAnalista, User $ator): void
+    {
+        $this->garantirVinculoDeSetor($request, $novaAnalista);
+
+        $status = $request->analysis_status;
+
+        if ($status === null || ! $status->permiteRedistribuicao()) {
+            throw DistribuicaoException::analiseConcluida($request);
+        }
+
+        DB::transaction(function () use ($request, $novaAnalista, $ator): void {
+            $analistaAnterior = $request->assigned_user_id;
+
+            $request->forceFill([
+                'assigned_user_id' => $novaAnalista->id,
+                'assigned_at' => now(),
+            ])->save();
+
+            $this->audit->log('analise', 'redistribuir', "Processo redistribuído para outra analista do setor (solicitação #{$request->id}).", [
+                'viability_request_id' => $request->id,
+                'protocol_number' => $request->protocol_number,
+                'sector_id' => $request->sector_id,
+                'analista_anterior_id' => $analistaAnterior,
+                'assigned_user_id' => $novaAnalista->id,
+                'ator_id' => $ator->id,
+            ], $request);
+        });
+    }
+
+    /**
      * Núcleo da atribuição: valida o vínculo de setor, grava assigned_user_id/
      * assigned_at e recalcula o SLA (etapa análise) via forceFill, SEM alterar
      * sector_id (não sai da caixa) nem o status (segue em_analise), e audita

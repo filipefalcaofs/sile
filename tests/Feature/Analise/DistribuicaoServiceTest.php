@@ -3,6 +3,7 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStage;
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
 use App\Models\Sector;
@@ -201,5 +202,98 @@ class DistribuicaoServiceTest extends TestCase
         }
 
         $this->assertNull($request->fresh()->assigned_user_id);
+    }
+
+    /**
+     * Processo já atribuído a uma analista, em etapa de análise com prazo
+     * corrente — o estado de onde a redistribuição parte.
+     */
+    private function processoAtribuido(Sector $sector, User $analista, AnalysisStatus $status = AnalysisStatus::EmAnalise): ViabilityRequest
+    {
+        $request = $this->processoNaCaixa($sector);
+
+        $request->forceFill([
+            'assigned_user_id' => $analista->id,
+            'assigned_at' => now()->subDay(),
+            'analysis_stage' => AnalysisStage::Analise,
+            'analysis_stage_started_at' => now()->subDay(),
+            'analysis_due_at' => now()->addDays(9),
+            'analysis_status' => $status,
+        ])->save();
+
+        return $request;
+    }
+
+    public function test_redistribuir_troca_a_analista_mantendo_o_prazo_e_audita_a_troca(): void
+    {
+        // O prazo é do processo, não da pessoa: a troca NÃO recalcula o SLA.
+        Carbon::setTestNow('2026-03-10 09:00:00');
+
+        $sector = Sector::factory()->create();
+        $analistaA = $this->analistaDoSetor($sector);
+        $analistaB = $this->analistaDoSetor($sector);
+        $apoio = User::factory()->create();
+        $request = $this->processoAtribuido($sector, $analistaA);
+        $prazoOriginal = $request->analysis_due_at->toDateTimeString();
+
+        $this->service()->redistribuir($request, $analistaB, $apoio);
+
+        $fresh = $request->fresh();
+        $this->assertSame($analistaB->id, $fresh->assigned_user_id);
+        $this->assertSame($prazoOriginal, $fresh->analysis_due_at->toDateTimeString(), 'A redistribuição não recalcula o SLA.');
+        $this->assertSame($sector->id, $fresh->sector_id, 'O processo não sai da caixa do setor (RN-004).');
+
+        $activity = Activity::query()
+            ->where('log_name', 'analise')
+            ->where('event', 'redistribuir')
+            ->where('subject_id', $request->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($activity, 'A redistribuição deve ser auditada de forma síncrona (RN-006).');
+        $this->assertSame($analistaA->id, $activity->properties['analista_anterior_id']);
+        $this->assertSame($analistaB->id, $activity->properties['assigned_user_id']);
+        $this->assertSame($apoio->id, $activity->properties['ator_id']);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_redistribuir_e_bloqueada_apos_a_conclusao_da_analise(): void
+    {
+        $sector = Sector::factory()->create();
+        $analistaA = $this->analistaDoSetor($sector);
+        $analistaB = $this->analistaDoSetor($sector);
+        $request = $this->processoAtribuido($sector, $analistaA, AnalysisStatus::AnaliseConcluida);
+
+        try {
+            $this->service()->redistribuir($request, $analistaB, User::factory()->create());
+            $this->fail('Esperava DistribuicaoException para análise concluída.');
+        } catch (DistribuicaoException) {
+            // esperado
+        }
+
+        $this->assertSame($analistaA->id, $request->fresh()->assigned_user_id);
+        $this->assertDatabaseMissing('activity_log', [
+            'log_name' => 'analise',
+            'event' => 'redistribuir',
+            'subject_id' => $request->id,
+        ]);
+    }
+
+    public function test_redistribuir_exige_analista_vinculada_ao_setor(): void
+    {
+        $sector = Sector::factory()->create();
+        $analistaA = $this->analistaDoSetor($sector);
+        $forasteiro = User::factory()->create();
+        $request = $this->processoAtribuido($sector, $analistaA);
+
+        try {
+            $this->service()->redistribuir($request, $forasteiro, User::factory()->create());
+            $this->fail('Esperava DistribuicaoException para analista fora do setor.');
+        } catch (DistribuicaoException) {
+            // esperado
+        }
+
+        $this->assertSame($analistaA->id, $request->fresh()->assigned_user_id);
     }
 }

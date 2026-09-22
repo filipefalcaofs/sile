@@ -647,6 +647,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
 
             Route::middleware('permission:distribuir-processos')->group(function () {
                 Route::post('distribuir', [CaixaSetorController::class, 'distribuir'])->name('distribuir');
+                Route::post('redistribuir', [CaixaSetorController::class, 'redistribuir'])->name('redistribuir');
             });
         });
 
@@ -675,6 +676,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('ficha/nova-revisao', [AnalysisRecordController::class, 'novaRevisao'])->name('ficha.nova-revisao');
             // Sugestão de minuta de parecer por IA (HU-118) — apoio, nunca decisão.
             Route::post('ficha/sugerir-parecer', [AnalysisRecordController::class, 'sugerirParecer'])->name('ficha.sugerir-parecer');
+            Route::post('ficha/sugerir-justificativa', [AnalysisRecordController::class, 'sugerirJustificativa'])->name('ficha.sugerir-justificativa');
             Route::post('ficha/gerar-resumo', [AnalysisRecordController::class, 'gerarResumo'])->name('ficha.gerar-resumo');
             Route::get('ficha/diff', [AnalysisRecordController::class, 'diff'])->name('ficha.diff');
             Route::get('precedentes', [PrecedenteController::class, 'show'])->name('precedentes');

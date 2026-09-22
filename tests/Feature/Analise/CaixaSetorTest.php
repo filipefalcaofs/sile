@@ -351,4 +351,50 @@ class CaixaSetorTest extends TestCase
         $this->assertTrue($itens->firstWhere('id', $emAnalise->id)['pode_redistribuir']);
         $this->assertFalse($itens->firstWhere('id', $concluido->id)['pode_redistribuir']);
     }
+
+    public function test_apoio_redistribui_processo_para_outra_analista_do_setor(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analistaA = $this->analistaDoSetor($setor);
+        $analistaB = $this->analistaDoSetor($setor);
+        $processo = $this->processoNaCaixa($setor);
+        $processo->forceFill([
+            'assigned_user_id' => $analistaA->id,
+            'assigned_at' => now(),
+            'analysis_status' => AnalysisStatus::EmAnalise,
+        ])->save();
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/redistribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $analistaB->id,
+            ])
+            ->assertSessionHas('status');
+
+        $this->assertSame($analistaB->id, $processo->fresh()->assigned_user_id);
+    }
+
+    public function test_redistribuir_retorna_erro_controlado_quando_a_analise_ja_foi_concluida(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analistaA = $this->analistaDoSetor($setor);
+        $analistaB = $this->analistaDoSetor($setor);
+        $processo = $this->processoNaCaixa($setor);
+        $processo->forceFill([
+            'assigned_user_id' => $analistaA->id,
+            'assigned_at' => now(),
+            'analysis_status' => AnalysisStatus::AnaliseConcluida,
+        ])->save();
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/redistribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $analistaB->id,
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertSame($analistaA->id, $processo->fresh()->assigned_user_id);
+    }
 }
