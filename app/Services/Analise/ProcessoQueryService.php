@@ -34,6 +34,9 @@ class ProcessoQueryService
         'sede_escritorio' => 'Sede de Escritório',
     ];
 
+    /** Filtros oferecidos nas caixas (setor e analista) — subconjunto do SAPS. */
+    public const CHAVES_FILTRO_CAIXA = ['analysis_status', 'servico', 'protocolo', 'bap', 'data_de', 'data_ate', 'nome', 'cnpj', 'bairro', 'categoria'];
+
     /**
      * Grupo de status (filtro macro do SAPS) → conjunto de status do enum.
      *

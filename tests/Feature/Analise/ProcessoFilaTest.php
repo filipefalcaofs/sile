@@ -7,6 +7,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityServiceType;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -286,5 +287,59 @@ class ProcessoFilaTest extends TestCase
             'result' => 'sucesso',
             'causer_id' => $analista->id,
         ]);
+    }
+
+    public function test_fila_ignora_parametros_fora_da_whitelist(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $primeiro = $this->processo(['assigned_user_id' => $analista->id]);
+        $segundo = $this->processo(['assigned_user_id' => $analista->id]);
+
+        $props = $this->filaProps($analista, 'meus', 'status=deferida');
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($primeiro->id, $ids);
+        $this->assertContains($segundo->id, $ids);
+    }
+
+    public function test_fila_filtra_por_servico(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $servico = ViabilityServiceType::factory()->create();
+
+        $alvo = $this->processo(['assigned_user_id' => $analista->id]);
+        $alvo->forceFill(['service_type_id' => $servico->id])->save();
+
+        $outro = $this->processo(['assigned_user_id' => $analista->id]);
+
+        $props = $this->filaProps($analista, 'meus', "servico={$servico->id}");
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($alvo->id, $ids);
+        $this->assertNotContains($outro->id, $ids);
+    }
+
+    public function test_fila_filtra_por_periodo_de_entrada(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $hoje = now()->toDateString();
+
+        $deHoje = $this->processo(['assigned_user_id' => $analista->id]);
+        $deHoje->forceFill(['protocoled_at' => now()])->save();
+
+        $antigo = $this->processo(['assigned_user_id' => $analista->id]);
+        $antigo->forceFill(['protocoled_at' => now()->subDays(10)])->save();
+
+        $props = $this->filaProps($analista, 'meus', "data_de={$hoje}");
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($deHoje->id, $ids);
+        $this->assertNotContains($antigo->id, $ids);
     }
 }

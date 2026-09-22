@@ -106,7 +106,10 @@ class ProcessoController extends Controller
         $modo = in_array($modo, ['meus', 'setor'], true) ? $modo : 'meus';
 
         $user = $request->user();
-        $filtros = $this->filtros($request);
+        $filtros = [];
+        foreach (ProcessoQueryService::CHAVES_FILTRO_CAIXA as $chave) {
+            $filtros[$chave] = $request->string($chave)->toString();
+        }
         $perPage = $this->perPage($request);
 
         $processos = $this->processos->aplicarFiltros($this->processos->fila($user, $modo), $filtros)

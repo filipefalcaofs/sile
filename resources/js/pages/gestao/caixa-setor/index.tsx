@@ -1,6 +1,6 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { type ReactNode, useState } from 'react';
-import ProcessoFiltros, { type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
+import ProcessoFiltros, { FILTROS_VAZIOS, type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
 import PageHeader from '@/components/app/page-header';
 import Select from '@/components/form/select';
 import { ArrowRightIcon, GroupIcon, UserCircleIcon } from '@/components/icons';
@@ -342,23 +342,7 @@ export default function CaixaSetorIndex({
                             analysisStatusOptions={analysisStatusOptions}
                             categoriaOptions={categoriaOptions}
                             onAplicar={(valores) => navegar({ filtros: valores })}
-                            onLimpar={() =>
-                                navegar({
-                                    filtros: {
-                                        ...filtrosDeCampo,
-                                        analysis_status: '',
-                                        servico: '',
-                                        protocolo: '',
-                                        bap: '',
-                                        data_de: '',
-                                        data_ate: '',
-                                        nome: '',
-                                        cnpj: '',
-                                        bairro: '',
-                                        categoria: '',
-                                    },
-                                })
-                            }
+                            onLimpar={() => navegar({ filtros: FILTROS_VAZIOS })}
                         />
 
                         <div role="tablist" aria-label="Visões da caixa do setor" className="flex border-b border-gray-200 dark:border-gray-800">

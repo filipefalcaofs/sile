@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import ProcessoFiltros, { type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
+import ProcessoFiltros, { FILTROS_VAZIOS, type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
 import PageHeader from '@/components/app/page-header';
 import {
     CategoriaBadges,
@@ -221,23 +221,7 @@ export default function Fila({
                                 analysisStatusOptions={analysisStatusOptions}
                                 categoriaOptions={categoriaOptions}
                                 onAplicar={(valores) => navegar({ filtros: valores })}
-                                onLimpar={() =>
-                                    navegar({
-                                        filtros: {
-                                            ...filtrosDeCampo,
-                                            analysis_status: '',
-                                            servico: '',
-                                            protocolo: '',
-                                            bap: '',
-                                            data_de: '',
-                                            data_ate: '',
-                                            nome: '',
-                                            cnpj: '',
-                                            bairro: '',
-                                            categoria: '',
-                                        },
-                                    })
-                                }
+                                onLimpar={() => navegar({ filtros: FILTROS_VAZIOS })}
                             />
 
                             <div

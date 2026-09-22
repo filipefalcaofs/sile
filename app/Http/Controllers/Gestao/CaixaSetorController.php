@@ -247,10 +247,9 @@ class CaixaSetorController extends Controller
      */
     private function filtrosDaCaixa(Request $request): array
     {
-        $chaves = ['analysis_status', 'servico', 'protocolo', 'bap', 'data_de', 'data_ate', 'nome', 'cnpj', 'bairro', 'categoria'];
         $filtros = [];
 
-        foreach ($chaves as $chave) {
+        foreach (ProcessoQueryService::CHAVES_FILTRO_CAIXA as $chave) {
             $filtros[$chave] = $request->string($chave)->toString();
         }
 

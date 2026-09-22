@@ -556,4 +556,48 @@ class CaixaSetorTest extends TestCase
         $this->assertArrayHasKey('servicoOptions', $props);
         $this->assertArrayHasKey('analysis_status', $props['filtros']);
     }
+
+    public function test_filtra_por_periodo_de_entrada(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+
+        $hoje = now()->toDateString();
+
+        $deHoje = $this->processoNaCaixa($setor);
+        $deHoje->forceFill(['protocoled_at' => now()])->save();
+
+        $antigo = $this->processoNaCaixa($setor);
+        $antigo->forceFill(['protocoled_at' => now()->subDays(10)])->save();
+
+        $response = $this->actingAs($apoio, 'gestao')
+            ->get("/gestao/caixa-setor?data_de={$hoje}")
+            ->assertOk();
+
+        $ids = collect($response->viewData('page')['props']['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($deHoje->id, $ids);
+        $this->assertNotContains($antigo->id, $ids);
+    }
+
+    public function test_filtra_por_bairro(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+
+        $alvo = $this->processoNaCaixa($setor);
+        $alvo->forceFill(['address_neighborhood' => 'Barra'])->save();
+
+        $outro = $this->processoNaCaixa($setor);
+        $outro->forceFill(['address_neighborhood' => 'Pituba'])->save();
+
+        $response = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?bairro=Barra')
+            ->assertOk();
+
+        $ids = collect($response->viewData('page')['props']['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($alvo->id, $ids);
+        $this->assertNotContains($outro->id, $ids);
+    }
 }
