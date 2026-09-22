@@ -338,4 +338,64 @@ class ProcessoConsultaTest extends TestCase
         $this->assertTrue($resultado->contains($comStatus->id));
         $this->assertFalse($resultado->contains($outro->id));
     }
+
+    public function test_busca_unica_encontra_empresa_ou_bap(): void
+    {
+        $empresa = Company::factory()->create([
+            'legal_name' => 'Padaria Boa Vista LTDA',
+            'trade_name' => 'Padaria Boa Vista',
+        ]);
+        $porEmpresa = $this->processo(['company_id' => $empresa->id]);
+        $porBap = $this->processo(['external_reference' => '5921000030-00990019/2026']);
+        $this->processo();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?busca=Boa%20Vista')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('processos.data', 1)
+                ->where('processos.data.0.id', $porEmpresa->id));
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?busca=00990019')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('processos.data', 1)
+                ->where('processos.data.0.id', $porBap->id));
+    }
+
+    public function test_abas_contam_o_recorte_sem_aplicar_a_propria_aba(): void
+    {
+        $this->processo(['status' => ViabilityRequestStatus::EmAnalise]);
+        $paraDistribuir = $this->processo(['status' => ViabilityRequestStatus::EmAnalise]);
+        $paraDistribuir->forceFill(['analysis_status' => AnalysisStatus::ParaDistribuir])->save();
+        $this->processo(['status' => ViabilityRequestStatus::EmPendencia]);
+        $this->processo(['status' => ViabilityRequestStatus::Deferida]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?status=em_pendencia')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('processos.data', 1)
+                ->where('abas.todos', 4)
+                ->where('abas.em_analise', 2)
+                ->where('abas.distribuir', 1)
+                ->where('abas.pendencia', 1)
+                ->where('abas.concluido', 1));
+    }
+
+    public function test_ordena_pelo_prazo_mais_curto(): void
+    {
+        $tarde = $this->processo();
+        $tarde->forceFill(['analysis_due_at' => now()->addDays(10)])->save();
+        $cedo = $this->processo();
+        $cedo->forceFill(['analysis_due_at' => now()->addDay()])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?ordem=prazo')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('processos.data.0.id', $cedo->id)
+                ->where('filtros.ordem', 'prazo'));
+    }
 }

@@ -49,6 +49,7 @@ export interface ProcessoItem {
     inscricao: string | null;
     categorias: ProcessoCategoria[];
     categoria: string | null;
+    servico: string | null;
     analista: string | null;
     assigned_user_id: number | null;
     setor: string | null;

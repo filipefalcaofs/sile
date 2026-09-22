@@ -27,7 +27,7 @@ class ProcessoResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $this->resource->loadMissing(['decision', 'encaminhamentoAnalise']);
+        $this->resource->loadMissing(['decision', 'encaminhamentoAnalise', 'serviceType']);
 
         $categorias = ProcessoQueryService::categoriasDe($this->resource);
 
@@ -57,6 +57,7 @@ class ProcessoResource extends JsonResource
             // Categoria primária para exibição compacta (lista/CSV); a lista
             // completa fica em `categorias`.
             'categoria' => $categorias[0]['label'] ?? null,
+            'servico' => $this->serviceType?->name,
             'analista' => $this->assignedTo?->name,
             'assigned_user_id' => $this->assigned_user_id,
             'setor' => $this->sector?->name,

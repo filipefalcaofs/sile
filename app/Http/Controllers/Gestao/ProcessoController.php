@@ -57,11 +57,13 @@ class ProcessoController extends Controller
     public function index(Request $request): Response|HttpResponse
     {
         $filtros = $this->filtros($request);
+        $ordem = $this->ordem($request);
+        $consulta = $filtros + ['ordem' => $ordem];
 
         if (in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
             return app(ReportExporter::class)->export(
                 app(ProcessosReportSource::class),
-                ReportFilters::fromArray($filtros),
+                ReportFilters::fromArray($consulta),
                 $request->string('formato')->lower()->toString(),
                 $request->user(),
             );
@@ -69,7 +71,7 @@ class ProcessoController extends Controller
 
         $perPage = $this->perPage($request);
 
-        $processos = $this->processos->filtered($filtros)
+        $processos = $this->processos->filtered($consulta)
             ->paginate($perPage)
             ->withQueryString()
             ->through(fn (ViabilityRequest $processo): array => (new ProcessoResource($processo))->resolve());
@@ -80,7 +82,8 @@ class ProcessoController extends Controller
 
         return Inertia::render('gestao/processos/index', [
             'processos' => $processos,
-            'filtros' => $filtros + ['per_page' => $perPage],
+            'filtros' => $consulta + ['per_page' => $perPage],
+            'abas' => $this->processos->contadoresConsulta($consulta),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'statusOptions' => $this->statusOptions(),
             'analysisStatusOptions' => AnalysisStatus::options(),
@@ -243,7 +246,7 @@ class ProcessoController extends Controller
         $chaves = [
             'grupo', 'status', 'analysis_status', 'protocolo', 'bap', 'produto_tvl', 'servico', 'setor',
             'analista', 'categoria', 'inscricao', 'nome', 'cnpj', 'cep', 'logradouro',
-            'bairro', 'data_de', 'data_ate',
+            'bairro', 'data_de', 'data_ate', 'busca',
         ];
 
         $filtros = [];
@@ -264,6 +267,13 @@ class ProcessoController extends Controller
     private function filtrosPreenchidos(array $filtros): array
     {
         return array_filter($filtros, fn ($valor): bool => $valor !== null && $valor !== '');
+    }
+
+    private function ordem(Request $request): string
+    {
+        $ordem = $request->string('ordem')->toString();
+
+        return in_array($ordem, ['recentes', 'prazo', 'status'], true) ? $ordem : 'recentes';
     }
 
     private function perPage(Request $request): int

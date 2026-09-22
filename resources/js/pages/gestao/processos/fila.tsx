@@ -113,13 +113,13 @@ export default function Fila({ modo, processos, contadores }: FilaProps) {
         {
             id: 'etapa',
             header: 'Etapa',
-            cellClassName: 'whitespace-nowrap',
+            cellClassName: 'max-w-64 align-top whitespace-normal',
             cell: (item) => (
-                <div className="flex max-w-72 flex-col gap-1">
+                <div className="flex w-64 max-w-full flex-col items-start gap-1">
                     <span className="text-gray-700 dark:text-gray-300">{item.analysis_stage_label ?? '—'}</span>
                     <CategoriaBadges categorias={item.categorias} />
                     {item.sem_decisao_automatica && item.motivo_encaminhamento && (
-                        <span className="text-theme-xs text-gray-500 dark:text-gray-400">
+                        <span className="min-w-0 whitespace-normal text-theme-xs leading-snug text-gray-500 dark:text-gray-400">
                             Sem decisão automática — {item.motivo_encaminhamento}
                         </span>
                     )}

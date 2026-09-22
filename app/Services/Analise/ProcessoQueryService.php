@@ -61,11 +61,12 @@ class ProcessoQueryService
      */
     public function filtered(array $filtros): Builder
     {
-        return ViabilityRequest::query()
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise'])
+        $query = ViabilityRequest::query()
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name'])
             ->when($this->valor($filtros, 'grupo'), fn (Builder $q, string $grupo) => $this->aplicarGrupo($q, $grupo))
             ->when($this->valor($filtros, 'status'), fn (Builder $q, string $status) => $q->where('status', $status))
             ->when($this->valor($filtros, 'analysis_status'), fn (Builder $q, string $s) => $q->where('analysis_status', $s))
+            ->when($this->valor($filtros, 'busca'), fn (Builder $q, string $v) => $this->aplicarBusca($q, $v))
             ->when($this->valor($filtros, 'protocolo'), fn (Builder $q, string $v) => $q->whereLike('protocol_number', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'bap'), fn (Builder $q, string $v) => $q->whereLike('external_reference', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'produto_tvl'), fn (Builder $q, string $v) => $q->whereHas('decision', fn ($d) => $d->whereLike('tvl_product_number', "%{$v}%", caseSensitive: false)))
@@ -80,8 +81,32 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'cnpj'), fn (Builder $q, string $v) => $q->whereHas('company', fn ($c) => $c->whereLike('cnpj', "%{$v}%", caseSensitive: false)))
             ->when($this->data($filtros, 'data_de'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '>=', $d))
             ->when($this->data($filtros, 'data_ate'), fn (Builder $q, string $d) => $q->whereDate('protocoled_at', '<=', $d))
-            ->when($this->categoria($filtros), fn (Builder $q, string $cat) => $this->aplicarCategoria($q, $cat))
-            ->orderByDesc('id');
+            ->when($this->categoria($filtros), fn (Builder $q, string $cat) => $this->aplicarCategoria($q, $cat));
+
+        return $this->aplicarOrdem($query, $this->valor($filtros, 'ordem'));
+    }
+
+    /**
+     * Totais das abas da consulta. O recorte (busca e filtros avançados) entra;
+     * grupo, status e situação da análise ficam de fora, porque são a própria aba.
+     *
+     * @param  array<string, mixed>  $filtros
+     * @return array{todos: int, em_analise: int, distribuir: int, pendencia: int, concluido: int}
+     */
+    public function contadoresConsulta(array $filtros): array
+    {
+        $semAba = $filtros;
+        $semAba['grupo'] = '';
+        $semAba['status'] = '';
+        $semAba['analysis_status'] = '';
+
+        return [
+            'todos' => $this->filtered($semAba)->count(),
+            'em_analise' => $this->filtered(array_merge($semAba, ['status' => ViabilityRequestStatus::EmAnalise->value]))->count(),
+            'distribuir' => $this->filtered(array_merge($semAba, ['analysis_status' => 'para_distribuir']))->count(),
+            'pendencia' => $this->filtered(array_merge($semAba, ['status' => ViabilityRequestStatus::EmPendencia->value]))->count(),
+            'concluido' => $this->filtered(array_merge($semAba, ['grupo' => 'concluido']))->count(),
+        ];
     }
 
     /**
@@ -95,7 +120,7 @@ class ProcessoQueryService
     public function fila(User $user, string $modo): Builder
     {
         return $this->escopo($user, $modo)
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise'])
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name'])
             ->whereIn('status', self::STATUS_FILA)
             ->orderBy('analysis_due_at')
             ->orderBy('id');
@@ -208,6 +233,46 @@ class ProcessoQueryService
         }
 
         return $categorias;
+    }
+
+    /**
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    /**
+     * Busca única da consulta: protocolo, BAP, TVL, CNPJ ou nome da empresa.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    private function aplicarBusca(Builder $query, string $busca): Builder
+    {
+        return $query->where(function (Builder $inner) use ($busca) {
+            $inner->whereLike('protocol_number', "%{$busca}%", caseSensitive: false)
+                ->orWhereLike('external_reference', "%{$busca}%", caseSensitive: false)
+                ->orWhereHas('company', fn (Builder $empresa) => $empresa
+                    ->whereLike('legal_name', "%{$busca}%", caseSensitive: false)
+                    ->orWhereLike('trade_name', "%{$busca}%", caseSensitive: false)
+                    ->orWhereLike('cnpj', "%{$busca}%", caseSensitive: false))
+                ->orWhereHas('decision', fn (Builder $decisao) => $decisao
+                    ->whereLike('tvl_product_number', "%{$busca}%", caseSensitive: false));
+        });
+    }
+
+    /**
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    private function aplicarOrdem(Builder $query, ?string $ordem): Builder
+    {
+        return match ($ordem) {
+            'prazo' => $query
+                ->orderByRaw('case when analysis_due_at is null then 1 else 0 end')
+                ->orderBy('analysis_due_at')
+                ->orderByDesc('id'),
+            'status' => $query->orderBy('status')->orderByDesc('id'),
+            default => $query->orderByDesc('id'),
+        };
     }
 
     /**
