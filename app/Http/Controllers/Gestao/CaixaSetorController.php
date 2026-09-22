@@ -89,6 +89,9 @@ class CaixaSetorController extends Controller
                 'cnpj' => $processo->company?->formatted_cnpj,
                 'status' => $processo->status->value,
                 'status_label' => $processo->status->label(),
+                // Eixo operacional: a linha em vistoria distribui para a lista
+                // de vistoriadores, não para a lista geral de analistas.
+                'analysis_status' => $processo->analysis_status?->value,
                 'analysis_stage' => $processo->analysis_stage?->value,
                 'analysis_stage_label' => $processo->analysis_stage?->label(),
                 'sector' => $processo->sector?->name,
@@ -121,6 +124,22 @@ class CaixaSetorController extends Controller
                 ->all()
             : [];
 
+        // Vistoriadores do(s) setor(es): o seletor da distribuição usa ESTA
+        // lista quando a linha está no eixo de vistoria (a regra é enforced
+        // pelo DistribuicaoService; aqui é a conveniência da tela).
+        $vistoriadores = $podeDistribuir
+            ? User::query()
+                ->permission('preencher-ficha-vistoria')
+                ->whereHas('sectors', fn ($query) => $query->whereIn('sectors.id', $sectorIds))
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn (User $vistoriador): array => [
+                    'id' => $vistoriador->id,
+                    'name' => $vistoriador->name,
+                ])
+                ->all()
+            : [];
+
         $this->audit->log('analise', 'consulta-caixa', 'Consulta da caixa do setor', [
             'setores' => $sectorIds->all(),
         ]);
@@ -136,6 +155,7 @@ class CaixaSetorController extends Controller
             'podeDistribuir' => $podeDistribuir,
             'podeAssumir' => $podeAssumir,
             'analistas' => $analistas,
+            'vistoriadores' => $vistoriadores,
         ]);
     }
 
@@ -160,7 +180,11 @@ class CaixaSetorController extends Controller
         $response = back()->with('status', "{$resumo['ok']} processo(s) distribuído(s) a {$analista->name}.");
 
         if ($resumo['falhas'] !== []) {
-            $response->with('warning', count($resumo['falhas']).' processo(s) não distribuído(s): analista não vinculado ao setor.');
+            // Motivo real da falha (nunca genérico): vínculo de setor OU a
+            // regra da vistoria (só vistoriador recebe processo em vistoria).
+            $motivos = collect($resumo['falhas'])->pluck('motivo')->unique()->implode(' ');
+
+            $response->with('warning', count($resumo['falhas']).' processo(s) não distribuído(s): '.$motivos);
         }
 
         return $response;
