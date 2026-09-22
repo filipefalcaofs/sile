@@ -209,18 +209,21 @@ class FluxoExpressoService
         // Reexecução FRESCA dos motores — a decisão é autoritativa, não o snapshot.
         $resolved = $this->resolver->resolve($request);
 
+        // RN-041-A: Quadro 10 ou Quadro 11A vedam o uso no local. Isso
+        // independe do risco — a análise só recebe o que ainda pode deferir.
+        // O veto locacional vem ANTES do gate de alto risco (e-mail SEDUR
+        // 21/09/2026, item 5): a legislação impossibilita o deferimento, então
+        // o processo é indeferido expresso, nunca encaminhado à análise.
+        if ($resolved->consolidado === ResultadoViabilidade::NaoPermitido->value) {
+            return $this->emitir($request, $resolved, $actor);
+        }
+
         // RN-041-B: alto risco — determinado pelo CNAE ou por pergunta
         // condicional que o eleve — nunca é decidido automaticamente, nem
         // deferido nem indeferido. Vai à análise com a fundamentação do
-        // motor, inclusive o veto locacional quando houver.
+        // motor. Só chega aqui SEM veto locacional (o veto indeferiu acima).
         if ($resolved->temAltoRisco()) {
             return $this->encaminharAnalise($request, 'atividade de alto risco — análise técnica', $actor, $resolved);
-        }
-
-        // RN-041-A: Quadro 10 ou Quadro 11A vedam o uso no local. Isso
-        // independe do risco — a análise só recebe o que ainda pode deferir.
-        if ($resolved->consolidado === ResultadoViabilidade::NaoPermitido->value) {
-            return $this->emitir($request, $resolved, $actor);
         }
 
         if (! $resolved->elegivelExpresso()) {

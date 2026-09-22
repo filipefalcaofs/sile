@@ -283,14 +283,14 @@ class FluxoExpressoDecisaoTest extends TestCase
         Event::assertDispatched(ResultadoEmitido::class);
     }
 
-    public function test_alto_risco_por_pergunta_condicional_vai_para_analise_mesmo_com_veto_locacional(): void
+    public function test_alto_risco_por_pergunta_condicional_indefere_expresso_com_veto_locacional(): void
     {
-        // RN-041-B: o Decreto classifica o CNAE como baixo_a, mas a pergunta
-        // condicional P3 (modo artesanal = NÃO) eleva o ramo a ID3-11 — ALTO
-        // na planilha (industrial). Alto risco nunca é decidido
-        // automaticamente: mesmo com o Quadro 10 proibindo o grupo na zona, o
-        // processo vai à análise com o veto locacional fundamentado, sem
-        // decisão e sem evento.
+        // RN-041-B revista pelo e-mail SEDUR 21/09/2026 (item 5): o Decreto
+        // classifica o CNAE como baixo_a, mas a pergunta condicional P3 (modo
+        // artesanal = NÃO) eleva o ramo a ID3-11 — ALTO na planilha
+        // (industrial). Com o Quadro 10 proibindo o grupo na zona, o processo
+        // é INDEFERIDO expresso: a legislação impossibilita o deferimento e
+        // não se justifica a análise.
         Event::fake([ResultadoEmitido::class]);
         $this->seed([RiskTriggerSeeder::class, PropertyTypeSeeder::class]);
         $this->fakeBairroComZona('ZR-1');
@@ -315,19 +315,23 @@ class FluxoExpressoDecisaoTest extends TestCase
 
         $result = $this->service()->decide($request);
 
-        $this->assertSame(ViabilityRequestStatus::EmAnalise, $result->status);
-        $this->assertNull($result->decision);
-        $this->assertFalse($result->emitted);
-        $this->assertDatabaseCount('viability_decisions', 0);
-        Event::assertNotDispatched(ResultadoEmitido::class);
+        // E-mail SEDUR 21/09/2026 (item 5): vedado pelo Quadro 10/11A, o
+        // processo é INDEFERIDO expresso mesmo com alto risco — a legislação
+        // impossibilita o deferimento, não se justifica a análise.
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $result->status);
+        $this->assertNotNull($result->decision);
+        $this->assertSame(DecisionOutcome::Indeferida, $result->decision->outcome);
+        $this->assertNull($result->decision->tvl_product_number);
+        $this->assertTrue($result->emitted);
+        Event::assertDispatched(ResultadoEmitido::class);
     }
 
-    public function test_alto_risco_do_cnae_vai_para_analise_mesmo_com_veto_locacional(): void
+    public function test_alto_risco_do_cnae_indefere_expresso_com_veto_locacional(): void
     {
-        // RN-041-B: CNAE cuja atividade no local é ALTO por natureza na
-        // planilha (0210-1/07 → ID2-07). Mesmo com o Quadro 10 proibindo o
-        // grupo na zona, vai à análise — o indeferimento automático é
-        // reservado a baixo/médio risco.
+        // RN-041-B revista pelo e-mail SEDUR 21/09/2026 (item 5): CNAE cuja
+        // atividade no local é ALTO por natureza na planilha (0210-1/07 →
+        // ID2-07). Com o Quadro 10 proibindo o grupo na zona, o processo é
+        // INDEFERIDO expresso — o veto locacional independe do risco.
         Event::fake([ResultadoEmitido::class]);
         $this->seed([RiskTriggerSeeder::class, PropertyTypeSeeder::class]);
         $this->fakeBairroComZona('ZR-1');
@@ -344,11 +348,12 @@ class FluxoExpressoDecisaoTest extends TestCase
 
         $result = $this->service()->decide($request);
 
-        $this->assertSame(ViabilityRequestStatus::EmAnalise, $result->status);
-        $this->assertNull($result->decision);
-        $this->assertFalse($result->emitted);
-        $this->assertDatabaseCount('viability_decisions', 0);
-        Event::assertNotDispatched(ResultadoEmitido::class);
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $result->status);
+        $this->assertNotNull($result->decision);
+        $this->assertSame(DecisionOutcome::Indeferida, $result->decision->outcome);
+        $this->assertNull($result->decision->tvl_product_number);
+        $this->assertTrue($result->emitted);
+        Event::assertDispatched(ResultadoEmitido::class);
     }
 
     public function test_permitido_com_condicoes_defere(): void

@@ -52,13 +52,14 @@ class AnaliseSmokeTest extends TestCase
     use LazilyRefreshDatabase;
     use SeedsTratamentoPlanilha;
 
-    public function test_fluxo_humano_defere_com_divergencia_e_emite_tvl(): void
+    public function test_fluxo_humano_defere_e_emite_tvl(): void
     {
         // Caminho HUMANO completo: semi-expresso (uma CNAE de risco alto torna
-        // inelegível) com a zona identificada → a ficha vem PRÉ-ANALISADA (sugere
-        // 4712100=deferida, 4731800=indeferida). O analista DIVERGE da sugestão
-        // de indeferimento da 2ª (defere com justificativa) → DEFERE o processo
-        // com TVL, gravando a divergência analista×motor.
+        // inelegível) com a zona identificada e PERMITIDA nos dois quadros → a
+        // ficha vem PRÉ-ANALISADA (sem sugestão pré-marcada — SEDUR 21/09). O
+        // analista defere as duas → DEFERE o processo com TVL. (Com a regra do
+        // e-mail SEDUR 21/09, veto locacional indefere expresso e NUNCA chega
+        // à análise — o cenário humano usa alto risco sem veto.)
         Notification::fake();
         $this->fakeBairroComZona('ZR-1');
 
@@ -68,7 +69,7 @@ class AnaliseSmokeTest extends TestCase
 
         $this->classificarMunicipal('4731800', RiscoMunicipal::BaixoA);
         $this->seedTratamento('4731800', 'nR2', 'nR2-04');
-        $this->seedQuadro10('ZR-1', 'nR2', Quadro10Permissao::Proibido);
+        $this->seedQuadro10('ZR-1', 'nR2', Quadro10Permissao::Permitido);
 
         $request = $this->protocoladaComCnaes(['4712100', '4731800']);
 
@@ -82,8 +83,6 @@ class AnaliseSmokeTest extends TestCase
         $this->assertNotNull($ficha);
         $this->assertSame(1, $ficha->revision);
         $this->assertTrue($ficha->engine_available, 'Com zona, a ficha deveria vir pré-analisada.');
-        $this->assertSame('deferida', $this->sugestao($ficha, '4712100'));
-        $this->assertSame('indeferida', $this->sugestao($ficha, '4731800'));
 
         // 2) DISTRIBUIR/ASSUMIR: o processo entra na caixa do setor e o analista
         // assume (HU-080/081).
@@ -91,26 +90,18 @@ class AnaliseSmokeTest extends TestCase
         $request->forceFill(['sector_id' => $sector->id])->save();
         app(DistribuicaoService::class)->assumir($request->fresh(), $analista);
 
-        // 3) PREENCHER/FINALIZAR com DIVERGÊNCIA: o analista DEFERE a 2ª CNAE
-        // (motor sugeriu indeferida) com justificativa própria.
+        // 3) PREENCHER/FINALIZAR: o analista defere as duas atividades.
         $service = app(AnalysisRecordService::class);
         $service->autosave($ficha, [
             'per_cnae' => [
                 ['cnae' => '4712100', 'status_escolhido' => 'deferida'],
-                ['cnae' => '4731800', 'status_escolhido' => 'deferida', 'justificativa' => 'Atividade acessória compatível com o local.'],
+                ['cnae' => '4731800', 'status_escolhido' => 'deferida'],
             ],
             'parecer' => 'Parecer técnico favorável às duas atividades.',
         ]);
         $finalizada = $service->finalizar($ficha->fresh(), $analista);
 
-        $this->assertDatabaseHas('analysis_divergences', [
-            'analysis_record_id' => $finalizada->id,
-            'cnae' => '4731800',
-            'field' => 'status',
-            'suggested_value' => 'indeferida',
-            'final_value' => 'deferida',
-            'justification' => 'Atividade acessória compatível com o local.',
-        ]);
+        $this->assertDatabaseCount('analysis_divergences', 0);
 
         // 4) DECIDIR: deferimento real (flow analise_tecnica + TVL); ResultadoEmitido
         // reusa os listeners da Fase 9.
@@ -150,13 +141,16 @@ class AnaliseSmokeTest extends TestCase
 
     public function test_fluxo_humano_indefere_sem_tvl(): void
     {
-        // INDEFERIR: semi-expresso com a zona PROIBINDO o grupo → o analista
-        // concorda (indeferida) → INDEFERE sem TVL; a SEFAZ ignora (RN-003).
+        // INDEFERIR: semi-expresso (alto risco) com a zona PERMITINDO — sem veto
+        // locacional, o processo vai à análise (e-mail SEDUR 21/09: veto locacional
+        // indeferiria expresso). O motor sugere deferida; o analista DIVERGE e
+        // indefere com parecer → INDEFERE sem TVL, com a divergência gravada; a
+        // SEFAZ ignora (RN-003).
         Notification::fake();
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4731800', RiscoMunicipal::Alto); // alto → semi-expresso
         $this->seedTratamento('4731800', 'nR2', 'nR2-04');
-        $this->seedQuadro10('ZR-1', 'nR2', Quadro10Permissao::Proibido);
+        $this->seedQuadro10('ZR-1', 'nR2', Quadro10Permissao::Permitido);
 
         $request = $this->protocoladaComCnaes(['4731800']);
 
@@ -165,7 +159,7 @@ class AnaliseSmokeTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->status);
 
         $ficha = $request->currentAnalysisRecord()->first();
-        $this->assertSame('indeferida', $this->sugestao($ficha, '4731800'));
+        $this->assertSame('deferida', $this->sugestao($ficha, '4731800'));
 
         [$sector, $analista] = $this->analistaNoSetor();
         $request->forceFill(['sector_id' => $sector->id])->save();
@@ -173,10 +167,21 @@ class AnaliseSmokeTest extends TestCase
 
         $service = app(AnalysisRecordService::class);
         $service->autosave($ficha, [
-            'per_cnae' => [['cnae' => '4731800', 'status_escolhido' => 'indeferida']],
+            'per_cnae' => [['cnae' => '4731800', 'status_escolhido' => 'indeferida', 'justificativa' => 'Incompatibilidade verificada em análise.']],
             'parecer' => 'Atividade não admitida na zona.',
         ]);
         $finalizada = $service->finalizar($ficha->fresh(), $analista);
+
+        // Divergência analista×motor gravada: o motor sugeriu deferida e o
+        // analista indeferiu com justificativa (HU-140 RN-002).
+        $this->assertDatabaseHas('analysis_divergences', [
+            'analysis_record_id' => $finalizada->id,
+            'cnae' => '4731800',
+            'field' => 'status',
+            'suggested_value' => 'deferida',
+            'final_value' => 'indeferida',
+            'justification' => 'Incompatibilidade verificada em análise.',
+        ]);
 
         $result = app(AnaliseTecnicaDecisionService::class)->decide($finalizada, $analista);
 
