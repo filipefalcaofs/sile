@@ -50,6 +50,20 @@ enum AnalysisStatus: string
     }
 
     /**
+     * A redistribuição (troca da analista responsável pelo apoio/gestor) só é
+     * permitida antes da conclusão da análise — depois de concluída, ou já em
+     * convite/vistoria, o responsável está consolidado.
+     */
+    public function permiteRedistribuicao(): bool
+    {
+        return match ($this) {
+            self::ParaDistribuir, self::Encaminhado, self::Analisar, self::EmAnalise => true,
+            self::AnaliseConcluida, self::EmConvite, self::ConviteRespondido,
+            self::ConviteCancelado, self::ConviteExpirado, self::Vistoriar, self::Vistoriado => false,
+        };
+    }
+
+    /**
      * @return list<array{value: string, label: string}>
      */
     public static function options(): array
