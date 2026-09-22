@@ -18,7 +18,7 @@ class TratamentoRegrasSeederTest extends TestCase
         $this->seed(TratamentoRegrasSeeder::class);
 
         $this->assertSame(32, TratamentoPergunta::query()->count());
-        $this->assertSame(2850, TratamentoCnaeBinding::query()->count());
+        $this->assertSame(3114, TratamentoCnaeBinding::query()->count());
         $this->assertSame(2850, TratamentoEnquadramento::query()->count());
     }
 

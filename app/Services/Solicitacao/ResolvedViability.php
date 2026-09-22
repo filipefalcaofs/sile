@@ -77,6 +77,28 @@ final readonly class ResolvedViability
     }
 
     /**
+     * Alto risco SEM ramo expresso curado da planilha. O gate RN-041-B cede
+     * quando a regra da planilha marca o ramo como expresso explícito (ex.:
+     * regra 51 — "Fluxo Expresso (ALTO RISCO)"): decisão SEDUR 22/09/2026, a
+     * planilha prevalece. O mapa de encaminhamento padrão nunca manda alto ao
+     * expresso, então fluxo expresso com nível alto só nasce do ramo curado.
+     */
+    public function temAltoRiscoForaDoExpresso(): bool
+    {
+        foreach ($this->por_cnae as $item) {
+            $consulta = $item['consulta'] ?? null;
+            $alto = ($consulta?->risco->encaminhamento['nivel'] ?? null) === 'alto';
+            $expressoCurado = ($consulta?->risco->encaminhamento['fluxo'] ?? null) === Fluxo::Expresso->value;
+
+            if ($alto && ! $expressoCurado) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Snapshot orientativo no shape EXATO que a simulação (Fase 8) persiste:
      * `ponto`, `area_m2` e `por_cnae` com a `consulta` serializada (toArray). O
      * objeto ConsultaViabilidadeResult fica fora do registro — ele só serve à

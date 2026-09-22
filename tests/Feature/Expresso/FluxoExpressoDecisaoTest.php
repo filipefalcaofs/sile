@@ -356,6 +356,43 @@ class FluxoExpressoDecisaoTest extends TestCase
         Event::assertDispatched(ResultadoEmitido::class);
     }
 
+    public function test_alto_risco_com_ramo_expresso_da_planilha_defere_expresso(): void
+    {
+        // Decisão SEDUR 22/09/2026: a planilha prevalece sobre a RN-041-B.
+        // Regra 51 — "Fluxo Expresso (ALTO RISCO)": P2=NÃO ≤ 1.250 m² defere
+        // expresso com TVL mesmo com o CNAE alto (990018/2026).
+        Event::fake([ResultadoEmitido::class]);
+        $this->seed([RiskTriggerSeeder::class, PropertyTypeSeeder::class]);
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('1032501', RiscoMunicipal::BaixoA);
+        $this->seedTratamentoPlanilha();
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $request = $this->protocoladaComCnaes(['1032501']);
+        $request->forceFill([
+            'tipo_imovel' => 'Edificação Comercial',
+            'tipo_imovel_normalized' => 'edificacao_comercial',
+            'used_area_m2' => 80.0,
+        ])->save();
+
+        $fresco = $request->fresh();
+        $fresco->respostasTratamento = [2 => false];
+
+        $resolvido = app(SolicitacaoViabilityResolver::class)->resolve($fresco);
+        $this->assertSame('alto', $resolvido->por_cnae[0]['consulta']->risco->encaminhamento['nivel'], 'A premissa é o nível ALTO da linha 07.12.13 da regra 51.');
+        $this->assertSame('expresso', $resolvido->por_cnae[0]['consulta']->risco->encaminhamento['fluxo'], 'A premissa é o ramo expresso curado da regra 51.');
+
+        $result = $this->service()->decide($fresco);
+
+        $this->assertSame(ViabilityRequestStatus::Deferida, $result->status);
+        $this->assertTrue($result->emitted);
+
+        $decision = $request->fresh()->decision;
+        $this->assertSame(DecisionOutcome::Deferida, $decision->outcome);
+        $this->assertNotNull($decision->tvl_product_number);
+        Event::assertDispatched(ResultadoEmitido::class);
+    }
+
     public function test_permitido_com_condicoes_defere(): void
     {
         // HU-074 / RN-006/009: permitido condicionado na zona → permitido_com_

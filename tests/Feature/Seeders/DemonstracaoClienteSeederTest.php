@@ -163,7 +163,7 @@ class DemonstracaoClienteSeederTest extends TestCase
         $this->seed(DemonstracaoClienteSeeder::class);
 
         $this->assertSame(
-            2850,
+            3114,
             TratamentoCnaeBinding::query()->count(),
             'Esperava os vínculos CNAE da planilha 20.08.26 no seed de homologação.',
         );

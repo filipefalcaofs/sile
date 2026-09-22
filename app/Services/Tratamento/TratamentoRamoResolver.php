@@ -7,6 +7,7 @@ use App\Enums\TipoImovelReconhecimento;
 use App\Models\RuleVersion;
 use App\Models\TratamentoCnaeBinding;
 use App\Models\TratamentoEnquadramento;
+use App\Models\TratamentoRegraRamo;
 use App\Services\Risco\TipoImovel;
 use Illuminate\Support\Collection;
 
@@ -45,6 +46,14 @@ class TratamentoRamoResolver
 
         foreach ($perguntas as $numero) {
             if (! array_key_exists((int) $numero, $input->respostas)) {
+                // A P3 só é exibida quando a P2 é SIM (texto das regras da
+                // família 52: "Se SIM na pergunta 2, exibir a pergunta 3").
+                // Com P2=NÃO ela não se aplica e não pode travar a resolução
+                // (pendência espúria do relatório SEDUR 21/09, item 25).
+                if ((int) $numero === 3 && ($input->respostas[2] ?? null) === false) {
+                    continue;
+                }
+
                 return new TratamentoRamoResult(
                     status: 'nao_resolvido',
                     motivo: "Pergunta {$numero} sem resposta",
@@ -59,7 +68,21 @@ class TratamentoRamoResolver
             ->get();
 
         $noLocal = $this->atividadeNoLocal($input, $perguntas);
-        $linha = $this->escolherLinha($enquadramentos, $noLocal, $input->respostas);
+        $tipoDirige = $this->tipoDirige($input->tipoImovel);
+
+        // O fluxo do ramo é dado curado dos textos oficiais das regras
+        // (treatment_regra_ramos) — quando o ramo traz código LOUOS, ele manda
+        // na linha (relatório SEDUR 21/09, item 18); quando traz só o fluxo,
+        // a linha segue a seleção atual e o fluxo vence a heurística.
+        $ramoCurado = $this->ramoCurado($bindings, $input->respostas, $input->areaUtilizada, $tipoDirige, (int) $versao->getKey());
+
+        $linha = null;
+
+        if ($ramoCurado !== null && $ramoCurado->codigo_louos !== null && $ramoCurado->codigo_louos !== '') {
+            $linha = $enquadramentos->firstWhere('codigo_louos', $ramoCurado->codigo_louos);
+        }
+
+        $linha ??= $this->escolherLinha($enquadramentos, $noLocal, $input->respostas);
 
         if ($linha === null) {
             return new TratamentoRamoResult(
@@ -116,7 +139,7 @@ class TratamentoRamoResolver
             $risco = 'medio';
         }
 
-        $fluxo = $this->fluxoDe($linha->codigo_louos, $subgrupo, $risco, $noLocal, $input->tipoImovel);
+        $fluxo = $ramoCurado?->fluxo ?? $this->fluxoDe($linha->codigo_louos, $subgrupo, $risco, $noLocal, $input->tipoImovel);
 
         $binding = $bindings->firstWhere('codigo_louos', $linha->codigo_louos);
 
@@ -198,7 +221,7 @@ class TratamentoRamoResolver
      * @param  Collection<int, TratamentoEnquadramento>  $outros
      * @param  array<int, bool>  $respostas
      */
-    private function escolherLinhaNoLocal($outros, array $respostas): TratamentoEnquadramento
+    private function escolherLinhaNoLocal($outros, array $respostas): ?TratamentoEnquadramento
     {
         if ($outros->count() === 1) {
             return $outros->first();
@@ -226,7 +249,69 @@ class TratamentoRamoResolver
             ) ?? $outros->first();
         }
 
-        return $outros->first();
+        // Sem resposta que decida entre várias linhas "no local", o sistema NÃO
+        // enquadra (relatório SEDUR 21/09, item 21 + decisão 22/09): null →
+        // nao_resolvido → análise. Nunca a primeira linha do arquivo (o default
+        // anterior assumia a linha ID/ALTO e chegou a indeferir o 990011).
+        return null;
+    }
+
+    /**
+     * Ramo curado da planilha (treatment_regra_ramos) para as regras do CNAE:
+     * casa pergunta decisiva × resposta × faixa (1.250 m²) × tipo que dirige
+     * regra; o mais específico vence. Null quando nada casa — o resolver cai
+     * na heurística (degradação honesta, nunca inferência silenciosa).
+     *
+     * @param  Collection<int, TratamentoCnaeBinding>  $bindings
+     * @param  array<int, bool>  $respostas
+     */
+    private function ramoCurado(Collection $bindings, array $respostas, ?float $area, bool $tipoDirige, int $versaoId): ?TratamentoRegraRamo
+    {
+        $regras = $bindings->pluck('regra')->filter()->unique()->values();
+
+        if ($regras->isEmpty()) {
+            return null;
+        }
+
+        $faixa = $area === null ? null : ($area <= 1250 ? 'ate_1250' : 'acima_1250');
+        $perguntaVinculada = $bindings->pluck('perguntas')->flatten()->filter()->map(fn (mixed $n): int => (int) $n)->unique()->first();
+
+        $ramos = TratamentoRegraRamo::query()
+            ->where('rule_version_id', $versaoId)
+            ->whereIn('regra', $regras)
+            ->get();
+
+        return $ramos
+            ->filter(function (TratamentoRegraRamo $ramo) use ($respostas, $faixa, $tipoDirige, $perguntaVinculada): bool {
+                // Ramo sem número de pergunta no texto (ex.: regra 50) casa com
+                // a pergunta vinculada ao CNAE.
+                $pergunta = $ramo->pergunta ?? $perguntaVinculada;
+
+                if ($pergunta === null || ! array_key_exists($pergunta, $respostas)) {
+                    return false;
+                }
+
+                if ($ramo->resposta !== null && $ramo->resposta !== (bool) $respostas[$pergunta]) {
+                    return false;
+                }
+
+                if ($ramo->faixa !== null && $ramo->faixa !== $faixa) {
+                    return false;
+                }
+
+                if ($ramo->tipo_dirige !== null && $ramo->tipo_dirige !== $tipoDirige) {
+                    return false;
+                }
+
+                return true;
+            })
+            // Mais específico vence: tipo que dirige regra pesa mais, depois a
+            // pergunta explícita (ramo curado à mão), depois faixa e resposta.
+            ->sortByDesc(fn (TratamentoRegraRamo $ramo): int => ($ramo->resposta !== null ? 1 : 0)
+                + ($ramo->faixa !== null ? 1 : 0)
+                + ($ramo->tipo_dirige !== null ? 2 : 0)
+                + ($ramo->pergunta !== null ? 2 : 0))
+            ->first();
     }
 
     /**

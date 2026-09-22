@@ -266,6 +266,50 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertSame('1011-2/01', $relatorio['consolidado']['cnae'] ?? null);
     }
 
+    public function test_itens_do_relatorio_2026_09_22_na_simulacao_real(): void
+    {
+        // Regressão ponta a ponta dos itens 18/20/25 do relatório SEDUR
+        // 21/09/2026, após o fluxo por ramo virar dado curado (plano
+        // 2026-09-22-fluxo-por-ramo-planilha).
+        $this->seedPlanilhaTratamento();
+        $this->seed([LouosQuadro10Seeder::class, LouosQuadro11Seeder::class]);
+
+        // Item 20 (990010): regra 1, P11=SIM → análise, NUNCA deferido
+        // automático (o motor deferia com TVL).
+        $regra1 = app(ReginProtocoloSimulacaoService::class)->simular('regra-1-nr');
+        $this->assertSame('em_analise', $regra1['status']);
+
+        // Item 25 (990018): regra 51 — "Fluxo Expresso (ALTO RISCO)" — defere
+        // expresso com TVL mesmo com o CNAE alto (a planilha prevalece).
+        $regra51 = app(ReginProtocoloSimulacaoService::class)->simular('regra-51');
+        $this->assertSame('deferida', $regra51['status']);
+
+        $processo51 = ViabilityRequest::query()
+            ->where('external_reference', app(ReginProtocoloCatalog::class)->porCodigo('regra-51')['processo'])
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($processo51?->decision?->tvl_product_number);
+
+        // Item 18 (990008): regra 50 — o 8630-5/02 é expresso com a linha
+        // 07.05.03 (não a primeira do arquivo) — sinalização por CNAE correta
+        // mesmo com o processo indo à análise pelo 4639-7/02.
+        app(ReginProtocoloSimulacaoService::class)->simular('dupla-r49-r50');
+
+        $processoDupla = ViabilityRequest::query()
+            ->where('external_reference', app(ReginProtocoloCatalog::class)->porCodigo('dupla-r49-r50')['processo'])
+            ->latest('id')
+            ->firstOrFail();
+
+        $resolvidoDupla = app(SolicitacaoViabilityResolver::class)->resolve($processoDupla);
+        $porCnae = collect($resolvidoDupla->por_cnae)->keyBy('cnae_formatado');
+        $clinicaCnae = $porCnae->get('8630-5/02');
+
+        $this->assertNotNull($clinicaCnae);
+        $this->assertSame('expresso', $clinicaCnae['consulta']->risco->encaminhamento['fluxo'] ?? null);
+        $this->assertSame('07.05.03', $clinicaCnae['consulta']->enquadramento->enquadramento['codigo_louos'] ?? null);
+    }
+
     public function test_galpao_do_43747_dirige_regra_e_classifica_pelo_motor_real(): void
     {
         $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('43747');
@@ -581,13 +625,29 @@ class ReginProtocoloSimulacaoTest extends TestCase
         // quadro sem regra = indeferimento expresso, este caso sai da exceção.
         // O mesmo vale para a dupla-r6-r23 (1020-1/01 → ID3-02): antes da
         // correção da P3 ela era DEFERIDA indevidamente (relatório SEDUR
-        // 21/09, item 16 — gravíssimo).
+        // 21/09, item 16 — gravíssimo). E para o 207 (regra 47, P11=SIM sem
+        // tipo que dirige): a regra manda "remeter para crítica do analista"
+        // SEM reenquadrar — o analista escolhe entre as linhas 07.05.xx, o
+        // sistema não assume (decisão SEDUR 22/09 — "não enquadrar"). A
+        // dupla-r1-r20 (regra 20, P11=SIM) fica pendente porque o texto
+        // "enquadrar com o segundo enquadramento disponível" é ambíguo
+        // (segunda linha do CNAE × coluna enquadramento2) e o risco do ramo
+        // (MÉDIO) conflita com as linhas (ALTO/BAIXO) — pendência de leitura
+        // da planilha com a SEDUR, registrada no plano 2026-09-22.
         $pendentesQuadro10PorChaveDeSubgrupo = [
             'dupla-r24-r48',
             'dupla-r6-r23',
             'regra-25-industrial',
             'regra-52-industrial',
             'dupla-r25-r52',
+            '207',
+            'dupla-r1-r20',
+            'dupla-r1-r24',
+            'dupla-r21-r22',
+            'dupla-r46-r47',
+            'regra-1-galpao',
+            'regra-1-id',
+            'regra-1-nr',
         ];
 
         foreach ($codigos as $codigo) {

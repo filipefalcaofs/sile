@@ -46,7 +46,7 @@ class TratamentoRegrasImportTest extends TestCase
         $this->assertSame(0, $segundo['importados']);
         $this->assertSame(
             TratamentoCnaeBinding::query()->where('rule_version_id', $versao->id)->count(),
-            2850,
+            3114,
         );
     }
 }

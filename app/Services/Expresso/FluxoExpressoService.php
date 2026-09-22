@@ -222,7 +222,10 @@ class FluxoExpressoService
         // condicional que o eleve — nunca é decidido automaticamente, nem
         // deferido nem indeferido. Vai à análise com a fundamentação do
         // motor. Só chega aqui SEM veto locacional (o veto indeferiu acima).
-        if ($resolved->temAltoRisco()) {
+        // Exceção da planilha (decisão SEDUR 22/09/2026): o ramo curado como
+        // expresso explícito (ex.: regra 51 — "Fluxo Expresso (ALTO RISCO)")
+        // não cai neste gate — a planilha prevalece.
+        if ($resolved->temAltoRiscoForaDoExpresso()) {
             return $this->encaminharAnalise($request, 'atividade de alto risco — análise técnica', $actor, $resolved);
         }
 

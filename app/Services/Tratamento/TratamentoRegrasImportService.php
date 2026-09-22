@@ -7,6 +7,7 @@ use App\Models\TratamentoCnaeBinding;
 use App\Models\TratamentoEnquadramento;
 use App\Models\TratamentoPergunta;
 use App\Models\TratamentoRegra;
+use App\Models\TratamentoRegraRamo;
 use RuntimeException;
 use SplFileObject;
 
@@ -80,6 +81,27 @@ class TratamentoRegrasImportService
             $importados,
             $atualizados,
         );
+
+        // Ramos curados de fluxo (relatório SEDUR 21/09, itens 18/20/21/25):
+        // o fluxo expresso/semiexpresso do ramo é dado extraído dos textos
+        // oficiais das regras — arquivo opcional; sem ele, a versão fica sem
+        // ramos e o resolver cai na heurística (degradação honesta).
+        $fluxoPath = $dir.'/regras-fluxo.csv';
+
+        if (is_file($fluxoPath)) {
+            $ramos = $this->lerCsv($fluxoPath, ['regra', 'pergunta', 'resposta', 'faixa', 'tipo_dirige', 'codigo_louos', 'fluxo']);
+            $lidos += $ramos['lidos'];
+            $rejected = [...$rejected, ...$ramos['rejeitados']];
+            $this->contarUpsert(
+                TratamentoRegraRamo::class,
+                $version,
+                $this->mapRamos($version, $ramos['rows']),
+                ['rule_version_id', 'chave'],
+                ['fluxo'],
+                $importados,
+                $atualizados,
+            );
+        }
 
         return [
             'lidos' => $lidos,
@@ -170,6 +192,53 @@ class TratamentoRegrasImportService
     }
 
     /**
+     * Ramos curados de fluxo: resposta SIM/NÃO → bool, faixa/tipo/código vazios
+     * → null; a chave normalizada (NULLs como '-') faz o upsert idempotente.
+     *
+     * @param  list<array<string, string>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private function mapRamos(RuleVersion $version, array $rows): array
+    {
+        $out = [];
+
+        foreach ($rows as $row) {
+            $resposta = match (mb_strtoupper($row['resposta'])) {
+                'SIM' => true,
+                'NÃO', 'NAO' => false,
+                default => null,
+            };
+            $pergunta = $row['pergunta'] !== '' ? (int) $row['pergunta'] : null;
+            $faixa = $row['faixa'] !== '' ? $row['faixa'] : null;
+            $tipoDirige = $row['tipo_dirige'] === '1' ? true : null;
+            $codigo = $row['codigo_louos'] !== '' ? $row['codigo_louos'] : null;
+
+            $chave = implode('|', [
+                $row['regra'],
+                $pergunta !== null ? (string) $pergunta : '-',
+                $resposta !== null ? (string) (int) $resposta : '-',
+                $faixa ?? '-',
+                $tipoDirige !== null ? '1' : '-',
+                $codigo ?? '-',
+            ]);
+
+            $out[] = [
+                'rule_version_id' => $version->getKey(),
+                'regra' => (int) $row['regra'],
+                'pergunta' => $pergunta,
+                'resposta' => $resposta,
+                'faixa' => $faixa,
+                'tipo_dirige' => $tipoDirige,
+                'codigo_louos' => $codigo,
+                'fluxo' => $row['fluxo'],
+                'chave' => $chave,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * @param  list<array<string, string>>  $rows
      * @return list<array<string, mixed>>
      */
@@ -210,16 +279,33 @@ class TratamentoRegrasImportService
      * @param  list<array<string, string>>  $rows
      * @return list<array<string, mixed>>
      */
+    /**
+     * Uma linha de binding por (cnae, regra, codigo_louos) — a coluna `regras`
+     * da planilha é pipe-separada ("26|27") e CADA regra vale (a resposta
+     * decide qual): truncar com (int) perdia a segunda regra e o ramo curado
+     * não casava (regra 27 do 4789-0/04, relatório SEDUR 21/09).
+     *
+     * @param  list<array<string, string>>  $rows
+     * @return list<array<string, mixed>>
+     */
     private function mapBindings(RuleVersion $version, array $rows): array
     {
-        return array_map(fn (array $row): array => [
-            'rule_version_id' => $version->getKey(),
-            'cnae' => $row['cnae'],
-            'regra' => (int) $row['regras'],
-            'codigo_louos' => $row['codigo_louos'],
-            'perguntas' => json_encode($this->listaInt($row['perguntas']), JSON_UNESCAPED_UNICODE),
-            'condicionantes' => json_encode($this->listaInt($row['condicionantes']), JSON_UNESCAPED_UNICODE),
-        ], $rows);
+        $out = [];
+
+        foreach ($rows as $row) {
+            foreach ($this->listaInt($row['regras']) as $regra) {
+                $out[] = [
+                    'rule_version_id' => $version->getKey(),
+                    'cnae' => $row['cnae'],
+                    'regra' => $regra,
+                    'codigo_louos' => $row['codigo_louos'],
+                    'perguntas' => json_encode($this->listaInt($row['perguntas']), JSON_UNESCAPED_UNICODE),
+                    'condicionantes' => json_encode($this->listaInt($row['condicionantes']), JSON_UNESCAPED_UNICODE),
+                ];
+            }
+        }
+
+        return $out;
     }
 
     /**

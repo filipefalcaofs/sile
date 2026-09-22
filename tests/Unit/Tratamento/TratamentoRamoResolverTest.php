@@ -139,6 +139,87 @@ class TratamentoRamoResolverTest extends TestCase
         $this->assertSame('semiexpresso', $ramo->fluxo);
     }
 
+    public function test_regra_1_no_local_remete_a_critica_semiexpresso(): void
+    {
+        // Relatório SEDUR 21/09 (item 20 — 990010): regra 1, P11=SIM →
+        // "registrar e remeter para crítica do analista" (semiexpresso) —
+        // nunca expresso com deferimento automático. Sem resposta que decida
+        // entre as duas linhas "no local" da regra, o sistema não enquadra:
+        // nao_resolvido → análise (decisão SEDUR 22/09).
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '4511-1/01',
+            respostas: [11 => true],
+            areaUtilizada: 80.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('nao_resolvido', $ramo->status);
+    }
+
+    public function test_regra_51_fora_do_local_e_expresso_mesmo_com_alto_risco(): void
+    {
+        // Item 25 (990018): regra 51 — P2=NÃO ≤ 1.250 m² → "Fluxo Expresso
+        // (ALTO RISCO)": a planilha prevalece, expresso mesmo com risco alto.
+        // Cobre também a pendência espúria: a P3 só é exigida quando P2=SIM
+        // (regra 52: "Se SIM na pergunta 2, exibir a pergunta 3").
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1032-5/01',
+            respostas: [2 => false],
+            areaUtilizada: 80.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.12.13', $ramo->codigoLouos);
+        $this->assertSame('expresso', $ramo->fluxo);
+    }
+
+    public function test_regra_50_no_local_e_expresso_com_a_linha_da_regra(): void
+    {
+        // Item 18 (990008): regra 50 — P11=SIM ≤ 1.250 m² → expresso com a
+        // linha 07.05.03 (clínica), não a primeira do arquivo (07.05.01).
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '8630-5/02',
+            respostas: [11 => true],
+            areaUtilizada: 80.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.05.03', $ramo->codigoLouos);
+        $this->assertSame('expresso', $ramo->fluxo);
+    }
+
+    public function test_sem_resposta_decisiva_nao_enquadra(): void
+    {
+        // Item 21 (990011): várias linhas "no local" e nenhuma resposta que
+        // decida entre elas → o sistema NÃO enquadra (análise), nunca assume
+        // a primeira linha ID do arquivo.
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1013-9/01',
+            respostas: [11 => true],
+            areaUtilizada: 80.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('nao_resolvido', $ramo->status);
+    }
+
+    public function test_regra_27_no_local_e_expresso_com_a_linha_da_regra(): void
+    {
+        // Regra 27: P19=SIM + P20 (opções 1/2/4) → 07.04.06 expresso (MÉDIO).
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '4789-0/04',
+            respostas: [19 => true, 20 => true],
+            areaUtilizada: 80.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.04.06', $ramo->codigoLouos);
+        $this->assertSame('expresso', $ramo->fluxo);
+    }
+
     public function test_pergunta_faltando_nao_resolve(): void
     {
         $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
