@@ -1,6 +1,6 @@
-import { Form, Head, router, usePage } from '@inertiajs/react';
+import { Form, Head, router, useHttp, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
@@ -33,6 +33,22 @@ interface TllValorItem {
     codigo_servico_sefaz: string | null;
     servico_sefaz: string | null;
     active: boolean;
+    cnaes_count: number;
+}
+
+interface TllCnaeVinculado {
+    cnae: string;
+    denominacao: string | null;
+}
+
+interface TllCnaesResposta {
+    data: TllCnaeVinculado[];
+    meta: {
+        total: number;
+        current_page: number;
+        last_page: number;
+        per_page: number;
+    };
 }
 
 interface TllExercicio {
@@ -293,6 +309,93 @@ function GerarExercicioModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
     );
 }
 
+function CnaesVinculadosModal({ valor, onClose }: { valor: TllValorItem; onClose: () => void }) {
+    const [pagina, setPagina] = useState(1);
+    const [resposta, setResposta] = useState<TllCnaesResposta | null>(null);
+    const [failed, setFailed] = useState(false);
+    const http = useHttp<Record<string, never>, TllCnaesResposta>({});
+    const httpRef = useRef(http);
+    httpRef.current = http;
+
+    useEffect(() => {
+        setFailed(false);
+        setResposta(null);
+
+        void httpRef.current.get(`${URL_TLL}/${valor.id}/cnaes?page=${pagina}`, {
+            onSuccess: (payload) => {
+                setResposta(payload);
+                setFailed(false);
+            },
+            onError: () => {
+                setResposta(null);
+                setFailed(true);
+            },
+        });
+    }, [valor.id, pagina]);
+
+    const total = resposta?.meta.total ?? valor.cnaes_count;
+    const ultima = resposta?.meta.last_page ?? 1;
+
+    return (
+        <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[640px] overflow-y-auto p-6 lg:p-8">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                CNAEs do código {valor.codigo_tll}
+            </h4>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Vinculados na versão vigente da planilha de regras. Somente leitura — o mapeamento se altera
+                versionando a planilha, não nesta tarifa.
+            </p>
+
+            {failed && (
+                <p className="mt-4 text-sm text-error-500">Não foi possível carregar os CNAEs vinculados.</p>
+            )}
+
+            {!failed && resposta === null && (
+                <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Carregando CNAEs…</p>
+            )}
+
+            {resposta && resposta.data.length === 0 && (
+                <EmptyState
+                    title="Nenhum CNAE vinculado"
+                    description="A planilha vigente não referencia este código TLL."
+                />
+            )}
+
+            {resposta && resposta.data.length > 0 && (
+                <ul className="mt-5 divide-y divide-gray-100 dark:divide-gray-800">
+                    {resposta.data.map((item) => (
+                        <li key={item.cnae} className="py-2.5">
+                            <p className="font-medium text-gray-800 dark:text-white/90">{item.cnae}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{item.denominacao || '—'}</p>
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+            <div className="mt-5 flex items-center justify-between gap-3">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {total} {total === 1 ? 'CNAE' : 'CNAEs'}
+                </p>
+                {ultima > 1 && (
+                    <div className="flex gap-2">
+                        <Button size="sm" variant="outline" disabled={pagina <= 1} onClick={() => setPagina((atual) => atual - 1)}>
+                            Anterior
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={pagina >= ultima}
+                            onClick={() => setPagina((atual) => atual + 1)}
+                        >
+                            Próxima
+                        </Button>
+                    </div>
+                )}
+            </div>
+        </Modal>
+    );
+}
+
 function CreateValorModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     return (
         <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-h-[90vh] max-w-[640px] overflow-y-auto p-6 lg:p-8">
@@ -362,6 +465,7 @@ export default function TllIndex({ valores, exercicios, filters, perPageOptions 
     const [editing, setEditing] = useState<TllValorItem | null>(null);
     const [pendingToggle, setPendingToggle] = useState<TllValorItem | null>(null);
     const [pendingPublish, setPendingPublish] = useState<TllExercicio | null>(null);
+    const [viewingCnaes, setViewingCnaes] = useState<TllValorItem | null>(null);
     const [actionProcessing, setActionProcessing] = useState(false);
 
     const filtering = table.search.trim() !== '' || table.filters.active !== '' || table.filters.exercicio !== '';
@@ -378,6 +482,20 @@ export default function TllIndex({ valores, exercicios, filters, perPageOptions 
             header: 'Especificação',
             cellClassName: 'text-gray-500 dark:text-gray-400',
             cell: (valor) => valor.especificacao || '—',
+        },
+        {
+            id: 'cnaes',
+            header: 'CNAEs',
+            cellClassName: 'whitespace-nowrap',
+            cell: (valor) => (
+                <button
+                    type="button"
+                    className="text-sm font-medium text-brand-500 transition hover:text-brand-600 hover:underline dark:text-brand-400"
+                    onClick={() => setViewingCnaes(valor)}
+                >
+                    {valor.cnaes_count.toLocaleString('pt-BR')} {valor.cnaes_count === 1 ? 'CNAE' : 'CNAEs'}
+                </button>
+            ),
         },
         {
             id: 'exercicio',
@@ -478,7 +596,7 @@ export default function TllIndex({ valores, exercicios, filters, perPageOptions 
                 <Card>
                     <CardHeader
                         title="Tabela de valores TLL por exercício"
-                        description="Valores da Taxa de Licença de Localização por código e exercício. Alimentam o cálculo do DAM e o bloco de taxas enviado à SEFAZ. A chave (código TLL, exercício) é única; valores não são excluídos, apenas inativados."
+                        description="Valores da Taxa de Licença de Localização por código e exercício. Os CNAEs vêm da planilha vigente (somente leitura). Alimentam o cálculo do DAM e o bloco de taxas enviado à SEFAZ."
                         actions={
                             canMaintain ? (
                                 <div className="flex flex-wrap gap-2">
@@ -523,7 +641,7 @@ export default function TllIndex({ valores, exercicios, filters, perPageOptions 
                                 search={{
                                     value: table.search,
                                     onChange: table.setSearch,
-                                    placeholder: 'Buscar por código ou serviço...',
+                                    placeholder: 'Buscar por código TLL, CNAE ou especificação...',
                                     label: 'Buscar valores TLL',
                                 }}
                                 filters={
@@ -597,6 +715,8 @@ export default function TllIndex({ valores, exercicios, filters, perPageOptions 
             {canMaintain && <CreateValorModal isOpen={showCreate} onClose={() => setShowCreate(false)} />}
 
             {editing && <EditValorModal valor={editing} onClose={() => setEditing(null)} />}
+
+            {viewingCnaes && <CnaesVinculadosModal valor={viewingCnaes} onClose={() => setViewingCnaes(null)} />}
 
             {confirmContent && (
                 <ConfirmDialog

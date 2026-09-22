@@ -10,9 +10,12 @@ use App\Http\Requests\Gestao\PropagacaoTllRequest;
 use App\Http\Requests\Gestao\TllValorRequest;
 use App\Models\RuleVersion;
 use App\Models\TllValor;
+use App\Models\TratamentoEnquadramento;
+use App\Services\Analise\TllCnaeVinculo;
 use App\Services\Analise\TllPropagacaoExercicio;
 use App\Services\Analise\TllPublicacaoExercicio;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,16 +46,11 @@ class TllValorController extends Controller
         $active = $request->string('active')->toString();
         $exercicio = $request->string('exercicio')->toString();
 
-        $valores = TllValor::query()
-            ->when($request->string('search')->isNotEmpty(), function ($query) use ($request) {
-                $term = (string) $request->string('search')->trim();
+        $vinculo = app(TllCnaeVinculo::class);
 
-                $query->where(function ($q) use ($term): void {
-                    $q->whereLike('codigo_tll', "%{$term}%", caseSensitive: false)
-                        ->orWhereLike('especificacao', "%{$term}%", caseSensitive: false)
-                        ->orWhereLike('codigo_tll_sefaz', "%{$term}%", caseSensitive: false)
-                        ->orWhereLike('servico_sefaz', "%{$term}%", caseSensitive: false);
-                });
+        $valores = TllValor::query()
+            ->when($request->string('search')->isNotEmpty(), function ($query) use ($request, $vinculo) {
+                $vinculo->restringirBusca($query, (string) $request->string('search')->trim());
             })
             ->when(in_array($active, ['0', '1'], true), fn ($query) => $query->where('active', $active === '1'))
             ->when($exercicio !== '' && ctype_digit($exercicio), fn ($query) => $query->where('exercicio', (int) $exercicio))
@@ -60,19 +58,23 @@ class TllValorController extends Controller
             ->orderBy('codigo_tll')
             ->orderBy('especificacao')
             ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn (TllValor $valor): array => [
-                'id' => $valor->id,
-                'codigo_tll' => $valor->codigo_tll,
-                'especificacao' => $valor->especificacao,
-                'exercicio' => $valor->exercicio,
-                'valor' => (string) $valor->valor,
-                'taxa_servico' => (string) $valor->taxa_servico,
-                'codigo_tll_sefaz' => $valor->codigo_tll_sefaz,
-                'codigo_servico_sefaz' => $valor->codigo_servico_sefaz,
-                'servico_sefaz' => $valor->servico_sefaz,
-                'active' => $valor->active,
-            ]);
+            ->withQueryString();
+
+        $contagens = $vinculo->contarPara($valores->getCollection());
+
+        $valores->through(fn (TllValor $valor): array => [
+            'id' => $valor->id,
+            'codigo_tll' => $valor->codigo_tll,
+            'especificacao' => $valor->especificacao,
+            'exercicio' => $valor->exercicio,
+            'valor' => (string) $valor->valor,
+            'taxa_servico' => (string) $valor->taxa_servico,
+            'codigo_tll_sefaz' => $valor->codigo_tll_sefaz,
+            'codigo_servico_sefaz' => $valor->codigo_servico_sefaz,
+            'servico_sefaz' => $valor->servico_sefaz,
+            'active' => $valor->active,
+            'cnaes_count' => $contagens[$valor->id] ?? 0,
+        ]);
 
         $viewerId = $request->user()?->id;
 
@@ -99,6 +101,26 @@ class TllValorController extends Controller
                 'exercicio' => $exercicio,
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
+        ]);
+    }
+
+    public function cnaes(TllValor $tllValor): JsonResponse
+    {
+        $pagina = app(TllCnaeVinculo::class)->listar($tllValor);
+
+        return response()->json([
+            'data' => collect($pagina->items())
+                ->map(fn (TratamentoEnquadramento $linha): array => [
+                    'cnae' => $linha->cnae,
+                    'denominacao' => $linha->denominacao,
+                ])
+                ->values(),
+            'meta' => [
+                'total' => $pagina->total(),
+                'current_page' => $pagina->currentPage(),
+                'last_page' => $pagina->lastPage(),
+                'per_page' => $pagina->perPage(),
+            ],
         ]);
     }
 

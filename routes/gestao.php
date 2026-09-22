@@ -564,6 +564,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('/', [TllValorController::class, 'store'])->name('store');
             Route::post('exercicios', [TllValorController::class, 'gerarExercicio'])->name('exercicios.store');
             Route::post('exercicios/{exercicio}/publicar', [TllValorController::class, 'publicarExercicio'])->name('exercicios.publicar');
+            Route::get('{tllValor}/cnaes', [TllValorController::class, 'cnaes'])->name('cnaes');
             Route::put('{tllValor}', [TllValorController::class, 'update'])->name('update');
             Route::put('{tllValor}/ativacao', [TllValorController::class, 'toggleActivation'])->name('ativacao.update');
         });
