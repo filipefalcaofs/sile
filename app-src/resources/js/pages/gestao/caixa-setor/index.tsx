@@ -197,6 +197,23 @@ export default function CaixaSetorIndex({
         router.get('/gestao/caixa-setor/central', { ids: ids.join(',') }, { preserveScroll: true });
     }
 
+    function distribuicaoInteligente(ids: number[] | null) {
+        const params: Record<string, string | number> = {};
+        if (ids === null) {
+            params.todos = 1;
+            for (const [chave, valor] of Object.entries(filtrosDeCampo)) {
+                if (valor !== '') {
+                    params[chave] = valor;
+                }
+            }
+        } else if (ids.length > 0) {
+            params.ids = ids.join(',');
+        } else {
+            return;
+        }
+        router.get('/gestao/caixa-setor/distribuicao-inteligente', params, { preserveScroll: true });
+    }
+
     function confirmarTramitacao() {
         const rota = modal?.tipo === 'redistribuir' ? '/gestao/caixa-setor/redistribuir' : '/gestao/caixa-setor/distribuir';
 
@@ -387,7 +404,17 @@ export default function CaixaSetorIndex({
                         </div>
 
                         <div className="flex items-center justify-between gap-3">
-                            <div>
+                            <div className="flex flex-wrap items-center gap-3">
+                                {selecaoAtiva && (
+                                    <Button variant="outline" onClick={() => distribuicaoInteligente(null)}>
+                                        Distribuição inteligente de todos os elegíveis
+                                    </Button>
+                                )}
+                                {selecaoAtiva && selecionados.length > 0 && (
+                                    <Button variant="outline" onClick={() => distribuicaoInteligente(selecionados)}>
+                                        Distribuição inteligente ({selecionados.length})
+                                    </Button>
+                                )}
                                 {selecaoAtiva && selecionados.length > 0 && (
                                     <Button
                                         variant="primary"

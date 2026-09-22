@@ -26,6 +26,10 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache || true
 
+# O seed roda com CACHE_STORE=array e não alcança o Redis da aplicação.
+# Sem este reset, um papel ganho no deploy continua negado até o cache expirar.
+php artisan permission:cache-reset || true
+
 echo "[entrypoint] Iniciando servicos..."
 if [ "$#" -gt 0 ]; then
     echo "[entrypoint] Comando: $*"

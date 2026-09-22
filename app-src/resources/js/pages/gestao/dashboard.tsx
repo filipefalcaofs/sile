@@ -1,6 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import Chart from '@/components/ui/chart/chart';
+import type { EChartsOption } from '@/components/ui/chart/echarts-core';
 import { ExportMenu } from '@/components/ui/data-table/export-menu';
 import GestaoLayout from '@/layouts/gestao-layout';
 
@@ -146,6 +148,13 @@ const TOM_ACAO = {
         ponto: 'bg-error-500',
     },
 } as const;
+
+const COR_AGING: Record<string, string> = {
+    '0_5': '#12b76a',
+    '6_10': '#5992ed',
+    '11_20': '#f79009',
+    acima_20: '#f04438',
+};
 
 const TOM_AGING: Record<string, string> = {
     '0_5': 'bg-success-500',
@@ -326,51 +335,164 @@ function textoGapExpresso(operacao: OperacaoKpis): { texto: string; tom: TomDelt
     };
 }
 
-interface GeometriaFluxo {
-    pontos: SerieFluxoPonto[];
-    grade: { y: number; label: string }[];
-    marcas: { x: number; label: string }[];
-    linhaEntrada: string;
-    linhaSaida: string;
-    areaEntrada: string;
+function fluxoChartOption(pontos: SerieFluxoPonto[]): EChartsOption {
+    return {
+        tooltip: { trigger: 'axis' },
+        legend: { top: 0 },
+        grid: { left: 8, right: 16, top: 36, bottom: 8, containLabel: true },
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: pontos.map((ponto) => formatarDiaCurto(ponto.dia)),
+        },
+        yAxis: { type: 'value', minInterval: 1 },
+        series: [
+            {
+                type: 'line',
+                name: 'Protocolos',
+                smooth: true,
+                showSymbol: pontos.length === 1,
+                data: pontos.map((ponto) => ponto.entrada),
+                itemStyle: { color: '#1351b4' },
+                lineStyle: { width: 2.5, color: '#1351b4' },
+                areaStyle: { color: 'rgba(19,81,180,0.08)' },
+            },
+            {
+                type: 'line',
+                name: 'Decisões',
+                smooth: true,
+                showSymbol: pontos.length === 1,
+                data: pontos.map((ponto) => ponto.saida),
+                itemStyle: { color: '#12b76a' },
+                lineStyle: { width: 2.5, color: '#12b76a' },
+            },
+        ],
+    };
 }
 
-function geometriaFluxo(pontos: SerieFluxoPonto[]): GeometriaFluxo | null {
-    if (pontos.length === 0) {
-        return null;
+function corEtapa(etapa: EtapaPainel): string {
+    if (etapa.media_dias === null) {
+        return '#eaecf0';
     }
 
-    const largura = 760;
-    const altura = 240;
-    const esquerda = 44;
-    const direita = 12;
-    const topo = 16;
-    const base = 34;
-    const maior = Math.max(...pontos.map((ponto) => Math.max(ponto.entrada, ponto.saida)), 1);
-    const degrau = Math.max(1, Math.ceil((maior * 1.15) / 4));
-    const maximo = degrau * 4;
-    const px = (indice: number) =>
-        pontos.length === 1
-            ? esquerda + (largura - esquerda - direita) / 2
-            : esquerda + (indice * (largura - esquerda - direita)) / (pontos.length - 1);
-    const py = (valor: number) => altura - base - (valor / maximo) * (altura - topo - base);
-    const caminho = (chave: 'entrada' | 'saida') =>
-        pontos.map((ponto, indice) => `${indice === 0 ? 'M' : 'L'}${px(indice).toFixed(1)} ${py(ponto[chave]).toFixed(1)}`).join(' ');
-    const passo = Math.max(1, Math.round(pontos.length / 6));
+    if (etapa.meta_dias !== null && etapa.media_dias > etapa.meta_dias) {
+        return '#f04438';
+    }
 
+    return etapa.meta_dias === null ? '#1351b4' : '#12b76a';
+}
+
+function etapasChartOption(etapas: EtapaPainel[]): EChartsOption {
     return {
-        pontos,
-        grade: [0, 0.25, 0.5, 0.75].map((fracao) => ({
-            y: topo + fracao * (altura - topo - base),
-            label: numberFormat.format(Math.round(maximo * (1 - fracao))),
-        })),
-        marcas: pontos
-            .map((ponto, indice) => ({ ponto, indice }))
-            .filter(({ indice }) => indice % passo === 0)
-            .map(({ ponto, indice }) => ({ x: px(indice), label: formatarDiaCurto(ponto.dia) })),
-        linhaEntrada: caminho('entrada'),
-        linhaSaida: caminho('saida'),
-        areaEntrada: `${caminho('entrada')} L${px(pontos.length - 1).toFixed(1)} ${altura - base} L${esquerda} ${altura - base} Z`,
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'shadow' },
+            formatter: (params) => {
+                const item = Array.isArray(params) ? params[0] : params;
+                const indice = typeof item === 'object' && item && 'dataIndex' in item ? Number(item.dataIndex) : 0;
+                const etapa = etapas[indice];
+
+                if (!etapa || etapa.media_dias === null) {
+                    return `${etapa?.label ?? ''} — sem amostra`;
+                }
+
+                const meta = etapa.meta_dias === null ? '' : `<br/>meta ${numberFormat.format(etapa.meta_dias)} d`;
+
+                return `${etapa.label}<br/>${decimalFormat.format(etapa.media_dias)} d úteis${meta}`;
+            },
+        },
+        grid: { left: 8, right: 24, top: 8, bottom: 8, containLabel: true },
+        xAxis: { type: 'value', name: 'dias úteis', minInterval: 1 },
+        yAxis: { type: 'category', inverse: true, data: etapas.map((etapa) => etapa.label) },
+        series: [
+            {
+                type: 'bar',
+                name: 'Tempo médio',
+                data: etapas.map((etapa) => ({
+                    value: etapa.media_dias ?? 0,
+                    itemStyle: { color: corEtapa(etapa), borderRadius: [0, 6, 6, 0] },
+                })),
+                markPoint: {
+                    symbol: 'rect',
+                    symbolSize: [2, 16],
+                    itemStyle: { color: '#98a2b3' },
+                    label: { show: false },
+                    tooltip: { show: false },
+                    data: etapas.flatMap((etapa) =>
+                        etapa.meta_dias === null
+                            ? []
+                            : [{ name: 'Prazo', coord: [etapa.meta_dias, etapa.label] as [number, string] }],
+                    ),
+                },
+            },
+        ],
+    };
+}
+
+function motivosChartOption(motivos: MotivoExpresso[]): EChartsOption {
+    return {
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        grid: { left: 8, right: 24, top: 8, bottom: 8, containLabel: true },
+        xAxis: { type: 'value', minInterval: 1 },
+        yAxis: { type: 'category', inverse: true, data: motivos.map((motivo) => motivo.rotulo) },
+        series: [
+            {
+                type: 'bar',
+                name: 'Quedas',
+                cursor: 'pointer',
+                data: motivos.map((motivo) => motivo.total),
+                itemStyle: { color: '#5992ed', borderRadius: [0, 6, 6, 0] },
+            },
+        ],
+    };
+}
+
+function expressoChartOption(taxa: number | null, meta: number | null): EChartsOption {
+    return {
+        grid: { left: 0, right: 8, top: 8, bottom: 8 },
+        xAxis: { type: 'value', min: 0, max: 100, show: false },
+        yAxis: { type: 'category', data: ['Taxa'], show: false },
+        tooltip: { trigger: 'item', formatter: () => `Taxa ${formatarPercentual(taxa)} · meta ${formatarPercentual(meta)}` },
+        series: [
+            {
+                type: 'bar',
+                name: 'Taxa expressa',
+                data: [taxa ?? 0],
+                barWidth: 10,
+                showBackground: true,
+                backgroundStyle: { color: '#f2f4f7', borderRadius: 8 },
+                itemStyle: { color: '#1351b4', borderRadius: 8 },
+                markLine:
+                    meta === null
+                        ? undefined
+                        : {
+                              symbol: 'none',
+                              label: { show: false },
+                              lineStyle: { color: '#1d2939', width: 2, type: 'solid' },
+                              data: [{ xAxis: meta }],
+                          },
+            },
+        ],
+    };
+}
+
+function agingChartOption(faixas: FaixaAging[]): EChartsOption {
+    return {
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        grid: { left: 8, right: 16, top: 8, bottom: 8, containLabel: true },
+        xAxis: { type: 'value', minInterval: 1 },
+        yAxis: { type: 'category', inverse: true, data: faixas.map((faixa) => faixa.label) },
+        series: [
+            {
+                type: 'bar',
+                name: 'Processos',
+                cursor: 'pointer',
+                data: faixas.map((faixa) => ({
+                    value: faixa.total,
+                    itemStyle: { color: COR_AGING[faixa.faixa] ?? '#98a2b3', borderRadius: [0, 6, 6, 0] },
+                })),
+            },
+        ],
     };
 }
 
@@ -428,9 +550,10 @@ function CartaoResultado({
 }
 
 function GraficoFluxo({ operacao }: { operacao: OperacaoKpis }) {
-    const geometria = useMemo(() => geometriaFluxo(serieDiaria(operacao)), [operacao]);
+    const pontos = useMemo(() => serieDiaria(operacao), [operacao]);
+    const option = useMemo(() => fluxoChartOption(pontos), [pontos]);
 
-    if (!geometria) {
+    if (pontos.length === 0) {
         return (
             <div className="flex h-60 items-center justify-center rounded-2xl bg-gray-50 text-sm text-gray-400 dark:bg-white/[0.02] dark:text-gray-500">
                 Sem dados no período.
@@ -438,79 +561,19 @@ function GraficoFluxo({ operacao }: { operacao: OperacaoKpis }) {
         );
     }
 
-    return (
-        <svg viewBox="0 0 760 240" className="mt-3.5 h-auto w-full" role="img" aria-label="Série diária de protocolos e decisões">
-            {geometria.grade.map((linha) => (
-                <g key={linha.label}>
-                    <line x1="44" y1={linha.y} x2="748" y2={linha.y} className="text-gray-100 dark:text-gray-800" stroke="currentColor" />
-                    <text x="36" y={linha.y + 4} textAnchor="end" className="fill-gray-500" fontSize="11">
-                        {linha.label}
-                    </text>
-                </g>
-            ))}
-            {geometria.marcas.map((marca) => (
-                <text key={`${marca.x}-${marca.label}`} x={marca.x} y="228" textAnchor="middle" className="fill-gray-500" fontSize="11">
-                    {marca.label}
-                </text>
-            ))}
-            <path d={geometria.areaEntrada} className="fill-brand-500/10" />
-            <path
-                d={geometria.linhaEntrada}
-                fill="none"
-                className="text-brand-500"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-            />
-            <path
-                d={geometria.linhaSaida}
-                fill="none"
-                className="text-success-500"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-            />
-        </svg>
-    );
-}
-
-function BarraEtapa({ etapa, teto }: { etapa: EtapaPainel; teto: number }) {
-    const largura = etapa.media_dias === null ? 0 : Math.min(100, (etapa.media_dias / teto) * 100);
-    const meta = etapa.meta_dias === null ? null : Math.min(100, (etapa.meta_dias / teto) * 100);
-    const acima = etapa.media_dias !== null && etapa.meta_dias !== null && etapa.media_dias > etapa.meta_dias;
-    const cor =
-        etapa.media_dias === null ? 'bg-gray-200 dark:bg-gray-700' : acima ? 'bg-error-500' : etapa.meta_dias === null ? 'bg-brand-500' : 'bg-success-500';
-    const corTexto = etapa.media_dias === null ? 'text-gray-500' : acima ? 'text-error-600 dark:text-error-400' : 'text-success-700 dark:text-success-400';
-    const media = etapa.media_dias === null ? 'sem amostra' : `${decimalFormat.format(etapa.media_dias)} d`;
-    const texto = etapa.meta_dias === null ? media : `${media} · meta ${numberFormat.format(etapa.meta_dias)} d`;
-
-    return (
-        <div className="flex flex-col gap-1.5">
-            <span className="flex items-baseline justify-between gap-3 text-sm text-gray-700 dark:text-gray-300">
-                <span>{etapa.label}</span>
-                <span className={`text-[13px] font-semibold ${etapa.meta_dias === null && etapa.media_dias !== null ? 'text-gray-700 dark:text-gray-300' : corTexto}`}>
-                    {texto}
-                </span>
-            </span>
-            <span className="relative block h-2.5 rounded-full bg-gray-100 dark:bg-gray-800">
-                <span className={`block h-2.5 rounded-full ${cor}`} style={{ width: `${largura}%` }} />
-                {meta !== null && (
-                    <span
-                        className="absolute top-[-3px] bottom-[-3px] w-0.5 bg-gray-400 dark:bg-gray-500"
-                        style={{ left: `${meta}%` }}
-                        title="Prazo parametrizado"
-                    />
-                )}
-            </span>
-        </div>
-    );
+    return <Chart option={option} className="mt-3.5 h-60 w-full" />;
 }
 
 export default function Dashboard({ kpis }: DashboardProps) {
     const operacao = kpis.operacao;
     const [visaoCarga, setVisaoCarga] = useState<'setor' | 'analista'>('setor');
+    const optionEtapas = useMemo(() => etapasChartOption(operacao?.etapas ?? []), [operacao]);
+    const optionMotivos = useMemo(() => motivosChartOption(operacao?.expresso.motivos ?? []), [operacao]);
+    const optionExpresso = useMemo(
+        () => expressoChartOption(operacao?.expresso.taxa ?? null, operacao?.expresso.meta ?? null),
+        [operacao],
+    );
+    const optionAging = useMemo(() => agingChartOption(operacao?.aging ?? []), [operacao]);
 
     if (!operacao) {
         return (
@@ -527,8 +590,6 @@ export default function Dashboard({ kpis }: DashboardProps) {
     const variacao = formatarVariacao(operacao.variacao_protocolos);
     const gap = textoGapExpresso(operacao);
     const totalAging = operacao.aging.reduce((soma, faixa) => soma + faixa.total, 0);
-    const maiorMotivo = Math.max(...operacao.expresso.motivos.map((motivo) => motivo.total), 1);
-    const tetoEtapas = Math.max(1, ...operacao.etapas.flatMap((etapa) => [etapa.media_dias ?? 0, etapa.meta_dias ?? 0]));
     const saldoPositivo = operacao.saldo_periodo > 0;
     const notaTempo =
         operacao.tempo_decisao.media_minutos === null
@@ -643,16 +704,6 @@ export default function Dashboard({ kpis }: DashboardProps) {
                                     O saldo só cai quando as decisões ficam acima dos protocolos. Não há série diária do estoque — a posição em andamento é a de agora.
                                 </p>
                             </div>
-                            <div className="flex items-center gap-4 text-[13px] text-gray-500 dark:text-gray-400">
-                                <span className="inline-flex items-center gap-1.5">
-                                    <span className="inline-block h-0.5 w-4 rounded-sm bg-brand-500" />
-                                    Protocolos
-                                </span>
-                                <span className="inline-flex items-center gap-1.5">
-                                    <span className="inline-block h-0.5 w-4 rounded-sm bg-success-500" />
-                                    Decisões
-                                </span>
-                            </div>
                         </div>
                         <GraficoFluxo operacao={operacao} />
                         <div className="mt-3.5 flex flex-wrap gap-3 border-t border-gray-100 pt-3.5 dark:border-gray-800">
@@ -692,20 +743,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
                                 meta {formatarPercentual(operacao.expresso.meta)}
                             </span>
                         </div>
-                        <div className="relative mt-3 h-2.5 rounded-full bg-gray-100 dark:bg-gray-800">
-                            {operacao.expresso.taxa !== null && (
-                                <div
-                                    className="absolute inset-y-0 left-0 rounded-full bg-brand-500"
-                                    style={{ width: `${Math.min(100, Math.max(0, operacao.expresso.taxa))}%` }}
-                                />
-                            )}
-                            {operacao.expresso.meta !== null && (
-                                <div
-                                    className="absolute top-[-4px] bottom-[-4px] w-0.5 bg-gray-800 dark:bg-white/80"
-                                    style={{ left: `${Math.min(100, Math.max(0, operacao.expresso.meta))}%` }}
-                                />
-                            )}
-                        </div>
+                        {operacao.expresso.taxa !== null && <Chart option={optionExpresso} className="mt-3 h-12 w-full" />}
                         <p className={`mt-2.5 text-[13px] leading-[18px] ${DELTA[gap.tom]}`}>{gap.texto}</p>
 
                         <div className="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-3.5 dark:border-gray-800">
@@ -713,26 +751,11 @@ export default function Dashboard({ kpis }: DashboardProps) {
                             {operacao.expresso.motivos.length === 0 ? (
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Nenhuma queda registrada no período.</p>
                             ) : (
-                                operacao.expresso.motivos.map((motivo) => (
-                                    <Link
-                                        key={motivo.rotulo}
-                                        href={hrefPeriodo('/gestao/relatorios/quedas', operacao)}
-                                        className="flex flex-col gap-1.5"
-                                    >
-                                        <span className="flex items-baseline justify-between gap-3 text-sm text-gray-700 dark:text-gray-300">
-                                            <span>{motivo.rotulo}</span>
-                                            <strong className="font-semibold text-gray-800 tabular-nums dark:text-white/90">
-                                                {numberFormat.format(motivo.total)}
-                                            </strong>
-                                        </span>
-                                        <span className="block h-1.5 rounded-full bg-gray-100 dark:bg-gray-800">
-                                            <span
-                                                className="block h-1.5 rounded-full bg-brand-400"
-                                                style={{ width: `${Math.round((motivo.total / maiorMotivo) * 100)}%` }}
-                                            />
-                                        </span>
-                                    </Link>
-                                ))
+                                <Chart
+                                    option={optionMotivos}
+                                    className="h-52 w-full"
+                                    onClick={() => router.visit(hrefPeriodo('/gestao/relatorios/quedas', operacao))}
+                                />
                             )}
                         </div>
                     </div>
@@ -744,11 +767,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
                         <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">
                             Tempo médio por etapa contra o prazo parametrizado, em dias úteis.
                         </p>
-                        <div className="mt-4 flex flex-col gap-4">
-                            {operacao.etapas.map((etapa) => (
-                                <BarraEtapa key={etapa.chave} etapa={etapa} teto={tetoEtapas} />
-                            ))}
-                        </div>
+                        <Chart option={optionEtapas} className="mt-2 h-56 w-full" />
                         <p className="mt-4 border-t border-gray-100 pt-3 text-[13px] leading-[18px] text-gray-500 dark:border-gray-800 dark:text-gray-400">
                             Marcador cinza = prazo parametrizado. A espera pelo requerente é medida à parte e não conta como atraso da SEDUR. Sem amostras, a etapa fica sem tempo médio.
                         </p>
@@ -759,16 +778,11 @@ export default function Dashboard({ kpis }: DashboardProps) {
                         <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">
                             Processos em aberto por tempo desde o protocolo. O clique abre a lista em andamento.
                         </p>
-                        <div className="mt-4 flex h-4 gap-0.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-                            {totalAging > 0 &&
-                                operacao.aging.map((faixa) => (
-                                    <span
-                                        key={faixa.faixa}
-                                        className={TOM_AGING[faixa.faixa] ?? 'bg-gray-300'}
-                                        style={{ width: `${(faixa.total / totalAging) * 100}%` }}
-                                    />
-                                ))}
-                        </div>
+                        <Chart
+                            option={optionAging}
+                            className="mt-2 h-48 w-full"
+                            onClick={() => router.visit('/gestao/processos?grupo=em_andamento')}
+                        />
                         <div className="mt-4 flex flex-col">
                             {operacao.aging.map((faixa) => (
                                 <Link

@@ -13,6 +13,7 @@ use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Analise\CargaAnalistaService;
 use App\Services\Analise\DistribuicaoException;
+use App\Services\Analise\DistribuicaoInteligenteService;
 use App\Services\Analise\DistribuicaoService;
 use App\Services\Analise\ProcessoQueryService;
 use App\Support\Audit\AuditService;
@@ -43,6 +44,7 @@ class CaixaSetorController extends Controller
         private AuditService $audit,
         private ProcessoQueryService $processos,
         private CargaAnalistaService $carga,
+        private DistribuicaoInteligenteService $inteligente,
     ) {}
 
     /**
@@ -260,6 +262,83 @@ class CaixaSetorController extends Controller
     }
 
     /**
+     * Proposta de distribuição em lote. Não tramita: calcula uma sugestão
+     * equilibrada pela carga ativa e devolve para o Apoio revisar.
+     */
+    public function distribuicaoInteligente(Request $request): Response|RedirectResponse
+    {
+        $sectorIds = $request->user()->sectors()->pluck('sectors.id');
+
+        $consulta = ViabilityRequest::query()
+            ->whereIn('sector_id', $sectorIds)
+            ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->whereNull('assigned_user_id');
+
+        if ($request->boolean('todos')) {
+            $consulta = $this->processos->aplicarFiltros($consulta, $this->filtrosDaCaixa($request));
+        } else {
+            $ids = collect(explode(',', (string) $request->string('ids')))
+                ->map(fn ($id): int => (int) trim($id))
+                ->filter()
+                ->unique()
+                ->values();
+            $consulta->whereIn('id', $ids);
+        }
+
+        $models = $consulta
+            ->orderBy('analysis_due_at')
+            ->orderBy('id')
+            ->get();
+
+        $setores = $models->pluck('sector_id')->unique()->values();
+
+        if ($setores->count() > 1) {
+            return redirect('/gestao/caixa-setor')->with('error', 'Selecione processos de um único setor por vez para distribuir.');
+        }
+
+        if ($setores->isEmpty()) {
+            return redirect('/gestao/caixa-setor')->with('error', 'Nenhum processo elegível para distribuir.');
+        }
+
+        $carga = collect($this->carga->cargaDosSetores($setores))->keyBy('analista_id');
+        $usuarios = User::query()
+            ->with('sectors:id')
+            ->whereIn('id', $carga->keys())
+            ->get();
+
+        $analistas = $usuarios->map(fn (User $usuario): array => [
+            'analista_id' => $usuario->id,
+            'analista' => $usuario->name,
+            'total' => (int) ($carga[$usuario->id]['total'] ?? 0),
+            'pode_vistoria' => $usuario->can('preencher-ficha-vistoria'),
+            'setores' => $usuario->sectors->pluck('id')->map(fn ($id): int => (int) $id)->all(),
+        ])->all();
+
+        $processos = $models->map(fn (ViabilityRequest $processo): array => [
+            'id' => $processo->id,
+            'sector_id' => (int) $processo->sector_id,
+            'analysis_status' => $processo->analysis_status?->value,
+            'analysis_due_at' => $processo->analysis_due_at?->toIso8601String(),
+            'bap' => $processo->external_reference,
+            'protocol_number' => $processo->protocol_number,
+        ])->all();
+
+        $sugestao = $this->inteligente->sugerir($processos, $analistas);
+
+        $this->audit->log('analise', 'consulta-distribuicao-inteligente', 'Consulta da sugestão de distribuição inteligente', [
+            'setores' => $setores->all(),
+            'processos' => $models->pluck('id')->all(),
+        ]);
+
+        return Inertia::render('gestao/caixa-setor/distribuicao-inteligente', [
+            'criterio' => $sugestao['criterio'],
+            'alocacoes' => $sugestao['alocacoes'],
+            'naoAlocados' => $sugestao['nao_alocados'],
+            'totalSelecionados' => $models->count(),
+        ]);
+    }
+
+    /**
      * Distribui um ou mais processos (lote — RN-007) a um analista do setor. A
      * validação estrutural é do DistribuirProcessoRequest. O lote inteiro é
      * rejeitado se algum item não estiver disponível na caixa do ator; falhas de
@@ -385,6 +464,21 @@ class CaixaSetorController extends Controller
                         'qtd' => $qtd,
                         'sector_id' => $grupo['requests']->first()->sector_id,
                         'ator_id' => $request->user()->id,
+                    ]);
+                }
+
+                if ($request->input('origem') === 'inteligente') {
+                    $this->audit->log('analise', 'distribuir-inteligente', 'Distribuição inteligente em lote confirmada pelo apoio.', [
+                        'ator_id' => $request->user()->id,
+                        'ator_nome' => $request->user()->name,
+                        'qtd' => $todosIds->unique()->count(),
+                        'sector_id' => (int) $processos->first()->sector_id,
+                        'proposta' => $request->input('proposta', []),
+                        'confirmada' => collect($alocacoes)->map(fn (array $alocacao): array => [
+                            'analista_id' => (int) $alocacao['analista_id'],
+                            'request_ids' => array_map(intval(...), $alocacao['request_ids']),
+                        ])->all(),
+                        'alteracoes' => $request->input('alteracoes', []),
                     ]);
                 }
 

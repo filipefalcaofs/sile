@@ -25,7 +25,7 @@ export type ChartProps = ChartImplProps;
  * resolvido internamente pela classe `dark` do <html>; basta passar `option`.
  * Exibe um skeleton de mesma altura enquanto monta, evitando salto de layout.
  */
-export function Chart({ option, className }: ChartProps) {
+export function Chart({ option, className, onClick }: ChartProps) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -38,7 +38,7 @@ export function Chart({ option, className }: ChartProps) {
 
     return (
         <Suspense fallback={<ChartSkeleton className={className} />}>
-            <ChartImpl option={option} className={className} />
+            <ChartImpl option={option} className={className} onClick={onClick} />
         </Suspense>
     );
 }
