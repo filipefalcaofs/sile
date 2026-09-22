@@ -1501,6 +1501,20 @@ export default function FichaAnaliseShow({
                     </div>
                 )}
 
+                {/* Resumo no topo da ficha: o analista lê a síntese antes de
+                    endereço, mapa e atividades. Prop deferida — entra em tela
+                    assim que a página abre. */}
+                <WhenVisible data="sugestoesIa" buffer={200} fallback={<SugestoesIaSkeleton />}>
+                    <ResumoProcessoCard
+                        sugestoes={sugestoesIa ?? []}
+                        iaFicha={iaFicha}
+                        status={resumoStatus}
+                        mensagem={resumoMensagem}
+                        gerando={resumoHttp.processing || resumoStatus === 'aguardando'}
+                        onGerar={gerarResumo}
+                    />
+                </WhenVisible>
+
                 {/* Topo no padrão legado SAPS (design 2026-07-22): Localização + Cadastro
                     Imobiliário à esquerda, Polígono à direita, e a faixa Dados
                     do TVL abaixo, antes das demais seções da ficha. */}
@@ -1644,20 +1658,10 @@ export default function FichaAnaliseShow({
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="space-y-6 lg:col-span-2">
-                        {/* Sugestões de IA (HU-117 resumo + HU-115 alertas) —
-                            revisáveis, carregadas sob demanda (deferida) quando a
-                            seção entra em tela. O resumo do processo abre o topo da
-                            ficha; os alertas seguem logo abaixo. */}
+                        {/* Minutas e alertas de IA — o resumo já está no topo
+                            da ficha. A prop deferida sugestoesIa é a mesma. */}
                         <WhenVisible data="sugestoesIa" buffer={200} fallback={<SugestoesIaSkeleton />}>
                             <div className="space-y-6">
-                                <ResumoProcessoCard
-                                    sugestoes={sugestoesIa ?? []}
-                                    iaFicha={iaFicha}
-                                    status={resumoStatus}
-                                    mensagem={resumoMensagem}
-                                    gerando={resumoHttp.processing || resumoStatus === 'aguardando'}
-                                    onGerar={gerarResumo}
-                                />
                                 <MinutaParecerCard
                                     sugestoes={sugestoesIa ?? []}
                                     editavel={editavel}
@@ -1673,16 +1677,15 @@ export default function FichaAnaliseShow({
                             </div>
                         </WhenVisible>
 
-                        {/* Motivo de Análise — logo após o Resumo, no topo e fora
-                            da ficha (relatório de usabilidade SEDUR 19/09, itens 28-29).
-                            Preenchido pelo sistema; o analista não edita. */}
-                        <Card>
-                            <CardHeader
-                                title="Motivo de Análise"
-                                description="Registrado automaticamente pelo sistema quando o processo exige análise humana. O analista não edita este campo."
-                            />
-                            <CardContent>
-                                {analysisReasons.length > 0 ? (
+                        {/* Motivo de Análise — só entra na tela quando o sistema
+                            registrou motivo. Vazio, a caixa some (não polui). */}
+                        {analysisReasons.length > 0 && (
+                            <Card>
+                                <CardHeader
+                                    title="Motivo de Análise"
+                                    description="Registrado automaticamente pelo sistema quando o processo exige análise humana. O analista não edita este campo."
+                                />
+                                <CardContent>
                                     <ul className="space-y-2">
                                         {analysisReasons.map((motivo, indice) => (
                                             <li
@@ -1696,13 +1699,9 @@ export default function FichaAnaliseShow({
                                             </li>
                                         ))}
                                     </ul>
-                                ) : (
-                                    <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                                        Nenhum motivo registrado pelo sistema.
-                                    </p>
-                                )}
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
+                        )}
 
                         {/* Justificativa do processo — consolidada no início, fora da
                             ficha (relatório de usabilidade SEDUR 19/09, item 24):
@@ -3237,6 +3236,10 @@ function rotuloCampo(campo: string): string {
 function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
     const inconsistencias = sugestoes.filter((sugestao) => sugestao.type === 'inconsistencias');
 
+    if (inconsistencias.length === 0) {
+        return null;
+    }
+
     return (
         <Card>
             <CardHeader
@@ -3244,12 +3247,7 @@ function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
                 description="Divergências apontadas pela IA entre o que foi declarado e o que os documentos/foto mostram. Complementa, não substitui, as validações técnicas."
             />
             <CardContent>
-                {inconsistencias.length === 0 ? (
-                    <p className="text-theme-sm text-gray-500 dark:text-gray-400">
-                        Nenhum alerta de IA para este processo.
-                    </p>
-                ) : (
-                    <ul className="space-y-4" aria-label="Alertas de inconsistência sugeridos pela IA">
+                <ul className="space-y-4" aria-label="Alertas de inconsistência sugeridos pela IA">
                         {inconsistencias.map((sugestao) => {
                             const itens = sugestao.output.inconsistencias ?? [];
                             const fonte = typeof sugestao.output.fonte === 'string' ? sugestao.output.fonte : null;
@@ -3326,7 +3324,6 @@ function AlertasIaCard({ sugestoes }: { sugestoes: SugestaoIa[] }) {
                             );
                         })}
                     </ul>
-                )}
 
                 <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
                     Sinais para revisão humana — não decidem nem penalizam (RN-004). As validações de lote (GIS) e

@@ -260,6 +260,21 @@ class FluxoExpressoService
             return $this->encaminharAnalise($request, $flag, $actor, $resolved);
         }
 
+        if ($resolved->consolidado === ResultadoViabilidade::Pendente->value
+            && $this->bypassSimulacaoHomologacao($request)) {
+            return $this->emitir(
+                $request,
+                new ResolvedViability(
+                    por_cnae: $resolved->por_cnae,
+                    consolidado: ResultadoViabilidade::Permitido->value,
+                    rules_versions: $resolved->rules_versions,
+                    ponto: $resolved->ponto,
+                    area_m2: $resolved->area_m2,
+                ),
+                $actor,
+            );
+        }
+
         return $this->emitir($request, $resolved, $actor);
     }
 

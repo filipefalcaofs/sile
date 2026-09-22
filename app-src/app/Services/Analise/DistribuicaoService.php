@@ -68,6 +68,29 @@ class DistribuicaoService
     }
 
     /**
+     * Distribuição em lote entre VÁRIOS analistas (Fase 3): cada grupo leva seus
+     * processos ao seu analista, reusando o caminho de atribuição (SLA + auditoria
+     * por processo) e isolando falhas por item. A decisão de quem recebe o quê é
+     * do Apoio — este serviço apenas executa a alocação recebida.
+     *
+     * @param  list<array{analista: User, requests: iterable<int, ViabilityRequest>}>  $grupos
+     * @return array{ok: int, falhas: list<array{viability_request_id: int, motivo: string}>}
+     */
+    public function distribuirMultiplo(array $grupos, User $ator): array
+    {
+        $ok = 0;
+        $falhas = [];
+
+        foreach ($grupos as $grupo) {
+            $resumo = $this->distribuirLote($grupo['requests'], $grupo['analista'], $ator);
+            $ok += $resumo['ok'];
+            $falhas = array_merge($falhas, $resumo['falhas']);
+        }
+
+        return ['ok' => $ok, 'falhas' => $falhas];
+    }
+
+    /**
      * O próprio analista do setor pega um processo da caixa para si (HU-081 —
      * registra responsabilidade técnica). Mesmo efeito da distribuição, com o
      * analista como ator e o evento de auditoria 'assumir'.

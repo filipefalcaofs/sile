@@ -718,4 +718,89 @@ class CaixaSetorTest extends TestCase
         $this->assertContains($doA->id, $ids);
         $this->assertNotContains($doB->id, $ids, 'Processo de setor alheio não entra na Central.');
     }
+
+    public function test_distribuir_lote_multiplo_distribui_por_analista(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $a = $this->analistaDoSetor($setor);
+        $b = $this->analistaDoSetor($setor);
+
+        $p1 = $this->processoNaCaixa($setor);
+        $p2 = $this->processoNaCaixa($setor);
+        $p3 = $this->processoNaCaixa($setor);
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir-lote', [
+                'alocacoes' => [
+                    ['analista_id' => $a->id, 'request_ids' => [$p1->id, $p2->id]],
+                    ['analista_id' => $b->id, 'request_ids' => [$p3->id]],
+                ],
+            ])
+            ->assertSessionHas('status');
+
+        $this->assertSame($a->id, $p1->fresh()->assigned_user_id);
+        $this->assertSame($a->id, $p2->fresh()->assigned_user_id);
+        $this->assertSame($b->id, $p3->fresh()->assigned_user_id);
+
+        // Auditoria de resumo para o histórico (um por analista).
+        $this->assertDatabaseHas('activity_log', ['log_name' => 'analise', 'event' => 'distribuir-lote']);
+    }
+
+    public function test_distribuir_lote_rejeita_processo_de_setor_alheio_atomicamente(): void
+    {
+        $setorA = Sector::factory()->create();
+        $setorB = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setorA);
+        $a = $this->analistaDoSetor($setorA);
+
+        $doA = $this->processoNaCaixa($setorA);
+        $doB = $this->processoNaCaixa($setorB); // fora da caixa do ator
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir-lote', [
+                'alocacoes' => [
+                    ['analista_id' => $a->id, 'request_ids' => [$doA->id, $doB->id]],
+                ],
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertNull($doA->fresh()->assigned_user_id, 'Lote inválido não grava nada (atômico).');
+        $this->assertNull($doB->fresh()->assigned_user_id);
+    }
+
+    public function test_distribuir_lote_rejeita_ids_sobrepostos(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $a = $this->analistaDoSetor($setor);
+        $b = $this->analistaDoSetor($setor);
+        $p = $this->processoNaCaixa($setor);
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir-lote', [
+                'alocacoes' => [
+                    ['analista_id' => $a->id, 'request_ids' => [$p->id]],
+                    ['analista_id' => $b->id, 'request_ids' => [$p->id]], // mesmo processo em dois grupos
+                ],
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertNull($p->fresh()->assigned_user_id);
+    }
+
+    public function test_distribuir_lote_exige_distribuir_processos(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $p = $this->processoNaCaixa($setor);
+
+        $this->actingAs($analista, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir-lote', [
+                'alocacoes' => [['analista_id' => $analista->id, 'request_ids' => [$p->id]]],
+            ])
+            ->assertForbidden();
+
+        $this->assertNull($p->fresh()->assigned_user_id);
+    }
 }

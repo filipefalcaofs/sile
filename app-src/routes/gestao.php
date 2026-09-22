@@ -260,9 +260,6 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:consultar-cnaes')->group(function () {
             Route::get('cnaes', [CnaeController::class, 'index'])->name('cnaes.index');
             Route::get('regras-tratamento', [TratamentoRegrasController::class, 'index'])->name('regras-tratamento.index');
-            // Homologação do motor: protocolos SEDUR entram como se o tipo de
-            // imóvel e a área tivessem chegado do REGIN. A tela declara a
-            // simulação — a integração REGIN continua stub.
         });
 
         Route::middleware('permission:manter-cnaes')->group(function () {
@@ -645,6 +642,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::middleware('permission:distribuir-processos')->group(function () {
                 Route::get('central', [CaixaSetorController::class, 'central'])->name('central');
                 Route::post('distribuir', [CaixaSetorController::class, 'distribuir'])->name('distribuir');
+                Route::post('distribuir-lote', [CaixaSetorController::class, 'distribuirLote'])->name('distribuir-lote');
                 Route::post('redistribuir', [CaixaSetorController::class, 'redistribuir'])->name('redistribuir');
             });
         });

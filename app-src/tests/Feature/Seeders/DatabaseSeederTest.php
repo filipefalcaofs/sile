@@ -293,6 +293,13 @@ class DatabaseSeederTest extends TestCase
         $this->assertNull($deferimento->decision);
         $this->assertSame(ViabilityRequestStatus::Protocolada, $emAnalise->status);
         $this->assertNull($emAnalise->decision);
+        // O EP12 (AuditoriaDevSeeder) acrescenta 2 decisões SQLite-safe pela
+        // ANÁLISE TÉCNICA (territorial-agnóstica, em requerentes/empresas
+        // dedicados): uma decidida com decision_trace e uma legada sem trace —
+        // tornando a explicabilidade (HU-099) navegável no dev mesmo em SQLite.
+        $this->assertSame(2, ViabilityDecision::query()->count());
+
+        // Sem massa de zona fictícia: a zona oficial segue pendente até a base GIS.
     }
 
     public function test_seed_prepara_setores_textos_padrao_e_usuarios_da_analise(): void
