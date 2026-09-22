@@ -553,7 +553,6 @@
       "resources/js/pages/gestao/requisitos-documentais/index.tsx",
       "resources/js/pages/gestao/resultados-expresso/index.tsx",
       "resources/js/pages/gestao/resultados-expresso/show.tsx",
-      "resources/js/pages/gestao/risco/simulacao-regin.tsx",
       "resources/js/pages/gestao/setores/index.tsx",
       "resources/js/pages/gestao/termo-lgpd.tsx",
       "resources/js/pages/gestao/termos-legais/index.tsx",
@@ -1986,27 +1985,6 @@
       "_icons-RGXwcqnO.js",
       "_badge-6IGglFyG.js",
       "_card-DMGHpoj1.js"
-    ]
-  },
-  "resources/js/pages/gestao/risco/simulacao-regin.tsx": {
-    "file": "assets/simulacao-regin-C_O5SQCD.js",
-    "name": "simulacao-regin",
-    "src": "resources/js/pages/gestao/risco/simulacao-regin.tsx",
-    "isDynamicEntry": true,
-    "imports": [
-      "_chunk-QTnfLwEv.js",
-      "resources/js/app.tsx",
-      "_jsx-runtime-DsKLSDJq.js",
-      "_gestao-layout-oQOMrjgK.js",
-      "_page-header-DX6sd0-_.js",
-      "_input-kyDh7ds9.js",
-      "_label-CW864JjH.js",
-      "_icons-RGXwcqnO.js",
-      "_badge-6IGglFyG.js",
-      "_button-DagGAFpx.js",
-      "_card-DMGHpoj1.js",
-      "_confirm-dialog-DBRM25sy.js",
-      "_data-table-C_NQom61.js"
     ]
   },
   "resources/js/pages/gestao/setores/index.tsx": {
