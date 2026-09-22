@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnalysisStatusStateMachine;
 use App\Services\Solicitacao\PropertyGeometryWriter;
+use App\Support\Audit\AuditService;
 
 /**
  * Ciclo de vida da ficha de vistoria: abertura (identificação automática +
@@ -29,6 +30,8 @@ class InspectionService
     public function __construct(
         private PropertyGeometryWriter $geometry,
         private AnalysisStatusStateMachine $statusMachine,
+        private EncaminharVistoriaService $encaminhamento,
+        private AuditService $audit,
     ) {}
 
     /**
@@ -49,6 +52,27 @@ class InspectionService
         }
 
         $this->garantirPodeAssumir($processo, $vistoriador);
+
+        // Self-service coerente: abrir a ficha de um processo SEM responsável
+        // atribui o processo a quem abriu — ele sai de "Para distribuir" na
+        // caixa do setor de vistoria e a autoria fica registrada (RN-002).
+        if ($processo->assigned_user_id === null) {
+            $processo->forceFill([
+                'assigned_user_id' => $vistoriador->id,
+                'assigned_at' => now(),
+            ])->save();
+
+            $this->audit->log(
+                logName: 'vistoria',
+                event: 'vistoria-assumir',
+                description: "Vistoriador assumiu o processo #{$processo->id} ao abrir a ficha de vistoria",
+                properties: [
+                    'viability_request_id' => $processo->id,
+                    'vistoriador_user_id' => $vistoriador->id,
+                ],
+                subject: $processo,
+            );
+        }
 
         $snapshot = is_array($processo->simulation_snapshot) ? $processo->simulation_snapshot : [];
 
@@ -141,6 +165,11 @@ class InspectionService
                 $ator,
                 'Ficha de vistoria concluída.',
             );
+
+            // Retorno automático: com referral registrado, o processo volta ao
+            // setor e ao analista de origem (Vistoriado → EmAnalise). Sem
+            // referral (vistoria manual), permanece Vistoriado — retorno manual.
+            $this->encaminhamento->devolverAoAnalista($processo->refresh(), $ator);
         }
 
         return $ficha;

@@ -1,4 +1,4 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { type ReactNode, useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Select from '@/components/form/select';
@@ -13,6 +13,7 @@ import { Modal } from '@/components/ui/modal';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
+import type { SharedProps } from '@/types';
 
 type Visao = 'para_distribuir' | 'distribuidos';
 
@@ -25,6 +26,7 @@ interface ProcessoItem {
     cnpj: string | null;
     status: string;
     status_label: string;
+    analysis_status: string | null;
     analysis_stage: string | null;
     analysis_stage_label: string | null;
     sector: string | null;
@@ -64,6 +66,12 @@ interface CaixaSetorIndexProps {
     podeDistribuir: boolean;
     podeAssumir: boolean;
     analistas: Analista[];
+    vistoriadores: Analista[];
+}
+
+/** Linha no eixo operacional de vistoria — a distribuição é só a vistoriadores. */
+function emVistoria(item: ProcessoItem): boolean {
+    return item.analysis_status === 'vistoriar' || item.analysis_status === 'vistoriado';
 }
 
 /** Formata a data-hora ISO do prazo para o padrão pt-BR (dd/mm/aaaa hh:mm). */
@@ -101,11 +109,19 @@ export default function CaixaSetorIndex({
     podeDistribuir,
     podeAssumir,
     analistas,
+    vistoriadores,
 }: CaixaSetorIndexProps) {
+    const { auth } = usePage<SharedProps>().props;
+    const podeVistoria = auth.permissions.includes('preencher-ficha-vistoria');
+
     const linhas = Array.isArray(processos?.data) ? processos.data : [];
     const opcoesAnalista = (Array.isArray(analistas) ? analistas : []).map((analista) => ({
         value: String(analista.id),
         label: analista.name,
+    }));
+    const opcoesVistoriador = (Array.isArray(vistoriadores) ? vistoriadores : []).map((vistoriador) => ({
+        value: String(vistoriador.id),
+        label: vistoriador.name,
     }));
 
     const [assumindoId, setAssumindoId] = useState<number | null>(null);
@@ -119,6 +135,13 @@ export default function CaixaSetorIndex({
 
     const selecaoAtiva = visao === 'para_distribuir' && podeDistribuir;
     const todosSelecionados = linhas.length > 0 && linhas.every((item) => selecionados.includes(item.id));
+
+    // Modal em contexto de vistoria quando QUALQUER linha envolvida está no
+    // eixo de vistoria — o seletor passa a listar só vistoriadores (a regra é
+    // enforced pelo DistribuicaoService; aqui é a conveniência da tela).
+    const modalEmVistoria =
+        modal !== null && linhas.some((linha) => modal.ids.includes(linha.id) && emVistoria(linha));
+    const opcoesDoModal = modalEmVistoria ? opcoesVistoriador : opcoesAnalista;
 
     function navegar(params: { visao?: Visao; per_page?: number }) {
         setSelecionados([]);
@@ -241,7 +264,7 @@ export default function CaixaSetorIndex({
             cellClassName: 'whitespace-nowrap',
             cell: (item) => (
                 <div className="flex justify-end gap-2">
-                    {podeAssumir && item.assigned_user_id === null && (
+                    {podeAssumir && item.assigned_user_id === null && (!emVistoria(item) || podeVistoria) && (
                         <TableAction
                             tone="brand"
                             onClick={() => assumir(item)}
@@ -395,20 +418,31 @@ export default function CaixaSetorIndex({
                     {modal?.tipo === 'redistribuir' ? 'Redistribuir processo' : 'Tramitar processo(s)'}
                 </h3>
                 <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
-                    {modal?.descricao} — selecione a analista do setor responsável pela análise.
+                    {modal?.descricao} —{' '}
+                    {modalEmVistoria
+                        ? 'processo em vistoria: selecione o vistoriador responsável pela ficha.'
+                        : 'selecione a analista do setor responsável pela análise.'}
                 </p>
 
                 <div className="mt-6">
                     <label htmlFor="tramitar-analista" className="mb-1.5 block text-theme-sm font-medium text-gray-700 dark:text-gray-300">
-                        Analista
+                        {modalEmVistoria ? 'Vistoriador' : 'Analista'}
                     </label>
                     <Select
                         id="tramitar-analista"
                         value={tramitacao.data.analista_id}
                         onChange={(value) => tramitacao.setData('analista_id', value)}
-                        placeholder={opcoesAnalista.length > 0 ? 'Selecione a analista' : 'Nenhuma analista vinculada ao setor'}
-                        options={opcoesAnalista}
-                        disabled={opcoesAnalista.length === 0}
+                        placeholder={
+                            modalEmVistoria
+                                ? opcoesDoModal.length > 0
+                                    ? 'Selecione o vistoriador'
+                                    : 'Nenhum vistoriador vinculado ao setor'
+                                : opcoesDoModal.length > 0
+                                  ? 'Selecione a analista'
+                                  : 'Nenhuma analista vinculada ao setor'
+                        }
+                        options={opcoesDoModal}
+                        disabled={opcoesDoModal.length === 0}
                     />
                     {tramitacao.errors.analista_id && (
                         <p className="mt-1.5 text-theme-xs text-error-500">{tramitacao.errors.analista_id}</p>

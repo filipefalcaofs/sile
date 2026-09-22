@@ -28,4 +28,9 @@ class DistribuicaoException extends RuntimeException
     {
         return new self("Solicitação #{$request->id} já teve a análise concluída — não pode ser redistribuída.");
     }
+
+    public static function alvoSemPermissaoDeVistoria(User $alvo, ViabilityRequest $request): self
+    {
+        return new self("Solicitação #{$request->id} está em vistoria — só pode ser atribuída a um vistoriador, e {$alvo->name} não tem a permissão de ficha de vistoria.");
+    }
 }

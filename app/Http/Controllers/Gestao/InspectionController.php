@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Gestao\EncaminharVistoriaRequest;
 use App\Http\Requests\Gestao\InspectionAttachmentRequest;
 use App\Http\Requests\Gestao\InspectionConcludeRequest;
 use App\Http\Requests\Gestao\InspectionPolygonRequest;
@@ -11,8 +12,11 @@ use App\Http\Resources\InspectionResource;
 use App\Models\Inspection;
 use App\Models\InspectionAttachment;
 use App\Models\PropertyType;
+use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Vistoria\EncaminharVistoriaException;
+use App\Services\Vistoria\EncaminharVistoriaService;
 use App\Services\Vistoria\InspectionAtribuidaException;
 use App\Services\Vistoria\InspectionAutoriaException;
 use App\Services\Vistoria\InspectionConcluidaException;
@@ -40,8 +44,35 @@ class InspectionController extends Controller
 {
     public function __construct(
         private InspectionService $inspections,
+        private EncaminharVistoriaService $encaminhamento,
         private AuditService $audit,
     ) {}
+
+    /**
+     * Encaminhamento à vistoria (handoff real — NÃO é malha fina): o processo
+     * vai à caixa do setor de vistoria, desatribuído, com o eixo operacional
+     * em Vistoriar, para o apoio distribuir a um vistoriador. A origem fica
+     * registrada para o retorno automático na conclusão da ficha. Gated por
+     * analisar-processos (quem encaminha é o analista) — a rota vive no grupo
+     * da análise, não no grupo da ficha.
+     */
+    public function encaminhar(EncaminharVistoriaRequest $request, ViabilityRequest $viabilityRequest): RedirectResponse
+    {
+        $setor = Sector::query()->findOrFail($request->integer('setor_vistoria_id'));
+
+        try {
+            $this->encaminhamento->encaminhar(
+                $viabilityRequest,
+                $setor,
+                trim((string) $request->input('motivo')),
+                $request->user(),
+            );
+        } catch (EncaminharVistoriaException $e) {
+            throw ValidationException::withMessages(['motivo' => $e->getMessage()]);
+        }
+
+        return back()->with('status', "Processo encaminhado à vistoria ({$setor->name}) — aguardando distribuição ao vistoriador.");
+    }
 
     /**
      * Abre a ficha (criando na primeira vez) ou retoma a existente.

@@ -57,7 +57,9 @@ export default function ProcessoFiltros({
     onLimpar,
 }: ProcessoFiltrosProps) {
     const [form, setForm] = useState<ProcessoFiltrosValores>(valores);
-    const [avancadosAbertos, setAvancadosAbertos] = useState(false);
+    const [avancadosAbertos, setAvancadosAbertos] = useState(
+        valores.nome !== '' || valores.cnpj !== '' || valores.bairro !== '' || valores.categoria !== '',
+    );
 
     function definir(chave: keyof ProcessoFiltrosValores, valor: string) {
         setForm((anterior) => ({ ...anterior, [chave]: valor }));
@@ -103,7 +105,7 @@ export default function ProcessoFiltros({
             </div>
 
             {avancadosAbertos && (
-                <div className="grid grid-cols-1 gap-3 border-t border-gray-100 pt-4 sm:grid-cols-2 lg:grid-cols-4 dark:border-gray-800">
+                <div id="filtros-avancados" className="grid grid-cols-1 gap-3 border-t border-gray-100 pt-4 sm:grid-cols-2 lg:grid-cols-4 dark:border-gray-800">
                     <div>
                         <Label htmlFor="filtro-nome">Empresa / requerente</Label>
                         <Input id="filtro-nome" value={form.nome} onChange={(e) => definir('nome', e.target.value)} />
@@ -128,6 +130,8 @@ export default function ProcessoFiltros({
                 <Button type="button" variant="outline" onClick={limpar}>Limpar</Button>
                 <button
                     type="button"
+                    aria-expanded={avancadosAbertos}
+                    aria-controls="filtros-avancados"
                     onClick={() => setAvancadosAbertos((aberto) => !aberto)}
                     className="text-theme-sm font-medium text-brand-600 underline dark:text-brand-400"
                 >

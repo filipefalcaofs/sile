@@ -176,6 +176,101 @@ class CaixaSetorTest extends TestCase
         $this->assertSame($analista->id, $processo->fresh()->assigned_user_id);
     }
 
+    /**
+     * Processo na caixa E no eixo operacional de vistoria (Vistoriar).
+     */
+    private function processoEmVistoria(Sector $sector): ViabilityRequest
+    {
+        $processo = $this->processoNaCaixa($sector);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::Vistoriar])->save();
+
+        return $processo;
+    }
+
+    /**
+     * Membro do setor com analisar-processos mas SEM preencher-ficha-vistoria
+     * (o papel analista inclui as duas; aqui montamos permissão a permissão).
+     */
+    private function analistaSemVistoria(Sector $sector): User
+    {
+        $analista = User::factory()->withAcceptedLgpdTerm()->create();
+        $analista->givePermissionTo('analisar-processos');
+        $analista->sectors()->attach($sector);
+
+        return $analista;
+    }
+
+    private function vistoriadorDoSetor(Sector $sector): User
+    {
+        $vistoriador = User::factory()->withAcceptedLgpdTerm()->create();
+        $vistoriador->givePermissionTo(['analisar-processos', 'preencher-ficha-vistoria']);
+        $vistoriador->sectors()->attach($sector);
+
+        return $vistoriador;
+    }
+
+    public function test_apoio_distribui_processo_em_vistoria_a_vistoriador(): void
+    {
+        // Regra da vistoria: processo em Vistoriar só é distribuído a quem tem
+        // preencher-ficha-vistoria — a distribuição específica do fluxo.
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $vistoriador = $this->vistoriadorDoSetor($setor);
+        $processo = $this->processoEmVistoria($setor);
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $vistoriador->id,
+            ])
+            ->assertSessionHas('status');
+
+        $this->assertSame($vistoriador->id, $processo->fresh()->assigned_user_id);
+    }
+
+    public function test_apoio_distribuir_processo_em_vistoria_a_nao_vistoriador_volta_com_aviso(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $naoVistoriador = $this->analistaSemVistoria($setor);
+        $processo = $this->processoEmVistoria($setor);
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $naoVistoriador->id,
+            ])
+            ->assertSessionHas('warning');
+
+        $this->assertNull($processo->fresh()->assigned_user_id);
+    }
+
+    public function test_index_expoe_vistoriadores_do_setor_e_status_operacional_da_linha(): void
+    {
+        // A caixa alimenta o seletor da distribuição: processos em vistoria
+        // distribuem para a lista de vistoriadores (preencher-ficha-vistoria),
+        // não para a lista geral de analistas.
+        $setor = Sector::factory()->create();
+        $gestor = $this->gestor();
+        $gestor->sectors()->attach($setor);
+        $vistoriador = $this->vistoriadorDoSetor($setor);
+        $analistaComum = $this->analistaSemVistoria($setor);
+        $processo = $this->processoEmVistoria($setor);
+
+        $response = $this->actingAs($gestor, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertOk();
+
+        $props = $response->viewData('page')['props'];
+
+        $vistoriadoresIds = collect($props['vistoriadores'])->pluck('id')->all();
+        $this->assertContains($vistoriador->id, $vistoriadoresIds);
+        $this->assertNotContains($analistaComum->id, $vistoriadoresIds);
+
+        $linha = collect($props['processos']['data'])->firstWhere('id', $processo->id);
+        $this->assertSame('vistoriar', $linha['analysis_status']);
+    }
+
     public function test_apoio_nao_pode_assumir_processo(): void
     {
         $setor = Sector::factory()->create();

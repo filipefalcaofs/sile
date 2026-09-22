@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\DistribuicaoException;
 use App\Services\Analise\DistribuicaoService;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -98,6 +99,107 @@ class DistribuicaoServiceTest extends TestCase
         $this->assertSame($gestor->id, $activity->properties['ator_id']);
 
         Carbon::setTestNow();
+    }
+
+    /**
+     * Processo na caixa E no eixo operacional de vistoria (Vistoriar).
+     */
+    private function processoEmVistoria(Sector $sector): ViabilityRequest
+    {
+        $request = $this->processoNaCaixa($sector);
+        $request->forceFill(['analysis_status' => AnalysisStatus::Vistoriar])->save();
+
+        return $request;
+    }
+
+    /**
+     * Membro do setor SEM a permissão de vistoria (só analisar-processos) —
+     * o papel analista passou a incluir preencher-ficha-vistoria, então o
+     * não-vistoriador é montado permissão a permissão.
+     */
+    private function analistaSemVistoria(Sector $sector): User
+    {
+        $analista = User::factory()->create();
+        $analista->givePermissionTo('analisar-processos');
+        $analista->sectors()->attach($sector);
+
+        return $analista;
+    }
+
+    private function vistoriadorDoSetor(Sector $sector): User
+    {
+        $vistoriador = User::factory()->create();
+        $vistoriador->givePermissionTo(['analisar-processos', 'preencher-ficha-vistoria']);
+        $vistoriador->sectors()->attach($sector);
+
+        return $vistoriador;
+    }
+
+    public function test_processo_em_vistoria_so_pode_ser_distribuido_a_vistoriador(): void
+    {
+        // Regra da vistoria: com o processo em Vistoriar, a distribuição é
+        // específica — só usuário com preencher-ficha-vistoria recebe.
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $sector = Sector::factory()->create();
+        $request = $this->processoEmVistoria($sector);
+        $naoVistoriador = $this->analistaSemVistoria($sector);
+
+        try {
+            $this->service()->distribuir($request, $naoVistoriador);
+            $this->fail('Esperava DistribuicaoException para não-vistoriador em processo de vistoria.');
+        } catch (DistribuicaoException) {
+            // esperado
+        }
+
+        $this->assertNull($request->fresh()->assigned_user_id);
+    }
+
+    public function test_processo_em_vistoria_distribuido_a_vistoriador_funciona(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $sector = Sector::factory()->create();
+        $request = $this->processoEmVistoria($sector);
+        $vistoriador = $this->vistoriadorDoSetor($sector);
+
+        $this->service()->distribuir($request, $vistoriador);
+
+        $this->assertSame($vistoriador->id, $request->fresh()->assigned_user_id);
+    }
+
+    public function test_assumir_processo_em_vistoria_exige_permissao_de_vistoriador(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $sector = Sector::factory()->create();
+        $request = $this->processoEmVistoria($sector);
+        $naoVistoriador = $this->analistaSemVistoria($sector);
+
+        try {
+            $this->service()->assumir($request, $naoVistoriador);
+            $this->fail('Esperava DistribuicaoException ao assumir vistoria sem permissão.');
+        } catch (DistribuicaoException) {
+            // esperado
+        }
+
+        $this->assertNull($request->fresh()->assigned_user_id);
+    }
+
+    public function test_processo_fora_de_vistoria_nao_exige_permissao_de_vistoriador(): void
+    {
+        // Fora do eixo de vistoria, a regra atual permanece: qualquer analista
+        // vinculado ao setor recebe — a permissão de vistoria não é exigida.
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $sector = Sector::factory()->create();
+        $request = $this->processoNaCaixa($sector);
+        $request->forceFill(['analysis_status' => AnalysisStatus::EmAnalise])->save();
+        $analista = $this->analistaSemVistoria($sector);
+
+        $this->service()->distribuir($request, $analista);
+
+        $this->assertSame($analista->id, $request->fresh()->assigned_user_id);
     }
 
     public function test_analista_nao_vinculado_ao_setor_nao_e_distribuido(): void
