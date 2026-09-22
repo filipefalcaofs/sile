@@ -826,5 +826,34 @@ class CaixaSetorTest extends TestCase
         $this->assertNotEmpty($props['historico']);
         $this->assertSame($a->name, $props['historico'][0]['analista']);
         $this->assertSame(2, $props['historico'][0]['qtd']);
+        $this->assertSame($apoio->name, $props['historico'][0]['ator'], 'O histórico deve expor o Apoio que distribuiu (causer).');
+        $this->assertNotNull($props['historico'][0]['em']);
+        $this->assertSame(['em', 'ator', 'analista', 'qtd'], array_keys($props['historico'][0]));
+    }
+
+    public function test_historico_nao_mistura_setores(): void
+    {
+        $setorA = Sector::factory()->create();
+        $setorB = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setorA);
+        $apoio->sectors()->attach($setorB);
+
+        $analistaB = $this->analistaDoSetor($setorB);
+
+        $processoA = $this->processoNaCaixa($setorA);
+        $processoB1 = $this->processoNaCaixa($setorB);
+        $processoB2 = $this->processoNaCaixa($setorB);
+
+        $this->actingAs($apoio, 'gestao')->post('/gestao/caixa-setor/distribuir-lote', [
+            'alocacoes' => [['analista_id' => $analistaB->id, 'request_ids' => [$processoB1->id, $processoB2->id]]],
+        ])->assertSessionHas('status');
+
+        $props = $this->actingAs($apoio, 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$processoA->id}")
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $analistasNoHistorico = collect($props['historico'])->pluck('analista');
+        $this->assertNotContains($analistaB->name, $analistasNoHistorico, 'O histórico do setor A não deve incluir distribuições do setor B.');
     }
 }

@@ -232,6 +232,7 @@ class CaixaSetorController extends Controller
             ->where('log_name', 'analise')
             ->where('event', 'distribuir-lote')
             ->whereIn('properties->sector_id', $setoresHistorico->map(fn ($id): int => (int) $id)->all())
+            ->with('causer')
             ->latest()
             ->limit(15)
             ->get()
