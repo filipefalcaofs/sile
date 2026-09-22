@@ -6,6 +6,7 @@ import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import ProgressBar from '@/components/ui/progress-bar';
 import GestaoLayout from '@/layouts/gestao-layout';
+import { alocarPorQuantidade } from './alocar-lote';
 
 interface ProcessoSelecionado {
     id: number;
@@ -70,33 +71,10 @@ export default function CentralDistribuicao({
         [quantidades],
     );
 
-    const alocacaoPrevia = useMemo(() => {
-        const ids = processos.map((p) => p.id);
-        let cursor = 0;
-        const grupos: { analista_id: number; analista: string; request_ids: number[] }[] = [];
+    const faltam = totalSelecionados - totalAlocado;
 
-        for (const a of analistas) {
-            const q = quantidades[a.analista_id] || 0;
-            if (q <= 0) {
-                continue;
-            }
-            const fatia = ids.slice(cursor, cursor + q);
-            cursor += q;
-            grupos.push({ analista_id: a.analista_id, analista: a.analista, request_ids: fatia });
-        }
-
-        return grupos;
-    }, [analistas, quantidades, processos]);
-
-    const processoPorId = useMemo(() => new Map(processos.map((p) => [p.id, p])), [processos]);
-
-    const listaVisivel = useMemo(() => {
-        const termo = busca.trim().toLowerCase();
-        const filtrados = termo === ''
-            ? analistas
-            : analistas.filter((a) => a.analista.toLowerCase().includes(termo));
-
-        const ordenados = [...filtrados];
+    const analistasOrdenados = useMemo(() => {
+        const ordenados = [...analistas];
         ordenados.sort((a, b) => {
             if (ordenacao === 'nome') {
                 return a.analista.localeCompare(b.analista, 'pt-BR');
@@ -108,7 +86,33 @@ export default function CentralDistribuicao({
         });
 
         return ordenados;
-    }, [analistas, busca, ordenacao]);
+    }, [analistas, ordenacao]);
+
+    const alocacaoPrevia = useMemo(
+        () => alocarPorQuantidade(processos, analistasOrdenados, quantidades),
+        [analistasOrdenados, quantidades, processos],
+    );
+
+    const processoPorId = useMemo(() => new Map(processos.map((p) => [p.id, p])), [processos]);
+
+    const idsAlocados = useMemo(
+        () => new Set(alocacaoPrevia.flatMap((grupo) => grupo.request_ids)),
+        [alocacaoPrevia],
+    );
+
+    const semDestino = useMemo(
+        () => processos.filter((processo) => !idsAlocados.has(processo.id)),
+        [idsAlocados, processos],
+    );
+
+    const listaVisivel = useMemo(() => {
+        const termo = busca.trim().toLowerCase();
+        if (termo === '') {
+            return analistasOrdenados;
+        }
+
+        return analistasOrdenados.filter((a) => a.analista.toLowerCase().includes(termo));
+    }, [analistasOrdenados, busca]);
 
     const escolhido = analistas.find((a) => a.analista_id === selecionado) ?? null;
 
@@ -166,8 +170,12 @@ export default function CentralDistribuicao({
 
                 <Card>
                     <CardHeader
-                        title="Escolha o analista"
-                        description="A carga atual apoia a decisão. A escolha do destinatário é sua — o sistema não distribui automaticamente."
+                        title={modo === 'varios' ? 'Divida a quantidade' : 'Escolha o analista'}
+                        description={
+                            modo === 'varios'
+                                ? 'Diga quantos processos cada analista recebe. A soma tem que fechar com o total. Quem está no topo da lista recebe primeiro os de prazo mais curto.'
+                                : 'A carga atual apoia a decisão. A escolha do destinatário é sua — o sistema não distribui automaticamente.'
+                        }
                         actions={
                             <Button
                                 variant="outline"
@@ -180,7 +188,10 @@ export default function CentralDistribuicao({
                     />
                     <CardContent>
                         <div className="mb-4 inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-white/[0.03]">
-                            {([['um', 'Um analista'], ['varios', 'Vários analistas']] as const).map(([valor, rotulo]) => (
+                            {([
+                                ['um', 'Enviar todos para um'],
+                                ['varios', 'Dividir entre vários'],
+                            ] as const).map(([valor, rotulo]) => (
                                 <button
                                     key={valor}
                                     type="button"
@@ -197,78 +208,120 @@ export default function CentralDistribuicao({
                             ))}
                         </div>
 
+                        {modo === 'varios' && (
+                            <p
+                                id="resumo-divisao"
+                                className={`mb-4 rounded-xl px-4 py-3 text-theme-sm ${
+                                    faltam === 0
+                                        ? 'bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400'
+                                        : 'bg-gray-50 text-gray-700 dark:bg-white/[0.03] dark:text-gray-300'
+                                }`}
+                            >
+                                {faltam === 0
+                                    ? `Divisão fechada: ${textoProcessos(totalSelecionados)} com destinatário.`
+                                    : `Faltam ${textoProcessos(faltam)} para fechar a divisão de ${totalSelecionados}.`}
+                            </p>
+                        )}
+
                         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                            <div className="w-full sm:max-w-xs">
-                                <Input
-                                    id="busca-analista"
-                                    value={busca}
-                                    onChange={(e) => setBusca(e.target.value)}
-                                    placeholder="Pesquisar analista..."
-                                    aria-label="Pesquisar analista"
-                                />
-                            </div>
+                            {modo === 'um' && (
+                                <div className="w-full sm:max-w-xs">
+                                    <Input
+                                        id="busca-analista"
+                                        value={busca}
+                                        onChange={(e) => setBusca(e.target.value)}
+                                        placeholder="Pesquisar analista..."
+                                        aria-label="Pesquisar analista"
+                                    />
+                                </div>
+                            )}
                             <label className="flex items-center gap-2 text-theme-sm text-gray-500 dark:text-gray-400">
-                                Ordenar
+                                {modo === 'varios' ? 'Quem recebe os mais urgentes primeiro' : 'Ordenar'}
                                 <select
                                     value={ordenacao}
                                     onChange={(e) => setOrdenacao(e.target.value as Ordenacao)}
                                     className="h-11 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
                                 >
-                                    <option value="menor">Menor carga</option>
-                                    <option value="maior">Maior carga</option>
+                                    <option value="menor">Menor carga primeiro</option>
+                                    <option value="maior">Maior carga primeiro</option>
                                     <option value="nome">Ordem alfabética</option>
                                 </select>
                             </label>
                         </div>
 
+                        {modo === 'varios' && (
+                            <div className="mb-1 hidden gap-3 px-3 text-theme-xs font-medium tracking-wide text-gray-400 uppercase sm:grid sm:grid-cols-[minmax(12rem,1.4fr)_minmax(10rem,1fr)_8.5rem_6rem]">
+                                <span>Analista</span>
+                                <span>Carga atual</span>
+                                <span>Recebe</span>
+                                <span>Depois</span>
+                            </div>
+                        )}
+
                         <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {listaVisivel.map((a) => {
+                            {(modo === 'varios' ? analistasOrdenados : listaVisivel).map((a) => {
                                 const ativo = a.analista_id === selecionado;
                                 const percentual = maiorCarga > 0 ? (a.total / maiorCarga) * 100 : 0;
                                 const grupos = Object.entries(a.por_grupo).filter(([, n]) => n > 0);
-                                const restante = totalSelecionados - (totalAlocado - (quantidades[a.analista_id] || 0));
+                                const quantidade = quantidades[a.analista_id] || 0;
+                                const restante = totalSelecionados - (totalAlocado - quantidade);
 
                                 if (modo === 'varios') {
                                     return (
                                         <li key={a.analista_id}>
-                                            <div className="flex w-full flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:gap-4">
-                                                <span className="min-w-[200px] flex-1 font-medium text-gray-800 dark:text-white/90">
-                                                    {a.analista}
-                                                </span>
-                                                <span className="flex min-w-[240px] flex-1 items-center gap-3">
-                                                    <span className="inline-flex min-w-[3.5rem] justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-theme-sm font-semibold tabular-nums text-gray-700 dark:bg-white/10 dark:text-gray-200">
-                                                        {a.total}
-                                                    </span>
-                                                    <span className="w-full max-w-[220px]">
-                                                        <ProgressBar
-                                                            value={percentual}
-                                                            tone={a.total >= maiorCarga && maiorCarga > 0 ? 'warning' : 'brand'}
-                                                            label={`Carga de ${a.analista}: ${a.total} processos`}
-                                                        />
-                                                    </span>
-                                                </span>
-                                                <span className="min-w-[160px] text-theme-xs text-gray-500 dark:text-gray-400">
-                                                    {grupos.length > 0
-                                                        ? grupos.map(([g, n]) => `${n} ${g}`).join(' · ')
-                                                        : 'sem carga ativa'}
-                                                </span>
-                                                <div className="w-full sm:w-28">
-                                                    <label htmlFor={`qtd-${a.analista_id}`} className="sr-only">
-                                                        Quantidade para {a.analista}
+                                            <div className="grid gap-3 px-3 py-4 sm:grid-cols-[minmax(12rem,1.4fr)_minmax(10rem,1fr)_8.5rem_6rem] sm:items-center">
+                                                <div>
+                                                    <p className="font-medium text-gray-800 dark:text-white/90">{a.analista}</p>
+                                                    <p className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                        {grupos.length > 0
+                                                            ? grupos.map(([g, n]) => `${n} ${g}`).join(' · ')
+                                                            : 'sem carga ativa'}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-theme-xs text-gray-500 sm:sr-only">Carga atual</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="inline-flex min-w-[3.5rem] justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-theme-sm font-semibold tabular-nums text-gray-700 dark:bg-white/10 dark:text-gray-200">
+                                                            {a.total}
+                                                        </span>
+                                                        <span className="w-full max-w-[160px]">
+                                                            <ProgressBar
+                                                                value={percentual}
+                                                                tone={a.total >= maiorCarga && maiorCarga > 0 ? 'warning' : 'brand'}
+                                                                label={`Carga de ${a.analista}: ${a.total} processos`}
+                                                            />
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        htmlFor={`qtd-${a.analista_id}`}
+                                                        className="mb-1 block text-theme-xs font-medium text-gray-700 sm:sr-only dark:text-gray-300"
+                                                    >
+                                                        Recebe
                                                     </label>
                                                     <Input
                                                         id={`qtd-${a.analista_id}`}
                                                         type="number"
+                                                        inputMode="numeric"
                                                         min={0}
                                                         max={restante}
                                                         step={1}
-                                                        value={quantidades[a.analista_id] ?? 0}
+                                                        placeholder="0"
+                                                        value={quantidade === 0 ? '' : quantidade}
                                                         onChange={(e) =>
                                                             definirQuantidade(a.analista_id, Number(e.target.value) || 0)
                                                         }
-                                                        aria-label={`Quantidade de processos para ${a.analista}`}
+                                                        aria-label={`Quantos processos ${a.analista} recebe`}
+                                                        aria-describedby="resumo-divisao"
                                                         className="tabular-nums"
                                                     />
+                                                </div>
+                                                <div>
+                                                    <p className="text-theme-xs text-gray-500 sm:sr-only">Depois</p>
+                                                    <p className="text-lg font-semibold tabular-nums text-gray-800 dark:text-white/90">
+                                                        {a.total + quantidade}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </li>
@@ -311,34 +364,60 @@ export default function CentralDistribuicao({
                             })}
                         </ul>
 
-                        {modo === 'varios' && alocacaoPrevia.length > 0 && (
-                            <div className="mt-4 space-y-3">
-                                {alocacaoPrevia.map((g) => (
-                                    <div key={g.analista_id} className="rounded-xl border border-gray-100 p-3 dark:border-gray-800">
-                                        <p className="mb-1 text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                            {g.analista} — {g.request_ids.length} processo(s)
-                                        </p>
-                                        <ul className="text-theme-xs text-gray-500 dark:text-gray-400">
-                                            {g.request_ids.map((id) => {
-                                                const p = processoPorId.get(id);
-                                                return <li key={id}>{p?.bap ?? p?.protocol_number ?? `#${id}`}</li>;
-                                            })}
-                                        </ul>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
                     </CardContent>
                 </Card>
+
+                {modo === 'varios' && (
+                    <Card>
+                        <CardHeader
+                            title="Quem recebe cada processo"
+                            description="Os processos entram na ordem do prazo, do mais curto para o mais longo. O primeiro analista da lista com quantidade preenchida leva os primeiros."
+                        />
+                        <CardContent>
+                            {alocacaoPrevia.length === 0 ? (
+                                <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                    Nenhuma quantidade informada. Preencha a coluna Recebe.
+                                </p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {alocacaoPrevia.map((grupo) => (
+                                        <div key={grupo.analista_id}>
+                                            <p className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                                {grupo.analista} recebe {textoProcessos(grupo.request_ids.length)}
+                                            </p>
+                                            <ol className="mt-1 list-decimal space-y-1 pl-5 text-theme-sm text-gray-600 dark:text-gray-300">
+                                                {grupo.request_ids.map((id) => (
+                                                    <li key={id}>{rotuloProcesso(processoPorId.get(id), id)}</li>
+                                                ))}
+                                            </ol>
+                                        </div>
+                                    ))}
+                                    {semDestino.length > 0 && (
+                                        <div>
+                                            <p className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                                                Ainda sem analista: {textoProcessos(semDestino.length)}
+                                            </p>
+                                            <ol className="mt-1 list-decimal space-y-1 pl-5 text-theme-sm text-gray-600 dark:text-gray-300">
+                                                {semDestino.map((processo) => (
+                                                    <li key={processo.id}>{rotuloProcesso(processo, processo.id)}</li>
+                                                ))}
+                                            </ol>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
 
                 {modo === 'varios' && (
                     <Card>
                         <CardContent>
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 <p className="text-theme-sm text-gray-600 dark:text-gray-300">
-                                    Alocados{' '}
-                                    <strong className="tabular-nums">{totalAlocado}</strong> de{' '}
-                                    <strong className="tabular-nums">{totalSelecionados}</strong>
+                                    {faltam === 0
+                                        ? 'A divisão está completa. Confirme para encaminhar.'
+                                        : `Ainda faltam ${textoProcessos(faltam)}. A confirmação libera quando a soma for ${totalSelecionados}.`}
                                 </p>
                                 <div className="flex items-center gap-3">
                                     <Button
@@ -419,6 +498,20 @@ export default function CentralDistribuicao({
             </div>
         </>
     );
+}
+
+function textoProcessos(quantidade: number): string {
+    return quantidade === 1 ? '1 processo' : `${quantidade} processos`;
+}
+
+function rotuloProcesso(processo: ProcessoSelecionado | undefined, id: number): string {
+    if (!processo) {
+        return `#${id}`;
+    }
+
+    const codigo = processo.bap ?? processo.protocol_number ?? `#${processo.id}`;
+
+    return processo.imovel !== '' ? `${codigo} — ${processo.imovel}` : codigo;
 }
 
 function ResumoItem({ rotulo, valor }: { rotulo: string; valor: number }) {
