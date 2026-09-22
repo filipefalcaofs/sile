@@ -190,6 +190,13 @@ export default function CaixaSetorIndex({
         setModal(novo);
     }
 
+    function irParaCentral(ids: number[]) {
+        if (ids.length === 0) {
+            return;
+        }
+        router.get('/gestao/caixa-setor/central', { ids: ids.join(',') }, { preserveScroll: true });
+    }
+
     function confirmarTramitacao() {
         const rota = modal?.tipo === 'redistribuir' ? '/gestao/caixa-setor/redistribuir' : '/gestao/caixa-setor/distribuir';
 
@@ -289,11 +296,13 @@ export default function CaixaSetorIndex({
                         <TableAction
                             tone="neutral"
                             onClick={() =>
-                                abrirModal({
-                                    tipo: 'distribuir',
-                                    ids: [item.id],
-                                    descricao: `Processo ${item.bap ?? item.protocol_number ?? item.id}`,
-                                })
+                                emVistoria(item)
+                                    ? abrirModal({
+                                          tipo: 'distribuir',
+                                          ids: [item.id],
+                                          descricao: `Processo ${item.bap ?? item.protocol_number ?? item.id}`,
+                                      })
+                                    : irParaCentral([item.id])
                             }
                             icon={<GroupIcon className="size-4.5" />}
                             label="Distribuir a um analista"
@@ -382,15 +391,25 @@ export default function CaixaSetorIndex({
                                 {selecaoAtiva && selecionados.length > 0 && (
                                     <Button
                                         variant="primary"
-                                        onClick={() =>
-                                            abrirModal({
-                                                tipo: 'distribuir',
-                                                ids: selecionados,
-                                                descricao: `${selecionados.length} processo(s) selecionado(s)`,
-                                            })
-                                        }
+                                        onClick={() => {
+                                            const algumEmVistoria = linhas.some(
+                                                (linha) => selecionados.includes(linha.id) && emVistoria(linha),
+                                            );
+
+                                            if (algumEmVistoria) {
+                                                abrirModal({
+                                                    tipo: 'distribuir',
+                                                    ids: selecionados,
+                                                    descricao: `${selecionados.length} processo(s) selecionado(s)`,
+                                                });
+
+                                                return;
+                                            }
+
+                                            irParaCentral(selecionados);
+                                        }}
                                     >
-                                        Tramitar selecionados ({selecionados.length})
+                                        Distribuir selecionados ({selecionados.length})
                                     </Button>
                                 )}
                             </div>
