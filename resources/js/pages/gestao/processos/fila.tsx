@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import ProcessoFiltros, { type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
 import PageHeader from '@/components/app/page-header';
 import {
     CategoriaBadges,
@@ -9,10 +10,12 @@ import {
 import { AlertIcon, ArrowRightIcon, FileIcon, InfoIcon, ListIcon } from '@/components/icons';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table/data-table';
+import PerPageSelect from '@/components/ui/data-table/per-page-select';
 import type { ColumnDef } from '@/components/ui/data-table/types';
 import EmptyState from '@/components/ui/empty-state';
 import KpiCard from '@/components/ui/kpi-card';
 import type { KpiTone } from '@/components/ui/kpi-card';
+import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
 
@@ -34,11 +37,24 @@ interface VisaoSetor {
     vermelhos: number;
 }
 
+interface Paginado<T> {
+    data: T[];
+    links: PaginationLink[];
+    from: number | null;
+    to: number | null;
+    total: number;
+}
+
 interface FilaProps {
     modo: 'meus' | 'setor';
-    processos: ProcessoItem[];
+    processos: Paginado<ProcessoItem>;
     contadores: Contadores;
     visaoSetor: VisaoSetor | null;
+    filtros: ProcessoFiltrosValores & { per_page: number };
+    perPageOptions: number[];
+    servicoOptions: { value: string; label: string }[];
+    analysisStatusOptions: { value: string; label: string }[];
+    categoriaOptions: { value: string; label: string }[];
 }
 
 const numberFormat = new Intl.NumberFormat('pt-BR');
@@ -49,13 +65,37 @@ const ABAS: { value: 'meus' | 'setor'; label: string }[] = [
     { value: 'setor', label: 'Caixa do setor' },
 ];
 
-export default function Fila({ modo, processos, contadores }: FilaProps) {
+export default function Fila({
+    modo,
+    processos,
+    contadores,
+    filtros,
+    perPageOptions,
+    servicoOptions,
+    analysisStatusOptions,
+    categoriaOptions,
+}: FilaProps) {
+    const { per_page: _perPage, ...filtrosDeCampo } = filtros;
+
+    function navegar(params: { modo?: 'meus' | 'setor'; per_page?: number; filtros?: ProcessoFiltrosValores }) {
+        const filtrosAtuais = params.filtros ?? filtrosDeCampo;
+        router.get(
+            '/gestao/processos/fila',
+            {
+                modo: params.modo ?? modo,
+                per_page: params.per_page ?? filtros.per_page,
+                ...Object.fromEntries(Object.entries(filtrosAtuais).filter(([, v]) => v !== '')),
+            },
+            { preserveScroll: true, preserveState: false },
+        );
+    }
+
     function trocarModo(proximo: 'meus' | 'setor') {
         if (proximo === modo) {
             return;
         }
 
-        router.get('/gestao/processos/fila', { modo: proximo }, { preserveScroll: true, preserveState: false });
+        navegar({ modo: proximo });
     }
 
     const indicadores: { key: string; label: string; value: number; icon: ReactNode; tone: KpiTone }[] = [
@@ -175,6 +215,31 @@ export default function Fila({ modo, processos, contadores }: FilaProps) {
                     />
                     <CardContent>
                         <div className="space-y-5">
+                            <ProcessoFiltros
+                                valores={filtrosDeCampo}
+                                servicoOptions={servicoOptions}
+                                analysisStatusOptions={analysisStatusOptions}
+                                categoriaOptions={categoriaOptions}
+                                onAplicar={(valores) => navegar({ filtros: valores })}
+                                onLimpar={() =>
+                                    navegar({
+                                        filtros: {
+                                            ...filtrosDeCampo,
+                                            analysis_status: '',
+                                            servico: '',
+                                            protocolo: '',
+                                            bap: '',
+                                            data_de: '',
+                                            data_ate: '',
+                                            nome: '',
+                                            cnpj: '',
+                                            bairro: '',
+                                            categoria: '',
+                                        },
+                                    })
+                                }
+                            />
+
                             <div
                                 role="tablist"
                                 aria-label="Escopo da fila"
@@ -204,7 +269,7 @@ export default function Fila({ modo, processos, contadores }: FilaProps) {
 
                             <DataTable
                                 columns={columns}
-                                rows={processos}
+                                rows={processos.data}
                                 rowKey={(item) => item.id}
                                 density="compact"
                                 emptyState={
@@ -221,6 +286,18 @@ export default function Fila({ modo, processos, contadores }: FilaProps) {
                                         }
                                     />
                                 }
+                            />
+
+                            <div className="flex items-center justify-end">
+                                <PerPageSelect
+                                    value={filtros.per_page}
+                                    options={perPageOptions}
+                                    onChange={(pp) => navegar({ per_page: pp })}
+                                />
+                            </div>
+                            <Pagination
+                                links={processos.links}
+                                meta={{ from: processos.from, to: processos.to, total: processos.total }}
                             />
                         </div>
                     </CardContent>
