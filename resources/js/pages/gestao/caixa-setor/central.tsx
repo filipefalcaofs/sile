@@ -114,7 +114,7 @@ export default function CentralDistribuicao({
 
     function definirQuantidade(analistaId: number, valor: number) {
         const restante = totalSelecionados - (totalAlocado - (quantidades[analistaId] || 0));
-        const limitado = Math.max(0, Math.min(valor, restante));
+        const limitado = Math.max(0, Math.min(Math.trunc(valor), restante));
         setQuantidades((atual) => ({ ...atual, [analistaId]: limitado }));
     }
 
@@ -139,7 +139,6 @@ export default function CentralDistribuicao({
         }));
         loteForm.post('/gestao/caixa-setor/distribuir-lote', {
             preserveScroll: true,
-            onSuccess: () => router.visit('/gestao/caixa-setor'),
         });
     }
 
@@ -170,7 +169,11 @@ export default function CentralDistribuicao({
                         title="Escolha o analista"
                         description="A carga atual apoia a decisão. A escolha do destinatário é sua — o sistema não distribui automaticamente."
                         actions={
-                            <Button variant="outline" onClick={() => setHistoricoAberto((v) => !v)}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setHistoricoAberto((v) => !v)}
+                                aria-expanded={historicoAberto}
+                            >
                                 {historicoAberto ? 'Ocultar histórico' : 'Ver histórico'}
                             </Button>
                         }
@@ -182,6 +185,7 @@ export default function CentralDistribuicao({
                                     key={valor}
                                     type="button"
                                     onClick={() => setModo(valor)}
+                                    aria-pressed={modo === valor}
                                     className={`rounded-md px-4 py-2 text-theme-sm font-medium ${
                                         modo === valor
                                             ? 'bg-white text-brand-500 shadow-theme-xs dark:bg-gray-900 dark:text-brand-400'
@@ -257,6 +261,7 @@ export default function CentralDistribuicao({
                                                         type="number"
                                                         min={0}
                                                         max={restante}
+                                                        step={1}
                                                         value={quantidades[a.analista_id] ?? 0}
                                                         onChange={(e) =>
                                                             definirQuantidade(a.analista_id, Number(e.target.value) || 0)

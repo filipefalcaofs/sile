@@ -19,6 +19,7 @@ use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -320,54 +321,85 @@ class CaixaSetorController extends Controller
             return back()->with('error', 'Um mesmo processo foi alocado para mais de um analista.');
         }
 
-        // Todos os processos precisam estar disponíveis na caixa do ator (atômico).
-        $processos = ViabilityRequest::query()
-            ->whereIn('id', $todosIds->unique())
-            ->whereIn('sector_id', $sectorIds)
-            ->where('status', ViabilityRequestStatus::EmAnalise->value)
-            ->whereNull('assigned_user_id')
-            ->get()
-            ->keyBy('id');
+        try {
+            $resultado = DB::transaction(function () use ($request, $sectorIds, $alocacoes, $todosIds): array {
+                $processos = ViabilityRequest::query()
+                    ->whereIn('id', $todosIds->unique())
+                    ->whereIn('sector_id', $sectorIds)
+                    ->where('status', ViabilityRequestStatus::EmAnalise->value)
+                    ->whereNull('assigned_user_id')
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
 
-        if ($processos->count() !== $todosIds->unique()->count()) {
-            return back()->with('error', 'Alguns processos não estão disponíveis para distribuição na sua caixa.');
+                if ($processos->count() !== $todosIds->unique()->count()) {
+                    return ['error' => 'Alguns processos não estão disponíveis para distribuição na sua caixa.'];
+                }
+
+                if ($processos->pluck('sector_id')->unique()->count() > 1) {
+                    return ['error' => 'Distribua processos de um único setor por vez.'];
+                }
+
+                $grupos = [];
+                foreach ($alocacoes as $alocacao) {
+                    /** @var User|null $analista */
+                    $analista = User::query()->find($alocacao['analista_id']);
+                    $requests = collect($alocacao['request_ids'])
+                        ->map(fn ($id): ViabilityRequest => $processos[(int) $id]);
+                    $sectorIdDoGrupo = (int) $requests->first()->sector_id;
+
+                    if ($analista === null || ! $analista->can('analisar-processos')) {
+                        return ['error' => 'O destinatário selecionado não possui permissão para analisar processos.'];
+                    }
+
+                    if (! $analista->sectors()->where('sectors.id', $sectorIdDoGrupo)->exists()) {
+                        return ['error' => 'O destinatário selecionado não está vinculado ao setor dos processos.'];
+                    }
+
+                    $grupoTemVistoria = $requests->contains(
+                        fn (ViabilityRequest $processo): bool => in_array(
+                            $processo->analysis_status,
+                            [AnalysisStatus::Vistoriar, AnalysisStatus::Vistoriado],
+                            true,
+                        ),
+                    );
+
+                    if ($grupoTemVistoria && ! $analista->can('preencher-ficha-vistoria')) {
+                        return ['error' => 'O destinatário selecionado não possui permissão para preencher ficha de vistoria.'];
+                    }
+
+                    $grupos[] = ['analista' => $analista, 'requests' => $requests];
+                }
+
+                $resumo = $this->distribuicao->distribuirMultiplo($grupos, $request->user());
+
+                if ($resumo['falhas'] !== []) {
+                    throw new \RuntimeException('A distribuição múltipla retornou falhas após a pré-validação.');
+                }
+
+                foreach ($grupos as $grupo) {
+                    $qtd = $grupo['requests']->count();
+                    $this->audit->log('analise', 'distribuir-lote', "Distribuição em lote de {$qtd} processo(s) para {$grupo['analista']->name}.", [
+                        'analista_id' => $grupo['analista']->id,
+                        'analista_nome' => $grupo['analista']->name,
+                        'qtd' => $qtd,
+                        'sector_id' => $grupo['requests']->first()->sector_id,
+                        'ator_id' => $request->user()->id,
+                    ]);
+                }
+
+                return ['total' => $resumo['ok']];
+            });
+        } catch (\RuntimeException) {
+            return back()->with('error', 'Não foi possível concluir a distribuição; nada foi alterado.');
         }
 
-        // Monta os grupos com os models resolvidos (analista + processos).
-        $grupos = [];
-        foreach ($alocacoes as $alocacao) {
-            /** @var User $analista */
-            $analista = User::query()->findOrFail($alocacao['analista_id']);
-            $requests = collect($alocacao['request_ids'])->map(fn ($id): ViabilityRequest => $processos[(int) $id]);
-            $grupos[] = ['analista' => $analista, 'requests' => $requests];
+        if (isset($resultado['error'])) {
+            return back()->with('error', $resultado['error']);
         }
 
-        $resumo = $this->distribuicao->distribuirMultiplo($grupos, $request->user());
-
-        // Resumo por analista para o histórico (só dos que receberam ao menos um).
-        foreach ($grupos as $grupo) {
-            $qtd = collect($grupo['requests'])->count();
-            if ($qtd === 0) {
-                continue;
-            }
-
-            $this->audit->log('analise', 'distribuir-lote', "Distribuição em lote de {$qtd} processo(s) para {$grupo['analista']->name}.", [
-                'analista_id' => $grupo['analista']->id,
-                'analista_nome' => $grupo['analista']->name,
-                'qtd' => $qtd,
-                'sector_id' => collect($grupo['requests'])->first()?->sector_id,
-                'ator_id' => $request->user()->id,
-            ]);
-        }
-
-        $response = back()->with('status', "{$resumo['ok']} processo(s) distribuído(s) entre os analistas.");
-
-        if ($resumo['falhas'] !== []) {
-            $motivos = collect($resumo['falhas'])->pluck('motivo')->unique()->implode(' ');
-            $response->with('warning', count($resumo['falhas']).' processo(s) não distribuído(s): '.$motivos);
-        }
-
-        return $response;
+        return redirect('/gestao/caixa-setor')
+            ->with('status', "{$resultado['total']} processo(s) distribuído(s) entre os analistas.");
     }
 
     /**
