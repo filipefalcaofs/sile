@@ -190,3 +190,6 @@ Thumbs.db
 .playwright-cli/
 output/
 .worktrees/
+
+# LSP/IDE
+storage/framework/lsp-*.php
