@@ -95,7 +95,7 @@ class DatabaseSeederTest extends TestCase
         // preditiva).
         // + 1 do setor de triagem da análise (analise.setor_triagem_id — elo
         // motor → caixa do setor, 2026-09-20).
-        $this->assertSame(124, Parameter::query()->count());
+        $this->assertSame(125, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -383,7 +383,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(5, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(124, Parameter::query()->count());
+        $this->assertSame(125, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

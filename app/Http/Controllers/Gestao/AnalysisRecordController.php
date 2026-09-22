@@ -19,6 +19,7 @@ use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Ai\AiFeatureGate;
 use App\Services\Ai\ResumoProcessoService;
+use App\Services\Ai\SugestaoJustificativaService;
 use App\Services\Ai\SugestaoParecerService;
 use App\Services\Analise\AnaliseTecnicaDecisionService;
 use App\Services\Analise\AnalysisRecordDiff;
@@ -284,6 +285,61 @@ class AnalysisRecordController extends Controller
                 ? 'Minuta solicitada à IA. A sugestão aparecerá nos alertas de IA para revisão.'
                 : ($this->iaFicha($viabilityRequest)['parecer_motivo']
                     ?? 'Sugestão de minuta indisponível (função desativada ou processo sem pré-análise do motor). Redija o parecer manualmente.'),
+        ]);
+    }
+
+    /**
+     * Solicita à IA uma SUGESTÃO de justificativa da atividade (regra SEDUR
+     * 22/09/2026, item 6): a justificativa é a manifestação do analista — a IA
+     * só entra como apoio e SOMENTE depois de o analista decidir o
+     * enquadramento da atividade (deferida/indeferida). Sem a decisão, 422
+     * (a regra do botão da ficha). Delega ao SugestaoJustificativaService, que
+     * degrada honestamente sem o toggle features.ia_justificativa, sem provedor
+     * de texto ou sem a pré-análise do motor. Recusa numa revisão finalizada
+     * (RN-003). NUNCA grava decisão — a minuta preenche o campo vazio da
+     * atividade, sempre editável.
+     */
+    public function sugerirJustificativa(Request $request, ViabilityRequest $viabilityRequest, SugestaoJustificativaService $justificativa): JsonResponse
+    {
+        $record = $this->records->current($viabilityRequest);
+
+        if ($record->isFinalizada()) {
+            abort(422, 'A revisão está finalizada (RN-003): crie uma nova revisão para trabalhar uma minuta.');
+        }
+
+        $dados = $request->validate([
+            'cnae' => ['required', 'string', 'max:20'],
+        ]);
+
+        $cnae = preg_replace('/\D/', '', (string) $dados['cnae']);
+
+        if ($justificativa->decisaoDoCnae($record, $cnae) === null) {
+            throw ValidationException::withMessages([
+                'cnae' => ['Decida o enquadramento da atividade (deferida ou indeferida) antes de pedir a sugestão da IA.'],
+            ]);
+        }
+
+        $despachou = $justificativa->processar($viabilityRequest, $cnae, $request->user()?->id);
+
+        $this->audit->log(
+            logName: 'analise',
+            event: 'ficha-sugerir-justificativa',
+            description: "Solicitação de justificativa por IA da atividade {$cnae} do processo #{$viabilityRequest->id}",
+            properties: [
+                'viability_request_id' => $viabilityRequest->id,
+                'revision' => $record->revision,
+                'cnae' => $cnae,
+                'despachou' => $despachou,
+            ],
+            subject: $record,
+        );
+
+        return response()->json([
+            'despachou' => $despachou,
+            'status' => $despachou
+                ? 'Justificativa solicitada à IA. A sugestão aparecerá nos alertas de IA para revisão.'
+                : ($this->iaFicha($viabilityRequest)['justificativa_motivo']
+                    ?? 'Sugestão de justificativa indisponível (função desativada ou processo sem pré-análise do motor). Redija manualmente.'),
         ]);
     }
 
@@ -651,9 +707,14 @@ class AnalysisRecordController extends Controller
     {
         $resumoMotivo = $this->iaGate->unavailableReason('resumo', 'text');
         $parecerMotivo = $this->iaGate->unavailableReason('parecer', 'text');
+        $justificativaMotivo = $this->iaGate->unavailableReason('justificativa', 'text');
 
         if ($parecerMotivo === null && ! $this->parecerTemMotor($request)) {
             $parecerMotivo = 'A minuta precisa da pré-análise do motor (zoneamento/enquadramento). Sem isso, redija o parecer manualmente.';
+        }
+
+        if ($justificativaMotivo === null && ! $this->parecerTemMotor($request)) {
+            $justificativaMotivo = 'A sugestão precisa da pré-análise do motor (zoneamento/enquadramento). Sem isso, redija a justificativa manualmente.';
         }
 
         return [
@@ -661,6 +722,8 @@ class AnalysisRecordController extends Controller
             'resumo_motivo' => $resumoMotivo,
             'parecer_disponivel' => $parecerMotivo === null,
             'parecer_motivo' => $parecerMotivo,
+            'justificativa_disponivel' => $justificativaMotivo === null,
+            'justificativa_motivo' => $justificativaMotivo,
         ];
     }
 
@@ -697,6 +760,9 @@ class AnalysisRecordController extends Controller
                 'status_label' => $sugestao->status->label(),
                 'confianca' => $sugestao->confidence,
                 'output' => $sugestao->output,
+                // CNAE da atividade (sugestão de justificativa) — para a ficha
+                // aplicar a minuta no campo certo.
+                'cnae' => $sugestao->input_ref['cnae'] ?? null,
                 'created_at' => $sugestao->created_at?->toIso8601String(),
             ])
             ->all();

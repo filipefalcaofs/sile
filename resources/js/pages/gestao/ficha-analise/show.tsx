@@ -198,6 +198,8 @@ interface SugestaoIa {
     status_label: string;
     confianca: string | null;
     output: SugestaoIaOutput;
+    /** CNAE da atividade (sugestão de justificativa) — para aplicar no campo certo. */
+    cnae?: string | null;
     created_at: string | null;
 }
 
@@ -254,6 +256,8 @@ interface IaFicha {
     resumo_motivo: string | null;
     parecer_disponivel: boolean;
     parecer_motivo: string | null;
+    justificativa_disponivel: boolean;
+    justificativa_motivo: string | null;
 }
 
 const STATUS_OPCOES: { value: StatusFicha; label: string }[] = [
@@ -823,6 +827,21 @@ export default function FichaAnaliseShow({
         [sugestoesIa],
     );
 
+    // Sugestão de justificativa por IA (regra SEDUR 22/09, item 6): apoio por
+    // atividade, habilitado SÓ depois da decisão do analista no CNAE. O job roda
+    // em fila; sondamos a prop deferida sugestoesIa como na minuta do parecer.
+    const justificativaIa = useHttp<{ cnae?: string }, { despachou?: boolean; status?: string }>({});
+    const [justificativaStatus, setJustificativaStatus] = useState<
+        Record<string, 'solicitando' | 'aguardando' | 'pronta' | 'indisponivel'>
+    >({});
+    const [justificativaMensagem, setJustificativaMensagem] = useState<Record<string, string | null>>({});
+    const justificativaPollRef = useRef<number | null>(null);
+    const justificativaBaselineRef = useRef(0);
+    const justificativasSugeridas = useMemo(
+        () => (sugestoesIa ?? []).filter((sugestao) => sugestao.type === 'justificativa').length,
+        [sugestoesIa],
+    );
+
     const [precedentesData, setPrecedentesData] = useState<PrecedentesResponse | null>(null);
     const [precedentesErro, setPrecedentesErro] = useState<string | null>(null);
 
@@ -1194,6 +1213,110 @@ export default function FichaAnaliseShow({
         });
     }
 
+    function pararPollJustificativa() {
+        if (justificativaPollRef.current !== null) {
+            window.clearInterval(justificativaPollRef.current);
+            justificativaPollRef.current = null;
+        }
+    }
+
+    function iniciarPollJustificativa() {
+        pararPollJustificativa();
+        let tentativas = 0;
+
+        justificativaPollRef.current = window.setInterval(() => {
+            tentativas += 1;
+
+            if (tentativas > MINUTA_POLL_MAX) {
+                pararPollJustificativa();
+
+                return;
+            }
+
+            router.reload({ only: ['sugestoesIa'] });
+        }, MINUTA_POLL_INTERVAL_MS);
+    }
+
+    /**
+     * Pede à IA a minuta da justificativa da atividade (regra SEDUR 22/09,
+     * item 6): o botão só habilita DEPOIS da decisão do analista no CNAE — o
+     * endpoint revalida (422 sem decisão). A minuta chega pela fila e preenche
+     * o campo vazio (atuando), sempre editável; nunca decide.
+     */
+    function sugerirJustificativa(cnae: string) {
+        setJustificativaMensagem((atual) => ({ ...atual, [cnae]: null }));
+        setJustificativaStatus((atual) => ({ ...atual, [cnae]: 'solicitando' }));
+        justificativaBaselineRef.current = justificativasSugeridas;
+
+        justificativaIa.transform(() => ({ cnae }));
+        justificativaIa.post(`${fichaUrl}/sugerir-justificativa`, {
+            onSuccess: (resposta) => {
+                setJustificativaMensagem((atual) => ({ ...atual, [cnae]: resposta?.status ?? null }));
+
+                if (resposta?.despachou) {
+                    setJustificativaStatus((atual) => ({ ...atual, [cnae]: 'aguardando' }));
+                    iniciarPollJustificativa();
+                } else {
+                    setJustificativaStatus((atual) => ({ ...atual, [cnae]: 'indisponivel' }));
+                }
+            },
+            onHttpException: (erro) => {
+                const dados = erro?.data;
+                const mensagem =
+                    dados && typeof dados === 'object' && typeof (dados as { message?: unknown }).message === 'string'
+                        ? ((dados as { message: string }).message)
+                        : 'Não foi possível solicitar a sugestão agora. Tente novamente.';
+
+                setJustificativaStatus((atual) => ({ ...atual, [cnae]: 'indisponivel' }));
+                setJustificativaMensagem((atual) => ({ ...atual, [cnae]: mensagem }));
+
+                return false;
+            },
+        });
+    }
+
+    /**
+     * Aplica a minuta da IA ao campo da atividade como RASCUNHO editável
+     * (client-side) — preenche o campo vazio; se já houver texto do analista,
+     * acrescenta ao final. Nada é decidido nem finalizado.
+     */
+    function aplicarMinutaJustificativa(cnae: string, texto: string) {
+        const indice = perCnae.findIndex((item) => item.cnae === cnae);
+
+        if (indice < 0) {
+            return;
+        }
+
+        const atual = (perCnae[indice].justificativa ?? '').trim();
+        atualizarCnae(indice, { justificativa: atual === '' ? texto : `${atual}\n\n${texto}` });
+    }
+
+    // A minuta da justificativa chega de forma assíncrona (fila): quando a
+    // contagem cresce além do baseline, aplica ao campo vazio do CNAE que
+    // aguardava (atuando) e sinaliza pronta.
+    useEffect(() => {
+        const aguardando = Object.entries(justificativaStatus).find(([, status]) => status === 'aguardando');
+
+        if (!aguardando || justificativasSugeridas <= justificativaBaselineRef.current) {
+            return;
+        }
+
+        const [cnaeAguardando] = aguardando;
+        const sugestao = (sugestoesIa ?? []).find(
+            (item) => item.type === 'justificativa' && item.cnae === cnaeAguardando,
+        );
+        const texto = typeof sugestao?.output?.justificativa === 'string' ? sugestao.output.justificativa.trim() : '';
+        const indice = perCnae.findIndex((item) => item.cnae === cnaeAguardando);
+
+        if (texto !== '' && indice >= 0 && (perCnae[indice].justificativa ?? '').trim() === '') {
+            atualizarCnae(indice, { justificativa: texto });
+        }
+
+        setJustificativaStatus((atual) => ({ ...atual, [cnaeAguardando]: 'pronta' }));
+        pararPollJustificativa();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [justificativasSugeridas, justificativaStatus]);
+
     // A minuta chega de forma assíncrona (fila): quando a contagem de sugestões de
     // parecer cresce além do baseline, encerramos a sondagem e sinalizamos pronta.
     useEffect(() => {
@@ -1478,6 +1601,12 @@ export default function FichaAnaliseShow({
                                     sugestoes={sugestoesIa ?? []}
                                     editavel={editavel}
                                     onAplicar={aplicarMinutaAoParecer}
+                                />
+                                <MinutaJustificativaCard
+                                    sugestoes={sugestoesIa ?? []}
+                                    editavel={editavel}
+                                    perCnae={perCnae}
+                                    onAplicar={aplicarMinutaJustificativa}
                                 />
                                 <AlertasIaCard sugestoes={sugestoesIa ?? []} />
                             </div>
@@ -1839,9 +1968,27 @@ export default function FichaAnaliseShow({
                                                     </div>
 
                                                     <div className="mt-3">
-                                                        <Label htmlFor={`justificativa-${indice}`} className="mb-1.5">
-                                                            Justificativa
-                                                        </Label>
+                                                        <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+                                                            <Label htmlFor={`justificativa-${indice}`}>Justificativa</Label>
+                                                            {editavel && iaFicha.justificativa_disponivel && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    disabled={
+                                                                        !item.status_escolhido ||
+                                                                        justificativaIa.processing ||
+                                                                        justificativaStatus[item.cnae] === 'solicitando' ||
+                                                                        justificativaStatus[item.cnae] === 'aguardando'
+                                                                    }
+                                                                    onClick={() => sugerirJustificativa(item.cnae)}
+                                                                >
+                                                                    {justificativaStatus[item.cnae] === 'solicitando' ||
+                                                                    justificativaStatus[item.cnae] === 'aguardando'
+                                                                        ? 'Sugerindo…'
+                                                                        : 'Sugerir com IA'}
+                                                                </Button>
+                                                            )}
+                                                        </div>
                                                         <Textarea
                                                             id={`justificativa-${indice}`}
                                                             rows={8}
@@ -1852,6 +1999,23 @@ export default function FichaAnaliseShow({
                                                                 atualizarCnae(indice, { justificativa: valor })
                                                             }
                                                         />
+                                                        {editavel && iaFicha.justificativa_disponivel && !item.status_escolhido && (
+                                                            <p className="mt-1 text-theme-xs text-gray-400 dark:text-gray-500">
+                                                                Decida o enquadramento da atividade (deferida ou indeferida) para
+                                                                habilitar a sugestão da IA.
+                                                            </p>
+                                                        )}
+                                                        {editavel && justificativaStatus[item.cnae] === 'indisponivel' && (
+                                                            <p className="mt-1 text-theme-xs text-error-600 dark:text-error-400">
+                                                                {justificativaMensagem[item.cnae] ??
+                                                                    'Sugestão de justificativa indisponível no momento.'}
+                                                            </p>
+                                                        )}
+                                                        {editavel && justificativaStatus[item.cnae] === 'pronta' && (
+                                                            <p className="mt-1 text-theme-xs text-gray-400 dark:text-gray-500">
+                                                                Sugestão da IA aplicada ao campo — revise e ajuste antes de salvar.
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </li>
                                             );
@@ -2756,9 +2920,128 @@ function MinutaParecerCard({
     );
 }
 
+/**
+ * Card "Justificativa da atividade" (regra SEDUR 22/09, item 6): exibe as
+ * minutas de justificativa sugeridas pela IA por CNAE, sempre marcadas como
+ * "sugestão — revise". A ação "Aplicar à justificativa" copia o texto para o
+ * campo da atividade (client-side, editável) — NUNCA decide nem finaliza. A
+ * sugestão só existe quando o analista já decidiu o enquadramento daquela
+ * atividade (a regra do botão, revalidada no endpoint).
+ */
+function MinutaJustificativaCard({
+    sugestoes,
+    editavel,
+    perCnae,
+    onAplicar,
+}: {
+    sugestoes: SugestaoIa[];
+    editavel: boolean;
+    perCnae: PerCnae[];
+    onAplicar: (cnae: string, texto: string) => void;
+}) {
+    const minutas = sugestoes.filter((sugestao) => sugestao.type === 'justificativa');
+
+    if (minutas.length === 0) {
+        return null;
+    }
+
+    return (
+        <Card>
+            <CardHeader
+                title="Justificativa da atividade (IA — sugestão, revise)"
+                description="Minuta de justificativa proposta pela IA conforme a SUA decisão na atividade, com base no enquadramento do motor. É apoio, não decisão: revise, edite e valide."
+            />
+            <CardContent>
+                <ul className="space-y-4" aria-label="Justificativas sugeridas pela IA">
+                    {minutas.map((sugestao) => {
+                        const minutaTexto =
+                            typeof sugestao.output.justificativa === 'string' ? sugestao.output.justificativa : '';
+                        const fundamentacao =
+                            typeof sugestao.output.fundamentacao === 'string' ? sugestao.output.fundamentacao : null;
+                        const fonte = typeof sugestao.output.fonte === 'string' ? sugestao.output.fonte : null;
+                        const cnaeItem = perCnae.find((item) => item.cnae === sugestao.cnae);
+                        const rotuloCnae = cnaeItem?.cnae_formatado ?? sugestao.cnae ?? '';
+
+                        return (
+                            <li
+                                key={sugestao.id}
+                                className="rounded-xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10"
+                            >
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Badge color="info" size="sm">
+                                            Sugestão — revise
+                                        </Badge>
+                                        {rotuloCnae !== '' && (
+                                            <Badge color="light" size="sm">
+                                                CNAE {rotuloCnae}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {sugestao.confianca && (
+                                            <Badge color="light" size="sm">
+                                                Confiança: {confiancaLabel(sugestao.confianca)}
+                                            </Badge>
+                                        )}
+                                        <Badge color={sugestao.status === 'escalada_humano' ? 'error' : 'light'} size="sm">
+                                            {sugestao.status_label}
+                                        </Badge>
+                                    </div>
+                                </div>
+
+                                {minutaTexto === '' ? (
+                                    <p className="mt-3 text-theme-sm text-gray-600 dark:text-gray-300">
+                                        A IA não retornou texto de justificativa nesta geração.
+                                    </p>
+                                ) : (
+                                    <p className="mt-3 text-theme-sm whitespace-pre-line text-gray-800 dark:text-white/90">
+                                        {minutaTexto}
+                                    </p>
+                                )}
+
+                                {fundamentacao && (
+                                    <div className="mt-3">
+                                        <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                                            Fundamentação (do motor)
+                                        </p>
+                                        <p className="mt-1 text-theme-sm whitespace-pre-line text-gray-700 dark:text-gray-300">
+                                            {fundamentacao}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {fonte && (
+                                    <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">Fonte: {fonte}</p>
+                                )}
+
+                                {editavel && minutaTexto !== '' && sugestao.cnae && (
+                                    <div className="mt-4">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => onAplicar(sugestao.cnae as string, minutaTexto)}
+                                        >
+                                            Aplicar à justificativa
+                                        </Button>
+                                    </div>
+                                )}
+                            </li>
+                        );
+                    })}
+                </ul>
+
+                <p className="mt-4 text-theme-xs text-gray-400 dark:text-gray-500">
+                    “Aplicar à justificativa” copia o texto para o campo da atividade, onde você revisa e ajusta — nada é
+                    gravado nem decidido automaticamente (RN-001).
+                </p>
+            </CardContent>
+        </Card>
+    );
+}
+
 /** Severidade da inconsistência → cor e rótulo em pt-BR (texto, nunca só cor). */
-function severidadeBadge(severidade: SeveridadeIa): { cor: 'error' | 'warning' | 'light'; label: string } {
-    if (severidade === 'alta') {
+function severidadeBadge(severidade: SeveridadeIa): { cor: 'error' | 'warning' | 'light'; label: string } {    if (severidade === 'alta') {
         return { cor: 'error', label: 'Alta' };
     }
 

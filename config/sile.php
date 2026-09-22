@@ -60,6 +60,7 @@ return [
         'ia_inconsistencias' => false,
         'ia_resumo' => false,
         'ia_parecer' => false,
+        'ia_justificativa' => false,
         'ia_explicacao' => false,
         'ia_assistente' => false,
         // Auditoria Preditiva de Processos Expressos (Módulo 3): nasce DESLIGADA

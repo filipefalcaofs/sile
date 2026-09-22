@@ -948,6 +948,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita a sugestão de minuta de parecer por IA; sempre sugestão revisável, nunca decisão; desligado degrada de forma comunicada',
             ],
+            'features.ia_justificativa' => [
+                'group' => 'ia',
+                'type' => 'boolean',
+                'default_value' => '0',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a sugestão de justificativa da atividade por IA; só após a decisão do analista na ficha; sempre sugestão revisável, nunca decisão; desligado degrada de forma comunicada',
+            ],
             'features.ia_explicacao' => [
                 'group' => 'ia',
                 'type' => 'boolean',

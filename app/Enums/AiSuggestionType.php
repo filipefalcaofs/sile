@@ -17,6 +17,7 @@ enum AiSuggestionType: string
     case ResumoSolicitacao = 'resumo_solicitacao';
     case ResumoProcesso = 'resumo_processo';
     case Parecer = 'parecer';
+    case Justificativa = 'justificativa';
     case Explicacao = 'explicacao';
     case Assistente = 'assistente';
 
@@ -30,6 +31,7 @@ enum AiSuggestionType: string
             self::ResumoSolicitacao => 'Resumo da solicitação',
             self::ResumoProcesso => 'Resumo do processo',
             self::Parecer => 'Minuta de parecer',
+            self::Justificativa => 'Justificativa da atividade',
             self::Explicacao => 'Explicação ao cidadão',
             self::Assistente => 'Assistente conversacional',
         };
