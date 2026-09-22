@@ -73,6 +73,33 @@ class SlaVencimentosService
     }
 
     /**
+     * Detalhe das ações do painel sobre o mesmo recorte do resumo: quem já tem
+     * analista entre os que vencem na janela, e há quantos dias venceu o prazo
+     * mais antigo. Sem vencido, o mais antigo é null — nunca um dia fabricado.
+     *
+     * @return array{vencendo_com_analista: int, vencendo_sem_analista: int, vencido_mais_antigo_dias: int|null}
+     */
+    public function detalheAcao(ReportFilters $f): array
+    {
+        $agora = Carbon::now();
+        $limite = $agora->copy()->addDays($this->janelaVencimentoDias());
+        $vencendo = (clone $this->builderSemOrdem($f))
+            ->whereBetween('analysis_due_at', [$agora, $limite]);
+
+        $maisAntigo = (clone $this->builderSemOrdem($f))
+            ->where('analysis_due_at', '<', $agora)
+            ->min('analysis_due_at');
+
+        return [
+            'vencendo_com_analista' => (clone $vencendo)->whereNotNull('assigned_user_id')->count(),
+            'vencendo_sem_analista' => (clone $vencendo)->whereNull('assigned_user_id')->count(),
+            'vencido_mais_antigo_dias' => $maisAntigo === null
+                ? null
+                : (int) floor(Carbon::parse($maisAntigo)->diffInDays($agora)),
+        ];
+    }
+
+    /**
      * Builder dos processos em andamento com prazo, ordenado pelo vencimento
      * (o mais urgente primeiro) — base da tela paginada e do export (RN-005:
      * o MESMO recorte nos dois caminhos). Eager-load de setor/analista para a
