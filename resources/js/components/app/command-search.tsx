@@ -2,7 +2,6 @@ import { router, useHttp, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { SearchIcon } from '@/components/icons';
 import { Modal } from '@/components/ui/modal';
-import { useSidebar } from '@/contexts/sidebar-context';
 import { destinosComando } from '@/navigation/gestao-nav';
 import type { SharedProps } from '@/types';
 
@@ -15,13 +14,10 @@ interface ResultadoBusca {
 
 /**
  * Busca global da retaguarda (HU-082 RN-009): atalho Cmd/Ctrl+K e gatilho
- * acima do menu da sidebar. Destinos rápidos vêm de `destinosComando()`
- * (mesmo catálogo da sidebar). A busca de processos exige
- * `consultar-solicitacoes`.
+ * no cabeçalho. Destinos rápidos vêm de `destinosComando()` (mesmo
+ * catálogo da sidebar). A busca de processos exige `consultar-solicitacoes`.
  */
 export default function CommandSearch() {
-    const { isExpanded, isHovered, isMobileOpen } = useSidebar();
-    const showLabel = isExpanded || isHovered || isMobileOpen;
     const { auth } = usePage<SharedProps>().props;
     const permissions = Array.isArray(auth?.permissions) ? auth.permissions : [];
     const podeConsultar = permissions.includes('consultar-solicitacoes');
@@ -106,19 +102,13 @@ export default function CommandSearch() {
                 onClick={() => setOpen(true)}
                 title="Buscar (⌘K)"
                 aria-label="Abrir busca"
-                className={
-                    showLabel
-                        ? 'flex w-full items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-left text-theme-sm text-gray-400 transition hover:bg-white/10 hover:text-white'
-                        : 'mx-auto flex size-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-400 transition hover:bg-white/10 hover:text-white'
-                }
+                className="flex h-11 w-full items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 text-left text-theme-sm text-gray-500 transition hover:bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:bg-white/[0.06]"
             >
                 <SearchIcon className="size-5 shrink-0" />
-                {showLabel && (
-                    <>
-                        <span className="min-w-0 flex-1 truncate">Buscar</span>
-                        <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-theme-xs font-medium text-gray-400">⌘K</kbd>
-                    </>
-                )}
+                <span className="min-w-0 flex-1 truncate">Buscar</span>
+                <kbd className="hidden rounded border border-gray-200 bg-white px-1.5 py-0.5 text-theme-xs font-medium text-gray-400 sm:inline dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                    ⌘K
+                </kbd>
             </button>
 
             {open && (

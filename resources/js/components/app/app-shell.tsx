@@ -13,7 +13,7 @@ interface AppShellProps {
     subtitle?: string;
     variant?: SidebarVariant;
     collapsibleGroups?: boolean;
-    beforeNav?: ReactNode;
+    headerToolbar?: ReactNode;
     children: ReactNode;
 }
 
@@ -25,7 +25,7 @@ function ShellContent({
     subtitle,
     variant,
     collapsibleGroups,
-    beforeNav,
+    headerToolbar,
     children,
 }: AppShellProps) {
     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
@@ -38,7 +38,6 @@ function ShellContent({
                 subtitle={subtitle}
                 variant={variant}
                 collapsibleGroups={collapsibleGroups}
-                beforeNav={beforeNav}
             />
             <Backdrop />
             <div
@@ -46,7 +45,12 @@ function ShellContent({
                     isExpanded || isHovered ? 'lg:ml-[290px]' : 'lg:ml-[90px]'
                 } ${isMobileOpen ? 'ml-0' : ''}`}
             >
-                <AppHeader homeHref={homeHref} logoutHref={logoutHref ?? '/portal/logout'} accountHref={accountHref ?? '/portal/conta/perfil'} />
+                <AppHeader
+                    homeHref={homeHref}
+                    logoutHref={logoutHref ?? '/portal/logout'}
+                    accountHref={accountHref ?? '/portal/conta/perfil'}
+                    toolbar={headerToolbar}
+                />
                 <div id="conteudo" className="w-full min-w-0 p-4 md:p-6">{children}</div>
             </div>
         </div>
