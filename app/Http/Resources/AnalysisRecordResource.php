@@ -6,7 +6,6 @@ use App\Enums\RuleDomain;
 use App\Models\AnalysisRecord;
 use App\Models\RuleVersion;
 use App\Models\TllValor;
-use App\Services\Analise\JustificativaFundamentadaComposer;
 use App\Services\Analise\PerguntaLocalFicha;
 use App\Services\Analise\QuadrosFichaChecklist;
 use Illuminate\Http\Request;
@@ -57,15 +56,16 @@ class AnalysisRecordResource extends JsonResource
     }
 
     /**
-     * Fichas antigas (vazias ou só com o motivo curto do motor) recebem o
-     * parecer fundamentado na leitura — sem recomputar o veredito.
+     * Per-CNAE da ficha: pergunta do CNAE, valor TLL do exercício, checklist
+     * dos quadros e risco lidos do snapshot. A justificativa NUNCA é
+     * completada pelo sistema (regra SEDUR 22/09/2026, item 6) — vazia ou do
+     * analista, passa como está.
      *
      * @return list<array<string, mixed>>
      */
     private function perCnaeComJustificativaDoMotor(): array
     {
         $itens = array_values((array) ($this->per_cnae ?? []));
-        $composer = app(JustificativaFundamentadaComposer::class);
         $local = app(PerguntaLocalFicha::class);
         $quadros = app(QuadrosFichaChecklist::class);
         $this->resource->loadMissing('viabilityRequest');
@@ -74,7 +74,7 @@ class AnalysisRecordResource extends JsonResource
             ? $this->engine_snapshot['por_cnae']
             : [];
 
-        return array_map(function (array $item) use ($composer, $porCnae, $local, $solicitacao, $quadros): array {
+        return array_map(function (array $item) use ($porCnae, $local, $solicitacao, $quadros): array {
             // A sugestão do motor não sai do servidor (relatório SEDUR 21/09,
             // item 02) — fica gravada só para a divergência auditada.
             unset($item['status_sugerido']);
@@ -112,17 +112,8 @@ class AnalysisRecordResource extends JsonResource
                 ? ($sanitario['nivel_final'] ?? null)
                 : null;
 
-            $atual = trim((string) ($item['justificativa'] ?? ''));
-            $motivoCurto = trim((string) ($consulta['enquadramento']['consolidado']['motivo']
-                ?? $consulta['veredito_locacional']['motivo']
-                ?? ''));
-
-            if ($atual !== '' && $atual !== $motivoCurto) {
-                return $item;
-            }
-
-            $item['justificativa'] = $composer->paraSnapshot($consulta, $item);
-
+            // Justificativa NUNCA completada pelo sistema (regra SEDUR
+            // 22/09/2026, item 6): vazia ou do analista, passa como está.
             return $item;
         }, $itens);
     }

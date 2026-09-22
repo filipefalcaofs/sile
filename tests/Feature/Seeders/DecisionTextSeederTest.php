@@ -3,9 +3,7 @@
 namespace Tests\Feature\Seeders;
 
 use App\Enums\Quadro10Permissao;
-use App\Enums\ResultadoViabilidade;
 use App\Models\DecisionText;
-use App\Services\Analise\JustificativaFundamentadaComposer;
 use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\LouosEnquadramentoService;
@@ -91,26 +89,6 @@ class DecisionTextSeederTest extends TestCase
             'Classificação de risco',
             $catalogo->get('explicacao.titulo.risco'),
         );
-    }
-
-    public function test_paridade_da_conclusao_da_justificativa(): void
-    {
-        $this->seed(DecisionTextSeeder::class);
-
-        $composer = app(JustificativaFundamentadaComposer::class);
-        $conclusao = new ReflectionMethod($composer, 'conclusao');
-
-        $atual = $conclusao->invoke($composer, [
-            'consolidado' => ['resultado' => ResultadoViabilidade::Permitido->value],
-            'zona' => 'ZEC',
-        ]);
-
-        $doCatalogo = (new DecisionTextCatalog)->render(
-            'justificativa.conclusao.permitido',
-            [':zona' => 'ZEC'],
-        );
-
-        $this->assertSame($atual, $doCatalogo);
     }
 
     public function test_paridade_do_template_do_quadro10(): void

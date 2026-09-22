@@ -1,0 +1,39 @@
+---
+description: GitLab Softwell/TechPulse — repo de dev da empresa do Viabiliza
+alwaysApply: true
+---
+
+# GitLab Softwell — repo de dev da empresa (Viabiliza)
+
+Destino permanente do repositório de desenvolvimento da empresa para o Viabiliza.
+
+- **Remote:** `softwell`
+- **URL:** https://gitlab.softwell.com.br/techpulse/sile.git
+- **Projeto:** [techpulse/sile](https://gitlab.softwell.com.br/techpulse/sile)
+
+## Quando usar
+
+Sempre que o usuário pedir para subir versão, publicar, fazer push ou atualizar o **repo de dev da empresa**, o GitLab da Softwell/TechPulse, ou este projeto no GitLab interno — o destino é `softwell`, não o GitHub (`origin`) e não o SEMIT (`semit`).
+
+## Push
+
+Só com pedido explícito. Fast-forward; nunca `--force` em `main`.
+
+```bash
+git remote get-url softwell
+git push -u softwell HEAD
+```
+
+Se o remote estiver ausente:
+
+```bash
+git remote add softwell https://gitlab.softwell.com.br/techpulse/sile.git
+```
+
+## O que este remote NÃO é
+
+| Remote | Papel |
+|---|---|
+| `softwell` | Repo de **dev da empresa** (TechPulse / GitLab Softwell) |
+| `origin` | Espelho / trabalho (GitHub) |
+| `semit` | GitLab institucional da Prefeitura — só com pedido de SEMIT |

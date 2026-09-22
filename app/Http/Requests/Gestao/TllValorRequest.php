@@ -71,7 +71,7 @@ class TllValorRequest extends FormRequest
             'exercicio' => 'exercício',
             'valor' => 'valor',
             'taxa_servico' => 'taxa de serviço',
-            'codigo_tll_sefaz' => 'código TLL SEFAZ',
+            'codigo_tll_sefaz' => 'código SEDUR',
             'codigo_servico_sefaz' => 'código de serviço SEFAZ',
             'servico_sefaz' => 'serviço SEFAZ',
             'active' => 'situação',

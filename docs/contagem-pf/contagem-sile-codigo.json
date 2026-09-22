@@ -1,0 +1,2753 @@
+{
+  "identificacao": {
+    "empresa": "Sudoeste Informática",
+    "aplicacao": "Viabiliza — Sistema de Licenciamento Eletrônico da SEDUR",
+    "projeto": "Contagem IFPUG - Extração do Código Fonte",
+    "dv_numero": "DV-SILE-002",
+    "responsavel": "Equipe de Análise — Sudoeste Informática (via Análise de Código)",
+    "versao": "1.0",
+    "tipo_contagem": "desenvolvimento",
+    "rs_por_pf": 700,
+    "proposito": "Medir o tamanho funcional do Viabiliza extraindo ALIs a partir de Models, AIEs de Services de integração, e Funções Transacionais de Controllers e Rotas. A contagem adota heurísticas sobre a estrutura Laravel e segue as regras de fronteira IFPUG 4.3.1 (PT-BR)."
+  },
+  "termo": {
+    "sistema": "Viabiliza — SISTEMA DE LICENCIAMENTO ELETRÔNICO",
+    "nome_curto": "Viabiliza",
+    "total_pf": 0,
+    "data": "Salvador-BA, 17 de setembro de 2026",
+    "cliente": "Prefeitura Municipal de Salvador",
+    "cliente_linha2": "Secretaria Municipal de Desenvolvimento Urbano e Sustentabilidade — SEDUR",
+    "cliente_contratante": "Prefeitura Municipal de Salvador",
+    "processo_licitatorio": "A definir",
+    "contrato": "A definir",
+    "processo_administrativo": "A definir",
+    "planilha_anexa": "contagem-sile-codigo-fonte.xlsx",
+    "elaborado_por": "Equipe de Análise — Sudoeste Informática",
+    "elaborado_cargo": "Analista de Pontos de Função"
+  },
+  "grupos": [
+    {
+      "id": "G_ALI",
+      "nome": "1. Modelo de Dados Interno (ALIs)",
+      "itens": [
+        {
+          "nome": "Dados - EmailServer",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model EmailServer.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - GovBrAccount",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model GovBrAccount.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ViabilityServiceType",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityServiceType.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - FineMeshReferral",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model FineMeshReferral.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - RiskClassification",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model RiskClassification.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - LouosQuadro10Permissao",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model LouosQuadro10Permissao.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - LouosQuadro7Faixa",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model LouosQuadro7Faixa.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AssistedAttendance",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AssistedAttendance.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AnalysisDivergence",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AnalysisDivergence.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - LegalTerm",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model LegalTerm.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AnalysisRecord",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AnalysisRecord.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - DocumentRequirement",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model DocumentRequirement.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ReginSimulacaoExecucao",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ReginSimulacaoExecucao.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - GeoLayer",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model GeoLayer.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - CompanyUser",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model CompanyUser.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ExportFile",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ExportFile.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - PredictiveAnomaly",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model PredictiveAnomaly.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AnalysisStatusTransition",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AnalysisStatusTransition.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - LegalTermAcceptance",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model LegalTermAcceptance.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - LouosQuadro11CondicaoVia",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model LouosQuadro11CondicaoVia.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AiPrecedentEmbedding",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AiPrecedentEmbedding.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AbuseAlert",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AbuseAlert.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - RiskCondicionante",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model RiskCondicionante.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - User",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model User.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - SanitaryRiskClassification",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model SanitaryRiskClassification.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ViabilityRequest",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityRequest.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - RiskTrigger",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model RiskTrigger.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ViabilityRequestDocument",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityRequestDocument.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ViabilityQuery",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityQuery.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - Holiday",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Holiday.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - Sector",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Sector.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - TvlSequence",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model TvlSequence.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - Company",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Company.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - Communication",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Communication.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - SefazNotification",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model SefazNotification.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ViabilityRequestTransition",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityRequestTransition.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - StandardText",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model StandardText.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - RuleVersion",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model RuleVersion.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - Activity",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Activity.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ViabilityDecision",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityDecision.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - GeoFeature",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model GeoFeature.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ExpressoQueda",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ExpressoQueda.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ProtocolSequence",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ProtocolSequence.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - TvlDocument",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model TvlDocument.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - VirtualOfficeInscriptionLock",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model VirtualOfficeInscriptionLock.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AnalysisPendency",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AnalysisPendency.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AiSuggestion",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AiSuggestion.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ReginRecebimento",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ReginRecebimento.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - VirtualOfficeActivityCnae",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model VirtualOfficeActivityCnae.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - Cnae",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Cnae.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - Parameter",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Parameter.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - Procuration",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Procuration.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AiConfiguration",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AiConfiguration.php. Classificação funcional baseada em tabela relacional autônoma.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        }
+      ]
+    },
+    {
+      "id": "G_AIE",
+      "nome": "2. Integrações e Dados Externos (AIEs)",
+      "itens": [
+        {
+          "nome": "Dados Externos - GeoLayerService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa obtida através de integração. Mapeado do serviço GeoLayerService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados Externos - GeoServerWfsZonaClient",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa obtida através de integração. Mapeado do serviço GeoServerWfsZonaClient.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados Externos - ReginRecebeService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa obtida através de integração. Mapeado do serviço ReginRecebeService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados Externos - ReginProtocoloSimulacaoService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa obtida através de integração. Mapeado do serviço ReginProtocoloSimulacaoService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados Externos - GeoBairroIndicadorService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa obtida através de integração. Mapeado do serviço GeoBairroIndicadorService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_0",
+      "nome": "3.1 Módulo: NotificationCenter",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller NotificationCenterController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "markAsRead",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método markAsRead no controller NotificationCenterController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "markAllAsRead",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método markAllAsRead no controller NotificationCenterController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_1",
+      "nome": "3.2 Módulo: ComunicacaoHistorico",
+      "itens": [
+        {
+          "nome": "portal",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método portal no controller ComunicacaoHistoricoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "gestao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método gestao no controller ComunicacaoHistoricoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_2",
+      "nome": "3.3 Módulo: Profile",
+      "itens": [
+        {
+          "nome": "edit",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método edit no controller ProfileController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller ProfileController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_3",
+      "nome": "3.4 Módulo: Password",
+      "itens": [
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller PasswordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller PasswordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_4",
+      "nome": "3.5 Módulo: SolicitacaoImovel",
+      "itens": [
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller SolicitacaoImovelController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_5",
+      "nome": "3.6 Módulo: CompanyCnae",
+      "itens": [
+        {
+          "nome": "updatePrimary",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updatePrimary no controller CompanyCnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "updateSecondaries",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updateSecondaries no controller CompanyCnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_6",
+      "nome": "3.7 Módulo: ConsultaViabilidade",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller ConsultaViabilidadeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "endereco",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método endereco no controller ConsultaViabilidadeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "cnae",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método cnae no controller ConsultaViabilidadeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "inscricao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método inscricao no controller ConsultaViabilidadeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_7",
+      "nome": "3.8 Módulo: ConsultaProtocolo",
+      "itens": [
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller ConsultaProtocoloController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_8",
+      "nome": "3.9 Módulo: Company",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller CompanyController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "create",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método create no controller CompanyController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller CompanyController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller CompanyController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller CompanyController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_9",
+      "nome": "3.10 Módulo: AccessHistory",
+      "itens": [
+        {
+          "nome": "__invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no controller AccessHistoryController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_10",
+      "nome": "3.11 Módulo: HistoricoConsulta",
+      "itens": [
+        {
+          "nome": "__invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no controller HistoricoConsultaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_11",
+      "nome": "3.12 Módulo: Dashboard",
+      "itens": [
+        {
+          "nome": "__invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no controller DashboardController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_12",
+      "nome": "3.13 Módulo: SolicitacaoSimulacao",
+      "itens": [
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller SolicitacaoSimulacaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_13",
+      "nome": "3.14 Módulo: Protocolo",
+      "itens": [
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller ProtocoloController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_14",
+      "nome": "3.15 Módulo: CnaeSearch",
+      "itens": [
+        {
+          "nome": "__invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no controller CnaeSearchController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_15",
+      "nome": "3.16 Módulo: CancelamentoSolicitacao",
+      "itens": [
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller CancelamentoSolicitacaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_16",
+      "nome": "3.17 Módulo: CompanyLink",
+      "itens": [
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller CompanyLinkController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_17",
+      "nome": "3.18 Módulo: SolicitacaoAtividade",
+      "itens": [
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller SolicitacaoAtividadeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_18",
+      "nome": "3.19 Módulo: LgpdTerm",
+      "itens": [
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller LgpdTermController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "accept",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método accept no controller LgpdTermController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_19",
+      "nome": "3.20 Módulo: ConsultaProtocoloPublica",
+      "itens": [
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller ConsultaProtocoloPublicaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_20",
+      "nome": "3.21 Módulo: Procuration",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller ProcurationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller ProcurationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller ProcurationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_21",
+      "nome": "3.22 Módulo: SolicitacaoDocumento",
+      "itens": [
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller SolicitacaoDocumentoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "download",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método download no controller SolicitacaoDocumentoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller SolicitacaoDocumentoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_22",
+      "nome": "3.23 Módulo: Representation",
+      "itens": [
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller RepresentationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller RepresentationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_23",
+      "nome": "3.24 Módulo: Solicitacao",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller SolicitacaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller SolicitacaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "create",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método create no controller SolicitacaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "edit",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método edit no controller SolicitacaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_24",
+      "nome": "3.25 Módulo: CnpjLookup",
+      "itens": [
+        {
+          "nome": "__invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no controller CnpjLookupController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_25",
+      "nome": "3.26 Módulo: GovBrLogin",
+      "itens": [
+        {
+          "nome": "redirect",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método redirect no controller GovBrLoginController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "callback",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método callback no controller GovBrLoginController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_26",
+      "nome": "3.27 Módulo: PendenciaResposta",
+      "itens": [
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller PendenciaRespostaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "responder",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método responder no controller PendenciaRespostaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_27",
+      "nome": "3.28 Módulo: ReginRecebe",
+      "itens": [
+        {
+          "nome": "ping",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método ping no controller ReginRecebeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller ReginRecebeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_28",
+      "nome": "3.29 Módulo: Exportacao",
+      "itens": [
+        {
+          "nome": "download",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método download no controller ExportacaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_29",
+      "nome": "3.30 Módulo: DocumentRequirement",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller DocumentRequirementController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller DocumentRequirementController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller DocumentRequirementController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "toggle",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggle no controller DocumentRequirementController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "syncCnaes",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método syncCnaes no controller DocumentRequirementController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_30",
+      "nome": "3.31 Módulo: ProcessoPendencia",
+      "itens": [
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller ProcessoPendenciaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "cancelar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método cancelar no controller ProcessoPendenciaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_31",
+      "nome": "3.32 Módulo: Precedente",
+      "itens": [
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller PrecedenteController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_32",
+      "nome": "3.33 Módulo: Holiday",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller HolidayController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller HolidayController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller HolidayController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no controller HolidayController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_33",
+      "nome": "3.34 Módulo: ForgotPassword",
+      "itens": [
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller ForgotPasswordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller ForgotPasswordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_34",
+      "nome": "3.35 Módulo: Processo",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller ProcessoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "fila",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método fila no controller ProcessoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller ProcessoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "atualizarStatusAnalise",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método atualizarStatusAnalise no controller ProcessoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_35",
+      "nome": "3.36 Módulo: CondicionanteAutocomplete",
+      "itens": [
+        {
+          "nome": "__invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no controller CondicionanteAutocompleteController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_36",
+      "nome": "3.37 Módulo: Cnae",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller CnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "create",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método create no controller CnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "edit",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método edit no controller CnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller CnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller CnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "updateSituacao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updateSituacao no controller CnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller CnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "storeCondicionante",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método storeCondicionante no controller CnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "updateCondicionante",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updateCondicionante no controller CnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "destroyCondicionante",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método destroyCondicionante no controller CnaeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_37",
+      "nome": "3.38 Módulo: Sector",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller SectorController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller SectorController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller SectorController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no controller SectorController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "syncAnalysts",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método syncAnalysts no controller SectorController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_38",
+      "nome": "3.39 Módulo: Login",
+      "itens": [
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller LoginController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller LoginController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_39",
+      "nome": "3.40 Módulo: Contingencia",
+      "itens": [
+        {
+          "nome": "create",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método create no controller ContingenciaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller ContingenciaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_40",
+      "nome": "3.41 Módulo: LouosSandbox",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller LouosSandboxController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "simulate",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método simulate no controller LouosSandboxController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "publish",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método publish no controller LouosSandboxController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_41",
+      "nome": "3.42 Módulo: ReginIntegration",
+      "itens": [
+        {
+          "nome": "edit",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método edit no controller ReginIntegrationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller ReginIntegrationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "test",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método test no controller ReginIntegrationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_42",
+      "nome": "3.43 Módulo: CaixaSetor",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller CaixaSetorController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "distribuir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método distribuir no controller CaixaSetorController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "assumir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método assumir no controller CaixaSetorController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_43",
+      "nome": "3.44 Módulo: Abuso",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller AbusoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "confirmar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método confirmar no controller AbusoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "descartar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método descartar no controller AbusoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_44",
+      "nome": "3.45 Módulo: Role",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller RoleController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller RoleController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller RoleController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller RoleController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_45",
+      "nome": "3.46 Módulo: ProcessoDecisao",
+      "itens": [
+        {
+          "nome": "__invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no controller ProcessoDecisaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_46",
+      "nome": "3.47 Módulo: UserManagement",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller UserManagementController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no controller UserManagementController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "updateRole",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updateRole no controller UserManagementController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_47",
+      "nome": "3.48 Módulo: LouosDraft",
+      "itens": [
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller LouosDraftController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "open",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método open no controller LouosDraftController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "storeLinha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método storeLinha no controller LouosDraftController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "updateLinha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updateLinha no controller LouosDraftController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "destroyLinha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método destroyLinha no controller LouosDraftController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "importar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método importar no controller LouosDraftController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "publish",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método publish no controller LouosDraftController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "discard",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método discard no controller LouosDraftController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "modeloCsv",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método modeloCsv no controller LouosDraftController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_48",
+      "nome": "3.49 Módulo: Parameter",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller ParameterController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller ParameterController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "history",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método history no controller ParameterController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_49",
+      "nome": "3.50 Módulo: EscritorioVirtualDesvinculacao",
+      "itens": [
+        {
+          "nome": "__invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no controller EscritorioVirtualDesvinculacaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_50",
+      "nome": "3.51 Módulo: ResultadoExpresso",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller ResultadoExpressoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller ResultadoExpressoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_51",
+      "nome": "3.52 Módulo: ResetPassword",
+      "itens": [
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller ResetPasswordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller ResetPasswordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_52",
+      "nome": "3.53 Módulo: Geocode",
+      "itens": [
+        {
+          "nome": "__invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no controller GeocodeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_53",
+      "nome": "3.54 Módulo: MalhaFina",
+      "itens": [
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller MalhaFinaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_54",
+      "nome": "3.55 Módulo: EmailLog",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller EmailLogController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_55",
+      "nome": "3.56 Módulo: TvlDocument",
+      "itens": [
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller TvlDocumentController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "download",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método download no controller TvlDocumentController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_56",
+      "nome": "3.57 Módulo: Louos",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller LouosController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "publish",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método publish no controller LouosController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "activate",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método activate no controller LouosController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_57",
+      "nome": "3.58 Módulo: AssistedAttendance",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller AssistedAttendanceController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller AssistedAttendanceController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "storeSolicitacao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método storeSolicitacao no controller AssistedAttendanceController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller AssistedAttendanceController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_58",
+      "nome": "3.59 Módulo: ProcessoBusca",
+      "itens": [
+        {
+          "nome": "__invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no controller ProcessoBuscaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_59",
+      "nome": "3.60 Módulo: AuditoriaPreditiva",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller AuditoriaPreditivaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "confirmar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método confirmar no controller AuditoriaPreditivaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "descartar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método descartar no controller AuditoriaPreditivaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_60",
+      "nome": "3.61 Módulo: Relatorio",
+      "itens": [
+        {
+          "nome": "indicadores",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método indicadores no controller RelatorioController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "tempo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método tempo no controller RelatorioController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "produtividade",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método produtividade no controller RelatorioController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "quedas",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método quedas no controller RelatorioController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "geoBairro",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método geoBairro no controller RelatorioController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "saturacao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método saturacao no controller RelatorioController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "escritorioVirtual",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método escritorioVirtual no controller RelatorioController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "tempoEmissaoTvl",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método tempoEmissaoTvl no controller RelatorioController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_61",
+      "nome": "3.62 Módulo: AnalysisRecord",
+      "itens": [
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller AnalysisRecordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "autosave",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método autosave no controller AnalysisRecordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "finalizar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método finalizar no controller AnalysisRecordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "concluirProcesso",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método concluirProcesso no controller AnalysisRecordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "novaRevisao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método novaRevisao no controller AnalysisRecordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "sugerirParecer",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método sugerirParecer no controller AnalysisRecordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "gerarResumo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método gerarResumo no controller AnalysisRecordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "diff",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método diff no controller AnalysisRecordController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_62",
+      "nome": "3.63 Módulo: AiConfiguration",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller AiConfigurationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller AiConfigurationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller AiConfigurationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller AiConfigurationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "test",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método test no controller AiConfigurationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no controller AiConfigurationController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_63",
+      "nome": "3.64 Módulo: ReginProtocoloSimulacao",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller ReginProtocoloSimulacaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "simulate",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método simulate no controller ReginProtocoloSimulacaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller ReginProtocoloSimulacaoController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_64",
+      "nome": "3.65 Módulo: ViabilityServiceType",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller ViabilityServiceTypeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller ViabilityServiceTypeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller ViabilityServiceTypeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no controller ViabilityServiceTypeController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_65",
+      "nome": "3.66 Módulo: EnviarParaAnalise",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller EnviarParaAnaliseController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "pesquisar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método pesquisar no controller EnviarParaAnaliseController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "enviar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método enviar no controller EnviarParaAnaliseController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_66",
+      "nome": "3.67 Módulo: Territory",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller TerritoryController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "identify",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método identify no controller TerritoryController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "validateLocation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método validateLocation no controller TerritoryController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_67",
+      "nome": "3.68 Módulo: StandardText",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller StandardTextController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller StandardTextController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller StandardTextController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no controller StandardTextController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_68",
+      "nome": "3.69 Módulo: Auditoria",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller AuditoriaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "export",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método export no controller AuditoriaController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_69",
+      "nome": "3.70 Módulo: LgpdMonitor",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller LgpdMonitorController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_70",
+      "nome": "3.71 Módulo: TermoLgpd",
+      "itens": [
+        {
+          "nome": "Detalhar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no controller TermoLgpdController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "accept",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método accept no controller TermoLgpdController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CTRL_71",
+      "nome": "3.72 Módulo: EmailServer",
+      "itens": [
+        {
+          "nome": "Consultar/Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no controller EmailServerController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no controller EmailServerController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no controller EmailServerController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no controller EmailServerController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "test",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método test no controller EmailServerController.php. Classificação heurística pelo verbo/ação.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    }
+  ],
+  "escopo_macro": [
+    "1. Levantamento automático de Arquivos Lógicos Internos (ALI) baseado nos Models do Laravel.",
+    "2. Levantamento automático de Arquivos de Interface Externa (AIE) baseado em Integrações nos Services.",
+    "3. Levantamento de Processos Elementares (EE, CE, SE) baseado nos métodos públicos (actions) de Controllers."
+  ],
+  "proposta": {
+    "objeto": "Contagem de pontos de função extraída estaticamente da base de código (Models, Services, Controllers).",
+    "validade_dias": 30,
+    "prazo_execucao_dias": 10,
+    "condicoes_pagamento": "Pagamento único após entrega e aceite da medição em código."
+  }
+}

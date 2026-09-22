@@ -1,0 +1,3720 @@
+{
+  "language": "pt",
+  "text": " A gente se reuniu sobre a integração. A gente se reuniu sobre a integração. O Regim. Deixa eu olhar aqui. Vamos lá. Eu quero falar sobre esse tritório virtual. Antes disso eu quero te fazer uma pergunta. É alguma dúvida do que você me mandou ontem? Você respondeu muito bem. Deixa eu ver aqui se eu anota alguma coisa ontem. É... Por enquanto não. Por enquanto não, né? Então eu quero fazer o seguinte. Eu quero compartilhar com você. Uma tela. Que é a tela do que a gente usa hoje. Tá? Que... Atende parcialmente. Eu precisaria de algumas implementações. Deixa eu só abrir aqui. Que eu vou compartilhar contigo. Aí, à medida que você for ter uma dúvida. Você me fala, eu paro a versicular isso. Certo. Deixa eu abrir aqui. Certo. Certo. Só um minuto tá, Felipe? Porque a interredação aqui tá bem lenta. Tá certo. Bom, enquanto isso deixa eu explicar o conceito ao alo. Que é a parte de escritório virtual. Escritório virtual é quando uma empresa cede seu endereço pra outras empresas poderem se abrigar melhor e exercer atividades de escritório. Atividades administrativas. Existe uma lista de atividades que são permitidas com essa atualidade. E o que é que acontece? A sede, que é a primeira a dar entrada na viabilidade. Ela tem uma viabilidade que a gente chama de padrão. Ou que ela precisa abrir um processo solicitando o Kinai 821301. Esse Kinai... Ele vem atrelado a uma pergunta onde a empresa tem a opção de escolher se ela vai ser uma sede ou não. Isso é uma pergunta que tá na regra. Quando ela informa que ela vai ser uma sede... Quando ela informa que vai ser sede, o sistema encaminha esse processo pra análise. E aqui, pelos analistas, a opção de sede e escritório virtual, essa é o acionada. E a inscrição imobiliária usada no processo fica vinculada a essa sede, a essa viabilidade. Escritora virtual é aquele caso de, por exemplo, médico que fica atendendo em vários hospitais? Isso é autônomo. Escritora virtual é uma sala que, por exemplo, um psicólogo que bota o endereço fiscal dele nesse escritório virtual. Ou, se não, é um consultor que coloca o endereço dele fiscal como endereço dessa sede de escritório virtual. É funcionando essa forma. Existem atividades específicas pra isso. Primeiro, cravar o que é sede. Sede é isso que eu expliquei. E aí, ele vem pra cá pra ser analisada. Quando esse processo é deferido, gerada uma viabilidade interna, como eu te expliquei ontem, não fica disponível por requerente. A gente gera aqui interno e encaminha pra... O que você faz? O retorno dessa viabilidade. No produto dessa sede, tem a condicionante de que ele presta serviços de escritório virtual. Então, o que é que acontece? Essa sede precisa primeiro selecionar, escolher o quinae, pra isso, que é o serviço combinado de escritório e apoio administrativo 821300, é o código quinae. Ela informa que quer exercer a atividade de sede de escritório virtual. Ela pode selecionar mais de um quinae nesse processo. Mas esse quinae específico que eu citei, ele precisa estar dentro desse processo. Aí vem pra cá e aí é a valiária. Ele é marcado como sede, o sistema trela quando deferido a viabilidade, a inscrição no biliário. E essa inscrição no biliário, ela fica travada para outras empresas darem entrada. O que é que significa? Que para uma empresa se instalar nesse endereço, ela precisa obrigatoriamente ser um abrigado dessa empresa. Aí eu vou te explicar agora o que é abrigado. É justamente a empresa onde a sede sede seu endereço pra ela. Então ele informa o número da inscrição no biliário, utilizado no processo da sede, e o CNPJ dessa empresa. Então ele sede essas informações, aí, digamos, eu vou dar entrada num processo solicitando a abertura de uma empresa nessa inscrição pra ser abrigado daquele CNPJ. E aí eu coloco a inscrição no biliário, seleciono necessariamente, eu preciso informar uma atividade que é permitida em escritório virtual. A gente já tem essa lista das atividades que são permitidas. E quando o formulário, tudo isso é parte do referente ainda, tá? Sim, sim. Quando abre o formulário do município, o sistema faz as seguintes desvalidações. Qual foi a atividade que eu escolhi? Se eu escolhi uma atividade que não é permitida, que não está na lista de escritório virtual, o sistema ba, o sistema não deixa o cadastro da solicitação. Quando eu selecione uma atividade que é permitida, o sistema abre o questionamento pra mim. Se eu vou ser um abrigado de escritório virtual ou não, se eu informo que eu não vou ser um escritório virtual, o sistema barra também, porque o sistema consulta e vê que aquela inscrição está atrelada a uma sede. Então, uma outra empresa que não é um abrigado, não pode se instalar, tá? Quando ele informa que no questionamento que é um abrigado, o sistema abre pra ele o campo pra ele informar o CNPJ da sede que estava encolada. Então, quando ele informa o CNPJ, o sistema consulta lá nasce e faz qual é a viabilidade que estava encolada esse CNPJ. Se a viabilidade for a mesma que estava encolada, a inscrição no abiliário, ele permite o cadastramento, o que é que abre pro requerente. O endereço da sede e o nome do escritório virtual. Acredito. Certo? Não permite que ele atere nada. Só aparece as informações pra ele confirmar e ele cadastra a solicitação. O processo vem, o processo é deferido ou o processo é deferido automaticamente. Certo? E a validade do produto é a mesma validade da sede. Tá? O que é que é de diferente no produto de abrigado? O produto de abrigado é diferente no quesito de que? Existe um campo onde aparece o número da viabilidade da sede. Eu vou te mostrar aqui. É isso que eu quero compartilhar com você pra você dar uma olhada. Eu tô aqui com uma sede, um produto de sede e um produto de virtual, de ida. Tuas cotelas não estão mostrando não, João? Eu sei, eu vou compartilhar agora. Ah, tá. E aí eu vou te mostrar a ficha de análise, tá? Se eu acho importante, hoje atende as meninas do jeito que tá, tá? Hoje atende as meninas, tá? Então, eu vou te mostrar aqui. O máximo que você puder montar de semelhança pra usabilidade dela ser mais receptiva, melhor porque quando elas forem fazer o teste, elas não vão sentir um impacto muito grande. E eu vou moir. Só compartilhar aqui agora, please. Tá conseguindo ver? Sim. Pronto, vamos ver se eu acredito pela sua. Aqui essa é a tela... Desculpe, essa é a tela de conflutas inicial, tá? É onde se pedir pra colocar aqueles filtros pra gente fazer as testes. Aqui é um processo onde foi solicitado de uma empresa querer ser cédio. Aí eu vou abrir ela para você, você clica e ele abre aqui. Só um processo que foi deferido. Tá vendo aqui? Aparece, ó, esse é o motivo da análise. Ele quis ser uma cédia de escritório virtual. Sim. E eu vou te mostrar aqui a ficha da Anax. É, o produto sempre é o resultado da última ficha, tá? Aqui, tá vendo? Cédia de escritório virtual, aqui a gente marca como sim. Aqui a gente tem a opção de colocar não também, tá? Quando a empresa, digamos, solicitou. Cadê o que ele diz? Esse que ele diz? Tá vendo? 8211. Ele solicitou esse quinae, mas lá ele colocou que não quer ser cédio. Aí a gente vem aqui e, ó, não, ele não quer ser cédio. Quando ele informa que quer ser cédio, ele pode ser uma cédia. Aí a gente vem aqui e marca. É isso aqui juntamente com esse quinae que trava a inscrição mobiliária, certo? Se ele tiver esse quinae e aqui não tiver marcado como cede, o sistema não trava a inscrição. Ele precisa ter isso aqui e selecionado como sim. Se não tiver, não é para o sistema travar. Bom, essa daqui é a ficha de Anax. Tá? Eu vou passar até um devagar para que fique gravado para você ver mais ou menos como é que é. Uhum. Tá? Hoje é o que atende a gente aqui. Melhoria que isso aí, o que você pensa? Bom, aqui a gente tinha, né? Aqui a Lebena, essa área aqui. Esse é um campo onde as meninas não precisavam consultar. Não precisavam consultar nas sefais dos que eles chamam de abriar. A gente tinha alguns campos que eram imprescindíveis aqui. Eu posso te passar para você inserir aqui no espaço, por exemplo. Uhum. Esses dados para que a gente não precise ir lá chacar. Uhum. Tá? Essa é a principal melhoria dessa ficha. Um mais. É isso aqui mesmo. Isso aqui foi elas lá no início que definiram o máximo de semelhança em todos os campos que você conseguiu manter e manter. Aqui é a parte de condicionante, tá? Que aparece já para elas na ficha de análise. Aí eu colocaria também condicionantes. A gente tem um cadastro de condicionantes também. A gente tem aqui essa parte de pesquisar. Elas digitam e aí aparece também a opção para elas para ela não estar nem voltando. Aí eu peço para relacionar tanto a parte de condicionante como a parte de observação. Se elas quiserem colocar algo no produto, que elas colocam aqui. Tá? Sim. Essas são as duas melhorias que elas solicitam. Tá? Um máximo não mexer no estilo da ficha. Tá elas, tá? Aqui eu vou te mostrar agora o produto que fica disponibilizado só para a gente dessa sede. Tá? Eu quero te pedir uma melhoria nesse produto. Essa informação. Vem aí essa informação, a prestação de serviço escritório virtual. Que isso não seja dentro desse campo texto de condicionante. Teria como ele ser um campo separado de sim ou não. Tipo assim, essa é de escritório virtual? Sim. Essa é de escritório virtual? Não. Pode ser assim? Você tem como fazer isso? Pode ser. Pronto. Porque aí a gente consegue encaminhar essa informação para ser faz de forma mais acertiva. Um hum. Tem um? Tá. Esse, essa é a viabilidade da sede. Tá? Ela é dessa forma. Tá. Agora vamos... Pode se comentar. Essa é a semispreza no caso, não é? Essa não é a expressa. É. A sede... Essa dá pedido de análise. Exatamente. Exatamente. A sede sempre vem para análise. Quando tem esse quinaim, vem para análise. 811300. Agora vamos para um abrigado. Tá? Tá vendo? Ele pode ter ns abrigados. Vou clicar aqui em 1. E como você pode ver, a gente tem aqui a opção de Malho Afínio sem expressa, tá vendo? Ele não foi nenhum dos dois. Ele foi expressa. Porque se a sede tá no local, pode ter um abrigado. Tá? Ele não passa aqui pela nossa análise. A diferença é... Olha aqui em direcso virtual. É o número da sede. O número da viabilidade da sede. Se você observar esse número, é o mesmo do outro que eu mostrei, que é o da sede. E a validade da sede é o mesmo a validade do abrigado. Sim. Tá? Agora, o abrigado tem o próprio número da viabilidade dela. Tá vendo? Sim, sim, sim. Mas o endereço, o inscrição mobiliar é o mesmo, tá? E aqui as atividades, elas estão na lista de permitidos de escritório virtual. Sim. Tá? Se ele por um caso solicitar lá no cadastro uma atividade que não tá nessa lista, que eu vou te passar, o sistema não permite que ele cadastra, tá? Certo, certo. Pronto. No básico é isso. Aí é uma questão que eu quero conversar com a gente. Como é que a gente pode fazer que a gente tenha um seguinte problema com os escritórios virtuais aqui? Como eu te expliquei, a chave pra gente travar e não permitir atividades que não são permitidas fora de uma sede é a inscrição mobiliária. Só que a gente tem casos de que a sede mudou de endereço. A sede saiu da inscrição mobiliária A e foi pra inscrição mobiliária B. Só que o sistema, ele não desatrela a viabilidade que mudou de endereço da inscrição que ele saía. E aí, e quando uma empresa que não é sede, que não tem necessidade de ser sede, que não tem necessidade de ser escritório, quer se abrigar, ela não consegue. Então, cara, a gente finge uma coisa. Tem como a gente fazer no sistema uma forma de quando a sede saí do local? A inscrição mobiliária, se é desvinculada dessa viabilidade? Tem como. Agora, quando for desvinculada, as pessoas não vinculadas essa sede. Tem que ser desvinculada e tem que ser informado pra surfaz também. É o memória. Perfeito. Tanto pra surfaz como pra elas também. Teria como isso? Teria. Pronto. É um ponto importantíssimo pra gente. Isso daí. Eu só não sei se a surfaz vai ter, se vai ter API pra poder fazer essa comunicação, uma comunicação que é feita de maneira diferente, porque se não tá ligando um diferente, não define como ela é. Entendi. Essa reunião então sobre isso, a gente tem como você botar em uma observação pra a gente ter com o Anderson? Sim. Porque aí a gente vê com ele como é que a gente faria essa comunicação, porque de fato eles precisam receber essa informação por conta do alvarado de funcionamento e a gente teria que ver como mudar pra eles essa informação também. Bom, mas escritório virtual, escritório virtual é isso. É de certa forma simples e um pouco detalhado, né? Porque os abrigados, de certa forma, eles são expressos, mas a gente precisa ver essa questão da sede, conseguir ser desvinculada quando ela mudar de endereço. É totalmente possível, é só a gente alinhar com o Deiró, mesmo, essa API, como você faz. Agora me diga uma coisa. Ela mudou de endereço, mas ela continua sendo sede. Continua sendo sede, ela pode ter essa opção também. Ah, a mesma assim vai ser desvinculada. As outras empresas que estão vinculadas em endereço dela virtual, vai ter que ser desvinculado. Então a pessoa tem que pedir novamente esse vinculado? Não. Quem pede o abrigado, ele não é vinculado, vamos lá. O que vincula a inscrição mobiliária é uma sede a própria sede. Aí ele tem os abrigados. Esse abrigado fica vinculado à inscrição e à viabilidade da sede. Quando a sede muda de endereço, ela muda tanto de endereço de inscrição mobiliária como muda de número de viabilidade. Então esses abrigados precisam ser informados. Olha, a sede mudou de endereço. Entendeu? É um pouco chato mesmo. É por isso que eu queria ter uma rei o real contigo, entendeu? É sobre isso aí. Porque esse escritório virtual é um tópico a parte. Então assim, vamos lá. Como é que a inscrição... Aqui. O abrigado. Eu botei aqui o número da viabilidade da sede. O número da viabilidade da sede vai trazer todos os abrigados. Por que? Porque como eu te falei, aqui o abrigado tem o número da sede vinculado. Então o sistema atrás. Da mesma forma que se eu for fazer a pesquisa pela inscrição mobiliária, ele vai trazer também a sede e os abrigados. Mas o que trava a inscrição mobiliária de fato é a sede. Não é o abrigado. Porque se não existir uma sede, não existe um abrigado. Entendeu? Então eu acredito o quê? Desvinculando. Eu acredito não. É justamente o que acontece hoje. Quando você desvincula a sede da inscrição mobiliária, aquela inscrição fica livre para que qualquer outra empresa venha se instalar, se assim for permitido pela lei. Quando essa inscrição ainda está vinculada a uma sede, não pode outra empresa se instalar sem ser um abrigado dessa sede que está livre vinculada. Sim. É assim que funciona. Aí vai ficar histórico de que aquela empresa já permaneceu abrigada ou não fica histórico? Não. Sim, sempre fica um histórico para saber que aquela empresa já se abrigou naquela inscrição. Mas a inscrição não fica mais atrelada a ela. O que é que significa? Que quando eu for fazer uma pesquisa aqui no meu sistema e colocar a inscrição, não é para eu localizar a sede antiga. Entendeu? Isso daí é mais para efeito de banco. Sim. Tá? Isso aí é mais para efeito de banco do que de usabilidade da gente aqui. Tá, beleza. Tá? Fechou. Aí uma outra coisa. Virimete normalmente os referentes solicitam para a gente uma lista dos vinculados. Aí eles passam para a gente o número da inscrição imobiliária. Aí eu queria que você gerasse o seguinte. Tá vendo aqui essa ação que eu estou fazendo? É o menu. Aí eu venho aqui relatórios administrativos sede de escritório virtual. E aqui também tem a opção de eu tirar o relatório do tempo. Que é... Eu acho que já te expliquei. Não foi a parte de relatório do tempo? Deu uma pincelada possível, mas pode mostrar de novo. Tá. Então eu vou te mostrar o da sede e depois eu vou mostrar o do tempo. Clicando nesse da sede, eu coloco a viabilidade da sede. Tá? E pesquisa. Só que eu quero te pedir que você coloque para mim o ponto... Dois pontos de pesquisa. O número da sede e o número da inscrição imobiliária. Lembra que a inscrição imobiliária sempre é a tela da sede. E os abrigados, certo? Sim. E aí quando eu chamar aqui a pesquisa, trás está vendo? Todos esses dados. Tá vendo? Ou seja, a gente tem 31 registros de abrigados para essa habilidade aqui. Tá? A gente precisa desse relatório. Tá. Tá? Perfeito, perfeito. É outra coisa. Eu deixo te mostrar agora o do tempo. Como é que funciona o do tempo? A gente tem aqui a opção de relatório que a gente pega, de viabilidade ou de revisão. As revisões são as alterações feitas em viabilidades existentes. Tá? Que é. Eu tenho uma empresa aqui no ACM, mas eu quero mudar para Brontas. Aí é uma revisão de alteração de endereço. Existe também a possibilidade de eu estar aqui nesse prédio e querer mudar de sala. Isso aí é uma revisão de alteração de espaço. Eu posso querer tirar uma atividade do meu CNPJ. Isso é uma revisão de exclusão de atividade. Eu posso querer incluir uma atividade no meu CNPJ. Isso é uma revisão de inclusão de atividade econômica. Tá? A gente tem quatro tipos de alteração. Quante essas alterações aí? Eles falem direto no redi-sim e o redi-sim comunicar aos temas. Direto no redi-sim e aí tem a integração aqui. Entendi. Tá. Tá? Aí aqui a gente tem, tá vendo o tipo de serviço? Tá vendo, ó? Termos de viabilidade padrão. Atividade escritória virtual. Atividade em edifício comercial. Atividade em culto religioso. Normalmente são os que mais solicitam da gente em questão de relatório, né? Pra mostrar pra o prefeito. Mas aí eu quero incluir aqui atividades em residência. Pode ser? Pode ser. Tá. Atividades em residência, tá? É... Uma outra coisa que eu também queria te pedir. Tem como você acrescentar aqui a opção de selecionar Qnai? Que aí viria o Qnai, os processos que foram solicitados com aquele Qnai? Sim, tem como... Tem como inclusive botar os filtros ainda. Se você pensar em mais filtros, já tá colocando. Ai, maravilha. Ele precisa do Qnai. Até então é só isso. Se você pensar em mais, pode mandar no WhatsApp. File que tem polémissão. Pode botar esse e esse filtro. Vai ajudar bastante. Só mandar. Tá bom, maravilha. E aqui a gente precisa do timing, tá? Que a data inicial da tafina. Perfeito. Gerai Kv? Oi? E gerai o relatório por nós. Tá. Aqui eu posso escolher todos. Ou posso escolher especificamente um, tá? Aqui eu deixo todos normalmente. E aí eu escolho um período. Foi mais ou menos o que eu fiz esse mês. Aí aqui embaixo eu escolho o status. Se eu quero deferido ou indeferido, tá? Aqui são de processos já concluídos. Ah. Aí é o que primeiro pesquiso. O sistema traz para a minha relação desse período aqui que eu selecionei. E eu clico em gerar Excel. Aí aqui... Dá uma olhadinha. Eu quero te pedir o seguinte. Essa parte aqui de gera sangue dan, pagamento de dan, geração de dan complementar, pagamento de dan. Se ele é como você tirar isso eu não quero esse mês. Encontre-se. Tá? No Geramagdan, né? Comente. Aqui não, exatamente. A gente só inclamia o código para ser faz e lá ele chamou a taxa. Aqui para a gente não faz diferença. Aí aqui a data da emissão e aqui do lado, eu quero, de fato, o tempo em horas. Hoje em dia, o que foi o mais prático fazer, tá? Agora é hora ou dia útil, sempre, tá? Sim. Tirando o final de semana e feriado cadastrado. Na aba emissão, data de abertura. No lugar da data de abertura, por exemplo, você colocar só... Como é que eu posso dizer? Você bota a finalização do processo ou conclusão. Você pode colocar só a conclusão e coloque entre parênteses qual é a unidade de tempo que você vai utilizar. O dia azul, três horas. Tá, tá? Eu fico. Já dá uma enxugada para mim. Aí eu gero o relatório. O que eu gero é que o Excel, ele aparece exatamente assim. Então, presa não. Só o formato Excel que você quer, tem outro formato que você queira PDF. PDF. Tá. E a puder gera já em PDF. Tá, antes. Perfeito. No time, mais essa parte do tempo. Viu. Hoje são esses dois problemas até então que a gente tem. A parte, eu já cheguei a te explicar da parte de que um processo que foi expresso como um descritorial virtual, por exemplo, ele pode ser puxado para análise? Não. Não cheguei a te explicar, mas eu acho que eu vi lá a opção de mandar para análise um processo. Tem essa opção lá. Tem essa opção lá. Aqui a gente faz assim. A gente seleciona aqui dados do processo e aparece a opção e a processo de viabilidade para análise, tá vendo? Aí a gente clica aqui e a gente informa o número do processo. A gente informa o número do processo pesquisa. Aí você pega outro. Esse aqui. Vou celular para as pessoas. Tá com problema aqui. Eu identifico que quando a gente pesquisa, ele aparece aqui esse dado aqui. Tá vendo? Ele aparece exatamente esse dado aqui porque ele já foi concluído e tem a opção em caminhar para análise. Então, ele tem a opção de fazer um processo de viabilidade. Ele tem a opção de fazer um processo de viabilidade, porque ele já foi concluído e tem a opção em caminhar para análise. Eu clico, o processo vai direto para a caixa do setor. Aí ele continua para a gente ver se ele estiver diferido, ele continua, deferido, mais em análise ou ele muda de ferido para análise? Ele muda para em análise. Entendi. E a Cephaya tem que ser informada aí. Isso porque a Cephaya foi informada de que está diferida. Aí não, né? Só se ela foi indiferida, né? Só se o status muda. Lembra dos status que eu te mandei? Castado, revogado ou desativado? Aí a gente caminha. Se não tiver alteração de status, não se faz necessária. Perfeito. Tá? Perfeito. Bom, não mais é isso. E aí qualquer dúvida que você vê, tira comigo que a gente converta. Pronto, pronto. Obrigado, beleza. Nada, despoenho, te agradeço também. Vou adiantar que as pessoas que você mandou ontem, já adiantei algumas, vou adiantar outras. Comcomindo para isso aí. Eu já gerei a penicil que vou mandar no teu WhatsApp, a gente vai falar com o Deirão, só para deixar que lembras. Tá certo. E eu vou te mandar aqui agora a lista de atividades que são permitidas para abrigados de escritora Vincuado. Tá, tá bom. Tá bom, é um link que a gente tem aqui na cedô. E aí eu te mando. Tá bom? Tá, tchau. Tchau.",
+  "segments": [
+    {
+      "id": 0,
+      "start": 0.0,
+      "end": 7.0,
+      "text": " A gente se reuniu sobre a integração."
+    },
+    {
+      "id": 1,
+      "start": 7.0,
+      "end": 12.0,
+      "text": " A gente se reuniu sobre a integração."
+    },
+    {
+      "id": 2,
+      "start": 12.0,
+      "end": 16.0,
+      "text": " O Regim."
+    },
+    {
+      "id": 3,
+      "start": 16.0,
+      "end": 22.0,
+      "text": " Deixa eu olhar aqui."
+    },
+    {
+      "id": 4,
+      "start": 22.0,
+      "end": 24.0,
+      "text": " Vamos lá."
+    },
+    {
+      "id": 5,
+      "start": 24.0,
+      "end": 26.0,
+      "text": " Eu quero falar sobre esse tritório virtual."
+    },
+    {
+      "id": 6,
+      "start": 26.0,
+      "end": 27.0,
+      "text": " Antes disso eu quero te fazer uma pergunta."
+    },
+    {
+      "id": 7,
+      "start": 27.0,
+      "end": 30.0,
+      "text": " É alguma dúvida do que você me mandou ontem?"
+    },
+    {
+      "id": 8,
+      "start": 30.0,
+      "end": 32.0,
+      "text": " Você respondeu muito bem."
+    },
+    {
+      "id": 9,
+      "start": 32.0,
+      "end": 35.0,
+      "text": " Deixa eu ver aqui se eu anota alguma coisa ontem."
+    },
+    {
+      "id": 10,
+      "start": 35.0,
+      "end": 37.0,
+      "text": " É..."
+    },
+    {
+      "id": 11,
+      "start": 45.0,
+      "end": 47.0,
+      "text": " Por enquanto não."
+    },
+    {
+      "id": 12,
+      "start": 47.0,
+      "end": 50.0,
+      "text": " Por enquanto não, né?"
+    },
+    {
+      "id": 13,
+      "start": 50.0,
+      "end": 53.0,
+      "text": " Então eu quero fazer o seguinte."
+    },
+    {
+      "id": 14,
+      "start": 53.0,
+      "end": 56.0,
+      "text": " Eu quero compartilhar com você."
+    },
+    {
+      "id": 15,
+      "start": 56.0,
+      "end": 58.0,
+      "text": " Uma tela."
+    },
+    {
+      "id": 16,
+      "start": 58.0,
+      "end": 60.0,
+      "text": " Que é a tela do que a gente usa hoje."
+    },
+    {
+      "id": 17,
+      "start": 60.0,
+      "end": 62.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 18,
+      "start": 62.0,
+      "end": 64.0,
+      "text": " Que..."
+    },
+    {
+      "id": 19,
+      "start": 64.0,
+      "end": 66.0,
+      "text": " Atende parcialmente."
+    },
+    {
+      "id": 20,
+      "start": 66.0,
+      "end": 70.0,
+      "text": " Eu precisaria de algumas implementações."
+    },
+    {
+      "id": 21,
+      "start": 70.0,
+      "end": 72.0,
+      "text": " Deixa eu só abrir aqui."
+    },
+    {
+      "id": 22,
+      "start": 72.0,
+      "end": 74.0,
+      "text": " Que eu vou compartilhar contigo."
+    },
+    {
+      "id": 23,
+      "start": 74.0,
+      "end": 76.0,
+      "text": " Aí, à medida que você for ter uma dúvida."
+    },
+    {
+      "id": 24,
+      "start": 76.0,
+      "end": 80.0,
+      "text": " Você me fala, eu paro a versicular isso."
+    },
+    {
+      "id": 25,
+      "start": 80.0,
+      "end": 82.0,
+      "text": " Certo."
+    },
+    {
+      "id": 26,
+      "start": 82.0,
+      "end": 85.0,
+      "text": " Deixa eu abrir aqui."
+    },
+    {
+      "id": 27,
+      "start": 142.0,
+      "end": 144.0,
+      "text": " Certo."
+    },
+    {
+      "id": 28,
+      "start": 172.0,
+      "end": 174.0,
+      "text": " Certo."
+    },
+    {
+      "id": 29,
+      "start": 202.0,
+      "end": 204.0,
+      "text": " Só um minuto tá, Felipe?"
+    },
+    {
+      "id": 30,
+      "start": 204.0,
+      "end": 206.0,
+      "text": " Porque a interredação aqui tá bem lenta."
+    },
+    {
+      "id": 31,
+      "start": 206.0,
+      "end": 208.0,
+      "text": " Tá certo."
+    },
+    {
+      "id": 32,
+      "start": 222.0,
+      "end": 226.0,
+      "text": " Bom, enquanto isso deixa eu explicar o conceito ao alo."
+    },
+    {
+      "id": 33,
+      "start": 226.0,
+      "end": 230.0,
+      "text": " Que é a parte de escritório virtual."
+    },
+    {
+      "id": 34,
+      "start": 230.0,
+      "end": 236.0,
+      "text": " Escritório virtual é quando uma empresa cede seu endereço"
+    },
+    {
+      "id": 35,
+      "start": 236.0,
+      "end": 242.0,
+      "text": " pra outras empresas poderem se abrigar melhor"
+    },
+    {
+      "id": 36,
+      "start": 242.0,
+      "end": 246.0,
+      "text": " e exercer atividades de escritório."
+    },
+    {
+      "id": 37,
+      "start": 246.0,
+      "end": 248.0,
+      "text": " Atividades administrativas."
+    },
+    {
+      "id": 38,
+      "start": 248.0,
+      "end": 254.0,
+      "text": " Existe uma lista de atividades que são permitidas"
+    },
+    {
+      "id": 39,
+      "start": 254.0,
+      "end": 258.0,
+      "text": " com essa atualidade."
+    },
+    {
+      "id": 40,
+      "start": 258.0,
+      "end": 262.0,
+      "text": " E o que é que acontece?"
+    },
+    {
+      "id": 41,
+      "start": 262.0,
+      "end": 268.0,
+      "text": " A sede, que é a primeira a dar entrada na viabilidade."
+    },
+    {
+      "id": 42,
+      "start": 268.0,
+      "end": 272.0,
+      "text": " Ela tem uma viabilidade que a gente chama de padrão."
+    },
+    {
+      "id": 43,
+      "start": 272.0,
+      "end": 282.0,
+      "text": " Ou que ela precisa abrir um processo solicitando o Kinai 821301."
+    },
+    {
+      "id": 44,
+      "start": 282.0,
+      "end": 286.0,
+      "text": " Esse Kinai..."
+    },
+    {
+      "id": 45,
+      "start": 286.0,
+      "end": 290.0,
+      "text": " Ele vem atrelado a uma pergunta"
+    },
+    {
+      "id": 46,
+      "start": 290.0,
+      "end": 294.0,
+      "text": " onde a empresa tem a opção de escolher"
+    },
+    {
+      "id": 47,
+      "start": 294.0,
+      "end": 298.0,
+      "text": " se ela vai ser uma sede ou não."
+    },
+    {
+      "id": 48,
+      "start": 298.0,
+      "end": 304.0,
+      "text": " Isso é uma pergunta que tá na regra."
+    },
+    {
+      "id": 49,
+      "start": 304.0,
+      "end": 310.0,
+      "text": " Quando ela informa que ela vai ser uma sede..."
+    },
+    {
+      "id": 50,
+      "start": 310.0,
+      "end": 316.0,
+      "text": " Quando ela informa que vai ser sede,"
+    },
+    {
+      "id": 51,
+      "start": 316.0,
+      "end": 322.0,
+      "text": " o sistema encaminha esse processo pra análise."
+    },
+    {
+      "id": 52,
+      "start": 322.0,
+      "end": 328.0,
+      "text": " E aqui, pelos analistas,"
+    },
+    {
+      "id": 53,
+      "start": 328.0,
+      "end": 334.0,
+      "text": " a opção de sede e escritório virtual, essa é o acionada."
+    },
+    {
+      "id": 54,
+      "start": 334.0,
+      "end": 338.0,
+      "text": " E a inscrição imobiliária usada no processo"
+    },
+    {
+      "id": 55,
+      "start": 338.0,
+      "end": 346.0,
+      "text": " fica vinculada a essa sede, a essa viabilidade."
+    },
+    {
+      "id": 56,
+      "start": 346.0,
+      "end": 350.0,
+      "text": " Escritora virtual é aquele caso de, por exemplo,"
+    },
+    {
+      "id": 57,
+      "start": 350.0,
+      "end": 354.0,
+      "text": " médico que fica atendendo em vários hospitais?"
+    },
+    {
+      "id": 58,
+      "start": 354.0,
+      "end": 358.0,
+      "text": " Isso é autônomo."
+    },
+    {
+      "id": 59,
+      "start": 358.0,
+      "end": 364.0,
+      "text": " Escritora virtual é uma sala que, por exemplo,"
+    },
+    {
+      "id": 60,
+      "start": 364.0,
+      "end": 372.0,
+      "text": " um psicólogo que bota o endereço fiscal dele"
+    },
+    {
+      "id": 61,
+      "start": 372.0,
+      "end": 374.0,
+      "text": " nesse escritório virtual."
+    },
+    {
+      "id": 62,
+      "start": 374.0,
+      "end": 380.0,
+      "text": " Ou, se não, é um consultor que coloca o endereço"
+    },
+    {
+      "id": 63,
+      "start": 380.0,
+      "end": 386.0,
+      "text": " dele fiscal como endereço dessa sede de escritório virtual."
+    },
+    {
+      "id": 64,
+      "start": 386.0,
+      "end": 388.0,
+      "text": " É funcionando essa forma."
+    },
+    {
+      "id": 65,
+      "start": 388.0,
+      "end": 392.0,
+      "text": " Existem atividades específicas pra isso."
+    },
+    {
+      "id": 66,
+      "start": 392.0,
+      "end": 394.0,
+      "text": " Primeiro, cravar o que é sede."
+    },
+    {
+      "id": 67,
+      "start": 394.0,
+      "end": 396.0,
+      "text": " Sede é isso que eu expliquei."
+    },
+    {
+      "id": 68,
+      "start": 396.0,
+      "end": 402.0,
+      "text": " E aí, ele vem pra cá pra ser analisada."
+    },
+    {
+      "id": 69,
+      "start": 402.0,
+      "end": 408.0,
+      "text": " Quando esse processo é deferido,"
+    },
+    {
+      "id": 70,
+      "start": 408.0,
+      "end": 412.0,
+      "text": " gerada uma viabilidade interna, como eu te expliquei ontem,"
+    },
+    {
+      "id": 71,
+      "start": 412.0,
+      "end": 414.0,
+      "text": " não fica disponível por requerente."
+    },
+    {
+      "id": 72,
+      "start": 414.0,
+      "end": 418.0,
+      "text": " A gente gera aqui interno e encaminha pra..."
+    },
+    {
+      "id": 73,
+      "start": 418.0,
+      "end": 420.0,
+      "text": " O que você faz?"
+    },
+    {
+      "id": 74,
+      "start": 420.0,
+      "end": 424.0,
+      "text": " O retorno dessa viabilidade."
+    },
+    {
+      "id": 75,
+      "start": 424.0,
+      "end": 434.0,
+      "text": " No produto dessa sede, tem a condicionante"
+    },
+    {
+      "id": 76,
+      "start": 434.0,
+      "end": 440.0,
+      "text": " de que ele presta serviços de escritório virtual."
+    },
+    {
+      "id": 77,
+      "start": 440.0,
+      "end": 442.0,
+      "text": " Então, o que é que acontece?"
+    },
+    {
+      "id": 78,
+      "start": 442.0,
+      "end": 446.0,
+      "text": " Essa sede precisa primeiro selecionar, escolher o quinae,"
+    },
+    {
+      "id": 79,
+      "start": 446.0,
+      "end": 450.0,
+      "text": " pra isso, que é o serviço combinado de escritório"
+    },
+    {
+      "id": 80,
+      "start": 450.0,
+      "end": 456.0,
+      "text": " e apoio administrativo 821300, é o código quinae."
+    },
+    {
+      "id": 81,
+      "start": 456.0,
+      "end": 464.0,
+      "text": " Ela informa que quer exercer a atividade de sede"
+    },
+    {
+      "id": 82,
+      "start": 464.0,
+      "end": 466.0,
+      "text": " de escritório virtual."
+    },
+    {
+      "id": 83,
+      "start": 466.0,
+      "end": 472.0,
+      "text": " Ela pode selecionar mais de um quinae nesse processo."
+    },
+    {
+      "id": 84,
+      "start": 472.0,
+      "end": 476.0,
+      "text": " Mas esse quinae específico que eu citei,"
+    },
+    {
+      "id": 85,
+      "start": 476.0,
+      "end": 478.0,
+      "text": " ele precisa estar dentro desse processo."
+    },
+    {
+      "id": 86,
+      "start": 478.0,
+      "end": 482.0,
+      "text": " Aí vem pra cá e aí é a valiária."
+    },
+    {
+      "id": 87,
+      "start": 482.0,
+      "end": 484.0,
+      "text": " Ele é marcado como sede,"
+    },
+    {
+      "id": 88,
+      "start": 484.0,
+      "end": 488.0,
+      "text": " o sistema trela quando deferido a viabilidade,"
+    },
+    {
+      "id": 89,
+      "start": 488.0,
+      "end": 490.0,
+      "text": " a inscrição no biliário."
+    },
+    {
+      "id": 90,
+      "start": 490.0,
+      "end": 494.0,
+      "text": " E essa inscrição no biliário, ela fica travada"
+    },
+    {
+      "id": 91,
+      "start": 494.0,
+      "end": 498.0,
+      "text": " para outras empresas darem entrada."
+    },
+    {
+      "id": 92,
+      "start": 498.0,
+      "end": 502.0,
+      "text": " O que é que significa?"
+    },
+    {
+      "id": 93,
+      "start": 502.0,
+      "end": 508.0,
+      "text": " Que para uma empresa se instalar nesse endereço,"
+    },
+    {
+      "id": 94,
+      "start": 508.0,
+      "end": 514.0,
+      "text": " ela precisa obrigatoriamente ser um abrigado dessa empresa."
+    },
+    {
+      "id": 95,
+      "start": 514.0,
+      "end": 518.0,
+      "text": " Aí eu vou te explicar agora o que é abrigado."
+    },
+    {
+      "id": 96,
+      "start": 518.0,
+      "end": 522.0,
+      "text": " É justamente a empresa onde a sede sede"
+    },
+    {
+      "id": 97,
+      "start": 522.0,
+      "end": 524.0,
+      "text": " seu endereço pra ela."
+    },
+    {
+      "id": 98,
+      "start": 524.0,
+      "end": 527.0,
+      "text": " Então ele informa o número da inscrição no biliário,"
+    },
+    {
+      "id": 99,
+      "start": 527.0,
+      "end": 530.0,
+      "text": " utilizado no processo da sede,"
+    },
+    {
+      "id": 100,
+      "start": 530.0,
+      "end": 535.0,
+      "text": " e o CNPJ dessa empresa."
+    },
+    {
+      "id": 101,
+      "start": 535.0,
+      "end": 537.0,
+      "text": " Então ele sede essas informações,"
+    },
+    {
+      "id": 102,
+      "start": 537.0,
+      "end": 539.0,
+      "text": " aí, digamos,"
+    },
+    {
+      "id": 103,
+      "start": 539.0,
+      "end": 541.0,
+      "text": " eu vou dar entrada num processo"
+    },
+    {
+      "id": 104,
+      "start": 541.0,
+      "end": 544.0,
+      "text": " solicitando a abertura de uma empresa"
+    },
+    {
+      "id": 105,
+      "start": 544.0,
+      "end": 549.0,
+      "text": " nessa inscrição pra ser abrigado daquele CNPJ."
+    },
+    {
+      "id": 106,
+      "start": 549.0,
+      "end": 553.0,
+      "text": " E aí eu coloco a inscrição no biliário,"
+    },
+    {
+      "id": 107,
+      "start": 553.0,
+      "end": 555.0,
+      "text": " seleciono necessariamente,"
+    },
+    {
+      "id": 108,
+      "start": 555.0,
+      "end": 557.0,
+      "text": " eu preciso informar uma atividade"
+    },
+    {
+      "id": 109,
+      "start": 557.0,
+      "end": 560.0,
+      "text": " que é permitida em escritório virtual."
+    },
+    {
+      "id": 110,
+      "start": 560.0,
+      "end": 563.0,
+      "text": " A gente já tem essa lista das atividades"
+    },
+    {
+      "id": 111,
+      "start": 563.0,
+      "end": 565.0,
+      "text": " que são permitidas."
+    },
+    {
+      "id": 112,
+      "start": 565.0,
+      "end": 568.0,
+      "text": " E quando o formulário,"
+    },
+    {
+      "id": 113,
+      "start": 568.0,
+      "end": 570.0,
+      "text": " tudo isso é parte do referente ainda, tá?"
+    },
+    {
+      "id": 114,
+      "start": 570.0,
+      "end": 571.0,
+      "text": " Sim, sim."
+    },
+    {
+      "id": 115,
+      "start": 571.0,
+      "end": 577.0,
+      "text": " Quando abre o formulário do município,"
+    },
+    {
+      "id": 116,
+      "start": 577.0,
+      "end": 581.0,
+      "text": " o sistema faz as seguintes desvalidações."
+    },
+    {
+      "id": 117,
+      "start": 581.0,
+      "end": 586.0,
+      "text": " Qual foi a atividade que eu escolhi?"
+    },
+    {
+      "id": 118,
+      "start": 586.0,
+      "end": 589.0,
+      "text": " Se eu escolhi uma atividade"
+    },
+    {
+      "id": 119,
+      "start": 589.0,
+      "end": 591.0,
+      "text": " que não é permitida,"
+    },
+    {
+      "id": 120,
+      "start": 591.0,
+      "end": 594.0,
+      "text": " que não está na lista de escritório virtual,"
+    },
+    {
+      "id": 121,
+      "start": 594.0,
+      "end": 595.0,
+      "text": " o sistema ba,"
+    },
+    {
+      "id": 122,
+      "start": 595.0,
+      "end": 598.0,
+      "text": " o sistema não deixa o cadastro da solicitação."
+    },
+    {
+      "id": 123,
+      "start": 598.0,
+      "end": 602.0,
+      "text": " Quando eu selecione uma atividade"
+    },
+    {
+      "id": 124,
+      "start": 602.0,
+      "end": 604.0,
+      "text": " que é permitida,"
+    },
+    {
+      "id": 125,
+      "start": 604.0,
+      "end": 607.0,
+      "text": " o sistema abre o questionamento pra mim."
+    },
+    {
+      "id": 126,
+      "start": 607.0,
+      "end": 610.0,
+      "text": " Se eu vou ser um abrigado de escritório virtual"
+    },
+    {
+      "id": 127,
+      "start": 610.0,
+      "end": 611.0,
+      "text": " ou não,"
+    },
+    {
+      "id": 128,
+      "start": 611.0,
+      "end": 615.0,
+      "text": " se eu informo que eu não vou ser um escritório virtual,"
+    },
+    {
+      "id": 129,
+      "start": 615.0,
+      "end": 618.0,
+      "text": " o sistema barra também,"
+    },
+    {
+      "id": 130,
+      "start": 618.0,
+      "end": 622.0,
+      "text": " porque o sistema consulta e vê"
+    },
+    {
+      "id": 131,
+      "start": 622.0,
+      "end": 624.0,
+      "text": " que aquela inscrição está atrelada a uma sede."
+    },
+    {
+      "id": 132,
+      "start": 624.0,
+      "end": 629.0,
+      "text": " Então, uma outra empresa que não é um abrigado,"
+    },
+    {
+      "id": 133,
+      "start": 629.0,
+      "end": 632.0,
+      "text": " não pode se instalar, tá?"
+    },
+    {
+      "id": 134,
+      "start": 632.0,
+      "end": 635.0,
+      "text": " Quando ele informa"
+    },
+    {
+      "id": 135,
+      "start": 635.0,
+      "end": 638.0,
+      "text": " que no questionamento que é um abrigado,"
+    },
+    {
+      "id": 136,
+      "start": 638.0,
+      "end": 640.0,
+      "text": " o sistema abre pra ele o campo"
+    },
+    {
+      "id": 137,
+      "start": 640.0,
+      "end": 644.0,
+      "text": " pra ele informar o CNPJ da sede que estava encolada."
+    },
+    {
+      "id": 138,
+      "start": 644.0,
+      "end": 647.0,
+      "text": " Então, quando ele informa o CNPJ,"
+    },
+    {
+      "id": 139,
+      "start": 647.0,
+      "end": 651.0,
+      "text": " o sistema consulta lá nasce e faz"
+    },
+    {
+      "id": 140,
+      "start": 651.0,
+      "end": 655.0,
+      "text": " qual é a viabilidade que estava encolada"
+    },
+    {
+      "id": 141,
+      "start": 655.0,
+      "end": 657.0,
+      "text": " esse CNPJ."
+    },
+    {
+      "id": 142,
+      "start": 657.0,
+      "end": 661.0,
+      "text": " Se a viabilidade for a mesma que estava encolada,"
+    },
+    {
+      "id": 143,
+      "start": 661.0,
+      "end": 663.0,
+      "text": " a inscrição no abiliário,"
+    },
+    {
+      "id": 144,
+      "start": 663.0,
+      "end": 666.0,
+      "text": " ele permite o cadastramento,"
+    },
+    {
+      "id": 145,
+      "start": 666.0,
+      "end": 668.0,
+      "text": " o que é que abre pro requerente."
+    },
+    {
+      "id": 146,
+      "start": 668.0,
+      "end": 672.0,
+      "text": " O endereço da sede e o nome do escritório virtual."
+    },
+    {
+      "id": 147,
+      "start": 672.0,
+      "end": 673.0,
+      "text": " Acredito."
+    },
+    {
+      "id": 148,
+      "start": 673.0,
+      "end": 676.0,
+      "text": " Certo? Não permite que ele atere nada."
+    },
+    {
+      "id": 149,
+      "start": 676.0,
+      "end": 679.0,
+      "text": " Só aparece as informações pra ele confirmar"
+    },
+    {
+      "id": 150,
+      "start": 679.0,
+      "end": 681.0,
+      "text": " e ele cadastra a solicitação."
+    },
+    {
+      "id": 151,
+      "start": 681.0,
+      "end": 684.0,
+      "text": " O processo vem, o processo é deferido"
+    },
+    {
+      "id": 152,
+      "start": 684.0,
+      "end": 688.0,
+      "text": " ou o processo é deferido automaticamente."
+    },
+    {
+      "id": 153,
+      "start": 688.0,
+      "end": 690.0,
+      "text": " Certo?"
+    },
+    {
+      "id": 154,
+      "start": 690.0,
+      "end": 695.0,
+      "text": " E a validade do produto é a mesma validade da sede."
+    },
+    {
+      "id": 155,
+      "start": 695.0,
+      "end": 697.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 156,
+      "start": 697.0,
+      "end": 702.0,
+      "text": " O que é que é de diferente no produto de abrigado?"
+    },
+    {
+      "id": 157,
+      "start": 702.0,
+      "end": 706.0,
+      "text": " O produto de abrigado é diferente no quesito de que?"
+    },
+    {
+      "id": 158,
+      "start": 706.0,
+      "end": 715.0,
+      "text": " Existe um campo onde aparece o número da viabilidade da sede."
+    },
+    {
+      "id": 159,
+      "start": 715.0,
+      "end": 716.0,
+      "text": " Eu vou te mostrar aqui."
+    },
+    {
+      "id": 160,
+      "start": 716.0,
+      "end": 719.0,
+      "text": " É isso que eu quero compartilhar com você pra você dar uma olhada."
+    },
+    {
+      "id": 161,
+      "start": 719.0,
+      "end": 723.0,
+      "text": " Eu tô aqui com uma sede, um produto de sede"
+    },
+    {
+      "id": 162,
+      "start": 723.0,
+      "end": 726.0,
+      "text": " e um produto de virtual, de ida."
+    },
+    {
+      "id": 163,
+      "start": 726.0,
+      "end": 728.0,
+      "text": " Tuas cotelas não estão mostrando não, João?"
+    },
+    {
+      "id": 164,
+      "start": 728.0,
+      "end": 730.0,
+      "text": " Eu sei, eu vou compartilhar agora."
+    },
+    {
+      "id": 165,
+      "start": 730.0,
+      "end": 732.0,
+      "text": " Ah, tá."
+    },
+    {
+      "id": 166,
+      "start": 732.0,
+      "end": 737.0,
+      "text": " E aí eu vou te mostrar a ficha de análise, tá?"
+    },
+    {
+      "id": 167,
+      "start": 737.0,
+      "end": 744.0,
+      "text": " Se eu acho importante, hoje atende as meninas do jeito que tá, tá?"
+    },
+    {
+      "id": 168,
+      "start": 744.0,
+      "end": 747.0,
+      "text": " Hoje atende as meninas, tá?"
+    },
+    {
+      "id": 169,
+      "start": 747.0,
+      "end": 750.0,
+      "text": " Então, eu vou te mostrar aqui."
+    },
+    {
+      "id": 170,
+      "start": 750.0,
+      "end": 756.0,
+      "text": " O máximo que você puder montar de semelhança"
+    },
+    {
+      "id": 171,
+      "start": 756.0,
+      "end": 763.0,
+      "text": " pra usabilidade dela ser mais receptiva,"
+    },
+    {
+      "id": 172,
+      "start": 763.0,
+      "end": 766.0,
+      "text": " melhor porque quando elas forem fazer o teste,"
+    },
+    {
+      "id": 173,
+      "start": 766.0,
+      "end": 769.0,
+      "text": " elas não vão sentir um impacto muito grande."
+    },
+    {
+      "id": 174,
+      "start": 777.0,
+      "end": 784.0,
+      "text": " E eu vou moir."
+    },
+    {
+      "id": 175,
+      "start": 784.0,
+      "end": 787.0,
+      "text": " Só compartilhar aqui agora, please."
+    },
+    {
+      "id": 176,
+      "start": 804.0,
+      "end": 806.0,
+      "text": " Tá conseguindo ver?"
+    },
+    {
+      "id": 177,
+      "start": 806.0,
+      "end": 808.0,
+      "text": " Sim."
+    },
+    {
+      "id": 178,
+      "start": 810.0,
+      "end": 817.0,
+      "text": " Pronto, vamos ver se eu acredito pela sua."
+    },
+    {
+      "id": 179,
+      "start": 817.0,
+      "end": 819.0,
+      "text": " Aqui essa é a tela..."
+    },
+    {
+      "id": 180,
+      "start": 819.0,
+      "end": 824.0,
+      "text": " Desculpe, essa é a tela de conflutas inicial, tá?"
+    },
+    {
+      "id": 181,
+      "start": 824.0,
+      "end": 831.0,
+      "text": " É onde se pedir pra colocar aqueles filtros pra gente fazer as testes."
+    },
+    {
+      "id": 182,
+      "start": 831.0,
+      "end": 835.0,
+      "text": " Aqui é um processo"
+    },
+    {
+      "id": 183,
+      "start": 835.0,
+      "end": 839.52,
+      "text": " onde foi solicitado de uma empresa querer ser cédio."
+    },
+    {
+      "id": 184,
+      "start": 841.52,
+      "end": 845.12,
+      "text": " Aí eu vou abrir ela para você, você clica e ele abre aqui."
+    },
+    {
+      "id": 185,
+      "start": 848.72,
+      "end": 851.28,
+      "text": " Só um processo que foi deferido."
+    },
+    {
+      "id": 186,
+      "start": 853.0,
+      "end": 856.4,
+      "text": " Tá vendo aqui? Aparece, ó, esse é o motivo da análise."
+    },
+    {
+      "id": 187,
+      "start": 856.4,
+      "end": 859.0,
+      "text": " Ele quis ser uma cédia de escritório virtual."
+    },
+    {
+      "id": 188,
+      "start": 859.0,
+      "end": 860.0,
+      "text": " Sim."
+    },
+    {
+      "id": 189,
+      "start": 860.72,
+      "end": 864.0,
+      "text": " E eu vou te mostrar aqui a ficha da Anax."
+    },
+    {
+      "id": 190,
+      "start": 866.0,
+      "end": 873.0,
+      "text": " É, o produto sempre é o resultado da última ficha, tá?"
+    },
+    {
+      "id": 191,
+      "start": 875.0,
+      "end": 876.0,
+      "text": " Aqui, tá vendo?"
+    },
+    {
+      "id": 192,
+      "start": 878.0,
+      "end": 882.0,
+      "text": " Cédia de escritório virtual, aqui a gente marca como sim."
+    },
+    {
+      "id": 193,
+      "start": 882.0,
+      "end": 885.0,
+      "text": " Aqui a gente tem a opção de colocar não também, tá?"
+    },
+    {
+      "id": 194,
+      "start": 885.0,
+      "end": 888.0,
+      "text": " Quando a empresa, digamos, solicitou."
+    },
+    {
+      "id": 195,
+      "start": 889.0,
+      "end": 890.0,
+      "text": " Cadê o que ele diz?"
+    },
+    {
+      "id": 196,
+      "start": 890.0,
+      "end": 893.0,
+      "text": " Esse que ele diz? Tá vendo? 8211."
+    },
+    {
+      "id": 197,
+      "start": 893.0,
+      "end": 897.0,
+      "text": " Ele solicitou esse quinae, mas lá ele colocou que não quer ser cédio."
+    },
+    {
+      "id": 198,
+      "start": 899.0,
+      "end": 903.0,
+      "text": " Aí a gente vem aqui e, ó, não, ele não quer ser cédio."
+    },
+    {
+      "id": 199,
+      "start": 903.0,
+      "end": 907.0,
+      "text": " Quando ele informa que quer ser cédio, ele pode ser uma cédia."
+    },
+    {
+      "id": 200,
+      "start": 907.0,
+      "end": 909.0,
+      "text": " Aí a gente vem aqui e marca."
+    },
+    {
+      "id": 201,
+      "start": 909.0,
+      "end": 920.0,
+      "text": " É isso aqui juntamente com esse quinae que trava a inscrição mobiliária, certo?"
+    },
+    {
+      "id": 202,
+      "start": 920.0,
+      "end": 932.0,
+      "text": " Se ele tiver esse quinae e aqui não tiver marcado como cede, o sistema não trava a inscrição."
+    },
+    {
+      "id": 203,
+      "start": 934.0,
+      "end": 938.0,
+      "text": " Ele precisa ter isso aqui e selecionado como sim."
+    },
+    {
+      "id": 204,
+      "start": 939.0,
+      "end": 942.0,
+      "text": " Se não tiver, não é para o sistema travar."
+    },
+    {
+      "id": 205,
+      "start": 945.0,
+      "end": 947.0,
+      "text": " Bom, essa daqui é a ficha de Anax."
+    },
+    {
+      "id": 206,
+      "start": 947.0,
+      "end": 949.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 207,
+      "start": 949.0,
+      "end": 954.0,
+      "text": " Eu vou passar até um devagar para que fique gravado para você ver mais ou menos como é que é."
+    },
+    {
+      "id": 208,
+      "start": 954.0,
+      "end": 955.0,
+      "text": " Uhum."
+    },
+    {
+      "id": 209,
+      "start": 955.0,
+      "end": 956.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 210,
+      "start": 956.0,
+      "end": 959.0,
+      "text": " Hoje é o que atende a gente aqui."
+    },
+    {
+      "id": 211,
+      "start": 959.0,
+      "end": 963.0,
+      "text": " Melhoria que isso aí, o que você pensa?"
+    },
+    {
+      "id": 212,
+      "start": 963.0,
+      "end": 968.0,
+      "text": " Bom, aqui a gente tinha, né?"
+    },
+    {
+      "id": 213,
+      "start": 968.0,
+      "end": 971.0,
+      "text": " Aqui a Lebena, essa área aqui."
+    },
+    {
+      "id": 214,
+      "start": 971.0,
+      "end": 976.0,
+      "text": " Esse é um campo onde as meninas não precisavam consultar."
+    },
+    {
+      "id": 215,
+      "start": 976.0,
+      "end": 979.0,
+      "text": " Não precisavam consultar nas sefais dos que eles chamam de abriar."
+    },
+    {
+      "id": 216,
+      "start": 979.0,
+      "end": 986.0,
+      "text": " A gente tinha alguns campos que eram imprescindíveis aqui."
+    },
+    {
+      "id": 217,
+      "start": 986.0,
+      "end": 990.0,
+      "text": " Eu posso te passar para você inserir aqui no espaço, por exemplo."
+    },
+    {
+      "id": 218,
+      "start": 990.0,
+      "end": 991.0,
+      "text": " Uhum."
+    },
+    {
+      "id": 219,
+      "start": 991.0,
+      "end": 993.0,
+      "text": " Esses dados para que a gente não precise ir lá chacar."
+    },
+    {
+      "id": 220,
+      "start": 993.0,
+      "end": 994.0,
+      "text": " Uhum."
+    },
+    {
+      "id": 221,
+      "start": 994.0,
+      "end": 995.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 222,
+      "start": 995.0,
+      "end": 998.0,
+      "text": " Essa é a principal melhoria dessa ficha."
+    },
+    {
+      "id": 223,
+      "start": 998.0,
+      "end": 999.0,
+      "text": " Um mais."
+    },
+    {
+      "id": 224,
+      "start": 999.0,
+      "end": 1002.0,
+      "text": " É isso aqui mesmo."
+    },
+    {
+      "id": 225,
+      "start": 1002.0,
+      "end": 1011.0,
+      "text": " Isso aqui foi elas lá no início que definiram o máximo de semelhança em todos os campos que você conseguiu manter e manter."
+    },
+    {
+      "id": 226,
+      "start": 1011.0,
+      "end": 1014.0,
+      "text": " Aqui é a parte de condicionante, tá?"
+    },
+    {
+      "id": 227,
+      "start": 1014.0,
+      "end": 1018.0,
+      "text": " Que aparece já para elas na ficha de análise."
+    },
+    {
+      "id": 228,
+      "start": 1018.0,
+      "end": 1023.0,
+      "text": " Aí eu colocaria também condicionantes."
+    },
+    {
+      "id": 229,
+      "start": 1023.0,
+      "end": 1026.0,
+      "text": " A gente tem um cadastro de condicionantes também."
+    },
+    {
+      "id": 230,
+      "start": 1026.0,
+      "end": 1029.0,
+      "text": " A gente tem aqui essa parte de pesquisar."
+    },
+    {
+      "id": 231,
+      "start": 1029.0,
+      "end": 1035.0,
+      "text": " Elas digitam e aí aparece também a opção para elas para ela não estar nem voltando."
+    },
+    {
+      "id": 232,
+      "start": 1035.0,
+      "end": 1040.0,
+      "text": " Aí eu peço para relacionar tanto a parte de condicionante como a parte de observação."
+    },
+    {
+      "id": 233,
+      "start": 1040.0,
+      "end": 1046.0,
+      "text": " Se elas quiserem colocar algo no produto, que elas colocam aqui."
+    },
+    {
+      "id": 234,
+      "start": 1046.0,
+      "end": 1047.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 235,
+      "start": 1047.0,
+      "end": 1048.0,
+      "text": " Sim."
+    },
+    {
+      "id": 236,
+      "start": 1048.0,
+      "end": 1055.0,
+      "text": " Essas são as duas melhorias que elas solicitam."
+    },
+    {
+      "id": 237,
+      "start": 1055.0,
+      "end": 1056.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 238,
+      "start": 1056.0,
+      "end": 1061.0,
+      "text": " Um máximo não mexer no estilo da ficha."
+    },
+    {
+      "id": 239,
+      "start": 1061.0,
+      "end": 1065.0,
+      "text": " Tá elas, tá?"
+    },
+    {
+      "id": 240,
+      "start": 1065.0,
+      "end": 1076.0,
+      "text": " Aqui eu vou te mostrar agora o produto que fica disponibilizado só para a gente dessa sede."
+    },
+    {
+      "id": 241,
+      "start": 1076.0,
+      "end": 1077.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 242,
+      "start": 1077.0,
+      "end": 1080.0,
+      "text": " Eu quero te pedir uma melhoria nesse produto."
+    },
+    {
+      "id": 243,
+      "start": 1080.0,
+      "end": 1083.0,
+      "text": " Essa informação."
+    },
+    {
+      "id": 244,
+      "start": 1086.0,
+      "end": 1090.0,
+      "text": " Vem aí essa informação, a prestação de serviço escritório virtual."
+    },
+    {
+      "id": 245,
+      "start": 1090.0,
+      "end": 1094.0,
+      "text": " Que isso não seja dentro desse campo texto de condicionante."
+    },
+    {
+      "id": 246,
+      "start": 1094.0,
+      "end": 1099.0,
+      "text": " Teria como ele ser um campo separado de sim ou não."
+    },
+    {
+      "id": 247,
+      "start": 1099.0,
+      "end": 1102.0,
+      "text": " Tipo assim, essa é de escritório virtual?"
+    },
+    {
+      "id": 248,
+      "start": 1102.0,
+      "end": 1103.0,
+      "text": " Sim."
+    },
+    {
+      "id": 249,
+      "start": 1103.0,
+      "end": 1104.0,
+      "text": " Essa é de escritório virtual?"
+    },
+    {
+      "id": 250,
+      "start": 1104.0,
+      "end": 1105.0,
+      "text": " Não."
+    },
+    {
+      "id": 251,
+      "start": 1105.0,
+      "end": 1106.0,
+      "text": " Pode ser assim?"
+    },
+    {
+      "id": 252,
+      "start": 1106.0,
+      "end": 1107.0,
+      "text": " Você tem como fazer isso?"
+    },
+    {
+      "id": 253,
+      "start": 1107.0,
+      "end": 1108.0,
+      "text": " Pode ser."
+    },
+    {
+      "id": 254,
+      "start": 1108.0,
+      "end": 1109.0,
+      "text": " Pronto."
+    },
+    {
+      "id": 255,
+      "start": 1109.0,
+      "end": 1114.0,
+      "text": " Porque aí a gente consegue encaminhar essa informação para ser faz de forma mais acertiva."
+    },
+    {
+      "id": 256,
+      "start": 1114.0,
+      "end": 1117.0,
+      "text": " Um hum."
+    },
+    {
+      "id": 257,
+      "start": 1117.0,
+      "end": 1119.0,
+      "text": " Tem um?"
+    },
+    {
+      "id": 258,
+      "start": 1119.0,
+      "end": 1120.0,
+      "text": " Tá."
+    },
+    {
+      "id": 259,
+      "start": 1120.0,
+      "end": 1125.0,
+      "text": " Esse, essa é a viabilidade da sede."
+    },
+    {
+      "id": 260,
+      "start": 1125.0,
+      "end": 1126.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 261,
+      "start": 1126.0,
+      "end": 1127.0,
+      "text": " Ela é dessa forma."
+    },
+    {
+      "id": 262,
+      "start": 1127.0,
+      "end": 1128.0,
+      "text": " Tá."
+    },
+    {
+      "id": 263,
+      "start": 1128.0,
+      "end": 1129.0,
+      "text": " Agora vamos..."
+    },
+    {
+      "id": 264,
+      "start": 1129.0,
+      "end": 1131.0,
+      "text": " Pode se comentar."
+    },
+    {
+      "id": 265,
+      "start": 1131.0,
+      "end": 1133.0,
+      "text": " Essa é a semispreza no caso, não é?"
+    },
+    {
+      "id": 266,
+      "start": 1133.0,
+      "end": 1135.0,
+      "text": " Essa não é a expressa."
+    },
+    {
+      "id": 267,
+      "start": 1135.0,
+      "end": 1136.0,
+      "text": " É."
+    },
+    {
+      "id": 268,
+      "start": 1136.0,
+      "end": 1137.0,
+      "text": " A sede..."
+    },
+    {
+      "id": 269,
+      "start": 1137.0,
+      "end": 1138.0,
+      "text": " Essa dá pedido de análise."
+    },
+    {
+      "id": 270,
+      "start": 1138.0,
+      "end": 1139.0,
+      "text": " Exatamente."
+    },
+    {
+      "id": 271,
+      "start": 1139.0,
+      "end": 1140.0,
+      "text": " Exatamente."
+    },
+    {
+      "id": 272,
+      "start": 1140.0,
+      "end": 1144.0,
+      "text": " A sede sempre vem para análise."
+    },
+    {
+      "id": 273,
+      "start": 1144.0,
+      "end": 1147.0,
+      "text": " Quando tem esse quinaim, vem para análise."
+    },
+    {
+      "id": 274,
+      "start": 1147.0,
+      "end": 1152.0,
+      "text": " 811300."
+    },
+    {
+      "id": 275,
+      "start": 1152.0,
+      "end": 1156.0,
+      "text": " Agora vamos para um abrigado."
+    },
+    {
+      "id": 276,
+      "start": 1156.0,
+      "end": 1157.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 277,
+      "start": 1157.0,
+      "end": 1159.0,
+      "text": " Tá vendo?"
+    },
+    {
+      "id": 278,
+      "start": 1159.0,
+      "end": 1162.0,
+      "text": " Ele pode ter ns abrigados."
+    },
+    {
+      "id": 279,
+      "start": 1162.0,
+      "end": 1167.0,
+      "text": " Vou clicar aqui em 1."
+    },
+    {
+      "id": 280,
+      "start": 1167.0,
+      "end": 1175.0,
+      "text": " E como você pode ver, a gente tem aqui a opção de Malho Afínio sem expressa, tá vendo?"
+    },
+    {
+      "id": 281,
+      "start": 1175.0,
+      "end": 1177.0,
+      "text": " Ele não foi nenhum dos dois."
+    },
+    {
+      "id": 282,
+      "start": 1177.0,
+      "end": 1178.0,
+      "text": " Ele foi expressa."
+    },
+    {
+      "id": 283,
+      "start": 1178.0,
+      "end": 1183.0,
+      "text": " Porque se a sede tá no local, pode ter um abrigado."
+    },
+    {
+      "id": 284,
+      "start": 1183.0,
+      "end": 1184.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 285,
+      "start": 1184.0,
+      "end": 1187.0,
+      "text": " Ele não passa aqui pela nossa análise."
+    },
+    {
+      "id": 286,
+      "start": 1187.0,
+      "end": 1191.0,
+      "text": " A diferença é..."
+    },
+    {
+      "id": 287,
+      "start": 1191.0,
+      "end": 1196.0,
+      "text": " Olha aqui em direcso virtual."
+    },
+    {
+      "id": 288,
+      "start": 1196.0,
+      "end": 1199.0,
+      "text": " É o número da sede."
+    },
+    {
+      "id": 289,
+      "start": 1199.0,
+      "end": 1201.0,
+      "text": " O número da viabilidade da sede."
+    },
+    {
+      "id": 290,
+      "start": 1201.0,
+      "end": 1208.0,
+      "text": " Se você observar esse número, é o mesmo do outro que eu mostrei, que é o da sede."
+    },
+    {
+      "id": 291,
+      "start": 1208.0,
+      "end": 1214.0,
+      "text": " E a validade da sede é o mesmo a validade do abrigado."
+    },
+    {
+      "id": 292,
+      "start": 1214.0,
+      "end": 1215.0,
+      "text": " Sim."
+    },
+    {
+      "id": 293,
+      "start": 1215.0,
+      "end": 1216.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 294,
+      "start": 1216.0,
+      "end": 1220.0,
+      "text": " Agora, o abrigado tem o próprio número da viabilidade dela."
+    },
+    {
+      "id": 295,
+      "start": 1220.0,
+      "end": 1221.0,
+      "text": " Tá vendo?"
+    },
+    {
+      "id": 296,
+      "start": 1221.0,
+      "end": 1222.0,
+      "text": " Sim, sim, sim."
+    },
+    {
+      "id": 297,
+      "start": 1222.0,
+      "end": 1227.0,
+      "text": " Mas o endereço, o inscrição mobiliar é o mesmo, tá?"
+    },
+    {
+      "id": 298,
+      "start": 1227.0,
+      "end": 1234.0,
+      "text": " E aqui as atividades, elas estão na lista de permitidos de escritório virtual."
+    },
+    {
+      "id": 299,
+      "start": 1234.0,
+      "end": 1235.0,
+      "text": " Sim."
+    },
+    {
+      "id": 300,
+      "start": 1235.0,
+      "end": 1236.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 301,
+      "start": 1236.0,
+      "end": 1246.0,
+      "text": " Se ele por um caso solicitar lá no cadastro uma atividade que não tá nessa lista, que"
+    },
+    {
+      "id": 302,
+      "start": 1246.0,
+      "end": 1250.0,
+      "text": " eu vou te passar, o sistema não permite que ele cadastra, tá?"
+    },
+    {
+      "id": 303,
+      "start": 1250.0,
+      "end": 1253.0,
+      "text": " Certo, certo."
+    },
+    {
+      "id": 304,
+      "start": 1253.0,
+      "end": 1255.0,
+      "text": " Pronto."
+    },
+    {
+      "id": 305,
+      "start": 1255.0,
+      "end": 1258.0,
+      "text": " No básico é isso."
+    },
+    {
+      "id": 306,
+      "start": 1258.0,
+      "end": 1261.0,
+      "text": " Aí é uma questão que eu quero conversar com a gente."
+    },
+    {
+      "id": 307,
+      "start": 1261.0,
+      "end": 1266.0,
+      "text": " Como é que a gente pode fazer que a gente tenha um seguinte problema com os escritórios"
+    },
+    {
+      "id": 308,
+      "start": 1266.0,
+      "end": 1268.0,
+      "text": " virtuais aqui?"
+    },
+    {
+      "id": 309,
+      "start": 1268.0,
+      "end": 1275.0,
+      "text": " Como eu te expliquei, a chave pra gente travar e não permitir atividades que não são"
+    },
+    {
+      "id": 310,
+      "start": 1275.0,
+      "end": 1280.0,
+      "text": " permitidas fora de uma sede é a inscrição mobiliária."
+    },
+    {
+      "id": 311,
+      "start": 1280.0,
+      "end": 1288.0,
+      "text": " Só que a gente tem casos de que a sede mudou de endereço."
+    },
+    {
+      "id": 312,
+      "start": 1288.0,
+      "end": 1295.0,
+      "text": " A sede saiu da inscrição mobiliária A e foi pra inscrição mobiliária B."
+    },
+    {
+      "id": 313,
+      "start": 1295.0,
+      "end": 1304.0,
+      "text": " Só que o sistema, ele não desatrela a viabilidade que mudou de endereço da inscrição que ele"
+    },
+    {
+      "id": 314,
+      "start": 1304.0,
+      "end": 1305.0,
+      "text": " saía."
+    },
+    {
+      "id": 315,
+      "start": 1305.0,
+      "end": 1311.0,
+      "text": " E aí, e quando uma empresa que não é sede, que não tem necessidade de ser sede, que"
+    },
+    {
+      "id": 316,
+      "start": 1311.0,
+      "end": 1315.0,
+      "text": " não tem necessidade de ser escritório, quer se abrigar, ela não consegue."
+    },
+    {
+      "id": 317,
+      "start": 1315.0,
+      "end": 1316.0,
+      "text": " Então, cara, a gente finge uma coisa."
+    },
+    {
+      "id": 318,
+      "start": 1316.0,
+      "end": 1324.0,
+      "text": " Tem como a gente fazer no sistema uma forma de quando a sede saí do local?"
+    },
+    {
+      "id": 319,
+      "start": 1324.0,
+      "end": 1331.0,
+      "text": " A inscrição mobiliária, se é desvinculada dessa viabilidade?"
+    },
+    {
+      "id": 320,
+      "start": 1331.0,
+      "end": 1332.0,
+      "text": " Tem como."
+    },
+    {
+      "id": 321,
+      "start": 1332.0,
+      "end": 1337.0,
+      "text": " Agora, quando for desvinculada, as pessoas não vinculadas essa sede."
+    },
+    {
+      "id": 322,
+      "start": 1337.0,
+      "end": 1341.0,
+      "text": " Tem que ser desvinculada e tem que ser informado pra surfaz também."
+    },
+    {
+      "id": 323,
+      "start": 1341.0,
+      "end": 1342.0,
+      "text": " É o memória."
+    },
+    {
+      "id": 324,
+      "start": 1342.0,
+      "end": 1343.0,
+      "text": " Perfeito."
+    },
+    {
+      "id": 325,
+      "start": 1343.0,
+      "end": 1345.0,
+      "text": " Tanto pra surfaz como pra elas também."
+    },
+    {
+      "id": 326,
+      "start": 1345.0,
+      "end": 1347.0,
+      "text": " Teria como isso?"
+    },
+    {
+      "id": 327,
+      "start": 1347.0,
+      "end": 1348.0,
+      "text": " Teria."
+    },
+    {
+      "id": 328,
+      "start": 1348.0,
+      "end": 1349.0,
+      "text": " Pronto."
+    },
+    {
+      "id": 329,
+      "start": 1349.0,
+      "end": 1352.0,
+      "text": " É um ponto importantíssimo pra gente."
+    },
+    {
+      "id": 330,
+      "start": 1352.0,
+      "end": 1353.0,
+      "text": " Isso daí."
+    },
+    {
+      "id": 331,
+      "start": 1353.0,
+      "end": 1358.0,
+      "text": " Eu só não sei se a surfaz vai ter, se vai ter API pra poder fazer essa comunicação,"
+    },
+    {
+      "id": 332,
+      "start": 1358.0,
+      "end": 1364.0,
+      "text": " uma comunicação que é feita de maneira diferente, porque se não tá ligando um"
+    },
+    {
+      "id": 333,
+      "start": 1364.0,
+      "end": 1366.0,
+      "text": " diferente, não define como ela é."
+    },
+    {
+      "id": 334,
+      "start": 1366.0,
+      "end": 1367.0,
+      "text": " Entendi."
+    },
+    {
+      "id": 335,
+      "start": 1367.0,
+      "end": 1372.0,
+      "text": " Essa reunião então sobre isso, a gente tem como você botar em uma observação pra"
+    },
+    {
+      "id": 336,
+      "start": 1372.0,
+      "end": 1374.0,
+      "text": " a gente ter com o Anderson?"
+    },
+    {
+      "id": 337,
+      "start": 1374.0,
+      "end": 1375.0,
+      "text": " Sim."
+    },
+    {
+      "id": 338,
+      "start": 1375.0,
+      "end": 1381.0,
+      "text": " Porque aí a gente vê com ele como é que a gente faria essa comunicação, porque"
+    },
+    {
+      "id": 339,
+      "start": 1381.0,
+      "end": 1386.0,
+      "text": " de fato eles precisam receber essa informação por conta do alvarado de funcionamento e"
+    },
+    {
+      "id": 340,
+      "start": 1386.0,
+      "end": 1396.0,
+      "text": " a gente teria que ver como mudar pra eles essa informação também."
+    },
+    {
+      "id": 341,
+      "start": 1396.0,
+      "end": 1408.0,
+      "text": " Bom, mas escritório virtual, escritório virtual é isso."
+    },
+    {
+      "id": 342,
+      "start": 1408.0,
+      "end": 1415.0,
+      "text": " É de certa forma simples e um pouco detalhado, né?"
+    },
+    {
+      "id": 343,
+      "start": 1415.0,
+      "end": 1422.2,
+      "text": " Porque os abrigados, de certa forma, eles são expressos, mas a gente precisa ver essa"
+    },
+    {
+      "id": 344,
+      "start": 1422.2,
+      "end": 1427.0,
+      "text": " questão da sede, conseguir ser desvinculada quando ela mudar de endereço."
+    },
+    {
+      "id": 345,
+      "start": 1427.0,
+      "end": 1435.0,
+      "text": " É totalmente possível, é só a gente alinhar com o Deiró, mesmo, essa API, como você faz."
+    },
+    {
+      "id": 346,
+      "start": 1435.0,
+      "end": 1436.0,
+      "text": " Agora me diga uma coisa."
+    },
+    {
+      "id": 347,
+      "start": 1436.0,
+      "end": 1440.0,
+      "text": " Ela mudou de endereço, mas ela continua sendo sede."
+    },
+    {
+      "id": 348,
+      "start": 1440.0,
+      "end": 1443.0,
+      "text": " Continua sendo sede, ela pode ter essa opção também."
+    },
+    {
+      "id": 349,
+      "start": 1443.0,
+      "end": 1446.0,
+      "text": " Ah, a mesma assim vai ser desvinculada."
+    },
+    {
+      "id": 350,
+      "start": 1446.0,
+      "end": 1450.0,
+      "text": " As outras empresas que estão vinculadas em endereço dela virtual, vai ter que ser desvinculado."
+    },
+    {
+      "id": 351,
+      "start": 1450.0,
+      "end": 1453.0,
+      "text": " Então a pessoa tem que pedir novamente esse vinculado?"
+    },
+    {
+      "id": 352,
+      "start": 1453.0,
+      "end": 1454.0,
+      "text": " Não."
+    },
+    {
+      "id": 353,
+      "start": 1454.0,
+      "end": 1462.0,
+      "text": " Quem pede o abrigado, ele não é vinculado, vamos lá."
+    },
+    {
+      "id": 354,
+      "start": 1462.0,
+      "end": 1468.0,
+      "text": " O que vincula a inscrição mobiliária é uma sede a própria sede."
+    },
+    {
+      "id": 355,
+      "start": 1468.0,
+      "end": 1470.0,
+      "text": " Aí ele tem os abrigados."
+    },
+    {
+      "id": 356,
+      "start": 1470.0,
+      "end": 1478.0,
+      "text": " Esse abrigado fica vinculado à inscrição e à viabilidade da sede."
+    },
+    {
+      "id": 357,
+      "start": 1478.0,
+      "end": 1486.0,
+      "text": " Quando a sede muda de endereço, ela muda tanto de endereço de inscrição mobiliária como"
+    },
+    {
+      "id": 358,
+      "start": 1486.0,
+      "end": 1488.0,
+      "text": " muda de número de viabilidade."
+    },
+    {
+      "id": 359,
+      "start": 1488.0,
+      "end": 1491.0,
+      "text": " Então esses abrigados precisam ser informados."
+    },
+    {
+      "id": 360,
+      "start": 1491.0,
+      "end": 1494.0,
+      "text": " Olha, a sede mudou de endereço."
+    },
+    {
+      "id": 361,
+      "start": 1494.0,
+      "end": 1498.0,
+      "text": " Entendeu?"
+    },
+    {
+      "id": 362,
+      "start": 1498.0,
+      "end": 1500.0,
+      "text": " É um pouco chato mesmo."
+    },
+    {
+      "id": 363,
+      "start": 1500.0,
+      "end": 1502.0,
+      "text": " É por isso que eu queria ter uma rei o real contigo, entendeu?"
+    },
+    {
+      "id": 364,
+      "start": 1502.0,
+      "end": 1503.0,
+      "text": " É sobre isso aí."
+    },
+    {
+      "id": 365,
+      "start": 1503.0,
+      "end": 1507.0,
+      "text": " Porque esse escritório virtual é um tópico a parte."
+    },
+    {
+      "id": 366,
+      "start": 1507.0,
+      "end": 1509.0,
+      "text": " Então assim, vamos lá."
+    },
+    {
+      "id": 367,
+      "start": 1509.0,
+      "end": 1512.0,
+      "text": " Como é que a inscrição..."
+    },
+    {
+      "id": 368,
+      "start": 1512.0,
+      "end": 1514.0,
+      "text": " Aqui."
+    },
+    {
+      "id": 369,
+      "start": 1514.0,
+      "end": 1516.0,
+      "text": " O abrigado."
+    },
+    {
+      "id": 370,
+      "start": 1516.0,
+      "end": 1521.0,
+      "text": " Eu botei aqui o número da viabilidade da sede."
+    },
+    {
+      "id": 371,
+      "start": 1521.0,
+      "end": 1526.0,
+      "text": " O número da viabilidade da sede vai trazer todos os abrigados."
+    },
+    {
+      "id": 372,
+      "start": 1526.0,
+      "end": 1527.0,
+      "text": " Por que?"
+    },
+    {
+      "id": 373,
+      "start": 1527.0,
+      "end": 1532.0,
+      "text": " Porque como eu te falei, aqui o abrigado tem o número da sede vinculado."
+    },
+    {
+      "id": 374,
+      "start": 1532.0,
+      "end": 1536.0,
+      "text": " Então o sistema atrás."
+    },
+    {
+      "id": 375,
+      "start": 1536.0,
+      "end": 1541.0,
+      "text": " Da mesma forma que se eu for fazer a pesquisa pela inscrição mobiliária,"
+    },
+    {
+      "id": 376,
+      "start": 1541.0,
+      "end": 1545.0,
+      "text": " ele vai trazer também a sede e os abrigados."
+    },
+    {
+      "id": 377,
+      "start": 1545.0,
+      "end": 1549.0,
+      "text": " Mas o que trava a inscrição mobiliária de fato é a sede."
+    },
+    {
+      "id": 378,
+      "start": 1549.0,
+      "end": 1552.0,
+      "text": " Não é o abrigado."
+    },
+    {
+      "id": 379,
+      "start": 1552.0,
+      "end": 1557.0,
+      "text": " Porque se não existir uma sede, não existe um abrigado."
+    },
+    {
+      "id": 380,
+      "start": 1557.0,
+      "end": 1559.0,
+      "text": " Entendeu?"
+    },
+    {
+      "id": 381,
+      "start": 1559.0,
+      "end": 1560.0,
+      "text": " Então eu acredito o quê?"
+    },
+    {
+      "id": 382,
+      "start": 1560.0,
+      "end": 1561.0,
+      "text": " Desvinculando."
+    },
+    {
+      "id": 383,
+      "start": 1561.0,
+      "end": 1562.0,
+      "text": " Eu acredito não."
+    },
+    {
+      "id": 384,
+      "start": 1562.0,
+      "end": 1563.0,
+      "text": " É justamente o que acontece hoje."
+    },
+    {
+      "id": 385,
+      "start": 1563.0,
+      "end": 1567.0,
+      "text": " Quando você desvincula a sede da inscrição mobiliária,"
+    },
+    {
+      "id": 386,
+      "start": 1567.0,
+      "end": 1570.0,
+      "text": " aquela inscrição fica livre para que qualquer outra empresa venha"
+    },
+    {
+      "id": 387,
+      "start": 1570.0,
+      "end": 1574.0,
+      "text": " se instalar, se assim for permitido pela lei."
+    },
+    {
+      "id": 388,
+      "start": 1574.0,
+      "end": 1579.0,
+      "text": " Quando essa inscrição ainda está vinculada a uma sede,"
+    },
+    {
+      "id": 389,
+      "start": 1579.0,
+      "end": 1583.0,
+      "text": " não pode outra empresa se instalar sem ser um abrigado"
+    },
+    {
+      "id": 390,
+      "start": 1583.0,
+      "end": 1587.0,
+      "text": " dessa sede que está livre vinculada."
+    },
+    {
+      "id": 391,
+      "start": 1587.0,
+      "end": 1590.0,
+      "text": " Sim."
+    },
+    {
+      "id": 392,
+      "start": 1590.0,
+      "end": 1594.0,
+      "text": " É assim que funciona."
+    },
+    {
+      "id": 393,
+      "start": 1594.0,
+      "end": 1601.0,
+      "text": " Aí vai ficar histórico de que aquela empresa já permaneceu abrigada"
+    },
+    {
+      "id": 394,
+      "start": 1601.0,
+      "end": 1603.0,
+      "text": " ou não fica histórico?"
+    },
+    {
+      "id": 395,
+      "start": 1603.0,
+      "end": 1604.0,
+      "text": " Não."
+    },
+    {
+      "id": 396,
+      "start": 1604.0,
+      "end": 1610.0,
+      "text": " Sim, sempre fica um histórico para saber que aquela empresa já se abrigou"
+    },
+    {
+      "id": 397,
+      "start": 1610.0,
+      "end": 1611.0,
+      "text": " naquela inscrição."
+    },
+    {
+      "id": 398,
+      "start": 1611.0,
+      "end": 1616.0,
+      "text": " Mas a inscrição não fica mais atrelada a ela."
+    },
+    {
+      "id": 399,
+      "start": 1616.0,
+      "end": 1617.0,
+      "text": " O que é que significa?"
+    },
+    {
+      "id": 400,
+      "start": 1617.0,
+      "end": 1620.0,
+      "text": " Que quando eu for fazer uma pesquisa aqui no meu sistema"
+    },
+    {
+      "id": 401,
+      "start": 1620.0,
+      "end": 1625.0,
+      "text": " e colocar a inscrição, não é para eu localizar a sede antiga."
+    },
+    {
+      "id": 402,
+      "start": 1625.0,
+      "end": 1627.0,
+      "text": " Entendeu?"
+    },
+    {
+      "id": 403,
+      "start": 1627.0,
+      "end": 1631.0,
+      "text": " Isso daí é mais para efeito de banco."
+    },
+    {
+      "id": 404,
+      "start": 1631.0,
+      "end": 1632.0,
+      "text": " Sim."
+    },
+    {
+      "id": 405,
+      "start": 1632.0,
+      "end": 1635.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 406,
+      "start": 1635.0,
+      "end": 1639.0,
+      "text": " Isso aí é mais para efeito de banco do que de usabilidade da gente aqui."
+    },
+    {
+      "id": 407,
+      "start": 1639.0,
+      "end": 1641.0,
+      "text": " Tá, beleza."
+    },
+    {
+      "id": 408,
+      "start": 1641.0,
+      "end": 1642.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 409,
+      "start": 1642.0,
+      "end": 1643.0,
+      "text": " Fechou."
+    },
+    {
+      "id": 410,
+      "start": 1643.0,
+      "end": 1645.0,
+      "text": " Aí uma outra coisa."
+    },
+    {
+      "id": 411,
+      "start": 1645.0,
+      "end": 1651.0,
+      "text": " Virimete normalmente os referentes solicitam para a gente uma lista dos vinculados."
+    },
+    {
+      "id": 412,
+      "start": 1651.0,
+      "end": 1657.0,
+      "text": " Aí eles passam para a gente o número da inscrição imobiliária."
+    },
+    {
+      "id": 413,
+      "start": 1657.0,
+      "end": 1661.0,
+      "text": " Aí eu queria que você gerasse o seguinte."
+    },
+    {
+      "id": 414,
+      "start": 1661.0,
+      "end": 1664.0,
+      "text": " Tá vendo aqui essa ação que eu estou fazendo?"
+    },
+    {
+      "id": 415,
+      "start": 1664.0,
+      "end": 1665.0,
+      "text": " É o menu."
+    },
+    {
+      "id": 416,
+      "start": 1665.0,
+      "end": 1670.0,
+      "text": " Aí eu venho aqui relatórios administrativos sede de escritório virtual."
+    },
+    {
+      "id": 417,
+      "start": 1670.0,
+      "end": 1676.0,
+      "text": " E aqui também tem a opção de eu tirar o relatório do tempo."
+    },
+    {
+      "id": 418,
+      "start": 1676.0,
+      "end": 1678.0,
+      "text": " Que é..."
+    },
+    {
+      "id": 419,
+      "start": 1678.0,
+      "end": 1680.0,
+      "text": " Eu acho que já te expliquei."
+    },
+    {
+      "id": 420,
+      "start": 1680.0,
+      "end": 1683.0,
+      "text": " Não foi a parte de relatório do tempo?"
+    },
+    {
+      "id": 421,
+      "start": 1683.0,
+      "end": 1686.0,
+      "text": " Deu uma pincelada possível, mas pode mostrar de novo."
+    },
+    {
+      "id": 422,
+      "start": 1686.0,
+      "end": 1687.0,
+      "text": " Tá."
+    },
+    {
+      "id": 423,
+      "start": 1687.0,
+      "end": 1690.0,
+      "text": " Então eu vou te mostrar o da sede e depois eu vou mostrar o do tempo."
+    },
+    {
+      "id": 424,
+      "start": 1690.0,
+      "end": 1696.0,
+      "text": " Clicando nesse da sede, eu coloco a viabilidade da sede."
+    },
+    {
+      "id": 425,
+      "start": 1696.0,
+      "end": 1697.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 426,
+      "start": 1697.0,
+      "end": 1699.0,
+      "text": " E pesquisa."
+    },
+    {
+      "id": 427,
+      "start": 1699.0,
+      "end": 1705.0,
+      "text": " Só que eu quero te pedir que você coloque para mim o ponto..."
+    },
+    {
+      "id": 428,
+      "start": 1705.0,
+      "end": 1707.0,
+      "text": " Dois pontos de pesquisa."
+    },
+    {
+      "id": 429,
+      "start": 1707.0,
+      "end": 1711.0,
+      "text": " O número da sede e o número da inscrição imobiliária."
+    },
+    {
+      "id": 430,
+      "start": 1711.0,
+      "end": 1714.0,
+      "text": " Lembra que a inscrição imobiliária sempre é a tela da sede."
+    },
+    {
+      "id": 431,
+      "start": 1714.0,
+      "end": 1718.0,
+      "text": " E os abrigados, certo?"
+    },
+    {
+      "id": 432,
+      "start": 1718.0,
+      "end": 1719.0,
+      "text": " Sim."
+    },
+    {
+      "id": 433,
+      "start": 1719.0,
+      "end": 1723.0,
+      "text": " E aí quando eu chamar aqui a pesquisa, trás está vendo?"
+    },
+    {
+      "id": 434,
+      "start": 1723.0,
+      "end": 1725.0,
+      "text": " Todos esses dados."
+    },
+    {
+      "id": 435,
+      "start": 1725.0,
+      "end": 1726.0,
+      "text": " Tá vendo?"
+    },
+    {
+      "id": 436,
+      "start": 1726.0,
+      "end": 1732.0,
+      "text": " Ou seja, a gente tem 31 registros de abrigados para essa habilidade aqui."
+    },
+    {
+      "id": 437,
+      "start": 1732.0,
+      "end": 1735.0,
+      "text": " Tá? A gente precisa desse relatório."
+    },
+    {
+      "id": 438,
+      "start": 1735.0,
+      "end": 1736.0,
+      "text": " Tá."
+    },
+    {
+      "id": 439,
+      "start": 1736.0,
+      "end": 1737.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 440,
+      "start": 1737.0,
+      "end": 1739.0,
+      "text": " Perfeito, perfeito."
+    },
+    {
+      "id": 441,
+      "start": 1739.0,
+      "end": 1741.0,
+      "text": " É outra coisa."
+    },
+    {
+      "id": 442,
+      "start": 1741.0,
+      "end": 1744.0,
+      "text": " Eu deixo te mostrar agora o do tempo."
+    },
+    {
+      "id": 443,
+      "start": 1744.0,
+      "end": 1746.0,
+      "text": " Como é que funciona o do tempo?"
+    },
+    {
+      "id": 444,
+      "start": 1746.0,
+      "end": 1751.0,
+      "text": " A gente tem aqui a opção de relatório que a gente pega, de viabilidade ou de revisão."
+    },
+    {
+      "id": 445,
+      "start": 1751.0,
+      "end": 1757.0,
+      "text": " As revisões são as alterações feitas em viabilidades existentes."
+    },
+    {
+      "id": 446,
+      "start": 1757.0,
+      "end": 1758.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 447,
+      "start": 1758.0,
+      "end": 1759.0,
+      "text": " Que é."
+    },
+    {
+      "id": 448,
+      "start": 1759.0,
+      "end": 1763.0,
+      "text": " Eu tenho uma empresa aqui no ACM, mas eu quero mudar para Brontas."
+    },
+    {
+      "id": 449,
+      "start": 1763.0,
+      "end": 1766.0,
+      "text": " Aí é uma revisão de alteração de endereço."
+    },
+    {
+      "id": 450,
+      "start": 1766.0,
+      "end": 1771.0,
+      "text": " Existe também a possibilidade de eu estar aqui nesse prédio e querer mudar de sala."
+    },
+    {
+      "id": 451,
+      "start": 1771.0,
+      "end": 1774.0,
+      "text": " Isso aí é uma revisão de alteração de espaço."
+    },
+    {
+      "id": 452,
+      "start": 1774.0,
+      "end": 1777.0,
+      "text": " Eu posso querer tirar uma atividade do meu CNPJ."
+    },
+    {
+      "id": 453,
+      "start": 1777.0,
+      "end": 1781.0,
+      "text": " Isso é uma revisão de exclusão de atividade."
+    },
+    {
+      "id": 454,
+      "start": 1781.0,
+      "end": 1785.0,
+      "text": " Eu posso querer incluir uma atividade no meu CNPJ."
+    },
+    {
+      "id": 455,
+      "start": 1785.0,
+      "end": 1790.0,
+      "text": " Isso é uma revisão de inclusão de atividade econômica."
+    },
+    {
+      "id": 456,
+      "start": 1790.0,
+      "end": 1791.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 457,
+      "start": 1791.0,
+      "end": 1793.0,
+      "text": " A gente tem quatro tipos de alteração."
+    },
+    {
+      "id": 458,
+      "start": 1793.0,
+      "end": 1795.0,
+      "text": " Quante essas alterações aí?"
+    },
+    {
+      "id": 459,
+      "start": 1795.0,
+      "end": 1799.0,
+      "text": " Eles falem direto no redi-sim e o redi-sim comunicar aos temas."
+    },
+    {
+      "id": 460,
+      "start": 1799.0,
+      "end": 1803.0,
+      "text": " Direto no redi-sim e aí tem a integração aqui."
+    },
+    {
+      "id": 461,
+      "start": 1803.0,
+      "end": 1804.0,
+      "text": " Entendi."
+    },
+    {
+      "id": 462,
+      "start": 1804.0,
+      "end": 1805.0,
+      "text": " Tá."
+    },
+    {
+      "id": 463,
+      "start": 1805.0,
+      "end": 1806.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 464,
+      "start": 1806.0,
+      "end": 1809.0,
+      "text": " Aí aqui a gente tem, tá vendo o tipo de serviço?"
+    },
+    {
+      "id": 465,
+      "start": 1809.0,
+      "end": 1810.0,
+      "text": " Tá vendo, ó?"
+    },
+    {
+      "id": 466,
+      "start": 1810.0,
+      "end": 1812.0,
+      "text": " Termos de viabilidade padrão."
+    },
+    {
+      "id": 467,
+      "start": 1812.0,
+      "end": 1814.0,
+      "text": " Atividade escritória virtual."
+    },
+    {
+      "id": 468,
+      "start": 1814.0,
+      "end": 1817.0,
+      "text": " Atividade em edifício comercial."
+    },
+    {
+      "id": 469,
+      "start": 1817.0,
+      "end": 1819.0,
+      "text": " Atividade em culto religioso."
+    },
+    {
+      "id": 470,
+      "start": 1819.0,
+      "end": 1825.0,
+      "text": " Normalmente são os que mais solicitam da gente em questão de relatório, né?"
+    },
+    {
+      "id": 471,
+      "start": 1825.0,
+      "end": 1827.0,
+      "text": " Pra mostrar pra o prefeito."
+    },
+    {
+      "id": 472,
+      "start": 1827.0,
+      "end": 1832.0,
+      "text": " Mas aí eu quero incluir aqui atividades em residência."
+    },
+    {
+      "id": 473,
+      "start": 1832.0,
+      "end": 1834.0,
+      "text": " Pode ser?"
+    },
+    {
+      "id": 474,
+      "start": 1834.0,
+      "end": 1836.0,
+      "text": " Pode ser."
+    },
+    {
+      "id": 475,
+      "start": 1836.0,
+      "end": 1837.0,
+      "text": " Tá."
+    },
+    {
+      "id": 476,
+      "start": 1837.0,
+      "end": 1839.0,
+      "text": " Atividades em residência, tá?"
+    },
+    {
+      "id": 477,
+      "start": 1839.0,
+      "end": 1841.0,
+      "text": " É..."
+    },
+    {
+      "id": 478,
+      "start": 1841.0,
+      "end": 1843.0,
+      "text": " Uma outra coisa que eu também queria te pedir."
+    },
+    {
+      "id": 479,
+      "start": 1843.0,
+      "end": 1849.0,
+      "text": " Tem como você acrescentar aqui a opção de selecionar Qnai?"
+    },
+    {
+      "id": 480,
+      "start": 1849.0,
+      "end": 1858.0,
+      "text": " Que aí viria o Qnai, os processos que foram solicitados com aquele Qnai?"
+    },
+    {
+      "id": 481,
+      "start": 1858.0,
+      "end": 1859.0,
+      "text": " Sim, tem como..."
+    },
+    {
+      "id": 482,
+      "start": 1859.0,
+      "end": 1860.0,
+      "text": " Tem como inclusive botar os filtros ainda."
+    },
+    {
+      "id": 483,
+      "start": 1860.0,
+      "end": 1862.0,
+      "text": " Se você pensar em mais filtros, já tá colocando."
+    },
+    {
+      "id": 484,
+      "start": 1862.0,
+      "end": 1863.0,
+      "text": " Ai, maravilha."
+    },
+    {
+      "id": 485,
+      "start": 1863.0,
+      "end": 1865.0,
+      "text": " Ele precisa do Qnai."
+    },
+    {
+      "id": 486,
+      "start": 1865.0,
+      "end": 1868.0,
+      "text": " Até então é só isso."
+    },
+    {
+      "id": 487,
+      "start": 1868.0,
+      "end": 1870.0,
+      "text": " Se você pensar em mais, pode mandar no WhatsApp."
+    },
+    {
+      "id": 488,
+      "start": 1870.0,
+      "end": 1872.0,
+      "text": " File que tem polémissão."
+    },
+    {
+      "id": 489,
+      "start": 1872.0,
+      "end": 1874.0,
+      "text": " Pode botar esse e esse filtro."
+    },
+    {
+      "id": 490,
+      "start": 1874.0,
+      "end": 1875.0,
+      "text": " Vai ajudar bastante."
+    },
+    {
+      "id": 491,
+      "start": 1875.0,
+      "end": 1876.0,
+      "text": " Só mandar."
+    },
+    {
+      "id": 492,
+      "start": 1876.0,
+      "end": 1878.0,
+      "text": " Tá bom, maravilha."
+    },
+    {
+      "id": 493,
+      "start": 1878.0,
+      "end": 1880.0,
+      "text": " E aqui a gente precisa do timing, tá?"
+    },
+    {
+      "id": 494,
+      "start": 1880.0,
+      "end": 1882.0,
+      "text": " Que a data inicial da tafina."
+    },
+    {
+      "id": 495,
+      "start": 1882.0,
+      "end": 1883.0,
+      "text": " Perfeito."
+    },
+    {
+      "id": 496,
+      "start": 1883.0,
+      "end": 1884.0,
+      "text": " Gerai Kv?"
+    },
+    {
+      "id": 497,
+      "start": 1884.0,
+      "end": 1885.0,
+      "text": " Oi?"
+    },
+    {
+      "id": 498,
+      "start": 1885.0,
+      "end": 1887.0,
+      "text": " E gerai o relatório por nós."
+    },
+    {
+      "id": 499,
+      "start": 1887.0,
+      "end": 1889.0,
+      "text": " Tá."
+    },
+    {
+      "id": 500,
+      "start": 1889.0,
+      "end": 1891.0,
+      "text": " Aqui eu posso escolher todos."
+    },
+    {
+      "id": 501,
+      "start": 1891.0,
+      "end": 1893.0,
+      "text": " Ou posso escolher especificamente um, tá?"
+    },
+    {
+      "id": 502,
+      "start": 1893.0,
+      "end": 1895.0,
+      "text": " Aqui eu deixo todos normalmente."
+    },
+    {
+      "id": 503,
+      "start": 1895.0,
+      "end": 1897.0,
+      "text": " E aí eu escolho um período."
+    },
+    {
+      "id": 504,
+      "start": 1897.0,
+      "end": 1899.0,
+      "text": " Foi mais ou menos o que eu fiz esse mês."
+    },
+    {
+      "id": 505,
+      "start": 1899.0,
+      "end": 1901.0,
+      "text": " Aí aqui embaixo eu escolho o status."
+    },
+    {
+      "id": 506,
+      "start": 1901.0,
+      "end": 1903.0,
+      "text": " Se eu quero deferido ou indeferido, tá?"
+    },
+    {
+      "id": 507,
+      "start": 1903.0,
+      "end": 1905.0,
+      "text": " Aqui são de processos já concluídos."
+    },
+    {
+      "id": 508,
+      "start": 1905.0,
+      "end": 1906.0,
+      "text": " Ah."
+    },
+    {
+      "id": 509,
+      "start": 1906.0,
+      "end": 1909.0,
+      "text": " Aí é o que primeiro pesquiso."
+    },
+    {
+      "id": 510,
+      "start": 1909.0,
+      "end": 1914.0,
+      "text": " O sistema traz para a minha relação desse período aqui que eu selecionei."
+    },
+    {
+      "id": 511,
+      "start": 1914.0,
+      "end": 1916.0,
+      "text": " E eu clico em gerar Excel."
+    },
+    {
+      "id": 512,
+      "start": 1916.0,
+      "end": 1920.0,
+      "text": " Aí aqui..."
+    },
+    {
+      "id": 513,
+      "start": 1920.0,
+      "end": 1921.0,
+      "text": " Dá uma olhadinha."
+    },
+    {
+      "id": 514,
+      "start": 1921.0,
+      "end": 1923.0,
+      "text": " Eu quero te pedir o seguinte."
+    },
+    {
+      "id": 515,
+      "start": 1923.0,
+      "end": 1925.0,
+      "text": " Essa parte aqui de gera sangue dan,"
+    },
+    {
+      "id": 516,
+      "start": 1925.0,
+      "end": 1928.0,
+      "text": " pagamento de dan, geração de dan complementar,"
+    },
+    {
+      "id": 517,
+      "start": 1928.0,
+      "end": 1930.0,
+      "text": " pagamento de dan."
+    },
+    {
+      "id": 518,
+      "start": 1930.0,
+      "end": 1933.0,
+      "text": " Se ele é como você tirar isso eu não quero esse mês."
+    },
+    {
+      "id": 519,
+      "start": 1933.0,
+      "end": 1934.0,
+      "text": " Encontre-se."
+    },
+    {
+      "id": 520,
+      "start": 1934.0,
+      "end": 1935.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 521,
+      "start": 1935.0,
+      "end": 1936.0,
+      "text": " No Geramagdan, né?"
+    },
+    {
+      "id": 522,
+      "start": 1936.0,
+      "end": 1937.0,
+      "text": " Comente."
+    },
+    {
+      "id": 523,
+      "start": 1937.0,
+      "end": 1938.0,
+      "text": " Aqui não, exatamente."
+    },
+    {
+      "id": 524,
+      "start": 1938.0,
+      "end": 1944.0,
+      "text": " A gente só inclamia o código para ser faz e lá ele chamou a taxa."
+    },
+    {
+      "id": 525,
+      "start": 1944.0,
+      "end": 1947.0,
+      "text": " Aqui para a gente não faz diferença."
+    },
+    {
+      "id": 526,
+      "start": 1947.0,
+      "end": 1952.0,
+      "text": " Aí aqui a data da emissão e aqui do lado,"
+    },
+    {
+      "id": 527,
+      "start": 1952.0,
+      "end": 1957.0,
+      "text": " eu quero, de fato, o tempo em horas."
+    },
+    {
+      "id": 528,
+      "start": 1957.0,
+      "end": 1961.0,
+      "text": " Hoje em dia, o que foi o mais prático fazer, tá?"
+    },
+    {
+      "id": 529,
+      "start": 1961.0,
+      "end": 1965.0,
+      "text": " Agora é hora ou dia útil, sempre, tá?"
+    },
+    {
+      "id": 530,
+      "start": 1965.0,
+      "end": 1966.0,
+      "text": " Sim."
+    },
+    {
+      "id": 531,
+      "start": 1966.0,
+      "end": 1971.0,
+      "text": " Tirando o final de semana e feriado cadastrado."
+    },
+    {
+      "id": 532,
+      "start": 1971.0,
+      "end": 1976.0,
+      "text": " Na aba emissão, data de abertura."
+    },
+    {
+      "id": 533,
+      "start": 1976.0,
+      "end": 1979.0,
+      "text": " No lugar da data de abertura, por exemplo,"
+    },
+    {
+      "id": 534,
+      "start": 1979.0,
+      "end": 1981.0,
+      "text": " você colocar só..."
+    },
+    {
+      "id": 535,
+      "start": 1985.0,
+      "end": 1987.0,
+      "text": " Como é que eu posso dizer?"
+    },
+    {
+      "id": 536,
+      "start": 1989.0,
+      "end": 1992.0,
+      "text": " Você bota a finalização do processo ou conclusão."
+    },
+    {
+      "id": 537,
+      "start": 1992.0,
+      "end": 1996.0,
+      "text": " Você pode colocar só a conclusão e coloque entre parênteses"
+    },
+    {
+      "id": 538,
+      "start": 1996.0,
+      "end": 2000.0,
+      "text": " qual é a unidade de tempo que você vai utilizar."
+    },
+    {
+      "id": 539,
+      "start": 2000.0,
+      "end": 2002.0,
+      "text": " O dia azul, três horas."
+    },
+    {
+      "id": 540,
+      "start": 2002.0,
+      "end": 2004.0,
+      "text": " Tá, tá?"
+    },
+    {
+      "id": 541,
+      "start": 2004.0,
+      "end": 2006.0,
+      "text": " Eu fico."
+    },
+    {
+      "id": 542,
+      "start": 2006.0,
+      "end": 2008.0,
+      "text": " Já dá uma enxugada para mim."
+    },
+    {
+      "id": 543,
+      "start": 2008.0,
+      "end": 2009.0,
+      "text": " Aí eu gero o relatório."
+    },
+    {
+      "id": 544,
+      "start": 2009.0,
+      "end": 2012.0,
+      "text": " O que eu gero é que o Excel, ele aparece exatamente assim."
+    },
+    {
+      "id": 545,
+      "start": 2012.0,
+      "end": 2014.0,
+      "text": " Então, presa não."
+    },
+    {
+      "id": 546,
+      "start": 2014.0,
+      "end": 2016.0,
+      "text": " Só o formato Excel que você quer,"
+    },
+    {
+      "id": 547,
+      "start": 2016.0,
+      "end": 2018.0,
+      "text": " tem outro formato que você queira PDF."
+    },
+    {
+      "id": 548,
+      "start": 2018.0,
+      "end": 2020.0,
+      "text": " PDF."
+    },
+    {
+      "id": 549,
+      "start": 2020.0,
+      "end": 2022.0,
+      "text": " Tá."
+    },
+    {
+      "id": 550,
+      "start": 2022.0,
+      "end": 2024.0,
+      "text": " E a puder gera já em PDF."
+    },
+    {
+      "id": 551,
+      "start": 2024.0,
+      "end": 2025.0,
+      "text": " Tá, antes."
+    },
+    {
+      "id": 552,
+      "start": 2025.0,
+      "end": 2027.0,
+      "text": " Perfeito."
+    },
+    {
+      "id": 553,
+      "start": 2027.0,
+      "end": 2032.0,
+      "text": " No time, mais essa parte do tempo."
+    },
+    {
+      "id": 554,
+      "start": 2032.0,
+      "end": 2034.0,
+      "text": " Viu."
+    },
+    {
+      "id": 555,
+      "start": 2034.0,
+      "end": 2036.0,
+      "text": " Hoje são esses dois problemas até então que a gente tem."
+    },
+    {
+      "id": 556,
+      "start": 2036.0,
+      "end": 2040.0,
+      "text": " A parte, eu já cheguei a te explicar da parte de que um processo"
+    },
+    {
+      "id": 557,
+      "start": 2040.0,
+      "end": 2043.0,
+      "text": " que foi expresso como um descritorial virtual,"
+    },
+    {
+      "id": 558,
+      "start": 2043.0,
+      "end": 2045.0,
+      "text": " por exemplo, ele pode ser puxado para análise?"
+    },
+    {
+      "id": 559,
+      "start": 2047.0,
+      "end": 2048.0,
+      "text": " Não."
+    },
+    {
+      "id": 560,
+      "start": 2048.0,
+      "end": 2052.0,
+      "text": " Não cheguei a te explicar, mas eu acho que eu vi lá a opção de mandar para análise"
+    },
+    {
+      "id": 561,
+      "start": 2052.0,
+      "end": 2054.0,
+      "text": " um processo."
+    },
+    {
+      "id": 562,
+      "start": 2054.0,
+      "end": 2056.0,
+      "text": " Tem essa opção lá."
+    },
+    {
+      "id": 563,
+      "start": 2056.0,
+      "end": 2058.0,
+      "text": " Tem essa opção lá."
+    },
+    {
+      "id": 564,
+      "start": 2058.0,
+      "end": 2060.0,
+      "text": " Aqui a gente faz assim."
+    },
+    {
+      "id": 565,
+      "start": 2060.0,
+      "end": 2064.0,
+      "text": " A gente seleciona aqui dados do processo e aparece a opção"
+    },
+    {
+      "id": 566,
+      "start": 2064.0,
+      "end": 2068.0,
+      "text": " e a processo de viabilidade para análise, tá vendo?"
+    },
+    {
+      "id": 567,
+      "start": 2068.0,
+      "end": 2073.0,
+      "text": " Aí a gente clica aqui e a gente informa o número do processo."
+    },
+    {
+      "id": 568,
+      "start": 2073.0,
+      "end": 2076.0,
+      "text": " A gente informa o número do processo pesquisa."
+    },
+    {
+      "id": 569,
+      "start": 2079.0,
+      "end": 2081.0,
+      "text": " Aí você pega outro."
+    },
+    {
+      "id": 570,
+      "start": 2081.0,
+      "end": 2083.0,
+      "text": " Esse aqui."
+    },
+    {
+      "id": 571,
+      "start": 2083.0,
+      "end": 2085.0,
+      "text": " Vou celular para as pessoas."
+    },
+    {
+      "id": 572,
+      "start": 2089.0,
+      "end": 2091.0,
+      "text": " Tá com problema aqui."
+    },
+    {
+      "id": 573,
+      "start": 2091.0,
+      "end": 2095.0,
+      "text": " Eu identifico que quando a gente pesquisa, ele aparece aqui esse dado aqui."
+    },
+    {
+      "id": 574,
+      "start": 2097.0,
+      "end": 2099.0,
+      "text": " Tá vendo?"
+    },
+    {
+      "id": 575,
+      "start": 2099.0,
+      "end": 2103.0,
+      "text": " Ele aparece exatamente esse dado aqui porque ele já foi concluído"
+    },
+    {
+      "id": 576,
+      "start": 2103.0,
+      "end": 2105.0,
+      "text": " e tem a opção em caminhar para análise."
+    },
+    {
+      "id": 577,
+      "start": 2105.0,
+      "end": 2108.0,
+      "text": " Então, ele tem a opção de fazer um processo de viabilidade."
+    },
+    {
+      "id": 578,
+      "start": 2108.0,
+      "end": 2112.0,
+      "text": " Ele tem a opção de fazer um processo de viabilidade, porque ele já foi concluído"
+    },
+    {
+      "id": 579,
+      "start": 2112.0,
+      "end": 2114.0,
+      "text": " e tem a opção em caminhar para análise."
+    },
+    {
+      "id": 580,
+      "start": 2114.0,
+      "end": 2118.0,
+      "text": " Eu clico, o processo vai direto para a caixa do setor."
+    },
+    {
+      "id": 581,
+      "start": 2118.0,
+      "end": 2121.0,
+      "text": " Aí ele continua para a gente ver se ele estiver diferido,"
+    },
+    {
+      "id": 582,
+      "start": 2121.0,
+      "end": 2124.0,
+      "text": " ele continua, deferido, mais em análise ou ele muda de ferido para análise?"
+    },
+    {
+      "id": 583,
+      "start": 2124.0,
+      "end": 2126.0,
+      "text": " Ele muda para em análise."
+    },
+    {
+      "id": 584,
+      "start": 2126.0,
+      "end": 2128.0,
+      "text": " Entendi."
+    },
+    {
+      "id": 585,
+      "start": 2128.0,
+      "end": 2130.0,
+      "text": " E a Cephaya tem que ser informada aí."
+    },
+    {
+      "id": 586,
+      "start": 2130.0,
+      "end": 2132.0,
+      "text": " Isso porque a Cephaya foi informada de que está diferida."
+    },
+    {
+      "id": 587,
+      "start": 2132.0,
+      "end": 2134.0,
+      "text": " Aí não, né?"
+    },
+    {
+      "id": 588,
+      "start": 2134.0,
+      "end": 2136.0,
+      "text": " Só se ela foi indiferida, né?"
+    },
+    {
+      "id": 589,
+      "start": 2136.0,
+      "end": 2138.0,
+      "text": " Só se o status muda."
+    },
+    {
+      "id": 590,
+      "start": 2138.0,
+      "end": 2140.0,
+      "text": " Lembra dos status que eu te mandei?"
+    },
+    {
+      "id": 591,
+      "start": 2140.0,
+      "end": 2144.0,
+      "text": " Castado, revogado ou desativado?"
+    },
+    {
+      "id": 592,
+      "start": 2144.0,
+      "end": 2146.0,
+      "text": " Aí a gente caminha."
+    },
+    {
+      "id": 593,
+      "start": 2146.0,
+      "end": 2148.0,
+      "text": " Se não tiver alteração de status,"
+    },
+    {
+      "id": 594,
+      "start": 2148.0,
+      "end": 2150.0,
+      "text": " não se faz necessária."
+    },
+    {
+      "id": 595,
+      "start": 2150.0,
+      "end": 2152.0,
+      "text": " Perfeito."
+    },
+    {
+      "id": 596,
+      "start": 2152.0,
+      "end": 2154.0,
+      "text": " Tá?"
+    },
+    {
+      "id": 597,
+      "start": 2154.0,
+      "end": 2156.0,
+      "text": " Perfeito."
+    },
+    {
+      "id": 598,
+      "start": 2156.0,
+      "end": 2158.0,
+      "text": " Bom, não mais é isso."
+    },
+    {
+      "id": 599,
+      "start": 2158.0,
+      "end": 2160.0,
+      "text": " E aí qualquer dúvida que você vê,"
+    },
+    {
+      "id": 600,
+      "start": 2160.0,
+      "end": 2162.0,
+      "text": " tira comigo que a gente converta."
+    },
+    {
+      "id": 601,
+      "start": 2162.0,
+      "end": 2164.0,
+      "text": " Pronto, pronto."
+    },
+    {
+      "id": 602,
+      "start": 2164.0,
+      "end": 2166.0,
+      "text": " Obrigado, beleza."
+    },
+    {
+      "id": 603,
+      "start": 2166.0,
+      "end": 2168.0,
+      "text": " Nada, despoenho, te agradeço também."
+    },
+    {
+      "id": 604,
+      "start": 2168.0,
+      "end": 2170.0,
+      "text": " Vou adiantar que as pessoas que você mandou ontem,"
+    },
+    {
+      "id": 605,
+      "start": 2170.0,
+      "end": 2172.0,
+      "text": " já adiantei algumas, vou adiantar outras."
+    },
+    {
+      "id": 606,
+      "start": 2172.0,
+      "end": 2174.0,
+      "text": " Comcomindo para isso aí."
+    },
+    {
+      "id": 607,
+      "start": 2174.0,
+      "end": 2176.0,
+      "text": " Eu já gerei a penicil que vou mandar no teu WhatsApp,"
+    },
+    {
+      "id": 608,
+      "start": 2176.0,
+      "end": 2178.0,
+      "text": " a gente vai falar com o Deirão,"
+    },
+    {
+      "id": 609,
+      "start": 2178.0,
+      "end": 2180.0,
+      "text": " só para deixar que lembras."
+    },
+    {
+      "id": 610,
+      "start": 2180.0,
+      "end": 2182.0,
+      "text": " Tá certo. E eu vou te mandar aqui agora a lista de atividades"
+    },
+    {
+      "id": 611,
+      "start": 2182.0,
+      "end": 2184.0,
+      "text": " que são permitidas"
+    },
+    {
+      "id": 612,
+      "start": 2184.0,
+      "end": 2186.0,
+      "text": " para abrigados de escritora Vincuado."
+    },
+    {
+      "id": 613,
+      "start": 2186.0,
+      "end": 2188.0,
+      "text": " Tá, tá bom."
+    },
+    {
+      "id": 614,
+      "start": 2188.0,
+      "end": 2190.0,
+      "text": " Tá bom, é um link que a gente tem aqui na cedô."
+    },
+    {
+      "id": 615,
+      "start": 2190.0,
+      "end": 2192.0,
+      "text": " E aí eu te mando."
+    },
+    {
+      "id": 616,
+      "start": 2192.0,
+      "end": 2194.0,
+      "text": " Tá bom?"
+    },
+    {
+      "id": 617,
+      "start": 2194.0,
+      "end": 2196.0,
+      "text": " Tá, tchau."
+    },
+    {
+      "id": 618,
+      "start": 2196.0,
+      "end": 2198.0,
+      "text": " Tchau."
+    }
+  ]
+}

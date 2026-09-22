@@ -1,0 +1,3206 @@
+{
+  "identificacao": {
+    "empresa": "Sudoeste Informática",
+    "aplicacao": "Viabiliza — Sistema de Licenciamento Eletrônico da SEDUR",
+    "projeto": "Contagem IFPUG - Código Fonte Atualizada",
+    "dv_numero": "DV-SILE-003",
+    "responsavel": "Equipe de Análise — Sudoeste Informática (via Análise de Código)",
+    "versao": "1.1",
+    "tipo_contagem": "desenvolvimento",
+    "rs_por_pf": 700,
+    "proposito": "Recontagem atualizada do Viabiliza extraindo ALIs a partir de Models, AIEs de Services, e Funções Transacionais de Controllers. Otimizado para refletir com precisão CRUDs (Telas/Funções) agrupadas com os arquivos lógicos. Segue IFPUG 4.3.1 (PT-BR)."
+  },
+  "termo": {
+    "sistema": "Viabiliza — SISTEMA DE LICENCIAMENTO ELETRÔNICO",
+    "nome_curto": "Viabiliza",
+    "total_pf": 0,
+    "data": "Salvador-BA, 17 de setembro de 2026",
+    "cliente": "Prefeitura Municipal de Salvador",
+    "cliente_linha2": "Secretaria Municipal de Desenvolvimento Urbano e Sustentabilidade — SEDUR",
+    "cliente_contratante": "Prefeitura Municipal de Salvador",
+    "processo_licitatorio": "A definir",
+    "contrato": "A definir",
+    "processo_administrativo": "A definir",
+    "planilha_anexa": "contagem-atualizada-codigo.xlsx",
+    "elaborado_por": "Equipe de Análise — Sudoeste Informática",
+    "elaborado_cargo": "Analista de Pontos de Função"
+  },
+  "grupos": [
+    {
+      "id": "G_AIE",
+      "nome": "Integrações (AIEs)",
+      "itens": [
+        {
+          "nome": "Integração/Dados Externos - LouosEnquadramentoService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de LouosEnquadramentoService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - LouosMaintenanceService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de LouosMaintenanceService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - LouosQuadro10ImportService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de LouosQuadro10ImportService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - LouosDraftService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de LouosDraftService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - LouosQuadro7ImportService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de LouosQuadro7ImportService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - LouosQuadro11ImportService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de LouosQuadro11ImportService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - LouosSandboxSimulationService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de LouosSandboxSimulationService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - GeoLayerService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de GeoLayerService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - GeoServerWfsZonaClient",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de GeoServerWfsZonaClient.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - ReginRecebeService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de ReginRecebeService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - ReginProtocoloSimulacaoService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de ReginProtocoloSimulacaoService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - RuleVersionService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de RuleVersionService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Integração/Dados Externos - GeoBairroIndicadorService",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Referência externa/motor de regras obtida via integração. Mapeado de GeoBairroIndicadorService.php.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        }
+      ]
+    },
+    {
+      "id": "G_VerificacaoDocumento",
+      "nome": "Funcionalidade: VerificacaoDocumento",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no VerificacaoDocumentoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_NotificationCenter",
+      "nome": "Funcionalidade: NotificationCenter",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no NotificationCenterController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: markAsRead",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método markAsRead no NotificationCenterController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: markAllAsRead",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método markAllAsRead no NotificationCenterController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ComunicacaoHistorico",
+      "nome": "Funcionalidade: ComunicacaoHistorico",
+      "itens": [
+        {
+          "nome": "Ação: portal",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método portal no ComunicacaoHistoricoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: gestao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método gestao no ComunicacaoHistoricoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Profile",
+      "nome": "Funcionalidade: Profile",
+      "itens": [
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no ProfileController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Password",
+      "nome": "Funcionalidade: Password",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no PasswordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no PasswordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_SolicitacaoImovel",
+      "nome": "Funcionalidade: SolicitacaoImovel",
+      "itens": [
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no SolicitacaoImovelController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CompanyCnae",
+      "nome": "Funcionalidade: CompanyCnae",
+      "itens": [
+        {
+          "nome": "Ação: updatePrimary",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updatePrimary no CompanyCnaeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: updateSecondaries",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updateSecondaries no CompanyCnaeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ConsultaViabilidade",
+      "nome": "Funcionalidade: ConsultaViabilidade",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no ConsultaViabilidadeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: endereco",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método endereco no ConsultaViabilidadeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: cnae",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método cnae no ConsultaViabilidadeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: inscricao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método inscricao no ConsultaViabilidadeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ConsultaProtocolo",
+      "nome": "Funcionalidade: ConsultaProtocolo",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no ConsultaProtocoloController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Company",
+      "nome": "Funcionalidade: Company",
+      "itens": [
+        {
+          "nome": "Dados - Company",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Company.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no CompanyController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no CompanyController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no CompanyController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no CompanyController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_AccessHistory",
+      "nome": "Funcionalidade: AccessHistory",
+      "itens": [
+        {
+          "nome": "Ação: __invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no AccessHistoryController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_HistoricoConsulta",
+      "nome": "Funcionalidade: HistoricoConsulta",
+      "itens": [
+        {
+          "nome": "Ação: __invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no HistoricoConsultaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Dashboard",
+      "nome": "Funcionalidade: Dashboard",
+      "itens": [
+        {
+          "nome": "Ação: __invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no DashboardController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_SolicitacaoSimulacao",
+      "nome": "Funcionalidade: SolicitacaoSimulacao",
+      "itens": [
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no SolicitacaoSimulacaoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Protocolo",
+      "nome": "Funcionalidade: Protocolo",
+      "itens": [
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no ProtocoloController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CnaeSearch",
+      "nome": "Funcionalidade: CnaeSearch",
+      "itens": [
+        {
+          "nome": "Ação: __invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no CnaeSearchController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CancelamentoSolicitacao",
+      "nome": "Funcionalidade: CancelamentoSolicitacao",
+      "itens": [
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no CancelamentoSolicitacaoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CompanyLink",
+      "nome": "Funcionalidade: CompanyLink",
+      "itens": [
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no CompanyLinkController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_SolicitacaoAtividade",
+      "nome": "Funcionalidade: SolicitacaoAtividade",
+      "itens": [
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no SolicitacaoAtividadeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_LgpdTerm",
+      "nome": "Funcionalidade: LgpdTerm",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no LgpdTermController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: accept",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método accept no LgpdTermController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ConsultaProtocoloPublica",
+      "nome": "Funcionalidade: ConsultaProtocoloPublica",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no ConsultaProtocoloPublicaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Procuration",
+      "nome": "Funcionalidade: Procuration",
+      "itens": [
+        {
+          "nome": "Dados - Procuration",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Procuration.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no ProcurationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no ProcurationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no ProcurationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_SolicitacaoDocumento",
+      "nome": "Funcionalidade: SolicitacaoDocumento",
+      "itens": [
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no SolicitacaoDocumentoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Exportar / Relatório",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método download no SolicitacaoDocumentoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no SolicitacaoDocumentoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Representation",
+      "nome": "Funcionalidade: Representation",
+      "itens": [
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no RepresentationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no RepresentationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Solicitacao",
+      "nome": "Funcionalidade: Solicitacao",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no SolicitacaoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no SolicitacaoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CnpjLookup",
+      "nome": "Funcionalidade: CnpjLookup",
+      "itens": [
+        {
+          "nome": "Ação: __invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no CnpjLookupController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ComprovanteProtocolo",
+      "nome": "Funcionalidade: ComprovanteProtocolo",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no ComprovanteProtocoloController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_GovBrLogin",
+      "nome": "Funcionalidade: GovBrLogin",
+      "itens": [
+        {
+          "nome": "Ação: redirect",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método redirect no GovBrLoginController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: callback",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método callback no GovBrLoginController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_PendenciaResposta",
+      "nome": "Funcionalidade: PendenciaResposta",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no PendenciaRespostaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: responder",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método responder no PendenciaRespostaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ReginRecebe",
+      "nome": "Funcionalidade: ReginRecebe",
+      "itens": [
+        {
+          "nome": "Ação: ping",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método ping no ReginRecebeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no ReginRecebeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Exportacao",
+      "nome": "Funcionalidade: Exportacao",
+      "itens": [
+        {
+          "nome": "Exportar / Relatório",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método download no ExportacaoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_DocumentRequirement",
+      "nome": "Funcionalidade: DocumentRequirement",
+      "itens": [
+        {
+          "nome": "Dados - DocumentRequirement",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model DocumentRequirement.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no DocumentRequirementController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no DocumentRequirementController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no DocumentRequirementController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: toggle",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggle no DocumentRequirementController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: syncCnaes",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método syncCnaes no DocumentRequirementController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ProcessoPendencia",
+      "nome": "Funcionalidade: ProcessoPendencia",
+      "itens": [
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no ProcessoPendenciaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: cancelar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método cancelar no ProcessoPendenciaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Precedente",
+      "nome": "Funcionalidade: Precedente",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no PrecedenteController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Holiday",
+      "nome": "Funcionalidade: Holiday",
+      "itens": [
+        {
+          "nome": "Dados - Holiday",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Holiday.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no HolidayController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no HolidayController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no HolidayController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no HolidayController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ForgotPassword",
+      "nome": "Funcionalidade: ForgotPassword",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no ForgotPasswordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no ForgotPasswordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Processo",
+      "nome": "Funcionalidade: Processo",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no ProcessoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: fila",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método fila no ProcessoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no ProcessoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: atualizarStatusAnalise",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método atualizarStatusAnalise no ProcessoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_GeoServerLayer",
+      "nome": "Funcionalidade: GeoServerLayer",
+      "itens": [
+        {
+          "nome": "Dados - GeoServerLayer",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model GeoServerLayer.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no GeoServerLayerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no GeoServerLayerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no GeoServerLayerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no GeoServerLayerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CondicionanteAutocomplete",
+      "nome": "Funcionalidade: CondicionanteAutocomplete",
+      "itens": [
+        {
+          "nome": "Ação: __invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no CondicionanteAutocompleteController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Cnae",
+      "nome": "Funcionalidade: Cnae",
+      "itens": [
+        {
+          "nome": "Dados - Cnae",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Cnae.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no CnaeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no CnaeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no CnaeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: updateSituacao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updateSituacao no CnaeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no CnaeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: storeCondicionante",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método storeCondicionante no CnaeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: updateCondicionante",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updateCondicionante no CnaeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: destroyCondicionante",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método destroyCondicionante no CnaeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Sector",
+      "nome": "Funcionalidade: Sector",
+      "itens": [
+        {
+          "nome": "Dados - Sector",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Sector.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no SectorController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no SectorController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no SectorController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no SectorController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: syncAnalysts",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método syncAnalysts no SectorController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Login",
+      "nome": "Funcionalidade: Login",
+      "itens": [
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no LoginController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no LoginController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Contingencia",
+      "nome": "Funcionalidade: Contingencia",
+      "itens": [
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no ContingenciaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_LouosSandbox",
+      "nome": "Funcionalidade: LouosSandbox",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no LouosSandboxController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: simulate",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método simulate no LouosSandboxController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: publish",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método publish no LouosSandboxController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ReginIntegration",
+      "nome": "Funcionalidade: ReginIntegration",
+      "itens": [
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no ReginIntegrationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: test",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método test no ReginIntegrationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_CaixaSetor",
+      "nome": "Funcionalidade: CaixaSetor",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no CaixaSetorController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: distribuir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método distribuir no CaixaSetorController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: assumir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método assumir no CaixaSetorController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Abuso",
+      "nome": "Funcionalidade: Abuso",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no AbusoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: confirmar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método confirmar no AbusoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: descartar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método descartar no AbusoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Role",
+      "nome": "Funcionalidade: Role",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no RoleController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no RoleController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no RoleController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no RoleController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ProcessoDecisao",
+      "nome": "Funcionalidade: ProcessoDecisao",
+      "itens": [
+        {
+          "nome": "Ação: __invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no ProcessoDecisaoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_UserManagement",
+      "nome": "Funcionalidade: UserManagement",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no UserManagementController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no UserManagementController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: updateRole",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updateRole no UserManagementController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_LouosDraft",
+      "nome": "Funcionalidade: LouosDraft",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no LouosDraftController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: manual",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método manual no LouosDraftController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: open",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método open no LouosDraftController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: storeLinha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método storeLinha no LouosDraftController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: updateLinha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método updateLinha no LouosDraftController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: destroyLinha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método destroyLinha no LouosDraftController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: importar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método importar no LouosDraftController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: publish",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método publish no LouosDraftController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: discard",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método discard no LouosDraftController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: modeloCsv",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método modeloCsv no LouosDraftController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Parameter",
+      "nome": "Funcionalidade: Parameter",
+      "itens": [
+        {
+          "nome": "Dados - Parameter",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Parameter.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no ParameterController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no ParameterController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: history",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método history no ParameterController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_EscritorioVirtualDesvinculacao",
+      "nome": "Funcionalidade: EscritorioVirtualDesvinculacao",
+      "itens": [
+        {
+          "nome": "Ação: __invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no EscritorioVirtualDesvinculacaoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ResultadoExpresso",
+      "nome": "Funcionalidade: ResultadoExpresso",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no ResultadoExpressoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no ResultadoExpressoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_PropertyType",
+      "nome": "Funcionalidade: PropertyType",
+      "itens": [
+        {
+          "nome": "Dados - PropertyType",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model PropertyType.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no PropertyTypeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no PropertyTypeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no PropertyTypeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no PropertyTypeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ResetPassword",
+      "nome": "Funcionalidade: ResetPassword",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no ResetPasswordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no ResetPasswordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Geocode",
+      "nome": "Funcionalidade: Geocode",
+      "itens": [
+        {
+          "nome": "Ação: __invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no GeocodeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_MalhaFina",
+      "nome": "Funcionalidade: MalhaFina",
+      "itens": [
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no MalhaFinaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_EmailLog",
+      "nome": "Funcionalidade: EmailLog",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no EmailLogController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_GeoLayer",
+      "nome": "Funcionalidade: GeoLayer",
+      "itens": [
+        {
+          "nome": "Dados - GeoLayer",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model GeoLayer.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no GeoLayerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no GeoLayerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_TvlDocument",
+      "nome": "Funcionalidade: TvlDocument",
+      "itens": [
+        {
+          "nome": "Dados - TvlDocument",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model TvlDocument.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no TvlDocumentController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Exportar / Relatório",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método download no TvlDocumentController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Louos",
+      "nome": "Funcionalidade: Louos",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no LouosController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: publish",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método publish no LouosController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: activate",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método activate no LouosController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_EscritorioVirtualAnexos",
+      "nome": "Funcionalidade: EscritorioVirtualAnexos",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no EscritorioVirtualAnexosController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no EscritorioVirtualAnexosController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: publicar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método publicar no EscritorioVirtualAnexosController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_AssistedAttendance",
+      "nome": "Funcionalidade: AssistedAttendance",
+      "itens": [
+        {
+          "nome": "Dados - AssistedAttendance",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AssistedAttendance.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no AssistedAttendanceController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no AssistedAttendanceController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: storeSolicitacao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método storeSolicitacao no AssistedAttendanceController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no AssistedAttendanceController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ProcessoBusca",
+      "nome": "Funcionalidade: ProcessoBusca",
+      "itens": [
+        {
+          "nome": "Ação: __invoke",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método __invoke no ProcessoBuscaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_RiskTrigger",
+      "nome": "Funcionalidade: RiskTrigger",
+      "itens": [
+        {
+          "nome": "Dados - RiskTrigger",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model RiskTrigger.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no RiskTriggerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no RiskTriggerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no RiskTriggerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_AuditoriaPreditiva",
+      "nome": "Funcionalidade: AuditoriaPreditiva",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no AuditoriaPreditivaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: confirmar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método confirmar no AuditoriaPreditivaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: descartar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método descartar no AuditoriaPreditivaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_InscricaoImobiliariaIntegration",
+      "nome": "Funcionalidade: InscricaoImobiliariaIntegration",
+      "itens": [
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no InscricaoImobiliariaIntegrationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: test",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método test no InscricaoImobiliariaIntegrationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Relatorio",
+      "nome": "Funcionalidade: Relatorio",
+      "itens": [
+        {
+          "nome": "Ação: indicadores",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método indicadores no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: tempo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método tempo no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: produtividade",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método produtividade no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: quedas",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método quedas no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: geoBairro",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método geoBairro no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: saturacao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método saturacao no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: escritorioVirtual",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método escritorioVirtual no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: tempoEmissaoTvl",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método tempoEmissaoTvl no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: slaVencimentos",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método slaVencimentos no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: pendencias",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método pendencias no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: contingencia",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método contingencia no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: comunicacoesFalhas",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método comunicacoesFalhas no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: trilha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método trilha no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: trilhaImprimir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método trilhaImprimir no RelatorioController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_AnalysisRecord",
+      "nome": "Funcionalidade: AnalysisRecord",
+      "itens": [
+        {
+          "nome": "Dados - AnalysisRecord",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AnalysisRecord.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no AnalysisRecordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: autosave",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método autosave no AnalysisRecordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: finalizar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método finalizar no AnalysisRecordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: concluirProcesso",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método concluirProcesso no AnalysisRecordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: novaRevisao",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método novaRevisao no AnalysisRecordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: sugerirParecer",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método sugerirParecer no AnalysisRecordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: gerarResumo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método gerarResumo no AnalysisRecordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: diff",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método diff no AnalysisRecordController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_AiConfiguration",
+      "nome": "Funcionalidade: AiConfiguration",
+      "itens": [
+        {
+          "nome": "Dados - AiConfiguration",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AiConfiguration.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no AiConfigurationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no AiConfigurationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no AiConfigurationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no AiConfigurationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: test",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método test no AiConfigurationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no AiConfigurationController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_IndeferimentoDocument",
+      "nome": "Funcionalidade: IndeferimentoDocument",
+      "itens": [
+        {
+          "nome": "Dados - IndeferimentoDocument",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model IndeferimentoDocument.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no IndeferimentoDocumentController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Exportar / Relatório",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método download no IndeferimentoDocumentController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ReginProtocoloSimulacao",
+      "nome": "Funcionalidade: ReginProtocoloSimulacao",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no ReginProtocoloSimulacaoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: simulate",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método simulate no ReginProtocoloSimulacaoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no ReginProtocoloSimulacaoController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_ViabilityServiceType",
+      "nome": "Funcionalidade: ViabilityServiceType",
+      "itens": [
+        {
+          "nome": "Dados - ViabilityServiceType",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityServiceType.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no ViabilityServiceTypeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no ViabilityServiceTypeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no ViabilityServiceTypeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no ViabilityServiceTypeController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_EnviarParaAnalise",
+      "nome": "Funcionalidade: EnviarParaAnalise",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no EnviarParaAnaliseController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: pesquisar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método pesquisar no EnviarParaAnaliseController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: enviar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método enviar no EnviarParaAnaliseController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_LegalTerm",
+      "nome": "Funcionalidade: LegalTerm",
+      "itens": [
+        {
+          "nome": "Dados - LegalTerm",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model LegalTerm.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no LegalTermController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no LegalTermController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no LegalTermController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: publicar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método publicar no LegalTermController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no LegalTermController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Territory",
+      "nome": "Funcionalidade: Territory",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no TerritoryController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: identify",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método identify no TerritoryController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: validateLocation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método validateLocation no TerritoryController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_StandardText",
+      "nome": "Funcionalidade: StandardText",
+      "itens": [
+        {
+          "nome": "Dados - StandardText",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model StandardText.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no StandardTextController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no StandardTextController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no StandardTextController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no StandardTextController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Zona",
+      "nome": "Funcionalidade: Zona",
+      "itens": [
+        {
+          "nome": "Dados - Zona",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Zona.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no ZonaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no ZonaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no ZonaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: toggleActivation",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método toggleActivation no ZonaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_Auditoria",
+      "nome": "Funcionalidade: Auditoria",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no AuditoriaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Exportar / Relatório",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método export no AuditoriaController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_LgpdMonitor",
+      "nome": "Funcionalidade: LgpdMonitor",
+      "itens": [
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no LgpdMonitorController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_TermoLgpd",
+      "nome": "Funcionalidade: TermoLgpd",
+      "itens": [
+        {
+          "nome": "Detalhar (Consulta)",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método show no TermoLgpdController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: accept",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método accept no TermoLgpdController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_EmailServer",
+      "nome": "Funcionalidade: EmailServer",
+      "itens": [
+        {
+          "nome": "Dados - EmailServer",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model EmailServer.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Consultar / Listar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método index no EmailServerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Incluir / Salvar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método store no EmailServerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método update no EmailServerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Processo elementar mapeado do método destroy no EmailServerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        },
+        {
+          "nome": "Ação: test",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Processo elementar mapeado do método test no EmailServerController.php.",
+          "citacao_cpm": "Parte 2 Cap 7."
+        }
+      ]
+    },
+    {
+      "id": "G_OUTROS",
+      "nome": "Cadastros Auxiliares (ALIs sem módulo direto)",
+      "itens": [
+        {
+          "nome": "Dados - GovBrAccount",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model GovBrAccount.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - FineMeshReferral",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model FineMeshReferral.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - RiskClassification",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model RiskClassification.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - LouosQuadro10Permissao",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model LouosQuadro10Permissao.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - LouosQuadro7Faixa",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model LouosQuadro7Faixa.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AnalysisDivergence",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AnalysisDivergence.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ReginSimulacaoExecucao",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ReginSimulacaoExecucao.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - CompanyUser",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model CompanyUser.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ExportFile",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ExportFile.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - PredictiveAnomaly",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model PredictiveAnomaly.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AnalysisStatusTransition",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AnalysisStatusTransition.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - LegalTermAcceptance",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model LegalTermAcceptance.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - LouosQuadro11CondicaoVia",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model LouosQuadro11CondicaoVia.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AiPrecedentEmbedding",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AiPrecedentEmbedding.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AbuseAlert",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AbuseAlert.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - RiskCondicionante",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model RiskCondicionante.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - User",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model User.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - SanitaryRiskClassification",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model SanitaryRiskClassification.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ViabilityRequest",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityRequest.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ViabilityRequestDocument",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityRequestDocument.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - PropertyTypeAlias",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model PropertyTypeAlias.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ViabilityQuery",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityQuery.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - TvlSequence",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model TvlSequence.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - Communication",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Communication.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - SefazNotification",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model SefazNotification.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ViabilityRequestTransition",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityRequestTransition.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - RuleVersion",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model RuleVersion.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - Activity",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model Activity.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ViabilityDecision",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ViabilityDecision.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - GeoFeature",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model GeoFeature.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ExpressoQueda",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ExpressoQueda.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ProtocolSequence",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ProtocolSequence.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - VirtualOfficeInscriptionLock",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model VirtualOfficeInscriptionLock.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AnalysisPendency",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AnalysisPendency.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - AiSuggestion",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model AiSuggestion.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - ReginRecebimento",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model ReginRecebimento.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        },
+        {
+          "nome": "Dados - VirtualOfficeActivityCnae",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo lógico mantido pela aplicação. Mapeado do model VirtualOfficeActivityCnae.php. Tabela relacional de negócio.",
+          "citacao_cpm": "Parte 2 Cap 6."
+        }
+      ]
+    }
+  ],
+  "escopo_macro": [
+    "1. Levantamento automático de ALI baseado em Models (Laravel).",
+    "2. Levantamento automático de AIE baseado em Integrações nos Services.",
+    "3. Mapeamento de Transações (EE/CE/SE) em Módulos via Controllers."
+  ],
+  "proposta": {
+    "objeto": "Contagem de pontos de função extraída estaticamente da base de código, revisada e organizada por tela/função.",
+    "validade_dias": 30,
+    "prazo_execucao_dias": 10,
+    "condicoes_pagamento": "Pagamento único após entrega."
+  }
+}

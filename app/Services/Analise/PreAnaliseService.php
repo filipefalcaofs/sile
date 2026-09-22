@@ -50,7 +50,6 @@ class PreAnaliseService
         private readonly SolicitacaoViabilityResolver $resolver,
         private readonly AuditService $audit,
         private readonly MotivoAnaliseComposer $motivos,
-        private readonly JustificativaFundamentadaComposer $justificativas,
     ) {}
 
     /**
@@ -218,7 +217,9 @@ class PreAnaliseService
                 'gatilhos' => $this->rotulosGatilhos($consulta->risco->encaminhamento['gatilhos_acionados'] ?? []),
                 'condicionantes' => $this->textosCondicionantes($consulta->enquadramento->consolidado['condicionantes'] ?? []),
                 'fundamentacao' => $consulta->fundamentacao(),
-                'justificativa' => $this->justificativas->paraConsulta($consulta, $item),
+                // Justificativa em branco (regra SEDUR 22/09/2026, item 6):
+                // manifestação do analista — o motor não antecipa nem inventa.
+                'justificativa' => null,
                 'codigo_louos' => is_string($enquadramentoUso['codigo_louos'] ?? null) && $enquadramentoUso['codigo_louos'] !== ''
                     ? $enquadramentoUso['codigo_louos']
                     : null,

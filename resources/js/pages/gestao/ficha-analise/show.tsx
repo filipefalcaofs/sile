@@ -1642,7 +1642,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Enquadramento por atividade (CNAE)"
-                                description="Pré-preenchido pelo sistema (LOUOS e risco), inclusive a justificativa. Confirme ou altere. Divergência exige justificativa própria."
+                                description="Pré-preenchido pelo sistema (LOUOS e risco). Justificativa e parecer são do analista — nascem em branco."
                             />
                             <CardContent>
                                 {perCnae.length === 0 ? (
@@ -1846,7 +1846,7 @@ export default function FichaAnaliseShow({
                                                             id={`justificativa-${indice}`}
                                                             rows={8}
                                                             disabled={!editavel}
-                                                            placeholder="Justificativa fundamentada da atividade — pré-preenchida pelo sistema…"
+                                                            placeholder="Justificativa da atividade — a manifestação é do analista…"
                                                             value={item.justificativa ?? ''}
                                                             onChange={(valor) =>
                                                                 atualizarCnae(indice, { justificativa: valor })

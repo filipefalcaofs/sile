@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sig-dashboard": {
+      "url": "https://sigv3.sudoesteinformatica.com.br/mcp",
+      "headers": {
+        "X-SIG-User": "<seu-login-sig>",
+        "X-SIG-Password": "<sua-senha-sig>",
+        "X-SIG-Project-Id": "<id-do-projeto>",
+        "X-SIG-Sprint-Id": "<id-da-sprint>"
+      }
+    }
+  }
+}

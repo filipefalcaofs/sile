@@ -176,7 +176,7 @@ function CamposValor({ valor, errors }: { valor?: TllValorItem; errors: Record<s
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                    <Label htmlFor={valor ? `edit-codtll-sefaz-${valor.id}` : 'create-codtll-sefaz'}>Código TLL SEFAZ</Label>
+                    <Label htmlFor={valor ? `edit-codtll-sefaz-${valor.id}` : 'create-codtll-sefaz'}>Código SEDUR</Label>
                     <Input
                         id={valor ? `edit-codtll-sefaz-${valor.id}` : 'create-codtll-sefaz'}
                         type="text"
@@ -517,7 +517,7 @@ export default function TllIndex({ valores, exercicios, filters, perPageOptions 
         },
         {
             id: 'codigo_tll_sefaz',
-            header: 'Código SEFAZ',
+            header: 'Código SEDUR',
             cellClassName: 'text-gray-500 dark:text-gray-400',
             cell: (valor) => valor.codigo_tll_sefaz ?? '—',
         },

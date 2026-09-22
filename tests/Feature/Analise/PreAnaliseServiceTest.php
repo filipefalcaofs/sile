@@ -190,11 +190,9 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertSame('deferida', $record->per_cnae[0]['status_sugerido']);
         $this->assertNull($record->per_cnae[0]['status_escolhido']);
         $this->assertSame('nR1', $record->per_cnae[0]['grupo_uso']);
-        $this->assertNotEmpty($record->per_cnae[0]['justificativa']);
-        $this->assertStringContainsString('Lei nº 9.148/2016', (string) $record->per_cnae[0]['justificativa']);
-        $this->assertStringContainsString('planilha vigente', (string) $record->per_cnae[0]['justificativa']);
-        $this->assertStringContainsString('Quadro 10', (string) $record->per_cnae[0]['justificativa']);
-        $this->assertStringContainsString('deferimento', mb_strtolower((string) $record->per_cnae[0]['justificativa']));
+        // Justificativa em branco (regra SEDUR 22/09/2026, item 6): o motor
+        // traz só as informações objetivas — a manifestação é do analista.
+        $this->assertNull($record->per_cnae[0]['justificativa']);
         // Parecer nasce em branco para o analista (relatório SEDUR 21/09, item 04).
         $this->assertNull($record->parecer);
         $this->assertSame('permitido', $record->engine_snapshot['consolidado']);
@@ -231,9 +229,7 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertSame('nao_permitido', $record->per_cnae[0]['tendencia']);
         $this->assertSame('indeferida', $record->per_cnae[0]['status_sugerido']);
         $this->assertNull($record->per_cnae[0]['status_escolhido']);
-        $this->assertNotEmpty($record->per_cnae[0]['justificativa']);
-        $this->assertStringContainsString('indeferimento', mb_strtolower((string) $record->per_cnae[0]['justificativa']));
-        $this->assertStringContainsString('proibido', mb_strtolower((string) $record->per_cnae[0]['justificativa']));
+        $this->assertNull($record->per_cnae[0]['justificativa']);
         $this->assertNull($record->parecer);
     }
 
@@ -486,13 +482,15 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertGreaterThanOrEqual(2, count($record->analysis_reasons ?? []));
     }
 
-    public function test_resource_preenche_justificativa_vazia_com_motivo_do_snapshot(): void
+    public function test_resource_mantem_justificativa_vazia_para_o_analista(): void
     {
+        // Regra SEDUR 22/09/2026 (item 6): a justificativa NÃO é completada pelo
+        // sistema na leitura — nasce e permanece em branco até o analista
+        // escrever. (Antes, a ficha antiga recebia o texto do motor.)
         $ficha = AnalysisRecord::factory()->create([
             'per_cnae' => [[
                 'cnae' => '4771701',
                 'justificativa' => null,
-                'status_sugerido' => 'deferida',
                 'status_escolhido' => 'deferida',
             ]],
             'engine_snapshot' => [
@@ -505,10 +503,7 @@ class PreAnaliseServiceTest extends TestCase
 
         $payload = (new AnalysisRecordResource($ficha))->resolve();
 
-        $this->assertStringContainsString('Lei nº 9.148/2016', $payload['per_cnae'][0]['justificativa']);
-        $this->assertStringContainsString('planilha vigente', $payload['per_cnae'][0]['justificativa']);
-        $this->assertStringContainsString('Quadro 10', $payload['per_cnae'][0]['justificativa']);
-        $this->assertStringContainsString('deferimento', mb_strtolower($payload['per_cnae'][0]['justificativa']));
+        $this->assertNull($payload['per_cnae'][0]['justificativa']);
     }
 
     public function test_resource_expoe_risco_por_cnae_lido_do_snapshot(): void

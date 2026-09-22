@@ -3,13 +3,10 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Enums\RiscoMunicipal;
-use App\Enums\RiscoSanitario;
 use App\Enums\RuleDomain;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\StoreCnaeRequest;
-use App\Http\Requests\Gestao\StoreRiscoCondicionanteRequest;
 use App\Http\Requests\Gestao\UpdateCnaeRequest;
-use App\Http\Requests\Gestao\UpdateRiscoCondicionanteRequest;
 use App\Models\Cnae;
 use App\Models\RiskClassification;
 use App\Models\RiskCondicionante;
@@ -127,23 +124,17 @@ class CnaeController extends Controller
 
     /**
      * Ficha única do CNAE: dados próprios + classificação de risco municipal
-     * vigente + perguntas de condicionante sanitária vigentes.
+     * vigente. Sem condicionantes sanitárias — o e-mail SEDUR de 21/09/2026
+     * (item 4) retirou toda validação de condicionantes da VISA do Viabiliza.
      */
     public function edit(Cnae $cnae): Response
     {
         $municipal = $this->versaoMunicipalVigente();
-        $sanitaria = $this->versaoSanitariaVigente();
 
         $classificacao = $municipal === null ? null : RiskClassification::query()
             ->where('rule_version_id', $municipal->id)
             ->where('cnae_code', $cnae->code)
             ->first();
-
-        $condicionantes = $sanitaria === null ? collect() : RiskCondicionante::query()
-            ->where('rule_version_id', $sanitaria->id)
-            ->where('cnae_code', $cnae->code)
-            ->orderBy('id')
-            ->get();
 
         return Inertia::render('gestao/cnaes/editar', [
             'cnae' => [
@@ -166,16 +157,8 @@ class CnaeController extends Controller
                 'exige_detalhamento_multiplicador' => $cnae->exige_detalhamento_multiplicador,
                 'risco_municipal' => $classificacao?->risco_municipal->value,
             ],
-            'condicionantes' => $condicionantes->map(fn (RiskCondicionante $condicionante) => [
-                'id' => $condicionante->id,
-                'pergunta' => $condicionante->pergunta,
-                'regra_reclassificacao' => $condicionante->regra_reclassificacao,
-                'texto_parecer' => $condicionante->texto_parecer,
-            ])->values(),
             'niveisMunicipais' => $this->niveisMunicipais(),
-            'niveisReclassificacao' => $this->niveisReclassificacao(),
             'semVersaoMunicipal' => $municipal === null,
-            'semVersaoSanitaria' => $sanitaria === null,
         ]);
     }
 
@@ -273,53 +256,6 @@ class CnaeController extends Controller
     }
 
     /**
-     * Cadastro de pergunta de condicionante sanitária diretamente na ficha do
-     * CNAE — reaproveita o request do antigo RiscoCondicionanteController,
-     * ignorando qualquer cnae_code enviado: o vínculo vem sempre da rota.
-     */
-    public function storeCondicionante(StoreRiscoCondicionanteRequest $request, Cnae $cnae): RedirectResponse
-    {
-        $versao = $this->versaoSanitariaVigente();
-
-        if ($versao === null) {
-            return back()->with('error', 'Não há versão vigente de risco sanitário para vincular a condicionante.');
-        }
-
-        RiskCondicionante::create([
-            'rule_version_id' => $versao->id,
-            'cnae_code' => $cnae->code,
-            ...$request->safe()->except('cnae_code'),
-        ]);
-
-        return back()->with('status', 'Pergunta de classificação de risco cadastrada com sucesso.');
-    }
-
-    public function updateCondicionante(
-        UpdateRiscoCondicionanteRequest $request,
-        Cnae $cnae,
-        RiskCondicionante $condicionante,
-    ): RedirectResponse {
-        if ($condicionante->cnae_code !== $cnae->code) {
-            abort(404);
-        }
-
-        $condicionante->update($request->safe()->except('cnae_code'));
-
-        return back()->with('status', 'Pergunta atualizada com sucesso.');
-    }
-
-    public function destroyCondicionante(Cnae $cnae, RiskCondicionante $condicionante): RedirectResponse
-    {
-        if ($condicionante->cnae_code !== $cnae->code) {
-            abort(404);
-        }
-
-        $condicionante->delete();
-
-        return back()->with('status', 'Pergunta removida.');
-    }
-
-    /**
      * FK lógica: tabelas de regras apontam para Cnae.code (dígitos), não para
      * o id. Ao alterar o código no CRUD, as linhas vigentes e históricas
      * acompanham o registro — sem disparar auditoria em massa.
@@ -341,11 +277,6 @@ class CnaeController extends Controller
         return RuleVersion::vigente(RuleDomain::RiscoMunicipal)->first();
     }
 
-    private function versaoSanitariaVigente(): ?RuleVersion
-    {
-        return RuleVersion::vigente(RuleDomain::RiscoSanitario)->first();
-    }
-
     /**
      * @return array<int, array{value: string, label: string}>
      */
@@ -354,17 +285,6 @@ class CnaeController extends Controller
         return array_map(
             fn (RiscoMunicipal $nivel) => ['value' => $nivel->value, 'label' => $nivel->label()],
             RiscoMunicipal::cases(),
-        );
-    }
-
-    /**
-     * @return array<int, array{value: string, label: string}>
-     */
-    private function niveisReclassificacao(): array
-    {
-        return array_map(
-            fn (RiscoSanitario $nivel) => ['value' => $nivel->value, 'label' => $nivel->label()],
-            RiscoSanitario::cases(),
         );
     }
 }

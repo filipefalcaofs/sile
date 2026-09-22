@@ -1,0 +1,55 @@
+---
+description: Fluxo autônomo do MCP SIG — executor até Teste, telemetria obrigatória, gates humanos em QA
+alwaysApply: true
+---
+
+# SIG MCP — Executor Autônomo
+
+Você tem acesso ao MCP `sig-dashboard` / `user-sig-dashboard`.
+Com projeto SIG conectado, **opere de forma autônoma** — sem o usuário pedir
+“registre”, “mova”, “terminei” ou “review ok”.
+
+## Modo padrão: autônomo estrito
+
+1. `sig_workflow_start`
+2. `sig_workflow_status` — se há task ativa, retomar
+3. Senão: auto-pick em **A Fazer** do usuário (maior prioridade; empate → mais antiga)
+4. Se zero elegíveis: informar e parar (não inventar card)
+5. `sig_pick_task` + telemetria (`sig-telemetry`)
+6. Implementar + `sig_sync_progress` em marcos + telemetria contínua
+7. Checklist verde → `sig_finish_coding`
+8. Checklist review verde → `sig_pass_review` → **Teste**
+
+**Proibido:** perguntar “qual task?” quando houver elegível; esperar frases humanas
+para avançar se o checklist já estiver verde.
+
+## Telemetria (obrigatória)
+
+Carregar `.agents/skills/sig-telemetry/SKILL.md` (espelho `.cursor/skills/sig-telemetry/`).
+Em todo turno com task ativa: sessão, activity, file_changed, command, test_result,
+error, heartbeat — sem pedido do usuário. Sem chain-of-thought.
+
+## Gates humanos (únicos)
+
+| Gate | Quem |
+|------|------|
+| Cadastrar corretiva | Autorização explícita (`sig-qa-corretiva`) |
+| Teste → Concluído | Somente perfil QA com autorização |
+
+Erro em Teste: prévia → autorização → criar corretiva → só então pai em Review + impedimento.
+
+## Pausas
+
+Só com pedido explícito do usuário: `sig_pause_current` / `sig_resume_current`.
+Troca de task pedida: `sig_pause_current` + `sig_pick_task`.
+
+## Regras críticas
+
+- Play/pause via tools compostas — nunca `move_task` com workflow de dev ativo
+- Fluxo do dev termina em **Teste**
+- `usouIA: true` exige `iaUtilizada` (IUC_COD)
+- Wiki = brain (projeto + sprint + caso)
+- APF nativa: `list_apf_contagens`, `get_apf_contagem`, `create_apf_contagem`, `import_apf_json`
+- Épicos: `list_epics`, `create_epic`, `codEpico`
+- CAS_CAT: 1=Corretiva, 2=Melhoria/Inclusão, 3=Elicitação, 4=Outras
+- Skills/agente: `.agents/skills/*` + `.agents/agents/sig-dev.md` (espelhos `.cursor/`)

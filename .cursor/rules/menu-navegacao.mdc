@@ -1,0 +1,89 @@
+---
+description: Organização da navegação (sidebar e Cmd+K) — onde colocar cada tela nova sem poluir o menu
+alwaysApply: true
+---
+
+# Menu de navegação — normativa
+
+```
+TELA NOVA NÃO NASCE NO MENU POR REFLEXO. ENTRA NO GRUPO DO TRABALHO, NUNCA NUM GRUPO NOVO POR PREGUIÇA.
+```
+
+Fonte de verdade do console SEDUR: `resources/js/navigation/gestao-nav.ts`.
+Sidebar e Cmd+K **leem o mesmo catálogo**. Proibido duplicar lista de itens em `gestao-layout.tsx` ou `command-search.tsx`.
+
+Portal do cidadão: `resources/js/layouts/portal-layout.tsx` (Início / Serviços / Minha conta). Mesmas regras, catálogo menor.
+
+## Árvore de decisão — onde entra o item
+
+Pergunte nesta ordem. Pare no primeiro sim.
+
+| # | O item é… | Grupo | Exemplos |
+|---|---|---|---|
+| 1 | Trabalho do dia (fila, processo, atendimento, contingência, mesa do analista) | **Operação** | Fila, Processos, Atendimento, Contingência, Minha Mesa |
+| 2 | Mapa, camada GIS, GeoServer, consulta territorial | **Território** | Consulta, Camadas, GeoServer |
+| 3 | Catálogo ou motor que decide viabilidade (CNAE, LOUOS, tipo, gatilho, requisito) | **Regras** | CNAEs, Zonas, Quadros LOUOS, Gatilhos |
+| 4 | KPI / série temporal / taxa (número agregado, gráfico) | **Indicadores** | SLA, tempo de análise, quedas do expresso |
+| 5 | Relatório analítico (lista, recorte, trilha, saturação) | **Relatórios** | Pendências, painel por bairro, falhas de e-mail |
+| 6 | Trilha, abuso, fraude, LGPD operacional | **Auditoria** | Trilha, alertas de abuso, preditiva |
+| 7 | Quem acessa o sistema (usuário, perfil, setor) | **Administração** | Usuários, Perfis, Setores |
+| 8 | Parâmetro, texto, feriado, credencial, integração | **Configuração** | Parâmetros, Feriados, API REGIN, e-mail, IA |
+
+Se nenhum encaixar: **não crie grupo**. Absorva no mais próximo ou deixe a tela acessível só a partir da tela-mãe (ver “filho de tela”).
+
+## Ordem dos grupos (imutável)
+
+`Operação → Território → Regras → Indicadores → Relatórios → Auditoria → Administração → Configuração`
+
+Trabalho primeiro, leitura no meio, quem-pode e o-que-o-sistema-usa por último.
+
+## Ordem dentro do grupo
+
+1. Mais usado no dia a dia primeiro
+2. Cadastros antes de ferramentas
+3. Simulações e testes no **fim** de Regras
+4. Integrações (API, e-mail, IA) no **fim** de Configuração
+5. Pessoas (usuários/perfis/setores) juntas, nessa ordem, em Administração
+
+## Limites (anti-poluição)
+
+| Limite | Valor | O que fazer ao estourar |
+|---|---|---|
+| Grupos no console | **8** | Não criar o 9º. Absorver ou promover uma página-índice no grupo que cresceu |
+| Itens em grupo misto (Operação) | **8** | Extrair o subconjunto homogêneo para um grupo existente |
+| Itens em grupo homogêneo | **12** | Criar **página-índice** do grupo; sidebar fica com os 6–8 principais + “Ver todos” |
+| Grupo com 1 item | **proibido** | Absorver no grupo vizinho da árvore |
+| Grupo com 2 itens | só se o público for outro (ex.: portal vs gestão) | Senão, absorver |
+
+`assertGestaoNavHealth()` em `gestao-nav.ts` valida isso. Teste em `gestao-nav.test.ts` tem que continuar verde.
+
+## O que NÃO entra no menu
+
+- Tela-filha de um cadastro (editar, versionar, detalhe, wizard). Link na tela-mãe.
+- Ação pontual (exportar, simular a partir de um registro, “novo” de um CRUD que já tem lista no menu).
+- Recorte que já existe como filtro na lista (ex.: “processos atrasados” → filtro da Fila, não item novo).
+- Feature bloqueada / integração indisponível. Não reserve item “em breve”.
+- Segundo atalho para a mesma rota.
+
+## O que NÃO fazer
+
+- Jogar cadastro em **Relatórios** (Feriados já errou isso uma vez).
+- Misturar GIS com atendimento.
+- Colocar setor, minuta ou parâmetro em Operação/Análise.
+- Criar grupo “Outros”, “Utilitários”, “Diversos” ou “Sistema”.
+- Renomear grupo para caber um item deslocado. Mova o item.
+- Copiar a lista do menu no Cmd+K. Use `destinosComando()`.
+
+## Portal do cidadão
+
+Grupos fixos: **Início** (painel), **Serviços** (empresas, viabilidade, procurações), **Minha conta**.
+Item novo do requerente: Serviços, salvo se for perfil/senha (Minha conta) ou home (Início).
+Não replicar telas de gestão no portal.
+
+## Checklist antes de commitar uma tela nova
+
+1. Percorri a árvore de decisão e escolhi **um** grupo existente
+2. Incluí o item só em `gestao-nav.ts` (nome curto, href, ícone já existente, permissão)
+3. Rodei `npx vitest run resources/js/navigation/gestao-nav.test.ts`
+4. Não criei grupo, não dupliquei no layout, não coloquei filho de tela no menu
+5. Ícone reutiliza o vocabulário do catálogo (`grid`, `list`, `file`, `map`, `gear`…) — não inventar ícone novo sem necessidade

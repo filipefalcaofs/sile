@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Decisao;
 
-use App\Enums\Fluxo;
 use App\Enums\GeoLayerType;
 use App\Enums\Quadro10Permissao;
 use App\Enums\RiscoMunicipal;
@@ -14,17 +13,12 @@ use App\Models\LouosQuadro10Permissao;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
-use App\Services\Analise\JustificativaFundamentadaComposer;
 use App\Services\Analise\PreAnaliseService;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\SpatialRepository;
-use App\Services\Geo\TerritoryResult;
-use App\Services\Louos\EnquadramentoResult;
 use App\Services\Risco\RiscoClassificationService;
 use App\Services\Risco\RiscoInput;
-use App\Services\Risco\RiscoResult;
-use App\Services\Viabilidade\ConsultaViabilidadeResult;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
@@ -129,53 +123,6 @@ class TextosServicosByteIdenticosTest extends TestCase
         $this->assertNotNull($record);
         $this->assertTrue($record->engine_available);
         $this->assertNull($record->parecer);
-    }
-
-    public function test_conclusao_de_permitido_e_byte_identica(): void
-    {
-        $paragrafos = $this->paragrafosDaJustificativa('permitido');
-
-        $this->assertContains(
-            'Diante do enquadramento acima, manifesta-se pelo deferimento desta atividade, por ser locacionalmente permitida na zona ZEC, sem condicionantes urbanísticas incidentes.',
-            $paragrafos,
-        );
-    }
-
-    public function test_conclusao_de_permitido_com_condicoes_e_byte_identica(): void
-    {
-        $paragrafos = $this->paragrafosDaJustificativa('permitido_com_condicoes');
-
-        $this->assertContains(
-            'Diante do enquadramento acima, manifesta-se pelo deferimento desta atividade na zona ZEC, condicionado ao cumprimento das exigências urbanísticas incidentes.',
-            $paragrafos,
-        );
-    }
-
-    public function test_conclusao_de_nao_permitido_e_byte_identica(): void
-    {
-        $paragrafos = $this->paragrafosDaJustificativa('nao_permitido');
-
-        $this->assertContains(
-            'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso proibido na zona ZEC segundo o Quadro 10 da LOUOS.',
-            $paragrafos,
-        );
-    }
-
-    public function test_conclusao_padrao_sem_desfecho_e_byte_identica(): void
-    {
-        $paragrafos = $this->paragrafosDaJustificativa('pendente');
-
-        $this->assertContains(
-            'Não há elementos suficientes para deferir ou indeferir. Encaminha-se a atividade à análise técnica, sem sugerir desfecho locacional.',
-            $paragrafos,
-        );
-    }
-
-    public function test_fundamentacao_padrao_da_justificativa_e_byte_identica(): void
-    {
-        $paragrafos = $this->paragrafosDaJustificativa('permitido', fundamentacao: []);
-
-        $this->assertSame('Fundamentação: Lei nº 9.148/2016 (LOUOS).', end($paragrafos));
     }
 
     /**
@@ -294,107 +241,5 @@ class TextosServicosByteIdenticosTest extends TestCase
         $solicitacao->respostasTratamento = [11 => true];
 
         return $solicitacao;
-    }
-
-    /**
-     * Justificativa redigida pelo caminho público real do composer, em
-     * parágrafos, para a comparação byte a byte da conclusão/fundamentação.
-     *
-     * @param  list<string>|null  $fundamentacao
-     * @return list<string>
-     */
-    private function paragrafosDaJustificativa(string $resultado, ?array $fundamentacao = null): array
-    {
-        $consulta = $this->consultaSintetica($resultado, $fundamentacao);
-
-        $texto = app(JustificativaFundamentadaComposer::class)->paraConsulta($consulta, [
-            'cnae' => '4771701',
-            'cnae_formatado' => '4771-7/01',
-            'is_primary' => true,
-            'descricao' => 'Comércio varejista de produtos farmacêuticos',
-        ]);
-
-        return explode("\n\n", $texto);
-    }
-
-    /**
-     * @param  list<string>|null  $fundamentacao
-     */
-    private function consultaSintetica(string $resultado, ?array $fundamentacao = null): ConsultaViabilidadeResult
-    {
-        $fundamentacaoConsolidado = $fundamentacao ?? [
-            'Lei nº 9.148/2016 (LOUOS) — nR1-01',
-            'Quadro 10 da Lei nº 9.148/2016',
-        ];
-
-        return new ConsultaViabilidadeResult(
-            entrada: [
-                'tipo' => 'ponto',
-                'cnae' => '4771701',
-                'cnae_formatado' => '4771-7/01',
-                'area' => 75.0,
-            ],
-            geocode: null,
-            territory: new TerritoryResult(
-                bairro: ['status' => 'identificado', 'nome' => 'Comércio', 'versao_camada' => 'bairro-2024'],
-                via: ['status' => 'identificado', 'nome' => 'Av. Estados Unidos', 'versao_camada' => 'via-2024'],
-                zona: ['status' => 'identificado', 'nome' => 'ZEC', 'versao_camada' => 'zona-2026'],
-                lote: ['status' => 'nao_encontrado', 'versao_camada' => null],
-                restricoes: ['status' => 'nao_encontrado', 'itens' => [], 'versao_camada' => null],
-            ),
-            enquadramento: new EnquadramentoResult(
-                enquadramento: [
-                    'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
-                    'grupo' => 'nR1',
-                    'subgrupo' => 'nR1-01',
-                    'motivo' => 'O CNAE 4771-7/01 com área 75 m² enquadra-se no grupo nR1 (nR1-01) da LOUOS (07.01.05).',
-                ],
-                quadro10: [
-                    'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
-                    'permissao' => 'permitido',
-                    'motivo' => 'O grupo nR1 é permitido na zona ZEC segundo o Quadro 10 da LOUOS.',
-                ],
-                quadro11a: [
-                    'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
-                    'condicoes' => [],
-                    'motivo' => null,
-                ],
-                consolidado: [
-                    'resultado' => $resultado,
-                    'fundamentacao' => $fundamentacaoConsolidado,
-                    'condicionantes' => [],
-                    'motivo' => 'Permitido: o CNAE 4771-7/01 (área 75 m²) classificou-se no grupo nR1 pelo enquadramento da planilha vigente e esse grupo é permitido na zona ZEC pelo Quadro 10.',
-                ],
-                versoes: [
-                    'risco_tratamento' => 'planilha-20-08-26',
-                    'quadro10' => 'lei-9148-2016-quadro10',
-                    'quadro11a' => null,
-                ],
-            ),
-            risco: new RiscoResult(
-                municipal: [
-                    'status' => RiscoResult::STATUS_CLASSIFICADO,
-                    'nivel' => 'baixo_a',
-                    'nivel_label' => 'Baixo',
-                    'condicionantes' => [],
-                    'versao_regras' => 'decreto-32636-2020',
-                ],
-                sanitario: [
-                    'status' => RiscoResult::STATUS_NAO_CLASSIFICADO,
-                    'nivel_original' => null,
-                    'nivel_final' => null,
-                    'reclassificado' => false,
-                    'condicionantes_perguntas' => [],
-                ],
-                encaminhamento: [
-                    'fluxo' => Fluxo::Analise->value,
-                    'dimensao_decisiva' => 'municipal',
-                    'motivo' => 'Nível baixo_a (municipal) encaminhado para análise técnica',
-                    'gatilhos_acionados' => [],
-                ],
-                fundamentacao: $fundamentacao ?? ['Decreto Municipal nº 32.636/2020'],
-                versoes: ['municipal' => 'decreto-32636-2020', 'sanitario' => null],
-            ),
-        );
     }
 }
