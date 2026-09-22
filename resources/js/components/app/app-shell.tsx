@@ -13,10 +13,21 @@ interface AppShellProps {
     subtitle?: string;
     variant?: SidebarVariant;
     collapsibleGroups?: boolean;
+    beforeNav?: ReactNode;
     children: ReactNode;
 }
 
-function ShellContent({ groups, homeHref, logoutHref, accountHref, subtitle, variant, collapsibleGroups, children }: AppShellProps) {
+function ShellContent({
+    groups,
+    homeHref,
+    logoutHref,
+    accountHref,
+    subtitle,
+    variant,
+    collapsibleGroups,
+    beforeNav,
+    children,
+}: AppShellProps) {
     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
     return (
@@ -27,6 +38,7 @@ function ShellContent({ groups, homeHref, logoutHref, accountHref, subtitle, var
                 subtitle={subtitle}
                 variant={variant}
                 collapsibleGroups={collapsibleGroups}
+                beforeNav={beforeNav}
             />
             <Backdrop />
             <div

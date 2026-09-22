@@ -35,6 +35,7 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                 subtitle="Gestão SEDUR"
                 variant="console"
                 collapsibleGroups
+                beforeNav={<CommandSearch />}
             >
                 {flash.status && (
                     <div className="mb-6">
@@ -48,7 +49,6 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                 )}
                 {children}
             </AppShell>
-            <CommandSearch />
         </ThemeProvider>
     );
 }

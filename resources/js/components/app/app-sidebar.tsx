@@ -34,6 +34,7 @@ interface AppSidebarProps {
     subtitle?: string;
     variant?: SidebarVariant;
     collapsibleGroups?: boolean;
+    beforeNav?: ReactNode;
 }
 
 /**
@@ -53,6 +54,7 @@ export default function AppSidebar({
     subtitle,
     variant = 'light',
     collapsibleGroups = false,
+    beforeNav,
 }: AppSidebarProps) {
     const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
     const { url } = usePage<SharedProps>();
@@ -157,7 +159,8 @@ export default function AppSidebar({
                     )}
                 </Link>
             </div>
-            <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+            {beforeNav ? <div className="mb-6 shrink-0">{beforeNav}</div> : null}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
                 <nav className="mb-6">
                     <div className="flex flex-col gap-6">
                         {visibleGroups.map((group, index) => {
