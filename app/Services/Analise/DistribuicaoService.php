@@ -3,6 +3,7 @@
 namespace App\Services\Analise;
 
 use App\Enums\AnalysisStage;
+use App\Enums\AnalysisStatus;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Support\Audit\AuditService;
@@ -120,6 +121,7 @@ class DistribuicaoService
     private function atribuir(ViabilityRequest $request, User $analista, User $ator, string $evento, string $descricao): void
     {
         $this->garantirVinculoDeSetor($request, $analista);
+        $this->garantirVistoriadorEmVistoria($request, $analista);
 
         DB::transaction(function () use ($request, $analista, $ator, $evento, $descricao): void {
             $startedAt = now();
@@ -140,6 +142,26 @@ class DistribuicaoService
                 'ator_id' => $ator->id,
             ], $request);
         });
+    }
+
+    /**
+     * Processo no eixo de vistoria (Vistoriar/Vistoriado) só pode ser atribuído
+     * a vistoriador (preencher-ficha-vistoria) — a distribuição/assunção é
+     * específica nesse fluxo: quem recebe é quem abre e preenche a ficha.
+     * Redistribuição em vistoria já é bloqueada pelo enum
+     * (permiteRedistribuicao), então a regra vive no caminho de atribuição.
+     */
+    private function garantirVistoriadorEmVistoria(ViabilityRequest $request, User $analista): void
+    {
+        $emVistoria = in_array(
+            $request->analysis_status,
+            [AnalysisStatus::Vistoriar, AnalysisStatus::Vistoriado],
+            true,
+        );
+
+        if ($emVistoria && ! $analista->can('preencher-ficha-vistoria')) {
+            throw DistribuicaoException::alvoSemPermissaoDeVistoria($analista, $request);
+        }
     }
 
     /**

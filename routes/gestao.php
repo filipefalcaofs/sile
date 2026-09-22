@@ -680,6 +680,11 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('ficha/gerar-resumo', [AnalysisRecordController::class, 'gerarResumo'])->name('ficha.gerar-resumo');
             Route::get('ficha/diff', [AnalysisRecordController::class, 'diff'])->name('ficha.diff');
             Route::get('precedentes', [PrecedenteController::class, 'show'])->name('precedentes');
+            // Encaminhamento à vistoria (handoff real — não é malha fina): o
+            // analista envia o processo à caixa do setor de vistoria,
+            // desatribuído e com o eixo em Vistoriar, para o apoio distribuir
+            // a um vistoriador. A origem é registrada para o retorno automático.
+            Route::post('vistoria/encaminhar', [InspectionController::class, 'encaminhar'])->name('vistoria.encaminhar');
         });
 
         // Ficha de vistoria do processo: abertura com identificação automática

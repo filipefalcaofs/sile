@@ -592,7 +592,7 @@ export default function ConsultaProcessos({
                             />
                         </div>
                         <Button type="button" size="sm" onClick={encaminharMalhaFina} loading={enviando}>
-                            Encaminhar para a Vistoria
+                            Encaminhar para a malha fina
                         </Button>
                         <button
                             type="button"
