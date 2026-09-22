@@ -33,6 +33,15 @@ class DistribuirEmLoteRequest extends FormRequest
                 'integer',
                 Rule::exists('viability_requests', 'id')->where('status', ViabilityRequestStatus::EmAnalise->value),
             ],
+            'origem' => ['nullable', 'in:inteligente'],
+            'proposta' => ['nullable', 'array'],
+            'proposta.*.analista_id' => ['integer'],
+            'proposta.*.request_ids' => ['array'],
+            'proposta.*.request_ids.*' => ['integer'],
+            'alteracoes' => ['nullable', 'array'],
+            'alteracoes.*.request_id' => ['integer'],
+            'alteracoes.*.de_analista_id' => ['nullable', 'integer'],
+            'alteracoes.*.para_analista_id' => ['integer'],
         ];
     }
 

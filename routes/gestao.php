@@ -648,6 +648,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
 
             Route::middleware('permission:distribuir-processos')->group(function () {
                 Route::get('central', [CaixaSetorController::class, 'central'])->name('central');
+                Route::get('distribuicao-inteligente', [CaixaSetorController::class, 'distribuicaoInteligente'])->name('distribuicao-inteligente');
                 Route::post('distribuir', [CaixaSetorController::class, 'distribuir'])->name('distribuir');
                 Route::post('distribuir-lote', [CaixaSetorController::class, 'distribuirLote'])->name('distribuir-lote');
                 Route::post('redistribuir', [CaixaSetorController::class, 'redistribuir'])->name('redistribuir');
