@@ -8,6 +8,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityServiceType;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -396,5 +397,68 @@ class CaixaSetorTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertSame($analistaA->id, $processo->fresh()->assigned_user_id);
+    }
+
+    public function test_filtra_por_analysis_status_e_ajusta_contadores(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+
+        $paraDistribuir = $this->processoNaCaixa($setor);
+        $paraDistribuir->forceFill(['analysis_status' => AnalysisStatus::ParaDistribuir])->save();
+
+        $encaminhado = $this->processoNaCaixa($setor);
+        $encaminhado->forceFill(['analysis_status' => AnalysisStatus::Encaminhado])->save();
+
+        $response = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?analysis_status=encaminhado')
+            ->assertOk();
+
+        $props = $response->viewData('page')['props'];
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($encaminhado->id, $ids);
+        $this->assertNotContains($paraDistribuir->id, $ids);
+        $this->assertSame('encaminhado', $props['filtros']['analysis_status']);
+        $this->assertSame(1, $props['contadores']['para_distribuir'], 'Os contadores das abas respeitam o filtro.');
+    }
+
+    public function test_filtra_por_servico_bap_e_protocolo(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+
+        $servico = ViabilityServiceType::query()->first()
+            ?? ViabilityServiceType::factory()->create();
+
+        $alvo = $this->processoNaCaixa($setor);
+        $alvo->forceFill(['service_type_id' => $servico->id, 'external_reference' => 'BAP-XYZ-1'])->save();
+
+        $outro = $this->processoNaCaixa($setor);
+        $outro->forceFill(['external_reference' => 'BAP-OUTRO-2'])->save();
+
+        $response = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?bap=XYZ')
+            ->assertOk();
+
+        $ids = collect($response->viewData('page')['props']['processos']['data'])->pluck('id')->all();
+        $this->assertContains($alvo->id, $ids);
+        $this->assertNotContains($outro->id, $ids);
+    }
+
+    public function test_index_expoe_opcoes_de_servico_e_status_de_tramitacao(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $this->processoNaCaixa($setor);
+
+        $props = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertNotEmpty($props['analysisStatusOptions']);
+        $this->assertArrayHasKey('servicoOptions', $props);
+        $this->assertArrayHasKey('analysis_status', $props['filtros']);
     }
 }

@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\DistribuirProcessoRequest;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityServiceType;
 use App\Services\Analise\DistribuicaoException;
 use App\Services\Analise\DistribuicaoService;
+use App\Services\Analise\ProcessoQueryService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
@@ -34,6 +37,7 @@ class CaixaSetorController extends Controller
     public function __construct(
         private DistribuicaoService $distribuicao,
         private AuditService $audit,
+        private ProcessoQueryService $processos,
     ) {}
 
     /**
@@ -56,9 +60,13 @@ class CaixaSetorController extends Controller
         // e "distribuidos" (acompanhamento, com a analista atribuída).
         $visao = $request->input('visao') === 'distribuidos' ? 'distribuidos' : 'para_distribuir';
 
+        $filtros = $this->filtrosDaCaixa($request);
+
         $base = ViabilityRequest::query()
             ->whereIn('sector_id', $sectorIds)
             ->where('status', ViabilityRequestStatus::EmAnalise->value);
+
+        $base = $this->processos->aplicarFiltros($base, $filtros);
 
         $contadores = [
             'para_distribuir' => (clone $base)->whereNull('assigned_user_id')->count(),
@@ -123,15 +131,17 @@ class CaixaSetorController extends Controller
 
         $this->audit->log('analise', 'consulta-caixa', 'Consulta da caixa do setor', [
             'setores' => $sectorIds->all(),
+            'filtros' => array_filter($filtros, fn ($v): bool => $v !== ''),
         ]);
 
         return Inertia::render('gestao/caixa-setor/index', [
             'processos' => $processos,
             'visao' => $visao,
             'contadores' => $contadores,
-            'filtros' => [
-                'per_page' => $perPage,
-            ],
+            'filtros' => $filtros + ['per_page' => $perPage],
+            'servicoOptions' => $this->servicoOptions(),
+            'analysisStatusOptions' => AnalysisStatus::options(),
+            'categoriaOptions' => $this->categoriaOptions(),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'podeDistribuir' => $podeDistribuir,
             'podeAssumir' => $podeAssumir,
@@ -203,5 +213,48 @@ class CaixaSetorController extends Controller
         }
 
         return back()->with('status', 'Processo assumido.');
+    }
+
+    /**
+     * Filtros de pesquisa da caixa (subconjunto do SAPS), crus da query string —
+     * o ProcessoQueryService normaliza e ignora os vazios.
+     *
+     * @return array<string, string>
+     */
+    private function filtrosDaCaixa(Request $request): array
+    {
+        $chaves = ['analysis_status', 'servico', 'protocolo', 'bap', 'data_de', 'data_ate', 'nome', 'cnpj', 'bairro', 'categoria'];
+        $filtros = [];
+
+        foreach ($chaves as $chave) {
+            $filtros[$chave] = $request->string($chave)->toString();
+        }
+
+        return $filtros;
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function servicoOptions(): array
+    {
+        return ViabilityServiceType::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name])
+            ->all();
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function categoriaOptions(): array
+    {
+        $opcoes = [];
+        foreach (ProcessoQueryService::CATEGORIAS as $value => $label) {
+            $opcoes[] = ['value' => $value, 'label' => $label];
+        }
+
+        return $opcoes;
     }
 }
