@@ -46,7 +46,6 @@ use App\Http\Controllers\Gestao\ProcessoDecisaoController;
 use App\Http\Controllers\Gestao\ProcessoPendenciaController;
 use App\Http\Controllers\Gestao\PropertyTypeController;
 use App\Http\Controllers\Gestao\ReginIntegrationController;
-use App\Http\Controllers\Gestao\ReginProtocoloSimulacaoController;
 use App\Http\Controllers\Gestao\RelatorioController;
 use App\Http\Controllers\Gestao\ResetPasswordController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
@@ -260,12 +259,6 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:consultar-cnaes')->group(function () {
             Route::get('cnaes', [CnaeController::class, 'index'])->name('cnaes.index');
             Route::get('regras-tratamento', [TratamentoRegrasController::class, 'index'])->name('regras-tratamento.index');
-            // Homologação do motor: protocolos SEDUR entram como se o tipo de
-            // imóvel e a área tivessem chegado do REGIN. A tela declara a
-            // simulação — a integração REGIN continua stub.
-            Route::get('risco/simulacao-regin', [ReginProtocoloSimulacaoController::class, 'index'])->name('risco.simulacao-regin');
-            Route::post('risco/simulacao-regin', [ReginProtocoloSimulacaoController::class, 'simulate'])->name('risco.simulacao-regin.simular');
-            Route::delete('risco/simulacao-regin/{codigo}', [ReginProtocoloSimulacaoController::class, 'destroy'])->name('risco.simulacao-regin.apagar');
         });
 
         Route::middleware('permission:manter-cnaes')->group(function () {

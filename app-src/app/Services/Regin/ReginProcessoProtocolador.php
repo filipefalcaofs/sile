@@ -20,6 +20,8 @@ use App\Services\Solicitacao\ProtocolarSolicitacaoService;
  */
 class ReginProcessoProtocolador
 {
+    public const CONTINGENCIA_RECEBE = 'regin_recebe';
+
     public function __construct(
         private ProtocolarSolicitacaoService $protocolar,
         private FluxoExpressoService $expresso,
@@ -53,7 +55,7 @@ class ReginProcessoProtocolador
             'address_neighborhood' => $endereco['neighborhood'],
             'address_zip' => $endereco['zip'],
             'property_registration' => $this->inscricao($rowset),
-            'contingency_reason' => ReginProtocoloSimulacaoService::CONTINGENCIA_RECEBE,
+            'contingency_reason' => self::CONTINGENCIA_RECEBE,
             'external_reference' => $recebimento->protocolo,
         ]);
 

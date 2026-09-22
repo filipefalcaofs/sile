@@ -2,14 +2,10 @@
 
 namespace Tests\Feature\Seeders;
 
-use App\Enums\CompanySource;
 use App\Enums\RuleDomain;
-use App\Enums\ViabilityRequestOrigin;
-use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
 use App\Models\Cnae;
 use App\Models\Company;
-use App\Models\CompanyUser;
 use App\Models\DocumentRequirement;
 use App\Models\GeoLayer;
 use App\Models\LegalTerm;
@@ -27,11 +23,8 @@ use App\Models\Sector;
 use App\Models\StandardText;
 use App\Models\TratamentoEnquadramento;
 use App\Models\User;
-use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
-use Database\Seeders\ExpressoDevSeeder;
-use Database\Seeders\ZonaFicticiaDevSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
@@ -87,15 +80,13 @@ class DatabaseSeederTest extends TestCase
         // + 1 da pergunta vinculada de intenção de sede no passo de
         // atividades do portal (SDD escritorio-virtual-telas-portal, Tarefa 3:
         // analise.escritorio_virtual.pergunta_vinculada)
-        // + 1 da flag de bypass de homologação do motor de risco (Fase 0
-        // parametrização: features.simulacao_protocolo — DEFAULT OFF).
         // + 1 dos atributos de nome da zona na feição (Fase 3 parametrização,
         // item 3.4: geo.zona.atributos_nome).
         // + 3 da Fase 5 (janela de duplicidade + pesos e cortes da auditoria
         // preditiva).
         // + 1 do setor de triagem da análise (analise.setor_triagem_id — elo
         // motor → caixa do setor, 2026-09-20).
-        $this->assertSame(125, Parameter::query()->count());
+        $this->assertSame(124, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -155,158 +146,6 @@ class DatabaseSeederTest extends TestCase
         $this->assertTrue($galpao->drives_rule);
         $this->assertTrue($galpao->active);
         $this->assertContains('galpao', $galpao->aliases->pluck('alias')->all());
-
-        $admin = User::query()->where('email', 'admin@sile.dev')->first();
-
-        $this->assertNotNull($admin);
-        $this->assertTrue($admin->hasRole('administrador'));
-        $this->assertNotNull($admin->email_verified_at);
-    }
-
-    public function test_seed_cria_cidadao_dev_com_empresas(): void
-    {
-        $this->seed();
-
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
-
-        $this->assertNotNull($cidadao);
-        $this->assertTrue($cidadao->hasRole('cidadao'));
-        $this->assertNotNull($cidadao->email_verified_at);
-        $this->assertTrue(
-            LegalTermAcceptance::query()
-                ->where('user_id', $cidadao->id)
-                ->where('legal_term_id', LegalTerm::current('lgpd')->id)
-                ->exists()
-        );
-
-        $this->assertGreaterThanOrEqual(3, Company::query()->count());
-        $this->assertTrue(Company::query()->where('source', CompanySource::Manual)->exists());
-        $this->assertTrue(Company::query()->where('source', CompanySource::Redesim)->exists());
-
-        $vinculosAtivos = CompanyUser::query()
-            ->where('user_id', $cidadao->id)
-            ->whereNull('ended_at')
-            ->count();
-        $this->assertGreaterThanOrEqual(2, $vinculosAtivos);
-
-        $temPrincipal = Company::query()
-            ->whereHas('links', fn ($q) => $q->where('user_id', $cidadao->id)->whereNull('ended_at'))
-            ->whereHas('cnaes', fn ($q) => $q->where('company_cnae.is_primary', true))
-            ->exists();
-        $this->assertTrue($temPrincipal);
-    }
-
-    public function test_seed_prepara_catalogo_e_solicitacoes_de_exemplo_da_fase_8(): void
-    {
-        $this->seed();
-
-        // Catálogo de tipos de serviço (HU-061) — seed MÍNIMO com códigos
-        // estáveis; a lista oficial é pendência SEDUR (substituível sem deploy).
-        $this->assertSame(4, ViabilityServiceType::query()->count());
-        $this->assertTrue(
-            ViabilityServiceType::query()
-                ->where('code', 'viabilidade-1-estabelecimento')
-                ->where('active', true)
-                ->exists()
-        );
-
-        // Requisitos documentais BASE (HU-067) referenciados pelo resolver por
-        // code: fachada (sempre) e concessão (área pública). A obrigatoriedade
-        // POR CNAE entra VAZIA — planilha oficial pendente SEDUR (honesto).
-        $this->assertTrue(
-            DocumentRequirement::query()->where('code', 'foto-fachada')->where('active', true)->exists()
-        );
-        $this->assertTrue(
-            DocumentRequirement::query()->where('code', 'termo-concessao')->where('active', true)->exists()
-        );
-        $this->assertSame(0, DB::table('cnae_document_requirement')->count());
-
-        // Solicitações de EXEMPLO do cidadão dev (dados fictícios, lógica REAL):
-        // rascunho instruído, protocolada (número/timeline reais via serviço),
-        // cancelada e contingência.
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
-
-        $rascunho = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
-            ->where('status', ViabilityRequestStatus::Rascunho)
-            ->first();
-        $this->assertNotNull($rascunho, 'Esperava um rascunho instruído de exemplo.');
-        $this->assertTrue($rascunho->primaryCnae()->exists());
-        $this->assertNotNull($rascunho->property_polygon_geojson);
-
-        $protocolada = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
-            ->where('status', ViabilityRequestStatus::Protocolada)
-            ->where('origin', ViabilityRequestOrigin::Portal)
-            ->first();
-        $this->assertNotNull($protocolada, 'Esperava uma solicitação protocolada de exemplo.');
-        $this->assertMatchesRegularExpression('/^VIA-\d{4}-\d{6}$/', (string) $protocolada->protocol_number);
-        // Timeline REAL: transição rascunho→protocolada gravada pelo serviço.
-        $this->assertSame(
-            1,
-            $protocolada->transitions()->where('to_status', ViabilityRequestStatus::Protocolada)->count()
-        );
-
-        $cancelada = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
-            ->where('status', ViabilityRequestStatus::Cancelada)
-            ->first();
-        $this->assertNotNull($cancelada, 'Esperava uma solicitação cancelada de exemplo.');
-        $this->assertNotNull($cancelada->cancelled_at);
-
-        $contingencia = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
-            ->where('origin', ViabilityRequestOrigin::Contingencia)
-            ->first();
-        $this->assertNotNull($contingencia, 'Esperava uma solicitação de contingência de exemplo.');
-        $this->assertSame(ViabilityRequestStatus::Protocolada, $contingencia->status);
-        $this->assertNotNull($contingencia->contingency_reason);
-    }
-
-    public function test_seed_prepara_exemplos_navegaveis_do_fluxo_expresso(): void
-    {
-        $this->seed();
-
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
-
-        // Dois exemplos do fluxo expresso (dados fictícios, lógica REAL): um
-        // sobre a zona fictícia (deferimento navegável) e um fora dela (em
-        // análise honesto). Identificados pelo marcador estável.
-        $deferimento = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
-            ->where('address_reference', ExpressoDevSeeder::MARK_DEFERIDA)
-            ->first();
-        $this->assertNotNull($deferimento, 'Esperava o exemplo de deferimento do fluxo expresso.');
-        $this->assertTrue($deferimento->primaryCnae()->where('code', '4712100')->exists());
-        $this->assertNotNull($deferimento->property_polygon_geojson);
-
-        $emAnalise = ViabilityRequest::query()
-            ->where('requester_user_id', $cidadao->id)
-            ->where('address_reference', ExpressoDevSeeder::MARK_EM_ANALISE)
-            ->first();
-        $this->assertNotNull($emAnalise, 'Esperava o exemplo de em análise (sem zona) do fluxo expresso.');
-
-        // Em SQLite a decisão do EXPRESSO não roda (reexecuta os motores
-        // territoriais — exige PostGIS): os exemplos do expresso ficam
-        // protocolados, sem ViabilityDecision, e a zona fictícia não é carregada.
-        // Degradação honesta — o deferimento navegável (decisão + TVL sobre a zona
-        // real) é provado em @group postgis (ExpressoSeedPostgisTest).
-        $this->assertSame(ViabilityRequestStatus::Protocolada, $deferimento->status);
-        $this->assertNull($deferimento->decision);
-        $this->assertSame(ViabilityRequestStatus::Protocolada, $emAnalise->status);
-        $this->assertNull($emAnalise->decision);
-        // O EP12 (AuditoriaDevSeeder) acrescenta 2 decisões SQLite-safe pela
-        // ANÁLISE TÉCNICA (territorial-agnóstica, em requerentes/empresas
-        // dedicados): uma decidida com decision_trace e uma legada sem trace —
-        // tornando a explicabilidade (HU-099) navegável no dev mesmo em SQLite.
-        $this->assertSame(2, ViabilityDecision::query()->count());
-
-        // Driver-aware: a camada de zona fictícia (geometria) não é carregada em
-        // SQLite — a zona segue como pendente_fonte (degradação honesta).
-        $this->assertSame(
-            0,
-            GeoLayer::query()->where('version', ZonaFicticiaDevSeeder::VERSION)->count(),
-        );
     }
 
     public function test_seed_prepara_setores_textos_padrao_e_usuarios_da_analise(): void
@@ -318,35 +157,6 @@ class DatabaseSeederTest extends TestCase
         $setor = Sector::query()->where('name', 'Análise Locacional')->first();
         $this->assertNotNull($setor, 'Esperava o setor padrão de análise locacional.');
         $this->assertTrue($setor->active);
-
-        // Usuários dev da gestão (dados fictícios): um analista e um gestor,
-        // ambos com o termo LGPD aceito e VINCULADOS ao setor — tornam a caixa,
-        // a distribuição e a ficha navegáveis de ponta a ponta no dev.
-        $analista = User::query()->where('email', 'analista@sile.dev')->first();
-        $this->assertNotNull($analista, 'Esperava o analista dev (analista@sile.dev).');
-        $this->assertTrue($analista->hasRole('analista'));
-        $this->assertNotNull($analista->email_verified_at);
-        $this->assertTrue($analista->sectors()->whereKey($setor->id)->exists());
-
-        $gestor = User::query()->where('email', 'gestor@sile.dev')->first();
-        $this->assertNotNull($gestor, 'Esperava o gestor dev (gestor@sile.dev).');
-        $this->assertTrue($gestor->hasRole('gestor'));
-        $this->assertTrue($gestor->sectors()->whereKey($setor->id)->exists());
-
-        // Apoio dev (tramitação): distribui da caixa do setor ao analista,
-        // sem analisar — torna o fluxo motor → caixa → apoio → analista
-        // navegável de ponta a ponta no dev.
-        $apoio = User::query()->where('email', 'apoio@sile.dev')->first();
-        $this->assertNotNull($apoio, 'Esperava o apoio dev (apoio@sile.dev).');
-        $this->assertTrue($apoio->hasRole('apoio'));
-        $this->assertFalse($apoio->hasPermissionTo('analisar-processos'));
-        $this->assertTrue($apoio->sectors()->whereKey($setor->id)->exists());
-
-        // Elo motor → caixa: em dev o setor padrão é o setor de triagem
-        // parametrizado (em produção o administrador aponta pela interface).
-        $triagem = Parameter::query()->where('key', 'analise.setor_triagem_id')->first();
-        $this->assertNotNull($triagem);
-        $this->assertSame((string) $setor->id, $triagem->value);
 
         // Biblioteca de textos-padrão do parecer (HU-085): exemplos por categoria
         // (deferimento/indeferimento/condicionante/pendência), ativos e na versão
@@ -366,24 +176,14 @@ class DatabaseSeederTest extends TestCase
         // Setores/usuários/textos-padrão da análise estáveis no re-seed
         // (firstOrCreate por chave estável — nada é duplicado).
         $this->assertSame(1, Sector::query()->where('name', 'Análise Locacional')->count());
-        $this->assertSame(1, User::query()->where('email', 'analista@sile.dev')->count());
-        $this->assertSame(1, User::query()->where('email', 'gestor@sile.dev')->count());
-        $this->assertSame(1, User::query()->where('email', 'apoio@sile.dev')->count());
-        $analistaId = User::query()->where('email', 'analista@sile.dev')->value('id');
-        $setorId = Sector::query()->where('name', 'Análise Locacional')->value('id');
-        $this->assertSame(
-            1,
-            DB::table('sector_user')->where('user_id', $analistaId)->where('sector_id', $setorId)->count(),
-        );
+        $this->assertSame(0, User::query()->count());
         // Um texto-padrão por categoria (deferimento/indeferimento/condicionante/
         // pendência) — estável no re-seed (não duplica por content+category).
         $this->assertSame(4, StandardText::query()->count());
 
-        $this->assertSame(1, User::query()->where('email', 'admin@sile.dev')->count());
-        $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(5, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(125, Parameter::query()->count());
+        $this->assertSame(124, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());
@@ -400,41 +200,12 @@ class DatabaseSeederTest extends TestCase
         // firstOrCreate por alias) — nem duplica nem perde o catálogo.
         $this->assertSame(5, PropertyType::query()->count());
         $this->assertSame(5, PropertyTypeAlias::query()->count());
-        // 3 empresas do cidadão (CompanySeeder) + 2 dedicadas do EP12
-        // (AuditoriaDevSeeder: padrão de abuso e exemplos de decisão) = 5,
-        // estáveis no re-seed (firstOrCreate por CNPJ).
-        $this->assertSame(5, Company::query()->count());
-        $this->assertSame(
-            2,
-            CompanyUser::query()
-                ->where('user_id', User::query()->where('email', 'cidadao@sile.dev')->value('id'))
-                ->whereNull('ended_at')
-                ->count()
-        );
+        $this->assertSame(0, Company::query()->count());
 
-        // Catálogo e solicitações de exemplo da Fase 8 estáveis no re-seed
-        // (upsert/firstOrCreate por chave estável — nada é duplicado).
         $this->assertSame(4, ViabilityServiceType::query()->count());
         $this->assertSame(3, DocumentRequirement::query()->count());
         $this->assertSame(0, DB::table('cnae_document_requirement')->count());
-
-        // 4 exemplos da Fase 8 (rascunho/protocolada/cancelada/contingência) +
-        // 2 exemplos do fluxo expresso (deferimento/em análise) + 1 exemplo
-        // dedicado de comunicação do EP11 (em_analise após o ciclo de pendência,
-        // ComunicacaoDevSeeder) = 7, estáveis no re-seed.
-        $cidadaoId = User::query()->where('email', 'cidadao@sile.dev')->value('id');
-        $this->assertSame(7, ViabilityRequest::query()->where('requester_user_id', $cidadaoId)->count());
-        // Os exemplos protocolados não ganham número novo a cada re-seed: 1 da
-        // Fase 8 + 2 do expresso (em SQLite os exemplos do expresso ficam
-        // protocolados — a decisão real exige PostGIS, testes @group postgis).
-        $this->assertSame(
-            3,
-            ViabilityRequest::query()
-                ->where('requester_user_id', $cidadaoId)
-                ->where('origin', ViabilityRequestOrigin::Portal)
-                ->where('status', ViabilityRequestStatus::Protocolada)
-                ->count()
-        );
+        $this->assertSame(0, ViabilityRequest::query()->count());
     }
 
     public function test_seed_preserva_valor_de_parametro_administrado(): void
@@ -452,24 +223,5 @@ class DatabaseSeederTest extends TestCase
             '3',
             Parameter::query()->where('key', 'security.login.max_attempts')->first()->value
         );
-    }
-
-    public function test_admin_dev_acessa_gestao_apos_aceitar_termo(): void
-    {
-        $this->seed();
-
-        // Ambientes independentes: a gestão tem login próprio (guard gestao).
-        $this->post('/gestao/login', [
-            'email' => 'admin@sile.dev',
-            'password' => 'password',
-        ])->assertRedirect('/gestao');
-
-        $this->assertAuthenticated('gestao');
-
-        $this->get('/gestao')->assertRedirect(route('gestao.termo-lgpd.show'));
-
-        $this->post('/gestao/termo-lgpd', ['accepted' => true]);
-
-        $this->get('/gestao')->assertOk();
     }
 }

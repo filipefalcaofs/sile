@@ -127,12 +127,6 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 icon: 'table',
                 permission: 'consultar-cnaes',
             },
-            {
-                name: 'Simulação REGIN',
-                href: '/gestao/risco/simulacao-regin',
-                icon: 'plugin',
-                permission: 'consultar-cnaes',
-            },
             { name: 'Simulação de regras', href: '/gestao/louos/simulacao', icon: 'gear', permission: 'manter-louos' },
         ],
     },
