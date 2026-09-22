@@ -398,4 +398,47 @@ class ProcessoConsultaTest extends TestCase
                 ->where('processos.data.0.id', $cedo->id)
                 ->where('filtros.ordem', 'prazo'));
     }
+
+    public function test_filtra_pelo_fluxo_gravado_na_decisao_ou_pelo_status_em_analise(): void
+    {
+        $expresso = $this->processo(['status' => ViabilityRequestStatus::Deferida]);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $expresso->id,
+            'flow' => 'expresso',
+            'tvl_product_number' => 'TVL-'.now()->year.'-900001',
+        ]);
+
+        $naFila = $this->processo(['status' => ViabilityRequestStatus::EmAnalise]);
+
+        $tecnica = $this->processo(['status' => ViabilityRequestStatus::Deferida]);
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $tecnica->id,
+            'flow' => 'analise_tecnica',
+            'tvl_product_number' => 'TVL-'.now()->year.'-900002',
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?fluxo=expresso')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('processos.data', 1)
+                ->where('processos.data.0.id', $expresso->id)
+                ->where('processos.data.0.fluxo', 'expresso'));
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?fluxo=em_analise')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('processos.data', 1)
+                ->where('processos.data.0.id', $naFila->id)
+                ->where('processos.data.0.fluxo', 'em_analise'));
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?fluxo=analise_tecnica')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('processos.data', 1)
+                ->where('processos.data.0.id', $tecnica->id)
+                ->where('processos.data.0.fluxo', 'analise_tecnica'));
+    }
 }

@@ -67,6 +67,7 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'status'), fn (Builder $q, string $status) => $q->where('status', $status))
             ->when($this->valor($filtros, 'analysis_status'), fn (Builder $q, string $s) => $q->where('analysis_status', $s))
             ->when($this->valor($filtros, 'busca'), fn (Builder $q, string $v) => $this->aplicarBusca($q, $v))
+            ->when($this->valor($filtros, 'fluxo'), fn (Builder $q, string $fluxo) => $this->aplicarFluxo($q, $fluxo))
             ->when($this->valor($filtros, 'protocolo'), fn (Builder $q, string $v) => $q->whereLike('protocol_number', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'bap'), fn (Builder $q, string $v) => $q->whereLike('external_reference', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'produto_tvl'), fn (Builder $q, string $v) => $q->whereHas('decision', fn ($d) => $d->whereLike('tvl_product_number', "%{$v}%", caseSensitive: false)))
@@ -242,6 +243,27 @@ class ProcessoQueryService
     /**
      * Busca única da consulta: protocolo, BAP, TVL, CNPJ ou nome da empresa.
      *
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    /**
+     * Fluxo efetivo: decisão expressa, processo ainda na análise, ou decisão
+     * da análise técnica. Não usa analysis_category — o motor não grava essa coluna.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    private function aplicarFluxo(Builder $query, string $fluxo): Builder
+    {
+        return match ($fluxo) {
+            'expresso' => $query->whereHas('decision', fn (Builder $decisao) => $decisao->where('flow', 'expresso')),
+            'em_analise' => $query->where('status', ViabilityRequestStatus::EmAnalise->value),
+            'analise_tecnica' => $query->whereHas('decision', fn (Builder $decisao) => $decisao->where('flow', 'analise_tecnica')),
+            default => $query,
+        };
+    }
+
+    /**
      * @param  Builder<ViabilityRequest>  $query
      * @return Builder<ViabilityRequest>
      */

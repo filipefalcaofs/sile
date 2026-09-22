@@ -34,7 +34,7 @@ final readonly class ReportFilters
     public const PROCESSO_CHAVES = [
         'grupo', 'status', 'analysis_status', 'protocolo', 'bap', 'produto_tvl', 'servico', 'setor',
         'analista', 'inscricao', 'cep', 'logradouro', 'bairro', 'nome', 'cnpj',
-        'data_de', 'data_ate', 'categoria', 'busca', 'ordem',
+        'data_de', 'data_ate', 'categoria', 'busca', 'fluxo', 'ordem',
     ];
 
     /**

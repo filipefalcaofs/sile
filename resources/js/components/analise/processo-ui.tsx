@@ -38,6 +38,8 @@ export interface ProcessoItem {
     tvl_product_number: string | null;
     status: string;
     status_label: string;
+    fluxo: string | null;
+    fluxo_label: string | null;
     origin: string;
     origin_label: string;
     tipo_imovel: string | null;
@@ -49,7 +51,6 @@ export interface ProcessoItem {
     inscricao: string | null;
     categorias: ProcessoCategoria[];
     categoria: string | null;
-    servico: string | null;
     analista: string | null;
     assigned_user_id: number | null;
     setor: string | null;

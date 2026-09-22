@@ -42,6 +42,7 @@ interface FiltrosTexto {
     data_ate: string;
     analysis_status: string;
     busca: string;
+    fluxo: string;
 }
 
 interface AbasContagem {
@@ -71,6 +72,12 @@ interface ConsultaProps {
 }
 
 /** Grupos macro de status (espelham GRUPOS_STATUS do ProcessoQueryService). */
+const FLUXO_OPTIONS: SelectOption[] = [
+    { value: 'expresso', label: 'Expresso' },
+    { value: 'em_analise', label: 'Em análise' },
+    { value: 'analise_tecnica', label: 'Análise técnica' },
+];
+
 const GRUPO_OPTIONS: SelectOption[] = [
     { value: 'rascunho', label: 'Rascunho' },
     { value: 'em_andamento', label: 'Em andamento' },
@@ -97,6 +104,7 @@ const ROTULOS_FILTRO: Record<keyof FiltrosTexto, string> = {
     status: 'Status',
     analysis_status: 'Situação da análise',
     categoria: 'Categoria',
+    fluxo: 'Fluxo',
     protocolo: 'Nº do processo',
     bap: 'BAP',
     produto_tvl: 'Produto TVL',
@@ -134,6 +142,7 @@ const CHAVES_FILTRO: (keyof FiltrosTexto)[] = [
     'data_ate',
     'analysis_status',
     'busca',
+    'fluxo',
 ];
 
 const CHAVES_AVANCADAS = CHAVES_FILTRO.filter((chave) => chave !== 'busca');
@@ -402,6 +411,7 @@ export default function ConsultaProcessos({
         status: statusOptions,
         analysis_status: analysisStatusOptions,
         categoria: categoriaOptions,
+        fluxo: FLUXO_OPTIONS,
     };
 
     const chips = CHAVES_AVANCADAS.filter((chave) => (filtros[chave] ?? '') !== '' && !chavesDaAba.includes(chave)).map(
@@ -713,6 +723,11 @@ function LinhaProcesso({
                     <Badge color={statusColor(item.status)} size="sm">
                         {item.status_label}
                     </Badge>
+                    {item.fluxo_label && item.fluxo !== 'em_analise' && (
+                        <Badge color={item.fluxo === 'expresso' ? 'success' : 'light'} size="sm">
+                            {item.fluxo_label}
+                        </Badge>
+                    )}
                     {item.analysis_status_label && (
                         <Badge color="light" size="sm">
                             {item.analysis_status_label}
@@ -845,6 +860,10 @@ function PainelFiltros({
                         <div>
                             <Label htmlFor="filtro-analysis-status">Situação da análise</Label>
                             <Select id="filtro-analysis-status" value={form.analysis_status} onChange={(valor) => definir('analysis_status', valor)} placeholder="Todas" options={analysisStatusOptions} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-fluxo">Fluxo</Label>
+                            <Select id="filtro-fluxo" value={form.fluxo} onChange={(valor) => definir('fluxo', valor)} placeholder="Todos" options={FLUXO_OPTIONS} />
                         </div>
                         <div>
                             <Label htmlFor="filtro-categoria">Categoria</Label>

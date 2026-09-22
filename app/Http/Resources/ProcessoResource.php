@@ -39,6 +39,8 @@ class ProcessoResource extends JsonResource
             'tvl_product_number' => $this->decision?->tvl_product_number,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
+            'fluxo' => $this->fluxoConsulta(),
+            'fluxo_label' => $this->fluxoLabel(),
             'sem_decisao_automatica' => $this->semDecisaoAutomatica(),
             'motivo_encaminhamento' => $this->motivoEncaminhamento(),
             'origin' => $this->origin->value,
@@ -134,6 +136,29 @@ class ProcessoResource extends JsonResource
             'status_label' => $resultado['status']->label(),
             'restante' => $resultado['restante'],
         ];
+    }
+
+    /**
+     * Desfecho gravado: decisão expressa, decisão da análise técnica, ou
+     * processo ainda na fila (sem decisão).
+     */
+    private function fluxoConsulta(): ?string
+    {
+        return match ($this->decision?->flow) {
+            'expresso' => 'expresso',
+            'analise_tecnica' => 'analise_tecnica',
+            default => $this->status === ViabilityRequestStatus::EmAnalise ? 'em_analise' : null,
+        };
+    }
+
+    private function fluxoLabel(): ?string
+    {
+        return match ($this->fluxoConsulta()) {
+            'expresso' => 'Expresso',
+            'analise_tecnica' => 'Análise técnica',
+            'em_analise' => 'Em análise',
+            default => null,
+        };
     }
 
     /**
