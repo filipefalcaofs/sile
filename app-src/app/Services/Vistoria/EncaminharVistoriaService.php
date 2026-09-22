@@ -43,7 +43,11 @@ class EncaminharVistoriaService
             throw EncaminharVistoriaException::foraDeAnalise($processo);
         }
 
-        if (! $this->statusMachine->canTransition($processo->analysis_status, AnalysisStatus::Vistoriar)) {
+        // O eixo nasce em para_distribuir e o analista encaminha da ficha sem
+        // passar pelo dropdown "Em análise". A aresta direta da state machine
+        // só existe a partir de EmAnalise; dos estados anteriores o salto é
+        // forçado e fica registrado na timeline.
+        if (! $this->eixoAbertoParaVistoria($processo->analysis_status)) {
             throw EncaminharVistoriaException::eixoNaoPermite($processo);
         }
 
@@ -63,7 +67,13 @@ class EncaminharVistoriaService
                 'assigned_at' => null,
             ])->save();
 
-            $this->statusMachine->transition($processo, AnalysisStatus::Vistoriar, $ator, $motivo);
+            $this->statusMachine->transition(
+                $processo,
+                AnalysisStatus::Vistoriar,
+                $ator,
+                $motivo,
+                ! $this->statusMachine->canTransition($processo->analysis_status, AnalysisStatus::Vistoriar),
+            );
 
             $this->audit->log(
                 logName: 'vistoria',
@@ -83,6 +93,21 @@ class EncaminharVistoriaService
 
             return $referral;
         });
+    }
+
+    /**
+     * Análise ainda aberta: o processo pode ir à vistoria sem o analista
+     * percorrer para_distribuir → encaminhado → analisar → em_analise.
+     */
+    private function eixoAbertoParaVistoria(?AnalysisStatus $status): bool
+    {
+        return in_array($status, [
+            null,
+            AnalysisStatus::ParaDistribuir,
+            AnalysisStatus::Encaminhado,
+            AnalysisStatus::Analisar,
+            AnalysisStatus::EmAnalise,
+        ], true);
     }
 
     /**

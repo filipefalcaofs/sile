@@ -36,6 +36,7 @@ use App\Http\Controllers\Gestao\LoginController;
 use App\Http\Controllers\Gestao\LouosController;
 use App\Http\Controllers\Gestao\LouosDraftController;
 use App\Http\Controllers\Gestao\LouosSandboxController;
+use App\Http\Controllers\Gestao\MalhaFinaCaixaController;
 use App\Http\Controllers\Gestao\MalhaFinaController;
 use App\Http\Controllers\Gestao\MetadataController;
 use App\Http\Controllers\Gestao\ParameterController;
@@ -259,6 +260,9 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:consultar-cnaes')->group(function () {
             Route::get('cnaes', [CnaeController::class, 'index'])->name('cnaes.index');
             Route::get('regras-tratamento', [TratamentoRegrasController::class, 'index'])->name('regras-tratamento.index');
+            // Homologação do motor: protocolos SEDUR entram como se o tipo de
+            // imóvel e a área tivessem chegado do REGIN. A tela declara a
+            // simulação — a integração REGIN continua stub.
         });
 
         Route::middleware('permission:manter-cnaes')->group(function () {
@@ -639,6 +643,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             });
 
             Route::middleware('permission:distribuir-processos')->group(function () {
+                Route::get('central', [CaixaSetorController::class, 'central'])->name('central');
                 Route::post('distribuir', [CaixaSetorController::class, 'distribuir'])->name('distribuir');
                 Route::post('redistribuir', [CaixaSetorController::class, 'redistribuir'])->name('redistribuir');
             });
@@ -650,6 +655,17 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::get('vistorias', VistoriaConsultaController::class)
             ->middleware('permission:preencher-ficha-vistoria')
             ->name('vistorias.index');
+
+        // Caixa de Malha Fina: a fila do revisor — processos com in_fine_mesh
+        // (ortogonal ao status, HU-136). A consulta (GET) lista com os filtros
+        // das caixas (ProcessoQueryService) e audita; a conclusão (POST) dá
+        // baixa nos encaminhamentos abertos SEM mexer no status, com
+        // observação opcional. Gated por analisar-malha-fina — quem só
+        // encaminha (encaminhar-malha-fina) não opera a caixa.
+        Route::middleware('permission:analisar-malha-fina')->prefix('malha-fina')->name('malha-fina.')->group(function () {
+            Route::get('/', MalhaFinaCaixaController::class)->name('index');
+            Route::post('{viabilityRequest}/concluir', [MalhaFinaController::class, 'concluir'])->name('concluir');
+        });
 
         // Ficha de análise técnica (HU-135/140/142): a superfície da análise
         // humana. Abre a revisão vigente (pré-analisada em 10-08), faz autosave do

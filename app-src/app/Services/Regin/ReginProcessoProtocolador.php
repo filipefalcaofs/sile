@@ -53,8 +53,6 @@ class ReginProcessoProtocolador
             'address_neighborhood' => $endereco['neighborhood'],
             'address_zip' => $endereco['zip'],
             'property_registration' => $this->inscricao($rowset),
-            // Marcador estável do recebimento REGIN (valor de contingência
-            // reconhecido pelo fluxo expresso para este canal).
             'contingency_reason' => 'regin_recebe',
             'external_reference' => $recebimento->protocolo,
         ]);

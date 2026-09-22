@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Gestao\ConcluirMalhaFinaRequest;
 use App\Http\Requests\Gestao\EncaminharMalhaFinaRequest;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\MalhaFinaException;
@@ -46,5 +47,27 @@ class MalhaFinaController extends Controller
         }
 
         return $response;
+    }
+
+    /**
+     * Conclusão pela Caixa de Malha Fina: baixa TODOS os encaminhamentos
+     * abertos do processo (a caixa lista processos, não encaminhamentos) com
+     * observação opcional, SEM mudar o status (ortogonal — RN-001). Processo
+     * sem encaminhamento aberto volta com aviso controlado, nunca falha
+     * silenciosa. Gated por analisar-malha-fina na rota.
+     */
+    public function concluir(ConcluirMalhaFinaRequest $request, ViabilityRequest $viabilityRequest): RedirectResponse
+    {
+        $baixados = $this->malhaFina->resolverAbertos(
+            $viabilityRequest,
+            $request->user(),
+            $request->validated('observacao'),
+        );
+
+        if ($baixados === 0) {
+            return back()->with('warning', 'O processo não tinha encaminhamento aberto na malha fina.');
+        }
+
+        return back()->with('status', 'Análise da malha fina concluída.');
     }
 }

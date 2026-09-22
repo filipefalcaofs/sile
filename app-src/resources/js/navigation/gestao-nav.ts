@@ -58,6 +58,7 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 permission: ['analisar-processos', 'distribuir-processos'],
             },
             { name: 'Vistorias', href: '/gestao/vistorias', icon: 'map', permission: 'preencher-ficha-vistoria' },
+            { name: 'Malha fina', href: '/gestao/malha-fina', icon: 'shield', permission: 'analisar-malha-fina' },
             { name: 'Consulta de processos', href: '/gestao/processos', icon: 'file', permission: 'consultar-solicitacoes' },
             { name: 'Atendimento presencial', href: '/gestao/atendimento', icon: 'user', permission: 'atendimento-presencial' },
             {
@@ -65,12 +66,6 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 href: '/gestao/contingencia',
                 icon: 'file',
                 permission: 'registrar-contingencia',
-            },
-            {
-                name: 'Resultados do fluxo expresso',
-                href: '/gestao/resultados-expresso',
-                icon: 'list',
-                permission: 'consultar-solicitacoes',
             },
         ],
     },
@@ -207,6 +202,12 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 href: '/gestao/relatorios/comunicacoes-falhas',
                 icon: 'mail',
                 permission: 'consultar-relatorios',
+            },
+            {
+                name: 'Resultados do fluxo expresso',
+                href: '/gestao/resultados-expresso',
+                icon: 'list',
+                permission: 'consultar-solicitacoes',
             },
         ],
     },

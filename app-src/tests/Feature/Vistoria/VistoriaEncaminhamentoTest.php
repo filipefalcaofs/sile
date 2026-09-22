@@ -13,6 +13,7 @@ use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -112,23 +113,65 @@ class VistoriaEncaminhamentoTest extends TestCase
         $this->assertSame(0, InspectionReferral::query()->count());
     }
 
-    public function test_encaminhar_fora_do_eixo_em_analise_e_recusado(): void
+    /**
+     * O processo chega à ficha em para_distribuir (e segue encaminhado/analisar
+     * antes de alguém marcar "Em análise" no dropdown). O botão de vistoria
+     * tem de fazer o handoff a partir desses estados.
+     *
+     * @return array<string, array{0: AnalysisStatus}>
+     */
+    public static function eixosAbertosParaVistoria(): array
+    {
+        return [
+            'para distribuir' => [AnalysisStatus::ParaDistribuir],
+            'encaminhado' => [AnalysisStatus::Encaminhado],
+            'analisar' => [AnalysisStatus::Analisar],
+            'em análise' => [AnalysisStatus::EmAnalise],
+        ];
+    }
+
+    #[DataProvider('eixosAbertosParaVistoria')]
+    public function test_encaminhar_a_partir_do_eixo_aberto_faz_o_handoff(AnalysisStatus $origem): void
     {
         $setor = Sector::factory()->create();
         $setorVistoria = Sector::factory()->create();
         $analista = $this->analista();
         $processo = $this->processoEmAnalise($setor, $analista);
-        $processo->forceFill(['analysis_status' => AnalysisStatus::Analisar])->save();
+        $processo->forceFill(['analysis_status' => $origem])->save();
+
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/vistoria/encaminhar", [
+                'setor_vistoria_id' => $setorVistoria->id,
+                'motivo' => 'Precisa de vistoria.',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $fresh = $processo->refresh();
+        $this->assertSame(AnalysisStatus::Vistoriar, $fresh->analysis_status);
+        $this->assertSame($setorVistoria->id, $fresh->sector_id);
+        $this->assertNull($fresh->assigned_user_id);
+    }
+
+    public function test_encaminhar_com_analise_concluida_e_recusado_com_mensagem(): void
+    {
+        $setor = Sector::factory()->create();
+        $setorVistoria = Sector::factory()->create();
+        $analista = $this->analista();
+        $processo = $this->processoEmAnalise($setor, $analista);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::AnaliseConcluida])->save();
 
         $this->actingAs($analista, 'gestao')
             ->postJson("/gestao/processos/{$processo->id}/vistoria/encaminhar", [
                 'setor_vistoria_id' => $setorVistoria->id,
                 'motivo' => 'Precisa de vistoria.',
             ])
-            ->assertUnprocessable();
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['motivo']);
 
-        $this->assertSame(AnalysisStatus::Analisar, $processo->refresh()->analysis_status);
+        $this->assertSame(AnalysisStatus::AnaliseConcluida, $processo->refresh()->analysis_status);
         $this->assertSame($setor->id, $processo->sector_id);
+        $this->assertSame(0, InspectionReferral::query()->count());
     }
 
     public function test_encaminhar_exige_permissao_de_analise(): void

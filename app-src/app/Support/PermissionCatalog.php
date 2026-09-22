@@ -128,6 +128,12 @@ final class PermissionCatalog
                 'group' => 'Análise técnica',
             ],
             [
+                'name' => 'analisar-malha-fina',
+                'label' => 'Analisar malha fina',
+                'description' => 'Acessa e opera a Caixa de Malha Fina (consulta e baixa de encaminhamentos).',
+                'group' => 'Análise técnica',
+            ],
+            [
                 'name' => 'enviar-tvl-analise',
                 'label' => 'Enviar TVL para análise',
                 'description' => 'Encaminha um TVL já emitido para análise.',

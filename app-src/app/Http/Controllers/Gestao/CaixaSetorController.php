@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\DistribuirProcessoRequest;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityServiceType;
+use App\Services\Analise\CargaAnalistaService;
 use App\Services\Analise\DistribuicaoException;
 use App\Services\Analise\DistribuicaoService;
+use App\Services\Analise\ProcessoQueryService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
@@ -34,6 +38,8 @@ class CaixaSetorController extends Controller
     public function __construct(
         private DistribuicaoService $distribuicao,
         private AuditService $audit,
+        private ProcessoQueryService $processos,
+        private CargaAnalistaService $carga,
     ) {}
 
     /**
@@ -56,9 +62,13 @@ class CaixaSetorController extends Controller
         // e "distribuidos" (acompanhamento, com a analista atribuída).
         $visao = $request->input('visao') === 'distribuidos' ? 'distribuidos' : 'para_distribuir';
 
+        $filtros = $this->filtrosDaCaixa($request);
+
         $base = ViabilityRequest::query()
             ->whereIn('sector_id', $sectorIds)
             ->where('status', ViabilityRequestStatus::EmAnalise->value);
+
+        $base = $this->processos->aplicarFiltros($base, $filtros);
 
         $contadores = [
             'para_distribuir' => (clone $base)->whereNull('assigned_user_id')->count(),
@@ -142,15 +152,17 @@ class CaixaSetorController extends Controller
 
         $this->audit->log('analise', 'consulta-caixa', 'Consulta da caixa do setor', [
             'setores' => $sectorIds->all(),
+            'filtros' => array_filter($filtros, fn ($v): bool => $v !== ''),
         ]);
 
         return Inertia::render('gestao/caixa-setor/index', [
             'processos' => $processos,
             'visao' => $visao,
             'contadores' => $contadores,
-            'filtros' => [
-                'per_page' => $perPage,
-            ],
+            'filtros' => $filtros + ['per_page' => $perPage],
+            'servicoOptions' => $this->servicoOptions(),
+            'analysisStatusOptions' => AnalysisStatus::options(),
+            'categoriaOptions' => $this->categoriaOptions(),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'podeDistribuir' => $podeDistribuir,
             'podeAssumir' => $podeAssumir,
@@ -160,20 +172,97 @@ class CaixaSetorController extends Controller
     }
 
     /**
+     * Central de Distribuição (Fase 2): a partir dos processos selecionados na
+     * caixa (ids), mostra a carga ativa de cada analista do(s) setor(es) desses
+     * processos para o Apoio decidir a distribuição. Só processos EM ANÁLISE, sem
+     * responsável, do(s) setor(es) do usuário (RN-004). A gravação é o POST
+     * distribuir já existente. A decisão do destinatário é do Apoio — aqui só se
+     * mede a carga (nunca se sugere). A consulta é auditada.
+     */
+    public function central(Request $request): Response|RedirectResponse
+    {
+        $sectorIds = $request->user()->sectors()->pluck('sectors.id');
+
+        $ids = collect(explode(',', (string) $request->string('ids')))
+            ->map(fn ($id): int => (int) trim($id))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $processos = ViabilityRequest::query()
+            ->whereIn('id', $ids)
+            ->whereIn('sector_id', $sectorIds)
+            ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->whereNull('assigned_user_id')
+            ->with(['sector:id,name'])
+            ->orderBy('analysis_due_at')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (ViabilityRequest $processo): array => [
+                'id' => $processo->id,
+                'bap' => $processo->external_reference,
+                'protocol_number' => $processo->protocol_number,
+                'imovel' => implode(' - ', array_filter([
+                    trim(implode(', ', array_filter([$processo->address_street, $processo->address_number]))),
+                    $processo->address_neighborhood,
+                ])),
+                'analysis_stage_label' => $processo->analysis_stage?->label(),
+            ])
+            ->all();
+
+        // Setores efetivos dos processos válidos (interseção com os do usuário).
+        $setoresDosProcessos = ViabilityRequest::query()
+            ->whereIn('id', collect($processos)->pluck('id'))
+            ->pluck('sector_id')
+            ->unique()
+            ->values();
+
+        if ($setoresDosProcessos->count() > 1) {
+            return redirect('/gestao/caixa-setor')->with('error', 'Selecione processos de um único setor por vez para distribuir.');
+        }
+
+        $analistas = $this->carga->cargaDosSetores($setoresDosProcessos);
+        $totalEmAnalise = collect($analistas)->sum('total');
+
+        $this->audit->log('analise', 'consulta-central', 'Consulta da central de distribuição', [
+            'setores' => $setoresDosProcessos->all(),
+            'processos' => collect($processos)->pluck('id')->all(),
+        ]);
+
+        return Inertia::render('gestao/caixa-setor/central', [
+            'processos' => $processos,
+            'analistas' => $analistas,
+            'totalSelecionados' => count($processos),
+            'totalEmAnalise' => $totalEmAnalise,
+        ]);
+    }
+
+    /**
      * Distribui um ou mais processos (lote — RN-007) a um analista do setor. A
-     * validação estrutural é do DistribuirProcessoRequest; o vínculo de setor de
-     * cada item é regra do DistribuicaoService, que isola falhas no lote (uma
-     * atribuição inválida não derruba as demais).
+     * validação estrutural é do DistribuirProcessoRequest. O lote inteiro é
+     * rejeitado se algum item não estiver disponível na caixa do ator; falhas de
+     * regra do destinatário permanecem isoladas no DistribuicaoService.
      */
     public function distribuir(DistribuirProcessoRequest $request): RedirectResponse
     {
         /** @var User $analista */
         $analista = User::query()->findOrFail($request->integer('analista_id'));
 
+        $sectorIds = $request->user()->sectors()->pluck('sectors.id');
+        $pedidos = collect($request->input('request_ids'))
+            ->map(fn ($id): int => (int) $id)
+            ->unique();
+
         $processos = ViabilityRequest::query()
-            ->whereIn('id', $request->input('request_ids'))
+            ->whereIn('id', $pedidos)
+            ->whereIn('sector_id', $sectorIds)
             ->where('status', ViabilityRequestStatus::EmAnalise->value)
+            ->whereNull('assigned_user_id')
             ->get();
+
+        if ($processos->count() !== $pedidos->count()) {
+            return back()->with('error', 'Alguns processos não estão disponíveis para distribuição na sua caixa.');
+        }
 
         $resumo = $this->distribuicao->distribuirLote($processos, $analista, $request->user());
 
@@ -200,8 +289,11 @@ class CaixaSetorController extends Controller
         /** @var User $analista */
         $analista = User::query()->findOrFail($request->integer('analista_id'));
 
+        $sectorIds = $request->user()->sectors()->pluck('sectors.id');
+
         $processo = ViabilityRequest::query()
             ->whereIn('id', $request->input('request_ids'))
+            ->whereIn('sector_id', $sectorIds)
             ->where('status', ViabilityRequestStatus::EmAnalise->value)
             ->firstOrFail();
 
@@ -227,5 +319,47 @@ class CaixaSetorController extends Controller
         }
 
         return back()->with('status', 'Processo assumido.');
+    }
+
+    /**
+     * Filtros de pesquisa da caixa (subconjunto do SAPS), crus da query string —
+     * o ProcessoQueryService normaliza e ignora os vazios.
+     *
+     * @return array<string, string>
+     */
+    private function filtrosDaCaixa(Request $request): array
+    {
+        $filtros = [];
+
+        foreach (ProcessoQueryService::CHAVES_FILTRO_CAIXA as $chave) {
+            $filtros[$chave] = $request->string($chave)->toString();
+        }
+
+        return $filtros;
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function servicoOptions(): array
+    {
+        return ViabilityServiceType::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name])
+            ->all();
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function categoriaOptions(): array
+    {
+        $opcoes = [];
+        foreach (ProcessoQueryService::CATEGORIAS as $value => $label) {
+            $opcoes[] = ['value' => $value, 'label' => $label];
+        }
+
+        return $opcoes;
     }
 }

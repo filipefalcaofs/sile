@@ -147,7 +147,7 @@ class FluxoApoioTramitacaoTest extends TestCase
             ->get('/gestao/processos/fila')
             ->assertOk();
 
-        $idsFila = collect($fila->viewData('page')['props']['processos'])->pluck('id')->all();
+        $idsFila = collect($fila->viewData('page')['props']['processos']['data'])->pluck('id')->all();
         $this->assertContains($request->id, $idsFila, 'O processo distribuído deve aparecer na fila do analista.');
 
         // 7. O analista abre o processo.

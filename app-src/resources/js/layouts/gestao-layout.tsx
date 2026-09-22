@@ -35,10 +35,16 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                 subtitle="Gestão SEDUR"
                 variant="console"
                 collapsibleGroups
+                headerToolbar={<CommandSearch />}
             >
                 {flash.status && (
                     <div className="mb-6">
                         <Alert variant="success" title="Sucesso" message={flash.status} />
+                    </div>
+                )}
+                {flash.warning && (
+                    <div className="mb-6">
+                        <Alert variant="warning" title="Atenção" message={flash.warning} />
                     </div>
                 )}
                 {flash.error && (
@@ -48,7 +54,6 @@ export default function GestaoLayout({ children }: GestaoLayoutProps) {
                 )}
                 {children}
             </AppShell>
-            <CommandSearch />
         </ThemeProvider>
     );
 }

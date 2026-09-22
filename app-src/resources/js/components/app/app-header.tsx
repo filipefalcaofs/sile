@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
     ChevronDownIcon,
     CloseIcon,
@@ -115,13 +115,15 @@ interface AppHeaderProps {
     homeHref: string;
     logoutHref: string;
     accountHref: string;
+    toolbar?: ReactNode;
 }
 
 /**
- * Header do TailAdmin adaptado: mantém o toggle da sidebar, o toggle
- * de tema e o menu do usuário; remove busca e notificações fictícias.
+ * Header do TailAdmin adaptado: toggle da sidebar, tema, notificações
+ * e menu do usuário. O console de gestão injeta a busca global em `toolbar`,
+ * à esquerda desses controles.
  */
-export default function AppHeader({ homeHref, logoutHref, accountHref }: AppHeaderProps) {
+export default function AppHeader({ homeHref, logoutHref, accountHref, toolbar }: AppHeaderProps) {
     const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
     const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
@@ -141,7 +143,11 @@ export default function AppHeader({ homeHref, logoutHref, accountHref }: AppHead
     return (
         <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 lg:border-b">
             <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
-                <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
+                <div
+                    className={`flex items-center justify-between gap-2 border-b border-gray-200 px-3 py-3 dark:border-gray-800 sm:gap-4 lg:border-b-0 lg:px-0 lg:py-4 ${
+                        toolbar ? 'w-full min-w-0 lg:w-auto lg:flex-1 lg:justify-start' : 'w-full lg:w-auto lg:flex-none lg:justify-normal'
+                    }`}
+                >
                     <button
                         type="button"
                         className="flex items-center justify-center w-10 h-10 text-gray-500 border-gray-200 rounded-lg z-99999 dark:border-gray-800 dark:text-gray-400 lg:h-11 lg:w-11 lg:border"
@@ -151,9 +157,13 @@ export default function AppHeader({ homeHref, logoutHref, accountHref }: AppHead
                         {isMobileOpen ? <CloseIcon /> : <MenuIcon />}
                     </button>
 
-                    <Link href={homeHref} className="lg:hidden">
-                        <span className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">VIABILIZA</span>
-                    </Link>
+                    {toolbar ? (
+                        <div className="min-w-0 w-full max-w-xl flex-1">{toolbar}</div>
+                    ) : (
+                        <Link href={homeHref} className="lg:hidden">
+                            <span className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">VIABILIZA</span>
+                        </Link>
+                    )}
 
                     <button
                         type="button"
@@ -167,7 +177,7 @@ export default function AppHeader({ homeHref, logoutHref, accountHref }: AppHead
                 <div
                     className={`${
                         isApplicationMenuOpen ? 'flex' : 'hidden'
-                    } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
+                    } w-full items-center justify-between gap-4 px-5 py-4 shadow-theme-md lg:flex lg:w-auto lg:shrink-0 lg:justify-end lg:px-0 lg:py-0 lg:shadow-none`}
                 >
                     <div className="flex items-center gap-2 2xsm:gap-3">
                         <ThemeToggleButton />

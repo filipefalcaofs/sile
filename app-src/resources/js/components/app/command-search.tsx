@@ -13,9 +13,9 @@ interface ResultadoBusca {
 }
 
 /**
- * Busca global da retaguarda (HU-082 RN-009): atalho Cmd/Ctrl+K + gatilho
- * flutuante. Destinos rápidos vêm de `destinosComando()` (mesmo catálogo da
- * sidebar). A busca de processos exige `consultar-solicitacoes`.
+ * Busca global da retaguarda (HU-082 RN-009): atalho Cmd/Ctrl+K e gatilho
+ * no cabeçalho. Destinos rápidos vêm de `destinosComando()` (mesmo
+ * catálogo da sidebar). A busca de processos exige `consultar-solicitacoes`.
  */
 export default function CommandSearch() {
     const { auth } = usePage<SharedProps>().props;
@@ -102,11 +102,11 @@ export default function CommandSearch() {
                 onClick={() => setOpen(true)}
                 title="Buscar (⌘K)"
                 aria-label="Abrir busca"
-                className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 shadow-theme-lg transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.05]"
+                className="flex h-11 w-full items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 text-left text-theme-sm text-gray-500 transition hover:bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:bg-white/[0.06]"
             >
-                <SearchIcon className="size-5" />
-                <span className="hidden sm:inline">Buscar</span>
-                <kbd className="hidden rounded bg-gray-100 px-1.5 py-0.5 text-theme-xs font-medium text-gray-500 sm:inline dark:bg-white/10 dark:text-gray-400">
+                <SearchIcon className="size-5 shrink-0" />
+                <span className="min-w-0 flex-1 truncate">Buscar</span>
+                <kbd className="hidden rounded border border-gray-200 bg-white px-1.5 py-0.5 text-theme-xs font-medium text-gray-400 sm:inline dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
                     ⌘K
                 </kbd>
             </button>

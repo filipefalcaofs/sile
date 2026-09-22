@@ -184,11 +184,15 @@ class PreAnaliseServiceTest extends TestCase
         // (relatório SEDUR 21/09, item 02): status_escolhido é null até o analista
         // escolher. status_sugerido permanece gravado só para a divergência
         // auditada (HU-140 RN-002) — nunca é exposto na ficha.
+        // Regra SEDUR 22/09/2026 (retificação): permitido nos Quadros 10 e 11-A,
+        // a atividade já nasce pré-marcada Deferida — o analista confirma ou
+        // altera. status_sugerido permanece gravado só para a divergência
+        // auditada (HU-140 RN-002) — nunca é exposto na ficha.
         $this->assertCount(1, $record->per_cnae);
         $this->assertSame('4712100', $record->per_cnae[0]['cnae']);
         $this->assertSame('permitido', $record->per_cnae[0]['tendencia']);
         $this->assertSame('deferida', $record->per_cnae[0]['status_sugerido']);
-        $this->assertNull($record->per_cnae[0]['status_escolhido']);
+        $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
         $this->assertSame('nR1', $record->per_cnae[0]['grupo_uso']);
         // Justificativa em branco (regra SEDUR 22/09/2026, item 6): o motor
         // traz só as informações objetivas — a manifestação é do analista.
@@ -228,7 +232,9 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertTrue($record->engine_available);
         $this->assertSame('nao_permitido', $record->per_cnae[0]['tendencia']);
         $this->assertSame('indeferida', $record->per_cnae[0]['status_sugerido']);
-        $this->assertNull($record->per_cnae[0]['status_escolhido']);
+        // Não permitido pelos quadros: nasce pré-marcada Indeferida (o processo
+        // em produção é indeferido automaticamente pelo veto locacional).
+        $this->assertSame('indeferida', $record->per_cnae[0]['status_escolhido']);
         $this->assertNull($record->per_cnae[0]['justificativa']);
         $this->assertNull($record->parecer);
     }
@@ -343,7 +349,7 @@ class PreAnaliseServiceTest extends TestCase
 
         $this->assertNotNull($record);
         $this->assertSame('permitido_com_condicoes', $record->per_cnae[0]['tendencia']);
-        $this->assertNull($record->per_cnae[0]['status_escolhido']);
+        $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
         $this->assertNotEmpty($record->conditions);
         $this->assertNotEmpty($record->per_cnae[0]['condicionantes']);
         $this->assertTrue(
@@ -444,7 +450,7 @@ class PreAnaliseServiceTest extends TestCase
 
         $this->assertNotNull($record);
         $this->assertTrue($record->engine_available);
-        $this->assertNull($record->per_cnae[0]['status_escolhido']);
+        $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
         $this->assertNull($record->parecer);
         $this->assertSame(1, $request->analysisRecords()->count());
     }
@@ -559,12 +565,13 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertSame('Decisão técnica do analista.', $payload['per_cnae'][0]['justificativa']);
     }
 
-    public function test_payload_da_ficha_nao_expoe_sugestao_nem_pre_marca_decisao(): void
+    public function test_payload_da_ficha_nao_expoe_sugestao_e_pre_marca_deferido_quando_permitido(): void
     {
-        // Relatório SEDUR 21/09, itens 02 e 04: o sistema não sugere decisão ao
-        // analista — o payload da ficha não carrega status_sugerido, não pré-marca
-        // status_escolhido e o parecer nasce em branco. A sugestão gravada no
-        // banco continua disponível só para a divergência auditada (HU-140 RN-002).
+        // Regra SEDUR 22/09/2026 (retificação do item 02 de 21/09): o payload da
+        // ficha não carrega status_sugerido, mas PRÉ-MARCA Deferida em toda
+        // atividade permitida nos Quadros 10 e 11-A — o analista confirma ou
+        // altera. O parecer segue em branco. A sugestão gravada no banco
+        // continua disponível só para a divergência auditada (HU-140 RN-002).
         $this->fakeBairroComZona('ZR-1');
         $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
         $this->seedTratamento('4712100', 'nR1', 'nR1-01');
@@ -581,7 +588,7 @@ class PreAnaliseServiceTest extends TestCase
 
         foreach ($payload['per_cnae'] as $item) {
             $this->assertArrayNotHasKey('status_sugerido', $item);
-            $this->assertNull($item['status_escolhido']);
+            $this->assertSame('deferida', $item['status_escolhido']);
         }
     }
 

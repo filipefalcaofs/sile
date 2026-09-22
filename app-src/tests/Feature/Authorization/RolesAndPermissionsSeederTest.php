@@ -258,7 +258,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         // Gestor distribui e também analisa/emite TVL. Setores ficam só com o
         // administrador (relatório de usabilidade SEDUR 19/09, itens 03-04).
         $gestor = Role::findByName('gestor', 'web');
-        foreach (['analisar-processos', 'distribuir-processos', 'emitir-tvl', 'encaminhar-malha-fina'] as $permission) {
+        foreach (['analisar-processos', 'distribuir-processos', 'emitir-tvl', 'encaminhar-malha-fina', 'analisar-malha-fina'] as $permission) {
             $this->assertTrue($gestor->hasPermissionTo($permission));
         }
         $this->assertFalse($gestor->hasPermissionTo('manter-setores'));
@@ -457,7 +457,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertSame(5, Role::query()->count());
-        $this->assertSame(34, Permission::query()->count());
+        $this->assertSame(35, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void

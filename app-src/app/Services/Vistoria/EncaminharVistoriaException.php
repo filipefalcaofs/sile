@@ -7,8 +7,9 @@ use DomainException;
 
 /**
  * Precondições do encaminhamento à vistoria: o processo precisa estar em
- * análise (status canônico) e num ponto do eixo operacional de onde a
- * vistoria é alcançável (a state machine só permite EmAnalise → Vistoriar).
+ * análise (status canônico) e com o eixo operacional ainda aberto
+ * (para distribuir, encaminhado, analisar ou em análise). Análise
+ * concluída, convite e vistoria já encerrada recusam o handoff.
  */
 class EncaminharVistoriaException extends DomainException
 {
@@ -21,6 +22,6 @@ class EncaminharVistoriaException extends DomainException
     {
         $atual = $processo->analysis_status?->label() ?? 'não iniciado';
 
-        return new self("O processo #{$processo->id} está em \"{$atual}\" no eixo operacional — a vistoria só pode ser acionada a partir de \"Em análise\".");
+        return new self("O processo #{$processo->id} está em \"{$atual}\" — o encaminhamento à vistoria só vale enquanto a análise ainda está aberta.");
     }
 }

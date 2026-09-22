@@ -8,6 +8,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityServiceType;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -339,6 +340,7 @@ class CaixaSetorTest extends TestCase
     {
         $setor = Sector::factory()->create();
         $gestor = $this->gestor();
+        $gestor->sectors()->attach($setor);
         $analista = $this->analistaDoSetor($setor);
         $processo = $this->processoNaCaixa($setor);
 
@@ -356,6 +358,7 @@ class CaixaSetorTest extends TestCase
     {
         $setor = Sector::factory()->create();
         $gestor = $this->gestor();
+        $gestor->sectors()->attach($setor);
         $analista = $this->analistaDoSetor($setor);
         $p1 = $this->processoNaCaixa($setor);
         $p2 = $this->processoNaCaixa($setor);
@@ -369,6 +372,26 @@ class CaixaSetorTest extends TestCase
 
         $this->assertSame($analista->id, $p1->fresh()->assigned_user_id);
         $this->assertSame($analista->id, $p2->fresh()->assigned_user_id);
+    }
+
+    public function test_distribuir_rejeita_processo_de_setor_alheio(): void
+    {
+        $setorA = Sector::factory()->create();
+        $setorB = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setorA);
+        $analistaDoSetorB = $this->analistaDoSetor($setorB);
+        $processoDoSetorA = $this->processoNaCaixa($setorA);
+        $processoDoSetorB = $this->processoNaCaixa($setorB);
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processoDoSetorA->id, $processoDoSetorB->id],
+                'analista_id' => $analistaDoSetorB->id,
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertNull($processoDoSetorA->fresh()->assigned_user_id);
+        $this->assertNull($processoDoSetorB->fresh()->assigned_user_id);
     }
 
     public function test_analista_assume_processo_da_sua_caixa(): void
@@ -470,6 +493,30 @@ class CaixaSetorTest extends TestCase
         $this->assertSame($analistaB->id, $processo->fresh()->assigned_user_id);
     }
 
+    public function test_redistribuir_rejeita_processo_de_setor_alheio(): void
+    {
+        $setorA = Sector::factory()->create();
+        $setorB = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setorA);
+        $analistaDoSetorB = $this->analistaDoSetor($setorB);
+        $novoAnalistaDoSetorB = $this->analistaDoSetor($setorB);
+        $processo = $this->processoNaCaixa($setorB);
+        $processo->forceFill([
+            'assigned_user_id' => $analistaDoSetorB->id,
+            'assigned_at' => now(),
+            'analysis_status' => AnalysisStatus::EmAnalise,
+        ])->save();
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/redistribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $novoAnalistaDoSetorB->id,
+            ])
+            ->assertNotFound();
+
+        $this->assertSame($analistaDoSetorB->id, $processo->fresh()->assigned_user_id);
+    }
+
     public function test_redistribuir_retorna_erro_controlado_quando_a_analise_ja_foi_concluida(): void
     {
         $setor = Sector::factory()->create();
@@ -491,5 +538,184 @@ class CaixaSetorTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertSame($analistaA->id, $processo->fresh()->assigned_user_id);
+    }
+
+    public function test_filtra_por_analysis_status_e_ajusta_contadores(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+
+        $paraDistribuir = $this->processoNaCaixa($setor);
+        $paraDistribuir->forceFill(['analysis_status' => AnalysisStatus::ParaDistribuir])->save();
+
+        $encaminhado = $this->processoNaCaixa($setor);
+        $encaminhado->forceFill(['analysis_status' => AnalysisStatus::Encaminhado])->save();
+
+        $response = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?analysis_status=encaminhado')
+            ->assertOk();
+
+        $props = $response->viewData('page')['props'];
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($encaminhado->id, $ids);
+        $this->assertNotContains($paraDistribuir->id, $ids);
+        $this->assertSame('encaminhado', $props['filtros']['analysis_status']);
+        $this->assertSame(1, $props['contadores']['para_distribuir'], 'Os contadores das abas respeitam o filtro.');
+    }
+
+    public function test_filtra_por_servico_bap_e_protocolo(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+
+        $servico = ViabilityServiceType::query()->first()
+            ?? ViabilityServiceType::factory()->create();
+
+        $alvo = $this->processoNaCaixa($setor);
+        $alvo->forceFill(['service_type_id' => $servico->id, 'external_reference' => 'BAP-XYZ-1'])->save();
+
+        $outro = $this->processoNaCaixa($setor);
+        $outro->forceFill(['external_reference' => 'BAP-OUTRO-2'])->save();
+
+        $response = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?bap=XYZ')
+            ->assertOk();
+
+        $ids = collect($response->viewData('page')['props']['processos']['data'])->pluck('id')->all();
+        $this->assertContains($alvo->id, $ids);
+        $this->assertNotContains($outro->id, $ids);
+    }
+
+    public function test_index_expoe_opcoes_de_servico_e_status_de_tramitacao(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $this->processoNaCaixa($setor);
+
+        $props = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $this->assertNotEmpty($props['analysisStatusOptions']);
+        $this->assertArrayHasKey('servicoOptions', $props);
+        $this->assertArrayHasKey('analysis_status', $props['filtros']);
+    }
+
+    public function test_filtra_por_periodo_de_entrada(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+
+        $hoje = now()->toDateString();
+
+        $deHoje = $this->processoNaCaixa($setor);
+        $deHoje->forceFill(['protocoled_at' => now()])->save();
+
+        $antigo = $this->processoNaCaixa($setor);
+        $antigo->forceFill(['protocoled_at' => now()->subDays(10)])->save();
+
+        $response = $this->actingAs($apoio, 'gestao')
+            ->get("/gestao/caixa-setor?data_de={$hoje}")
+            ->assertOk();
+
+        $ids = collect($response->viewData('page')['props']['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($deHoje->id, $ids);
+        $this->assertNotContains($antigo->id, $ids);
+    }
+
+    public function test_filtra_por_bairro(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+
+        $alvo = $this->processoNaCaixa($setor);
+        $alvo->forceFill(['address_neighborhood' => 'Barra'])->save();
+
+        $outro = $this->processoNaCaixa($setor);
+        $outro->forceFill(['address_neighborhood' => 'Pituba'])->save();
+
+        $response = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?bairro=Barra')
+            ->assertOk();
+
+        $ids = collect($response->viewData('page')['props']['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($alvo->id, $ids);
+        $this->assertNotContains($outro->id, $ids);
+    }
+
+    public function test_central_lista_processos_selecionados_e_carga_dos_analistas(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analista = $this->analistaDoSetor($setor);
+
+        $p1 = $this->processoNaCaixa($setor);
+        $p2 = $this->processoNaCaixa($setor);
+
+        // Carga pré-existente do analista (1 processo já atribuído no setor).
+        $jaAtribuido = $this->processoNaCaixa($setor);
+        $jaAtribuido->forceFill(['assigned_user_id' => $analista->id, 'analysis_status' => AnalysisStatus::EmAnalise])->save();
+
+        $props = $this->actingAs($apoio, 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$p1->id},{$p2->id}")
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $idsProcessos = collect($props['processos'])->pluck('id')->all();
+        $this->assertContains($p1->id, $idsProcessos);
+        $this->assertContains($p2->id, $idsProcessos);
+        $this->assertSame(2, $props['totalSelecionados']);
+
+        $linha = collect($props['analistas'])->firstWhere('analista_id', $analista->id);
+        $this->assertSame(1, $linha['total'], 'A carga atual do analista aparece na Central.');
+    }
+
+    public function test_central_exige_distribuir_processos(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $p = $this->processoNaCaixa($setor);
+
+        $this->actingAs($analista, 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$p->id}")
+            ->assertForbidden();
+    }
+
+    public function test_central_bloqueia_selecao_de_multiplos_setores(): void
+    {
+        $setorA = Sector::factory()->create();
+        $setorB = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setorA);
+        $apoio->sectors()->attach($setorB);
+        $processoDoSetorA = $this->processoNaCaixa($setorA);
+        $processoDoSetorB = $this->processoNaCaixa($setorB);
+
+        $this->actingAs($apoio, 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$processoDoSetorA->id},{$processoDoSetorB->id}")
+            ->assertRedirect('/gestao/caixa-setor')
+            ->assertSessionHas('error');
+    }
+
+    public function test_central_ignora_ids_fora_dos_setores_do_usuario(): void
+    {
+        $setorA = Sector::factory()->create();
+        $setorB = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setorA);
+
+        $doA = $this->processoNaCaixa($setorA);
+        $doB = $this->processoNaCaixa($setorB);
+
+        $props = $this->actingAs($apoio, 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$doA->id},{$doB->id}")
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $ids = collect($props['processos'])->pluck('id')->all();
+        $this->assertContains($doA->id, $ids);
+        $this->assertNotContains($doB->id, $ids, 'Processo de setor alheio não entra na Central.');
     }
 }

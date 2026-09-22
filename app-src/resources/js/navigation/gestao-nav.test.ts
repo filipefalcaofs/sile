@@ -70,12 +70,23 @@ describe('IA da sidebar de Gestão', () => {
     it('esconde grupos e itens sem permissão, mas mantém o Painel', () => {
         const visivel = filterGestaoNav(['consultar-solicitacoes']);
 
-        expect(visivel.map((group) => group.id)).toEqual(['operacao']);
-        expect(visivel[0]?.items.map((item) => item.href)).toEqual([
-            '/gestao',
-            '/gestao/processos',
-            '/gestao/resultados-expresso',
-        ]);
+        expect(visivel.map((group) => group.id)).toEqual(['operacao', 'relatorios']);
+        expect(visivel[0]?.items.map((item) => item.href)).toEqual(['/gestao', '/gestao/processos']);
+        expect(visivel[1]?.items.map((item) => item.href)).toEqual(['/gestao/resultados-expresso']);
+    });
+
+    it('coloca a caixa de malha fina em Operação, gated por analisar-malha-fina', () => {
+        expect(groupOfHref('/gestao/malha-fina')?.id).toBe('operacao');
+
+        const hrefsDe = (groups: ReturnType<typeof filterGestaoNav>) =>
+            groups.flatMap((group) => group.items.map((item) => item.href));
+
+        expect(hrefsDe(filterGestaoNav(['analisar-malha-fina']))).toContain('/gestao/malha-fina');
+        expect(hrefsDe(filterGestaoNav(['encaminhar-malha-fina']))).not.toContain('/gestao/malha-fina');
+    });
+
+    it('mantém resultados do expresso em Relatórios (leitura, não trabalho do dia)', () => {
+        expect(groupOfHref('/gestao/resultados-expresso')?.id).toBe('relatorios');
     });
 
     it('espelha o catálogo no Cmd+K para as permissões do usuário', () => {

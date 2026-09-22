@@ -31,6 +31,10 @@ export function Modal({
 }: ModalProps) {
     const modalRef = useRef<HTMLDivElement>(null);
     const previousFocusRef = useRef<HTMLElement | null>(null);
+    // onClose chega inline do pai e muda a cada tecla. Se entrar nas deps do
+    // efeito, o cleanup devolve o foco e a abertura foca de novo o Fechar.
+    const onCloseRef = useRef(onClose);
+    onCloseRef.current = onClose;
 
     useEffect(() => {
         if (!isOpen) {
@@ -45,7 +49,7 @@ export function Modal({
 
         const handleKeydown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onClose();
+                onCloseRef.current();
                 return;
             }
 
@@ -81,7 +85,7 @@ export function Modal({
             document.removeEventListener('keydown', handleKeydown);
             previousFocusRef.current?.focus({ preventScroll: true });
         };
-    }, [isOpen, onClose]);
+    }, [isOpen]);
 
     useEffect(() => {
         if (isOpen) {

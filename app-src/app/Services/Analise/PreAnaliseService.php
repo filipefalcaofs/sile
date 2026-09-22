@@ -211,7 +211,11 @@ class PreAnaliseService
                 'tendencia' => $item['tendencia'],
                 'tendencia_label' => $item['tendencia_label'],
                 'status_sugerido' => $status,
-                'status_escolhido' => null,
+                // Regra SEDUR 22/09/2026 (retificação): a decisão nasce
+                // pré-marcada com o veredito locacional dos Quadros 10/11-A —
+                // permitido ⇒ Deferida; não permitido ⇒ Indeferida; pendente
+                // ⇒ sem marca. O analista confirma ou altera.
+                'status_escolhido' => $status,
                 'fluxo' => $item['fluxo'],
                 'grupo_uso' => $grupo,
                 'gatilhos' => $this->rotulosGatilhos($consulta->risco->encaminhamento['gatilhos_acionados'] ?? []),

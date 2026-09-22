@@ -7,6 +7,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityServiceType;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -75,15 +76,16 @@ class ProcessoFilaTest extends TestCase
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      */
-    private function filaProps(User $user, string $modo): array
+    private function filaProps(User $user, string $modo, string $query = ''): array
     {
-        $response = $this->actingAs($user, 'gestao')
-            ->get("/gestao/processos/fila?modo={$modo}")
-            ->assertOk();
+        $sufixo = $query === '' ? '' : "&{$query}";
 
-        return $response->viewData('page')['props'];
+        return $this->actingAs($user, 'gestao')
+            ->get("/gestao/processos/fila?modo={$modo}{$sufixo}")
+            ->assertOk()
+            ->viewData('page')['props'];
     }
 
     public function test_sem_permissao_consultar_solicitacoes_recebe_403_auditado(): void
@@ -113,7 +115,7 @@ class ProcessoFilaTest extends TestCase
         $deOutro = $this->processo(['assigned_user_id' => $outro->id, 'analysis_due_at' => now()->addDay()]);
 
         $props = $this->filaProps($analista, 'meus');
-        $ids = collect($props['processos'])->pluck('id')->all();
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
 
         $this->assertContains($maisUrgente->id, $ids);
         $this->assertContains($menosUrgente->id, $ids);
@@ -143,7 +145,7 @@ class ProcessoFilaTest extends TestCase
         ]);
 
         $props = $this->filaProps($analista, 'meus');
-        $porId = collect($props['processos'])->keyBy('id');
+        $porId = collect($props['processos']['data'])->keyBy('id');
 
         $this->assertSame('verde', $porId[$verde->id]['sla']['status']);
         $this->assertSame('vermelho', $porId[$vermelho->id]['sla']['status']);
@@ -159,7 +161,7 @@ class ProcessoFilaTest extends TestCase
         $doSetorB = $this->processo(['sector_id' => $setorB->id]);
 
         $props = $this->filaProps($analista, 'setor');
-        $ids = collect($props['processos'])->pluck('id')->all();
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
 
         $this->assertContains($doSetorA->id, $ids);
         $this->assertNotContains($doSetorB->id, $ids);
@@ -216,5 +218,128 @@ class ProcessoFilaTest extends TestCase
         $props = $this->filaProps($analista, 'setor');
 
         $this->assertNull($props['visaoSetor']);
+    }
+
+    public function test_fila_filtra_por_bap(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $alvo = $this->processo(['assigned_user_id' => $analista->id]);
+        $alvo->forceFill(['external_reference' => 'BAP-FILA-1'])->save();
+
+        $outro = $this->processo(['assigned_user_id' => $analista->id]);
+        $outro->forceFill(['external_reference' => 'BAP-FILA-2'])->save();
+
+        $props = $this->filaProps($analista, 'meus', 'bap=FILA-1');
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($alvo->id, $ids);
+        $this->assertNotContains($outro->id, $ids);
+    }
+
+    public function test_fila_pagina_no_servidor(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        foreach (range(1, 3) as $i) {
+            $this->processo(['assigned_user_id' => $analista->id]);
+        }
+
+        $props = $this->filaProps($analista, 'meus', 'per_page=10');
+
+        $this->assertArrayHasKey('data', $props['processos']);
+        $this->assertArrayHasKey('links', $props['processos']);
+        $this->assertSame(3, $props['processos']['total']);
+    }
+
+    public function test_contadores_ignoram_os_filtros_da_lista(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $alvo = $this->processo(['assigned_user_id' => $analista->id]);
+        $alvo->forceFill(['external_reference' => 'BAP-KPI-1'])->save();
+
+        $outro = $this->processo(['assigned_user_id' => $analista->id]);
+        $outro->forceFill(['external_reference' => 'BAP-KPI-2'])->save();
+
+        $props = $this->filaProps($analista, 'meus', 'bap=KPI-1');
+
+        $this->assertCount(1, $props['processos']['data']);
+        $this->assertSame(2, $props['contadores']['em_analise']);
+    }
+
+    public function test_consulta_fila_com_filtro_e_auditada(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $alvo = $this->processo(['assigned_user_id' => $analista->id]);
+        $alvo->forceFill(['external_reference' => 'BAP-AUD-1'])->save();
+
+        $this->filaProps($analista, 'meus', 'bap=AUD-1');
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'analise',
+            'event' => 'consulta-fila',
+            'result' => 'sucesso',
+            'causer_id' => $analista->id,
+        ]);
+    }
+
+    public function test_fila_ignora_parametros_fora_da_whitelist(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $primeiro = $this->processo(['assigned_user_id' => $analista->id]);
+        $segundo = $this->processo(['assigned_user_id' => $analista->id]);
+
+        $props = $this->filaProps($analista, 'meus', 'status=deferida');
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($primeiro->id, $ids);
+        $this->assertContains($segundo->id, $ids);
+    }
+
+    public function test_fila_filtra_por_servico(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $servico = ViabilityServiceType::factory()->create();
+
+        $alvo = $this->processo(['assigned_user_id' => $analista->id]);
+        $alvo->forceFill(['service_type_id' => $servico->id])->save();
+
+        $outro = $this->processo(['assigned_user_id' => $analista->id]);
+
+        $props = $this->filaProps($analista, 'meus', "servico={$servico->id}");
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($alvo->id, $ids);
+        $this->assertNotContains($outro->id, $ids);
+    }
+
+    public function test_fila_filtra_por_periodo_de_entrada(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $hoje = now()->toDateString();
+
+        $deHoje = $this->processo(['assigned_user_id' => $analista->id]);
+        $deHoje->forceFill(['protocoled_at' => now()])->save();
+
+        $antigo = $this->processo(['assigned_user_id' => $analista->id]);
+        $antigo->forceFill(['protocoled_at' => now()->subDays(10)])->save();
+
+        $props = $this->filaProps($analista, 'meus', "data_de={$hoje}");
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($deHoje->id, $ids);
+        $this->assertNotContains($antigo->id, $ids);
     }
 }

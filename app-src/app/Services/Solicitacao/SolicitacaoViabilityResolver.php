@@ -133,61 +133,6 @@ class SolicitacaoViabilityResolver
     }
 
     /**
-     * Território a partir do snapshot da solicitação: zona e via declaradas,
-     * com a classe viária explícita — sem consultar camada territorial. Sem
-     * zona no snapshot, devolve null e o chamador degrada para o ponto/via
-     * CNAE (veredito pendente, nunca inventado).
-     *
-     * @param  array<string, mixed>  $snapshot
-     */
-    private static function territorioDoSnapshot(array $snapshot): ?TerritoryResult
-    {
-        $zona = Quadro10Zona::oficializar(isset($snapshot['zona']) ? (string) $snapshot['zona'] : null);
-        $viaBruta = isset($snapshot['via']) ? trim((string) preg_replace('/[\s_-]+/', ' ', (string) $snapshot['via'])) : '';
-        $via = $viaBruta !== '' ? $viaBruta : null;
-
-        if ($zona === null) {
-            return null;
-        }
-
-        $vazia = [
-            'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
-            'nome' => null,
-            'propriedades' => null,
-            'motivo' => null,
-            'versao_camada' => null,
-        ];
-
-        return new TerritoryResult(
-            bairro: $vazia,
-            via: $via === null
-                ? $vazia + ['distancia_m' => null]
-                : [
-                    'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
-                    'nome' => $via,
-                    'propriedades' => ['CLASSE_VIA_LOUOS' => $via],
-                    'motivo' => null,
-                    'versao_camada' => 'snapshot-solicitacao',
-                    'distancia_m' => null,
-                ],
-            zona: [
-                'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
-                'nome' => $zona,
-                'propriedades' => ['NOME' => $zona],
-                'motivo' => null,
-                'versao_camada' => 'snapshot-solicitacao',
-            ],
-            lote: $vazia,
-            restricoes: [
-                'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
-                'itens' => [],
-                'motivo' => null,
-                'versao_camada' => null,
-            ],
-        );
-    }
-
-    /**
      * Tendência consolidada da solicitação: o pior caso (mais restritivo) entre
      * os CNAEs. Sem CNAEs (nada a avaliar), degrada para "pendente" — honesto,
      * nunca um permitido inventado.
@@ -242,5 +187,60 @@ class SolicitacaoViabilityResolver
             'lat' => array_sum($lats) / count($lats),
             'lng' => array_sum($lngs) / count($lngs),
         ];
+    }
+
+    /**
+     * Território a partir do snapshot da solicitação: zona e via declaradas,
+     * com a classe viária explícita — sem consultar camada territorial. Sem
+     * zona no snapshot, devolve null e o chamador degrada para o ponto/via
+     * CNAE (veredito pendente, nunca inventado).
+     *
+     * @param  array<string, mixed>  $snapshot
+     */
+    private static function territorioDoSnapshot(array $snapshot): ?TerritoryResult
+    {
+        $zona = Quadro10Zona::oficializar(isset($snapshot['zona']) ? (string) $snapshot['zona'] : null);
+        $viaBruta = isset($snapshot['via']) ? trim((string) preg_replace('/[\s_-]+/', ' ', (string) $snapshot['via'])) : '';
+        $via = $viaBruta !== '' ? $viaBruta : null;
+
+        if ($zona === null) {
+            return null;
+        }
+
+        $vazia = [
+            'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
+            'nome' => null,
+            'propriedades' => null,
+            'motivo' => null,
+            'versao_camada' => null,
+        ];
+
+        return new TerritoryResult(
+            bairro: $vazia,
+            via: $via === null
+                ? $vazia + ['distancia_m' => null]
+                : [
+                    'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
+                    'nome' => $via,
+                    'propriedades' => ['CLASSE_VIA_LOUOS' => $via],
+                    'motivo' => null,
+                    'versao_camada' => 'snapshot-solicitacao',
+                    'distancia_m' => null,
+                ],
+            zona: [
+                'status' => EnquadramentoResult::STATUS_IDENTIFICADO,
+                'nome' => $zona,
+                'propriedades' => ['NOME' => $zona],
+                'motivo' => null,
+                'versao_camada' => 'snapshot-solicitacao',
+            ],
+            lote: $vazia,
+            restricoes: [
+                'status' => EnquadramentoResult::STATUS_NAO_ENCONTRADO,
+                'itens' => [],
+                'motivo' => null,
+                'versao_camada' => null,
+            ],
+        );
     }
 }
