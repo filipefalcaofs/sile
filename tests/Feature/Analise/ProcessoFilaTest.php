@@ -75,15 +75,16 @@ class ProcessoFilaTest extends TestCase
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<string, mixed>
      */
-    private function filaProps(User $user, string $modo): array
+    private function filaProps(User $user, string $modo, string $query = ''): array
     {
-        $response = $this->actingAs($user, 'gestao')
-            ->get("/gestao/processos/fila?modo={$modo}")
-            ->assertOk();
+        $sufixo = $query === '' ? '' : "&{$query}";
 
-        return $response->viewData('page')['props'];
+        return $this->actingAs($user, 'gestao')
+            ->get("/gestao/processos/fila?modo={$modo}{$sufixo}")
+            ->assertOk()
+            ->viewData('page')['props'];
     }
 
     public function test_sem_permissao_consultar_solicitacoes_recebe_403_auditado(): void
@@ -113,7 +114,7 @@ class ProcessoFilaTest extends TestCase
         $deOutro = $this->processo(['assigned_user_id' => $outro->id, 'analysis_due_at' => now()->addDay()]);
 
         $props = $this->filaProps($analista, 'meus');
-        $ids = collect($props['processos'])->pluck('id')->all();
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
 
         $this->assertContains($maisUrgente->id, $ids);
         $this->assertContains($menosUrgente->id, $ids);
@@ -143,7 +144,7 @@ class ProcessoFilaTest extends TestCase
         ]);
 
         $props = $this->filaProps($analista, 'meus');
-        $porId = collect($props['processos'])->keyBy('id');
+        $porId = collect($props['processos']['data'])->keyBy('id');
 
         $this->assertSame('verde', $porId[$verde->id]['sla']['status']);
         $this->assertSame('vermelho', $porId[$vermelho->id]['sla']['status']);
@@ -159,7 +160,7 @@ class ProcessoFilaTest extends TestCase
         $doSetorB = $this->processo(['sector_id' => $setorB->id]);
 
         $props = $this->filaProps($analista, 'setor');
-        $ids = collect($props['processos'])->pluck('id')->all();
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
 
         $this->assertContains($doSetorA->id, $ids);
         $this->assertNotContains($doSetorB->id, $ids);
@@ -216,5 +217,39 @@ class ProcessoFilaTest extends TestCase
         $props = $this->filaProps($analista, 'setor');
 
         $this->assertNull($props['visaoSetor']);
+    }
+
+    public function test_fila_filtra_por_bap(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        $alvo = $this->processo(['assigned_user_id' => $analista->id]);
+        $alvo->forceFill(['external_reference' => 'BAP-FILA-1'])->save();
+
+        $outro = $this->processo(['assigned_user_id' => $analista->id]);
+        $outro->forceFill(['external_reference' => 'BAP-FILA-2'])->save();
+
+        $props = $this->filaProps($analista, 'meus', 'bap=FILA-1');
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+
+        $this->assertContains($alvo->id, $ids);
+        $this->assertNotContains($outro->id, $ids);
+    }
+
+    public function test_fila_pagina_no_servidor(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+
+        foreach (range(1, 3) as $i) {
+            $this->processo(['assigned_user_id' => $analista->id]);
+        }
+
+        $props = $this->filaProps($analista, 'meus', 'per_page=10');
+
+        $this->assertArrayHasKey('data', $props['processos']);
+        $this->assertArrayHasKey('links', $props['processos']);
+        $this->assertSame(3, $props['processos']['total']);
     }
 }

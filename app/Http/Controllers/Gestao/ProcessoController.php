@@ -9,6 +9,7 @@ use App\Http\Requests\Gestao\AnalysisStatusRequest;
 use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ProcessoResource;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityServiceType;
 use App\Services\Analise\AnalysisStatusStateMachine;
 use App\Services\Analise\InvalidAnalysisStatusTransitionException;
 use App\Services\Analise\ProcessoQueryService;
@@ -105,23 +106,29 @@ class ProcessoController extends Controller
         $modo = in_array($modo, ['meus', 'setor'], true) ? $modo : 'meus';
 
         $user = $request->user();
+        $filtros = $this->filtros($request);
+        $perPage = $this->perPage($request);
 
-        $processos = $this->processos->fila($user, $modo)
-            ->get()
-            ->map(fn (ViabilityRequest $processo): array => (new ProcessoResource($processo))->resolve())
-            ->all();
+        $processos = $this->processos->aplicarFiltros($this->processos->fila($user, $modo), $filtros)
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn (ViabilityRequest $processo): array => (new ProcessoResource($processo))->resolve());
 
         $this->audit->log('analise', 'consulta-fila', 'Consulta da fila de trabalho do analista', [
             'modo' => $modo,
+            'filtros' => $this->filtrosPreenchidos($filtros),
         ]);
 
         return Inertia::render('gestao/processos/fila', [
             'modo' => $modo,
             'processos' => $processos,
             'contadores' => $this->processos->contadores($user, $modo),
-            // A visão agregada do setor é só do gestor (distribuir-processos);
-            // o analista recebe null e a UI (10-16) não a renderiza.
             'visaoSetor' => $user->can('distribuir-processos') ? $this->processos->visaoSetor($user) : null,
+            'filtros' => $filtros + ['per_page' => $perPage],
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+            'servicoOptions' => $this->servicoOptions(),
+            'analysisStatusOptions' => AnalysisStatus::options(),
+            'categoriaOptions' => $this->categoriaOptions(),
         ]);
     }
 
@@ -308,5 +315,17 @@ class ProcessoController extends Controller
         }
 
         return $opcoes;
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function servicoOptions(): array
+    {
+        return ViabilityServiceType::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name])
+            ->all();
     }
 }
