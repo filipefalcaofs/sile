@@ -1,5 +1,5 @@
 import { Head, Link, router, useHttp } from '@inertiajs/react';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import { MapaPoligonoSection } from '@/components/geo/mapa-poligono-section';
@@ -21,6 +21,7 @@ import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import ConfirmDialog from '@/components/ui/confirm-dialog';
 import GestaoLayout from '@/layouts/gestao-layout';
+import { calcularPreenchimento, type ContagemSecao, type ResumoPreenchimento } from './preenchimento';
 
 interface Ficha {
     id: number;
@@ -395,10 +396,85 @@ function SecaoTitulo({ children }: { children: ReactNode }) {
     );
 }
 
+function SeloContagem({ secao }: { secao: ContagemSecao }) {
+    const cor = secao.situacao === 'completa' ? 'success' : secao.situacao === 'parcial' ? 'warning' : 'light';
+
+    return (
+        <Badge size="sm" color={cor}>
+            {secao.preenchidos} de {secao.total}
+        </Badge>
+    );
+}
+
+function IndiceFicha({ resumo, ativa }: { resumo: ResumoPreenchimento; ativa: string }) {
+    return (
+        <nav
+            aria-label="Seções da ficha"
+            className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900"
+        >
+            <p className="px-2 pb-2 text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">Seções da ficha</p>
+            <ol className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
+                {resumo.secoes.map((secao) => {
+                    const atual = ativa === secao.id;
+
+                    return (
+                        <li key={secao.id} className="shrink-0 lg:shrink">
+                            <a
+                                href={`#${secao.id}`}
+                                aria-current={atual ? 'true' : undefined}
+                                className={`flex items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-sm ${
+                                    atual
+                                        ? 'bg-brand-50 font-semibold text-brand-700 dark:bg-brand-500/10 dark:text-brand-300'
+                                        : 'font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/[0.03]'
+                                }`}
+                            >
+                                <span className="flex items-center gap-2">
+                                    <span
+                                        className={`inline-block h-1.5 w-1.5 rounded-full ${
+                                            secao.situacao === 'completa'
+                                                ? 'bg-success-500'
+                                                : secao.situacao === 'parcial'
+                                                  ? 'bg-warning-500'
+                                                  : 'bg-gray-300 dark:bg-gray-600'
+                                        }`}
+                                        aria-hidden="true"
+                                    />
+                                    {secao.rotulo}
+                                </span>
+                                <span className="text-xs tabular-nums text-gray-400">
+                                    {secao.preenchidos}/{secao.total}
+                                </span>
+                            </a>
+                        </li>
+                    );
+                })}
+            </ol>
+            <div className="mt-3 border-t border-gray-100 px-2 pt-3 dark:border-gray-800">
+                <div className="flex items-baseline justify-between text-xs text-gray-500">
+                    <span>Preenchimento</span>
+                    <strong className="text-sm font-semibold text-gray-800 tabular-nums dark:text-white/90">
+                        {resumo.percentual}%
+                    </strong>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                    <div className="h-1.5 rounded-full bg-brand-500" style={{ width: `${resumo.percentual}%` }} />
+                </div>
+                <p className="mt-2 text-[11px] leading-4 text-gray-400">
+                    {resumo.parecerPronto
+                        ? 'O parecer já permite concluir a ficha.'
+                        : 'O parecer é o que falta para concluir.'}
+                </p>
+            </div>
+        </nav>
+    );
+}
+
 export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImovel, opcoes, anexos }: VistoriaShowProps) {
     const [ficha, setFicha] = useState<Ficha>(fichaInicial);
     const [dados, setDados] = useState<DadosFicha>(() => estadoInicial(fichaInicial));
     const [saveState, setSaveState] = useState<'idle' | 'salvo' | 'erro'>('idle');
+    const [salvoEm, setSalvoEm] = useState<Date | null>(null);
+    const [secaoAtiva, setSecaoAtiva] = useState('localizacao');
     const [erroGeral, setErroGeral] = useState<string | null>(null);
     const [showConcluir, setShowConcluir] = useState(false);
 
@@ -421,6 +497,45 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
     const poligonoHttp = useHttp<{ polygon: GeoJsonPolygon | null }, { ficha: Ficha; status: string }>({ polygon: null });
 
     const areaPrevia = useMemo(() => areaPoligonoM2(vertices), [vertices]);
+    const preenchimento = useMemo(
+        () =>
+            calcularPreenchimento({
+                dados,
+                quantidadeAnexos: anexos.length,
+                poligonoValidado: ficha.polygon_validated_at !== null && !editandoPoligono,
+            }),
+        [dados, anexos.length, ficha.polygon_validated_at, editandoPoligono],
+    );
+    const contagem = (id: string): ContagemSecao =>
+        preenchimento.secoes.find((secao) => secao.id === id) ?? preenchimento.secoes[0];
+
+    useEffect(() => {
+        const ids = ['localizacao', 'imovel', 'entorno', 'condicoes', 'documentacao', 'conclusao'];
+        const alvos = ids
+            .map((id) => document.getElementById(id))
+            .filter((elemento): elemento is HTMLElement => elemento !== null);
+
+        if (alvos.length === 0) {
+            return;
+        }
+
+        const observador = new IntersectionObserver(
+            (entradas) => {
+                const visivel = entradas
+                    .filter((entrada) => entrada.isIntersecting)
+                    .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+                if (visivel) {
+                    setSecaoAtiva(visivel.target.id);
+                }
+            },
+            { rootMargin: '-30% 0px -55% 0px', threshold: [0.1, 0.25, 0.5] },
+        );
+
+        alvos.forEach((alvo) => observador.observe(alvo));
+
+        return () => observador.disconnect();
+    }, []);
 
     const set = <K extends keyof DadosFicha>(campo: K, valor: DadosFicha[K]) => {
         setDados((atual) => ({ ...atual, [campo]: valor }));
@@ -497,6 +612,7 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
             onSuccess: (resposta) => {
                 setFicha(resposta.ficha);
                 setSaveState('salvo');
+                setSalvoEm(new Date());
             },
             onError: () => setSaveState('erro'),
             onHttpException: () => {
@@ -600,6 +716,13 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
 
     const erroParecer = (conclusao.errors as Record<string, string>).parecer ?? null;
     const areaTotalCalculada = numeroOuNulo(dados.complemento_area_m2);
+    const areaConstruida = numeroOuNulo(dados.area_total_construida_m2);
+    const areaExibida = areaConstruida ?? areaTotalCalculada;
+    const endereco =
+        [ficha.logradouro, ficha.numero_metrico].filter(Boolean).join(', ') || 'Endereço não informado no cadastro';
+    const complementoLocal = [ficha.bairro, ficha.cep ? `CEP ${ficha.cep}` : null].filter(Boolean).join(' · ');
+    const tipoImovelLabel = tiposImovel.find((tipo) => tipo.value === dados.tipo_imovel)?.label ?? null;
+    const horaRascunho = salvoEm?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) ?? null;
 
     return (
         <>
@@ -609,7 +732,7 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
                 title="Ficha de vistoria"
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
-                    { label: 'Processos', href: '/gestao/processos' },
+                    { label: 'Vistorias', href: '/gestao/vistorias' },
                     { label: processo.protocol_number ?? `Processo #${processo.id}`, href: `/gestao/processos/${processo.id}/ficha` },
                 ]}
                 actions={
@@ -619,42 +742,95 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
                 }
             />
 
-            {/* Identificação da ficha — gravada na abertura, nunca digitada. */}
-            <Card className="mb-6">
-                <CardContent className="flex flex-wrap items-center gap-x-8 gap-y-3 border-t-0">
-                    <div>
-                        <span className="block text-xs tracking-wide text-gray-400 uppercase">Tipo</span>
-                        <strong className="text-sm font-semibold text-gray-800 dark:text-white/90">{ficha.tipo_label}</strong>
+            <section className="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                <div className="flex flex-wrap items-start justify-between gap-6 px-6 py-5">
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">{ficha.tipo_label}</p>
+                        <h3 className="mt-1 text-lg font-semibold text-gray-800 dark:text-white/90">{endereco}</h3>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            {complementoLocal || 'Bairro e CEP não vieram no cadastro'}
+                        </p>
                     </div>
-                    <div>
-                        <span className="block text-xs tracking-wide text-gray-400 uppercase">Abertura</span>
-                        <strong className="text-sm font-semibold text-gray-800 tabular-nums dark:text-white/90">
-                            {formatarData(ficha.opened_at)}
-                        </strong>
-                    </div>
-                    <div>
-                        <span className="block text-xs tracking-wide text-gray-400 uppercase">Vistoriador</span>
-                        <strong className="text-sm font-semibold text-gray-800 dark:text-white/90">
-                            {ficha.vistoriador ?? '—'}
-                        </strong>
-                    </div>
-                    {ficha.concluded_at && (
+                    <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-cols-3">
                         <div>
-                            <span className="block text-xs tracking-wide text-gray-400 uppercase">Conclusão</span>
-                            <strong className="text-sm font-semibold text-gray-800 tabular-nums dark:text-white/90">
-                                {formatarData(ficha.concluded_at)}
-                            </strong>
+                            <dt className="text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">Abertura</dt>
+                            <dd className="mt-0.5 font-semibold text-gray-800 tabular-nums dark:text-white/90">
+                                {formatarData(ficha.opened_at)}
+                            </dd>
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                        <div>
+                            <dt className="text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">Vistoriador</dt>
+                            <dd className="mt-0.5 font-semibold text-gray-800 dark:text-white/90">{ficha.vistoriador ?? '—'}</dd>
+                        </div>
+                        {ficha.concluded_at && (
+                            <div>
+                                <dt className="text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">Conclusão</dt>
+                                <dd className="mt-0.5 font-semibold text-gray-800 tabular-nums dark:text-white/90">
+                                    {formatarData(ficha.concluded_at)}
+                                </dd>
+                            </div>
+                        )}
+                    </dl>
+                </div>
+                <dl className="grid grid-cols-2 border-t border-gray-100 md:grid-cols-4 dark:border-gray-800">
+                    <div className="px-6 py-3.5">
+                        <dt className="text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">Zona / via</dt>
+                        <dd className="mt-0.5 text-sm font-semibold text-gray-800 dark:text-white/90">
+                            {[ficha.zona, ficha.via].filter(Boolean).join(' · ') || '—'}
+                        </dd>
+                    </div>
+                    <div className="px-6 py-3.5">
+                        <dt className="text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">Tipo de imóvel</dt>
+                        <dd className="mt-0.5 text-sm font-semibold text-gray-800 dark:text-white/90">
+                            {tipoImovelLabel ?? 'Ainda não informado'}
+                        </dd>
+                    </div>
+                    <div className="px-6 py-3.5">
+                        <dt className="text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">
+                            {areaConstruida !== null ? 'Área construída' : 'Área do complemento'}
+                        </dt>
+                        <dd className="mt-0.5 text-sm font-semibold text-gray-800 tabular-nums dark:text-white/90">
+                            {areaExibida !== null
+                                ? `${areaExibida.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} m²`
+                                : '—'}
+                        </dd>
+                    </div>
+                    <div className="px-6 py-3.5">
+                        <dt className="text-[11px] font-semibold tracking-[0.08em] text-gray-400 uppercase">Polígono</dt>
+                        <dd
+                            className={`mt-0.5 text-sm font-semibold ${
+                                ficha.polygon_validated_at && !editandoPoligono
+                                    ? 'text-success-600 dark:text-success-500'
+                                    : 'text-warning-600 dark:text-orange-400'
+                            }`}
+                        >
+                            {ficha.polygon_validated_at && !editandoPoligono
+                                ? `Validado${
+                                      ficha.polygon_area_m2 !== null
+                                          ? ` · ${ficha.polygon_area_m2.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} m²`
+                                          : ''
+                                  }`
+                                : editandoPoligono
+                                  ? 'Redesenhando'
+                                  : 'Pendente de validação'}
+                        </dd>
+                    </div>
+                </dl>
+            </section>
 
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+                <div className="sticky top-20 z-20 lg:top-24 lg:w-56 lg:shrink-0">
+                    <IndiceFicha resumo={preenchimento} ativa={secaoAtiva} />
+                </div>
+
+                <div className="flex min-w-0 flex-1 flex-col gap-6">
                 {/* 1 — Localização e polígono */}
+                <section id="localizacao" className="scroll-mt-28">
                 <Card>
                     <CardHeader
                         title="1. Localização e polígono"
                         description="Endereço vindo do cadastro do processo; o polígono pode ser redesenhado e validado."
+                        actions={<SeloContagem secao={contagem('localizacao')} />}
                     />
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
@@ -774,10 +950,16 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
                         </div>
                     </CardContent>
                 </Card>
+                </section>
 
                 {/* 2 — Imóvel */}
+                <section id="imovel" className="scroll-mt-28">
                 <Card>
-                    <CardHeader title="2. Imóvel" description="Dados, vagas e características do imóvel vistoriado." />
+                    <CardHeader
+                        title="2. Imóvel"
+                        description="Dados, vagas e características do imóvel vistoriado."
+                        actions={<SeloContagem secao={contagem('imovel')} />}
+                    />
                     <CardContent className="flex flex-col gap-6">
                         <div>
                             <SecaoTitulo>Dados do imóvel</SecaoTitulo>
@@ -953,10 +1135,16 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
                         </div>
                     </CardContent>
                 </Card>
+                </section>
 
                 {/* 3 — Entorno e infraestrutura */}
+                <section id="entorno" className="scroll-mt-28">
                 <Card>
-                    <CardHeader title="3. Entorno e infraestrutura" description="Distâncias, instalações e usuários." />
+                    <CardHeader
+                        title="3. Entorno e infraestrutura"
+                        description="Distâncias, instalações e usuários."
+                        actions={<SeloContagem secao={contagem('entorno')} />}
+                    />
                     <CardContent className="flex flex-col gap-6">
                         <div>
                             <SecaoTitulo>Entorno (distância em metro linear)</SecaoTitulo>
@@ -1077,10 +1265,16 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
                         </div>
                     </CardContent>
                 </Card>
+                </section>
 
                 {/* 4 — Condições e segurança */}
+                <section id="condicoes" className="scroll-mt-28">
                 <Card>
-                    <CardHeader title="4. Condições e segurança" description="Controle ambiental e equipamentos de segurança." />
+                    <CardHeader
+                        title="4. Condições e segurança"
+                        description="Controle ambiental e equipamentos de segurança."
+                        actions={<SeloContagem secao={contagem('condicoes')} />}
+                    />
                     <CardContent className="flex flex-col gap-6">
                         <div>
                             <SecaoTitulo>Controle ambiental</SecaoTitulo>
@@ -1180,13 +1374,15 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
                         </div>
                     </CardContent>
                 </Card>
+                </section>
 
                 {/* 5 — Documentação */}
+                <section id="documentacao" className="scroll-mt-28">
                 <Card>
                     <CardHeader
                         title="5. Documentação"
                         description="Anexos da vistoria e observações complementares."
-                        actions={<Badge size="sm" color="light">{anexos.length} anexos</Badge>}
+                        actions={<SeloContagem secao={contagem('documentacao')} />}
                     />
                     <CardContent className="flex flex-col gap-6">
                         <div>
@@ -1218,41 +1414,60 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
                                     Nenhum anexo enviado. Anexe fotos ou documentos da vistoria.
                                 </p>
                             ) : (
-                                <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                    {anexos.map((anexo) => (
-                                        <li
-                                            key={anexo.id}
-                                            className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-800"
-                                        >
-                                            <div className="min-w-0">
-                                                <p className="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                                                    {anexo.original_name}
-                                                </p>
-                                                <p className="text-xs text-gray-400">
-                                                    {anexo.mime_type.split('/')[1]?.toUpperCase()} · {formatarTamanho(anexo.size)}
-                                                </p>
-                                            </div>
-                                            <div className="flex shrink-0 items-center gap-1">
-                                                <a
-                                                    href={anexo.download_url}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-white/[0.05]"
-                                                    title="Visualizar anexo"
-                                                >
-                                                    <EyeIcon className="size-4 fill-current" />
-                                                </a>
-                                                {editavel && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setAnexoParaRemover(anexo)}
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-error-50 hover:text-error-500"
-                                                        title="Remover anexo"
-                                                    >
-                                                        <TrashIcon className="size-4 fill-current" />
-                                                    </button>
+                                <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                    {anexos.map((anexo) => {
+                                        const imagem = anexo.mime_type.startsWith('image/');
+
+                                        return (
+                                            <li
+                                                key={anexo.id}
+                                                className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800"
+                                            >
+                                                {imagem ? (
+                                                    <a href={anexo.download_url} className="block bg-gray-50 dark:bg-gray-800/40">
+                                                        <img
+                                                            src={anexo.download_url}
+                                                            alt={anexo.original_name}
+                                                            className="h-32 w-full object-cover"
+                                                        />
+                                                    </a>
+                                                ) : (
+                                                    <div className="flex h-32 items-center justify-center bg-gray-50 text-xs font-semibold tracking-wide text-gray-400 uppercase dark:bg-gray-800/40">
+                                                        {anexo.mime_type.split('/')[1] ?? 'arquivo'}
+                                                    </div>
                                                 )}
-                                            </div>
-                                        </li>
-                                    ))}
+                                                <div className="flex items-center justify-between gap-2 px-3 py-2.5">
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-sm font-medium text-gray-800 dark:text-white/90">
+                                                            {anexo.original_name}
+                                                        </p>
+                                                        <p className="text-xs text-gray-400">
+                                                            {anexo.mime_type.split('/')[1]?.toUpperCase()} · {formatarTamanho(anexo.size)}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex shrink-0 items-center gap-1">
+                                                        <a
+                                                            href={anexo.download_url}
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-white/[0.05]"
+                                                            title="Visualizar anexo"
+                                                        >
+                                                            <EyeIcon className="size-4 fill-current" />
+                                                        </a>
+                                                        {editavel && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setAnexoParaRemover(anexo)}
+                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-error-50 hover:text-error-500"
+                                                                title="Remover anexo"
+                                                            >
+                                                                <TrashIcon className="size-4 fill-current" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        );
+                                    })}
                                 </ul>
                             )}
                         </div>
@@ -1271,12 +1486,15 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
                         </div>
                     </CardContent>
                 </Card>
+                </section>
 
                 {/* 6 — Conclusão */}
+                <section id="conclusao" className="scroll-mt-28">
                 <Card className="border-brand-200 dark:border-brand-500/30">
                     <CardHeader
                         title="6. Conclusão da vistoria"
                         description="Etapa final — o parecer é obrigatório para concluir a ficha."
+                        actions={<SeloContagem secao={contagem('conclusao')} />}
                     />
                     <CardContent className="flex flex-col gap-6">
                         <div>
@@ -1333,15 +1551,27 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
                         </div>
                     </CardContent>
                 </Card>
+                </section>
 
                 {/* Barra de ações */}
                 <div className="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {saveState === 'salvo' && <span className="text-success-600">Rascunho salvo.</span>}
                         {saveState === 'erro' && <span className="text-error-500">{erroGeral ?? 'Falha ao salvar.'}</span>}
-                        {!editavel && ficha.status === 'concluida' && <span>Ficha concluída — somente leitura.</span>}
-                        {!editavel && ficha.status !== 'concluida' && (
+                        {saveState !== 'erro' && !editavel && ficha.status === 'concluida' && (
+                            <span>Ficha concluída — somente leitura.</span>
+                        )}
+                        {saveState !== 'erro' && !editavel && ficha.status !== 'concluida' && (
                             <span>Somente leitura — a ficha é do vistoriador {ficha.vistoriador ?? 'responsável'}.</span>
+                        )}
+                        {saveState !== 'erro' && editavel && (
+                            <span className={preenchimento.parecerPronto ? 'text-success-600' : 'text-gray-600 dark:text-gray-300'}>
+                                {preenchimento.parecerPronto
+                                    ? 'O parecer já permite concluir a ficha.'
+                                    : 'Falta o parecer para concluir.'}
+                                {horaRascunho && saveState === 'salvo' && (
+                                    <span className="text-gray-400"> Rascunho salvo às {horaRascunho}.</span>
+                                )}
+                            </span>
                         )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -1360,6 +1590,7 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
                             </>
                         )}
                     </div>
+                </div>
                 </div>
             </div>
 

@@ -189,14 +189,6 @@ class SolicitacaoViabilityResolver
         ];
     }
 
-    /**
-     * Território a partir do snapshot da solicitação: zona e via declaradas,
-     * com a classe viária explícita — sem consultar camada territorial. Sem
-     * zona no snapshot, devolve null e o chamador degrada para o ponto/via
-     * CNAE (veredito pendente, nunca inventado).
-     *
-     * @param  array<string, mixed>  $snapshot
-     */
     private static function territorioDoSnapshot(array $snapshot): ?TerritoryResult
     {
         $zona = Quadro10Zona::oficializar(isset($snapshot['zona']) ? (string) $snapshot['zona'] : null);
