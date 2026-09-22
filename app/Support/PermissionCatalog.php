@@ -134,6 +134,12 @@ final class PermissionCatalog
                 'group' => 'Análise técnica',
             ],
             [
+                'name' => 'preencher-ficha-vistoria',
+                'label' => 'Preencher ficha de vistoria',
+                'description' => 'Abre e preenche a ficha de vistoria do processo: localização, polígono, imóvel, anexos e parecer.',
+                'group' => 'Análise técnica',
+            ],
+            [
                 'name' => 'manter-setores',
                 'label' => 'Cadastrar setores',
                 'description' => 'Cria e edita os setores da análise técnica.',

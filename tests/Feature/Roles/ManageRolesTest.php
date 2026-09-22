@@ -41,8 +41,8 @@ class ManageRolesTest extends TestCase
                 ->where('roles.0.name', 'administrador')
                 ->where('roles.0.structural', true)
                 ->where('roles.0.users_count', 1)
-                ->has('permissions', 33)
-                ->has('permissionCatalog', 33)
+                ->has('permissions', 34)
+                ->has('permissionCatalog', 34)
                 ->where(
                     'permissionCatalog',
                     fn ($catalog) => collect($catalog)->contains(

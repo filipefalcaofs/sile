@@ -59,6 +59,7 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 icon: 'group',
                 permission: ['analisar-processos', 'distribuir-processos'],
             },
+            { name: 'Vistorias', href: '/gestao/vistorias', icon: 'map', permission: 'preencher-ficha-vistoria' },
             { name: 'Consulta de processos', href: '/gestao/processos', icon: 'file', permission: 'consultar-solicitacoes' },
             { name: 'Atendimento presencial', href: '/gestao/atendimento', icon: 'user', permission: 'atendimento-presencial' },
             {

@@ -141,6 +141,12 @@ return [
     'storage' => [
         'documentos' => ['disk' => 'local'],
     ],
+    // Espelha os parâmetros HU-014 vistoria.* (ficha de vistoria). Mesmo
+    // padrão dos anexos da solicitação: tipos e tamanho administráveis, disk
+    // NUNCA público (acesso por streaming autenticado — LGPD).
+    'vistoria' => [
+        'anexos' => ['max_mb' => 10, 'mime_permitidos' => ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']],
+    ],
     // Espelha os parâmetros HU-014 expresso.* / features.* do fluxo expresso
     // (EP09). Settings::get lê config("sile.expresso.*") no fallback (banco
     // indisponível). Os valores de negócio (prazo BAP, assuntos de e-mail,

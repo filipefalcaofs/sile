@@ -62,6 +62,7 @@ use App\Http\Controllers\Gestao\TvlDocumentController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
 use App\Http\Controllers\Gestao\ViaController;
+use App\Http\Controllers\Gestao\VistoriaConsultaController;
 use App\Http\Controllers\Gestao\ZonaController;
 use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\Portal\CnaeSearchController;
@@ -648,6 +649,13 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
                 Route::post('distribuir', [CaixaSetorController::class, 'distribuir'])->name('distribuir');
             });
         });
+
+        // Consulta de vistorias: a fila do vistoriador (processos no eixo
+        // operacional Vistoriar/Vistoriado, situação derivada da ficha). KPIs
+        // do universo, abas e busca server-driven; a consulta é auditada.
+        Route::get('vistorias', VistoriaConsultaController::class)
+            ->middleware('permission:preencher-ficha-vistoria')
+            ->name('vistorias.index');
 
         // Ficha de análise técnica (HU-135/140/142): a superfície da análise
         // humana. Abre a revisão vigente (pré-analisada em 10-08), faz autosave do

@@ -192,7 +192,7 @@ Toda transição grava `AuditService::log('analise','status-analise',...)` + tim
 - `[OPEN-1]` ~~rótulos~~ **RESOLVIDO** (§12.1-4).
 - `[OPEN-2..3,5,6,8,9,10,11]` **RESOLVIDOS** (§12.1 / rev. anteriores).
 - `[OPEN-7]` Vistoria obrigatória para algum CNAE/risco? (default: sempre manual). Menor.
-- `[OPEN-VISTORIA-FICHA]` Estrutura exata da ficha de vistoria (itens/tópicos) — reconciliar com a aba/vagas existentes na Fase 3.
+- `[OPEN-VISTORIA-FICHA]` ~~Estrutura exata da ficha de vistoria~~ **RESOLVIDO** (2026-09-22): estrutura mapeada dos prints do legado e implementada — `inspections`/`inspection_attachments`, `InspectionController`, tela `gestao/vistoria/show` (plano em `.planning/quick/20260922-ficha-vistoria/PLAN.md`). Reconciliação com a aba/vagas da ficha de análise (`parking`) continua aberta para a Fase 3.
 - **Depende do spec §13:** visibilidade do produto (interno vs. externo) — **pergunta aberta à SEDUR** (não desenhar antes).
 
 ## 12. Fontes

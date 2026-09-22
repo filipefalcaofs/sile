@@ -346,6 +346,17 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * Ficha de vistoria do processo (a mais recente, se houver mais de uma
+     * por reabertura futura). Alimenta a consulta de vistorias.
+     *
+     * @return HasOne<Inspection, $this>
+     */
+    public function inspection(): HasOne
+    {
+        return $this->hasOne(Inspection::class)->latestOfMany();
+    }
+
+    /**
      * Quedas do fluxo expresso que originaram o encaminhamento à análise.
      *
      * @return HasMany<ExpressoQueda, $this>

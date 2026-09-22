@@ -42,6 +42,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'emitir-tvl',
             'encaminhar-malha-fina',
             'enviar-tvl-analise',
+            'preencher-ficha-vistoria',
             'manter-setores',
             'consultar-auditoria',
             'monitorar-lgpd',
@@ -71,6 +72,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'encaminhar-malha-fina',
                 'emitir-tvl',
                 'enviar-tvl-analise',
+                'preencher-ficha-vistoria',
             ]);
         // Apoio (tramitação): distribui os processos da caixa do setor para um
         // analista específico, sem analisar — a tramitação é dele, a análise não.
@@ -101,6 +103,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'encaminhar-malha-fina',
                 'emitir-tvl',
                 'enviar-tvl-analise',
+                'preencher-ficha-vistoria',
                 'consultar-relatorios',
                 'relatorios.produtividade.nominal',
             ]);
@@ -130,6 +133,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'emitir-tvl',
                 'encaminhar-malha-fina',
                 'enviar-tvl-analise',
+                'preencher-ficha-vistoria',
                 'manter-setores',
                 'consultar-auditoria',
                 'monitorar-lgpd',
