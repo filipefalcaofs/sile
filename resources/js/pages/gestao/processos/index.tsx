@@ -2,7 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { type ProcessoItem } from '@/components/analise/processo-ui';
+import { rotuloSemSla, type ProcessoItem } from '@/components/analise/processo-ui';
 import PageHeader from '@/components/app/page-header';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
@@ -758,8 +758,8 @@ function LinhaProcesso({
                         {item.sla.restante && <span className="text-xs text-gray-400">{item.sla.restante}</span>}
                     </>
                 ) : (
-                    <Badge color="light" size="sm">
-                        Sem prazo
+                    <Badge color={item.fluxo === 'expresso' ? 'success' : 'light'} size="sm">
+                        {rotuloSemSla(item.fluxo)}
                     </Badge>
                 )}
             </div>

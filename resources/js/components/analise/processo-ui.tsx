@@ -51,6 +51,7 @@ export interface ProcessoItem {
     inscricao: string | null;
     categorias: ProcessoCategoria[];
     categoria: string | null;
+    servico: string | null;
     analista: string | null;
     assigned_user_id: number | null;
     setor: string | null;
@@ -90,6 +91,16 @@ const SEMAFORO_COLOR: Record<string, 'success' | 'warning' | 'error'> = {
     amarelo: 'warning',
     vermelho: 'error',
 };
+
+/**
+ * Rótulo da coluna de prazo quando o processo não tem SLA materializado.
+ * Processo decidido no fluxo expresso nunca entra na fila de análise (sem
+ * analysis_due_at), então exibe "Fluxo expresso" em vez do genérico
+ * "Sem prazo" — que fica reservado a quem ainda não entrou na fila.
+ */
+export function rotuloSemSla(fluxo: string | null | undefined): string {
+    return fluxo === 'expresso' ? 'Fluxo expresso' : 'Sem prazo';
+}
 
 /**
  * Badge do semáforo de SLA (HU-144). Exibe o rótulo do estado e o tempo
