@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
+use App\Models\Sector;
 use App\Models\User;
 use App\Support\DemoMode;
 use Illuminate\Database\Seeder;
@@ -122,6 +123,7 @@ class DemonstracaoClienteSeeder extends Seeder
         $this->seedUsuariosCliente();
         $this->call(self::SEEDERS_USUARIOS_DEMO);
         $this->rotacionarSenhasDev();
+        $this->vincularGestaoAoSetorDeTriagem();
     }
 
     private function seedPerfisValidacao(): void
@@ -200,5 +202,32 @@ class DemonstracaoClienteSeeder extends Seeder
         }
 
         return $user;
+    }
+
+    /**
+     * A caixa do setor só lista processos dos setores do usuário. Sem este
+     * vínculo, a conta de validação (e o admin de demo) vê a caixa vazia
+     * mesmo com processo em "Para distribuir" em Análise Locacional.
+     */
+    private function vincularGestaoAoSetorDeTriagem(): void
+    {
+        $setor = Sector::query()
+            ->where('name', SectorSeeder::SECTOR_NAME)
+            ->where('active', true)
+            ->first();
+
+        if ($setor === null) {
+            return;
+        }
+
+        $ids = User::query()
+            ->whereIn('email', [self::CLIENTE_GESTAO_EMAIL, 'admin@sile.dev'])
+            ->pluck('id');
+
+        if ($ids->isEmpty()) {
+            return;
+        }
+
+        $setor->analysts()->syncWithoutDetaching($ids->all());
     }
 }

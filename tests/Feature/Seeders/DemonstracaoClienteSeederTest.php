@@ -12,6 +12,7 @@ use App\Models\Zona;
 use App\Support\DemoMode;
 use Database\Seeders\DemonstracaoClienteSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Database\Seeders\SectorSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -61,6 +62,10 @@ class DemonstracaoClienteSeederTest extends TestCase
             ->firstOrFail();
 
         $this->assertTrue($validadora->hasRole('administrador'));
+        $this->assertTrue(
+            $validadora->sectors()->where('name', SectorSeeder::SECTOR_NAME)->exists(),
+            'A validadora da SEDUR precisa do setor de triagem para a caixa de distribuição.',
+        );
         $this->assertTrue($validadora->hasPermissionTo('manter-cnaes'));
         $this->assertTrue($validadora->hasPermissionTo('manter-perfis'));
         $this->assertTrue($validadora->hasPermissionTo('manter-usuarios'));
