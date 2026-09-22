@@ -2618,15 +2618,15 @@ export default function FichaAnaliseShow({
                         processo retorna automaticamente para você. Informe o parecer (obrigatório).
                     </p>
                     <div className="mt-4">
-                        <Label htmlFor="motivo-malha-fina" required>
+                        <Label htmlFor="motivo-vistoria" required>
                             Parecer
                         </Label>
                         <Textarea
-                            id="motivo-malha-fina"
+                            id="motivo-vistoria"
                             rows={3}
                             placeholder="Parecer do encaminhamento…"
-                            value={motivoMalhaFina}
-                            onChange={setMotivoMalhaFina}
+                            value={motivoVistoria}
+                            onChange={setMotivoVistoria}
                         />
                     </div>
                     <div className="mt-4">
@@ -2659,7 +2659,7 @@ export default function FichaAnaliseShow({
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                                setShowMalhaFina(false);
+                                setShowVistoria(false);
                                 setErroEncaminhar(null);
                             }}
                         >
@@ -2667,8 +2667,82 @@ export default function FichaAnaliseShow({
                         </Button>
                         <Button
                             size="sm"
+                            onClick={encaminharVistoria}
+                            disabled={motivoVistoria.trim() === '' || setorVistoria === ''}
+                            loading={vistoriaProcessing}
+                        >
+                            Encaminhar
+                        </Button>
+                    </div>
+                </Modal>
+            )}
+
+            {showMalhaFina && (
+                <Modal
+                    isOpen
+                    onClose={() => {
+                        setShowMalhaFina(false);
+                        setErroMalhaFina(null);
+                    }}
+                    className="m-4 max-w-[560px] p-6 lg:p-8"
+                >
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para a malha fina</h4>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        A malha fina é uma caixa à parte, para alterar o processo. Não muda o status da análise nem
+                        gera número novo. Informe o motivo (obrigatório).
+                    </p>
+                    <div className="mt-4">
+                        <Label htmlFor="motivo-malha-fina" required>
+                            Motivo
+                        </Label>
+                        <Textarea
+                            id="motivo-malha-fina"
+                            rows={3}
+                            placeholder="Motivo do encaminhamento…"
+                            value={motivoMalhaFina}
+                            onChange={setMotivoMalhaFina}
+                        />
+                    </div>
+                    <div className="mt-4">
+                        <Label htmlFor="setor-malha-fina" className="mb-1.5">
+                            Setor de tramitação
+                        </Label>
+                        <select
+                            id="setor-malha-fina"
+                            className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark dark:focus:border-brand-800"
+                            value={setorMalhaFina}
+                            onChange={(e) => setSetorMalhaFina(e.target.value)}
+                        >
+                            <option value="" className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                                Manter o setor atual
+                            </option>
+                            {setores.map((setor) => (
+                                <option key={setor.id} value={setor.id} className="text-gray-700 dark:bg-gray-900 dark:text-gray-200">
+                                    {setor.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    {erroMalhaFina && (
+                        <p className="mt-4 text-sm font-medium text-error-600 dark:text-error-500" role="alert">
+                            {erroMalhaFina}
+                        </p>
+                    )}
+                    <div className="mt-6 flex items-center justify-end gap-3">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                setShowMalhaFina(false);
+                                setErroMalhaFina(null);
+                            }}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            size="sm"
                             onClick={encaminharMalhaFina}
-                            disabled={motivoMalhaFina.trim() === '' || setorVistoria === ''}
+                            disabled={motivoMalhaFina.trim() === ''}
                             loading={malhaFinaProcessing}
                         >
                             Encaminhar
