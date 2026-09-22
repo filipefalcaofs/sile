@@ -659,6 +659,12 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             ->middleware('permission:preencher-ficha-vistoria')
             ->name('vistorias.index');
 
+        // Conclusão da malha fina pela caixa dedicada (a listagem GET chega na
+        // task da caixa). Baixa os encaminhamentos abertos SEM mexer no status.
+        Route::post('malha-fina/{viabilityRequest}/concluir', [MalhaFinaController::class, 'concluir'])
+            ->middleware('permission:analisar-malha-fina')
+            ->name('malha-fina.concluir');
+
         // Ficha de análise técnica (HU-135/140/142): a superfície da análise
         // humana. Abre a revisão vigente (pré-analisada em 10-08), faz autosave do
         // rascunho (RN-008), finaliza tornando a revisão IMUTÁVEL (RN-003) e
