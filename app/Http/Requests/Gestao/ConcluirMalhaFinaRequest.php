@@ -2,13 +2,15 @@
 
 namespace App\Http\Requests\Gestao;
 
+use App\Enums\ConclusionOutcome;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Conclusão da análise de malha fina pela caixa dedicada. A autorização é o
- * middleware permission:analisar-malha-fina da rota. A observação é OPCIONAL
- * — só quando há informação complementar da análise a registrar na trilha.
+ * middleware permission:analisar-malha-fina da rota. O resultado é o mesmo da
+ * conclusão de análise. A observação é opcional.
  */
 class ConcluirMalhaFinaRequest extends FormRequest
 {
@@ -23,6 +25,7 @@ class ConcluirMalhaFinaRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'resultado' => ['required', Rule::enum(ConclusionOutcome::class)],
             'observacao' => ['nullable', 'string', 'max:2000'],
         ];
     }
@@ -33,7 +36,18 @@ class ConcluirMalhaFinaRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'resultado' => 'resultado',
             'observacao' => 'observação',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'resultado.required' => 'Escolha o resultado da conclusão de análise.',
         ];
     }
 }

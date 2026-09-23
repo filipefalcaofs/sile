@@ -13,12 +13,18 @@ enum DecisionOutcome: string
 {
     case Deferida = 'deferida';
     case Indeferida = 'indeferida';
+    case Desativado = 'desativado';
+    case Cassado = 'cassado';
+    case Revogado = 'revogado';
 
     public function label(): string
     {
         return match ($this) {
             self::Deferida => 'Deferida',
             self::Indeferida => 'Indeferida',
+            self::Desativado => 'Desativado',
+            self::Cassado => 'Cassado',
+            self::Revogado => 'Revogado',
         };
     }
 }

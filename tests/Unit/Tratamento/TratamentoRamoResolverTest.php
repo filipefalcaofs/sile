@@ -120,6 +120,115 @@ class TratamentoRamoResolverTest extends TestCase
         $this->assertSame('nR1-09', $ramo->subgrupo);
     }
 
+    public function test_regra_25_industrial_e_alto_e_segue_para_critica(): void
+    {
+        // Planilha regras 24/25 (SEDUR, 23/09): resposta NÃO é produção em
+        // série — família ID, alto risco. O texto manda crítica do analista
+        // (semiexpresso), nunca o médio da linha de enquadramento.
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1063-5/00',
+            respostas: [2 => true, 3 => false],
+            areaUtilizada: 80.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('09.02.18', $ramo->codigoLouos);
+        $this->assertSame('alto', $ramo->risco);
+        $this->assertSame('semiexpresso', $ramo->fluxo);
+    }
+
+    public function test_regra_25_artesanal_e_medio_expresso(): void
+    {
+        // Fora da família ID o risco da regra 25 é médio, no fluxo expresso.
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1063-5/00',
+            respostas: [2 => true, 3 => true],
+            areaUtilizada: 80.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.09.02', $ramo->codigoLouos);
+        $this->assertSame('medio', $ramo->risco);
+        $this->assertSame('expresso', $ramo->fluxo);
+    }
+
+    public function test_regra_3_artesanal_entre_350_e_1250_permanece_baixo(): void
+    {
+        // Regras 3, 7, 19 e 57: o corte de risco é 1.250 m². A faixa de 350 m²
+        // da linha 07.09.17 não antecipa o médio nem troca o subgrupo.
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1340-5/01',
+            respostas: [2 => true, 3 => true],
+            areaUtilizada: 400.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.09.17', $ramo->codigoLouos);
+        $this->assertSame('nR1-09', $ramo->subgrupo);
+        $this->assertSame('baixo', $ramo->risco);
+        $this->assertSame('expresso', $ramo->fluxo);
+    }
+
+    public function test_regra_3_artesanal_acima_de_1250_e_medio_expresso(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1340-5/01',
+            respostas: [2 => true, 3 => true],
+            areaUtilizada: 2000.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.09.17', $ramo->codigoLouos);
+        $this->assertSame('medio', $ramo->risco);
+        $this->assertSame('expresso', $ramo->fluxo);
+    }
+
+    public function test_regra_7_artesanal_acima_de_1250_e_medio_expresso(): void
+    {
+        // Linha com faixa "Q": acima de 1.250 m² o risco sobe para médio
+        // e o fluxo permanece expresso.
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1020-1/01',
+            respostas: [2 => true, 3 => true],
+            areaUtilizada: 2000.0,
+            tipoImovel: TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826()),
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('07.09.02', $ramo->codigoLouos);
+        $this->assertSame('medio', $ramo->risco);
+        $this->assertSame('expresso', $ramo->fluxo);
+    }
+
+    public function test_regra_19_e_57_artesanal_acima_de_1250_e_medio_expresso(): void
+    {
+        $tipo = TipoImovel::fromRegin('Edificação Comercial', TipoImovelCatalog::sedur200826());
+
+        $regra19 = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1622-6/02',
+            respostas: [2 => true, 3 => true],
+            areaUtilizada: 2000.0,
+            tipoImovel: $tipo,
+        ));
+        $regra57 = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '1066-0/00',
+            respostas: [2 => true, 3 => true],
+            areaUtilizada: 2000.0,
+            tipoImovel: $tipo,
+        ));
+
+        $this->assertSame('medio', $regra19->risco);
+        $this->assertSame('expresso', $regra19->fluxo);
+        $this->assertSame('07.09.08', $regra19->codigoLouos);
+        $this->assertSame('medio', $regra57->risco);
+        $this->assertSame('expresso', $regra57->fluxo);
+        $this->assertSame('07.09.02', $regra57->codigoLouos);
+    }
+
     public function test_tipo_residencial_eleva_ramo_fora_do_id_para_medio(): void
     {
         // Planilha (regras 1, 5, 24, 51…): galpão/container/edificação residencial

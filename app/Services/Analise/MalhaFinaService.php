@@ -2,6 +2,7 @@
 
 namespace App\Services\Analise;
 
+use App\Enums\ConclusionOutcome;
 use App\Models\FineMeshReferral;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -108,22 +109,22 @@ class MalhaFinaService
     }
 
     /**
-     * Dá baixa em um encaminhamento (resolved_at = agora) SEM mexer no status,
-     * registrando QUEM baixou (resolved_by_user_id) e a observação OPCIONAL da
-     * conclusão (resolution_note — só quando há informação complementar da
-     * análise). Ao resolver o ÚLTIMO encaminhamento aberto do processo, baixa
-     * a flag in_fine_mesh — mantendo o invariante "in_fine_mesh = existe
-     * encaminhamento aberto". A baixa também é auditada por processo.
+     * Dá baixa em um encaminhamento (resolved_at = agora) SEM mexer no status
+     * canônico — o resultado da conclusão, quando houver, é aplicado antes
+     * pelo ConclusaoAnaliseService. Registra quem baixou, a observação
+     * opcional e o resultado escolhido. Ao resolver o ÚLTIMO encaminhamento
+     * aberto, baixa a flag in_fine_mesh. A baixa também é auditada.
      */
-    public function resolver(FineMeshReferral $referral, User $ator, ?string $observacao = null): void
+    public function resolver(FineMeshReferral $referral, User $ator, ?string $observacao = null, ?ConclusionOutcome $resultado = null): void
     {
         $observacao = $this->observacaoNormalizada($observacao);
 
-        DB::transaction(function () use ($referral, $ator, $observacao): void {
+        DB::transaction(function () use ($referral, $ator, $observacao, $resultado): void {
             $referral->forceFill([
                 'resolved_at' => now(),
                 'resolved_by_user_id' => $ator->id,
                 'resolution_note' => $observacao,
+                'resolution_outcome' => $resultado?->value,
             ])->save();
 
             $request = $referral->viabilityRequest;
@@ -140,6 +141,7 @@ class MalhaFinaService
                 'in_fine_mesh' => $request->in_fine_mesh,
                 'ator_id' => $ator->id,
                 'observacao' => $observacao,
+                'resultado' => $resultado?->value,
             ], $request);
         });
     }
@@ -151,12 +153,12 @@ class MalhaFinaService
      * última. Retorna quantos encaminhamentos foram baixados (0 = o processo
      * não estava na malha fina).
      */
-    public function resolverAbertos(ViabilityRequest $request, User $ator, ?string $observacao = null): int
+    public function resolverAbertos(ViabilityRequest $request, User $ator, ?string $observacao = null, ?ConclusionOutcome $resultado = null): int
     {
         $abertos = $request->fineMeshReferrals()->whereNull('resolved_at')->get();
 
         foreach ($abertos as $referral) {
-            $this->resolver($referral, $ator, $observacao);
+            $this->resolver($referral, $ator, $observacao, $resultado);
         }
 
         return $abertos->count();

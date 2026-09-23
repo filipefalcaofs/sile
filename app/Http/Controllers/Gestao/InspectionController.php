@@ -105,13 +105,75 @@ class InspectionController extends Controller
 
         return Inertia::render('gestao/vistoria/show', [
             'ficha' => (new InspectionResource($ficha))->resolve(),
-            'processo' => [
-                'id' => $viabilityRequest->id,
-                'protocol_number' => $viabilityRequest->protocol_number,
-                'status' => $viabilityRequest->status->value,
-                'status_label' => $viabilityRequest->status->label(),
-            ],
+            'processo' => $this->processoDaFicha($viabilityRequest),
+            'somenteLeitura' => false,
+            'ausente' => false,
             // Tipo de imóvel é dado administrável (cadastro de tipos ativos).
+            'tiposImovel' => PropertyType::query()
+                ->active()
+                ->orderBy('label')
+                ->get(['code', 'label'])
+                ->map(fn (PropertyType $tipo): array => ['value' => $tipo->code, 'label' => $tipo->label])
+                ->all(),
+            'opcoes' => Inspection::rotulos(),
+            'anexos' => $this->anexosDa($ficha),
+        ]);
+    }
+
+    /**
+     * Consulta a ficha existente, sem criar e sem editar. Sem ficha, a tela
+     * informa a ausência. A permissão preencher-ficha-vistoria segue sendo
+     * o que abre e altera a ficha.
+     */
+    public function visualizar(Request $request, ViabilityRequest $viabilityRequest): Response
+    {
+        abort_unless($request->user() instanceof User, 401);
+
+        $ficha = Inspection::query()
+            ->where('viability_request_id', $viabilityRequest->id)
+            ->latest('id')
+            ->first();
+
+        if ($ficha === null) {
+            $this->audit->log(
+                logName: 'vistoria',
+                event: 'ficha-visualizacao-ausente',
+                description: "Consulta de ficha de vistoria inexistente do processo #{$viabilityRequest->id}",
+                properties: [
+                    'viability_request_id' => $viabilityRequest->id,
+                ],
+                subject: $viabilityRequest,
+            );
+
+            return Inertia::render('gestao/vistoria/show', [
+                'ausente' => true,
+                'somenteLeitura' => true,
+                'ficha' => null,
+                'processo' => $this->processoDaFicha($viabilityRequest),
+                'tiposImovel' => [],
+                'opcoes' => Inspection::rotulos(),
+                'anexos' => [],
+            ]);
+        }
+
+        $ficha->loadMissing('vistoriador');
+
+        $this->audit->log(
+            logName: 'vistoria',
+            event: 'ficha-visualizacao',
+            description: "Visualização da ficha de vistoria do processo #{$viabilityRequest->id}",
+            properties: [
+                'viability_request_id' => $viabilityRequest->id,
+                'inspection_id' => $ficha->id,
+            ],
+            subject: $ficha,
+        );
+
+        return Inertia::render('gestao/vistoria/show', [
+            'ausente' => false,
+            'somenteLeitura' => true,
+            'ficha' => (new InspectionResource($ficha))->resolve(),
+            'processo' => $this->processoDaFicha($viabilityRequest),
             'tiposImovel' => PropertyType::query()
                 ->active()
                 ->orderBy('label')
@@ -355,6 +417,19 @@ class InspectionController extends Controller
         });
 
         return back()->with('status', 'Anexo removido com sucesso.');
+    }
+
+    /**
+     * @return array{id: int, protocol_number: string|null, status: string, status_label: string}
+     */
+    private function processoDaFicha(ViabilityRequest $viabilityRequest): array
+    {
+        return [
+            'id' => $viabilityRequest->id,
+            'protocol_number' => $viabilityRequest->protocol_number,
+            'status' => $viabilityRequest->status->value,
+            'status_label' => $viabilityRequest->status->label(),
+        ];
     }
 
     /**

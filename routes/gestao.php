@@ -10,6 +10,7 @@ use App\Http\Controllers\Gestao\AuditoriaController;
 use App\Http\Controllers\Gestao\AuditoriaPreditivaController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
+use App\Http\Controllers\Gestao\ConclusaoAnaliseController;
 use App\Http\Controllers\Gestao\Conta\PasswordController as ContaPasswordController;
 use App\Http\Controllers\Gestao\Conta\ProfileController as ContaProfileController;
 use App\Http\Controllers\Gestao\ContingenciaController;
@@ -663,11 +664,11 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             ->name('vistorias.index');
 
         // Caixa de Malha Fina: a fila do revisor — processos com in_fine_mesh
-        // (ortogonal ao status, HU-136). A consulta (GET) lista com os filtros
-        // das caixas (ProcessoQueryService) e audita; a conclusão (POST) dá
-        // baixa nos encaminhamentos abertos SEM mexer no status, com
-        // observação opcional. Gated por analisar-malha-fina — quem só
-        // encaminha (encaminhar-malha-fina) não opera a caixa.
+        // (o encaminhamento continua ortogonal ao status, HU-136). A consulta
+        // (GET) lista com os filtros das caixas e audita; a conclusão (POST)
+        // exige o resultado da análise (deferido, indeferido, desativado,
+        // cassado ou revogado) e só então baixa os encaminhamentos. Gated por
+        // analisar-malha-fina — quem só encaminha não opera a caixa.
         Route::middleware('permission:analisar-malha-fina')->prefix('malha-fina')->name('malha-fina.')->group(function () {
             Route::get('/', MalhaFinaCaixaController::class)->name('index');
             Route::post('{viabilityRequest}/concluir', [MalhaFinaController::class, 'concluir'])->name('concluir');
@@ -700,7 +701,17 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // desatribuído e com o eixo em Vistoriar, para o apoio distribuir
             // a um vistoriador. A origem é registrada para o retorno automático.
             Route::post('vistoria/encaminhar', [InspectionController::class, 'encaminhar'])->name('vistoria.encaminhar');
+            // Consulta da ficha já existente. Não abre, não cria e não edita —
+            // a edição segue em preencher-ficha-vistoria.
+            Route::get('vistoria/visualizar', [InspectionController::class, 'visualizar'])->name('vistoria.visualizar');
         });
+
+        // Download do anexo: o analista consulta a ficha sem a permissão de
+        // preencher; o vistoriador baixa no preenchimento. Mutação continua
+        // só em preencher-ficha-vistoria.
+        Route::middleware('permission:analisar-processos|preencher-ficha-vistoria')
+            ->get('processos/{viabilityRequest}/vistoria/anexos/{attachment}', [InspectionController::class, 'downloadAnexo'])
+            ->name('processos.vistoria.anexos.download');
 
         // Ficha de vistoria do processo: abertura com identificação automática
         // (tipo, data, vistoriador) e snapshot da localização, rascunho parcial,
@@ -708,13 +719,13 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // autenticado — nunca URL pública) e conclusão com parecer OBRIGATÓRIO
         // (ficha concluída é imutável). Gated por preencher-ficha-vistoria e
         // auditado (RN-002); o 403 é auditado no ponto único (bootstrap/app.php).
+
         Route::middleware('permission:preencher-ficha-vistoria')->prefix('processos/{viabilityRequest}/vistoria')->name('processos.vistoria.')->group(function () {
             Route::get('/', [InspectionController::class, 'show'])->name('show');
             Route::patch('/', [InspectionController::class, 'update'])->name('update');
             Route::post('concluir', [InspectionController::class, 'concluir'])->name('concluir');
             Route::post('poligono', [InspectionController::class, 'validarPoligono'])->name('poligono');
             Route::post('anexos', [InspectionController::class, 'storeAnexo'])->name('anexos.store');
-            Route::get('anexos/{attachment}', [InspectionController::class, 'downloadAnexo'])->name('anexos.download');
             Route::delete('anexos/{attachment}', [InspectionController::class, 'destroyAnexo'])->name('anexos.destroy');
         });
 
@@ -734,6 +745,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // permissão da análise técnica (a regra de estado é do serviço).
             Route::middleware('permission:analisar-processos')->group(function () {
                 Route::post('{viabilityRequest}/decidir', ProcessoDecisaoController::class)->name('decidir');
+                Route::post('{viabilityRequest}/conclusao-analise', ConclusaoAnaliseController::class)->name('conclusao-analise');
                 Route::post('{viabilityRequest}/pendencias', [ProcessoPendenciaController::class, 'store'])->name('pendencias.store');
                 Route::post('{viabilityRequest}/cancelar-convite', [ProcessoPendenciaController::class, 'cancelar'])->name('cancelar-convite');
                 Route::post('{viabilityRequest}/status-analise', [ProcessoController::class, 'atualizarStatusAnalise'])->name('status-analise');

@@ -25,6 +25,9 @@ enum ViabilityRequestStatus: string
     case Deferida = 'deferida';
     case Indeferida = 'indeferida';
     case EmPendencia = 'em_pendencia';
+    case Desativado = 'desativado';
+    case Cassado = 'cassado';
+    case Revogado = 'revogado';
 
     public function label(): string
     {
@@ -37,6 +40,9 @@ enum ViabilityRequestStatus: string
             self::Deferida => 'Deferida',
             self::Indeferida => 'Indeferida',
             self::EmPendencia => 'Em convite',
+            self::Desativado => 'Desativado',
+            self::Cassado => 'Cassado',
+            self::Revogado => 'Revogado',
         };
     }
 
@@ -51,6 +57,9 @@ enum ViabilityRequestStatus: string
             self::Deferida => 'Deferida — viabilidade reconhecida',
             self::Indeferida => 'Indeferida',
             self::EmPendencia => 'Convite — ação necessária do requerente',
+            self::Desativado => 'Desativado',
+            self::Cassado => 'Cassado',
+            self::Revogado => 'Revogado',
         };
     }
 }

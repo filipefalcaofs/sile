@@ -234,6 +234,7 @@ interface EnquadramentoOpcao {
 interface FichaAnaliseShowProps {
     ficha: Ficha;
     processo: Processo;
+    conclusaoOpcoes: { value: string; label: string }[];
     localizacao?: Localizacao;
     dadosTvl: DadosTvl;
     cadastroImobiliario: CadastroImobiliario;
@@ -249,6 +250,8 @@ interface FichaAnaliseShowProps {
     sugestoesIa?: SugestaoIa[];
     /** Disponibilidade honesta do copiloto (resumo + minuta). Sempre no load inicial. */
     iaFicha: IaFicha;
+    /** Há ficha de vistoria para consultar. A ausência não cria registro. */
+    temFichaVistoria: boolean;
 }
 
 interface IaFicha {
@@ -749,6 +752,7 @@ function TramitacaoLinha({ item }: { item: TramitacaoItem }) {
 export default function FichaAnaliseShow({
     ficha,
     processo,
+    conclusaoOpcoes,
     localizacao,
     dadosTvl,
     cadastroImobiliario,
@@ -760,6 +764,7 @@ export default function FichaAnaliseShow({
     autosaveDebounceMs,
     sugestoesIa,
     iaFicha,
+    temFichaVistoria,
 }: FichaAnaliseShowProps) {
     const { auth } = usePage<SharedProps>().props;
     // Encaminhar à vistoria é ação do analista (handoff ao setor de vistoria).
@@ -767,7 +772,8 @@ export default function FichaAnaliseShow({
     // Malha fina é caixa à parte para alterar o processo (HU-136) — permissão própria.
     const podeMalhaFina = auth.permissions.includes('encaminhar-malha-fina');
     const podeEmitirTvl = auth.permissions.includes('emitir-tvl');
-    const podeVistoria = auth.permissions.includes('preencher-ficha-vistoria');
+    const classeAcaoFantasma =
+        'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm text-gray-700 transition hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-300';
 
     const editavel = ficha.editavel;
 
@@ -866,11 +872,18 @@ export default function FichaAnaliseShow({
     const [parecerCancelamento, setParecerCancelamento] = useState('');
     const [cancelarConviteProcessing, setCancelarConviteProcessing] = useState(false);
     const [showVistoria, setShowVistoria] = useState(false);
+    const [showSemFichaVistoria, setShowSemFichaVistoria] = useState(false);
     const [motivoVistoria, setMotivoVistoria] = useState('');
     const [setorVistoria, setSetorVistoria] = useState('');
     const [showMalhaFina, setShowMalhaFina] = useState(false);
     const [motivoMalhaFina, setMotivoMalhaFina] = useState('');
     const [setorMalhaFina, setSetorMalhaFina] = useState('');
+    const [showConclusao, setShowConclusao] = useState(false);
+    const [resultadoConclusao, setResultadoConclusao] = useState('');
+    const [parecerConclusao, setParecerConclusao] = useState('');
+    const [conclusaoProcessing, setConclusaoProcessing] = useState(false);
+    const [erroConclusao, setErroConclusao] = useState<string | null>(null);
+    const podeConcluirAnalise = processo.status === 'em_analise' || processo.status === 'deferida';
     const [pickerParaParecer, setPickerParaParecer] = useState(false);
     const [pickerParaCondicao, setPickerParaCondicao] = useState(false);
 
@@ -1028,6 +1041,30 @@ export default function FichaAnaliseShow({
             onSuccess: () => router.reload(),
             onHttpException: () => false,
         });
+    }
+
+    function concluirAnalise() {
+        setErroConclusao(null);
+        router.post(
+            `/gestao/processos/${processo.id}/conclusao-analise`,
+            { resultado: resultadoConclusao, parecer: parecerConclusao },
+            {
+                preserveScroll: true,
+                onStart: () => setConclusaoProcessing(true),
+                onFinish: () => setConclusaoProcessing(false),
+                onSuccess: () => {
+                    setShowConclusao(false);
+                    setResultadoConclusao('');
+                    setParecerConclusao('');
+                },
+                onError: (erros) => {
+                    const mapa = erros as Record<string, string>;
+                    setErroConclusao(
+                        mapa.conclusao ?? mapa.resultado ?? 'Não foi possível concluir a análise.',
+                    );
+                },
+            },
+        );
     }
 
     function decidirProcesso() {
@@ -2432,6 +2469,18 @@ export default function FichaAnaliseShow({
                                         </>
                                     )}
 
+                                    {podeConcluirAnalise && (
+                                        <Button
+                                            onClick={() => {
+                                                setErroConclusao(null);
+                                                setShowConclusao(true);
+                                            }}
+                                            size="sm"
+                                        >
+                                            Conclusão de Análise
+                                        </Button>
+                                    )}
+
                                     <Button onClick={() => setShowPendencia(true)} variant="ghost" size="sm">
                                         Colocar em Convite
                                     </Button>
@@ -2454,13 +2503,21 @@ export default function FichaAnaliseShow({
                                         </Button>
                                     )}
 
-                                    {podeVistoria && (
+                                    {temFichaVistoria ? (
                                         <Link
-                                            href={`/gestao/processos/${processo.id}/vistoria`}
-                                            className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm text-gray-700 transition hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-brand-500 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-300"
+                                            href={`/gestao/processos/${processo.id}/vistoria/visualizar`}
+                                            className={classeAcaoFantasma}
                                         >
-                                            Ficha de vistoria
+                                            Visualizar ficha de vistoria
                                         </Link>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowSemFichaVistoria(true)}
+                                            className={classeAcaoFantasma}
+                                        >
+                                            Visualizar ficha de vistoria
+                                        </button>
                                     )}
 
                                     {ficha.revision > 1 && (
@@ -2474,6 +2531,20 @@ export default function FichaAnaliseShow({
                     </div>
                 </div>
             </div>
+
+            {showSemFichaVistoria && (
+                <Modal isOpen onClose={() => setShowSemFichaVistoria(false)} className="m-4 max-w-[480px] p-6 lg:p-8">
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Sem ficha de vistoria</h4>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        Este processo não possui ficha de vistoria.
+                    </p>
+                    <div className="mt-6 flex justify-end">
+                        <Button size="sm" onClick={() => setShowSemFichaVistoria(false)}>
+                            Entendi
+                        </Button>
+                    </div>
+                </Modal>
+            )}
 
             {/* Picker de textos-padrão */}
             {(pickerParaParecer || pickerParaCondicao) && (
@@ -2532,6 +2603,56 @@ export default function FichaAnaliseShow({
                     setErroAcao(null);
                 }}
             />
+
+            {showConclusao && (
+                <Modal isOpen onClose={() => setShowConclusao(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de Análise</h4>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Deferido e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o
+                        processo — inclusive um já deferido.
+                    </p>
+                    <div className="mt-4">
+                        <Label htmlFor="resultado-conclusao" required>
+                            Resultado
+                        </Label>
+                        <Select
+                            id="resultado-conclusao"
+                            value={resultadoConclusao}
+                            placeholder="Selecione o resultado"
+                            options={conclusaoOpcoes}
+                            onChange={setResultadoConclusao}
+                        />
+                    </div>
+                    <div className="mt-4">
+                        <Label htmlFor="parecer-conclusao">Parecer</Label>
+                        <Textarea
+                            id="parecer-conclusao"
+                            rows={4}
+                            placeholder="Parecer da conclusão…"
+                            value={parecerConclusao}
+                            onChange={setParecerConclusao}
+                        />
+                    </div>
+                    {erroConclusao && (
+                        <p className="mt-4 text-sm font-medium text-error-600 dark:text-error-500" role="alert">
+                            {erroConclusao}
+                        </p>
+                    )}
+                    <div className="mt-6 flex items-center justify-end gap-3">
+                        <Button variant="outline" size="sm" onClick={() => setShowConclusao(false)}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={concluirAnalise}
+                            disabled={resultadoConclusao === ''}
+                            loading={conclusaoProcessing}
+                        >
+                            Concluir análise
+                        </Button>
+                    </div>
+                </Modal>
+            )}
 
             {showPendencia && (
                 <Modal isOpen onClose={() => setShowPendencia(false)} className="m-4 max-w-[560px] p-6 lg:p-8">

@@ -40,8 +40,10 @@ class ViabilityRequestStateMachine
         'rascunho' => ['protocolada', 'cancelada'],
         'protocolada' => ['cancelada', 'em_analise', 'deferida', 'indeferida', 'aguardando_bap'],
         'aguardando_bap' => ['deferida', 'indeferida', 'em_analise'],
-        'em_analise' => ['em_pendencia', 'deferida', 'indeferida'],
+        'em_analise' => ['em_pendencia', 'deferida', 'indeferida', 'desativado', 'cassado', 'revogado'],
         'em_pendencia' => ['em_analise', 'indeferida'],
+        // Deferimento já emitido só sai para o ciclo posterior (cassado/revogado/desativado).
+        'deferida' => ['desativado', 'cassado', 'revogado'],
     ];
 
     public function __construct(private AuditService $audit) {}

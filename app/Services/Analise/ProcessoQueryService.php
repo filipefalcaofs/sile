@@ -128,16 +128,16 @@ class ProcessoQueryService
     }
 
     /**
-     * Monta o Builder da fila do analista (HU-144), ordenado por prazo
-     * (analysis_due_at — coluna indexada de 10-02) ascendente. Só os status de
-     * trabalho (em análise / em pendência); o escopo (meus/setor) vem do
-     * escopo().
+     * Monta o Builder da caixa de entrada do analista (HU-144), ordenado por
+     * prazo (analysis_due_at — coluna indexada de 10-02) ascendente. Só os
+     * processos atribuídos ao usuário, nos status de trabalho (em análise / em
+     * pendência).
      *
      * @return Builder<ViabilityRequest>
      */
-    public function fila(User $user, string $modo): Builder
+    public function fila(User $user): Builder
     {
-        return $this->escopo($user, $modo)
+        return $this->escopo($user)
             ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name'])
             ->whereIn('status', self::STATUS_FILA)
             ->orderBy('analysis_due_at')
@@ -145,22 +145,23 @@ class ProcessoQueryService
     }
 
     /**
-     * Contadores da fila por status (HU-144), no MESMO escopo (meus/setor):
-     * aguardando análise (em_analise sem analista), em análise (atribuído), em
-     * pendência e vencendo hoje (prazo <= fim do dia).
+     * Contadores da caixa de entrada por status (HU-144), no escopo do usuário:
+     * aguardando análise (em_analise sem analista — fica zerado aqui, porque a
+     * fila só tem o que já está atribuído), em análise, em pendência e vencendo
+     * hoje (prazo <= fim do dia).
      *
      * @return array{aguardando_analise: int, em_analise: int, em_pendencia: int, vencendo_hoje: int}
      */
-    public function contadores(User $user, string $modo): array
+    public function contadores(User $user): array
     {
         $emAnalise = ViabilityRequestStatus::EmAnalise->value;
         $emPendencia = ViabilityRequestStatus::EmPendencia->value;
 
         return [
-            'aguardando_analise' => $this->escopo($user, $modo)->where('status', $emAnalise)->whereNull('assigned_user_id')->count(),
-            'em_analise' => $this->escopo($user, $modo)->where('status', $emAnalise)->whereNotNull('assigned_user_id')->count(),
-            'em_pendencia' => $this->escopo($user, $modo)->where('status', $emPendencia)->count(),
-            'vencendo_hoje' => $this->escopo($user, $modo)
+            'aguardando_analise' => $this->escopo($user)->where('status', $emAnalise)->whereNull('assigned_user_id')->count(),
+            'em_analise' => $this->escopo($user)->where('status', $emAnalise)->whereNotNull('assigned_user_id')->count(),
+            'em_pendencia' => $this->escopo($user)->where('status', $emPendencia)->count(),
+            'vencendo_hoje' => $this->escopo($user)
                 ->whereIn('status', self::STATUS_FILA)
                 ->whereNotNull('analysis_due_at')
                 ->where('analysis_due_at', '<=', now()->endOfDay())
@@ -208,22 +209,14 @@ class ProcessoQueryService
     }
 
     /**
-     * Escopo da fila por modo: `meus` (atribuídos ao usuário) ou `setor`
-     * (processos das caixas do(s) setor(es) do usuário — respeita o vínculo
-     * analista↔setor, RN-005). Sem filtro de status nem ordenação (reaproveitado
-     * pela fila e pelos contadores).
+     * Escopo da caixa de entrada: processos atribuídos ao usuário. Sem filtro de
+     * status nem ordenação (reaproveitado pela fila e pelos contadores).
      *
      * @return Builder<ViabilityRequest>
      */
-    private function escopo(User $user, string $modo): Builder
+    private function escopo(User $user): Builder
     {
-        $query = ViabilityRequest::query();
-
-        if ($modo === 'setor') {
-            return $query->whereIn('sector_id', $user->sectors()->pluck('sectors.id'));
-        }
-
-        return $query->where('assigned_user_id', $user->id);
+        return ViabilityRequest::query()->where('assigned_user_id', $user->id);
     }
 
     /**

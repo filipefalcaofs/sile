@@ -62,7 +62,7 @@ class AnaliseTecnicaDecisionService
      * @throws DomainException quando a ficha não está finalizada, o processo não
      *                         está em análise ou a ficha não tem CNAEs para decidir
      */
-    public function decide(AnalysisRecord $record, User $analista): AnaliseDecisionResult
+    public function decide(AnalysisRecord $record, User $analista, ?DecisionOutcome $escolhido = null): AnaliseDecisionResult
     {
         if (! $record->isFinalizada()) {
             throw new DomainException(
@@ -86,7 +86,19 @@ class AnaliseTecnicaDecisionService
 
         $this->recusarSeAindaEmAnalise($perCnae);
 
-        $outcome = $this->outcome($perCnae);
+        if ($escolhido !== null && ! in_array($escolhido, [DecisionOutcome::Deferida, DecisionOutcome::Indeferida], true)) {
+            throw new DomainException('Deferido e indeferido são os únicos resultados lidos da ficha.');
+        }
+
+        $derivado = $this->outcome($perCnae);
+
+        if ($escolhido === DecisionOutcome::Deferida && $derivado !== DecisionOutcome::Deferida) {
+            throw new DomainException(
+                'Não é possível deferir: há atividade indeferida na ficha. Ajuste a atividade ou escolha Indeferido.',
+            );
+        }
+
+        $outcome = $escolhido ?? $derivado;
 
         try {
             $decision = DB::transaction(

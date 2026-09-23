@@ -11,8 +11,10 @@ import {
 import DecisionExplanation, { type DecisionExplanationData } from '@/components/auditoria/decision-explanation';
 import PageHeader from '@/components/app/page-header';
 import { MapaSection } from '@/components/geo/mapa-section';
+import Select from '@/components/form/select';
 import { AlertIcon, ArrowRightIcon, MapPinIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
+import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import GestaoLayout from '@/layouts/gestao-layout';
@@ -37,6 +39,7 @@ interface ShowProps {
     explicacao?: DecisionExplanationData | null;
     /** Próximas transições manuais oferecidas ao analista (Tarefa 10). */
     analysisStatusProximas: { value: string; label: string }[];
+    conclusaoOpcoes: { value: string; label: string }[];
 }
 
 type Aba = 'informacoes' | 'tramitacao' | 'explicabilidade';
@@ -100,11 +103,33 @@ function DescItem({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-export default function Show({ processo, timeline, geo, explicacao, analysisStatusProximas }: ShowProps) {
+export default function Show({ processo, timeline, geo, explicacao, analysisStatusProximas, conclusaoOpcoes }: ShowProps) {
     const { auth } = usePage<SharedProps>().props;
     const podeAnalisar = auth.permissions.includes('analisar-processos');
+    const podeConcluirAnalise = processo.status === 'em_analise' || processo.status === 'deferida';
 
     const [aba, setAba] = useState<Aba>('informacoes');
+    const [resultadoConclusao, setResultadoConclusao] = useState('');
+    const [conclusaoProcessing, setConclusaoProcessing] = useState(false);
+    const [erroConclusao, setErroConclusao] = useState<string | null>(null);
+
+    function concluirAnalise() {
+        setErroConclusao(null);
+        router.post(
+            `/gestao/processos/${processo.id}/conclusao-analise`,
+            { resultado: resultadoConclusao },
+            {
+                preserveScroll: true,
+                onStart: () => setConclusaoProcessing(true),
+                onFinish: () => setConclusaoProcessing(false),
+                onSuccess: () => setResultadoConclusao(''),
+                onError: (erros) => {
+                    const mapa = erros as Record<string, string>;
+                    setErroConclusao(mapa.conclusao ?? mapa.resultado ?? 'Não foi possível concluir a análise.');
+                },
+            },
+        );
+    }
 
     // A aba de explicabilidade só existe quando há decisão (prop presente).
     const abas: { value: Aba; label: string }[] = [
@@ -262,6 +287,33 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
                                         <DescItem label="Situação da análise">
                                             {processo.analysis_status_label ?? '—'}
                                         </DescItem>
+                                        {podeAnalisar && podeConcluirAnalise && (
+                                            <DescItem label="Conclusão de Análise">
+                                                <div className="flex flex-col gap-2 sm:items-end">
+                                                    <Select
+                                                        id="resultado-conclusao"
+                                                        value={resultadoConclusao}
+                                                        placeholder="Selecione o resultado"
+                                                        options={conclusaoOpcoes}
+                                                        onChange={setResultadoConclusao}
+                                                        className="sm:min-w-56"
+                                                    />
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={concluirAnalise}
+                                                        disabled={resultadoConclusao === ''}
+                                                        loading={conclusaoProcessing}
+                                                    >
+                                                        Concluir análise
+                                                    </Button>
+                                                    {erroConclusao && (
+                                                        <p className="text-theme-xs text-error-600 dark:text-error-500" role="alert">
+                                                            {erroConclusao}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </DescItem>
+                                        )}
                                         {podeAnalisar && analysisStatusProximas.length > 0 && (
                                             <DescItem label="Alterar situação da análise">
                                                 <select

@@ -1,5 +1,6 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
+import Select from '@/components/form/select';
 import ProcessoFiltros, { FILTROS_VAZIOS, type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
 import PageHeader from '@/components/app/page-header';
 import { ArrowRightIcon } from '@/components/icons';
@@ -39,6 +40,8 @@ interface MalhaFinaItem {
     concluido_em: string | null;
     concluido_por: string | null;
     observacao: string | null;
+    resultado: string | null;
+    resultado_label: string | null;
     ficha_url: string;
 }
 
@@ -70,6 +73,7 @@ interface MalhaFinaIndexProps {
     filtros: ProcessoFiltrosValores & { aba: Aba; per_page: number };
     servicoOptions: { value: string; label: string }[];
     analysisStatusOptions: { value: string; label: string }[];
+    conclusaoOpcoes: { value: string; label: string }[];
     categoriaOptions: { value: string; label: string }[];
     perPageOptions: number[];
 }
@@ -102,13 +106,13 @@ export default function MalhaFinaIndex({
     filtros,
     servicoOptions,
     analysisStatusOptions,
+    conclusaoOpcoes,
     categoriaOptions,
     perPageOptions,
 }: MalhaFinaIndexProps) {
     const linhas = Array.isArray(processos?.data) ? processos.data : [];
     const [concluindo, setConcluindo] = useState<MalhaFinaItem | null>(null);
-    const [observacao, setObservacao] = useState('');
-    const [enviando, setEnviando] = useState(false);
+    const conclusao = useForm({ resultado: '', observacao: '' });
 
     const { aba, per_page: _perPage, ...filtrosDeCampo } = filtros;
 
@@ -126,7 +130,8 @@ export default function MalhaFinaIndex({
     }
 
     function abrirConclusao(item: MalhaFinaItem) {
-        setObservacao('');
+        conclusao.reset();
+        conclusao.clearErrors();
         setConcluindo(item);
     }
 
@@ -135,16 +140,10 @@ export default function MalhaFinaIndex({
             return;
         }
 
-        router.post(
-            `/gestao/malha-fina/${concluindo.id}/concluir`,
-            { observacao },
-            {
-                preserveScroll: true,
-                onStart: () => setEnviando(true),
-                onFinish: () => setEnviando(false),
-                onSuccess: () => setConcluindo(null),
-            },
-        );
+        conclusao.post(`/gestao/malha-fina/${concluindo.id}/concluir`, {
+            preserveScroll: true,
+            onSuccess: () => setConcluindo(null),
+        });
     }
 
     const columns: ColumnDef<MalhaFinaItem>[] = [
@@ -213,6 +212,11 @@ export default function MalhaFinaIndex({
                             <span className="text-gray-700 dark:text-gray-300">
                                 {item.concluido_por ?? '—'} · {formatarDataHora(item.concluido_em)}
                             </span>
+                            {item.resultado_label && (
+                                <span className="text-theme-xs font-medium text-gray-700 dark:text-gray-300">
+                                    {item.resultado_label}
+                                </span>
+                            )}
                             {item.observacao && (
                                 <span className="text-theme-xs text-gray-400 dark:text-gray-500">{item.observacao}</span>
                             )}
@@ -341,29 +345,57 @@ export default function MalhaFinaIndex({
             </Card>
 
             <Modal isOpen={concluindo !== null} onClose={() => setConcluindo(null)} className="max-w-lg p-6">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">Concluir análise da malha fina</h2>
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de Análise</h2>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    O processo {concluindo?.protocol_number ?? ''} sai da malha fina e segue o fluxo normal, sem mudança
-                    de status. A baixa registra quem concluiu e quando.
+                    O processo {concluindo?.protocol_number ?? ''} sai da malha fina com o resultado escolhido. Deferido
+                    e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o processo —
+                    inclusive um já deferido.
                 </p>
+                <label htmlFor="concluir-resultado" className="mt-4 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Resultado
+                </label>
+                <Select
+                    id="concluir-resultado"
+                    className="mt-1"
+                    value={conclusao.data.resultado}
+                    placeholder="Selecione o resultado"
+                    options={conclusaoOpcoes}
+                    onChange={(valor) => conclusao.setData('resultado', valor)}
+                />
+                {conclusao.errors.resultado && (
+                    <p className="mt-1 text-sm text-error-600 dark:text-error-500" role="alert">
+                        {conclusao.errors.resultado}
+                    </p>
+                )}
                 <label htmlFor="concluir-observacao" className="mt-4 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Observação (opcional)
+                    Parecer (opcional)
                 </label>
                 <textarea
                     id="concluir-observacao"
-                    value={observacao}
-                    onChange={(evento) => setObservacao(evento.target.value)}
+                    value={conclusao.data.observacao}
+                    onChange={(evento) => conclusao.setData('observacao', evento.target.value)}
                     rows={3}
                     maxLength={2000}
-                    placeholder="Registre aqui apenas se houver informação complementar da análise"
+                    placeholder="Parecer da conclusão, se houver"
                     className="mt-1 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
                 />
+                {conclusao.errors.conclusao && (
+                    <p className="mt-3 text-sm font-medium text-error-600 dark:text-error-500" role="alert">
+                        {conclusao.errors.conclusao}
+                    </p>
+                )}
                 <div className="mt-5 flex justify-end gap-3">
-                    <Button type="button" variant="outline" onClick={() => setConcluindo(null)} disabled={enviando}>
+                    <Button type="button" variant="outline" onClick={() => setConcluindo(null)} disabled={conclusao.processing}>
                         Cancelar
                     </Button>
-                    <Button type="button" variant="primary" onClick={concluir} disabled={enviando}>
-                        Concluir malha fina
+                    <Button
+                        type="button"
+                        variant="primary"
+                        onClick={concluir}
+                        disabled={conclusao.processing || conclusao.data.resultado === ''}
+                        loading={conclusao.processing}
+                    >
+                        Concluir análise
                     </Button>
                 </div>
             </Modal>

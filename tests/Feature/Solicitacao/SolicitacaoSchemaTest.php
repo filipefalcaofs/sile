@@ -103,8 +103,11 @@ class SolicitacaoSchemaTest extends TestCase
         $this->assertSame('deferida', ViabilityRequestStatus::Deferida->value);
         $this->assertSame('indeferida', ViabilityRequestStatus::Indeferida->value);
         $this->assertSame('em_pendencia', ViabilityRequestStatus::EmPendencia->value);
+        $this->assertSame('desativado', ViabilityRequestStatus::Desativado->value);
+        $this->assertSame('cassado', ViabilityRequestStatus::Cassado->value);
+        $this->assertSame('revogado', ViabilityRequestStatus::Revogado->value);
 
-        $this->assertCount(8, ViabilityRequestStatus::cases());
+        $this->assertCount(11, ViabilityRequestStatus::cases());
     }
 
     public function test_status_tem_label_tecnico_e_publico(): void

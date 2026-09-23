@@ -46,7 +46,6 @@ interface Paginado<T> {
 }
 
 interface FilaProps {
-    modo: 'meus' | 'setor';
     processos: Paginado<ProcessoItem>;
     contadores: Contadores;
     visaoSetor: VisaoSetor | null;
@@ -59,14 +58,7 @@ interface FilaProps {
 
 const numberFormat = new Intl.NumberFormat('pt-BR');
 
-/** Abas da fila — alternam o escopo via GET preservando a rolagem. */
-const ABAS: { value: 'meus' | 'setor'; label: string }[] = [
-    { value: 'meus', label: 'Meus processos' },
-    { value: 'setor', label: 'Caixa do setor' },
-];
-
 export default function Fila({
-    modo,
     processos,
     contadores,
     filtros,
@@ -77,25 +69,16 @@ export default function Fila({
 }: FilaProps) {
     const { per_page: _perPage, ...filtrosDeCampo } = filtros;
 
-    function navegar(params: { modo?: 'meus' | 'setor'; per_page?: number; filtros?: ProcessoFiltrosValores }) {
+    function navegar(params: { per_page?: number; filtros?: ProcessoFiltrosValores }) {
         const filtrosAtuais = params.filtros ?? filtrosDeCampo;
         router.get(
             '/gestao/processos/fila',
             {
-                modo: params.modo ?? modo,
                 per_page: params.per_page ?? filtros.per_page,
                 ...Object.fromEntries(Object.entries(filtrosAtuais).filter(([, v]) => v !== '')),
             },
             { preserveScroll: true, preserveState: false },
         );
-    }
-
-    function trocarModo(proximo: 'meus' | 'setor') {
-        if (proximo === modo) {
-            return;
-        }
-
-        navegar({ modo: proximo });
     }
 
     const indicadores: { key: string; label: string; value: number; icon: ReactNode; tone: KpiTone }[] = [
@@ -224,33 +207,6 @@ export default function Fila({
                                 onLimpar={() => navegar({ filtros: FILTROS_VAZIOS })}
                             />
 
-                            <div
-                                role="tablist"
-                                aria-label="Escopo da fila"
-                                className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-white/[0.03]"
-                            >
-                                {ABAS.map((aba) => {
-                                    const ativa = aba.value === modo;
-
-                                    return (
-                                        <button
-                                            key={aba.value}
-                                            type="button"
-                                            role="tab"
-                                            aria-selected={ativa}
-                                            onClick={() => trocarModo(aba.value)}
-                                            className={`rounded-md px-4 py-2 text-theme-sm font-medium transition ${
-                                                ativa
-                                                    ? 'bg-white text-brand-500 shadow-theme-xs dark:bg-gray-900 dark:text-brand-400'
-                                                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                                            }`}
-                                        >
-                                            {aba.label}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
                             <DataTable
                                 columns={columns}
                                 rows={processos.data}
@@ -258,16 +214,8 @@ export default function Fila({
                                 density="compact"
                                 emptyState={
                                     <EmptyState
-                                        title={
-                                            modo === 'meus'
-                                                ? 'Sua fila está limpa'
-                                                : 'Nenhum processo na caixa do setor'
-                                        }
-                                        description={
-                                            modo === 'meus'
-                                                ? 'Você não tem processos atribuídos em análise ou convite. Assuma processos pela caixa do setor.'
-                                                : 'Não há processos em análise ou convite nas caixas dos seus setores.'
-                                        }
+                                        title="Sua fila está limpa"
+                                        description="Você não tem processos atribuídos em análise ou convite. Assuma processos pela caixa do setor."
                                     />
                                 }
                             />
