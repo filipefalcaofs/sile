@@ -5,6 +5,8 @@ namespace Tests\Feature\Geo;
 use App\Models\Activity;
 use App\Models\Parameter;
 use App\Models\User;
+use App\Services\Geo\Geocoder;
+use App\Services\Geo\GeocodeResult;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -112,6 +114,53 @@ class GeocodeEndpointTest extends TestCase
         $activity = Activity::query()->where('event', 'geocodificacao')->latest('id')->first();
         $this->assertSame('Praça da Sé, Salvador', $activity->properties['endereco']);
         $this->assertSame('nominatim.openstreetmap.org', $activity->properties['provider']);
+    }
+
+    public function test_endereco_fora_de_salvador_e_recusado(): void
+    {
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+
+        Http::fake(['*/search*' => Http::response([[
+            'lat' => '-23.561414',
+            'lon' => '-46.655881',
+            'display_name' => 'Avenida Paulista, Bela Vista, São Paulo, Brasil',
+            'importance' => 0.8,
+            'address' => [
+                'road' => 'Avenida Paulista',
+                'city' => 'São Paulo',
+                'state' => 'São Paulo',
+                'country_code' => 'br',
+            ],
+        ]], 200)]);
+
+        $this->actingAs($analista, 'gestao')
+            ->postJson('/gestao/territorio/geocodificar', ['address' => 'Avenida Paulista, São Paulo - SP'])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'O endereço está fora do município de Salvador. A consulta de viabilidade abrange apenas Salvador.');
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'territorio',
+            'event' => 'geocodificacao',
+            'result' => 'bloqueado',
+        ]);
+    }
+
+    public function test_falha_inesperada_do_geocoder_responde_503_e_nao_500(): void
+    {
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+
+        $this->app->instance(Geocoder::class, new class implements Geocoder
+        {
+            public function geocode(string $address): GeocodeResult
+            {
+                throw new \RuntimeException('payload inesperado do provedor');
+            }
+        });
+
+        $this->actingAs($analista, 'gestao')
+            ->postJson('/gestao/territorio/geocodificar', ['address' => 'Praça da Sé, Salvador'])
+            ->assertStatus(503)
+            ->assertJsonPath('message', 'Serviço de geocodificação indisponível. Posicione o ponto manualmente no mapa.');
     }
 
     public function test_endereco_invalido_e_rejeitado_sem_geocodificar(): void

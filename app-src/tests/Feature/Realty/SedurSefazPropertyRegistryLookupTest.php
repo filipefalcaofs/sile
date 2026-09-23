@@ -31,7 +31,7 @@ class SedurSefazPropertyRegistryLookupTest extends TestCase
     public function test_sucesso_mapeia_localizacao_converte_utm_e_descarta_proprietario(): void
     {
         Http::fake([
-            'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria/0010010010' => Http::response($this->fixtureSucesso(), 200),
+            'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos/v1/inscricao-imobiliaria/0010010010' => Http::response($this->fixtureSucesso(), 200),
         ]);
 
         $result = app(PropertyRegistryLookup::class)->resolve('001.001.001-0');

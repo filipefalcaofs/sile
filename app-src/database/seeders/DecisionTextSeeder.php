@@ -64,6 +64,10 @@ class DecisionTextSeeder extends Seeder
         'explicacao.motivo.quadro11a_nao_registrado' => 'Motivo do passo do Quadro 11-A não registrado na decisão legada.',
         'explicacao.motivo.permitido_so_enquadramento' => 'Motivo da consolidação legada permitida que cita só o enquadramento.',
         'explicacao.motivo.permitido_com_quadro10' => 'Motivo da consolidação legada permitida que cita o Quadro 10.',
+        'territorial.indeferimento.logradouro_cnae' => 'Mensagem de indeferimento automático por logradouro × CNAE (RT-01). Placeholders: :alvo (ex.: logradouro 212 – Avenida Lafayette Coutinho), :fundamento (base legal da regra).',
+        'territorial.motivo.camada_indisponivel' => 'Motivo do encaminhamento à análise quando a camada geográfica de uma regra territorial está indisponível. Placeholder: :regra.',
+        'louos.motivo.quadro10_observacao_fora_da_lista' => 'Motivo do Quadro 10 quando o uso sujeito à observação (a)/(b) está fora das localizações permitidas. Placeholder: :observacao.',
+        'louos.motivo.quadro10_observacao_sem_verificacao' => 'Motivo do Quadro 10 quando não há CODLOG/bairro para verificar a allow-list da observação (a)/(b). Placeholder: :observacao.',
     ];
 
     public function run(): void

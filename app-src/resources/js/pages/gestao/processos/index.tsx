@@ -56,6 +56,7 @@ interface AbasContagem {
 type AbaId = keyof AbasContagem;
 
 interface ConsultaProps {
+    erroPeriodo?: string | null;
     processos: {
         data: ProcessoItem[];
         links: PaginationLink[];
@@ -244,6 +245,7 @@ function formatarData(iso: string | null): string | null {
 }
 
 export default function ConsultaProcessos({
+    erroPeriodo = null,
     processos,
     filtros,
     abas,
@@ -442,6 +444,12 @@ export default function ConsultaProcessos({
         <>
             <Head title="Consulta de processos" />
             <PageHeader title="Consulta de processos" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
+
+            {erroPeriodo && (
+                <p role="alert" className="mb-4 rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-400">
+                    {erroPeriodo}
+                </p>
+            )}
 
             <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
                 <div className="flex flex-wrap items-center gap-3 px-5 py-4">

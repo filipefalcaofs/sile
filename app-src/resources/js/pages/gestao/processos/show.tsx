@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { Polygon } from 'geojson';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import BaixarTvl from '@/components/analise/baixar-tvl';
 import {
     CategoriaBadges,
     formatarDataHora,
@@ -208,7 +209,16 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
                                     <span className="font-medium">{processo.protocol_number ?? '—'}</span>
                                 </DescItem>
                                 <DescItem label="Protocolo BAP">{processo.bap ?? '—'}</DescItem>
-                                <DescItem label="Produto TVL">{processo.tvl_product_number ?? '—'}</DescItem>
+                                <DescItem label="Produto TVL">
+                                    {processo.tvl_product_number ? (
+                                        <span className="inline-flex flex-wrap items-center justify-end gap-2">
+                                            <span>{processo.tvl_product_number}</span>
+                                            <BaixarTvl solicitacaoId={processo.id} />
+                                        </span>
+                                    ) : (
+                                        '—'
+                                    )}
+                                </DescItem>
                             </dl>
                         </div>
 

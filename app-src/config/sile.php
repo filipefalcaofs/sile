@@ -34,11 +34,20 @@ return [
         'govbr_login' => false,
         'geocoding' => true,
         'geoserver_zona' => true,
+        // Regras territoriais por poligonal (RT-02/03/04) consultando o
+        // GeoServer SEDUR (WFS). Desligado, a regra de poligonal degrada para
+        // análise técnica com o motivo registrado — nunca falha silenciosa.
+        'geoserver_territorio' => true,
         'cadastro_imobiliario' => env('SILE_CADASTRO_IMOBILIARIO', true),
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,
         'fluxo_expresso' => true,
+        // Bypass de HOMOLOGAÇÃO do motor de risco (simulação REGIN): ligado,
+        // processo nascido do simulador com veredito pendente (zona oficial
+        // pendente SEDUR) emite TVL como permitido. DESLIGADO por default —
+        // NUNCA ligar em produção; remoção definitiva antes do go-live.
+        'simulacao_protocolo' => false,
         'notificacao_resultado_expresso' => true,
         'analise_tecnica' => true,
         // Toggles de canal da comunicação multicanal (EP11). E-mail e in-app
@@ -289,10 +298,10 @@ return [
             'cache_ttl' => 86400,
         ],
         'inscricao_imobiliaria' => [
-            'em_producao' => true,
+            'em_producao' => false,
             'url_homologacao' => 'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
             'url_producao' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
-            'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+            'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
             'inscricao_teste' => '0000000000',
             'timeout' => 12,
             'retries' => 3,

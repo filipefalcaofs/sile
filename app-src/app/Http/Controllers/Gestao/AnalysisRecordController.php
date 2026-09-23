@@ -429,7 +429,7 @@ class AnalysisRecordController extends Controller
      * @return array{
      *   poligono: array<string, mixed>|null,
      *   endereco: string|null,
-     *   cod_log: null,
+     *   cod_log: string|null,
      *   logradouro: string|null,
      *   numero_metrico: string|null,
      *   bairro: string|null,
@@ -459,7 +459,7 @@ class AnalysisRecordController extends Controller
         return [
             'poligono' => $request->property_polygon_geojson,
             'endereco' => $partes === [] ? null : implode(', ', $partes),
-            'cod_log' => null,
+            'cod_log' => $this->textoOuNulo($request->cod_log),
             'logradouro' => $logradouro,
             'numero_metrico' => $numeroMetrico,
             'bairro' => $bairro,

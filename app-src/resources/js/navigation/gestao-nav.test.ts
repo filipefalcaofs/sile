@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { GESTAO_NAV_ICON_MARKS } from './gestao-nav-icons';
 import {
     assertGestaoNavHealth,
     destinosComando,
@@ -23,6 +24,16 @@ describe('IA da sidebar de Gestão', () => {
 
     it('passa nas invariantes de organização (sem item no grupo errado)', () => {
         expect(assertGestaoNavHealth()).toEqual([]);
+    });
+
+    it('dá um ícone exclusivo a cada item', () => {
+        const icones = GESTAO_NAV_GROUPS.flatMap((group) => group.items.map((item) => item.icon));
+        const desenhos = icones.map((icon) => JSON.stringify(GESTAO_NAV_ICON_MARKS[icon]));
+
+        expect(new Set(icones).size).toBe(icones.length);
+        expect(Object.keys(GESTAO_NAV_ICON_MARKS).sort()).toEqual([...new Set(icones)].sort());
+        expect(desenhos.every((desenho) => desenho !== undefined)).toBe(true);
+        expect(new Set(desenhos).size).toBe(desenhos.length);
     });
 
     it('coloca Feriados em Configuração e Setores em Administração', () => {
@@ -107,7 +118,7 @@ describe('IA da sidebar de Gestão', () => {
             {
                 id: 'avulso',
                 label: 'Avulso',
-                items: [{ name: 'Feriados (errado)', href: '/gestao/feriados-2', icon: 'tag' as const, permission: null }],
+                items: [{ name: 'Feriados (errado)', href: '/gestao/feriados-2', icon: 'dashboard' as const, permission: null }],
             },
         ];
 

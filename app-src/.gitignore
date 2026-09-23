@@ -26,7 +26,6 @@ secrets.json
 
 # Caches de assistentes (não as skills/rules versionadas)
 .claude-cache/
-
 # Logs e temporários genéricos
 *.log
 *.pid

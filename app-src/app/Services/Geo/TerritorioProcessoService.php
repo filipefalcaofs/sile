@@ -6,14 +6,15 @@ use App\Models\ViabilityRequest;
 
 /**
  * Materialização do território no processo (Onda GIS): com o acesso full ao
- * GIS/SEDUR validado em produção, a zona oficial (GeoServer WFS) e o bairro
- * oficial (camada GeoSalvador versionada) deixam de ser consultados ao vivo e
- * descartados — são GRAVADOS em viability_requests (zona_codigo /
- * bairro_oficial) na identificação do imóvel e como rede de segurança no
- * protocolo. Write-once e conservador: só escreve quando a dimensão foi
- * IDENTIFICADA; indisponível/não encontrado NUNCA sobrescreve um valor já
- * materializado (a degradação não apaga dado bom). Sem polígono, não há ponto
- * — nada a materializar.
+ * GIS/SEDUR validado em produção, a zona oficial (GeoServer WFS), o bairro
+ * oficial (camada GeoSalvador versionada) e o CODLOG do logradouro (atributo
+ * da camada de vias) deixam de ser consultados ao vivo e descartados — são
+ * GRAVADOS em viability_requests (zona_codigo / bairro_oficial / cod_log) na
+ * identificação do imóvel e como rede de segurança no protocolo. Write-once
+ * e conservador: só escreve quando a dimensão foi IDENTIFICADA;
+ * indisponível/não encontrado NUNCA sobrescreve um valor já materializado
+ * (a degradação não apaga dado bom). Sem polígono, não há ponto — nada a
+ * materializar.
  */
 class TerritorioProcessoService
 {
@@ -51,16 +52,48 @@ class TerritorioProcessoService
             $mudou = true;
         }
 
+        $codLog = $this->codLogIdentificado($territorio->via);
+        if ($codLog !== null && $request->cod_log !== $codLog) {
+            $request->cod_log = $codLog;
+            $mudou = true;
+        }
+
         if ($mudou) {
             // Colunas fora do fillable (escritas pelo sistema, nunca pelo
             // cidadão) — mesmo padrão das colunas de análise.
             $request->forceFill([
                 'zona_codigo' => $request->zona_codigo,
                 'bairro_oficial' => $request->bairro_oficial,
+                'cod_log' => $request->cod_log,
             ])->save();
         }
 
         return $mudou;
+    }
+
+    /**
+     * CODLOG da via identificada (atributo oficial do cadastro municipal nas
+     * propriedades da feição). SÓ quando a via foi identificada e o atributo
+     * veio preenchido — indisponível/não encontrado/sem atributo devolvem
+     * null e nunca sobrescrevem o materializado.
+     *
+     * @param  array<string, mixed>  $via
+     */
+    private function codLogIdentificado(array $via): ?string
+    {
+        if (($via['status'] ?? null) !== 'identificado') {
+            return null;
+        }
+
+        $codLog = $via['propriedades']['CODLOG'] ?? null;
+
+        if (! is_string($codLog) && ! is_numeric($codLog)) {
+            return null;
+        }
+
+        $codLog = trim((string) $codLog);
+
+        return $codLog !== '' ? $codLog : null;
     }
 
     /**

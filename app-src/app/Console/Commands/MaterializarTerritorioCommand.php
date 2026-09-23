@@ -9,22 +9,23 @@ use Illuminate\Console\Command;
 
 /**
  * Backfill do território materializado (Onda GIS): percorre os processos com
- * polígono e sem zona/bairro materializados e grava a zona oficial (GeoServer
- * WFS) e o bairro oficial (camada GeoSalvador) pela identificação territorial.
- * Idempotente e conservador por construção (o serviço nunca sobrescreve dado
- * bom com degradação). O resultado é auditado (RN-002).
+ * polígono e sem zona/bairro/CODLOG materializados e grava a zona oficial
+ * (GeoServer WFS), o bairro oficial (camada GeoSalvador) e o CODLOG da via
+ * pela identificação territorial. Idempotente e conservador por construção
+ * (o serviço nunca sobrescreve dado bom com degradação). O resultado é
+ * auditado (RN-002).
  */
 class MaterializarTerritorioCommand extends Command
 {
     protected $signature = 'geo:materializar-territorio';
 
-    protected $description = 'Materializa zona_codigo/bairro_oficial nos processos com polígono (backfill da Onda GIS)';
+    protected $description = 'Materializa zona_codigo/bairro_oficial/cod_log nos processos com polígono (backfill da Onda GIS)';
 
     public function handle(TerritorioProcessoService $territorio, AuditService $audit): int
     {
         $elegiveis = ViabilityRequest::query()
             ->whereNotNull('property_polygon_geojson')
-            ->where(fn ($q) => $q->whereNull('zona_codigo')->orWhereNull('bairro_oficial'))
+            ->where(fn ($q) => $q->whereNull('zona_codigo')->orWhereNull('bairro_oficial')->orWhereNull('cod_log'))
             ->count();
 
         $this->info("Processos elegíveis: {$elegiveis}");
@@ -33,7 +34,7 @@ class MaterializarTerritorioCommand extends Command
 
         ViabilityRequest::query()
             ->whereNotNull('property_polygon_geojson')
-            ->where(fn ($q) => $q->whereNull('zona_codigo')->orWhereNull('bairro_oficial'))
+            ->where(fn ($q) => $q->whereNull('zona_codigo')->orWhereNull('bairro_oficial')->orWhereNull('cod_log'))
             ->chunkById(100, function ($processos) use ($territorio, &$materializados): void {
                 foreach ($processos as $processo) {
                     if ($territorio->materializar($processo)) {

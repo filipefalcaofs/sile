@@ -54,6 +54,36 @@ class TerritorioProcessoTest extends TestCase
         );
     }
 
+    /**
+     * TerritoryResult com a via identificada — `codLog` é o CODLOG presente
+     * nas propriedades da feição (null = feição sem o atributo).
+     */
+    private function territorioComVia(?string $codLog): TerritoryResult
+    {
+        $dim = fn (string $status): array => [
+            'status' => $status,
+            'nome' => null,
+            'propriedades' => null,
+            'motivo' => null,
+            'versao_camada' => 'teste',
+        ];
+
+        return new TerritoryResult(
+            bairro: $dim('indisponivel'),
+            via: [
+                'status' => 'identificado',
+                'nome' => 'Avenida Lafayette Coutinho',
+                'propriedades' => $codLog === null ? ['NOME_LOGRADOURO' => 'Avenida Lafayette Coutinho'] : ['CODLOG' => $codLog, 'NOME_LOGRADOURO' => 'Avenida Lafayette Coutinho'],
+                'motivo' => null,
+                'versao_camada' => 'teste',
+                'distancia_m' => 3.2,
+            ],
+            zona: $dim('indisponivel'),
+            lote: $dim('indisponivel'),
+            restricoes: ['status' => 'indisponivel', 'itens' => [], 'motivo' => null, 'versao_camada' => null],
+        );
+    }
+
     private function mockTerritorio(TerritoryResult $result): void
     {
         $mock = Mockery::mock(TerritoryService::class);
@@ -102,6 +132,44 @@ class TerritorioProcessoTest extends TestCase
         $this->assertNull($processo->fresh()->zona_codigo);
     }
 
+    public function test_materializa_cod_log_quando_via_identificada_traz_codlog(): void
+    {
+        $this->mockTerritorio($this->territorioComVia('212'));
+
+        $processo = ViabilityRequest::factory()->create();
+
+        $gravou = app(TerritorioProcessoService::class)->materializar($processo);
+
+        $this->assertTrue($gravou);
+        $this->assertSame('212', $processo->fresh()->cod_log);
+    }
+
+    public function test_degradacao_nao_sobrescreve_cod_log_materializado(): void
+    {
+        // Via indisponível desta vez — o CODLOG que estava gravado NÃO pode
+        // ser apagado pela degradação (mesmo padrão de zona/bairro).
+        $this->mockTerritorio($this->territorioIdentificado(null, null));
+
+        $processo = ViabilityRequest::factory()->create();
+        $processo->forceFill(['cod_log' => '212'])->save();
+
+        $gravou = app(TerritorioProcessoService::class)->materializar($processo);
+
+        $this->assertFalse($gravou);
+        $this->assertSame('212', $processo->fresh()->cod_log);
+    }
+
+    public function test_via_identificada_sem_codlog_nao_grava_cod_log(): void
+    {
+        $this->mockTerritorio($this->territorioComVia(null));
+
+        $processo = ViabilityRequest::factory()->create();
+
+        app(TerritorioProcessoService::class)->materializar($processo);
+
+        $this->assertNull($processo->fresh()->cod_log);
+    }
+
     public function test_protocolo_materializa_o_territorio_como_rede_de_seguranca(): void
     {
         $this->mockTerritorio($this->territorioIdentificado('ZPR-1', 'Pituba'));
@@ -134,14 +202,17 @@ class TerritorioProcessoTest extends TestCase
             'zona_codigo' => 'ZDE-1',
             'bairro_oficial' => 'Centro',
         ]);
+        $jaMaterializado->forceFill(['cod_log' => '999'])->save();
 
         $this->artisan('geo:materializar-territorio')->assertSuccessful();
 
         $this->assertSame('ZPR-1', $comPoligono->fresh()->zona_codigo);
         $this->assertSame('Pituba', $comPoligono->fresh()->bairro_oficial);
         $this->assertNull($semPoligono->fresh()->zona_codigo);
-        // Já materializado: fora do recorte do backfill, valor preservado.
+        // Já materializado (zona/bairro/CODLOG): fora do recorte do backfill,
+        // valor preservado.
         $this->assertSame('ZDE-1', $jaMaterializado->fresh()->zona_codigo);
+        $this->assertSame('999', $jaMaterializado->fresh()->cod_log);
 
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'territorio',

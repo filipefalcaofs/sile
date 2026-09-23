@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\Ai\AiConfigResolver;
 use Database\Factories\AiConfigurationFactory;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -84,7 +85,11 @@ class AiConfiguration extends Model
     protected function maskedApiKey(): Attribute
     {
         return Attribute::get(function (): ?string {
-            $key = $this->api_key;
+            try {
+                $key = $this->api_key;
+            } catch (DecryptException) {
+                return null;
+            }
 
             if ($key === null || $key === '') {
                 return null;

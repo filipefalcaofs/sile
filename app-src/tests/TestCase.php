@@ -29,6 +29,16 @@ abstract class TestCase extends BaseTestCase
             PostgisTestCase::$migrouPgsql = false;
         }
 
+        $framework = dirname(__DIR__).'/storage/framework';
+
+        foreach (['cache/data', 'sessions', 'views', 'testing'] as $diretorio) {
+            $caminho = $framework.'/'.$diretorio;
+
+            if (! is_dir($caminho)) {
+                mkdir($caminho, 0775, true);
+            }
+        }
+
         parent::setUp();
 
         $this->withoutVite();

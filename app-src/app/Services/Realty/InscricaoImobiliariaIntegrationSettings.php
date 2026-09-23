@@ -14,7 +14,7 @@ class InscricaoImobiliariaIntegrationSettings
 {
     public function usingProduction(): bool
     {
-        return (bool) Settings::get('integrations.inscricao_imobiliaria.em_producao', true);
+        return (bool) Settings::get('integrations.inscricao_imobiliaria.em_producao', false);
     }
 
     public function baseUrl(): string

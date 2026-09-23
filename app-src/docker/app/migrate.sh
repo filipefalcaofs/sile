@@ -17,3 +17,6 @@ done
 
 echo "[migrate] PostgreSQL respondendo. Executando migrations..."
 php /var/www/html/artisan migrate --force --no-interaction -vvv
+
+echo "[migrate] semeando servidor de e-mail..."
+php /var/www/html/artisan db:seed --class=EmailServerSeeder --force --no-interaction

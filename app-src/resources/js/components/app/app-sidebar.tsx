@@ -1,8 +1,9 @@
-import { Link, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { useEffect, useId, useState } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
+import { filtrarGruposMenu } from '@/components/app/filtrar-menu';
 import Logo, { LogoMark } from '@/components/app/logo';
-import { ChevronDownIcon, HorizontalDotsIcon } from '@/components/icons';
+import { ChevronDownIcon, CloseIcon, HorizontalDotsIcon, SearchIcon } from '@/components/icons';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { resolveActiveHref } from '@/components/app/sidebar-active';
 import {
@@ -102,6 +103,31 @@ export default function AppSidebar({
     };
 
     const showText = isExpanded || isHovered || isMobileOpen;
+    const buscaId = useId();
+    const [termoBusca, setTermoBusca] = useState('');
+    const buscando = termoBusca.trim() !== '';
+    const gruposExibidos = showText ? filtrarGruposMenu(visibleGroups, termoBusca) : visibleGroups;
+
+    function aoTeclarBusca(evento: KeyboardEvent<HTMLInputElement>) {
+        if (evento.key === 'Escape') {
+            setTermoBusca('');
+
+            return;
+        }
+
+        if (evento.key !== 'Enter') {
+            return;
+        }
+
+        const itens = gruposExibidos.flatMap((group) => group.items);
+
+        if (itens.length !== 1) {
+            return;
+        }
+
+        evento.preventDefault();
+        router.visit(itens[0].href);
+    }
 
     const surfaceStyles = isConsole
         ? 'bg-gray-950 border-white/[0.06]'
@@ -134,7 +160,7 @@ export default function AppSidebar({
             onMouseEnter={() => !isExpanded && setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div className={`py-8 flex ${!isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'}`}>
+            <div className={`flex ${showText ? 'pt-8 pb-4' : 'py-8'} ${!isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'}`}>
                 <Link href={homeHref}>
                     {showText ? (
                         <Logo
@@ -157,12 +183,58 @@ export default function AppSidebar({
                     )}
                 </Link>
             </div>
-            <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+            {showText && (
+                <div className="mb-5">
+                    <label htmlFor={buscaId} className="sr-only">
+                        Buscar no menu
+                    </label>
+                    <div className="relative">
+                        <SearchIcon
+                            className={`pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 ${
+                                isConsole ? 'text-white/40' : 'text-gray-400'
+                            }`}
+                        />
+                        <input
+                            id={buscaId}
+                            type="search"
+                            value={termoBusca}
+                            onChange={(evento) => setTermoBusca(evento.target.value)}
+                            onKeyDown={aoTeclarBusca}
+                            placeholder="Buscar no menu"
+                            autoComplete="off"
+                            spellCheck={false}
+                            className={`h-10 w-full rounded-lg border pr-9 pl-9 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-brand-400/40 [&::-webkit-search-cancel-button]:hidden ${
+                                isConsole
+                                    ? 'border-white/10 bg-white/5 text-white placeholder:text-white/35 focus:border-brand-400'
+                                    : 'border-gray-200 bg-gray-50 text-gray-800 placeholder:text-gray-400 focus:border-brand-300 dark:border-gray-700 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30'
+                            }`}
+                        />
+                        {termoBusca !== '' && (
+                            <button
+                                type="button"
+                                onClick={() => setTermoBusca('')}
+                                aria-label="Limpar busca"
+                                className={`absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 ${
+                                    isConsole ? 'text-white/40 hover:text-white' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                }`}
+                            >
+                                <CloseIcon className="size-4" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
                 <nav className="mb-6">
                     <div className="flex flex-col gap-6">
-                        {visibleGroups.map((group, index) => {
+                        {gruposExibidos.length === 0 && (
+                            <p role="status" className={`px-1 text-sm ${isConsole ? 'text-white/45' : 'text-gray-500'}`}>
+                                Nenhum item encontrado.
+                            </p>
+                        )}
+                        {gruposExibidos.map((group, index) => {
                             const collapsible = collapsibleGroups && showText;
-                            const open = collapsible ? !closedGroups.includes(group.label) : true;
+                            const open = collapsible ? buscando || !closedGroups.includes(group.label) : true;
                             const listId = `sidebar-group-${index}`;
 
                             return (
@@ -170,7 +242,11 @@ export default function AppSidebar({
                                     {collapsible ? (
                                         <button
                                             type="button"
-                                            onClick={() => handleToggleGroup(group.label)}
+                                            onClick={() => {
+                                                if (!buscando) {
+                                                    handleToggleGroup(group.label);
+                                                }
+                                            }}
                                             aria-expanded={open}
                                             aria-controls={listId}
                                             className={`mb-4 flex w-full items-center justify-between text-xs uppercase leading-[20px] transition-colors ${headingStyles}`}

@@ -89,7 +89,7 @@ function ServerFormModal({ server, isOpen, onClose }: { server?: EmailServerItem
                                 </div>
                                 <div>
                                     <Label htmlFor="port">Porta</Label>
-                                    <Input id="port" name="port" type="number" required defaultValue={server?.port ?? 587} error={!!errors.port} hint={errors.port} />
+                                    <Input id="port" name="port" type="number" required min={1} max={65535} defaultValue={server?.port ?? 587} error={!!errors.port} hint={errors.port ?? 'Inteiro de 1 a 65535'} />
                                 </div>
                                 <div>
                                     <Label htmlFor="encryption">Criptografia</Label>
@@ -97,7 +97,7 @@ function ServerFormModal({ server, isOpen, onClose }: { server?: EmailServerItem
                                 </div>
                                 <div>
                                     <Label htmlFor="timeout">Timeout (segundos)</Label>
-                                    <Input id="timeout" name="timeout" type="number" required defaultValue={server?.timeout ?? 30} error={!!errors.timeout} hint={errors.timeout} />
+                                    <Input id="timeout" name="timeout" type="number" required min={1} max={300} defaultValue={server?.timeout ?? 30} error={!!errors.timeout} hint={errors.timeout ?? 'Inteiro de 1 a 300 segundos'} />
                                 </div>
                             </div>
                         </section>
@@ -123,7 +123,7 @@ function ServerFormModal({ server, isOpen, onClose }: { server?: EmailServerItem
                                 </div>
                                 <div>
                                     <Label htmlFor="from_address">E-mail do remetente</Label>
-                                    <Input id="from_address" name="from_address" type="email" required defaultValue={server?.from_address} error={!!errors.from_address} hint={errors.from_address} />
+                                    <Input id="from_address" name="from_address" type="text" inputMode="email" autoComplete="off" required defaultValue={server?.from_address} placeholder="nao-responda@viabiliza.salvador.ba.gov.br" error={!!errors.from_address} hint={errors.from_address} />
                                 </div>
                                 <div>
                                     <Label htmlFor="from_name">Nome do remetente</Label>

@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useCallback, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
+import BaixarTvl from '@/components/analise/baixar-tvl';
 import PageHeader from '@/components/app/page-header';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
@@ -37,6 +38,7 @@ interface TvlRow {
     dam_emissao: string | null;
     dam_pagamento: string | null;
     dam_valor: string | null;
+    solicitacao_id: number;
     tvl_disponivel: boolean;
     tvl_numero: string | null;
     /** ISO8601 da Emissão (decided_at). */
@@ -284,7 +286,12 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
         {
             id: 'tvl_disponivel',
             header: 'TVL Disponível',
-            cell: (linha) => <DisponivelBadge disponivel={linha.tvl_disponivel} />,
+            cell: (linha) => (
+                <span className="inline-flex flex-wrap items-center gap-2">
+                    <DisponivelBadge disponivel={linha.tvl_disponivel} />
+                    {linha.tvl_disponivel && <BaixarTvl solicitacaoId={linha.solicitacao_id} />}
+                </span>
+            ),
         },
         {
             id: 'tvl_numero',

@@ -33,14 +33,14 @@ class InscricaoImobiliariaIntegrationControllerTest extends TestCase
         return User::factory()->analista()->withAcceptedLgpdTerm()->create();
     }
 
-    public function test_administrador_ve_a_tela_com_producao_padrao(): void
+    public function test_administrador_ve_a_tela_com_homologacao_padrao(): void
     {
         $this->actingAs($this->admin(), 'gestao')
             ->get('/gestao/config-inscricao-imobiliaria')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/config-inscricao-imobiliaria/index')
-                ->where('config.em_producao', true)
+                ->where('config.em_producao', false)
                 ->where(
                     'config.url_homologacao',
                     'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
@@ -51,7 +51,7 @@ class InscricaoImobiliariaIntegrationControllerTest extends TestCase
                 )
                 ->where(
                     'config.url_ativa',
-                    'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+                    'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
                 ));
     }
 
@@ -94,7 +94,7 @@ class InscricaoImobiliariaIntegrationControllerTest extends TestCase
     public function test_testar_conexao_chama_a_url_ativa_e_nao_vaza_corpo(): void
     {
         Http::fake([
-            'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria/0000000000' => Http::response([
+            'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos/v1/inscricao-imobiliaria/0000000000' => Http::response([
                 'CodigoRetorno' => '1',
                 'MensagemRetorno' => 'segredo-nao-vazar',
             ], 200),

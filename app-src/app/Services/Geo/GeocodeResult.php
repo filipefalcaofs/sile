@@ -57,4 +57,48 @@ final readonly class GeocodeResult
             'address' => $this->address,
         ];
     }
+
+    /**
+     * O endereço resolvido está no município de Salvador. O nome do município
+     * (Nominatim: city/town/municipality) vence; sem nome, vale a caixa
+     * aproximada do município. Estado diferente da Bahia recusa na hora.
+     */
+    public function estaEmSalvador(): bool
+    {
+        $estado = $this->normalizar((string) ($this->address['state'] ?? ''));
+
+        if ($estado !== '' && ! in_array($estado, ['bahia', 'ba'], true)) {
+            return false;
+        }
+
+        $municipio = $this->normalizar((string) (
+            $this->address['city']
+            ?? $this->address['town']
+            ?? $this->address['municipality']
+            ?? ''
+        ));
+
+        if ($municipio !== '') {
+            return $municipio === 'salvador';
+        }
+
+        return $this->latitude <= -12.73
+            && $this->latitude >= -13.02
+            && $this->longitude <= -38.30
+            && $this->longitude >= -38.72;
+    }
+
+    private function normalizar(string $valor): string
+    {
+        $valor = mb_strtolower(trim($valor));
+
+        return strtr($valor, [
+            'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a',
+            'é' => 'e', 'ê' => 'e',
+            'í' => 'i',
+            'ó' => 'o', 'ô' => 'o', 'õ' => 'o',
+            'ú' => 'u',
+            'ç' => 'c',
+        ]);
+    }
 }

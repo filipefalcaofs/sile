@@ -111,6 +111,52 @@ class EmailServerCrudTest extends TestCase
         Mail::assertSent(EmailServerTestMail::class);
     }
 
+    public function test_porta_e_timeout_fora_da_faixa_sao_recusados(): void
+    {
+        $this->actingAs($this->administrador(), 'gestao')
+            ->from('/gestao/config-email')
+            ->post('/gestao/config-email', [
+                'name' => 'SEDUR SMTP',
+                'driver' => 'smtp',
+                'host' => 'smtp.sedur.test',
+                'port' => 0,
+                'encryption' => 'tls',
+                'timeout' => -1,
+                'from_address' => 'nao-responda-qa@viabiliza.salvador.ba.gov.br',
+                'from_name' => 'SEDUR',
+                'active' => true,
+                'is_default' => false,
+            ])
+            ->assertRedirect('/gestao/config-email')
+            ->assertSessionHasErrors(['port', 'timeout']);
+
+        $this->assertDatabaseMissing('email_servers', ['name' => 'SEDUR SMTP']);
+    }
+
+    public function test_remetente_valido_e_aceito(): void
+    {
+        $this->actingAs($this->administrador(), 'gestao')
+            ->post('/gestao/config-email', [
+                'name' => 'SEDUR SMTP',
+                'driver' => 'smtp',
+                'host' => 'smtp.sedur.test',
+                'port' => 587,
+                'encryption' => 'tls',
+                'timeout' => 30,
+                'from_address' => 'nao-responda-qa@viabiliza.salvador.ba.gov.br',
+                'from_name' => 'SEDUR',
+                'active' => true,
+                'is_default' => false,
+            ])
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertSame(
+            'nao-responda-qa@viabiliza.salvador.ba.gov.br',
+            EmailServer::query()->where('name', 'SEDUR SMTP')->value('from_address'),
+        );
+    }
+
     public function test_excluir_remove_o_servidor(): void
     {
         $server = EmailServer::factory()->create();

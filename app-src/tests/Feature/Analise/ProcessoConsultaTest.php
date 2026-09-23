@@ -180,6 +180,35 @@ class ProcessoConsultaTest extends TestCase
                 ->where('processos.data.0.id', $alvo->id));
     }
 
+    public function test_numero_do_processo_encontra_o_numero_sedur_exibido_na_lista(): void
+    {
+        $alvo = $this->processo(['external_reference' => '5921000030-00990017/2026']);
+        $this->processo(['external_reference' => '5921000030-00000000/2026']);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?protocolo=5921000030-00990017/2026')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('processos.data', 1)
+                ->where('processos.data.0.id', $alvo->id)
+                ->where('erroPeriodo', null));
+    }
+
+    public function test_periodo_invertido_nao_consulta_sem_aviso_e_preserva_as_datas(): void
+    {
+        $this->processo();
+        $this->processo();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?data_de=2026-09-22&data_ate=2026-09-01')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('processos.total', 0)
+                ->where('erroPeriodo', 'A data inicial não pode ser posterior à data final.')
+                ->where('filtros.data_de', '2026-09-22')
+                ->where('filtros.data_ate', '2026-09-01'));
+    }
+
     public function test_filtra_por_cnpj_da_empresa(): void
     {
         $empresa = Company::factory()->create(['cnpj' => '11222333000181']);

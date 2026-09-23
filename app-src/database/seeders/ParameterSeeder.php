@@ -215,6 +215,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Consulta zona urbanística no GeoServer SEDUR (WFS) quando a camada local está pendente',
             ],
+            'features.geoserver_territorio' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Verifica regras territoriais por poligonal (ZEM, ZPAM, ABM, ZUE, loteamentos TAC) no GeoServer SEDUR (WFS). Desligado, a solicitação vai à análise com a indisponibilidade registrada',
+            ],
             'features.cadastro_imobiliario' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -225,7 +232,7 @@ class ParameterSeeder extends Seeder
             'integrations.inscricao_imobiliaria.em_producao' => [
                 'group' => 'integracoes',
                 'type' => 'boolean',
-                'default_value' => '1',
+                'default_value' => '0',
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Usa a URL de produção da API de inscrição imobiliária; desligado usa a URL de homologação',
             ],
@@ -246,7 +253,7 @@ class ParameterSeeder extends Seeder
             'integrations.inscricao_imobiliaria.base_url' => [
                 'group' => 'integracoes',
                 'type' => 'string',
-                'default_value' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
+                'default_value' => 'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-bff-portal-servicos/v1/inscricao-imobiliaria',
                 'validation_rules' => ['required', 'url'],
                 'requires_connection_test' => true,
                 'description' => 'URL ativa do BFF SEDUR de inscrição imobiliária (espelha a URL escolhida no painel dedicado)',

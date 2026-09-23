@@ -87,7 +87,12 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'analysis_status'), fn (Builder $q, string $s) => $q->where('analysis_status', $s))
             ->when($this->valor($filtros, 'busca'), fn (Builder $q, string $v) => $this->aplicarBusca($q, $v))
             ->when($this->valor($filtros, 'fluxo'), fn (Builder $q, string $fluxo) => $this->aplicarFluxo($q, $fluxo))
-            ->when($this->valor($filtros, 'protocolo'), fn (Builder $q, string $v) => $q->whereLike('protocol_number', "%{$v}%", caseSensitive: false))
+            ->when($this->valor($filtros, 'protocolo'), function (Builder $q, string $v): Builder {
+                return $q->where(function (Builder $inner) use ($v) {
+                    $inner->whereLike('protocol_number', "%{$v}%", caseSensitive: false)
+                        ->orWhereLike('external_reference', "%{$v}%", caseSensitive: false);
+                });
+            })
             ->when($this->valor($filtros, 'bap'), fn (Builder $q, string $v) => $q->whereLike('external_reference', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'produto_tvl'), fn (Builder $q, string $v) => $q->whereHas('decision', fn ($d) => $d->whereLike('tvl_product_number', "%{$v}%", caseSensitive: false)))
             ->when($this->inteiro($filtros, 'servico'), fn (Builder $q, int $id) => $q->where('service_type_id', $id))
