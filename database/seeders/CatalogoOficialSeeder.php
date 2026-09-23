@@ -33,7 +33,6 @@ class CatalogoOficialSeeder extends Seeder
             LouosQuadro10Seeder::class,
             LouosQuadro11Seeder::class,
             TratamentoRegrasSeeder::class,
-            TerritorialRuleSeeder::class,
             TllValoresSeeder::class,
             ZonaSeeder::class,
             ViaSeeder::class,
