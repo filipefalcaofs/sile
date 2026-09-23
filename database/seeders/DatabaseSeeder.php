@@ -18,6 +18,9 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             LegalTermSeeder::class,
             ParameterSeeder::class,
+            // SMTP Zoho da Sudoeste (mesmo do SIGVISA). Idempotente; a senha
+            // só entra na primeira carga e permanece cifrada.
+            EmailServerSeeder::class,
             // Textos decisórios (TVL/parecer/ficha) — catálogo administrável
             // por chave estável, seedado a partir de DecisionTextCatalog::defaults().
             DecisionTextSeeder::class,
