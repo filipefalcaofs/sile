@@ -1,19 +1,8 @@
-# Imagem web do Viabiliza no OKD. Espelha o SIGVISA: S2I em php-84,
-# usuário 1001, assemble e build do frontend na própria imagem.
-# A raiz do repositório no GitLab da prefeitura contém este arquivo;
-# o código fica em app-src/.
-FROM image-registry.openshift-image-registry.svc:5000/viabiliza/php-84
-
+FROM registry.salvador.ba.gov.br/library/php-oracle:8.4
 USER 0
 ADD app-src /tmp/src
 RUN chown -R 1001:0 /tmp/src
 
-# Contorna "Failed to decode zlib stream" no build: o assemble do s2i instala o
-# Composer rodando o instalador oficial, que baixa o composer.phar de
-# getcomposer.org sem retry. Atrás do proxy da rede da prefeitura esse
-# download chega corrompido. Aqui baixamos o composer.phar direto do CDN com
-# retry + validação e apontamos COMPOSER_INSTALLER para um shim que apenas
-# instala esse phar (sem novo download).
 RUN set -eux; \
     mkdir -p /opt/composer-cache; \
     ok=0; \
@@ -32,8 +21,6 @@ RUN set -eux; \
     chmod -R a+rX /opt/composer-cache; \
     php /opt/composer-cache/composer.phar --version
 
-# Limites alinhados ao php.ini da aplicação. Sem isso, o PHP da imagem S2I
-# rejeita o upload antes da validação do Laravel.
 RUN set -eux; \
     conf_dir="$(php -i 2>/dev/null | awk -F'=> ' '/^Scan this dir for additional .ini files/ {print $2; exit}')"; \
     if [ -z "$conf_dir" ] || [ ! -d "$conf_dir" ]; then \
@@ -56,7 +43,9 @@ USER 1001
 ENV COMPOSER_INSTALLER=file:///opt/composer-cache/installer-shim.php
 
 RUN /usr/libexec/s2i/assemble
-RUN chmod -R ug+rwX storage bootstrap/cache
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views \
+             storage/logs storage/app/public bootstrap/cache \
+ && chmod -R ug+rwX storage bootstrap/cache
 RUN npm install
 RUN npm run build
 
