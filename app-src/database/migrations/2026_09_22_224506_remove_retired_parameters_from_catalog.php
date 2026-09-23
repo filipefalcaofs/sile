@@ -49,17 +49,12 @@ return new class extends Migration
             ])
             ->pluck('id');
 
-        if ($ids->isNotEmpty()) {
-            DB::table('parameter_proposals')->whereIn('parameter_id', $ids)->delete();
-            DB::table('parameters')->whereIn('id', $ids)->delete();
+        if ($ids->isEmpty()) {
+            return;
         }
 
-        $flagId = DB::table('parameters')->where('key', 'features.'.'simulacao_protocolo')->value('id');
-
-        if ($flagId !== null) {
-            DB::table('parameter_proposals')->where('parameter_id', $flagId)->delete();
-            DB::table('parameters')->where('id', $flagId)->delete();
-        }
+        DB::table('parameter_proposals')->whereIn('parameter_id', $ids)->delete();
+        DB::table('parameters')->whereIn('id', $ids)->delete();
     }
 
     public function down(): void

@@ -13,14 +13,14 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Fila de trabalho do analista (HU-144): entrega o trabalho ordenado por prazo
- * restante (analysis_due_at) com semáforo de SLA on-the-fly (AnalysisSlaService,
- * 10-05) e contadores por status. Dois modos: "meus processos" (atribuídos ao
- * analista) e "caixa do setor" (processos do(s) setor(es) do analista — respeita
- * o vínculo, RN-005). O gestor (distribuir-processos) vê a visão agregada do
- * setor (carga por analista + processos em vermelho — CA-03). Gated por
- * consultar-solicitacoes; o 403 é auditado no ponto único. Props inspecionadas
- * sem exigir o .tsx (a tela é 10-16), como o CaixaSetorTest.
+ * Fila de trabalho do analista (HU-144): a caixa de entrada lista só os processos
+ * atribuídos ao usuário, ordenados por prazo restante (analysis_due_at), com
+ * semáforo de SLA on-the-fly (AnalysisSlaService, 10-05) e contadores por status.
+ * O parâmetro modo=setor é ignorado — a caixa do setor é a tela própria. O gestor
+ * (distribuir-processos) vê a visão agregada do setor (carga por analista +
+ * processos em vermelho — CA-03). Gated por consultar-solicitacoes; o 403 é
+ * auditado no ponto único. Props inspecionadas sem exigir o .tsx (a tela é
+ * 10-16), como o CaixaSetorTest.
  */
 class ProcessoFilaTest extends TestCase
 {
@@ -151,28 +151,31 @@ class ProcessoFilaTest extends TestCase
         $this->assertSame('vermelho', $porId[$vermelho->id]['sla']['status']);
     }
 
-    public function test_fila_setor_respeita_o_vinculo_do_analista(): void
+    public function test_caixa_de_entrada_ignora_modo_setor_e_lista_so_os_processos_do_usuario(): void
     {
-        $setorA = Sector::factory()->create();
-        $setorB = Sector::factory()->create();
-        $analista = $this->analistaDoSetor($setorA);
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $colega = $this->analistaDoSetor($setor);
 
-        $doSetorA = $this->processo(['sector_id' => $setorA->id]);
-        $doSetorB = $this->processo(['sector_id' => $setorB->id]);
+        $meu = $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => $analista->id]);
+        $doColega = $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => $colega->id]);
+        $semDono = $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => null]);
 
         $props = $this->filaProps($analista, 'setor');
         $ids = collect($props['processos']['data'])->pluck('id')->all();
 
-        $this->assertContains($doSetorA->id, $ids);
-        $this->assertNotContains($doSetorB->id, $ids);
+        $this->assertSame('meus', $props['modo']);
+        $this->assertContains($meu->id, $ids);
+        $this->assertNotContains($doColega->id, $ids);
+        $this->assertNotContains($semDono->id, $ids);
     }
 
-    public function test_contadores_por_status_no_modo_setor(): void
+    public function test_contadores_da_caixa_de_entrada_sao_do_usuario(): void
     {
         $setor = Sector::factory()->create();
         $analista = $this->analistaDoSetor($setor);
 
-        // Aguardando análise: em_analise no setor, sem analista.
+        // Sem dono: fica na caixa do setor, fora da caixa de entrada.
         $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => null, 'analysis_due_at' => now()->addDays(5)]);
         // Em análise: em_analise atribuído.
         $this->processo(['sector_id' => $setor->id, 'assigned_user_id' => $analista->id, 'analysis_due_at' => now()->addDays(5)]);
@@ -185,7 +188,7 @@ class ProcessoFilaTest extends TestCase
 
         $contadores = $this->filaProps($analista, 'setor')['contadores'];
 
-        $this->assertSame(1, $contadores['aguardando_analise']);
+        $this->assertSame(0, $contadores['aguardando_analise']);
         $this->assertSame(2, $contadores['em_analise']);
         $this->assertSame(1, $contadores['em_pendencia']);
         $this->assertSame(1, $contadores['vencendo_hoje']);
