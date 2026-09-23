@@ -41,10 +41,7 @@ class Vocabulario
      */
     public static function exportFormatos(): array
     {
-        $raw = Settings::get(
-            'relatorios.export.formatos_habilitados',
-            config('sile.relatorios.export.formatos_habilitados', ['csv', 'xlsx', 'pdf']),
-        );
+        $raw = config('sile.relatorios.export.formatos_habilitados', ['csv', 'xlsx', 'pdf']);
 
         if (! is_array($raw)) {
             return ['csv', 'xlsx', 'pdf'];

@@ -30,7 +30,7 @@ class PrecedentService
     {
         $request = $record->viabilityRequest;
 
-        $maxItens = (int) Settings::get('analise.precedentes.max_itens', 10);
+        $maxItens = (int) config('sile.analise.precedentes.max_itens', 10);
         $janelaMeses = (int) Settings::get('analise.precedentes.janela_meses', 12);
 
         $geojson = is_array($request?->property_polygon_geojson) ? $request->property_polygon_geojson : [];

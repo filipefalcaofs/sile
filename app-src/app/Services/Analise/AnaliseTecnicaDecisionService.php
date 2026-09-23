@@ -17,7 +17,6 @@ use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Expresso\TvlNumberGenerator;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
-use App\Support\Settings;
 use DomainException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -141,10 +140,7 @@ class AnaliseTecnicaDecisionService
 
         if ($isSede) {
             $consolidated = ResultadoViabilidade::PermitidoComCondicoes->value;
-            $fundamentacao[] = (string) Settings::get(
-                'analise.escritorio_virtual.condicionante_sede',
-                config('sile.analise.escritorio_virtual.condicionante_sede', ''),
-            );
+            $fundamentacao[] = (string) config('sile.analise.escritorio_virtual.condicionante_sede', '');
         }
 
         // Abrigado de escritório virtual (RN-EV-05): a inscrição tem sede ativa e

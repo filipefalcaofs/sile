@@ -690,10 +690,7 @@ class AnalysisRecordController extends Controller
                 'analise.escritorio_virtual.cnae_gatilho_sede',
                 config('sile.analise.escritorio_virtual.cnae_gatilho_sede', '8211-3/00'),
             ),
-            'flag_analise_sede' => (string) Settings::get(
-                'analise.escritorio_virtual.flag_analise_sede',
-                config('sile.analise.escritorio_virtual.flag_analise_sede'),
-            ),
+            'flag_analise_sede' => (string) config('sile.analise.escritorio_virtual.flag_analise_sede'),
         ];
     }
 

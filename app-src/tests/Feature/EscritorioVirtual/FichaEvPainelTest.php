@@ -6,13 +6,11 @@ use App\Enums\AnalysisRecordStatus;
 use App\Models\AnalysisRecord;
 use App\Models\Cnae;
 use App\Models\Company;
-use App\Models\Parameter;
 use App\Models\RuleVersion;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
-use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -156,21 +154,6 @@ class FichaEvPainelTest extends TestCase
                     config('sile.analise.escritorio_virtual.flag_analise_sede'),
                 )
                 ->where('escritorioVirtual.cnae_gatilho', config('sile.analise.escritorio_virtual.cnae_gatilho_sede')));
-    }
-
-    public function test_sobrescrever_o_parametro_muda_o_texto_que_chega_a_ficha(): void
-    {
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()->where('key', 'analise.escritorio_virtual.flag_analise_sede')->first()
-            ->update(['value' => 'Verificar condição excepcional de sede (teste ficha).']);
-
-        $sede = $this->criarSedeAtiva('INSC-EV-FLAG2', 'VIA-EV-FLAG2', 'TVL-EV-FLAG2');
-
-        $this->actingAs($this->analista(), 'gestao')
-            ->get("/gestao/processos/{$sede->id}/ficha")
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('escritorioVirtual.flag_analise_sede', 'Verificar condição excepcional de sede (teste ficha).'));
     }
 
     public function test_sede_sem_abrigados_tem_painel_vazio(): void

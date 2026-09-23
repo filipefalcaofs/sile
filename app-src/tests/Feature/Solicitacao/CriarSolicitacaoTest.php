@@ -4,12 +4,10 @@ namespace Tests\Feature\Solicitacao;
 
 use App\Enums\CompanyLinkRole;
 use App\Models\Company;
-use App\Models\Parameter;
 use App\Models\Procuration;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
-use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -204,30 +202,6 @@ class CriarSolicitacaoTest extends TestCase
             'event' => 'created',
             'result' => 'sucesso',
         ]);
-    }
-
-    public function test_toggle_desligado_degrada_comunicado(): void
-    {
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()
-            ->where('key', 'features.solicitacao_viabilidade')
-            ->first()
-            ->update(['value' => '0']);
-
-        $user = $this->portalUser();
-        $company = $this->companyLinkedTo($user);
-        $serviceType = ViabilityServiceType::factory()->create();
-
-        $this->actingAs($user)
-            ->from('/portal/solicitacoes')
-            ->post('/portal/solicitacoes', [
-                'service_type_id' => $serviceType->id,
-                'company_id' => $company->id,
-            ])
-            ->assertSessionHas('status');
-
-        // Degradação comunicada: nada criado, nunca falha silenciosa.
-        $this->assertDatabaseCount('viability_requests', 0);
     }
 
     public function test_minhas_solicitacoes_lista_somente_do_dono(): void

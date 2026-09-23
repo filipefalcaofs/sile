@@ -6,7 +6,6 @@ use App\Jobs\GerarExportacaoJob;
 use App\Models\User;
 use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
-use App\Support\Settings;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -61,10 +60,7 @@ class ReportExporter
         );
 
         $forceSync = $source instanceof SyncOnlyReportSource;
-        $limiar = (int) Settings::get(
-            'relatorios.export.assincrono_limiar_linhas',
-            config('sile.relatorios.export.assincrono_limiar_linhas', 5000),
-        );
+        $limiar = (int) config('sile.relatorios.export.assincrono_limiar_linhas', 5000);
 
         if ($forceSync || $total <= $limiar) {
             return $this->driver($formato)->stream($definition);
@@ -79,10 +75,7 @@ class ReportExporter
 
     private function validarFormato(string $formato): void
     {
-        $habilitados = (array) Settings::get(
-            'relatorios.export.formatos_habilitados',
-            config('sile.relatorios.export.formatos_habilitados', self::DRIVERS_DISPONIVEIS),
-        );
+        $habilitados = (array) config('sile.relatorios.export.formatos_habilitados', self::DRIVERS_DISPONIVEIS);
 
         $disponiveis = array_values(array_intersect($habilitados, self::DRIVERS_DISPONIVEIS));
 

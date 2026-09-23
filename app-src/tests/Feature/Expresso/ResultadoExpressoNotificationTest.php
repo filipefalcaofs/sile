@@ -5,7 +5,6 @@ namespace Tests\Feature\Expresso;
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationType;
 use App\Enums\DecisionOutcome;
-use App\Models\Parameter;
 use App\Models\User;
 use App\Notifications\Contracts\ProcessNotification;
 use App\Notifications\ResultadoExpressoNotification;
@@ -88,26 +87,6 @@ class ResultadoExpressoNotificationTest extends TestCase
             ->toMail($this->notifiable());
 
         $this->assertSame('Resultado da sua solicitação de viabilidade: indeferida', $mail->subject);
-    }
-
-    public function test_assunto_respeita_o_override_administravel(): void
-    {
-        // Parameter::saved invalida o cache da chave (efeito sem deploy, HU-014):
-        // o assunto reflete o valor administrado pelo gestor, sem novo deploy.
-        Parameter::query()->create([
-            'key' => 'expresso.notificacao.assunto_deferida',
-            'group' => 'expresso',
-            'type' => 'string',
-            'value' => 'Sua viabilidade foi aprovada',
-            'default_value' => 'Resultado da sua solicitação de viabilidade: deferida',
-            'validation_rules' => ['required', 'string', 'max:150'],
-            'description' => 'Assunto do e-mail de resultado deferido.',
-        ]);
-
-        $mail = (new ResultadoExpressoNotification('VIA-2026-000001', DecisionOutcome::Deferida))
-            ->toMail($this->notifiable());
-
-        $this->assertSame('Sua viabilidade foi aprovada', $mail->subject);
     }
 
     public function test_informa_o_numero_de_protocolo_no_corpo(): void

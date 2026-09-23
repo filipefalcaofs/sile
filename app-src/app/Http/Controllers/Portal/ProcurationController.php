@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProcurationRequest;
 use App\Models\Procuration;
 use App\Models\User;
-use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -55,7 +54,7 @@ class ProcurationController extends Controller
         return Inertia::render('portal/procuracoes/index', [
             'granted' => $granted,
             'received' => $received,
-            'procuracoesEnabled' => Settings::enabled('procuracoes'),
+            'procuracoesEnabled' => true,
         ]);
     }
 
@@ -67,10 +66,6 @@ class ProcurationController extends Controller
      */
     public function store(StoreProcurationRequest $request): RedirectResponse
     {
-        if (! Settings::enabled('procuracoes')) {
-            return back()->with('status', __('A funcionalidade de procurações está temporariamente desativada pelo administrador.'));
-        }
-
         $attorney = User::query()->where('email', $request->validated('attorney_email'))->firstOrFail();
 
         Procuration::create([

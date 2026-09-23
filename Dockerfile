@@ -4,7 +4,6 @@
 # o código fica em app-src/.
 #FROM image-registry.openshift-image-registry.svc:5000/viabiliza/php-84
 FROM registry.salvador.ba.gov.br/library/php-oracle:8.4
-
 USER 0
 ADD app-src /tmp/src
 RUN chown -R 1001:0 /tmp/src

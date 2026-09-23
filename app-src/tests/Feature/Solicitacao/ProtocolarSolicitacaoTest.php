@@ -6,7 +6,6 @@ use App\Enums\ViabilityRequestStatus;
 use App\Events\SolicitacaoProtocolada;
 use App\Models\Cnae;
 use App\Models\DocumentRequirement;
-use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\DocumentacaoIncompletaException;
@@ -14,7 +13,6 @@ use App\Services\Solicitacao\InvalidStatusTransitionException;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\SolicitacaoIncompletaException;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
-use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -404,30 +402,5 @@ class ProtocolarSolicitacaoTest extends TestCase
 
         $protocolada->refresh();
         $this->assertSame($numeroAntes, $protocolada->protocol_number);
-    }
-
-    public function test_toggle_desligado_degrada_comunicado(): void
-    {
-        // RN-005: com features.solicitacao_viabilidade desligado, o protocolo
-        // degrada de forma comunicada — sem protocolar, sem erro.
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()
-            ->where('key', 'features.solicitacao_viabilidade')
-            ->first()
-            ->update(['value' => '0']);
-
-        $user = $this->portalUser();
-        $solicitacao = $this->completeDraft($user);
-
-        $this->actingAs($user)
-            ->from(route('portal.solicitacoes.index'))
-            ->post(route('portal.solicitacoes.protocolar', $solicitacao))
-            ->assertRedirect(route('portal.solicitacoes.index'))
-            ->assertSessionHas('status')
-            ->assertSessionHasNoErrors();
-
-        $solicitacao->refresh();
-        $this->assertSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
-        $this->assertNull($solicitacao->protocol_number);
     }
 }

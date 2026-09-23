@@ -7,7 +7,6 @@ use App\Enums\CommunicationType;
 use App\Models\EmailLog;
 use App\Notifications\Contracts\ProcessNotification;
 use App\Services\Whatsapp\WhatsAppMessage;
-use App\Support\Settings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -108,15 +107,9 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
     {
         $url = route('portal.solicitacoes.show', $this->viabilityRequestId);
 
-        $assunto = $this->withPlaceholders((string) Settings::get(
-            'notificacoes.pendencia.assunto',
-            config('sile.notificacoes.pendencia.assunto', "Convite na sua solicitação de viabilidade {$this->protocolNumber}"),
-        ));
+        $assunto = $this->withPlaceholders((string) config('sile.notificacoes.pendencia.assunto', "Convite na sua solicitação de viabilidade {$this->protocolNumber}"));
 
-        $corpo = $this->withPlaceholders((string) Settings::get(
-            'notificacoes.pendencia.corpo',
-            config('sile.notificacoes.pendencia.corpo', "A análise técnica registrou um convite na sua solicitação {$this->protocolNumber}: {$this->descricao}."),
-        ));
+        $corpo = $this->withPlaceholders((string) config('sile.notificacoes.pendencia.corpo', "A análise técnica registrou um convite na sua solicitação {$this->protocolNumber}: {$this->descricao}."));
 
         // O corpo parametrizado pode abrir com a saudação; evita duplicar o greeting.
         $corpo = preg_replace('/^Olá!\s*/u', '', $corpo) ?? $corpo;

@@ -111,7 +111,7 @@ class LgpdMonitorService
      */
     public function acessosDadoPessoal(): array
     {
-        $janela = (int) Settings::get('ui.dashboard.acessos_janela_dias', 7);
+        $janela = (int) config('sile.ui.dashboard.acessos_janela_dias', 7);
         $desde = now()->subDays($janela);
 
         $base = Activity::query()

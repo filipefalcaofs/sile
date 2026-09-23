@@ -177,7 +177,7 @@ class FortifyServiceProvider extends ServiceProvider
         // sem deploy; estabelece o padrão de throttle parametrizado para HU-069/EP07.
         RateLimiter::for('cnpj-lookup', function (Request $request) {
             return Limit::perMinute(
-                (int) Settings::get('seguranca.throttle.cnpj_lookup.por_minuto', 30),
+                (int) config('sile.seguranca.throttle.cnpj_lookup.por_minuto', 30),
             )->by($request->user()?->id ?: $request->ip());
         });
 
@@ -185,7 +185,7 @@ class FortifyServiceProvider extends ServiceProvider
         // o limite por minuto é administrável sem deploy (espelha cnpj-lookup).
         RateLimiter::for('geocoding', function (Request $request) {
             return Limit::perMinute(
-                (int) Settings::get('seguranca.throttle.geocoding.por_minuto', 60),
+                (int) config('sile.seguranca.throttle.geocoding.por_minuto', 60),
             )->by($request->user()?->id ?: $request->ip());
         });
 
@@ -194,7 +194,7 @@ class FortifyServiceProvider extends ServiceProvider
         // estabelecido na Fase 3.1 (cnpj-lookup/geocoding).
         RateLimiter::for('consulta-viabilidade', function (Request $request) {
             return Limit::perMinute(
-                (int) Settings::get('seguranca.throttle.consulta_viabilidade.por_minuto', 20),
+                (int) config('sile.seguranca.throttle.consulta_viabilidade.por_minuto', 20),
             )->by($request->user()?->id ?: $request->ip());
         });
 
@@ -202,7 +202,7 @@ class FortifyServiceProvider extends ServiceProvider
         // limite administrável sem deploy; espelha consulta-viabilidade (EP07).
         RateLimiter::for('consulta-protocolo', function (Request $request) {
             return Limit::perMinute(
-                (int) Settings::get('seguranca.throttle.consulta_protocolo.por_minuto', 30),
+                (int) config('sile.seguranca.throttle.consulta_protocolo.por_minuto', 30),
             )->by($request->user()?->id ?: $request->ip());
         });
 
@@ -219,7 +219,7 @@ class FortifyServiceProvider extends ServiceProvider
         // Throttle do webhook municipal /api_integracao/recebe (HU-103 RN-010).
         RateLimiter::for('regin-recebe', function (Request $request) {
             return Limit::perMinute(
-                (int) Settings::get('seguranca.throttle.regin_recebe.por_minuto', 60),
+                (int) config('sile.seguranca.throttle.regin_recebe.por_minuto', 60),
             )->by($request->ip());
         });
     }
