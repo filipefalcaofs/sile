@@ -1,5 +1,6 @@
 # Fila do Viabiliza no OKD. Mesma base S2I da imagem web.
-FROM image-registry.openshift-image-registry.svc:5000/viabiliza/php-84
+#FROM image-registry.openshift-image-registry.svc:5000/viabiliza/php-84
+FROM registry.salvador.ba.gov.br/library/php-oracle:8.4
 
 USER 0
 ADD app-src /tmp/src
