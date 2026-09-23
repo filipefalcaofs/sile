@@ -18,7 +18,7 @@ A estrutura segue a ordem sugerida em `docs/PROMPT-INICIO-PROJETO-SILE.md`, que 
 
 1. Todos os CAs BDD das HUs da fase cobertos por feature tests PHPUnit passando (`php artisan test --compact`).
 2. Funcionalidade navegável de ponta a ponta no browser, executando lógica real — nunca simulada, sem etapas "em construção" disfarçadas de prontas.
-3. Nenhum valor de negócio hardcoded — parametrização via HU-014; funcionalidades acopláveis com feature toggle administrável.
+3. Parametrização só do que o gestor muda sem deploy (prazo, taxa, limiar de decisão/SLA, URL e credencial de integração, tabela legal versionada). Texto de tela, e-mail, throttle e toggle por tela ficam no código.
 4. Integrações da fase validadas contra homologação real, quando houver.
 5. `vendor/bin/pint --dirty --format agent` sem pendências.
 6. Telas novas responsivas (mobile-first no portal do cidadão) e acessíveis (WCAG/eMAG — obrigação legal de órgão público); validação visual inclui viewport mobile.

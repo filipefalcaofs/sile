@@ -170,10 +170,7 @@ class FluxoExpressoService
                     $mensagem = str_replace(
                         ':cnae',
                         $this->gatilhoSede->cnaeGatilhoFormatado(),
-                        (string) Settings::get(
-                            'analise.escritorio_virtual.mensagem_confirma_perda_sede',
-                            config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
-                        ),
+                        (string) config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
                     );
 
                     return $this->encaminharAnalise($request, $mensagem, $actor);
@@ -260,10 +257,7 @@ class FluxoExpressoService
         // informação de que foi o gatilho de sede já está na trilha de
         // auditoria por outros campos (resultado, consolidado, por_cnae).
         if ($this->gatilhoSede->aplica($request)) {
-            $flag = (string) Settings::get(
-                'analise.escritorio_virtual.flag_analise_sede',
-                config('sile.analise.escritorio_virtual.flag_analise_sede'),
-            );
+            $flag = (string) config('sile.analise.escritorio_virtual.flag_analise_sede');
 
             return $this->encaminharAnalise($request, $flag, $actor, $resolved);
         }

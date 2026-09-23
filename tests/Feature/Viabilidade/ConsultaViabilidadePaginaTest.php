@@ -2,8 +2,6 @@
 
 namespace Tests\Feature\Viabilidade;
 
-use App\Models\Parameter;
-use Database\Seeders\ParameterSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
@@ -28,24 +26,6 @@ class ConsultaViabilidadePaginaTest extends TestCase
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('portal/viabilidade/consulta')
                 ->has('consultaEnabled')
-            );
-    }
-
-    public function test_pagina_reflete_toggle_desligado(): void
-    {
-        // HU-014: com features.consulta_viabilidade desligado, a página reflete o
-        // toggle (consultaEnabled false) para degradar de forma comunicada na UI.
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()
-            ->where('key', 'features.consulta_viabilidade')
-            ->first()
-            ->update(['value' => '0']);
-
-        $this->get('/portal/viabilidade')
-            ->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page
-                ->component('portal/viabilidade/consulta')
-                ->where('consultaEnabled', false)
             );
     }
 }

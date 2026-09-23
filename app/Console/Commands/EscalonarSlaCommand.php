@@ -46,10 +46,7 @@ class EscalonarSlaCommand extends Command
             'notificacoes.escalonamento.tratamento',
             config('sile.notificacoes.escalonamento.tratamento', []),
         );
-        $gestorRole = (string) Settings::get(
-            'notificacoes.escalonamento.gestor_role',
-            config('sile.notificacoes.escalonamento.gestor_role', 'gestor'),
-        );
+        $gestorRole = (string) config('sile.notificacoes.escalonamento.gestor_role', 'gestor');
 
         $tratamentoAmarelo = (string) ($tratamento['amarelo'] ?? 'notificar_analista');
         $tratamentoVencido = (string) ($tratamento['vencido'] ?? 'notificar_gestor');

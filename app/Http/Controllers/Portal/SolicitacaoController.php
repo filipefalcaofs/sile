@@ -111,7 +111,7 @@ class SolicitacaoController extends Controller
                 'per_page' => $perPage,
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
-            'solicitacaoEnabled' => Settings::enabled('solicitacao_viabilidade'),
+            'solicitacaoEnabled' => true,
             // Alerta de reincidência (RN-007) vindo do store — nunca bloqueia,
             // só aponta o processo anterior. Exibido uma vez após criar.
             'duplicateAlert' => $request->session()->get('duplicateAlert'),
@@ -146,10 +146,6 @@ class SolicitacaoController extends Controller
      */
     public function store(StoreSolicitacaoRequest $request): RedirectResponse
     {
-        if (! Settings::enabled('solicitacao_viabilidade')) {
-            return back()->with('status', 'A criação de solicitações de viabilidade está temporariamente desativada pelo administrador.');
-        }
-
         $effectiveUser = $this->effectiveUser($request);
         $company = Company::query()->findOrFail($request->validated('company_id'));
 
@@ -193,8 +189,8 @@ class SolicitacaoController extends Controller
             'requisitosFaltantes' => [],
             'anexosConfig' => $this->anexosConfig(),
             'cnaesComplementaresMax' => $this->cnaesComplementaresMax(),
-            'simulacaoEnabled' => Settings::enabled('simulacao_solicitacao'),
-            'solicitacaoEnabled' => Settings::enabled('solicitacao_viabilidade'),
+            'simulacaoEnabled' => true,
+            'solicitacaoEnabled' => true,
             'territorio' => null,
             'areaAlert' => null,
         ]);
@@ -233,8 +229,8 @@ class SolicitacaoController extends Controller
                 ])->values(),
             'anexosConfig' => $this->anexosConfig(),
             'cnaesComplementaresMax' => $this->cnaesComplementaresMax(),
-            'simulacaoEnabled' => Settings::enabled('simulacao_solicitacao'),
-            'solicitacaoEnabled' => Settings::enabled('solicitacao_viabilidade'),
+            'simulacaoEnabled' => true,
+            'solicitacaoEnabled' => true,
             // Transientes vindos do PUT de imóvel (08-06): resumo do território
             // identificado (degrada honesto sem zona) e alerta de área×polígono.
             'territorio' => $request->session()->get('territorio'),
@@ -342,14 +338,8 @@ class SolicitacaoController extends Controller
                 'wants_virtual_office_hq' => (bool) $solicitacao->wants_virtual_office_hq,
             ],
             'escritorio_virtual' => [
-                'pergunta_geral' => Settings::get(
-                    'analise.escritorio_virtual.pergunta_geral',
-                    config('sile.analise.escritorio_virtual.pergunta_geral'),
-                ),
-                'pergunta_vinculada' => Settings::get(
-                    'analise.escritorio_virtual.pergunta_vinculada',
-                    config('sile.analise.escritorio_virtual.pergunta_vinculada'),
-                ),
+                'pergunta_geral' => config('sile.analise.escritorio_virtual.pergunta_geral'),
+                'pergunta_vinculada' => config('sile.analise.escritorio_virtual.pergunta_vinculada'),
                 // Interpolado AQUI, não no front (achado C1 da revisão da
                 // Task 3): o marcador :cnae é implementação do texto
                 // administrável, e o front não deve conhecer nem o marcador
@@ -358,10 +348,7 @@ class SolicitacaoController extends Controller
                 'mensagem_confirma_perda_sede' => str_replace(
                     ':cnae',
                     app(SedeEscritorioVirtualGatilho::class)->cnaeGatilhoFormatado(),
-                    (string) Settings::get(
-                        'analise.escritorio_virtual.mensagem_confirma_perda_sede',
-                        config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
-                    ),
+                    (string) config('sile.analise.escritorio_virtual.mensagem_confirma_perda_sede'),
                 ),
                 // Id do CNAE gatilho no cadastro (fonte única em
                 // SedeEscritorioVirtualGatilho::cnaeGatilho()), ou null se ainda
@@ -453,10 +440,7 @@ class SolicitacaoController extends Controller
     {
         return [
             'max_mb' => (int) Settings::get('solicitacao.anexos.max_mb', config('sile.solicitacao.anexos.max_mb', 10)),
-            'mime_permitidos' => (array) Settings::get(
-                'solicitacao.anexos.mime_permitidos',
-                config('sile.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']),
-            ),
+            'mime_permitidos' => (array) config('sile.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']),
         ];
     }
 

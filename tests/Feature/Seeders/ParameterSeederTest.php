@@ -15,9 +15,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(125, Parameter::query()->count());
+        $this->assertSame(88, Parameter::query()->count());
         $this->assertSame(
-            ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'tll', 'ui'],
+            ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'tll'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
         );
 
@@ -65,13 +65,7 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['required', 'integer', 'min:30', 'max:3650'], $retencao->validation_rules);
         $this->assertNull($retencao->value);
 
-        $throttle = Parameter::query()->where('key', 'seguranca.throttle.cnpj_lookup.por_minuto')->first();
-
-        $this->assertNotNull($throttle);
-        $this->assertSame('seguranca', $throttle->group);
-        $this->assertSame('integer', $throttle->type);
-        $this->assertSame('30', $throttle->default_value);
-        $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $throttle->validation_rules);
+        $this->assertNull(Parameter::query()->where('key', 'seguranca.throttle.cnpj_lookup.por_minuto')->first());
 
         // timeout/retries/backoff_ms são constantes técnicas de HTTP — ficam em
         // config/sile.php e não aparecem no painel de parâmetros do administrador.
@@ -195,13 +189,7 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['required', 'url'], $baseUrl->validation_rules);
         $this->assertTrue($baseUrl->requires_connection_test);
 
-        $throttle = Parameter::query()->where('key', 'seguranca.throttle.geocoding.por_minuto')->first();
-
-        $this->assertNotNull($throttle);
-        $this->assertSame('seguranca', $throttle->group);
-        $this->assertSame('integer', $throttle->type);
-        $this->assertSame('60', $throttle->default_value);
-        $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $throttle->validation_rules);
+        $this->assertNull(Parameter::query()->where('key', 'seguranca.throttle.geocoding.por_minuto')->first());
 
         $sobreposicao = Parameter::query()->where('key', 'geo.validacao.sobreposicao_minima')->first();
 
@@ -348,24 +336,15 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($dimensao->value);
     }
 
-    public function test_seeder_registra_atributos_de_nome_da_zona(): void
+    public function test_atributos_de_nome_da_zona_ficam_no_codigo(): void
     {
         $this->seed(ParameterSeeder::class);
 
-        $atributos = Parameter::query()->where('key', 'geo.zona.atributos_nome')->first();
-
-        $this->assertNotNull($atributos);
-        $this->assertSame('geo', $atributos->group);
-        $this->assertSame('json', $atributos->type);
-        $this->assertSame('["ZONA","zona","SIGLA_ZONA","SUBZONA"]', $atributos->default_value);
-        // A validação é sobre a STRING crua do request (UpdateParameterRequest):
-        // 'json' garante a sintaxe e a regra nomeada 'json_string_list' garante
-        // a lista não vazia de strings após o decode — 'array'/'min:1' aqui
-        // rejeitariam qualquer edição legítima pela UI.
-        $this->assertSame(['required', 'json', 'json_string_list'], $atributos->validation_rules);
-        $this->assertNull($atributos->value);
-
-        $this->assertSame(['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA'], $atributos->typedValue());
+        $this->assertNull(Parameter::query()->where('key', 'geo.zona.atributos_nome')->first());
+        $this->assertSame(
+            ['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA'],
+            config('sile.geo.zona.atributos_nome'),
+        );
     }
 
     public function test_seeder_registra_parametros_do_motor_louos(): void
@@ -382,49 +361,25 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($vagas->value);
         $this->assertSame([], $vagas->typedValue());
 
-        $sandbox = Parameter::query()->where('key', 'louos.sandbox.amostra_padrao')->first();
-
-        $this->assertNotNull($sandbox);
-        $this->assertSame('louos', $sandbox->group);
-        $this->assertSame('integer', $sandbox->type);
-        $this->assertSame('50', $sandbox->default_value);
-        $this->assertSame(['required', 'integer', 'min:1', 'max:1000'], $sandbox->validation_rules);
-        $this->assertNull($sandbox->value);
-        $this->assertSame(50, $sandbox->typedValue());
+        $this->assertNull(Parameter::query()->where('key', 'louos.sandbox.amostra_padrao')->first());
+        $this->assertSame(50, config('sile.louos.sandbox.amostra_padrao'));
     }
 
     public function test_seeder_registra_parametros_da_consulta_de_viabilidade(): void
     {
         $this->seed(ParameterSeeder::class);
 
-        $toggle = Parameter::query()->where('key', 'features.consulta_viabilidade')->first();
-        $this->assertNotNull($toggle);
-        $this->assertSame('features', $toggle->group);
-        $this->assertSame('boolean', $toggle->type);
-        $this->assertSame('1', $toggle->default_value);
-        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
-        $this->assertNull($toggle->value);
-
-        $throttle = Parameter::query()->where('key', 'seguranca.throttle.consulta_viabilidade.por_minuto')->first();
-        $this->assertNotNull($throttle);
-        $this->assertSame('seguranca', $throttle->group);
-        $this->assertSame('integer', $throttle->type);
-        $this->assertSame('20', $throttle->default_value);
-        $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $throttle->validation_rules);
-        $this->assertNull($throttle->value);
+        $this->assertNull(Parameter::query()->where('key', 'features.consulta_viabilidade')->first());
+        $this->assertNull(Parameter::query()->where('key', 'seguranca.throttle.consulta_viabilidade.por_minuto')->first());
+        $this->assertSame(20, config('sile.seguranca.throttle.consulta_viabilidade.por_minuto'));
     }
 
     public function test_seeder_registra_parametros_da_solicitacao_de_viabilidade(): void
     {
         $this->seed(ParameterSeeder::class);
 
-        $toggle = Parameter::query()->where('key', 'features.solicitacao_viabilidade')->first();
-        $this->assertNotNull($toggle);
-        $this->assertSame('features', $toggle->group);
-        $this->assertSame('boolean', $toggle->type);
-        $this->assertSame('1', $toggle->default_value);
-        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
-        $this->assertNull($toggle->value);
+        $this->assertNull(Parameter::query()->where('key', 'features.solicitacao_viabilidade')->first());
+        $this->assertNull(Parameter::query()->where('key', 'features.simulacao_solicitacao')->first());
 
         $prefixo = Parameter::query()->where('key', 'solicitacao.protocolo.prefixo')->first();
         $this->assertNotNull($prefixo);
@@ -434,30 +389,19 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['required', 'string', 'max:10'], $prefixo->validation_rules);
         $this->assertNull($prefixo->value);
 
-        $mimes = Parameter::query()->where('key', 'solicitacao.anexos.mime_permitidos')->first();
-        $this->assertNotNull($mimes);
-        $this->assertSame('solicitacao', $mimes->group);
-        $this->assertSame('json', $mimes->type);
-        $this->assertSame(['required', 'json'], $mimes->validation_rules);
-        $this->assertSame(['application/pdf', 'image/jpeg', 'image/png'], $mimes->typedValue());
+        $this->assertNull(Parameter::query()->where('key', 'solicitacao.anexos.mime_permitidos')->first());
+        $this->assertSame(
+            ['application/pdf', 'image/jpeg', 'image/png'],
+            config('sile.solicitacao.anexos.mime_permitidos'),
+        );
 
         // storage.documentos.disk é constante de infraestrutura — fica em config/sile.php.
         $this->assertNull(Parameter::query()->where('key', 'storage.documentos.disk')->first());
 
-        $throttle = Parameter::query()->where('key', 'seguranca.throttle.consulta_protocolo.por_minuto')->first();
-        $this->assertNotNull($throttle);
-        $this->assertSame('seguranca', $throttle->group);
-        $this->assertSame('integer', $throttle->type);
-        $this->assertSame('30', $throttle->default_value);
-        $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $throttle->validation_rules);
-        $this->assertNull($throttle->value);
-
-        $reginRecebe = Parameter::query()->where('key', 'seguranca.throttle.regin_recebe.por_minuto')->first();
-        $this->assertNotNull($reginRecebe);
-        $this->assertSame('seguranca', $reginRecebe->group);
-        $this->assertSame('integer', $reginRecebe->type);
-        $this->assertSame('60', $reginRecebe->default_value);
-        $this->assertSame(['required', 'integer', 'min:1', 'max:300'], $reginRecebe->validation_rules);
+        $this->assertNull(Parameter::query()->where('key', 'seguranca.throttle.consulta_protocolo.por_minuto')->first());
+        $this->assertNull(Parameter::query()->where('key', 'seguranca.throttle.regin_recebe.por_minuto')->first());
+        $this->assertSame(30, config('sile.seguranca.throttle.consulta_protocolo.por_minuto'));
+        $this->assertSame(60, config('sile.seguranca.throttle.regin_recebe.por_minuto'));
     }
 
     public function test_seeder_registra_parametro_de_estados_cancelaveis(): void
@@ -507,21 +451,12 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($prazoBap->value);
         $this->assertSame(48, $prazoBap->typedValue());
 
-        $assuntoDeferida = Parameter::query()->where('key', 'expresso.notificacao.assunto_deferida')->first();
-        $this->assertNotNull($assuntoDeferida);
-        $this->assertSame('expresso', $assuntoDeferida->group);
-        $this->assertSame('string', $assuntoDeferida->type);
-        $this->assertSame('Resultado da sua solicitação de viabilidade: deferida', $assuntoDeferida->default_value);
-        $this->assertSame(['required', 'string', 'max:150'], $assuntoDeferida->validation_rules);
-        $this->assertNull($assuntoDeferida->value);
-
-        $assuntoIndeferida = Parameter::query()->where('key', 'expresso.notificacao.assunto_indeferida')->first();
-        $this->assertNotNull($assuntoIndeferida);
-        $this->assertSame('expresso', $assuntoIndeferida->group);
-        $this->assertSame('string', $assuntoIndeferida->type);
-        $this->assertSame('Resultado da sua solicitação de viabilidade: indeferida', $assuntoIndeferida->default_value);
-        $this->assertSame(['required', 'string', 'max:150'], $assuntoIndeferida->validation_rules);
-        $this->assertNull($assuntoIndeferida->value);
+        $this->assertNull(Parameter::query()->where('key', 'expresso.notificacao.assunto_deferida')->first());
+        $this->assertNull(Parameter::query()->where('key', 'expresso.notificacao.assunto_indeferida')->first());
+        $this->assertSame(
+            'Resultado da sua solicitação de viabilidade: deferida',
+            config('sile.expresso.notificacao.assunto_deferida'),
+        );
 
         $prefixoTvl = Parameter::query()->where('key', 'expresso.tvl.prefixo')->first();
         $this->assertNotNull($prefixoTvl);
@@ -539,13 +474,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $toggle = Parameter::query()->where('key', 'features.analise_tecnica')->first();
-        $this->assertNotNull($toggle);
-        $this->assertSame('features', $toggle->group);
-        $this->assertSame('boolean', $toggle->type);
-        $this->assertSame('1', $toggle->default_value);
-        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
-        $this->assertNull($toggle->value);
+        $this->assertNull(Parameter::query()->where('key', 'features.analise_tecnica')->first());
 
         $distribuicao = Parameter::query()->where('key', 'analise.sla.distribuicao_dias')->first();
         $this->assertNotNull($distribuicao);
@@ -588,13 +517,8 @@ class ParameterSeederTest extends TestCase
         $this->assertNull($janela->value);
         $this->assertSame(12, $janela->typedValue());
 
-        $maxItens = Parameter::query()->where('key', 'analise.precedentes.max_itens')->first();
-        $this->assertNotNull($maxItens);
-        $this->assertSame('analise', $maxItens->group);
-        $this->assertSame('integer', $maxItens->type);
-        $this->assertSame('10', $maxItens->default_value);
-        $this->assertSame(['required', 'integer', 'min:1', 'max:50'], $maxItens->validation_rules);
-        $this->assertNull($maxItens->value);
+        $this->assertNull(Parameter::query()->where('key', 'analise.precedentes.max_itens')->first());
+        $this->assertSame(10, config('sile.analise.precedentes.max_itens'));
 
         // analise.tvl.disk, analise.tvl.assinatura.imagem_path e
         // analise.tvl.download.ttl_minutos são constantes de infraestrutura/
@@ -627,28 +551,9 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        // Tela T06: toggle da tela + mensagens de domínio parametrizáveis.
-        $toggle = Parameter::query()->where('key', 'features.enviar_tvl_analise')->first();
-        $this->assertNotNull($toggle);
-        $this->assertSame('features', $toggle->group);
-        $this->assertSame('boolean', $toggle->type);
-        $this->assertSame('1', $toggle->default_value);
-        $this->assertSame(['required', 'boolean'], $toggle->validation_rules);
-        $this->assertNull($toggle->value);
-
-        $naoEncontrado = Parameter::query()->where('key', 'analise.enviar_analise.mensagem_nao_encontrado')->first();
-        $this->assertNotNull($naoEncontrado);
-        $this->assertSame('analise', $naoEncontrado->group);
-        $this->assertSame('string', $naoEncontrado->type);
-        $this->assertSame(['required', 'string', 'max:2000'], $naoEncontrado->validation_rules);
-        $this->assertNull($naoEncontrado->value);
-
-        $confirmacao = Parameter::query()->where('key', 'analise.enviar_analise.mensagem_confirmacao')->first();
-        $this->assertNotNull($confirmacao);
-        $this->assertSame('analise', $confirmacao->group);
-        $this->assertSame('string', $confirmacao->type);
-        $this->assertSame(['required', 'string', 'max:2000'], $confirmacao->validation_rules);
-        $this->assertNull($confirmacao->value);
+        $this->assertNull(Parameter::query()->where('key', 'features.enviar_tvl_analise')->first());
+        $this->assertNull(Parameter::query()->where('key', 'analise.enviar_analise.mensagem_nao_encontrado')->first());
+        $this->assertNull(Parameter::query()->where('key', 'analise.enviar_analise.mensagem_confirmacao')->first());
     }
 
     public function test_seeder_registra_parametros_de_notificacoes(): void
@@ -725,31 +630,12 @@ class ParameterSeederTest extends TestCase
             $tratamento->typedValue(),
         );
 
-        $gestorRole = Parameter::query()->where('key', 'notificacoes.escalonamento.gestor_role')->first();
-        $this->assertNotNull($gestorRole);
-        $this->assertSame('notificacoes', $gestorRole->group);
-        $this->assertSame('string', $gestorRole->type);
-        $this->assertSame('gestor', $gestorRole->default_value);
-        $this->assertSame(['required', 'string', 'max:50'], $gestorRole->validation_rules);
-        $this->assertNull($gestorRole->value);
-
-        $assunto = Parameter::query()->where('key', 'notificacoes.pendencia.assunto')->first();
-        $this->assertNotNull($assunto);
-        $this->assertSame('notificacoes', $assunto->group);
-        $this->assertSame('string', $assunto->type);
-        $this->assertSame('Convite na sua solicitação de viabilidade {protocolo}', $assunto->default_value);
-        $this->assertSame(['required', 'string', 'max:150'], $assunto->validation_rules);
-        $this->assertNull($assunto->value);
-
-        $corpo = Parameter::query()->where('key', 'notificacoes.pendencia.corpo')->first();
-        $this->assertNotNull($corpo);
-        $this->assertSame('notificacoes', $corpo->group);
-        $this->assertSame('string', $corpo->type);
-        $this->assertSame(['required', 'string', 'max:2000'], $corpo->validation_rules);
-        // Template pt-BR honesto com os placeholders substituíveis.
-        $this->assertStringContainsString('{protocolo}', $corpo->default_value);
-        $this->assertStringContainsString('{pendencia}', $corpo->default_value);
-        $this->assertNull($corpo->value);
+        $this->assertNull(Parameter::query()->where('key', 'notificacoes.escalonamento.gestor_role')->first());
+        $this->assertSame('gestor', config('sile.notificacoes.escalonamento.gestor_role'));
+        $this->assertNull(Parameter::query()->where('key', 'notificacoes.pendencia.assunto')->first());
+        $this->assertNull(Parameter::query()->where('key', 'notificacoes.pendencia.corpo')->first());
+        $this->assertStringContainsString('{protocolo}', (string) config('sile.notificacoes.pendencia.assunto'));
+        $this->assertStringContainsString('{pendencia}', (string) config('sile.notificacoes.pendencia.corpo'));
 
         // Credenciais do WhatsApp (integração com teste de conexão + segredo
         // criptografado), prontas para a Fase 13 ligar só o binding.
@@ -829,25 +715,10 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $limiar = Parameter::query()->where('key', 'relatorios.export.assincrono_limiar_linhas')->first();
-        $this->assertNotNull($limiar);
-        $this->assertSame('relatorios', $limiar->group);
-        $this->assertSame('integer', $limiar->type);
-        $this->assertSame('5000', $limiar->default_value);
-        $this->assertSame(['required', 'integer', 'min:100', 'max:1000000'], $limiar->validation_rules);
-        $this->assertNull($limiar->value);
-        $this->assertSame(5000, $limiar->typedValue());
-
-        $formatos = Parameter::query()->where('key', 'relatorios.export.formatos_habilitados')->first();
-        $this->assertNotNull($formatos);
-        $this->assertSame('relatorios', $formatos->group);
-        $this->assertSame('json', $formatos->type);
-        $this->assertSame('["csv","xlsx","pdf"]', $formatos->default_value);
-        $this->assertSame(['required', 'json'], $formatos->validation_rules);
-        $this->assertNull($formatos->value);
-        // O parâmetro json é decodificado para array em typedValue() — as telas
-        // de gestão recebem a lista de formatos como array, nunca string.
-        $this->assertSame(['csv', 'xlsx', 'pdf'], $formatos->typedValue());
+        $this->assertNull(Parameter::query()->where('key', 'relatorios.export.assincrono_limiar_linhas')->first());
+        $this->assertSame(5000, config('sile.relatorios.export.assincrono_limiar_linhas'));
+        $this->assertNull(Parameter::query()->where('key', 'relatorios.export.formatos_habilitados')->first());
+        $this->assertSame(['csv', 'xlsx', 'pdf'], config('sile.relatorios.export.formatos_habilitados'));
 
         $retencao = Parameter::query()->where('key', 'relatorios.export.retencao_dias')->first();
         $this->assertNotNull($retencao);
@@ -867,14 +738,8 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['nullable', 'numeric', 'min:0', 'max:100'], $metaTaxa->validation_rules);
         $this->assertNull($metaTaxa->value);
 
-        $janela = Parameter::query()->where('key', 'relatorios.expresso.janela_dias')->first();
-        $this->assertNotNull($janela);
-        $this->assertSame('relatorios', $janela->group);
-        $this->assertSame('integer', $janela->type);
-        $this->assertSame('30', $janela->default_value);
-        $this->assertSame(['required', 'integer', 'min:1', 'max:365'], $janela->validation_rules);
-        $this->assertNull($janela->value);
-        $this->assertSame(30, $janela->typedValue());
+        $this->assertNull(Parameter::query()->where('key', 'relatorios.expresso.janela_dias')->first());
+        $this->assertSame(30, config('sile.relatorios.expresso.janela_dias'));
     }
 
     public function test_seeder_registra_parametros_de_saturacao(): void
@@ -996,6 +861,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(125, Parameter::query()->count());
+        $this->assertSame(88, Parameter::query()->count());
     }
 }

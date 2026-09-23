@@ -217,7 +217,7 @@ No Viabiliza: 127 HUs em 15 épicos na primeira geração. Após a revisão do p
 - **Auditoria transversal desde o dia 1.** Se toda HU exige trilha de auditoria (quem fez, quando, o quê, com que dados — o audit trail), isso é infraestrutura implementada uma vez e reutilizada, não feature repetida em cada tela.
 - **Os dois mandamentos da casa** (que viraram rules universais nos templates):
   - **Sem features de fachada.** Botão que não executa, tela com resultado simulado, integração fingida — proibido. Fake e mock só dentro da suíte de testes automatizados, que é o lugar deles.
-  - **Parametrização máxima** — que é a parametrização **do que faz sentido parametrizar**, não de tudo. Prazo, taxa, texto, limiar vira **parâmetro administrável**; funcionalidade acoplável nasce com **feature toggle** (chave liga/desliga administrável). Constante técnica e detalhe interno de implementação **não** viram parâmetro — parametrizar tudo gera painel inutilizável. O critério: existe alguém de negócio que pode querer mudar isso sem deploy? Então é parâmetro. O admin não abre chamado para desenvolvedor mudar o que pode ser campo no painel.
+  - **Parametrização** — só o que o gestor muda sem deploy. Prazo, taxa, limiar de decisão, URL e credencial de integração, tabela legal. Texto de tela, e-mail, throttle e toggle por tela ficam no código. Parametrizar tudo gera painel inutilizável.
 
 ---
 

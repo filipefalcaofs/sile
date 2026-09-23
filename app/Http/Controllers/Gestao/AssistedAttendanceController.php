@@ -128,10 +128,6 @@ class AssistedAttendanceController extends Controller
             return back()->with('error', 'O atendimento expirou ou não está ativo. Reabra o atendimento para continuar.');
         }
 
-        if (! Settings::enabled('solicitacao_viabilidade')) {
-            return back()->with('status', 'A criação de solicitações de viabilidade está temporariamente desativada pelo administrador.');
-        }
-
         $citizen = $attendance->citizen;
 
         $validated = $request->validate([

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\ParameterGovernance;
 use App\Models\Parameter;
+use App\Models\ParameterProposal;
 use Illuminate\Database\Seeder;
 
 /**
@@ -32,6 +33,63 @@ class ParameterSeeder extends Seeder
                 $parameter->forceFill(['sensitive' => $sensitive])->save();
             }
         }
+
+        $retiredIds = Parameter::query()->whereIn('key', self::retiredKeys())->pluck('id');
+
+        if ($retiredIds->isNotEmpty()) {
+            ParameterProposal::query()->whereIn('parameter_id', $retiredIds)->delete();
+            Parameter::query()->whereIn('id', $retiredIds)->delete();
+        }
+    }
+
+    /**
+     * Chaves que saíram do painel: texto, throttle, janela de tela e
+     * interruptor de módulo que o produto não desliga. O re-seed apaga a
+     * linha antiga para o valor ficar só no código (config/sile.php).
+     *
+     * @return list<string>
+     */
+    public static function retiredKeys(): array
+    {
+        return [
+            'ui.dashboard.acessos_janela_dias',
+            'features.procuracoes',
+            'seguranca.throttle.cnpj_lookup.por_minuto',
+            'seguranca.throttle.geocoding.por_minuto',
+            'geo.zona.atributos_nome',
+            'louos.sandbox.amostra_padrao',
+            'features.consulta_viabilidade',
+            'seguranca.throttle.consulta_viabilidade.por_minuto',
+            'features.solicitacao_viabilidade',
+            'features.simulacao_solicitacao',
+            'solicitacao.consulta_publica.assinatura_ttl_dias',
+            'solicitacao.anexos.mime_permitidos',
+            'seguranca.throttle.consulta_protocolo.por_minuto',
+            'seguranca.throttle.regin_recebe.por_minuto',
+            'expresso.notificacao.assunto_deferida',
+            'expresso.notificacao.assunto_indeferida',
+            'features.analise_tecnica',
+            'analise.escritorio_virtual.condicionante_sede',
+            'analise.escritorio_virtual.mensagem_bloqueio_abrigado',
+            'analise.escritorio_virtual.mensagem_recusa_abrigo',
+            'analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado',
+            'analise.escritorio_virtual.mensagem_sede_duplicada',
+            'analise.escritorio_virtual.mensagem_cnae_fora_anexo_a',
+            'analise.escritorio_virtual.flag_analise_sede',
+            'analise.escritorio_virtual.mensagem_confirma_perda_sede',
+            'analise.escritorio_virtual.pergunta_geral',
+            'analise.escritorio_virtual.pergunta_vinculada',
+            'analise.precedentes.max_itens',
+            'features.enviar_tvl_analise',
+            'analise.enviar_analise.mensagem_nao_encontrado',
+            'analise.enviar_analise.mensagem_confirmacao',
+            'notificacoes.escalonamento.gestor_role',
+            'notificacoes.pendencia.assunto',
+            'notificacoes.pendencia.corpo',
+            'relatorios.export.assincrono_limiar_linhas',
+            'relatorios.export.formatos_habilitados',
+            'relatorios.expresso.janela_dias',
+        ];
     }
 
     /**
@@ -40,6 +98,7 @@ class ParameterSeeder extends Seeder
     private static function catalog(): array
     {
         return [
+
             'security.password.min_length' => [
                 'group' => 'seguranca',
                 'type' => 'integer',
@@ -81,20 +140,6 @@ class ParameterSeeder extends Seeder
                 'default_value' => '60',
                 'validation_rules' => ['required', 'integer', 'min:10', 'max:1440'],
                 'description' => 'Validade em minutos do link de recuperação de senha',
-            ],
-            'ui.dashboard.acessos_janela_dias' => [
-                'group' => 'ui',
-                'type' => 'integer',
-                'default_value' => '7',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:90'],
-                'description' => 'Janela em dias do indicador de acessos no painel de gestão',
-            ],
-            'features.procuracoes' => [
-                'group' => 'features',
-                'type' => 'boolean',
-                'default_value' => '1',
-                'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita o módulo de procurações no portal',
             ],
             'features.cnpj_lookup' => [
                 'group' => 'features',
@@ -155,13 +200,6 @@ class ParameterSeeder extends Seeder
                 'default_value' => '365',
                 'validation_rules' => ['required', 'integer', 'min:30', 'max:3650'],
                 'description' => 'Dias de retenção do histórico de acessos antes da limpeza automática (LGPD)',
-            ],
-            'seguranca.throttle.cnpj_lookup.por_minuto' => [
-                'group' => 'seguranca',
-                'type' => 'integer',
-                'default_value' => '30',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
-                'description' => 'Limite de consultas de CNPJ por minuto por usuário no portal',
             ],
             'features.geocoding' => [
                 'group' => 'features',
@@ -229,30 +267,12 @@ class ParameterSeeder extends Seeder
                 'requires_connection_test' => true,
                 'description' => 'URL base do serviço de geocodificação (Nominatim; trocável por self-host sem deploy)',
             ],
-            'seguranca.throttle.geocoding.por_minuto' => [
-                'group' => 'seguranca',
-                'type' => 'integer',
-                'default_value' => '60',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
-                'description' => 'Limite de geocodificações por minuto por usuário (Nominatim recomenda ~1 req/s)',
-            ],
             'geo.validacao.sobreposicao_minima' => [
                 'group' => 'geo',
                 'type' => 'integer',
                 'default_value' => '50',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:100'],
                 'description' => 'Percentual mínimo de sobreposição entre o polígono informado e o lote oficial antes de alertar',
-            ],
-            'geo.zona.atributos_nome' => [
-                'group' => 'geo',
-                'type' => 'json',
-                'default_value' => '["ZONA","zona","SIGLA_ZONA","SUBZONA"]',
-                // A validação dinâmica (UpdateParameterRequest) aplica as regras
-                // sobre a STRING crua do request: 'json' garante a sintaxe e a
-                // regra nomeada 'json_string_list' (AppServiceProvider) garante
-                // lista não vazia de strings após o decode.
-                'validation_rules' => ['required', 'json', 'json_string_list'],
-                'description' => 'Atributos da feição da camada de zona candidatos a nome/código da zona, em ordem de precedência (a confirmar com a base oficial SEDUR)',
             ],
             'risco.mapa_encaminhamento' => [
                 'group' => 'risco',
@@ -275,41 +295,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'json'],
                 'description' => 'Exigência de vagas (estacionamento, carga/descarga) por grupo de uso da LOUOS — base do veredito de conformidade; vazio enquanto a SEDUR não parametriza (motor registra "não parametrizado", não bloqueia)',
             ],
-            'louos.sandbox.amostra_padrao' => [
-                'group' => 'louos',
-                'type' => 'integer',
-                'default_value' => '50',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:1000'],
-                'description' => 'Tamanho padrão da amostra de cenários reprocessados na simulação de impacto de regra',
-            ],
-            'features.consulta_viabilidade' => [
-                'group' => 'features',
-                'type' => 'boolean',
-                'default_value' => '1',
-                'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita a consulta prévia de viabilidade no portal do cidadão (endereço, CNAE e inscrição imobiliária)',
-            ],
-            'seguranca.throttle.consulta_viabilidade.por_minuto' => [
-                'group' => 'seguranca',
-                'type' => 'integer',
-                'default_value' => '20',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
-                'description' => 'Limite de consultas de viabilidade por minuto por usuário/IP no portal',
-            ],
-            'features.solicitacao_viabilidade' => [
-                'group' => 'features',
-                'type' => 'boolean',
-                'default_value' => '1',
-                'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita a solicitação de viabilidade no portal do cidadão',
-            ],
-            'features.simulacao_solicitacao' => [
-                'group' => 'features',
-                'type' => 'boolean',
-                'default_value' => '1',
-                'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita a simulação de viabilidade dentro do formulário de solicitação (orientativa, não bloqueia)',
-            ],
             'solicitacao.cnaes_complementares.max' => [
                 'group' => 'solicitacao',
                 'type' => 'integer',
@@ -324,26 +309,12 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:10'],
                 'description' => 'Prefixo do número de protocolo da viabilidade ({prefixo}-AAAA-NNNNNN) — formato oficial a confirmar SEDUR',
             ],
-            'solicitacao.consulta_publica.assinatura_ttl_dias' => [
-                'group' => 'solicitacao',
-                'type' => 'integer',
-                'default_value' => '30',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
-                'description' => 'Validade (dias) do link assinado de consulta pública de protocolo',
-            ],
             'solicitacao.anexos.max_mb' => [
                 'group' => 'solicitacao',
                 'type' => 'integer',
                 'default_value' => '10',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:100'],
                 'description' => 'Tamanho máximo (MB) por documento anexado à solicitação',
-            ],
-            'solicitacao.anexos.mime_permitidos' => [
-                'group' => 'solicitacao',
-                'type' => 'json',
-                'default_value' => '["application/pdf","image/jpeg","image/png"]',
-                'validation_rules' => ['required', 'json'],
-                'description' => 'Tipos de arquivo aceitos no anexo de documentos da solicitação',
             ],
             'solicitacao.area_poligono.tolerancia_percentual' => [
                 'group' => 'solicitacao',
@@ -380,20 +351,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:3650'],
                 'description' => 'Janela (dias) da detecção de reincidência por CNPJ — alerta com link ao processo anterior, nunca bloqueia (direito de petição). Definição oficial pendente SEDUR',
             ],
-            'seguranca.throttle.consulta_protocolo.por_minuto' => [
-                'group' => 'seguranca',
-                'type' => 'integer',
-                'default_value' => '30',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
-                'description' => 'Limite de consultas públicas de protocolo por minuto por IP/assinatura',
-            ],
-            'seguranca.throttle.regin_recebe.por_minuto' => [
-                'group' => 'seguranca',
-                'type' => 'integer',
-                'default_value' => '60',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:300'],
-                'description' => 'Limite de POSTs do REGIN em /api_integracao/recebe por minuto por IP',
-            ],
             'features.fluxo_expresso' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -422,33 +379,12 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:720'],
                 'description' => 'Prazo (horas) sem BAP vinculado antes do indeferimento automático por prazo (ativação bloqueada até o Regin)',
             ],
-            'expresso.notificacao.assunto_deferida' => [
-                'group' => 'expresso',
-                'type' => 'string',
-                'default_value' => 'Resultado da sua solicitação de viabilidade: deferida',
-                'validation_rules' => ['required', 'string', 'max:150'],
-                'description' => 'Assunto do e-mail de notificação de deferimento',
-            ],
-            'expresso.notificacao.assunto_indeferida' => [
-                'group' => 'expresso',
-                'type' => 'string',
-                'default_value' => 'Resultado da sua solicitação de viabilidade: indeferida',
-                'validation_rules' => ['required', 'string', 'max:150'],
-                'description' => 'Assunto do e-mail de notificação de indeferimento',
-            ],
             'expresso.tvl.prefixo' => [
                 'group' => 'expresso',
                 'type' => 'string',
                 'default_value' => 'TVL',
                 'validation_rules' => ['required', 'string', 'max:10'],
                 'description' => 'Prefixo do número de produto TVL do deferimento ({prefixo}-AAAA-NNNNNN) — numeração oficial do SAPS a confirmar SEDUR',
-            ],
-            'features.analise_tecnica' => [
-                'group' => 'features',
-                'type' => 'boolean',
-                'default_value' => '1',
-                'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita o módulo de análise técnica (fila, ficha, decisão humana, TVL PDF); desligado, degrada de forma comunicada',
             ],
             'analise.sla.distribuicao_dias' => [
                 'group' => 'analise',
@@ -506,76 +442,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:12'],
                 'description' => 'CNAE que dispara a análise de sede de escritório virtual (Serviços combinados de escritório e apoio administrativo)',
             ],
-            'analise.escritorio_virtual.condicionante_sede' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'A viabilidade é DEFERIDA na condição de prestação de serviços de escritório virtual, nos termos da legislação vigente.',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Texto da condicionante gravada no produto da sede de escritório virtual',
-            ],
-            'analise.escritorio_virtual.mensagem_bloqueio_abrigado' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'A atividade informada não está na lista de atividades permitidas para escritório virtual nesta inscrição.',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Mensagem de bloqueio quando o abrigado informa CNAE fora da Lista EV numa inscrição com sede ativa',
-            ],
-            'analise.escritorio_virtual.mensagem_recusa_abrigo' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'Inscrição imobiliária vinculada a uma sede de escritório virtual. Para exercer atividades nesse local, deverá ser abrigado da sede vinculada.',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Mensagem de indeferimento quando a inscrição tem sede ativa e o requerente recusa a condição de abrigado',
-            ],
-            'analise.escritorio_virtual.mensagem_cnae_sede_em_abrigado' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'O CNAE :cnae não é permitido para exercício em escritório virtual e coworking, conforme as disposições do Anexo B do Decreto Municipal nº 35.062/2021.',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Mensagem de indeferimento quando o abrigado informa o CNAE gatilho da sede (RN-C-02), com :cnae substituído pelo código do gatilho',
-            ],
-            'analise.escritorio_virtual.mensagem_sede_duplicada' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'Já existe uma sede de escritório virtual vinculada a esta inscrição imobiliária.',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Mensagem de indeferimento quando a intenção é constituir sede numa inscrição que já tem sede ativa (RN-C-01)',
-            ],
-            'analise.escritorio_virtual.mensagem_cnae_fora_anexo_a' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'O CNAE :cnae não é permitido para exercício em sede de escritório virtual, conforme as disposições do Anexo A do Decreto Municipal nº 35.062/2021.',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Mensagem de indeferimento quando a sede informa atividade fora de {CNAE gatilho} ∪ Anexo A (RN-C-03), com :cnae substituído pelo código reprovado',
-            ],
-            'analise.escritorio_virtual.flag_analise_sede' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'Verificar se atende ao §2º do artigo 6º do Decreto Municipal nº 35.062, de 29 de dezembro de 2021.',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Motivo registrado quando o gatilho de sede encaminha a solicitação à análise (RN-C-04): a flag do §2º do art. 6º que a operação lê na fila',
-            ],
-            'analise.escritorio_virtual.mensagem_confirma_perda_sede' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'A exclusão do CNAE :cnae fará com que a empresa deixe de ser caracterizada como Sede de Escritório Virtual. Deseja prosseguir com a exclusão?',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Pergunta de confirmação exibida ao requerente ao excluir o CNAE gatilho da sede (RN-AA-04), com :cnae substituído pelo código do gatilho vigente',
-            ],
-            'analise.escritorio_virtual.pergunta_geral' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'Deseja ser abrigado de escritório virtual?',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Texto da pergunta geral de intenção de abrigo exibida no passo do imóvel do portal (RN-EV-01, OPEN-EV-8)',
-            ],
-            'analise.escritorio_virtual.pergunta_vinculada' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'Irá prestar serviço de escritório virtual, centro de negócios ou coworking?',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Texto da pergunta vinculada de intenção de sede exibida no passo de atividades do portal (RN-EV-01, OPEN-EV-8), texto do legado',
-            ],
             'analise.precedentes.janela_meses' => [
                 'group' => 'analise',
                 'type' => 'integer',
@@ -583,44 +449,12 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:120'],
                 'description' => 'Janela temporal (meses) das estatísticas de precedentes do CNAE na zona',
             ],
-            'analise.precedentes.max_itens' => [
-                'group' => 'analise',
-                'type' => 'integer',
-                'default_value' => '10',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:50'],
-                'description' => 'Quantidade máxima de processos precedentes do imóvel exibidos na ficha',
-            ],
             'analise.tvl.assinatura.modo' => [
                 'group' => 'analise',
                 'type' => 'string',
                 'default_value' => 'imagem',
                 'validation_rules' => ['required', 'in:imagem,nenhuma'],
                 'description' => 'Modo de assinatura do TVL PDF: imagem do diretor (legado) ou nenhuma; assinatura digital gov.br/ICP é gancho → SEDUR',
-            ],
-            // Tela T06 (relatório de teste SEDUR): envio MANUAL de um processo à
-            // análise técnica. O toggle liga/desliga a tela (HU-014) e as
-            // mensagens de domínio são parametrizáveis (não-encontrado e
-            // confirmação) — texto oficial substituível sem deploy.
-            'features.enviar_tvl_analise' => [
-                'group' => 'features',
-                'type' => 'boolean',
-                'default_value' => '1',
-                'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita a tela de envio manual de processos de TVL para a análise técnica; desligada, degrada de forma comunicada',
-            ],
-            'analise.enviar_analise.mensagem_nao_encontrado' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'Nenhum processo encontrado para o protocolo informado. Confira o número e tente novamente.',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Mensagem exibida quando o protocolo pesquisado na tela de envio à análise não é encontrado',
-            ],
-            'analise.enviar_analise.mensagem_confirmacao' => [
-                'group' => 'analise',
-                'type' => 'string',
-                'default_value' => 'Confirma o envio deste processo para a análise técnica? A ação é registrada na auditoria.',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Texto de confirmação antes de enviar um processo para a análise técnica (tela T06)',
             ],
             // Comunicação multicanal (EP11). Os toggles de canal nascem
             // administráveis: e-mail e in-app ligados; WhatsApp DESLIGADO
@@ -670,27 +504,6 @@ class ParameterSeeder extends Seeder
                 'default_value' => '{"amarelo":"notificar_analista","vencido":"notificar_gestor"}',
                 'validation_rules' => ['required', 'json'],
                 'description' => 'Tratamento do escalonamento por SLA por faixa (default só notifica, sem decisão automática)',
-            ],
-            'notificacoes.escalonamento.gestor_role' => [
-                'group' => 'notificacoes',
-                'type' => 'string',
-                'default_value' => 'gestor',
-                'validation_rules' => ['required', 'string', 'max:50'],
-                'description' => "Papel destinatário do escalonamento de SLA (não há 'gestor do setor' no schema — pendência SEDUR; default role gestor)",
-            ],
-            'notificacoes.pendencia.assunto' => [
-                'group' => 'notificacoes',
-                'type' => 'string',
-                'default_value' => 'Convite na sua solicitação de viabilidade {protocolo}',
-                'validation_rules' => ['required', 'string', 'max:150'],
-                'description' => 'Assunto do aviso de pendência (placeholders substituíveis)',
-            ],
-            'notificacoes.pendencia.corpo' => [
-                'group' => 'notificacoes',
-                'type' => 'string',
-                'default_value' => 'Olá! Identificamos um convite na sua solicitação de viabilidade {protocolo}. Convite: {pendencia}. Acesse o portal do Viabiliza para responder dentro do prazo informado.',
-                'validation_rules' => ['required', 'string', 'max:2000'],
-                'description' => 'Corpo-template do aviso de pendência (placeholders {protocolo}/{pendencia})',
             ],
             'integrations.whatsapp.base_url' => [
                 'group' => 'integracoes',
@@ -799,25 +612,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'in:baixa,media,alta'],
                 'description' => 'Severidade mínima do alerta que dispara encaminhamento à malha fina (alertas iguais ou acima são encaminhados; nunca indeferidos)',
             ],
-            // Relatórios e indicadores (EP15). Os valores de negócio (limiar de
-            // exportação assíncrona, formatos habilitados, retenção, meta/janela
-            // da taxa expressa) nascem administráveis no catálogo; as constantes
-            // técnicas (max_linhas, chunk, disk, pdf, cache_ttl, job) ficam SÓ no
-            // config/sile.php (precedente [02-02]).
-            'relatorios.export.assincrono_limiar_linhas' => [
-                'group' => 'relatorios',
-                'type' => 'integer',
-                'default_value' => '5000',
-                'validation_rules' => ['required', 'integer', 'min:100', 'max:1000000'],
-                'description' => 'Acima deste número de linhas a exportação roda em segundo plano',
-            ],
-            'relatorios.export.formatos_habilitados' => [
-                'group' => 'relatorios',
-                'type' => 'json',
-                'default_value' => '["csv","xlsx","pdf"]',
-                'validation_rules' => ['required', 'json'],
-                'description' => 'Formatos de exportação habilitados nas telas de gestão',
-            ],
             'relatorios.export.retencao_dias' => [
                 'group' => 'relatorios',
                 'type' => 'integer',
@@ -834,13 +628,6 @@ class ParameterSeeder extends Seeder
                 'default_value' => null,
                 'validation_rules' => ['nullable', 'numeric', 'min:0', 'max:100'],
                 'description' => 'Meta (%) da taxa de resposta expressa (vazio = meta não definida)',
-            ],
-            'relatorios.expresso.janela_dias' => [
-                'group' => 'relatorios',
-                'type' => 'integer',
-                'default_value' => '30',
-                'validation_rules' => ['required', 'integer', 'min:1', 'max:365'],
-                'description' => 'Janela (dias) da série temporal da taxa de resposta expressa',
             ],
             // Observatório de Saturação Locacional (Módulo 2): capacidade
             // recomendada por CNAE (por bairro) e os limiares que classificam um

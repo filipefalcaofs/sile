@@ -4,7 +4,6 @@ namespace Tests\Feature\EscritorioVirtual;
 
 use App\Enums\CompanyLinkRole;
 use App\Models\Company;
-use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -112,35 +111,6 @@ class PerguntaGeralPortalTest extends TestCase
             ->where(
                 'solicitacao.escritorio_virtual.pergunta_geral',
                 'Deseja ser abrigado de escritório virtual?',
-            ));
-    }
-
-    /**
-     * O texto da pergunta e administravel (Settings::get) — sem deploy, a SEDUR
-     * pode ajustar a redacao exibida ao requerente.
-     */
-    public function test_texto_da_pergunta_e_parametrizavel(): void
-    {
-        // Cria a linha do catalogo em vez de dar update: este teste nao semeia o
-        // ParameterSeeder, entao um update casaria ZERO linhas em silencio e o
-        // Settings::get cairia no default do config — o teste passaria sem
-        // provar nada. Mesma disciplina do irmao em RecusaAbrigoEmInscricaoTravadaTest.
-        Parameter::factory()->create([
-            'key' => 'analise.escritorio_virtual.pergunta_geral',
-            'group' => 'analise',
-            'type' => 'string',
-            'value' => 'Texto customizado da pergunta geral?',
-        ]);
-
-        $user = $this->portalUser();
-        $solicitacao = $this->draftFor($user);
-
-        $response = $this->actingAs($user)->get("/portal/solicitacoes/{$solicitacao->id}/editar");
-
-        $response->assertInertia(fn ($page) => $page
-            ->where(
-                'solicitacao.escritorio_virtual.pergunta_geral',
-                'Texto customizado da pergunta geral?',
             ));
     }
 

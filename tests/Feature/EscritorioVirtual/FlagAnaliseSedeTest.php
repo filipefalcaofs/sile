@@ -10,13 +10,11 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
-use App\Models\Parameter;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
-use Database\Seeders\ParameterSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Spatie\Activitylog\Models\Activity;
 use Tests\Support\Geo\FakeSpatialRepository;
@@ -54,26 +52,6 @@ class FlagAnaliseSedeTest extends TestCase
             'Verificar se atende ao §2º do artigo 6º do Decreto Municipal nº 35.062, de 29 de dezembro de 2021.',
             $activity->properties['motivo'],
         );
-    }
-
-    public function test_texto_da_flag_e_parametrizavel(): void
-    {
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()->where('key', 'analise.escritorio_virtual.flag_analise_sede')->first()
-            ->update(['value' => 'Verificar condição excepcional de sede (teste).']);
-
-        $request = $this->protocoladaElegivelParaExpressoComSede();
-
-        app(FluxoExpressoService::class)->decide($request);
-
-        $activity = Activity::query()
-            ->where('log_name', 'expresso')
-            ->where('event', 'decisao')
-            ->latest('id')
-            ->first();
-
-        $this->assertNotNull($activity);
-        $this->assertSame('Verificar condição excepcional de sede (teste).', $activity->properties['motivo']);
     }
 
     /**

@@ -9,7 +9,6 @@ use App\Models\LouosQuadro10Permissao;
 use App\Models\RuleVersion;
 use App\Services\Geo\TerritoryResult;
 use App\Support\Audit\AuditService;
-use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -50,7 +49,7 @@ class LouosSandboxSimulationService
     public function simulate(RuleDomain $domain, string $versaoRascunho, ?int $amostra = null): array
     {
         // RN-003 / HU-014: amostra parametrizável, sem hardcode.
-        $amostraUsada = $amostra ?? (int) Settings::get('louos.sandbox.amostra_padrao', 50);
+        $amostraUsada = $amostra ?? (int) config('sile.louos.sandbox.amostra_padrao', 50);
 
         $cenarios = $this->montarCenarios($amostraUsada);
 

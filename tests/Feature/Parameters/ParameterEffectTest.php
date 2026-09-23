@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Parameters;
 
-use App\Models\Procuration;
 use App\Models\User;
 use App\Support\Settings;
 use Database\Seeders\ParameterSeeder;
@@ -45,57 +44,6 @@ class ParameterEffectTest extends TestCase
         // Efeito imediato, sem novo deploy: o Settings reflete o novo valor na
         // hora (o cache do parâmetro é invalidado na gravação).
         $this->assertSame(3, (int) Settings::get('security.login.max_attempts'));
-    }
-
-    public function test_toggle_desligado_bloqueia_novo_vinculo_com_aviso(): void
-    {
-        $cidadao = $this->cidadao();
-        $attorney = $this->cidadao();
-
-        $this->actingAs($this->admin(), 'gestao')
-            ->put(route('gestao.parametros.update', 'features.procuracoes'), ['value' => '0'])
-            ->assertRedirect();
-
-        $this->actingAs($cidadao, 'web')
-            ->post('/portal/procuracoes', [
-                'attorney_email' => $attorney->email,
-                'expires_at' => null,
-            ])
-            ->assertRedirect()
-            ->assertSessionHas('status');
-
-        $this->assertStringContainsString('desativad', session('status'));
-        $this->assertDatabaseCount('procurations', 0);
-    }
-
-    public function test_toggle_desligado_preserva_revogacao(): void
-    {
-        $grantor = $this->cidadao();
-        $procuration = Procuration::factory()->create(['grantor_user_id' => $grantor->id]);
-
-        $this->actingAs($this->admin(), 'gestao')
-            ->put(route('gestao.parametros.update', 'features.procuracoes'), ['value' => '0'])
-            ->assertRedirect();
-
-        $this->actingAs($grantor, 'web')
-            ->delete("/portal/procuracoes/{$procuration->id}")
-            ->assertRedirect();
-
-        $this->assertNotNull($procuration->fresh()->revoked_at);
-    }
-
-    public function test_toggle_desligado_comunica_na_tela(): void
-    {
-        $this->actingAs($this->admin(), 'gestao')
-            ->put(route('gestao.parametros.update', 'features.procuracoes'), ['value' => '0'])
-            ->assertRedirect();
-
-        $this->actingAs($this->cidadao(), 'web')
-            ->get('/portal/procuracoes')
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('portal/procuracoes/index')
-                ->where('procuracoesEnabled', false));
     }
 
     public function test_toggle_ligado_mantem_fluxo_normal(): void

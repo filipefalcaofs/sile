@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\SimulacaoSolicitacaoService;
-use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 
@@ -24,12 +23,6 @@ class SolicitacaoSimulacaoController extends Controller
     public function store(ViabilityRequest $solicitacao): RedirectResponse
     {
         Gate::authorize('update', $solicitacao);
-
-        // Toggle desligado: degrada comunicado, sem simular e sem falha — o
-        // requerente segue o fluxo normalmente (a simulação é orientativa).
-        if (! Settings::enabled('simulacao_solicitacao')) {
-            return back()->with('status', 'A simulação de viabilidade está temporariamente desativada pelo administrador. Você pode prosseguir com a solicitação normalmente.');
-        }
 
         $resultado = $this->simulacao->simulate($solicitacao);
 

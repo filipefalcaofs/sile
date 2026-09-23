@@ -191,8 +191,7 @@ class GeocodeEndpointTest extends TestCase
     {
         $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
 
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()->where('key', 'seguranca.throttle.geocoding.por_minuto')->first()->update(['value' => '2']);
+        config(['sile.seguranca.throttle.geocoding.por_minuto' => 2]);
 
         Http::fake(['*/search*' => Http::response($this->nominatimFixture(), 200)]);
 

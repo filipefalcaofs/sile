@@ -27,6 +27,12 @@ progress:
 
 # Project State
 
+## Parametrização enxuta (2026-09-22)
+
+Pedido do usuário: a parametrização estava exagerada. A política vigente deixa de ser "nenhum valor de negócio hardcoded".
+
+Parâmetro novo só quando um gestor da SEDUR muda o valor sem deploy: prazo, taxa, limiar ou fator de decisão/SLA; URL e credencial de integração; tabela legal versionada. Toggle só para fluxo que a operação desliga de verdade (integração, fluxo expresso, canal de notificação, aprovação automática). Texto de tela, e-mail, throttle, paginação, timeout, janela de gráfico e toggle por tela ficam no código. O catálogo já gravado permanece; não cresce por reflexo. Regra em `.cursor/rules/parametrizacao.mdc`.
+
 ## Fluxo de tramitação da análise — perfil Apoio e setor de triagem (2026-09-20)
 
 Pedido do usuário: o processo que o motor encaminha à análise deve cair na **caixa do setor** e ser tramitado pelo perfil **Apoio** a um analista específico — nunca direto na caixa de um analista. Mapeamento (3 frentes) confirmou: motor → `em_analise` OK, ficha pré-analisada OK, caixa/distribuir/assumir OK, mas (1) o motor deixava `sector_id` NULO (processo órfão de caixa), (2) não existia perfil Apoio, (3) a caixa do setor exigia `analisar-processos` até para ser vista e (4) estava fora do menu. Ajustes entregues (TDD estrito, quick plan `.planning/quick/20260920-fluxo-apoio-tramitacao/PLAN.md`):
@@ -477,7 +483,7 @@ Registro completo na tabela Key Decisions de PROJECT.md. Mais relevantes para o 
 - Motor de regras parametrizável: regras como dados versionados, nunca código; carga oficial (planilhas SEDUR) substitui seeds quando entregue.
 - Integrações atrás de contratos; adaptador só é concluído contra homologação real — sem acesso = feature explicitamente bloqueada, nunca simulada.
 - Risco municipal (Decreto 32.636/2020) e risco sanitário (planilha VISA) são dimensões separadas no modelo.
-- Parametrização máxima (HU-014): nenhum valor de negócio hardcoded; funcionalidades acopláveis com feature toggle administrável.
+- Parametrização (HU-014), revista em 2026-09-22: só o que o gestor muda sem deploy. Texto, e-mail, throttle e toggle por tela ficam no código. Ver seção "Parametrização enxuta".
 - [01-01] Fortify com exatamente 4 features (registration, resetPasswords, emailVerification, updatePasswords); 2FA/passkeys fora — migrations publicadas mantidas, inofensivas com features off.
 - [01-01] Parâmetros de segurança em config/sile.php lidos via App\Support\Settings::get(); Password::defaults() parametrizado — HU-014 troca o backend para banco sem tocar call sites.
 - [01-01] Permissions-Policy com geolocation=(self) — mapa da fase 4 pode pedir localização no próprio domínio.

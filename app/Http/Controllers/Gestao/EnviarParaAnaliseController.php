@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Gestao;
 use App\Http\Controllers\Controller;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\EnviarParaAnaliseService;
-use App\Support\Settings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,10 +23,6 @@ use Inertia\Response;
  * bootstrap/app.php). A regra e a auditoria (RN-002) vivem no
  * {@see EnviarParaAnaliseService}; aqui só a casca gated + o preview mínimo (PII
  * reduzida: protocolo, serviço, status e requerente).
- *
- * A tela respeita o toggle features.enviar_tvl_analise (HU-014): desligada, a
- * página comunica a indisponibilidade e as ações de pesquisar/enviar degradam de
- * forma honesta (404), sem falha silenciosa.
  */
 class EnviarParaAnaliseController extends Controller
 {
@@ -37,7 +32,7 @@ class EnviarParaAnaliseController extends Controller
     public function index(): Response
     {
         return Inertia::render('gestao/processos/enviar-para-analise', [
-            'featureEnabled' => $this->habilitada(),
+            'featureEnabled' => true,
             'mensagens' => [
                 'naoEncontrado' => $this->mensagemNaoEncontrado(),
                 'confirmacao' => $this->mensagemConfirmacao(),
@@ -52,8 +47,6 @@ class EnviarParaAnaliseController extends Controller
      */
     public function pesquisar(Request $request): JsonResponse
     {
-        abort_unless($this->habilitada(), 404);
-
         $processo = $this->encontrar($request);
 
         if ($processo === null) {
@@ -77,8 +70,6 @@ class EnviarParaAnaliseController extends Controller
      */
     public function enviar(Request $request): RedirectResponse
     {
-        abort_unless($this->habilitada(), 404);
-
         $processo = $this->encontrar($request);
 
         if ($processo === null) {
@@ -128,27 +119,13 @@ class EnviarParaAnaliseController extends Controller
         ];
     }
 
-    private function habilitada(): bool
-    {
-        return (bool) Settings::get(
-            'features.enviar_tvl_analise',
-            config('sile.features.enviar_tvl_analise', true),
-        );
-    }
-
     private function mensagemNaoEncontrado(): string
     {
-        return (string) Settings::get(
-            'analise.enviar_analise.mensagem_nao_encontrado',
-            'Nenhum processo encontrado para o protocolo informado. Confira o número e tente novamente.',
-        );
+        return (string) config('sile.analise.enviar_analise.mensagem_nao_encontrado', 'Nenhum processo encontrado para o protocolo informado. Confira o número e tente novamente.');
     }
 
     private function mensagemConfirmacao(): string
     {
-        return (string) Settings::get(
-            'analise.enviar_analise.mensagem_confirmacao',
-            'Confirma o envio deste processo para a análise técnica? A ação é registrada na auditoria.',
-        );
+        return (string) config('sile.analise.enviar_analise.mensagem_confirmacao', 'Confirma o envio deste processo para a análise técnica? A ação é registrada na auditoria.');
     }
 }

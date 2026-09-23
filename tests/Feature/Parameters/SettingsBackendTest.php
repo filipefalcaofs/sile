@@ -58,18 +58,18 @@ class SettingsBackendTest extends TestCase
     public function test_enabled_le_toggle_do_grupo_features(): void
     {
         $parameter = Parameter::factory()->create([
-            'key' => 'features.procuracoes',
+            'key' => 'features.cnpj_lookup',
             'group' => 'features',
             'type' => 'boolean',
             'value' => '0',
             'default_value' => '1',
         ]);
 
-        $this->assertFalse(Settings::enabled('procuracoes'));
+        $this->assertFalse(Settings::enabled('cnpj_lookup'));
 
         $parameter->delete();
 
-        $this->assertTrue(Settings::enabled('procuracoes'));
+        $this->assertTrue(Settings::enabled('cnpj_lookup'));
     }
 
     public function test_politica_de_senha_respeita_parametro_do_banco(): void

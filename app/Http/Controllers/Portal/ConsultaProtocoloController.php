@@ -10,7 +10,6 @@ use App\Models\ViabilityRequest;
 use App\Services\Ai\ExplicacaoCidadaoService;
 use App\Services\Solicitacao\TimelineSolicitacao;
 use App\Support\Audit\AuditService;
-use App\Support\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -84,10 +83,7 @@ class ConsultaProtocoloController extends Controller
             return null;
         }
 
-        $dias = (int) Settings::get(
-            'solicitacao.consulta_publica.assinatura_ttl_dias',
-            config('sile.solicitacao.consulta_publica.assinatura_ttl_dias', 30),
-        );
+        $dias = (int) config('sile.solicitacao.consulta_publica.assinatura_ttl_dias', 30);
 
         return URL::temporarySignedRoute(
             'portal.protocolo.publico',

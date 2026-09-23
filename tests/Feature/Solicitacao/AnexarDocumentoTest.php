@@ -84,20 +84,12 @@ class AnexarDocumentoTest extends TestCase
         $user = $this->portalUser();
         $solicitacao = $this->draftFor($user);
 
-        // Restringe os MIMEs aceitos a apenas PDF (HU-014) — efeito sem deploy.
-        Parameter::factory()->create([
-            'key' => 'solicitacao.anexos.mime_permitidos',
-            'group' => 'solicitacao',
-            'type' => 'json',
-            'value' => json_encode(['application/pdf']),
-        ]);
-
-        $png = UploadedFile::fake()->create('foto.png', 100, 'image/png');
+        $txt = UploadedFile::fake()->create('nota.txt', 100, 'text/plain');
 
         $this->actingAs($user)
             ->from(route('portal.solicitacoes.index'))
             ->post(route('portal.solicitacoes.documentos.store', $solicitacao), [
-                'file' => $png,
+                'file' => $txt,
             ])
             ->assertSessionHasErrors('file');
 

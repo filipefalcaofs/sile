@@ -5,14 +5,12 @@ namespace Tests\Feature\Viabilidade;
 use App\Enums\GeoLayerType;
 use App\Models\Activity;
 use App\Models\GeoLayer;
-use App\Models\Parameter;
 use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\GeocoderException;
 use App\Services\Geo\SpatialRepository;
-use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -231,23 +229,6 @@ class ConsultaViabilidadePublicaTest extends TestCase
         ]);
     }
 
-    public function test_consulta_por_cnae_respeita_toggle(): void
-    {
-        // HU-014: o toggle desligado bloqueia também a via CNAE, com aviso comunicado.
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()
-            ->where('key', 'features.consulta_viabilidade')
-            ->first()
-            ->update(['value' => '0']);
-
-        $this->postJson('/portal/viabilidade/cnae', [
-            'cnae' => self::CNAE_MINIMERCADO,
-            'area' => 120,
-        ])
-            ->assertStatus(422)
-            ->assertJsonPath('message', 'A consulta de viabilidade está temporariamente desativada. Tente novamente mais tarde.');
-    }
-
     public function test_cnae_invalido_e_rejeitado_sem_executar(): void
     {
         // FormRequest valida antes de orquestrar: CNAE ausente → 422.
@@ -284,24 +265,6 @@ class ConsultaViabilidadePublicaTest extends TestCase
         ]);
     }
 
-    public function test_inscricao_respeita_toggle(): void
-    {
-        // HU-014: o toggle desligado bloqueia também a via inscrição.
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()
-            ->where('key', 'features.consulta_viabilidade')
-            ->first()
-            ->update(['value' => '0']);
-
-        $this->postJson('/portal/viabilidade/inscricao', [
-            'inscricao' => '123',
-            'cnae' => self::CNAE_MINIMERCADO,
-            'area' => 120,
-        ])
-            ->assertStatus(422)
-            ->assertJsonPath('message', 'A consulta de viabilidade está temporariamente desativada. Tente novamente mais tarde.');
-    }
-
     public function test_inscricao_invalida_e_rejeitada_sem_executar(): void
     {
         // FormRequest valida antes de orquestrar: inscrição/CNAE ausentes → 422.
@@ -315,11 +278,7 @@ class ConsultaViabilidadePublicaTest extends TestCase
         // HU-014: o limite por minuto é administrável sem deploy. Com 2/min, a 3ª
         // consulta pública dentro da janela é bloqueada (429) — usa a via CNAE
         // (sem geocoder/território), que exercita o mesmo middleware.
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()
-            ->where('key', 'seguranca.throttle.consulta_viabilidade.por_minuto')
-            ->first()
-            ->update(['value' => '2']);
+        config(['sile.seguranca.throttle.consulta_viabilidade.por_minuto' => 2]);
 
         for ($i = 0; $i < 2; $i++) {
             $this->postJson('/portal/viabilidade/cnae', [
@@ -351,40 +310,6 @@ class ConsultaViabilidadePublicaTest extends TestCase
             'log_name' => 'viabilidade',
             'event' => 'consulta',
             'result' => 'sucesso',
-        ]);
-    }
-
-    public function test_toggle_desligado_bloqueia_antes_de_executar(): void
-    {
-        // HU-014: features.consulta_viabilidade desligado bloqueia ANTES de
-        // executar (degradação controlada e comunicada, nunca falha silenciosa).
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()
-            ->where('key', 'features.consulta_viabilidade')
-            ->first()
-            ->update(['value' => '0']);
-
-        // Geocoder que falha o teste se for chamado: o bloqueio é ANTES de orquestrar.
-        $this->app->instance(Geocoder::class, new class implements Geocoder
-        {
-            public function geocode(string $address): GeocodeResult
-            {
-                throw new \RuntimeException('A consulta NÃO deveria executar com o toggle desligado.');
-            }
-        });
-
-        $this->postJson('/portal/viabilidade/endereco', [
-            'endereco' => 'Praça Municipal, Centro, Salvador',
-            'cnae' => self::CNAE_MINIMERCADO,
-            'area' => 120,
-        ])
-            ->assertStatus(422)
-            ->assertJsonPath('message', 'A consulta de viabilidade está temporariamente desativada. Tente novamente mais tarde.');
-
-        $this->assertDatabaseHas('activity_log', [
-            'log_name' => 'viabilidade',
-            'event' => 'consulta',
-            'result' => 'bloqueado',
         ]);
     }
 }

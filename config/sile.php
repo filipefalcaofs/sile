@@ -26,6 +26,7 @@ return [
         // Quantidade de solicitações recentes no painel do cidadão. Constante
         // técnica/de UI (precedente [02-02]): NÃO entra no catálogo HU-014.
         'painel' => ['solicitacoes_recentes' => 5],
+        'dashboard' => ['acessos_janela_dias' => 7],
     ],
     'features' => [
         'procuracoes' => true,

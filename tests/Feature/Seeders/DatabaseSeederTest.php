@@ -31,6 +31,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use Database\Seeders\ExpressoDevSeeder;
+use Database\Seeders\SectorSeeder;
 use Database\Seeders\ZonaFicticiaDevSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -96,7 +97,7 @@ class DatabaseSeederTest extends TestCase
         // preditiva).
         // + 1 do setor de triagem da análise (analise.setor_triagem_id — elo
         // motor → caixa do setor, 2026-09-20).
-        $this->assertSame(125, Parameter::query()->count());
+        $this->assertSame(88, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -314,10 +315,20 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        // Setor da SEDUR (HU-138) — a caixa de distribuição da análise técnica,
-        // criado como catálogo padrão (em produção o gestor mantém pela UI).
-        $setor = Sector::query()->where('name', 'Análise Locacional')->first();
-        $this->assertNotNull($setor, 'Esperava o setor padrão de análise locacional.');
+        // Catálogo oficial SUCOM (HU-138), sem Simplifica e sem Recursos.
+        $this->assertSame(
+            SectorSeeder::NAMES,
+            Sector::query()->orderBy('id')->pluck('name')->all(),
+        );
+        $this->assertFalse(
+            Sector::query()->where('name', 'like', '%Simplifica%')->exists(),
+        );
+        $this->assertFalse(
+            Sector::query()->where('name', 'Recursos')->exists(),
+        );
+
+        $setor = Sector::query()->where('name', SectorSeeder::SECTOR_NAME)->first();
+        $this->assertNotNull($setor, 'Esperava a Diretoria Geral de Análise e Licenciamento.');
         $this->assertTrue($setor->active);
 
         // Usuários dev da gestão (dados fictícios): um analista e um gestor,
@@ -366,12 +377,13 @@ class DatabaseSeederTest extends TestCase
 
         // Setores/usuários/textos-padrão da análise estáveis no re-seed
         // (firstOrCreate por chave estável — nada é duplicado).
-        $this->assertSame(1, Sector::query()->where('name', 'Análise Locacional')->count());
+        $this->assertSame(count(SectorSeeder::NAMES), Sector::query()->count());
+        $this->assertSame(1, Sector::query()->where('name', SectorSeeder::SECTOR_NAME)->count());
         $this->assertSame(1, User::query()->where('email', 'analista@sile.dev')->count());
         $this->assertSame(1, User::query()->where('email', 'gestor@sile.dev')->count());
         $this->assertSame(1, User::query()->where('email', 'apoio@sile.dev')->count());
         $analistaId = User::query()->where('email', 'analista@sile.dev')->value('id');
-        $setorId = Sector::query()->where('name', 'Análise Locacional')->value('id');
+        $setorId = Sector::query()->where('name', SectorSeeder::SECTOR_NAME)->value('id');
         $this->assertSame(
             1,
             DB::table('sector_user')->where('user_id', $analistaId)->where('sector_id', $setorId)->count(),
@@ -384,7 +396,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(5, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(125, Parameter::query()->count());
+        $this->assertSame(88, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

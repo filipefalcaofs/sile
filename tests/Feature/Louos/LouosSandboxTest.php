@@ -237,15 +237,7 @@ class LouosSandboxTest extends TestCase
 
         // sem amostra explícita → lê o parâmetro louos.sandbox.amostra_padrao
         // (efeito sem deploy: Parameter::saved invalida o cache).
-        Parameter::query()->create([
-            'key' => 'louos.sandbox.amostra_padrao',
-            'group' => 'louos',
-            'type' => 'integer',
-            'value' => '7',
-            'default_value' => '50',
-            'validation_rules' => ['required', 'integer', 'min:1'],
-            'description' => 'Amostra padrão do sandbox de parametrização (HU-143).',
-        ]);
+        config(['sile.louos.sandbox.amostra_padrao' => 7]);
 
         $padrao = $this->sandbox()->simulate(RuleDomain::LouosQuadro10, 'q10-rascunho');
         $this->assertSame(7, $padrao['amostra_usada']);

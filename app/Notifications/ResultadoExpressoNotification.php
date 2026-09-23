@@ -6,7 +6,6 @@ use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationType;
 use App\Enums\DecisionOutcome;
 use App\Notifications\Contracts\ProcessNotification;
-use App\Support\Settings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -108,8 +107,8 @@ class ResultadoExpressoNotification extends Notification implements ProcessNotif
         $deferida = $this->outcome === DecisionOutcome::Deferida;
 
         $subject = $deferida
-            ? Settings::get('expresso.notificacao.assunto_deferida', config('sile.expresso.notificacao.assunto_deferida'))
-            : Settings::get('expresso.notificacao.assunto_indeferida', config('sile.expresso.notificacao.assunto_indeferida'));
+            ? config('sile.expresso.notificacao.assunto_deferida')
+            : config('sile.expresso.notificacao.assunto_indeferida');
 
         $message = (new MailMessage)
             ->subject($subject)

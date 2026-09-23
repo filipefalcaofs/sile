@@ -11,7 +11,6 @@ use App\Services\Relatorios\Export\Sources\ExpressoQuedaReportSource;
 use App\Services\Relatorios\Export\Sources\SolicitacoesReportSource;
 use App\Services\Relatorios\Export\XlsxExporter;
 use App\Services\Relatorios\ReportFilters;
-use App\Support\Settings;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
@@ -101,10 +100,7 @@ class RelatoriosExportarCommand extends Command
         $disponiveis = ['csv', 'xlsx', 'pdf'];
 
         $habilitados = array_values(array_intersect(
-            (array) Settings::get(
-                'relatorios.export.formatos_habilitados',
-                config('sile.relatorios.export.formatos_habilitados', $disponiveis),
-            ),
+            (array) config('sile.relatorios.export.formatos_habilitados', $disponiveis),
             $disponiveis,
         ));
 

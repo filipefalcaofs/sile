@@ -2,9 +2,7 @@
 
 namespace Tests\Feature\Companies;
 
-use App\Models\Parameter;
 use App\Models\User;
-use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -48,8 +46,7 @@ class CnpjThrottleTest extends TestCase
     {
         Http::fake(['*/00000000000191' => Http::response($this->brasilApiFixture(), 200)]);
 
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()->where('key', 'seguranca.throttle.cnpj_lookup.por_minuto')->first()->update(['value' => '2']);
+        config(['sile.seguranca.throttle.cnpj_lookup.por_minuto' => 2]);
 
         $user = $this->portalUser();
 
@@ -69,8 +66,7 @@ class CnpjThrottleTest extends TestCase
     {
         Http::fake(['*/00000000000191' => Http::response($this->brasilApiFixture(), 200)]);
 
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()->where('key', 'seguranca.throttle.cnpj_lookup.por_minuto')->first()->update(['value' => '5']);
+        config(['sile.seguranca.throttle.cnpj_lookup.por_minuto' => 5]);
 
         $user = $this->portalUser();
 

@@ -661,7 +661,7 @@ class LouosEnquadramentoService
         $propriedades = $zona['propriedades'] ?? [];
 
         /** @var list<string> $atributos */
-        $atributos = Settings::get('geo.zona.atributos_nome', ['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA']);
+        $atributos = config('sile.geo.zona.atributos_nome', ['ZONA', 'zona', 'SIGLA_ZONA', 'SUBZONA']);
 
         foreach ($atributos as $chave) {
             $valor = $propriedades[$chave] ?? null;
