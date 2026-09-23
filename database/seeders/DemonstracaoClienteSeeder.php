@@ -207,7 +207,7 @@ class DemonstracaoClienteSeeder extends Seeder
     /**
      * A caixa do setor só lista processos dos setores do usuário. Sem este
      * vínculo, a conta de validação (e o admin de demo) vê a caixa vazia
-     * mesmo com processo em "Para distribuir" em Análise Locacional.
+     * mesmo com processo em "Para distribuir" na diretoria de análise.
      */
     private function vincularGestaoAoSetorDeTriagem(): void
     {

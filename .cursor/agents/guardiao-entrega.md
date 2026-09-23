@@ -42,9 +42,10 @@ Comandos de prova típicos:
 
 **4. Parametrização (HU-014)**
 
-- Nenhum valor de negócio hardcoded (prazos, limiares, taxas, textos, e-mails, URLs de integração): tudo via `Settings::get`/`Settings::enabled`.
-- Funcionalidade acoplável nasce com feature toggle; desativação degrada de forma comunicada, nunca com falha silenciosa.
-- Credenciais criptografadas e nunca reexibidas em claro.
+- Parâmetro só para o que um gestor muda sem deploy: prazo, taxa, limiar ou fator de decisão/SLA; URL e credencial de integração; tabela legal versionada.
+- Texto de tela, e-mail, throttle, paginação, timeout e janela de gráfico no código não reprovam.
+- Toggle só para fluxo que a operação desliga de verdade (integração, fluxo expresso, canal de notificação, aprovação automática). Desligar avisa ou bloqueia, nunca falha em silêncio.
+- Credencial criptografada e nunca reexibida em claro.
 
 **5. Convenções e consistência**
 

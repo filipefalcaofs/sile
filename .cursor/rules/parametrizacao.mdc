@@ -1,49 +1,37 @@
 ---
-description: Parametrização máxima — admin não depende de desenvolvedor para mudar parâmetros ou ativar funcionalidades
+description: Parametrização só do que o gestor muda sem deploy; texto, throttle e toggle por tela ficam no código
 alwaysApply: true
 ---
 
-# Parametrização Máxima
+# Parametrização
 
 ```
-O ADMIN NUNCA DEPENDE DE DESENVOLVEDOR PARA MUDAR O QUE PODE SER PARÂMETRO
+PARÂMETRO SÓ QUANDO O GESTOR MUDA SEM DEPLOY. O RESTO FICA NO CÓDIGO.
 ```
 
-Parametrização máxima é a parametrização **do que faz sentido parametrizar** — não de tudo. Ao implementar qualquer funcionalidade, perguntar: **"o que aqui o admin pode querer mudar?"** — e transformar em parâmetro administrável.
+O catálogo já está grande. Parâmetro novo é exceção. Antes de criar um, a pergunta é: **um gestor da SEDUR vai alterar isso sem chamar desenvolvimento?** Se a resposta for não, não parametrizar.
 
-## O que faz sentido parametrizar (e o que não)
+## Parametrizar
 
-**Parametrizar:**
-- Valores que mudam por decisão de negócio: prazos, taxas, limiares, textos, termos
-- O que varia por ambiente, cliente ou contexto: URLs e credenciais de integração
-- Funcionalidades que o gestor pode querer ligar/desligar
-- Regras que mudam por lei, decreto ou planilha oficial
+- Prazo, taxa, limiar ou fator que muda a decisão, o roteamento ou o SLA
+- URL e credencial de integração que variam entre homologação e produção
+- Tabela legal, classificação ou condicionante que chega por lei, decreto ou planilha — dado versionado, não constante
+- Interruptor só de fluxo que a operação desliga de verdade: integração externa, fluxo expresso, canal de notificação, aprovação automática
 
-**NÃO parametrizar:**
-- Constantes técnicas e detalhes internos de implementação (timeouts de retry interno, nomes de filas, tamanhos de página de consulta interna)
-- O que nunca mudou e não há razão de negócio para mudar
-- Decisões de arquitetura (parametrizar isso é esconder decisão, não dar autonomia)
+## Não parametrizar
 
-Parametrizar tudo gera painel inutilizável e complexidade sem valor — é tão ruim quanto hardcoded. O critério é sempre: **existe alguém de negócio que pode querer mudar isso sem deploy?**
+- Texto de tela, confirmação, validação, assunto e corpo de e-mail
+- Throttle, paginação, timeout, retry, janela de gráfico, tamanho de amostra
+- Prefixo, formato e regra estável
+- Interruptor por tela ou por função só porque um dia podem desligar
+- Decisão de arquitetura
 
-## Parâmetros (valores de negócio)
+## Quando houver parâmetro
 
-- NENHUM valor de negócio hardcoded: prazos, limiares, taxas, valores, textos de e-mail e notificação, mensagens, termos legais, URLs de integração
-- Todo parâmetro com: tipo, descrição, valor padrão e regras de validação (faixa, formato, obrigatoriedade)
-- Alteração tem efeito **sem novo deploy** (limitado apenas pelo tempo de cache definido)
-- Histórico versionado e auditado: valor anterior, valor novo, responsável, data/hora
+- Tipo, descrição, valor padrão e validação (faixa, formato, obrigatoriedade)
+- Efeito sem deploy, no limite do cache já definido
+- Credencial criptografada e nunca reexibida em claro; integração com teste de conexão
+- Mudança que altera decisão ou roteamento: histórico com valor anterior, valor novo, responsável e data/hora
+- Desligar um fluxo real: pendência, aviso ou bloqueio explícito — nunca falha silenciosa
 
-## Feature toggles (funcionalidades acopláveis)
-
-- Toda funcionalidade acoplável nasce com chave de ativação/desativação administrável por interface: integrações externas, fluxos automáticos, IA, canais de notificação (e-mail, WhatsApp, SMS), aprovação automática
-- Desativação degrada de forma **controlada e comunicada**: pendência operacional, aviso ou bloqueio explícito — NUNCA falha silenciosa
-
-## Segurança
-
-- Parâmetros sensíveis (credenciais, senhas, tokens, chaves de API) armazenados **criptografados** e nunca reexibidos em texto claro após gravados
-- Telas de parametrização de integração com ação de **teste de conexão** para validar a configuração sem acionar o fluxo real
-
-## Organização
-
-- Configurações segregadas por domínio (ex.: `ConfigEmail`, `ConfigIa`, `ConfigPagamento`), cada uma com tela própria de administração
-- Regras de negócio complexas (tabelas legais, classificações, condicionantes) modeladas como **dados versionados**, não como código
+Entra no catálogo que já existe (`ParameterSeeder` e a tela de Parâmetros). Sem tela nova de configuração por domínio.

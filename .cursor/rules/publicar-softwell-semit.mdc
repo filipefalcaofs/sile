@@ -1,0 +1,14 @@
+---
+description: Publica atualizações do Viabiliza no GitLab Softwell e no GitLab SEMIT. Usar quando o usuário pedir para subir, publicar, atualizar ou fazer push para softwell, semit, homologa ou produção.
+alwaysApply: false
+---
+
+# Publicação Softwell e SEMIT
+
+Antes de qualquer push desses destinos, seguir a skill `publicar-softwell-semit`.
+
+- Softwell (`softwell`) recebe o repositório de desenvolvimento, na branch atual, só com pedido explícito. Fast-forward. Nunca `--force` em `main`.
+- SEMIT (`sedur/viabiliza`) recebe só o código para instalar, executar e manter. Histórico próprio, separado do repositório de trabalho.
+- Produção no SEMIT é `main`. Homologação é `homologa`. Não existe branch `prod`.
+- Não enviar ao SEMIT `.cursor/`, documentação interna, simulador REGIN, seeders de demonstração nem usuários fictícios.
+- A credencial do SEMIT fica no remote local `semit` (`.git/config`). Usar `git remote get-url semit` no clone temporário. Não gravar token em arquivo versionado. Não fazer `git push semit` a partir da branch de desenvolvimento.
