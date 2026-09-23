@@ -1,0 +1,5 @@
+<<<<<<<< HEAD:public/build/assets/notificacoes-Ws3k6xRu.js
+import{n as e}from"./app-DBTfDyVg.js";import{t}from"./jsx-runtime-DsKLSDJq.js";import{t as n}from"./page-header-D5fliuxs.js";import{t as r}from"./gestao-layout-BAXnGzho.js";import{t as i}from"./notification-center-DF2Sk47E.js";var a=t();function o({lista:t}){return(0,a.jsxs)(a.Fragment,{children:[(0,a.jsx)(e,{title:`Notificações`}),(0,a.jsx)(n,{title:`Notificações`,breadcrumbs:[{label:`Painel`,href:`/gestao`}]}),(0,a.jsx)(i,{lista:t,basePath:`/gestao`})]})}o.layout=e=>(0,a.jsx)(r,{children:e});export{o as default};
+========
+import{n as e}from"./app-CjDvepMQ.js";import{t}from"./jsx-runtime-DsKLSDJq.js";import{t as n}from"./page-header-C9dAxZHp.js";import{t as r}from"./gestao-layout-DpFswAie.js";import{t as i}from"./notification-center-CA6dS0fs.js";var a=t();function o({lista:t}){return(0,a.jsxs)(a.Fragment,{children:[(0,a.jsx)(e,{title:`Notificações`}),(0,a.jsx)(n,{title:`Notificações`,breadcrumbs:[{label:`Painel`,href:`/gestao`}]}),(0,a.jsx)(i,{lista:t,basePath:`/gestao`})]})}o.layout=e=>(0,a.jsx)(r,{children:e});export{o as default};
+>>>>>>>> softwell/main:public/build/assets/notificacoes-DuihRaTt.js
