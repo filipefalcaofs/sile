@@ -84,6 +84,8 @@ services:
     entrypoint: ['/bin/sh', '-ce']
     command:
       - |
+        echo "[seed] semeando servidor de e-mail..."
+        php artisan db:seed --class=EmailServerSeeder --force --no-interaction
         if [ "${SILE_DEMO_DATA:-false}" != "true" ]; then
           echo "[seed] SILE_DEMO_DATA nao esta true — pulando seed de demonstracao."
           exit 0
