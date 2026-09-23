@@ -73,11 +73,23 @@ class FichaCadastroImobiliarioInertiaTest extends TestCase
                 ->where('localizacao.logradouro', 'Rua das Flores'));
     }
 
+    public function test_localizacao_expoe_cod_log_materializado(): void
+    {
+        $processo = $this->processoComFicha();
+        $processo->forceFill(['cod_log' => '212'])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/ficha-analise/show')
+                ->where('localizacao.cod_log', '212'));
+    }
+
     public function test_sem_inscricao_expoe_status_sem_inscricao(): void
     {
         $processo = $this->processoComFicha([
-            'property_registration' => null,
-        ]);
+            'property_registration' => null,        ]);
 
         $this->actingAs($this->analista(), 'gestao')
             ->get("/gestao/processos/{$processo->id}/ficha")

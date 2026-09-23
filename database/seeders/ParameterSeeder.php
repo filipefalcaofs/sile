@@ -215,6 +215,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Consulta zona urbanística no GeoServer SEDUR (WFS) quando a camada local está pendente',
             ],
+            'features.geoserver_territorio' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Verifica regras territoriais por poligonal (ZEM, ZPAM, ABM, ZUE, loteamentos TAC) no GeoServer SEDUR (WFS). Desligado, a solicitação vai à análise com a indisponibilidade registrada',
+            ],
             'features.cadastro_imobiliario' => [
                 'group' => 'features',
                 'type' => 'boolean',

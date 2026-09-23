@@ -167,6 +167,14 @@ final class DecisionTextCatalog
             'explicacao.motivo.quadro11a_nao_registrado' => 'O Quadro 11-A condiciona a instalação pela via (classe viária × grupo). Não permite nem proíbe o uso. As condições desta decisão não foram gravadas.',
             'explicacao.motivo.permitido_so_enquadramento' => 'O registro cita o enquadramento da LOUOS como fundamento do veredito permitido. O enquadramento só classifica o uso. Quem permite ou proíbe na zona é o Quadro 10. Grupo e zona não foram gravados nesta decisão.',
             'explicacao.motivo.permitido_com_quadro10' => 'O registro cita o Quadro 10 da LOUOS (permissão do grupo na zona). Os detalhes (grupo, faixa e zona) não foram gravados nesta decisão.',
+
+            // Regras territoriais (RT-01 a RT-05 — pacote normativo SEDUR
+            // 2026-08-28). O indeferimento por logradouro × CNAE (RT-01) usa
+            // placeholders do alvo e do fundamento lidos da própria regra.
+            'territorial.indeferimento.logradouro_cnae' => 'A solicitação está localizada no :alvo e contempla atividade(s) econômica(s) abrangida(s) pelas restrições estabelecidas no :fundamento. Dessa forma, considerando o disposto na legislação vigente, o pedido não atende aos requisitos legais para deferimento, razão pela qual a solicitação é indeferida.',
+            'territorial.motivo.camada_indisponivel' => 'Não foi possível verificar a restrição territorial ":regra" (camada geográfica indisponível) — segue para análise técnica.',
+            'louos.motivo.quadro10_observacao_fora_da_lista' => 'Uso sujeito à observação :observacao do Quadro 10 permitido somente nas localizações listadas — endereço fora da allow-list',
+            'louos.motivo.quadro10_observacao_sem_verificacao' => 'Uso sujeito à observação :observacao do Quadro 10, mas sem CODLOG/bairro para verificar a allow-list de localizações',
         ];
     }
 }

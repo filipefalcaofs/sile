@@ -34,6 +34,10 @@ return [
         'govbr_login' => false,
         'geocoding' => true,
         'geoserver_zona' => true,
+        // Regras territoriais por poligonal (RT-02/03/04) consultando o
+        // GeoServer SEDUR (WFS). Desligado, a regra de poligonal degrada para
+        // análise técnica com o motivo registrado — nunca falha silenciosa.
+        'geoserver_territorio' => true,
         'cadastro_imobiliario' => env('SILE_CADASTRO_IMOBILIARIO', true),
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,

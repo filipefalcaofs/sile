@@ -25,32 +25,6 @@ class DemonstracaoClienteSeeder extends Seeder
     public const CLIENTE_PORTAL_EMAIL = 'requerente@sedur.salvador.ba.gov.br';
 
     /**
-     * Seeders de catálogo seguros para rodar em produção (sem factories/Faker).
-     */
-    private const SEEDERS_HOMOLOGACAO = [
-        RolesAndPermissionsSeeder::class,
-        LegalTermSeeder::class,
-        ParameterSeeder::class,
-        DecisionTextSeeder::class,
-        CnaeSeeder::class,
-        RiscoMunicipalSeeder::class,
-        RiscoSanitarioSeeder::class,
-        RiskTriggerSeeder::class,
-        PropertyTypeSeeder::class,
-        LouosQuadro10Seeder::class,
-        LouosQuadro11Seeder::class,
-        TratamentoRegrasSeeder::class,
-        GeoServerLayerSeeder::class,
-        ZonaSeeder::class,
-        ViabilityServiceTypeSeeder::class,
-        DocumentRequirementSeeder::class,
-        SectorSeeder::class,
-        StandardTextSeeder::class,
-        GeoLayerSeeder::class,
-        HolidaySeeder::class,
-    ];
-
-    /**
      * Usuários e empresas de demonstração. Processos NÃO entram aqui: o
      * container sile-seed roda a cada redeploy do Portainer e replantava a
      * massa (Solicitacao/Expresso/Analise/…) depois de o analista apagar.
@@ -68,7 +42,7 @@ class DemonstracaoClienteSeeder extends Seeder
             return;
         }
 
-        $this->call(self::SEEDERS_HOMOLOGACAO);
+        $this->call(CatalogoOficialSeeder::class);
         $this->seedUsuariosCliente();
         $this->call(self::SEEDERS_USUARIOS_DEMO);
         $this->rotacionarSenhasDev();

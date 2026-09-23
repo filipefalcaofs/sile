@@ -65,6 +65,7 @@ REMOVE_FILES = [
     "database/migrations/2026_09_16_190000_create_regin_simulacao_execucoes_table.php",
     "database/migrations/2026_09_17_140000_add_viability_request_id_to_regin_simulacao_execucoes_table.php",
     "database/data/regras-20-08-26/protocolos-sedur.json",
+    "database/seeders/DevDatabaseSeeder.php",
     "database/seeders/DemonstracaoClienteSeeder.php",
     "database/seeders/DevAdminSeeder.php",
     "database/seeders/CompanySeeder.php",

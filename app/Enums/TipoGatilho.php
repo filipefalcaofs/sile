@@ -15,12 +15,18 @@ enum TipoGatilho: string
     case ZeisEspecial = 'zeis_especial';
     case DadosDoProcesso = 'dados_do_processo';
 
+    // Regra territorial incidente (RT-01 a RT-05 — pacote SEDUR 2026-08-28):
+    // a queda do expresso veio de uma regra de lugar (poligonal TAC, ZEM,
+    // ZPAM, ABM, ZUE), não do risco da atividade.
+    case RegraTerritorial = 'regra_territorial';
+
     public function label(): string
     {
         return match ($this) {
             self::EnquadramentoAusente => 'Enquadramento ausente',
             self::ZeisEspecial => 'ZEIS especial',
             self::DadosDoProcesso => 'Dados do processo',
+            self::RegraTerritorial => 'Regra territorial',
         };
     }
 }

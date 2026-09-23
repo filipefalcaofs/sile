@@ -9,6 +9,7 @@ use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\RuleVersion;
 use App\Services\Decisao\DecisionTextCatalog;
+use App\Services\Territorial\TerritorialRuleService;
 use App\Services\Tratamento\TratamentoRamoInput;
 use App\Services\Tratamento\TratamentoRamoResolver;
 use App\Services\Tratamento\TratamentoRamoResult;
@@ -41,6 +42,7 @@ class LouosEnquadramentoService
         private AuditService $audit,
         private DecisionTextCatalog $textos,
         private TratamentoRamoResolver $resolverRamo,
+        private TerritorialRuleService $territorialRules,
     ) {}
 
     /**
@@ -625,6 +627,41 @@ class LouosEnquadramentoService
             );
         }
 
+        // Observações (a)/(b) do Quadro 10 (RT-05): o uso sujeito à observação
+        // só é permitido nas localizações da allow-list versionada (vias da
+        // ZCMu-2/ZCLMu, bairros Calçada e São Cristóvão na (a)). Fora da lista
+        // → proibido; sem CODLOG/bairro para verificar → indisponível (o
+        // consolidado degrada para pendente — nunca permissão inventada).
+        $observacao = $this->observacaoQuadro10($permissao);
+
+        if ($observacao !== null && $permissao->permissao !== Quadro10Permissao::Proibido) {
+            $permite = $this->territorialRules->observacaoQuadro10Permite(
+                $observacao === 'a' ? 'RT-05-A' : 'RT-05-B',
+                $this->codLogDoTerritorio($input),
+                $this->bairroDoTerritorio($input),
+            );
+
+            if ($permite === false) {
+                $vedado = $this->dimIdentificado($version->version, [
+                    'permissao' => Quadro10Permissao::Proibido->value,
+                    'condicionante_ref' => null,
+                    'base_legal' => $permissao->base_legal,
+                ]);
+
+                $vedado['motivo'] = $this->textos->render('louos.motivo.quadro10_observacao_fora_da_lista', [':observacao' => "({$observacao})"]);
+
+                return $vedado;
+            }
+
+            if ($permite === null) {
+                return $this->dimIndisponivel(
+                    $this->textos->render('louos.motivo.quadro10_observacao_sem_verificacao', [':observacao' => "({$observacao})"]),
+                    $version->version,
+                    ['permissao' => null, 'condicionante_ref' => null, 'base_legal' => null],
+                );
+            }
+        }
+
         $identificado = $this->dimIdentificado($version->version, [
             'permissao' => $permissao->permissao->value,
             'condicionante_ref' => $permissao->condicionante_ref,
@@ -784,6 +821,60 @@ class LouosEnquadramentoService
         }
 
         return number_format($area, 2, ',', '.');
+    }
+
+    /**
+     * Marcador de observação do Quadro 10 na permissão ('a' ou 'b'), lido do
+     * campo observacao da regra versionada — dado, nunca inferência. Null
+     * quando a linha não é sujeita a observação.
+     */
+    private function observacaoQuadro10(LouosQuadro10Permissao $permissao): ?string
+    {
+        $observacao = $permissao->observacao;
+
+        if (! is_string($observacao)) {
+            return null;
+        }
+
+        if (preg_match('/\(\s*a\s*\)/i', $observacao) === 1) {
+            return 'a';
+        }
+
+        if (preg_match('/\(\s*b\s*\)/i', $observacao) === 1) {
+            return 'b';
+        }
+
+        return null;
+    }
+
+    /**
+     * CODLOG do imóvel lido do território (atributo oficial da via
+     * identificada). Null quando a via não foi identificada ou não trouxe o
+     * atributo — a observação do Quadro 10 degrada para pendente.
+     */
+    private function codLogDoTerritorio(EnquadramentoInput $input): ?string
+    {
+        $propriedades = $input->territory?->via['propriedades'] ?? null;
+        $codLog = is_array($propriedades) ? ($propriedades['CODLOG'] ?? null) : null;
+
+        if (! is_string($codLog) && ! is_numeric($codLog)) {
+            return null;
+        }
+
+        $codLog = trim((string) $codLog);
+
+        return $codLog !== '' ? $codLog : null;
+    }
+
+    /**
+     * Bairro oficial do imóvel lido do território — insumo da allow-list da
+     * observação (a) do Quadro 10 (Calçada e São Cristóvão).
+     */
+    private function bairroDoTerritorio(EnquadramentoInput $input): ?string
+    {
+        $bairro = $input->territory?->bairro['nome'] ?? null;
+
+        return is_string($bairro) && trim($bairro) !== '' ? trim($bairro) : null;
     }
 
     /**

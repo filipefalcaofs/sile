@@ -31,6 +31,12 @@ enum RuleDomain: string
     // versionado que define valor de tributo (DAM). Sensível: quatro olhos.
     case TllValores = 'tll_valores';
 
+    // Regras territoriais (RT-01 a RT-05 — pacote normativo SEDUR 2026-08-28):
+    // restrições por logradouro × CNAE (art. 172-A), TACs de loteamento,
+    // zonas que sempre vão à análise (ZEM/ZPAM/ABM/ZUE) e allow-lists de via
+    // das observações do Quadro 10. Sensível: decide viabilidade locacional.
+    case Territorial = 'territorial';
+
     public function label(): string
     {
         return match ($this) {
@@ -42,6 +48,7 @@ enum RuleDomain: string
             self::AtividadesEscritorioVirtual => 'Atividades permitidas em escritório virtual',
             self::RiscoTratamento => 'Planilha de regras de tratamento (20.08.26)',
             self::TllValores => 'Tabela de valores TLL por exercício',
+            self::Territorial => 'Regras territoriais (logradouro, TAC, zonas especiais)',
         };
     }
 
@@ -61,6 +68,7 @@ enum RuleDomain: string
             self::AtividadesEscritorioVirtual => true,
             self::RiscoTratamento => true,
             self::TllValores => true,
+            self::Territorial => true,
             self::Condicionante => false,
         };
     }

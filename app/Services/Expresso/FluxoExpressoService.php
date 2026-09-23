@@ -9,6 +9,7 @@ use App\Enums\Fluxo;
 use App\Enums\IntencaoAtividade;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\SefazNotificationEvent;
+use App\Enums\TipoGatilho;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\EncaminhadoParaAnalise;
@@ -28,6 +29,8 @@ use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
+use App\Services\Territorial\TerritorialRuleService;
+use App\Services\Territorial\TerritorialRuleVerdict;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Database\QueryException;
@@ -73,6 +76,7 @@ class FluxoExpressoService
         private SedeEscritorioVirtualGatilho $gatilhoSede,
         private AbrigadoResolver $abrigadoResolver,
         private DesvincularInscricaoService $desvincular,
+        private TerritorialRuleService $territorialRules,
     ) {}
 
     /**
@@ -206,6 +210,28 @@ class FluxoExpressoService
         // Reexecução FRESCA dos motores — a decisão é autoritativa, não o snapshot.
         $resolved = $this->resolver->resolve($request);
 
+        // Regras territoriais (RT-01 a RT-05 — pacote normativo SEDUR
+        // 2026-08-28): o LUGAR manda antes do risco e do enquadramento. RT-01
+        // (logradouro × CNAE proibido) indefere com o texto legal da regra;
+        // as poligonais (TAC Vela Branca/Itaigara, ZEM, ZPAM, ABM, ZUE)
+        // encaminham à análise com o motivo exato do requisito. A avaliação
+        // degrada honesto: camada indisponível também encaminha (CA-RT-09).
+        $territorial = $this->territorialRules->avaliar($request, $resolved->ponto);
+
+        if ($territorial->status === TerritorialRuleVerdict::INDEFERIR) {
+            return $this->indeferirTerritorial($request, $resolved, $territorial, $actor);
+        }
+
+        if ($territorial->status === TerritorialRuleVerdict::ENCAMINHAR_ANALISE) {
+            return $this->encaminharAnalise(
+                $request,
+                (string) $territorial->motivo,
+                $actor,
+                $resolved,
+                $territorial,
+            );
+        }
+
         // RN-041-A: Quadro 10 ou Quadro 11A vedam o uso no local. Isso
         // independe do risco — a análise só recebe o que ainda pode deferir.
         // O veto locacional vem ANTES do gate de alto risco (e-mail SEDUR
@@ -330,8 +356,9 @@ class FluxoExpressoService
         string $reason,
         ?User $actor,
         ?ResolvedViability $resolved = null,
+        ?TerritorialRuleVerdict $territorial = null,
     ): DecisionResult {
-        DB::transaction(function () use ($request, $reason, $actor, $resolved): void {
+        DB::transaction(function () use ($request, $reason, $actor, $resolved, $territorial): void {
             $this->stateMachine->transition(
                 $request,
                 ViabilityRequestStatus::EmAnalise,
@@ -369,7 +396,7 @@ class FluxoExpressoService
                 rulesVersion: $resolved !== null ? $this->rulesVersionRepresentativa($resolved->rules_versions) : null,
             );
 
-            $this->capturarQueda($request, $reason, $resolved);
+            $this->capturarQueda($request, $reason, $resolved, $territorial);
         });
 
         // APÓS o commit: gatilho da pré-análise (10-08). Sem listener no ambiente
@@ -417,8 +444,23 @@ class FluxoExpressoService
      * roteamento; e CNAE sem gatilho de contexto registra `tipo_gatilho` NULL —
      * NUNCA um gatilho inventado.
      */
-    private function capturarQueda(ViabilityRequest $request, string $reason, ?ResolvedViability $resolved): void
+    private function capturarQueda(ViabilityRequest $request, string $reason, ?ResolvedViability $resolved, ?TerritorialRuleVerdict $territorial = null): void
     {
+        // Queda territorial (RT-02/03/04 e degradação CA-RT-09): a regra de
+        // lugar é a razão do encaminhamento — linha de nível-processo com o
+        // motivo EXATO da regra, gatilho regra_territorial.
+        if ($territorial !== null) {
+            ExpressoQueda::create([
+                'viability_request_id' => $request->id,
+                'cnae' => null,
+                'tipo_gatilho' => TipoGatilho::RegraTerritorial->value,
+                'dimensao' => 'territorio',
+                'motivo' => $territorial->motivo ?? $reason,
+            ]);
+
+            return;
+        }
+
         if ($resolved === null) {
             ExpressoQueda::create([
                 'viability_request_id' => $request->id,
@@ -640,6 +682,90 @@ class FluxoExpressoService
             SefazNotificationEvent::SedePerdeuCondicao,
         );
 
+        ResultadoEmitido::dispatch($request, $decision);
+
+        return DecisionResult::decidida($decision, emitted: true);
+    }
+
+    /**
+     * Indefere pela regra territorial (RT-01 — logradouro × CNAE proibido,
+     * art. 172-A): a decisão carrega o texto legal da regra como reason e a
+     * fundamentação própria (base legal da regra + fundamentos do motor), com
+     * a versão do dado territorial em rules_versions (RN-002). Mesma
+     * robustez idempotente de `emitir()` (unique por solicitação vira NO-OP).
+     * Sem número TVL — só deferimento tem produto.
+     */
+    private function indeferirTerritorial(
+        ViabilityRequest $request,
+        ResolvedViability $resolved,
+        TerritorialRuleVerdict $territorial,
+        ?User $actor,
+    ): DecisionResult {
+        try {
+            $decision = DB::transaction(function () use ($request, $resolved, $territorial, $actor): ViabilityDecision {
+                $fundamentacao = array_values(array_unique(array_filter([
+                    $territorial->regra?->base_legal,
+                    $territorial->motivo,
+                    ...$this->fundamentacaoConsolidada($resolved),
+                ])));
+
+                $decision = ViabilityDecision::create([
+                    'viability_request_id' => $request->id,
+                    'flow' => 'expresso',
+                    'outcome' => DecisionOutcome::Indeferida,
+                    'consolidated_result' => ResultadoViabilidade::NaoPermitido->value,
+                    'is_virtual_office_tenant' => false,
+                    'virtual_office_hq_tvl_number' => null,
+                    'tvl_product_number' => null,
+                    'per_cnae' => $this->perCnae($resolved),
+                    'rules_versions' => [
+                        ...$resolved->rules_versions,
+                        'territorial' => ['regras' => $territorial->versaoRegra],
+                    ],
+                    'fundamentacao' => $fundamentacao,
+                    'decision_trace' => $this->decisionTrace($resolved),
+                    'reason' => $territorial->motivo,
+                    'decided_by_user_id' => $actor?->id,
+                    'decided_at' => now(),
+                ]);
+
+                $this->stateMachine->transition(
+                    $request,
+                    ViabilityRequestStatus::Indeferida,
+                    $actor,
+                    publicLabel: ViabilityRequestStatus::Indeferida->publicLabel(),
+                );
+
+                $this->audit->log(
+                    logName: 'expresso',
+                    event: 'decisao',
+                    description: "Indeferimento por regra territorial ({$territorial->regra?->codigo}) da solicitação #{$request->id}",
+                    properties: [
+                        'viability_request_id' => $request->id,
+                        'protocol_number' => $request->protocol_number,
+                        'outcome' => DecisionOutcome::Indeferida->value,
+                        'regra_territorial' => $territorial->regra?->codigo,
+                        'motivo' => $territorial->motivo,
+                        'incidencias' => $territorial->incidencias,
+                    ],
+                    subject: $request,
+                    result: DecisionOutcome::Indeferida->value,
+                    rulesVersion: $territorial->versaoRegra,
+                );
+
+                return $decision;
+            });
+        } catch (QueryException $e) {
+            $existente = $request->decision()->first();
+
+            if ($existente !== null) {
+                return DecisionResult::decidida($existente, emitted: false);
+            }
+
+            throw $e;
+        }
+
+        // APÓS o commit: só decisões efetivadas geram efeitos.
         ResultadoEmitido::dispatch($request, $decision);
 
         return DecisionResult::decidida($decision, emitted: true);
