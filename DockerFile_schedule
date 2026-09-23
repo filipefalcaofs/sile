@@ -1,4 +1,4 @@
-# Fila do Viabiliza no OKD. Mesma base S2I da imagem web.
+# Agendador do Viabiliza no OKD. Mesma base S2I da imagem web.
 FROM registry.salvador.ba.gov.br/library/php-oracle:8.4
 
 USER 0
@@ -48,4 +48,4 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/fra
              storage/logs storage/app/public bootstrap/cache \
  && chmod -R ug+rwX storage bootstrap/cache
 
-CMD php artisan queue:work --sleep=3 --tries=3 --max-time=3600 --no-interaction
+CMD php artisan schedule:work --no-interaction
