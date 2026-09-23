@@ -2,7 +2,8 @@
 # usuário 1001, assemble e build do frontend na própria imagem.
 # A raiz do repositório no GitLab da prefeitura contém este arquivo;
 # o código fica em app-src/.
-FROM image-registry.openshift-image-registry.svc:5000/viabiliza/php-84
+#FROM image-registry.openshift-image-registry.svc:5000/viabiliza/php-84
+FROM registry.salvador.ba.gov.br/library/php-oracle:8.4
 
 USER 0
 ADD app-src /tmp/src
