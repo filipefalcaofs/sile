@@ -309,22 +309,6 @@ export default function CaixaSetorIndex({
                             label="Assumir processo"
                         />
                     )}
-                    {podeDistribuir && item.assigned_user_id === null && (
-                        <TableAction
-                            tone="neutral"
-                            onClick={() =>
-                                emVistoria(item)
-                                    ? abrirModal({
-                                          tipo: 'distribuir',
-                                          ids: [item.id],
-                                          descricao: `Processo ${item.bap ?? item.protocol_number ?? item.id}`,
-                                      })
-                                    : irParaCentral([item.id])
-                            }
-                            icon={<GroupIcon className="size-4.5" />}
-                            label="Distribuir a um analista"
-                        />
-                    )}
                     {podeDistribuir && item.assigned_user_id !== null && item.pode_redistribuir && (
                         <TableAction
                             tone="neutral"
