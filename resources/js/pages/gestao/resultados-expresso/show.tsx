@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import BaixarTvl from '@/components/analise/baixar-tvl';
 import { rotuloFluxoRisco } from '@/components/analise/processo-ui';
 import DecisionExplanation, { type DecisionExplanationData } from '@/components/auditoria/decision-explanation';
 import PageHeader from '@/components/app/page-header';
@@ -212,7 +213,10 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                             <dl className="grid shrink-0 grid-cols-1 gap-4 sm:text-right">
                                 {decisao.tvl_product_number && (
                                     <DescItem label="Viabilidade">
-                                        <span className="font-medium">{decisao.tvl_product_number}</span>
+                                        <span className="inline-flex flex-wrap items-center justify-end gap-2">
+                                            <span className="font-medium">{decisao.tvl_product_number}</span>
+                                            {solicitacao && <BaixarTvl solicitacaoId={solicitacao.id} />}
+                                        </span>
                                     </DescItem>
                                 )}
                                 <DescItem label="Decidido em">{formatarDataHora(decisao.decided_at)}</DescItem>

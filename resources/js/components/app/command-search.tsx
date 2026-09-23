@@ -2,6 +2,7 @@ import { router, useHttp, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { SearchIcon } from '@/components/icons';
 import { Modal } from '@/components/ui/modal';
+import { rotuloAtalhoBusca } from '@/components/app/atalho-busca';
 import { destinosComando } from '@/navigation/gestao-nav';
 import type { SharedProps } from '@/types';
 
@@ -92,6 +93,7 @@ export default function CommandSearch() {
         return null;
     }
 
+    const atalho = rotuloAtalhoBusca(typeof navigator === 'undefined' ? '' : navigator.userAgent);
     const termoLimpo = termo.trim().toLowerCase();
     const destinosFiltrados = termoLimpo === '' ? destinos : destinos.filter((destino) => destino.label.toLowerCase().includes(termoLimpo));
 
@@ -100,14 +102,14 @@ export default function CommandSearch() {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                title="Buscar (⌘K)"
+                title={`Buscar (${atalho})`}
                 aria-label="Abrir busca"
                 className="flex h-11 w-full items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 text-left text-theme-sm text-gray-500 transition hover:bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:bg-white/[0.06]"
             >
                 <SearchIcon className="size-5 shrink-0" />
                 <span className="min-w-0 flex-1 truncate">Buscar</span>
                 <kbd className="hidden rounded border border-gray-200 bg-white px-1.5 py-0.5 text-theme-xs font-medium text-gray-400 sm:inline dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                    ⌘K
+                    {atalho}
                 </kbd>
             </button>
 

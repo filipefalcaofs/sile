@@ -6,6 +6,7 @@ use App\Models\AiConfiguration;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -57,6 +58,25 @@ class AiConfigurationControllerTest extends TestCase
             'active' => true,
             'is_default' => false,
         ], $overrides);
+    }
+
+    public function test_credencial_ilegivel_nao_derruba_a_tela(): void
+    {
+        $config = AiConfiguration::factory()->create([
+            'name' => 'Provedor com chave antiga',
+            'api_key' => 'sk-chave-1234',
+        ]);
+
+        DB::table('ai_configurations')
+            ->where('id', $config->id)
+            ->update(['api_key' => 'ciphertext-ilegivel']);
+
+        $this->actingAs($this->administrador(), 'gestao')
+            ->get('/gestao/config-ia')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/config-ia/index')
+                ->where('configurations.0.masked_api_key', null));
     }
 
     public function test_administrador_acessa_a_tela_de_configuracao(): void
