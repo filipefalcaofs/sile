@@ -18,7 +18,6 @@ export default defineConfig({
         watch: {
             ignored: [
                 '**/storage/framework/views/**',
-                '**/.planning/**',
             ],
         },
     },

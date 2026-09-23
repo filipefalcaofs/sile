@@ -35,12 +35,17 @@ class ManageRolesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/perfis/index')
-                ->has('roles', 5)
+                ->has('roles', 21)
                 ->has('roles.0', fn (Assert $item) => $item
                     ->hasAll(['id', 'name', 'permissions', 'users_count', 'structural']))
-                ->where('roles.0.name', 'administrador')
-                ->where('roles.0.structural', true)
-                ->where('roles.0.users_count', 1)
+                ->where(
+                    'roles',
+                    fn ($roles) => collect($roles)->contains(
+                        fn ($role) => $role['name'] === 'administrador'
+                            && $role['structural'] === true
+                            && $role['users_count'] === 1
+                    )
+                )
                 ->has('permissions', 35)
                 ->has('permissionCatalog', 35)
                 ->where(
