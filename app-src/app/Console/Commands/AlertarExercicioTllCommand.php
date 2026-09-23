@@ -8,7 +8,6 @@ use App\Models\RuleVersion;
 use App\Models\User;
 use App\Notifications\TllExercicioFaltanteNotification;
 use App\Support\Audit\AuditService;
-use App\Support\Settings;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Notification;
 
@@ -45,10 +44,7 @@ class AlertarExercicioTllCommand extends Command
             return self::SUCCESS;
         }
 
-        $gestorRole = (string) Settings::get(
-            'notificacoes.escalonamento.gestor_role',
-            config('sile.notificacoes.escalonamento.gestor_role', 'gestor'),
-        );
+        $gestorRole = (string) config('sile.notificacoes.escalonamento.gestor_role', 'gestor');
 
         $gestores = User::query()
             ->whereHas('roles', fn ($query) => $query->where('name', $gestorRole))

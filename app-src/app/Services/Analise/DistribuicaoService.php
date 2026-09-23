@@ -28,6 +28,7 @@ class DistribuicaoService
     public function __construct(
         private AnalysisSlaService $sla,
         private AuditService $audit,
+        private AnalysisStatusStateMachine $status,
     ) {}
 
     /**
@@ -132,6 +133,8 @@ class DistribuicaoService
                 'assigned_user_id' => $novaAnalista->id,
                 'ator_id' => $ator->id,
             ], $request);
+
+            $this->colocarNaCaixaDoAnalista($request, $novaAnalista, $ator);
         });
     }
 
@@ -164,7 +167,34 @@ class DistribuicaoService
                 'assigned_user_id' => $analista->id,
                 'ator_id' => $ator->id,
             ], $request);
+
+            $this->colocarNaCaixaDoAnalista($request, $analista, $ator);
         });
+    }
+
+    /**
+     * A atribuição tira o processo do eixo "para distribuir" e o deixa na
+     * Caixa de entrada do analista, no status em que ele começa o trabalho.
+     * Vistoria e convite já estão em outro eixo e não são reabertos.
+     */
+    private function colocarNaCaixaDoAnalista(ViabilityRequest $request, User $analista, User $ator): void
+    {
+        $passos = match ($request->analysis_status) {
+            null => [AnalysisStatus::ParaDistribuir, AnalysisStatus::Encaminhado, AnalysisStatus::Analisar],
+            AnalysisStatus::ParaDistribuir => [AnalysisStatus::Encaminhado, AnalysisStatus::Analisar],
+            AnalysisStatus::Encaminhado => [AnalysisStatus::Analisar],
+            default => [],
+        };
+
+        foreach ($passos as $proximo) {
+            $motivo = match ($proximo) {
+                AnalysisStatus::Encaminhado => "Encaminhado para {$analista->name}.",
+                AnalysisStatus::Analisar => "Na caixa de entrada de {$analista->name}.",
+                default => null,
+            };
+
+            $this->status->transition($request, $proximo, $ator, $motivo);
+        }
     }
 
     /**

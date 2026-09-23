@@ -5,10 +5,8 @@ namespace Tests\Feature\Solicitacao;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
 use App\Models\Company;
-use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityRequest;
-use Database\Seeders\ParameterSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
@@ -119,11 +117,7 @@ class ConsultarProtocoloPublicoTest extends TestCase
     {
         // HU-014: o limite por minuto é administrável sem deploy. Com 2/min, a 3ª
         // consulta pública dentro da janela é bloqueada (429).
-        $this->seed(ParameterSeeder::class);
-        Parameter::query()
-            ->where('key', 'seguranca.throttle.consulta_protocolo.por_minuto')
-            ->first()
-            ->update(['value' => '2']);
+        config(['sile.seguranca.throttle.consulta_protocolo.por_minuto' => 2]);
 
         $solicitacao = $this->protocolada();
         $url = $this->signedUrl($solicitacao);

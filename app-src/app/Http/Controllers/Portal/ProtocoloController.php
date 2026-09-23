@@ -8,7 +8,6 @@ use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\DocumentacaoIncompletaException;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\SolicitacaoIncompletaException;
-use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 
@@ -27,10 +26,6 @@ class ProtocoloController extends Controller
     public function store(ProtocolarSolicitacaoRequest $request, ViabilityRequest $solicitacao): RedirectResponse
     {
         Gate::authorize('protocol', $solicitacao);
-
-        if (! Settings::enabled('solicitacao_viabilidade')) {
-            return back()->with('status', 'O protocolo de solicitações de viabilidade está temporariamente desativado pelo administrador.');
-        }
 
         try {
             $this->protocolar->protocol(

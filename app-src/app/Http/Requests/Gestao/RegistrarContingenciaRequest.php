@@ -38,10 +38,7 @@ class RegistrarContingenciaRequest extends FormRequest
         );
 
         /** @var array<int, string> $mimes */
-        $mimes = (array) Settings::get(
-            'solicitacao.anexos.mime_permitidos',
-            config('sile.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']),
-        );
+        $mimes = (array) config('sile.solicitacao.anexos.mime_permitidos', ['application/pdf', 'image/jpeg', 'image/png']);
 
         $maxKb = (int) Settings::get(
             'solicitacao.anexos.max_mb',

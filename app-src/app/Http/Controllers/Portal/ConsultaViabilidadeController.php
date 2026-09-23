@@ -11,8 +11,6 @@ use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\GeocoderException;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
-use App\Support\Audit\AuditService;
-use App\Support\Settings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,15 +21,13 @@ use Inertia\Response;
  * endpoints JSON (endereço/CNAE/inscrição) são acessíveis ao cidadão ANÔNIMO,
  * com throttle parametrizado (07-01) e auditoria RN-002. O controller só
  * orquestra via ConsultaViabilidadeService (07-05) — a auditoria de sucesso é
- * interna ao serviço; aqui registramos o bloqueio por toggle (HU-014) e
- * traduzimos as exceções honestas do geocoder (endereço não localizado / serviço
- * indisponível NUNCA viram resultado falso — sem fachada).
+ * interna ao serviço. Traduz as exceções honestas do geocoder (endereço não
+ * localizado / serviço indisponível NUNCA viram resultado falso — sem fachada).
  */
 class ConsultaViabilidadeController extends Controller
 {
     public function __construct(
         private ConsultaViabilidadeService $service,
-        private AuditService $audit,
     ) {}
 
     /**
@@ -41,7 +37,7 @@ class ConsultaViabilidadeController extends Controller
     public function index(): Response
     {
         return Inertia::render('portal/viabilidade/consulta', [
-            'consultaEnabled' => Settings::enabled('consulta_viabilidade'),
+            'consultaEnabled' => true,
         ]);
     }
 
@@ -51,10 +47,6 @@ class ConsultaViabilidadeController extends Controller
      */
     public function endereco(ConsultaViabilidadeEnderecoRequest $request): JsonResponse
     {
-        if ($bloqueio = $this->guardToggle()) {
-            return $bloqueio;
-        }
-
         try {
             $respostas = [];
             foreach ($request->validated('respostas') ?? [] as $numero => $valor) {
@@ -90,10 +82,6 @@ class ConsultaViabilidadeController extends Controller
      */
     public function cnae(ConsultaViabilidadeCnaeRequest $request): JsonResponse
     {
-        if ($bloqueio = $this->guardToggle()) {
-            return $bloqueio;
-        }
-
         $respostas = [];
         foreach ($request->validated('respostas') ?? [] as $numero => $valor) {
             $respostas[(int) $numero] = (bool) $valor;
@@ -121,10 +109,6 @@ class ConsultaViabilidadeController extends Controller
      */
     public function inscricao(ConsultaViabilidadeInscricaoRequest $request): JsonResponse
     {
-        if ($bloqueio = $this->guardToggle()) {
-            return $bloqueio;
-        }
-
         $result = $this->service->consultarPorInscricao(
             $request->validated('inscricao'),
             $request->validated('cnae'),
@@ -164,29 +148,5 @@ class ConsultaViabilidadeController extends Controller
             'ip_address' => $request->ip(),
             'created_at' => now(),
         ]);
-    }
-
-    /**
-     * Guarda do toggle features.consulta_viabilidade (HU-014): desligado, bloqueia
-     * ANTES de orquestrar, audita o bloqueio (degradação comunicada, nunca falha
-     * silenciosa) e devolve 422. Ligado, devolve null e o fluxo segue.
-     */
-    private function guardToggle(): ?JsonResponse
-    {
-        if (Settings::enabled('consulta_viabilidade')) {
-            return null;
-        }
-
-        $this->audit->log(
-            'viabilidade',
-            'consulta',
-            'Consulta de viabilidade bloqueada: recurso desativado',
-            ['motivo' => 'toggle-desativado'],
-            result: 'bloqueado',
-        );
-
-        return response()->json([
-            'message' => 'A consulta de viabilidade está temporariamente desativada. Tente novamente mais tarde.',
-        ], 422);
     }
 }

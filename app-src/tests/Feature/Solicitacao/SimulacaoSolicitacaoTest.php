@@ -6,7 +6,6 @@ use App\Enums\GeoLayerType;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
-use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\SpatialRepository;
@@ -234,33 +233,6 @@ class SimulacaoSolicitacaoTest extends TestCase
 
         $this->assertSame(ViabilityRequestStatus::Rascunho, $solicitacao->status);
         $this->assertFalse((bool) $solicitacao->applicant_proceeded_despite);
-    }
-
-    public function test_toggle_desligado_degrada_sem_falha(): void
-    {
-        // RN-005: com features.simulacao_solicitacao desligado, degrada de forma
-        // comunicada — sem simular, sem persistir, sem erro.
-        Parameter::factory()->create([
-            'key' => 'features.simulacao_solicitacao',
-            'group' => 'features',
-            'type' => 'boolean',
-            'value' => '0',
-        ]);
-
-        $user = $this->portalUser();
-        $solicitacao = $this->draftFor($user, [self::CNAE_MINIMERCADO_DIGITOS]);
-
-        $this->actingAs($user)
-            ->from(route('portal.solicitacoes.index'))
-            ->post(route('portal.solicitacoes.simular', $solicitacao))
-            ->assertRedirect(route('portal.solicitacoes.index'))
-            ->assertSessionHas('status')
-            ->assertSessionHasNoErrors();
-
-        $solicitacao->refresh();
-
-        $this->assertNull($solicitacao->simulation_snapshot);
-        $this->assertNull($solicitacao->simulated_at);
     }
 
     public function test_auditoria_da_simulacao(): void

@@ -10,7 +10,6 @@ use App\Http\Requests\Gestao\SimulateLouosRequest;
 use App\Models\RuleVersion;
 use App\Services\Louos\LouosDraftService;
 use App\Services\Louos\LouosSandboxSimulationService;
-use App\Support\Settings;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -119,7 +118,7 @@ class LouosSandboxController extends Controller
     {
         return [
             'rascunhos' => $this->rascunhos(),
-            'amostraPadrao' => (int) Settings::get('louos.sandbox.amostra_padrao', 50),
+            'amostraPadrao' => (int) config('sile.louos.sandbox.amostra_padrao', 50),
         ];
     }
 
