@@ -11,11 +11,10 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Conclusão pela Caixa de Malha Fina: POST .../concluir baixa todos os
- * encaminhamentos abertos do processo (resolverAbertos), com observação
- * OPCIONAL, SEM mudar o status (ortogonal — RN-001). Gated por
- * analisar-malha-fina: quem só encaminha (encaminhar-malha-fina — analista)
- * NÃO conclui (403 auditado no ponto único).
+ * Conclusão pela Caixa de Malha Fina: POST .../concluir exige o resultado
+ * da conclusão de análise, aplica esse resultado no processo e só então
+ * baixa os encaminhamentos abertos. A observação continua opcional. Gated
+ * por analisar-malha-fina: quem só encaminha não conclui (403 auditado).
  */
 class MalhaFinaConcluirTest extends TestCase
 {
@@ -57,18 +56,21 @@ class MalhaFinaConcluirTest extends TestCase
 
         $this->actingAs($revisor, 'gestao')
             ->post("/gestao/malha-fina/{$processo->id}/concluir", [
+                'resultado' => 'desativado',
                 'observacao' => 'Enquadramento confirmado.',
             ])
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
 
         $processo->refresh();
         $this->assertFalse((bool) $processo->in_fine_mesh);
-        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->status);
+        $this->assertSame(ViabilityRequestStatus::Desativado, $processo->status);
 
         $this->assertDatabaseHas('fine_mesh_referrals', [
             'viability_request_id' => $processo->id,
             'resolved_by_user_id' => $revisor->id,
             'resolution_note' => 'Enquadramento confirmado.',
+            'resolution_outcome' => 'desativado',
         ]);
 
         $this->assertDatabaseHas('activity_log', [
@@ -83,15 +85,21 @@ class MalhaFinaConcluirTest extends TestCase
         $processo = $this->processoEmMalhaFina($revisor);
 
         $this->actingAs($revisor, 'gestao')
-            ->post("/gestao/malha-fina/{$processo->id}/concluir", [])
-            ->assertRedirect();
+            ->post("/gestao/malha-fina/{$processo->id}/concluir", [
+                'resultado' => 'revogado',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
 
-        $this->assertFalse((bool) $processo->fresh()->in_fine_mesh);
+        $processo->refresh();
+        $this->assertFalse((bool) $processo->in_fine_mesh);
+        $this->assertSame(ViabilityRequestStatus::Revogado, $processo->status);
 
         $this->assertDatabaseHas('fine_mesh_referrals', [
             'viability_request_id' => $processo->id,
             'resolved_by_user_id' => $revisor->id,
             'resolution_note' => null,
+            'resolution_outcome' => 'revogado',
         ]);
     }
 
@@ -106,9 +114,42 @@ class MalhaFinaConcluirTest extends TestCase
         ]);
 
         $this->actingAs($revisor, 'gestao')
-            ->post("/gestao/malha-fina/{$processo->id}/concluir", [])
+            ->post("/gestao/malha-fina/{$processo->id}/concluir", [
+                'resultado' => 'cassado',
+            ])
             ->assertRedirect()
             ->assertSessionHas('warning');
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
+        $this->assertDatabaseCount('viability_decisions', 0);
+    }
+
+    public function test_sem_resultado_nao_conclui(): void
+    {
+        $revisor = $this->revisor();
+        $processo = $this->processoEmMalhaFina($revisor);
+
+        $this->actingAs($revisor, 'gestao')
+            ->post("/gestao/malha-fina/{$processo->id}/concluir", [])
+            ->assertSessionHasErrors('resultado');
+
+        $this->assertTrue((bool) $processo->fresh()->in_fine_mesh);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
+    }
+
+    public function test_deferido_sem_ficha_nao_baixa_a_malha_fina(): void
+    {
+        $revisor = $this->revisor();
+        $processo = $this->processoEmMalhaFina($revisor);
+
+        $this->actingAs($revisor, 'gestao')
+            ->post("/gestao/malha-fina/{$processo->id}/concluir", [
+                'resultado' => 'deferido',
+            ])
+            ->assertSessionHasErrors('conclusao');
+
+        $this->assertTrue((bool) $processo->fresh()->in_fine_mesh);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
     }
 
     public function test_analista_sem_analisar_malha_fina_recebe_403_auditado(): void

@@ -1,4 +1,4 @@
-import { Head, Link, router, useHttp } from '@inertiajs/react';
+import { Head, Link, router, useHttp, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
@@ -20,7 +20,9 @@ import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import ConfirmDialog from '@/components/ui/confirm-dialog';
+import EmptyState from '@/components/ui/empty-state';
 import GestaoLayout from '@/layouts/gestao-layout';
+import type { SharedProps } from '@/types';
 import { calcularPreenchimento, type ContagemSecao, type ResumoPreenchimento } from './preenchimento';
 
 interface Ficha {
@@ -122,12 +124,21 @@ interface Opcoes {
 }
 
 interface VistoriaShowProps {
-    ficha: Ficha;
+    ficha: Ficha | null;
     processo: Processo;
     tiposImovel: Array<{ value: string; label: string }>;
     opcoes: Opcoes;
     anexos: Anexo[];
+    /** Consulta a partir da análise: exibe a ficha e bloqueia a edição. */
+    somenteLeitura?: boolean;
+    /** O processo não tem ficha de vistoria. */
+    ausente?: boolean;
 }
+
+type VistoriaConteudoProps = Omit<VistoriaShowProps, 'ficha' | 'ausente'> & {
+    ficha: Ficha;
+    somenteLeitura: boolean;
+};
 
 /** '' = não respondido; '1'/'0' = sim/não (selects e radios Sim/Não). */
 type SimNao = '' | '1' | '0';
@@ -406,7 +417,15 @@ function SeloContagem({ secao }: { secao: ContagemSecao }) {
     );
 }
 
-function IndiceFicha({ resumo, ativa }: { resumo: ResumoPreenchimento; ativa: string }) {
+function IndiceFicha({
+    resumo,
+    ativa,
+    consulta = false,
+}: {
+    resumo: ResumoPreenchimento;
+    ativa: string;
+    consulta?: boolean;
+}) {
     return (
         <nav
             aria-label="Seções da ficha"
@@ -460,16 +479,25 @@ function IndiceFicha({ resumo, ativa }: { resumo: ResumoPreenchimento; ativa: st
                     <div className="h-1.5 rounded-full bg-brand-500" style={{ width: `${resumo.percentual}%` }} />
                 </div>
                 <p className="mt-2 text-[11px] leading-4 text-gray-400">
-                    {resumo.parecerPronto
-                        ? 'O parecer já permite concluir a ficha.'
-                        : 'O parecer é o que falta para concluir.'}
+                    {consulta
+                        ? 'Consulta da ficha. A edição exige a permissão de preencher ficha de vistoria.'
+                        : resumo.parecerPronto
+                          ? 'O parecer já permite concluir a ficha.'
+                          : 'O parecer é o que falta para concluir.'}
                 </p>
             </div>
         </nav>
     );
 }
 
-export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImovel, opcoes, anexos }: VistoriaShowProps) {
+function VistoriaConteudo({
+    ficha: fichaInicial,
+    processo,
+    tiposImovel,
+    opcoes,
+    anexos,
+    somenteLeitura,
+}: VistoriaConteudoProps) {
     const [ficha, setFicha] = useState<Ficha>(fichaInicial);
     const [dados, setDados] = useState<DadosFicha>(() => estadoInicial(fichaInicial));
     const [saveState, setSaveState] = useState<'idle' | 'salvo' | 'erro'>('idle');
@@ -478,7 +506,9 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
     const [erroGeral, setErroGeral] = useState<string | null>(null);
     const [showConcluir, setShowConcluir] = useState(false);
 
-    const editavel = ficha.editavel;
+    const { auth } = usePage<SharedProps>().props;
+    const podePreencher = auth.permissions.includes('preencher-ficha-vistoria');
+    const editavel = !somenteLeitura && ficha.editavel;
 
     // Polígono: vértices de trabalho (visualização ou redesenho em andamento).
     const [vertices, setVertices] = useState<Vertice[]>(() => geojsonParaVertices(fichaInicial.polygon_geojson));
@@ -726,19 +756,44 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
 
     return (
         <>
-            <Head title={`Ficha de vistoria — ${processo.protocol_number ?? 'processo'}`} />
+            <Head
+                title={`${somenteLeitura ? 'Visualizar ficha de vistoria' : 'Ficha de vistoria'} — ${processo.protocol_number ?? 'processo'}`}
+            />
 
             <PageHeader
-                title="Ficha de vistoria"
-                breadcrumbs={[
-                    { label: 'Painel', href: '/gestao' },
-                    { label: 'Vistorias', href: '/gestao/vistorias' },
-                    { label: processo.protocol_number ?? `Processo #${processo.id}`, href: `/gestao/processos/${processo.id}/ficha` },
-                ]}
+                title={somenteLeitura ? 'Visualizar ficha de vistoria' : 'Ficha de vistoria'}
+                breadcrumbs={
+                    somenteLeitura
+                        ? [
+                              { label: 'Painel', href: '/gestao' },
+                              {
+                                  label: processo.protocol_number ?? `Processo #${processo.id}`,
+                                  href: `/gestao/processos/${processo.id}/ficha`,
+                              },
+                          ]
+                        : [
+                              { label: 'Painel', href: '/gestao' },
+                              { label: 'Vistorias', href: '/gestao/vistorias' },
+                              {
+                                  label: processo.protocol_number ?? `Processo #${processo.id}`,
+                                  href: `/gestao/processos/${processo.id}/ficha`,
+                              },
+                          ]
+                }
                 actions={
-                    <Badge size="sm" color={ficha.status === 'concluida' ? 'success' : 'info'}>
-                        {ficha.status_label}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                        {somenteLeitura && podePreencher && ficha.editavel && (
+                            <Link
+                                href={`/gestao/processos/${processo.id}/vistoria`}
+                                className="inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 ring-1 ring-gray-300 ring-inset transition hover:bg-gray-50 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-white/[0.03]"
+                            >
+                                Editar ficha
+                            </Link>
+                        )}
+                        <Badge size="sm" color={ficha.status === 'concluida' ? 'success' : 'info'}>
+                            {ficha.status_label}
+                        </Badge>
+                    </div>
                 }
             />
 
@@ -820,7 +875,7 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
 
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
                 <div className="sticky top-20 z-20 lg:top-24 lg:w-56 lg:shrink-0">
-                    <IndiceFicha resumo={preenchimento} ativa={secaoAtiva} />
+                    <IndiceFicha resumo={preenchimento} ativa={secaoAtiva} consulta={somenteLeitura} />
                 </div>
 
                 <div className="flex min-w-0 flex-1 flex-col gap-6">
@@ -1557,10 +1612,11 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
                 <div className="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
                     <div className="text-sm text-gray-500 dark:text-gray-400">
                         {saveState === 'erro' && <span className="text-error-500">{erroGeral ?? 'Falha ao salvar.'}</span>}
-                        {saveState !== 'erro' && !editavel && ficha.status === 'concluida' && (
+                        {saveState !== 'erro' && somenteLeitura && <span>Somente leitura.</span>}
+                        {saveState !== 'erro' && !somenteLeitura && !editavel && ficha.status === 'concluida' && (
                             <span>Ficha concluída — somente leitura.</span>
                         )}
-                        {saveState !== 'erro' && !editavel && ficha.status !== 'concluida' && (
+                        {saveState !== 'erro' && !somenteLeitura && !editavel && ficha.status !== 'concluida' && (
                             <span>Somente leitura — a ficha é do vistoriador {ficha.vistoriador ?? 'responsável'}.</span>
                         )}
                         {saveState !== 'erro' && editavel && (
@@ -1620,6 +1676,46 @@ export default function VistoriaShow({ ficha: fichaInicial, processo, tiposImove
             />
         </>
     );
+}
+
+function VistoriaAusente({ processo }: { processo: Processo }) {
+    return (
+        <>
+            <Head title={`Visualizar ficha de vistoria — ${processo.protocol_number ?? 'processo'}`} />
+
+            <PageHeader
+                title="Visualizar ficha de vistoria"
+                breadcrumbs={[
+                    { label: 'Painel', href: '/gestao' },
+                    {
+                        label: processo.protocol_number ?? `Processo #${processo.id}`,
+                        href: `/gestao/processos/${processo.id}/ficha`,
+                    },
+                ]}
+            />
+
+            <EmptyState
+                title="Sem ficha de vistoria"
+                description="Este processo não possui ficha de vistoria."
+                action={
+                    <Link
+                        href={`/gestao/processos/${processo.id}/ficha`}
+                        className="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600"
+                    >
+                        Voltar à ficha de análise
+                    </Link>
+                }
+            />
+        </>
+    );
+}
+
+export default function VistoriaShow({ ausente, ficha, somenteLeitura, ...resto }: VistoriaShowProps) {
+    if (ausente || ficha === null) {
+        return <VistoriaAusente processo={resto.processo} />;
+    }
+
+    return <VistoriaConteudo {...resto} ficha={ficha} somenteLeitura={somenteLeitura ?? false} />;
 }
 
 VistoriaShow.layout = (page: ReactNode) => <GestaoLayout>{page}</GestaoLayout>;

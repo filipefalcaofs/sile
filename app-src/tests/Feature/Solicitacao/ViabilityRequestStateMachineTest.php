@@ -334,6 +334,24 @@ class ViabilityRequestStateMachineTest extends TestCase
         );
     }
 
+    public function test_deferida_aceita_cassado_revogado_e_desativado(): void
+    {
+        foreach ([
+            ViabilityRequestStatus::Cassado,
+            ViabilityRequestStatus::Revogado,
+            ViabilityRequestStatus::Desativado,
+        ] as $destino) {
+            $this->assertTrue(
+                $this->machine()->canTransition(ViabilityRequestStatus::EmAnalise, $destino),
+                "em_analise→{$destino->value} deveria ser válida na conclusão.",
+            );
+            $this->assertTrue(
+                $this->machine()->canTransition(ViabilityRequestStatus::Deferida, $destino),
+                "deferida→{$destino->value} deveria ser válida na conclusão.",
+            );
+        }
+    }
+
     public function test_decisao_final_lanca_excecao_e_nao_altera_estado(): void
     {
         $request = ViabilityRequest::factory()->protocoled()->create();
