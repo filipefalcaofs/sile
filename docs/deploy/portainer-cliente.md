@@ -160,20 +160,10 @@ análise técnica (em análise, deferida com malha fina, em pendência);
 comunicação multicanal; trilha de auditoria/explicabilidade/LGPD/abuso; e
 massa de indicadores para o dashboard e os relatórios.
 
-## 6. Liberar telas por fase
-
-Perfis pré-criados (Gestão → Perfis):
-
-| Perfil | Fases liberadas |
-|---|---|
-| `validacao-fase-02` | Painel + CNAEs |
-| `validacao-fase-04` | + Território |
-| `validacao-fase-07` | + LOUOS + Risco |
-| `validacao-fase-10` | + Processos + Análise |
-| `validacao-fase-completa` | + Auditoria + Relatórios |
+## 6. Liberar telas
 
 A validadora nasce como `administrador` (todas as telas, inclusive Perfis e Usuários).
-Para restringir a uma fase: **Gestão > Usuários** → editar `validacao@sedur...` → trocar perfil.
+O catálogo de perfis é o do legado SEDUR, mais o cidadão do portal. Para restringir o acesso: **Gestão > Perfis** marca as permissões do perfil, e **Gestão > Usuários** associa o usuário.
 
 ## 7. Verificação pós-deploy
 

@@ -451,12 +451,73 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
     }
 
+    public function test_seeder_cria_perfis_do_legado_sem_permissao(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $perfis = [
+            'Analista Servidor',
+            'Analista Terceirizado',
+            'Analista Vistoriador',
+            'Atendimento Sedur',
+            'Chefe de setor',
+            'Coordenador',
+            'Diretor',
+            'Fiscal',
+            'Gerente',
+            'GR',
+            'Padrão',
+            'Secretário',
+            'SEFAZ',
+            'Servidor',
+            'Subcoordenador',
+            'Vistoriador',
+        ];
+
+        foreach ($perfis as $nome) {
+            $perfil = Role::findByName($nome, 'web');
+            $this->assertSame($nome, $perfil->name);
+            $this->assertCount(0, $perfil->permissions, "O perfil {$nome} nasce sem permissão.");
+        }
+
+        $this->assertSame(21, Role::query()->count());
+    }
+
+    public function test_seeder_preserva_permissao_configurada_em_perfil_do_legado(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        Role::findByName('Chefe de setor', 'web')->givePermissionTo('acessar-gestao');
+
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertTrue(Role::findByName('Chefe de setor', 'web')->hasPermissionTo('acessar-gestao'));
+        $this->assertSame(21, Role::query()->count());
+    }
+
+    public function test_seeder_remove_perfil_fora_do_catalogo(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        Role::create(['name' => 'validacao-fase-02', 'guard_name' => 'web']);
+        $usuario = User::factory()->create();
+        $usuario->assignRole('validacao-fase-02');
+
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertFalse(Role::query()->where('name', 'validacao-fase-02')->exists());
+        $this->assertFalse($usuario->fresh()->hasRole('validacao-fase-02'));
+        $this->assertTrue(Role::query()->where('name', 'cidadao')->exists());
+        $this->assertTrue(Role::query()->where('name', 'Chefe de setor')->exists());
+        $this->assertSame(21, Role::query()->count());
+    }
+
     public function test_seeder_e_idempotente(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        $this->assertSame(5, Role::query()->count());
+        $this->assertSame(21, Role::query()->count());
         $this->assertSame(35, Permission::query()->count());
     }
 

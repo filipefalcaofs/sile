@@ -43,7 +43,7 @@ Pedido do usuário: o processo que o motor encaminha à análise deve cair na **
 - **Menu:** "Caixa do setor" entra em Operação (após Fila de trabalho) — o catálogo `gestao-nav.ts` passa a aceitar `permission: string[]` (anyOf) + invariante nova no health check.
 - **E2E real travado em teste:** `FluxoApoioTramitacaoTest` — motor → caixa do setor → apoio distribui → fila "meus" do analista → abrir processo → ficha pré-analisada; e apoio NÃO abre ficha nem assume (403).
 
-**Decisões do usuário (2026-09-20):** perfis Chefe de setor / Subcoordenadora / Coordenadora NÃO criados — pendência registrada (sem função definida no sistema seria fachada de perfil; criar quando a SEDUR definir o que cada um faz). Ficha segue aberta a qualquer analista (paridade SAPS) — não gatear por atribuição.
+**Decisões do usuário (2026-09-20, revista em 2026-09-23):** os perfis do legado (Analista Servidor, Analista Terceirizado, Analista Vistoriador, Atendimento Sedur, Chefe de setor, Coordenador, Diretor, Fiscal, Gerente, GR, Padrão, Secretário, SEFAZ, Servidor, Subcoordenador, Vistoriador) entram no seeder sem permissão. O administrador configura cada um na tela de Perfis. Analista, Apoio, Gestor, Administrador e Cidadão conservam as permissões que já tinham. Perfil fora desse catálogo (inclusive `validacao-fase-*`) é removido no seed. Ficha segue aberta a qualquer analista (paridade SAPS) — não gatear por atribuição.
 
 **Lacuna registrada (não bloqueia o fluxo):** os documentos anexados pelo requerente não aparecem na ficha de análise (ficam no detalhe do processo) — avaliar com o usuário se entram na ficha.
 

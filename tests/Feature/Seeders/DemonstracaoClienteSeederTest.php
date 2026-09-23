@@ -47,7 +47,7 @@ class DemonstracaoClienteSeederTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => DemonstracaoClienteSeeder::CLIENTE_PORTAL_EMAIL,
         ]);
-        $this->assertTrue(Role::where('name', 'validacao-fase-completa')->exists());
+        $this->assertFalse(Role::where('name', 'validacao-fase-completa')->exists());
         $this->assertTrue(DemoMode::enabled());
     }
 
@@ -69,19 +69,7 @@ class DemonstracaoClienteSeederTest extends TestCase
         $this->assertTrue($validadora->hasPermissionTo('manter-cnaes'));
         $this->assertTrue($validadora->hasPermissionTo('manter-perfis'));
         $this->assertTrue($validadora->hasPermissionTo('manter-usuarios'));
-
-        foreach ([
-            'validacao-fase-02',
-            'validacao-fase-04',
-            'validacao-fase-07',
-            'validacao-fase-10',
-            'validacao-fase-completa',
-        ] as $perfil) {
-            $this->assertTrue(
-                Role::findByName($perfil)->hasPermissionTo('manter-cnaes'),
-                "Esperava manter-cnaes no perfil {$perfil}."
-            );
-        }
+        $this->assertSame(21, Role::query()->count());
     }
 
     public function test_reseed_promove_validadora_existente_para_administrador(): void

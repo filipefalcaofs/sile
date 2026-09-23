@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Support\Roles;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -146,6 +147,16 @@ class RolesAndPermissionsSeeder extends Seeder
                 'consultar-relatorios',
                 'relatorios.produtividade.nominal',
             ]);
+
+        foreach (Roles::LEGACY as $name) {
+            Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+        }
+
+        Role::query()
+            ->where('guard_name', 'web')
+            ->whereNotIn('name', Roles::catalog())
+            ->get()
+            ->each(fn (Role $role) => $role->delete());
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }

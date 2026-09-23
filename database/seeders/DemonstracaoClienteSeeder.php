@@ -8,8 +8,6 @@ use App\Models\Sector;
 use App\Models\User;
 use App\Support\DemoMode;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Massa e credenciais para validação pela SEDUR no ambiente de demonstração
@@ -25,54 +23,6 @@ class DemonstracaoClienteSeeder extends Seeder
     public const CLIENTE_GESTAO_EMAIL = 'validacao@sedur.salvador.ba.gov.br';
 
     public const CLIENTE_PORTAL_EMAIL = 'requerente@sedur.salvador.ba.gov.br';
-
-    /** @var array<string, list<string>> */
-    private const PERFIS_VALIDACAO = [
-        'validacao-fase-02' => [
-            'acessar-gestao',
-            'consultar-cnaes',
-            'manter-cnaes',
-        ],
-        'validacao-fase-04' => [
-            'acessar-gestao',
-            'consultar-cnaes',
-            'manter-cnaes',
-            'consultar-territorio',
-        ],
-        'validacao-fase-07' => [
-            'acessar-gestao',
-            'consultar-cnaes',
-            'manter-cnaes',
-            'consultar-territorio',
-            'consultar-louos',
-        ],
-        'validacao-fase-10' => [
-            'acessar-gestao',
-            'consultar-cnaes',
-            'manter-cnaes',
-            'consultar-territorio',
-            'consultar-louos',
-            'consultar-solicitacoes',
-            'analisar-processos',
-            'emitir-tvl',
-            'encaminhar-malha-fina',
-        ],
-        'validacao-fase-completa' => [
-            'acessar-gestao',
-            'consultar-cnaes',
-            'manter-cnaes',
-            'consultar-territorio',
-            'consultar-louos',
-            'consultar-solicitacoes',
-            'analisar-processos',
-            'emitir-tvl',
-            'encaminhar-malha-fina',
-            'consultar-auditoria',
-            'monitorar-lgpd',
-            'gerenciar-alertas-abuso',
-            'consultar-relatorios',
-        ],
-    ];
 
     /**
      * Seeders de catálogo seguros para rodar em produção (sem factories/Faker).
@@ -119,21 +69,10 @@ class DemonstracaoClienteSeeder extends Seeder
         }
 
         $this->call(self::SEEDERS_HOMOLOGACAO);
-        $this->seedPerfisValidacao();
         $this->seedUsuariosCliente();
         $this->call(self::SEEDERS_USUARIOS_DEMO);
         $this->rotacionarSenhasDev();
         $this->vincularGestaoAoSetorDeTriagem();
-    }
-
-    private function seedPerfisValidacao(): void
-    {
-        app(PermissionRegistrar::class)->forgetCachedPermissions();
-
-        foreach (self::PERFIS_VALIDACAO as $nome => $permissoes) {
-            $role = Role::firstOrCreate(['name' => $nome, 'guard_name' => 'web']);
-            $role->givePermissionTo($permissoes);
-        }
     }
 
     private function seedUsuariosCliente(): void
