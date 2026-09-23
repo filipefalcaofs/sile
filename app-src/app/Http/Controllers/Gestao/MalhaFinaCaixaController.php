@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Enums\AnalysisStatus;
+use App\Enums\ConclusionOutcome;
 use App\Http\Controllers\Controller;
 use App\Models\FineMeshReferral;
 use App\Models\ViabilityRequest;
@@ -99,6 +100,7 @@ class MalhaFinaCaixaController extends Controller
             'filtros' => $filtros + ['aba' => $aba, 'per_page' => $perPage],
             'servicoOptions' => $this->servicoOptions(),
             'analysisStatusOptions' => AnalysisStatus::options(),
+            'conclusaoOpcoes' => ConclusionOutcome::options(),
             'categoriaOptions' => $this->categoriaOptions(),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);
@@ -139,6 +141,8 @@ class MalhaFinaCaixaController extends Controller
             'concluido_em' => $encaminhamento?->resolved_at?->toIso8601String(),
             'concluido_por' => $encaminhamento?->resolvedBy?->name,
             'observacao' => $encaminhamento?->resolution_note,
+            'resultado' => $encaminhamento?->resolution_outcome?->value,
+            'resultado_label' => $encaminhamento?->resolution_outcome?->label(),
             'ficha_url' => route('gestao.processos.ficha.show', ['viabilityRequest' => $processo->id]),
         ];
     }

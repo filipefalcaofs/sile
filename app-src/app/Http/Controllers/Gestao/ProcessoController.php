@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Enums\AnalysisStatus;
+use App\Enums\ConclusionOutcome;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\AnalysisStatusRequest;
@@ -93,18 +94,15 @@ class ProcessoController extends Controller
     }
 
     /**
-     * Fila de trabalho do analista (HU-144): "meus processos" (atribuídos) ou
-     * "caixa do setor" (processos do(s) setor(es) do usuário — respeita o
-     * vínculo), ordenada por prazo (analysis_due_at) com semáforo on-the-fly e
-     * contadores por status. O gestor (distribuir-processos) ganha a visão
-     * agregada do setor (carga por analista + processos em vermelho — CA-03). O
-     * acesso é auditado.
+     * Caixa de entrada do analista (HU-144): só os processos atribuídos ao
+     * usuário, ordenados por prazo (analysis_due_at) com semáforo on-the-fly e
+     * contadores por status. A caixa do setor é outra tela. O parâmetro modo é
+     * ignorado para um atalho antigo não reabrir a fila do setor aqui. O gestor
+     * (distribuir-processos) ganha a visão agregada do setor (carga por analista
+     * + processos em vermelho — CA-03). O acesso é auditado.
      */
     public function fila(Request $request): Response
     {
-        $modo = $request->string('modo')->toString();
-        $modo = in_array($modo, ['meus', 'setor'], true) ? $modo : 'meus';
-
         $user = $request->user();
         $filtros = [];
         foreach (ProcessoQueryService::CHAVES_FILTRO_CAIXA as $chave) {
@@ -112,20 +110,20 @@ class ProcessoController extends Controller
         }
         $perPage = $this->perPage($request);
 
-        $processos = $this->processos->aplicarFiltros($this->processos->fila($user, $modo), $filtros)
+        $processos = $this->processos->aplicarFiltros($this->processos->fila($user), $filtros)
             ->paginate($perPage)
             ->withQueryString()
             ->through(fn (ViabilityRequest $processo): array => (new ProcessoResource($processo))->resolve());
 
         $this->audit->log('analise', 'consulta-fila', 'Consulta da fila de trabalho do analista', [
-            'modo' => $modo,
+            'modo' => 'meus',
             'filtros' => $this->filtrosPreenchidos($filtros),
         ]);
 
         return Inertia::render('gestao/processos/fila', [
-            'modo' => $modo,
+            'modo' => 'meus',
             'processos' => $processos,
-            'contadores' => $this->processos->contadores($user, $modo),
+            'contadores' => $this->processos->contadores($user),
             'visaoSetor' => $user->can('distribuir-processos') ? $this->processos->visaoSetor($user) : null,
             'filtros' => $filtros + ['per_page' => $perPage],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
@@ -195,6 +193,7 @@ class ProcessoController extends Controller
             // do detalhe (Tarefa 10) — vazio quando o processo ainda não tem
             // status de análise (fora do fluxo operacional) ou já está num
             // estado terminal/dirigido por evento.
+            'conclusaoOpcoes' => ConclusionOutcome::options(),
             'analysisStatusProximas' => $viabilityRequest->analysis_status
                 ? array_map(
                     fn (AnalysisStatus $s): array => ['value' => $s->value, 'label' => $s->label()],

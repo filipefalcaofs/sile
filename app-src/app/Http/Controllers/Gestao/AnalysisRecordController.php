@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\ConclusionOutcome;
 use App\Enums\DecisionOutcome;
 use App\Enums\RuleDomain;
 use App\Http\Controllers\Controller;
@@ -110,6 +111,7 @@ class AnalysisRecordController extends Controller
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
             'cadastroImobiliario' => $cadastro,
             'tramitacao' => $this->tramitacao($viabilityRequest),
+            'conclusaoOpcoes' => ConclusionOutcome::options(),
             'enquadramentoOpcoes' => $this->enquadramentoOpcoes($record),
             // Setores ativos para o popup de vistoria (usabilidade SEDUR item 22).
             'setores' => Sector::query()->where('active', true)->orderBy('name')->get(['id', 'name']),
@@ -119,6 +121,8 @@ class AnalysisRecordController extends Controller
             'textosPadrao' => $this->textosPadraoAtivos(),
             'autosaveDebounceMs' => (int) config('sile.analise.autosave.debounce_ms', 1500),
             'iaFicha' => $this->iaFicha($viabilityRequest),
+            // A consulta na ficha de análise não cria vistoria: só informa se já existe.
+            'temFichaVistoria' => $viabilityRequest->inspection()->exists(),
             // Sugestões de IA (HU-115 alertas + HU-117 resumo do processo) — prop
             // DEFERIDA (carregada sob demanda pelo card, fora do load inicial).
             // Ao resolver, gera o resumo no mesmo request (gated; já existente ⇒

@@ -112,7 +112,10 @@ class TratamentoRamoResolver
             );
         }
 
-        [$subgrupo, $grupo, $risco] = $this->aplicarFaixa($linha, $input->areaUtilizada);
+        [$subgrupo, $grupo, $risco] = $this->aplicarFaixa(
+            $this->linhaComFaixaDaRegra($linha, $ramoCurado),
+            $input->areaUtilizada,
+        );
 
         if ($this->eFamiliaId($subgrupo)) {
             $dependenciaTipo = $this->motivoTipoAusente($input->tipoImovel);
@@ -138,6 +141,8 @@ class TratamentoRamoResolver
             // SEDUR 21/09, item 01.
             $risco = 'medio';
         }
+
+        $risco = $this->riscoDaRegra($risco, $subgrupo, $ramoCurado, $input);
 
         $fluxo = $ramoCurado?->fluxo ?? $this->fluxoDe($linha->codigo_louos, $subgrupo, $risco, $noLocal, $input->tipoImovel);
 
@@ -312,6 +317,60 @@ class TratamentoRamoResolver
                 + ($ramo->tipo_dirige !== null ? 2 : 0)
                 + ($ramo->pergunta !== null ? 2 : 0))
             ->first();
+    }
+
+    /**
+     * Regras 3, 7, 19 e 57: o corte de área do texto é 1.250 m². A linha
+     * 07.09.17 traz 350 m²; abaixo disso o subgrupo não pode antecipar o nR2.
+     */
+    private function linhaComFaixaDaRegra(TratamentoEnquadramento $linha, ?TratamentoRegraRamo $ramo): TratamentoEnquadramento
+    {
+        if (! $this->regraUsaCorte1250($ramo) || $this->eFamiliaId((string) $linha->subcategoria)) {
+            return $linha;
+        }
+
+        if ($linha->ate_m2 === null || (float) $linha->ate_m2 >= 1250 || ! $linha->enquadramento2) {
+            return $linha;
+        }
+
+        $ajustada = clone $linha;
+        $ajustada->ate_m2 = 1250;
+
+        return $ajustada;
+    }
+
+    /**
+     * Risco que o texto da regra manda, por cima da coluna da linha.
+     * Regras 24/25: fora do ID é médio; ID é alto. Regras 3, 7, 19 e 57,
+     * no artesanal e fora de galpão/container/residencial: baixo até 1.250 m²
+     * e médio acima, com o fluxo expresso que o ramo curado já traz.
+     */
+    private function riscoDaRegra(string $risco, string $subgrupo, ?TratamentoRegraRamo $ramo, TratamentoRamoInput $input): string
+    {
+        if ($ramo === null) {
+            return $risco;
+        }
+
+        $regra = (int) $ramo->regra;
+
+        if (in_array($regra, [24, 25], true)) {
+            return $this->eFamiliaId($subgrupo) ? 'alto' : 'medio';
+        }
+
+        if (! $this->regraUsaCorte1250($ramo) || $this->eFamiliaId($subgrupo) || $this->tipoDirige($input->tipoImovel)) {
+            return $risco;
+        }
+
+        if ($input->areaUtilizada === null) {
+            return $risco;
+        }
+
+        return $input->areaUtilizada > 1250 ? 'medio' : 'baixo';
+    }
+
+    private function regraUsaCorte1250(?TratamentoRegraRamo $ramo): bool
+    {
+        return $ramo !== null && in_array((int) $ramo->regra, [3, 7, 19, 57], true);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ConclusionOutcome;
 use Database\Factories\FineMeshReferralFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'resolved_at',
     'resolved_by_user_id',
     'resolution_note',
+    'resolution_outcome',
 ])]
 class FineMeshReferral extends Model
 {
@@ -34,6 +36,7 @@ class FineMeshReferral extends Model
     {
         return [
             'resolved_at' => 'datetime',
+            'resolution_outcome' => ConclusionOutcome::class,
         ];
     }
 
