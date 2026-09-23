@@ -83,7 +83,7 @@ Não replicar telas de gestão no portal.
 ## Checklist antes de commitar uma tela nova
 
 1. Percorri a árvore de decisão e escolhi **um** grupo existente
-2. Incluí o item só em `gestao-nav.ts` (nome curto, href, ícone já existente, permissão)
+2. Incluí o item só em `gestao-nav.ts` (nome curto, href, ícone exclusivo, permissão)
 3. Rodei `npx vitest run resources/js/navigation/gestao-nav.test.ts`
 4. Não criei grupo, não dupliquei no layout, não coloquei filho de tela no menu
-5. Ícone reutiliza o vocabulário do catálogo (`grid`, `list`, `file`, `map`, `gear`…) — não inventar ícone novo sem necessidade
+5. Ícone é exclusivo do item: desenho novo em `gestao-nav-icons.tsx`, sem repetir o de outro item do menu

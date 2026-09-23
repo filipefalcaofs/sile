@@ -5,20 +5,60 @@
  */
 
 export type GestaoNavIcon =
-    | 'grid'
-    | 'list'
-    | 'file'
+    | 'dashboard'
+    | 'inbox'
+    | 'archive'
+    | 'clipboard-check'
+    | 'filter'
+    | 'folder'
     | 'user'
+    | 'file-plus'
     | 'map'
-    | 'table'
-    | 'tag'
-    | 'gear'
-    | 'plugin'
-    | 'alert'
-    | 'shield'
-    | 'group'
+    | 'layers'
+    | 'globe'
+    | 'barcode'
+    | 'briefcase'
+    | 'home'
+    | 'bolt'
+    | 'book'
+    | 'hexagon'
+    | 'road'
+    | 'checklist'
+    | 'paperclip'
+    | 'sheet'
+    | 'plug'
+    | 'flask'
+    | 'chart'
+    | 'clock'
+    | 'hourglass'
+    | 'trending-up'
+    | 'seal'
+    | 'trending-down'
+    | 'warning-list'
+    | 'route'
+    | 'pin'
+    | 'gauge'
+    | 'building'
+    | 'counter'
+    | 'mail-off'
+    | 'chevrons'
+    | 'scroll'
+    | 'bell'
+    | 'radar'
+    | 'users'
     | 'lock'
-    | 'mail';
+    | 'sitemap'
+    | 'sliders'
+    | 'calendar'
+    | 'coins'
+    | 'scale'
+    | 'pen'
+    | 'file-text'
+    | 'link'
+    | 'id-card'
+    | 'server'
+    | 'mail-pulse'
+    | 'spark';
 
 export interface GestaoNavItem {
     name: string;
@@ -51,22 +91,22 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
         id: 'operacao',
         label: 'Operação',
         items: [
-            { name: 'Painel', href: '/gestao', icon: 'grid', permission: null },
-            { name: 'Caixa de entrada', href: '/gestao/processos/fila', icon: 'list', permission: 'analisar-processos' },
+            { name: 'Painel', href: '/gestao', icon: 'dashboard', permission: null },
+            { name: 'Caixa de entrada', href: '/gestao/processos/fila', icon: 'inbox', permission: 'analisar-processos' },
             {
                 name: 'Caixa do setor',
                 href: '/gestao/caixa-setor',
-                icon: 'group',
+                icon: 'archive',
                 permission: ['analisar-processos', 'distribuir-processos'],
             },
-            { name: 'Vistorias', href: '/gestao/vistorias', icon: 'map', permission: 'preencher-ficha-vistoria' },
-            { name: 'Malha fina', href: '/gestao/malha-fina', icon: 'shield', permission: 'analisar-malha-fina' },
-            { name: 'Consulta de processos', href: '/gestao/processos', icon: 'file', permission: 'consultar-solicitacoes' },
+            { name: 'Vistorias', href: '/gestao/vistorias', icon: 'clipboard-check', permission: 'preencher-ficha-vistoria' },
+            { name: 'Malha fina', href: '/gestao/malha-fina', icon: 'filter', permission: 'analisar-malha-fina' },
+            { name: 'Consulta de processos', href: '/gestao/processos', icon: 'folder', permission: 'consultar-solicitacoes' },
             { name: 'Atendimento presencial', href: '/gestao/atendimento', icon: 'user', permission: 'atendimento-presencial' },
             {
                 name: 'Nova solicitação (contingência)',
                 href: '/gestao/contingencia',
-                icon: 'file',
+                icon: 'file-plus',
                 permission: 'registrar-contingencia',
             },
         ],
@@ -79,13 +119,13 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
             {
                 name: 'Camadas geográficas',
                 href: '/gestao/territorio/camadas',
-                icon: 'table',
+                icon: 'layers',
                 permission: 'manter-territorio',
             },
             {
                 name: 'Camadas do GeoServer',
                 href: '/gestao/territorio/geoserver',
-                icon: 'grid',
+                icon: 'globe',
                 permission: 'manter-territorio',
             },
         ],
@@ -94,43 +134,43 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
         id: 'regras',
         label: 'Regras',
         items: [
-            { name: 'CNAEs', href: '/gestao/cnaes', icon: 'table', permission: 'consultar-cnaes' },
-            { name: 'Tipos de serviço', href: '/gestao/tipos-servico', icon: 'tag', permission: 'manter-tipos-servico' },
-            { name: 'Tipos de imóvel', href: '/gestao/tipos-imovel', icon: 'tag', permission: 'manter-tipos-imovel' },
+            { name: 'CNAEs', href: '/gestao/cnaes', icon: 'barcode', permission: 'consultar-cnaes' },
+            { name: 'Tipos de serviço', href: '/gestao/tipos-servico', icon: 'briefcase', permission: 'manter-tipos-servico' },
+            { name: 'Tipos de imóvel', href: '/gestao/tipos-imovel', icon: 'home', permission: 'manter-tipos-imovel' },
             {
                 name: 'Gatilhos de risco',
                 href: '/gestao/gatilhos-risco',
-                icon: 'alert',
+                icon: 'bolt',
                 permission: 'manter-gatilhos-risco',
             },
-            { name: 'Quadros LOUOS', href: '/gestao/louos', icon: 'file', permission: 'consultar-louos' },
-            { name: 'Zonas', href: '/gestao/louos/zonas', icon: 'map', permission: 'manter-louos' },
-            { name: 'Vias', href: '/gestao/louos/vias', icon: 'map', permission: 'manter-louos' },
+            { name: 'Quadros LOUOS', href: '/gestao/louos', icon: 'book', permission: 'consultar-louos' },
+            { name: 'Zonas', href: '/gestao/louos/zonas', icon: 'hexagon', permission: 'manter-louos' },
+            { name: 'Vias', href: '/gestao/louos/vias', icon: 'road', permission: 'manter-louos' },
             {
                 name: 'Requisitos documentais',
                 href: '/gestao/requisitos-documentais',
-                icon: 'file',
+                icon: 'checklist',
                 permission: 'manter-requisitos-documentais',
             },
             {
                 name: 'Anexos escritório virtual',
                 href: '/gestao/escritorio-virtual/anexos',
-                icon: 'file',
+                icon: 'paperclip',
                 permission: 'manter-cnaes',
             },
             {
                 name: 'Planilha de regras',
                 href: '/gestao/regras-tratamento',
-                icon: 'table',
+                icon: 'sheet',
                 permission: 'consultar-cnaes',
             },
             {
                 name: 'Simulação REGIN',
                 href: '/gestao/risco/simulacao-regin',
-                icon: 'plugin',
+                icon: 'plug',
                 permission: 'consultar-cnaes',
             },
-            { name: 'Simulação de regras', href: '/gestao/louos/simulacao', icon: 'gear', permission: 'manter-louos' },
+            { name: 'Simulação de regras', href: '/gestao/louos/simulacao', icon: 'flask', permission: 'manter-louos' },
         ],
     },
     {
@@ -140,27 +180,27 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
             {
                 name: 'Indicadores de viabilidade',
                 href: '/gestao/relatorios/indicadores',
-                icon: 'grid',
+                icon: 'chart',
                 permission: 'consultar-relatorios',
             },
-            { name: 'SLA e vencimentos', href: '/gestao/relatorios/sla', icon: 'alert', permission: 'consultar-relatorios' },
-            { name: 'Tempo de análise', href: '/gestao/relatorios/tempo', icon: 'list', permission: 'consultar-relatorios' },
+            { name: 'SLA e vencimentos', href: '/gestao/relatorios/sla', icon: 'clock', permission: 'consultar-relatorios' },
+            { name: 'Tempo de análise', href: '/gestao/relatorios/tempo', icon: 'hourglass', permission: 'consultar-relatorios' },
             {
                 name: 'Produtividade',
                 href: '/gestao/relatorios/produtividade',
-                icon: 'group',
+                icon: 'trending-up',
                 permission: 'consultar-relatorios',
             },
             {
                 name: 'Tempo de emissão de TVL',
                 href: '/gestao/relatorios/tempo-emissao-tvl',
-                icon: 'list',
+                icon: 'seal',
                 permission: 'consultar-relatorios',
             },
             {
                 name: 'Quedas do expresso',
                 href: '/gestao/relatorios/quedas',
-                icon: 'alert',
+                icon: 'trending-down',
                 permission: 'consultar-relatorios',
             },
         ],
@@ -172,49 +212,49 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
             {
                 name: 'Pendências e exigências',
                 href: '/gestao/relatorios/pendencias',
-                icon: 'list',
+                icon: 'warning-list',
                 permission: 'consultar-relatorios',
             },
             {
                 name: 'Trilha por processo',
                 href: '/gestao/relatorios/trilha',
-                icon: 'shield',
+                icon: 'route',
                 permission: 'consultar-relatorios',
             },
             {
                 name: 'Painel por bairro',
                 href: '/gestao/relatorios/geo-bairro',
-                icon: 'map',
+                icon: 'pin',
                 permission: 'consultar-relatorios',
             },
             {
                 name: 'Saturação locacional',
                 href: '/gestao/relatorios/saturacao',
-                icon: 'alert',
+                icon: 'gauge',
                 permission: 'consultar-relatorios',
             },
             {
                 name: 'Escritório virtual (sede × abrigados)',
                 href: '/gestao/relatorios/escritorio-virtual',
-                icon: 'file',
+                icon: 'building',
                 permission: 'consultar-relatorios',
             },
             {
                 name: 'Atendimento em contingência',
                 href: '/gestao/relatorios/contingencia',
-                icon: 'user',
+                icon: 'counter',
                 permission: 'consultar-relatorios',
             },
             {
                 name: 'Falhas de comunicação',
                 href: '/gestao/relatorios/comunicacoes-falhas',
-                icon: 'mail',
+                icon: 'mail-off',
                 permission: 'consultar-relatorios',
             },
             {
                 name: 'Resultados do fluxo expresso',
                 href: '/gestao/resultados-expresso',
-                icon: 'list',
+                icon: 'chevrons',
                 permission: 'consultar-solicitacoes',
             },
         ],
@@ -223,12 +263,12 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
         id: 'auditoria',
         label: 'Auditoria',
         items: [
-            { name: 'Trilha de auditoria', href: '/gestao/auditoria', icon: 'list', permission: 'consultar-auditoria' },
-            { name: 'Alertas de abuso', href: '/gestao/abuso', icon: 'alert', permission: 'gerenciar-alertas-abuso' },
+            { name: 'Trilha de auditoria', href: '/gestao/auditoria', icon: 'scroll', permission: 'consultar-auditoria' },
+            { name: 'Alertas de abuso', href: '/gestao/abuso', icon: 'bell', permission: 'gerenciar-alertas-abuso' },
             {
                 name: 'Auditoria preditiva',
                 href: '/gestao/auditoria-preditiva',
-                icon: 'shield',
+                icon: 'radar',
                 permission: 'gerenciar-alertas-abuso',
             },
         ],
@@ -237,31 +277,31 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
         id: 'administracao',
         label: 'Administração',
         items: [
-            { name: 'Usuários', href: '/gestao/usuarios', icon: 'group', permission: 'manter-usuarios' },
+            { name: 'Usuários', href: '/gestao/usuarios', icon: 'users', permission: 'manter-usuarios' },
             { name: 'Perfis', href: '/gestao/perfis', icon: 'lock', permission: 'manter-perfis' },
-            { name: 'Setores', href: '/gestao/setores', icon: 'group', permission: 'manter-setores' },
+            { name: 'Setores', href: '/gestao/setores', icon: 'sitemap', permission: 'manter-setores' },
         ],
     },
     {
         id: 'configuracao',
         label: 'Configuração',
         items: [
-            { name: 'Parâmetros', href: '/gestao/parametros', icon: 'plugin', permission: 'manter-parametros' },
-            { name: 'Feriados', href: '/gestao/feriados', icon: 'tag', permission: 'manter-parametros' },
-            { name: 'Valores TLL', href: '/gestao/tll', icon: 'tag', permission: 'manter-parametros' },
-            { name: 'Termos legais', href: '/gestao/termos-legais', icon: 'file', permission: 'manter-parametros' },
-            { name: 'Textos decisórios', href: '/gestao/textos-decisao', icon: 'file', permission: 'manter-parametros' },
-            { name: 'Minutas e textos-padrão', href: '/gestao/textos-padrao', icon: 'table', permission: 'manter-parametros' },
-            { name: 'API REGIN', href: '/gestao/config-regin', icon: 'plugin', permission: 'manter-parametros' },
+            { name: 'Parâmetros', href: '/gestao/parametros', icon: 'sliders', permission: 'manter-parametros' },
+            { name: 'Feriados', href: '/gestao/feriados', icon: 'calendar', permission: 'manter-parametros' },
+            { name: 'Valores TLL', href: '/gestao/tll', icon: 'coins', permission: 'manter-parametros' },
+            { name: 'Termos legais', href: '/gestao/termos-legais', icon: 'scale', permission: 'manter-parametros' },
+            { name: 'Textos decisórios', href: '/gestao/textos-decisao', icon: 'pen', permission: 'manter-parametros' },
+            { name: 'Minutas e textos-padrão', href: '/gestao/textos-padrao', icon: 'file-text', permission: 'manter-parametros' },
+            { name: 'API REGIN', href: '/gestao/config-regin', icon: 'link', permission: 'manter-parametros' },
             {
                 name: 'API de inscrição imobiliária',
                 href: '/gestao/config-inscricao-imobiliaria',
-                icon: 'plugin',
+                icon: 'id-card',
                 permission: 'manter-parametros',
             },
-            { name: 'Servidores de e-mail', href: '/gestao/config-email', icon: 'mail', permission: 'manter-config-email' },
-            { name: 'Monitoramento de e-mails', href: '/gestao/emails', icon: 'list', permission: 'monitorar-emails' },
-            { name: 'Configuração de IA', href: '/gestao/config-ia', icon: 'gear', permission: 'manter-config-ia' },
+            { name: 'Servidores de e-mail', href: '/gestao/config-email', icon: 'server', permission: 'manter-config-email' },
+            { name: 'Monitoramento de e-mails', href: '/gestao/emails', icon: 'mail-pulse', permission: 'monitorar-emails' },
+            { name: 'Configuração de IA', href: '/gestao/config-ia', icon: 'spark', permission: 'manter-config-ia' },
         ],
     },
 ];
@@ -327,6 +367,13 @@ export function assertGestaoNavHealth(groups: readonly GestaoNavGroup[] = GESTAO
 
     if (duplicados.length > 0) {
         erros.push(`Hrefs duplicados no menu: ${[...new Set(duplicados)].join(', ')}.`);
+    }
+
+    const icones = groups.flatMap((group) => group.items.map((item) => item.icon));
+    const iconesRepetidos = icones.filter((icon, index) => icones.indexOf(icon) !== index);
+
+    if (iconesRepetidos.length > 0) {
+        erros.push(`Ícones repetidos no menu: ${[...new Set(iconesRepetidos)].join(', ')}.`);
     }
 
     for (const group of groups) {
