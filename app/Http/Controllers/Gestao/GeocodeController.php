@@ -11,6 +11,7 @@ use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
+use Throwable;
 
 /**
  * HU-029 — geocodificação de endereço (endereço → coordenada) para posicionar o
@@ -47,6 +48,20 @@ class GeocodeController extends Controller
         try {
             $result = $this->geocoder->geocode($address);
 
+            if (! $result->estaEmSalvador()) {
+                $this->audit->log(
+                    'territorio',
+                    'geocodificacao',
+                    'Geocodificação recusada: endereço fora de Salvador',
+                    ['endereco' => $address, 'motivo' => 'fora-do-municipio'],
+                    result: 'bloqueado',
+                );
+
+                return response()->json([
+                    'message' => 'O endereço está fora do município de Salvador. A consulta de viabilidade abrange apenas Salvador.',
+                ], 422);
+            }
+
             $this->audit->log(
                 'territorio',
                 'geocodificacao',
@@ -74,6 +89,20 @@ class GeocodeController extends Controller
                 'geocodificacao',
                 'Geocodificação: serviço indisponível',
                 ['endereco' => $address, 'motivo' => 'indisponibilidade'],
+                result: 'falha',
+            );
+
+            return response()->json([
+                'message' => 'Serviço de geocodificação indisponível. Posicione o ponto manualmente no mapa.',
+            ], 503);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->audit->log(
+                'territorio',
+                'geocodificacao',
+                'Geocodificação: falha inesperada do provedor',
+                ['endereco' => $address, 'motivo' => 'falha-inesperada'],
                 result: 'falha',
             );
 

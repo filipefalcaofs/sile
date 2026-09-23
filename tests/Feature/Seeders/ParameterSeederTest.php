@@ -226,8 +226,8 @@ class ParameterSeederTest extends TestCase
         $this->assertNotNull($cadastroToggleAmbiente);
         $this->assertSame('integracoes', $cadastroToggleAmbiente->group);
         $this->assertSame('boolean', $cadastroToggleAmbiente->type);
-        $this->assertSame('1', $cadastroToggleAmbiente->default_value);
-        $this->assertTrue((bool) $cadastroToggleAmbiente->typedValue());
+        $this->assertSame('0', $cadastroToggleAmbiente->default_value);
+        $this->assertFalse((bool) $cadastroToggleAmbiente->typedValue());
 
         $cadastroHomolog = Parameter::query()->where('key', 'integrations.inscricao_imobiliaria.url_homologacao')->first();
 

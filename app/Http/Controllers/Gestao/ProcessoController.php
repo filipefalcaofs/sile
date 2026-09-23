@@ -22,6 +22,7 @@ use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -72,20 +73,40 @@ class ProcessoController extends Controller
         }
 
         $perPage = $this->perPage($request);
+        $periodoInvertido = $this->periodoInvertido($filtros);
 
-        $processos = $this->processos->filtered($consulta)
-            ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn (ViabilityRequest $processo): array => (new ProcessoResource($processo))->resolve());
+        if ($periodoInvertido) {
+            $processos = new LengthAwarePaginator([], 0, $perPage, 1, [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]);
+            $abas = [
+                'todos' => 0,
+                'em_analise' => 0,
+                'distribuir' => 0,
+                'pendencia' => 0,
+                'concluido' => 0,
+            ];
+        } else {
+            $processos = $this->processos->filtered($consulta)
+                ->paginate($perPage)
+                ->withQueryString()
+                ->through(fn (ViabilityRequest $processo): array => (new ProcessoResource($processo))->resolve());
+            $abas = $this->processos->contadoresConsulta($consulta);
+        }
 
         $this->audit->log('analise', 'consulta-processos', 'Consulta de processos da análise técnica', [
             'filtros' => $this->filtrosPreenchidos($filtros),
+            'periodo_invertido' => $periodoInvertido,
         ]);
 
         return Inertia::render('gestao/processos/index', [
             'processos' => $processos,
             'filtros' => $consulta + ['per_page' => $perPage],
-            'abas' => $this->processos->contadoresConsulta($consulta),
+            'erroPeriodo' => $periodoInvertido
+                ? 'A data inicial não pode ser posterior à data final.'
+                : null,
+            'abas' => $abas,
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'statusOptions' => $this->statusOptions(),
             'analysisStatusOptions' => AnalysisStatus::options(),
@@ -276,6 +297,22 @@ class ProcessoController extends Controller
     private function filtrosPreenchidos(array $filtros): array
     {
         return array_filter($filtros, fn ($valor): bool => $valor !== null && $valor !== '');
+    }
+
+    /**
+     * Período invertido não pode ser ignorado em silêncio: a consulta completa
+     * não roda e as datas informadas permanecem na tela.
+     *
+     * @param  array<string, string>  $filtros
+     */
+    private function periodoInvertido(array $filtros): bool
+    {
+        $de = $filtros['data_de'] ?? '';
+        $ate = $filtros['data_ate'] ?? '';
+
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $de) === 1
+            && preg_match('/^\d{4}-\d{2}-\d{2}$/', $ate) === 1
+            && $de > $ate;
     }
 
     private function ordem(Request $request): string
