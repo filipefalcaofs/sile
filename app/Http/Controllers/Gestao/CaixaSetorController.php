@@ -367,7 +367,7 @@ class CaixaSetorController extends Controller
 
         $resumo = $this->distribuicao->distribuirLote($processos, $analista, $request->user());
 
-        $response = back()->with('status', "{$resumo['ok']} processo(s) distribuído(s) a {$analista->name}.");
+        $response = back()->with('status', "{$resumo['ok']} processo(s) enviado(s) para a caixa de entrada de {$analista->name}.");
 
         if ($resumo['falhas'] !== []) {
             // Motivo real da falha (nunca genérico): vínculo de setor OU a
@@ -493,7 +493,7 @@ class CaixaSetorController extends Controller
         }
 
         return redirect('/gestao/caixa-setor')
-            ->with('status', "{$resultado['total']} processo(s) distribuído(s) entre os analistas.");
+            ->with('status', "{$resultado['total']} processo(s) enviado(s) para a caixa de entrada dos analistas.");
     }
 
     /**

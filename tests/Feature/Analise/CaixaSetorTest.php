@@ -176,6 +176,32 @@ class CaixaSetorTest extends TestCase
         $this->assertSame($analista->id, $processo->fresh()->assigned_user_id);
     }
 
+    public function test_distribuir_coloca_o_processo_na_caixa_de_entrada_do_analista(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+        $analista = $this->analistaDoSetor($setor);
+        $processo = $this->processoNaCaixa($setor);
+        $processo->forceFill(['analysis_status' => AnalysisStatus::ParaDistribuir])->save();
+
+        $this->actingAs($apoio, 'gestao')
+            ->post('/gestao/caixa-setor/distribuir', [
+                'request_ids' => [$processo->id],
+                'analista_id' => $analista->id,
+            ])
+            ->assertSessionHas('status');
+
+        $this->assertSame(AnalysisStatus::Analisar, $processo->fresh()->analysis_status);
+
+        $fila = $this->actingAs($analista, 'gestao')
+            ->get('/gestao/processos/fila')
+            ->assertOk();
+
+        $ids = collect($fila->viewData('page')['props']['processos']['data'])->pluck('id')->all();
+        $this->assertContains($processo->id, $ids);
+        $this->assertSame('meus', $fila->viewData('page')['props']['modo']);
+    }
+
     /**
      * Processo na caixa E no eixo operacional de vistoria (Vistoriar).
      */
