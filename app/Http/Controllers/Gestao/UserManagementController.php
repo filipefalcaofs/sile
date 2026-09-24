@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\AuthType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\ToggleUserActivationRequest;
+use App\Http\Requests\Gestao\UpdateUserAuthTypeRequest;
 use App\Http\Requests\Gestao\UpdateUserRoleRequest;
 use App\Models\User;
 use App\Services\Relatorios\Export\ReportExporter;
@@ -13,6 +15,8 @@ use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
@@ -79,6 +83,8 @@ class UserManagementController extends Controller
                 'roles' => $user->getRoleNames(),
                 'inactivated_at' => $user->inactivated_at?->toIso8601String(),
                 'cpf_masked' => '***.***.***-'.substr($user->cpf, -2),
+                'auth_type' => $user->auth_type->value,
+                'ad_username' => $user->ad_username,
             ]);
 
         return Inertia::render('gestao/usuarios/index', [
@@ -157,5 +163,60 @@ class UserManagementController extends Controller
         );
 
         return back()->with('status', 'Papel atualizado com sucesso.');
+    }
+
+    /**
+     * Define o mecanismo de autenticação da conta: AD valida na API
+     * institucional SEDUR; local valida o hash em users.password. Na troca
+     * de mecanismo a credencial anterior é inutilizada. Conta convertida
+     * para local define a nova senha pelo fluxo de recuperação do console.
+     * auth_type/ad_username ficam fora do fillable: forceFill + auditoria.
+     */
+    public function updateAuthType(UpdateUserAuthTypeRequest $request, User $user): RedirectResponse
+    {
+        $tipo = AuthType::from($request->validated('auth_type'));
+        $adUsername = $tipo === AuthType::Ad
+            ? Str::lower((string) $request->validated('ad_username'))
+            : null;
+
+        $tipoAnterior = $user->auth_type;
+
+        $mudou = $tipoAnterior !== $tipo || $user->ad_username !== $adUsername;
+
+        if (! $mudou) {
+            return back()->with('status', 'Tipo de autenticação atualizado.');
+        }
+
+        $anterior = ['auth_type' => $tipoAnterior->value, 'ad_username' => $user->ad_username];
+
+        $atributos = ['auth_type' => $tipo, 'ad_username' => $adUsername];
+
+        if ($tipoAnterior !== $tipo) {
+            $atributos['password'] = Str::random(64);
+        }
+
+        $user->forceFill($atributos)->save();
+
+        if ($tipoAnterior === AuthType::Ad && $tipo === AuthType::Local) {
+            Password::broker('users')->sendResetLink(
+                ['email' => $user->email],
+                fn (User $u, string $token) => $u->sendGestaoPasswordResetNotification($token),
+            );
+        }
+
+        app(AuditService::class)->log(
+            'usuarios',
+            'autenticacao-alterada',
+            "Autenticação de {$user->email} alterada para {$tipo->label()}",
+            [
+                'target_user_id' => $user->id,
+                'anterior' => $anterior,
+                'novo' => ['auth_type' => $tipo->value, 'ad_username' => $adUsername],
+            ],
+            $user,
+            personalData: true,
+        );
+
+        return back()->with('status', 'Tipo de autenticação atualizado.');
     }
 }
