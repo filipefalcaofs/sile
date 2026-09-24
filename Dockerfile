@@ -56,7 +56,8 @@ USER 1001
 ENV COMPOSER_INSTALLER=file:///opt/composer-cache/installer-shim.php
 
 RUN /usr/libexec/s2i/assemble
-RUN chmod -R ug+rwX storage bootstrap/cache
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+ && chmod -R ug+rwX storage bootstrap/cache
 RUN npm install
 RUN npm run build
 
