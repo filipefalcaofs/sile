@@ -60,7 +60,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
 
         $codigos = array_column($catalogo, 'codigo');
 
-        $this->assertCount(45, $catalogo);
+        $this->assertCount(46, $catalogo);
         $this->assertContains('43747', $codigos);
         $this->assertContains('594902-5', $codigos);
         $this->assertContains('25076-2', $codigos);
@@ -119,6 +119,15 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertSame('4681-8/01', $garcia['atividades'][0]['cnae']);
         $this->assertSame('P11', $garcia['atividades'][0]['perguntas'][0]['codigo']);
         $this->assertFalse($garcia['atividades'][0]['perguntas'][0]['valor']);
+
+        $comercio = $catalogo->porCodigo('34467-2');
+        $this->assertSame('34467-2', $comercio['inscricao_imobiliaria']);
+        $this->assertSame('ZPR 3', $comercio['zona']);
+        $this->assertSame('VA-II', $comercio['via']);
+        $this->assertSame('Edificação Comercial', $comercio['tipo_imovel']);
+        $this->assertSame(180.0, $comercio['area_utilizada']);
+        $this->assertSame('4681-8/02', $comercio['atividades'][0]['cnae']);
+        $this->assertSame([], $comercio['atividades'][0]['perguntas']);
     }
 
     public function test_novos_protocolos_trazem_cnae_zona_via_e_respostas_do_pdf(): void
@@ -181,7 +190,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
             );
         }
 
-        $this->assertSame(22, count(array_filter(
+        $this->assertSame(23, count(array_filter(
             $todos,
             static fn (array $p): bool => ! str_starts_with((string) $p['codigo'], 'dupla-')
                 && ! str_starts_with((string) $p['codigo'], 'regra-'),
@@ -405,7 +414,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/risco/simulacao-regin')
-                ->has('protocolos', 45)
+                ->has('protocolos', 46)
                 ->has('execucoes', 0)
                 ->where('aviso', fn ($aviso) => is_string($aviso) && str_contains($aviso, 'REGIN')));
 
