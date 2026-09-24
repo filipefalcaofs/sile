@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\LoginRequest;
 use App\Models\AccessLog;
 use App\Models\User;
+use App\Services\Auth\DirectoryAuthenticator;
+use App\Services\Sedur\SedurAuthInvalidCredentialsException;
+use App\Services\Sedur\SedurAuthSettings;
+use App\Services\Sedur\SedurAuthUnavailableException;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use Illuminate\Auth\Events\Failed;
@@ -20,15 +24,21 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Autenticação do console em guard próprio (gestao): sessão independente
- * do portal do cidadão. Paridade de segurança com o login do portal —
- * throttle parametrizado (HU-014) com Lockout auditável, anti-oráculo,
- * conta inativada (HU-012) e tentativa sem permissão bloqueada e
- * registrada (HU-002 CA-04). E-mail verificado é pré-condição de login
- * aqui (as rotas internas não usam o middleware verified, cujo aviso de
- * verificação pertence ao fluxo do portal).
+ * do portal do cidadão. Login híbrido — contas com auth_type=ad validam a
+ * credencial na API institucional SEDUR (DirectoryAuthenticator); contas
+ * locais validam o hash em users.password. Em ambos os casos a sessão é
+ * Laravel e valem as mesmas proteções: throttle parametrizado (HU-014) por
+ * conta e por IP com Lockout auditável, anti-oráculo, conta inativada
+ * (HU-012) e tentativa sem permissão bloqueada e registrada (HU-002 CA-04).
+ * Sem fallback: conta AD nunca valida contra a senha local.
  */
 class LoginController extends Controller
 {
+    public function __construct(
+        private DirectoryAuthenticator $directory,
+        private SedurAuthSettings $sedurAuth,
+    ) {}
+
     public function store(LoginRequest $request): RedirectResponse
     {
         $this->ensureIsNotRateLimited($request);
@@ -38,11 +48,16 @@ class LoginController extends Controller
             ->first();
 
         // Anti-oráculo: o estado da conta (inativa, sem permissão) só é
-        // revelado com credencial correta.
-        if (! $user || ! Hash::check($request->validated('password'), $user->password)) {
+        // revelado com credencial correta, e a falha de credencial tem a
+        // mesma mensagem para conta local, AD ou inexistente.
+        if (! $user || ! $this->credencialValida($request, $user)) {
             RateLimiter::hit($this->throttleKey($request), 60);
+            RateLimiter::hit($this->ipThrottleKey($request), 60);
 
-            event(new Failed('gestao', $user, ['email' => $request->validated('email')]));
+            event(new Failed('gestao', $user, [
+                'email' => $request->validated('email'),
+                'origin' => $user === null ? null : ($user->isAdAccount() ? 'ad' : 'local'),
+            ]));
 
             throw ValidationException::withMessages(['email' => __('auth.failed')]);
         }
@@ -55,6 +70,7 @@ class LoginController extends Controller
                 'ip_address' => $request->ip(),
                 'user_agent' => substr((string) $request->userAgent(), 0, 500),
                 'channel' => 'gestao',
+                'origin' => $user->isAdAccount() ? 'ad' : 'local',
             ]);
 
             throw ValidationException::withMessages([
@@ -80,6 +96,7 @@ class LoginController extends Controller
         }
 
         RateLimiter::clear($this->throttleKey($request));
+        RateLimiter::clear($this->ipThrottleKey($request));
 
         Auth::guard('gestao')->login($user, $request->boolean('remember'));
 
@@ -101,8 +118,81 @@ class LoginController extends Controller
         return redirect()->route('gestao.login');
     }
 
+    /**
+     * Verifica a credencial pelo mecanismo da conta. A senha digitada é
+     * transitória: repassada ao diretório (conta AD) ou ao hash local, e
+     * descartada ao fim da request — nunca persistida nem logada.
+     */
+    private function credencialValida(LoginRequest $request, User $user): bool
+    {
+        if (! $user->isAdAccount()) {
+            $this->markOrigin($request, 'local');
+
+            return Hash::check($request->validated('password'), $user->password);
+        }
+
+        $this->markOrigin($request, 'ad');
+
+        if (! $this->sedurAuth->enabled()) {
+            app(AuditService::class)->logBlocked('seguranca', 'Login AD bloqueado: integração desabilitada (features.ad_login)', [
+                'email' => $user->email,
+                'user_id' => $user->id,
+            ]);
+
+            throw ValidationException::withMessages([
+                'email' => __('A autenticação corporativa está desabilitada. Procure o administrador do sistema.'),
+            ]);
+        }
+
+        try {
+            $resultado = $this->directory->attempt(
+                (string) $user->ad_username,
+                $request->validated('password'),
+                $user->cpf,
+            );
+        } catch (SedurAuthInvalidCredentialsException) {
+            return false;
+        } catch (SedurAuthUnavailableException) {
+            AccessLog::create([
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'event' => 'ad-indisponivel',
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 500),
+                'channel' => 'gestao',
+                'origin' => 'ad',
+            ]);
+
+            throw ValidationException::withMessages([
+                'email' => __('Autenticação institucional indisponível no momento. Tente novamente em instantes.'),
+            ]);
+        }
+
+        if ($resultado->sincronizacaoFalhou) {
+            AccessLog::create([
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'event' => 'ad-sincronizacao-falhou',
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 500),
+                'channel' => 'gestao',
+                'origin' => 'ad',
+            ]);
+        }
+
+        // Sincronização cadastral com minimização: somente o nome oficial.
+        // name está no fillable — a auditoria HasAuditoria registra a mudança.
+        if ($resultado->nome !== null && $resultado->nome !== $user->name) {
+            $user->update(['name' => $resultado->nome]);
+        }
+
+        return true;
+    }
+
     protected function ensureIsNotRateLimited(LoginRequest $request): void
     {
+        $this->ensureIpIsNotRateLimited($request);
+
         $max = (int) Settings::get('security.login.max_attempts');
 
         if (! RateLimiter::tooManyAttempts($this->throttleKey($request), $max)) {
@@ -121,8 +211,48 @@ class LoginController extends Controller
         ]);
     }
 
+    /**
+     * Limite por IP (além do por conta): contém password spraying — muitas
+     * contas, uma senha — que a chave email|ip não pega. Sem ele, o SILE
+     * vira proxy de força bruta contra o AD institucional.
+     */
+    private function ensureIpIsNotRateLimited(LoginRequest $request): void
+    {
+        $maxPorIp = (int) config('sile.security.login.max_attempts_per_ip', 30);
+
+        if (! RateLimiter::tooManyAttempts($this->ipThrottleKey($request), $maxPorIp)) {
+            return;
+        }
+
+        event(new Lockout($request));
+
+        $seconds = RateLimiter::availableIn($this->ipThrottleKey($request));
+
+        throw ValidationException::withMessages([
+            'email' => __('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => (int) ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    /**
+     * O listener de login lê request() no container. O FormRequest injetado
+     * pode ser outra instância — a origem precisa estar nas duas.
+     */
+    private function markOrigin(LoginRequest $request, string $origin): void
+    {
+        $request->attributes->set('auth_origin', $origin);
+        request()->attributes->set('auth_origin', $origin);
+    }
+
     protected function throttleKey(LoginRequest $request): string
     {
         return Str::transliterate(Str::lower($request->validated('email')).'|'.$request->ip());
+    }
+
+    protected function ipThrottleKey(LoginRequest $request): string
+    {
+        return 'gestao-login-ip|'.$request->ip();
     }
 }
