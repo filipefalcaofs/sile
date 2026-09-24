@@ -264,9 +264,6 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // A planilha de enquadramento virou aba do hub Motor de regras —
             // a rota antiga redireciona, sem quebrar links existentes.
             Route::get('regras-tratamento', fn () => redirect()->route('gestao.louos.index', ['aba' => 'enquadramento']))->name('regras-tratamento.index');
-            // Homologação do motor: protocolos SEDUR entram como se o tipo de
-            // imóvel e a área tivessem chegado do REGIN. A tela declara a
-            // simulação — a integração REGIN continua stub.
         });
 
         Route::middleware('permission:manter-cnaes')->group(function () {
