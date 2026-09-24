@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Support\PasswordPolicy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,8 +27,16 @@ class PasswordController extends Controller
 
     public function update(Request $request, UpdateUserPassword $updater): RedirectResponse
     {
+        $user = $request->user('gestao');
+
+        if ($user->isAdAccount()) {
+            throw ValidationException::withMessages([
+                'current_password' => __('Contas corporativas (AD) têm a senha gerenciada pela rede corporativa. Altere-a pelo portal de senhas da prefeitura.'),
+            ]);
+        }
+
         $updater->update(
-            $request->user('gestao'),
+            $user,
             $request->only('current_password', 'password', 'password_confirmation'),
         );
 

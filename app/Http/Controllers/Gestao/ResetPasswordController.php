@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,6 +34,12 @@ class ResetPasswordController extends Controller
         $status = Password::broker('users')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
+                if ($user->isAdAccount()) {
+                    throw ValidationException::withMessages([
+                        'email' => __('Contas corporativas (AD) têm a senha gerenciada pela rede corporativa.'),
+                    ]);
+                }
+
                 $user->forceFill(['password' => Hash::make($password)])->save();
 
                 event(new PasswordReset($user));

@@ -33,9 +33,10 @@ class ForgotPasswordController extends Controller
             ->where('email', Str::lower((string) $request->input('email')))
             ->first();
 
-        // Só contas ativas com acesso ao console recebem o link; a resposta
-        // é sempre a mesma para não revelar a existência/estado da conta.
-        if ($user && ! $user->isInactive() && $user->can('acessar-gestao')) {
+        // Só contas ativas, locais e com acesso ao console recebem o link; a
+        // resposta é sempre a mesma para não revelar a existência/estado da
+        // conta. Conta AD tem a senha gerida pela rede corporativa.
+        if ($user && ! $user->isInactive() && ! $user->isAdAccount() && $user->can('acessar-gestao')) {
             Password::broker('users')->sendResetLink(
                 ['email' => $user->email],
                 fn (User $u, string $token) => $u->sendGestaoPasswordResetNotification($token),
