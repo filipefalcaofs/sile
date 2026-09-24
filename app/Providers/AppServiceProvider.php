@@ -16,6 +16,8 @@ use App\Services\Ai\OpenAiCompatibleClient;
 use App\Services\Analise\MalhaFinaService;
 use App\Services\Analise\PostgisPrecedentRepository;
 use App\Services\Analise\PrecedentRepository;
+use App\Services\Auth\DirectoryAuthenticator;
+use App\Services\Auth\SedurDirectoryAuthenticator;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjLookup;
 use App\Services\Expresso\DatabaseHolidayProvider;
@@ -59,6 +61,8 @@ class AppServiceProvider extends ServiceProvider
         // (laravel/ai) entra na Onda 1 trocando SÓ este binding, sem tocar os
         // consumidores. NÃO instalar o SDK agora (decisão do arquiteto-técnico).
         $this->app->bind(AiProviderClient::class, OpenAiCompatibleClient::class);
+
+        $this->app->bind(DirectoryAuthenticator::class, SedurDirectoryAuthenticator::class);
 
         // Provider público inicial (BrasilAPI / dados abertos RFB). A Fase 13
         // (HU-105) troca este binding pelo provider conveniado da Receita
