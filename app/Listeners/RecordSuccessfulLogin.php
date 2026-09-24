@@ -16,6 +16,9 @@ class RecordSuccessfulLogin
             'ip_address' => request()->ip(),
             'user_agent' => substr((string) request()->userAgent(), 0, 500),
             'channel' => request()->routeIs('gestao.*') ? 'gestao' : 'portal',
+            // Origem da credencial (ad/local) definida pelo fluxo de login;
+            // null no portal e em logins anteriores à feature.
+            'origin' => request()->attributes->get('auth_origin'),
         ]);
     }
 }
