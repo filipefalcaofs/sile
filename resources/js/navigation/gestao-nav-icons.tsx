@@ -107,13 +107,6 @@ export const GESTAO_NAV_ICON_MARKS: Record<GestaoNavIcon, readonly Mark[]> = {
         { k: 'p', d: 'M3.5 17 L5.2 18.6 L8.2 15.2' },
     ],
     paperclip: [{ k: 'p', d: 'M9 8.5 V16 A3 3 0 0 0 15 16 V8 A2 2 0 0 0 11 8 V15' }],
-    sheet: [
-        { k: 'r', x: 4, y: 4, w: 16, h: 16, rx: 1 },
-        { k: 'l', x1: 4, y1: 9, x2: 20, y2: 9 },
-        { k: 'l', x1: 4, y1: 14, x2: 20, y2: 14 },
-        { k: 'l', x1: 10, y1: 4, x2: 10, y2: 20 },
-        { k: 'l', x1: 15, y1: 4, x2: 15, y2: 20 },
-    ],
     plug: [
         { k: 'l', x1: 9, y1: 3, x2: 9, y2: 7 },
         { k: 'l', x1: 15, y1: 3, x2: 15, y2: 7 },

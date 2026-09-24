@@ -1,5 +1,5 @@
 # Agendador do Viabiliza no OKD. Mesma base S2I da imagem web.
-FROM image-registry.openshift-image-registry.svc:5000/viabiliza/php-84
+FROM registry.salvador.ba.gov.br/library/php-oracle:8.4
 
 USER 0
 ADD app-src /tmp/src
@@ -44,6 +44,7 @@ USER 1001
 ENV COMPOSER_INSTALLER=file:///opt/composer-cache/installer-shim.php
 
 RUN /usr/libexec/s2i/assemble
-RUN chmod -R ug+rwX storage bootstrap/cache
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+ && chmod -R ug+rwX storage bootstrap/cache
 
 CMD php artisan schedule:work --no-interaction

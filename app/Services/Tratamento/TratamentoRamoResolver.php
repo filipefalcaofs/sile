@@ -6,6 +6,7 @@ use App\Enums\RuleDomain;
 use App\Enums\TipoImovelReconhecimento;
 use App\Models\RuleVersion;
 use App\Models\TratamentoCnaeBinding;
+use App\Models\TratamentoCnluItem;
 use App\Models\TratamentoEnquadramento;
 use App\Models\TratamentoRegraRamo;
 use App\Services\Risco\TipoImovel;
@@ -92,7 +93,21 @@ class TratamentoRamoResolver
             );
         }
 
-        if ($this->eCnlu($linha->risco)) {
+        if ($ramoCurado?->bloqueia) {
+            return new TratamentoRamoResult(
+                status: 'resolvido',
+                grupo: $linha->grupo,
+                subgrupo: $linha->subcategoria,
+                codigoLouos: $linha->codigo_louos,
+                risco: $this->normalizarRisco($linha->risco),
+                fluxo: 'analise',
+                bloqueia: true,
+                motivo: 'A regra da planilha não permite o prosseguimento deste ramo',
+                versaoRegra: $versao->version,
+            );
+        }
+
+        if ($this->eCnlu($linha->risco) || $this->naListaCnlu((string) $linha->subcategoria, (int) $versao->getKey())) {
             return new TratamentoRamoResult(
                 status: 'nao_resolvido',
                 fluxo: 'analise',
@@ -144,7 +159,7 @@ class TratamentoRamoResolver
 
         $risco = $this->riscoDaRegra($risco, $subgrupo, $ramoCurado, $input);
 
-        $fluxo = $ramoCurado?->fluxo ?? $this->fluxoDe($linha->codigo_louos, $subgrupo, $risco, $noLocal, $input->tipoImovel);
+        $fluxo = $ramoCurado?->fluxo ?? $this->fluxoDaClassificacao($linha->classificacao) ?? $this->fluxoDe($linha->codigo_louos, $subgrupo, $risco, $noLocal, $input->tipoImovel);
 
         $binding = $bindings->firstWhere('codigo_louos', $linha->codigo_louos);
 
@@ -382,7 +397,11 @@ class TratamentoRamoResolver
         $grupo = $linha->grupo;
         $risco = $this->normalizarRisco($linha->risco);
 
-        if ($area !== null && $linha->ate_m2 !== null && $area > (float) $linha->ate_m2 && $linha->enquadramento2) {
+        if ($area !== null && $linha->enquadramento3 && $linha->acima_m2 !== null && $area >= (float) $linha->acima_m2) {
+            $sub = $linha->enquadramento3;
+            $grupo = $this->grupoDe($sub);
+            $risco = 'alto';
+        } elseif ($area !== null && $linha->ate_m2 !== null && $area > (float) $linha->ate_m2 && $linha->enquadramento2) {
             $sub = $linha->enquadramento2;
             $grupo = $this->grupoDe($sub);
 
@@ -413,6 +432,38 @@ class TratamentoRamoResolver
         }
 
         return 'expresso';
+    }
+
+    private function fluxoDaClassificacao(?string $classificacao): ?string
+    {
+        $texto = mb_strtoupper((string) $classificacao);
+
+        if (str_contains($texto, 'SEMI')) {
+            return 'semiexpresso';
+        }
+
+        if (str_contains($texto, 'EXPRESSO')) {
+            return 'expresso';
+        }
+
+        return null;
+    }
+
+    private function naListaCnlu(string $subgrupo, int $versaoId): bool
+    {
+        $codigos = TratamentoCnluItem::query()
+            ->where('rule_version_id', $versaoId)
+            ->pluck('codigo');
+
+        foreach ($codigos as $codigo) {
+            $codigo = (string) $codigo;
+
+            if (strcasecmp($subgrupo, $codigo) === 0 || str_starts_with($subgrupo, $codigo.'-')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function eCnlu(string $risco): bool

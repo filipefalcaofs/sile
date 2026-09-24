@@ -57,9 +57,10 @@ use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\SectorController;
 use App\Http\Controllers\Gestao\StandardTextController;
 use App\Http\Controllers\Gestao\TermoLgpdController;
+use App\Http\Controllers\Gestao\TerritorialRuleController;
 use App\Http\Controllers\Gestao\TerritoryController;
 use App\Http\Controllers\Gestao\TllValorController;
-use App\Http\Controllers\Gestao\TratamentoRegrasController;
+use App\Http\Controllers\Gestao\TratamentoPlanilhaController;
 use App\Http\Controllers\Gestao\TvlDocumentController;
 use App\Http\Controllers\Gestao\UserManagementController;
 use App\Http\Controllers\Gestao\ViabilityServiceTypeController;
@@ -261,7 +262,9 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // frontend não tem modo somente-leitura para a ficha (HU-011 CA-04).
         Route::middleware('permission:consultar-cnaes')->group(function () {
             Route::get('cnaes', [CnaeController::class, 'index'])->name('cnaes.index');
-            Route::get('regras-tratamento', [TratamentoRegrasController::class, 'index'])->name('regras-tratamento.index');
+            // A planilha de enquadramento virou aba do hub Motor de regras —
+            // a rota antiga redireciona, sem quebrar links existentes.
+            Route::get('regras-tratamento', fn () => redirect()->route('gestao.louos.index', ['aba' => 'enquadramento']))->name('regras-tratamento.index');
             // Homologação do motor: protocolos SEDUR entram como se o tipo de
             // imóvel e a área tivessem chegado do REGIN. A tela declara a
             // simulação — a integração REGIN continua stub.
@@ -342,13 +345,23 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // 4 Quadros (analista/gestor/admin) é separada da publicação versionada
         // (admin). Gate cross-guard via permission: (PADRÃO 04-03/06). Publicar
         // gera NOVA versão por quatro olhos, nunca edição destrutiva da vigente.
-        Route::middleware('permission:consultar-louos')->prefix('louos')->name('louos.')->group(function () {
+        Route::middleware('permission:consultar-louos|consultar-cnaes')->prefix('louos')->name('louos.')->group(function () {
             Route::get('/', [LouosController::class, 'index'])->name('index');
         });
 
         Route::middleware('permission:manter-louos')->prefix('louos')->name('louos.')->group(function () {
             Route::put('publicar', [LouosController::class, 'publish'])->name('publicar');
+            Route::post('enquadramento/importar', [TratamentoPlanilhaController::class, 'importar'])->name('enquadramento.importar');
+            Route::put('enquadramento/versoes/{versao}/publicar', [TratamentoPlanilhaController::class, 'publicar'])->name('enquadramento.publicar');
             Route::put('versoes/{versao}/ativar', [LouosController::class, 'activate'])->name('versoes.ativar');
+
+            // Regras territoriais (RT-01 a RT-05): edição no rascunho do
+            // domínio, publicação quatro olhos, reativação e descarte —
+            // mesmo fluxo versionado dos quadros.
+            Route::post('territoriais/rascunho', [TerritorialRuleController::class, 'storeDraft'])->name('territoriais.rascunho');
+            Route::put('territoriais/versoes/{versao}/publicar', [TerritorialRuleController::class, 'publish'])->name('territoriais.publicar');
+            Route::put('territoriais/versoes/{versao}/ativar', [TerritorialRuleController::class, 'activate'])->name('territoriais.ativar');
+            Route::delete('territoriais/rascunho/{versao}', [TerritorialRuleController::class, 'destroyDraft'])->name('territoriais.descartar');
 
             // CRUD do rascunho editável dos Quadros da LOUOS (HU-046): abrir/retomar,
             // inserir/alterar/excluir linha, importar CSV, publicar por quatro olhos,

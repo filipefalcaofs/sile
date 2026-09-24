@@ -66,19 +66,32 @@ class TerritorialRuleSeederTest extends TestCase
         $itaigara = TerritorialRule::query()->where('codigo', 'RT-02-ITAIGARA')->sole();
 
         $this->assertCount(11, $itaigara->addresses);
-        $this->assertFalse($itaigara->ativo);
+        $this->assertTrue($itaigara->ativo);
+        $this->assertSame("PARCELAMENTO ILIKE 'itaigara'", $itaigara->camada_filtro);
 
         $hiperideal = $itaigara->addresses()->where('rotulo', 'Hiperideal')->sole();
         $this->assertSame('5209', $hiperideal->cod_log);
         $this->assertSame('347', $hiperideal->numero_porta);
     }
 
-    public function test_poligonais_sem_atributo_confirmado_nascem_inativas(): void
+    public function test_poligonais_ativas_com_as_camadas_validadas_ao_vivo(): void
     {
+        // Atributos confirmados contra o GeoServer SEDUR em 2026-09-23 (do host
+        // de produção — a rede de dev é barrada pelo firewall): PARCELAMENTO
+        // (nome em minúsculas) na camada de parcelamento e TRECHOS (string) na
+        // camada poligonal de borda marítima.
         $this->seedar();
 
-        $this->assertFalse(TerritorialRule::query()->where('codigo', 'RT-02-VELA-BRANCA')->sole()->ativo);
-        $this->assertFalse(TerritorialRule::query()->where('codigo', 'RT-03-ABM')->sole()->ativo);
+        $velaBranca = TerritorialRule::query()->where('codigo', 'RT-02-VELA-BRANCA')->sole();
+        $this->assertTrue($velaBranca->ativo);
+        $this->assertSame('parcelamento_poligonal:VM_PARCELAMENTO', $velaBranca->camada);
+        $this->assertSame("PARCELAMENTO ILIKE 'vela branca'", $velaBranca->camada_filtro);
+
+        $abm = TerritorialRule::query()->where('codigo', 'RT-03-ABM')->sole();
+        $this->assertTrue($abm->ativo);
+        $this->assertSame('borda_maritima:VM_BORDA_MARITIMA_TRECHOS', $abm->camada);
+        $this->assertSame("TRECHOS IN ('5','6')", $abm->camada_filtro);
+
         $this->assertTrue(TerritorialRule::query()->where('codigo', 'RT-03-ZEM')->sole()->ativo);
         $this->assertTrue(TerritorialRule::query()->where('codigo', 'RT-03-ZPAM')->sole()->ativo);
         $this->assertTrue(TerritorialRule::query()->where('codigo', 'RT-04-ZUE')->sole()->ativo);

@@ -2,7 +2,7 @@
 
 **Data:** 2026-08-28 · **Revisão:** 1
 **Origem:** `docs/artefatos/Especificação de Regras de Negócio e Tratamentos do Sistema.pdf` (pacote normativo SEDUR 2026-08-28).
-**Status:** RASCUNHO — depende da base geográfica (Fase 4) para as poligonais.
+**Status:** IMPLEMENTADA (2026-09-23) — domínio `territorial` versionado + motor + hub Motor de regras. Bloqueios vivos: RT-02/RT-03-ABM aguardam validação de atributos no GeoServer ao vivo (rede); RT-05 (c) aguarda mapeamento SEDUR (OPEN-RT-4).
 **Relacionado:** `2026-06-13-georreferenciamento-design.md`, `2026-06-14-motor-louos-design.md`, `2026-08-18-louos-quadros-crud-rascunho-design.md`
 
 ---

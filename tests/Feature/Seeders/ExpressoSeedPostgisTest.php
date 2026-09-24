@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\ExpressoDevSeeder;
 use Database\Seeders\ZonaFicticiaDevSeeder;
+use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\PostgisTestCase;
 
@@ -30,6 +31,16 @@ class ExpressoSeedPostgisTest extends PostgisTestCase
 {
     public function test_seed_carrega_zona_ficticia_e_defere_exemplo_navegavel(): void
     {
+        // As regras territoriais de poligonal (RT-02/03/04) consultam o
+        // GeoServer SEDUR ao vivo — serviço externo, mockado na suíte (fora de
+        // todas as poligonais: o exemplo de deferimento não é territorial).
+        Http::fake([
+            '*geoserver.sedur.salvador.ba.gov.br*' => Http::response([
+                'type' => 'FeatureCollection',
+                'features' => [],
+            ]),
+        ]);
+
         $this->seed();
 
         // A zona fictícia é a camada de zona VIGENTE (a GeoJsonLayerImporter

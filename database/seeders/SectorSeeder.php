@@ -7,7 +7,6 @@ use App\Models\LegalTermAcceptance;
 use App\Models\Parameter;
 use App\Models\Sector;
 use App\Models\User;
-use App\Support\DemoMode;
 use Illuminate\Database\Seeder;
 
 /**
@@ -71,7 +70,7 @@ class SectorSeeder extends Seeder
 
         // Usuários de gestão são dados de DEV: nunca em produção (lá os analistas
         // reais são cadastrados pelo administrador e vinculados pelo gestor).
-        if (! DemoMode::allowsDemoSeeders()) {
+        if (! app()->environment(['local', 'testing']) && ! filter_var(config('sile.demo_data', false), FILTER_VALIDATE_BOOL)) {
             return;
         }
 

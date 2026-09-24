@@ -60,16 +60,20 @@ describe('IA da sidebar de Gestão', () => {
         expect(hrefsDe(filterGestaoNav(['consultar-solicitacoes']))).not.toContain('/gestao/caixa-setor');
     });
 
-    it('coloca a planilha de regras no grupo Regras, antes das simulações', () => {
-        expect(groupOfHref('/gestao/regras-tratamento')?.id).toBe('regras');
+    it('concentra o motor de regras num hub único (quadros, enquadramento e territoriais)', () => {
+        expect(groupOfHref('/gestao/louos')?.id).toBe('regras');
 
         const regras = GESTAO_NAV_GROUPS.find((group) => group.id === 'regras');
         const nomes = regras?.items.map((item) => item.name) ?? [];
-        const planilha = nomes.indexOf('Planilha de regras');
-        const primeiraSimulacao = nomes.findIndex((nome) => nome.startsWith('Simulação'));
 
-        expect(planilha).toBeGreaterThan(-1);
-        expect(planilha).toBeLessThan(primeiraSimulacao);
+        // A planilha de enquadramento virou aba do hub — sem item próprio.
+        expect(nomes).toContain('Motor de regras');
+        expect(nomes).not.toContain('Planilha de regras');
+        expect(groupOfHref('/gestao/regras-tratamento')).toBeUndefined();
+
+        // O hub abre para quem consulta quadros OU a planilha (anyOf).
+        const item = regras?.items.find((navItem) => navItem.href === '/gestao/louos');
+        expect(item?.permission).toEqual(['consultar-louos', 'consultar-cnaes']);
     });
 
     it('isola território e camadas GIS no grupo Território', () => {

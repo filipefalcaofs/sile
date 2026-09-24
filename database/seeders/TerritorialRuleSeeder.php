@@ -27,10 +27,13 @@ use Illuminate\Database\Seeder;
  * - OPEN-RT-2: o Hiperideal (item 11 de Itaigara) vem sem CODLOG — entra com
  *   5209 (Rua Anísio Teixeira, mesma via do item 10) pendente de confirmação.
  * - OPEN-RT-3: o motivo de ABM reproduz a grafia do documento ("AMB").
- * - Poligonais sem atributo confirmado na base GeoServer (loteamentos Vela
- *   Branca/Itaigara e trecho da ABM) nascem INATIVAS — bloqueio explícito,
- *   visível no cadastro, até a validação contra o serviço vivo. ZEM, ZPAM e
- *   ZUE têm FeatureType própria confirmada no inventário de 16/09/2026.
+ * - Poligonais VALIDADAS contra o GeoServer ao vivo em 2026-09-23 (do host de
+ *   produção — a rede de dev é barrada pelo firewall): loteamentos em
+ *   `parcelamento_poligonal:VM_PARCELAMENTO` (atributo PARCELAMENTO, nome em
+ *   minúsculas — filtro ILIKE) e trechos da ABM na camada POLIGONAL
+ *   `borda_maritima:VM_BORDA_MARITIMA_TRECHOS` (atributo TRECHOS, string;
+ *   a `l_savam:VM_L_SAVAM_TRECHOS_ABM_2016` é LineString — não serve para
+ *   ponto-em-polígono). ZEM/ZPAM/ZUE têm FeatureType própria confirmada.
  * - RT-05 (c) NÃO é seedada: "depósitos de produtos perigosos" é qualitativa
  *   e depende de mapeamento SEDUR (OPEN-RT-4) — bloqueada, nunca simulada.
  */
@@ -157,8 +160,9 @@ class TerritorialRuleSeeder extends Seeder
             $rt01->cnaes()->create(['cnae' => $cnae]);
         }
 
-        // RT-02 — TACs (§3º do art. 162 do PDDU). INATIVAS até a confirmação
-        // do atributo de loteamento na camada de parcelamento do GeoServer.
+        // RT-02 — TACs (§3º do art. 162 do PDDU). Poligonais validadas ao vivo
+        // em 2026-09-23: o nome do loteamento é o atributo PARCELAMENTO (em
+        // minúsculas) da camada de parcelamento — filtro ILIKE confirmado.
         TerritorialRule::create([
             'rule_version_id' => $version->getKey(),
             'codigo' => 'RT-02-VELA-BRANCA',
@@ -166,9 +170,9 @@ class TerritorialRuleSeeder extends Seeder
             'tipo' => TerritorialRuleType::PoligonalAnalise,
             'efeito' => TerritorialRuleEffect::EncaminharAnalise,
             'camada' => 'parcelamento_poligonal:VM_PARCELAMENTO',
+            'camada_filtro' => "PARCELAMENTO ILIKE 'vela branca'",
             'motivo_analise' => 'Solicitação cadastrada no Loteamento Vela Branca.',
             'base_legal' => '§3º do art. 162 do PDDU',
-            'ativo' => false,
         ]);
 
         $itaigara = TerritorialRule::create([
@@ -178,9 +182,9 @@ class TerritorialRuleSeeder extends Seeder
             'tipo' => TerritorialRuleType::PoligonalAllowlistExpresso,
             'efeito' => TerritorialRuleEffect::PermitirExpresso,
             'camada' => 'parcelamento_poligonal:VM_PARCELAMENTO',
+            'camada_filtro' => "PARCELAMENTO ILIKE 'itaigara'",
             'motivo_analise' => 'Solicitação cadastrada no Loteamento Itaigara.',
             'base_legal' => '§3º do art. 162 do PDDU',
-            'ativo' => false,
         ]);
 
         foreach (self::ITAIGARA_ALLOWLIST as $endereco) {
@@ -188,12 +192,14 @@ class TerritorialRuleSeeder extends Seeder
         }
 
         // RT-03 — Zonas que sempre vão à análise. ZEM/ZPAM têm FeatureType
-        // própria confirmada; ABM depende de confirmar o atributo de trecho.
+        // própria; a ABM usa a camada POLIGONAL de trechos (atributo TRECHOS,
+        // string) — validada ao vivo em 2026-09-23. A l_savam homônima é
+        // LineString e não serve para ponto-em-polígono.
         foreach ([
-            ['codigo' => 'RT-03-ZEM', 'titulo' => 'ZEM — Zona de Exploração Mineral', 'camada' => 'louos_zem:VM_L_Z_USO_ZEM', 'motivo' => 'Solicitação cadastrada na Zona de Exploração Mineral.', 'ativo' => true],
-            ['codigo' => 'RT-03-ZPAM', 'titulo' => 'ZPAM — Zona de Proteção Ambiental', 'camada' => 'louos_zpam:VM_L_Z_USO_ZPAM', 'motivo' => 'Solicitação cadastrada na Zona de Proteção Ambiental.', 'ativo' => true],
+            ['codigo' => 'RT-03-ZEM', 'titulo' => 'ZEM — Zona de Exploração Mineral', 'camada' => 'louos_zem:VM_L_Z_USO_ZEM', 'filtro' => null, 'motivo' => 'Solicitação cadastrada na Zona de Exploração Mineral.'],
+            ['codigo' => 'RT-03-ZPAM', 'titulo' => 'ZPAM — Zona de Proteção Ambiental', 'camada' => 'louos_zpam:VM_L_Z_USO_ZPAM', 'filtro' => null, 'motivo' => 'Solicitação cadastrada na Zona de Proteção Ambiental.'],
             // OPEN-RT-3: grafia "AMB" reproduzida do documento oficial.
-            ['codigo' => 'RT-03-ABM', 'titulo' => 'ABM — Área de Borda Marítima, trechos 5 e 6', 'camada' => 'l_savam:VM_L_SAVAM_TRECHOS_ABM_2016', 'motivo' => 'Solicitação cadastrada nos Trechos 5 e 6 da AMB – Área de Borda Marítima, em conformidade com as disposições estabelecidas pelo Decreto Municipal nº 31.168/2019.', 'ativo' => false],
+            ['codigo' => 'RT-03-ABM', 'titulo' => 'ABM — Área de Borda Marítima, trechos 5 e 6', 'camada' => 'borda_maritima:VM_BORDA_MARITIMA_TRECHOS', 'filtro' => "TRECHOS IN ('5','6')", 'motivo' => 'Solicitação cadastrada nos Trechos 5 e 6 da AMB – Área de Borda Marítima, em conformidade com as disposições estabelecidas pelo Decreto Municipal nº 31.168/2019.'],
         ] as $zona) {
             TerritorialRule::create([
                 'rule_version_id' => $version->getKey(),
@@ -202,9 +208,9 @@ class TerritorialRuleSeeder extends Seeder
                 'tipo' => TerritorialRuleType::PoligonalAnalise,
                 'efeito' => TerritorialRuleEffect::EncaminharAnalise,
                 'camada' => $zona['camada'],
+                'camada_filtro' => $zona['filtro'],
                 'motivo_analise' => $zona['motivo'],
                 'base_legal' => $zona['codigo'] === 'RT-03-ABM' ? 'Decreto Municipal nº 31.168/2019' : 'Lei Municipal nº 9.148/2016 (LOUOS)',
-                'ativo' => $zona['ativo'],
             ]);
         }
 
@@ -259,7 +265,6 @@ class TerritorialRuleSeeder extends Seeder
                 'versao' => $version->version,
                 'regras' => TerritorialRule::query()->where('rule_version_id', $version->getKey())->count(),
                 'cnaes_rt01' => count(self::CNAES_RT01),
-                'inativas_aguardando_base' => ['RT-02-VELA-BRANCA', 'RT-02-ITAIGARA', 'RT-03-ABM'],
             ],
             rulesVersion: $version->version,
         );
