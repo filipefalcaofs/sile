@@ -163,6 +163,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita o login com a conta GOV.BR no portal do cidadão (exige credenciais configuradas)',
             ],
+            'features.ad_login' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Habilita a autenticação de servidores via AD (API institucional SEDUR) no console; desligar bloqueia o login das contas AD com aviso explícito',
+            ],
             'integrations.govbr.base_url' => [
                 'group' => 'integracoes',
                 'type' => 'string',
@@ -186,6 +193,13 @@ class ParameterSeeder extends Seeder
                 'default_value' => null,
                 'validation_rules' => ['required', 'string', 'max:255'],
                 'description' => 'Client Secret da credencial do Login Único GOV.BR (armazenado criptografado)',
+            ],
+            'integrations.sedur_auth.base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'URL base da API institucional de autenticação AD e gestão de pessoas da SEDUR (sem teste de conexão: a API exige a credencial do próprio usuário)',
             ],
             'security.govbr.minimum_level' => [
                 'group' => 'seguranca',

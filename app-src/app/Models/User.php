@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\HasAuditoria;
+use App\Enums\AuthType;
 use App\Notifications\GestaoResetPasswordQueued;
 use App\Notifications\ResetPasswordQueued;
 use App\Notifications\VerifyEmailQueued;
@@ -45,7 +46,13 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'inactivated_at' => 'datetime',
             'password' => 'hashed',
+            'auth_type' => AuthType::class,
         ];
+    }
+
+    public function isAdAccount(): bool
+    {
+        return $this->auth_type === AuthType::Ad;
     }
 
     public function sendEmailVerificationNotification(): void

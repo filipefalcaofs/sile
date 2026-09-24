@@ -35,6 +35,7 @@ class RecordFailedLogin
             'ip_address' => request()->ip(),
             'user_agent' => substr((string) request()->userAgent(), 0, 500),
             'channel' => request()->routeIs('gestao.*') ? 'gestao' : 'portal',
+            'origin' => $event->credentials['origin'] ?? null,
         ]);
     }
 }
