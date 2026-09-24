@@ -1,0 +1,302 @@
+openapi: 3.0.3
+info:
+  title: Viabiliza — recebimento REGIN (api_integracao/recebe)
+  version: "1.0.0"
+  description: |
+    Endpoint municipal que a JUCEB/REGIN chama para entregar o processo de
+    viabilidade à SEDUR.
+
+    O contrato foi montado a partir da documentação da API da JUCEB (PSCS),
+    não o contrário:
+
+    - OpenAPI de produção da Junta: `EnvioDto` e a operação `testeEnvio`,
+      que exige retorno em texto `3` (recebido) e `5` (duplicado).
+    - Guia Técnico REGIN/PSCS v2.10: GET de conectividade e POST do processo
+      no caminho `/api_integracao/recebe`, serviço `WsProSol098`.
+
+    Esta URL é o lado da Prefeitura. Autenticação (`POST /acesso/auth`) e o
+    header `JWT` pertencem à API da JUCEB, quando o Viabiliza devolve o
+    parecer. Neste recebimento não há token: a JUCEB chama a URL publicada.
+
+    O layout completo do objeto `json` (schema `Ruc`) está na OpenAPI da
+    JUCEB. O anexo «Dados do Processo v2_08» não integra este documento.
+    Sem CNAE principal, área ou endereço no `Ruc`, o envelope é aceito
+    (`3`) e fica gravado, sem abrir processo.
+  contact:
+    name: SEDUR — Viabiliza
+    url: https://www.sedur.salvador.ba.gov.br
+  externalDocs:
+    description: OpenAPI de produção da API REGIN/JUCEB (PSCS), fonte do EnvioDto
+    url: http://regin.prefeitura.juceb.ba.gov.br:8080/api_integracao/v3/api-docs
+
+servers:
+  - url: https://viabiliza-hml.salvador.ba.gov.br
+    description: Homologação
+  - url: https://viabiliza.salvador.ba.gov.br
+    description: Produção
+
+tags:
+  - name: Recebimento
+    description: URL da instituição chamada pelo REGIN
+
+paths:
+  /api_integracao/recebe:
+    get:
+      tags: [Recebimento]
+      operationId: pingRecebe
+      summary: Teste de conectividade
+      description: |
+        A JUCEB envia este GET antes do POST (`testeEnvio` na OpenAPI da Junta).
+        Corpo da resposta, em texto puro: `3`.
+
+        A descrição geral da OpenAPI da JUCEB menciona retorno `OK` no GET do
+        servidor REGIN. No teste de envio para a instituição, e no Guia Técnico
+        v2.10, o valor conferido é `3`. Este endpoint devolve `3`.
+      responses:
+        "200":
+          description: Conectividade confirmada
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/CodigoRecebido"
+              example: "3"
+        "429":
+          $ref: "#/components/responses/LimiteExcedido"
+
+    post:
+      tags: [Recebimento]
+      operationId: recebeProcesso
+      summary: Recebe o processo enviado pelo REGIN
+      description: |
+        Persiste o envelope `EnvioDto` e responde em texto puro.
+
+        - `3` — protocolo gravado agora (HTTP 200).
+        - `5` — o mesmo `protocolo` já existe (HTTP 200). Não cria segunda linha.
+        - `0` — `protocolo` ausente ou vazio (HTTP 400). Nada é gravado.
+
+        O ack sai só depois da gravação. Duplicidade é pelo número do protocolo
+        na Junta, não pelo CNPJ.
+
+        Quando o `json` (`Ruc`) traz CNAE principal, área utilizada e endereço
+        (logradouro, bairro e CEP), o Viabiliza abre o processo com origem
+        REDESIM/Regin e a referência externa igual a `protocolo`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvioDto"
+            example:
+              cnpjDestino: "13927801000149"
+              cnpjEmpresa: "13927801000149"
+              cnpjOrigem: "13927801000149"
+              codFuncao: 103
+              dataGeracao: "2026-09-16T16:00:00.000Z"
+              nire: "00000000000"
+              protocolo: "43747"
+              servico: WsProSol098
+              json:
+                rowset:
+                  RUC_GENERAL:
+                    RGE_CGC_CPF: "13927801000149"
+                    RGE_NOMB: Empresa exemplo
+                  RUC_ESTAB:
+                    RES_AREA: "834"
+                    RES_DIRECCION: Rua das Flores
+                    RES_NUME: "100"
+                    RES_IDENT_COMP: Sala 2
+                    RES_URBANIZACION: Centro
+                    RES_ZONA_POSTAL: "40000000"
+                  GROUPRUC_ACTV_ECON:
+                    RUC_ACTV_ECON:
+                      - RAE_TAE_COD_ACTVD: "4712100"
+                        RAE_CALIF_ACTV: "1"
+                  GROUPRUC_GEN_PROTOCOLO:
+                    RUC_GEN_PROTOCOLO:
+                      - RGP_TGE_COD_TIP_TAB: "5"
+                        RGP_VALOR: "123456"
+      responses:
+        "200":
+          description: Recebido (`3`) ou protocolo já existente (`5`)
+          content:
+            text/plain:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CodigoRecebido"
+                  - $ref: "#/components/schemas/CodigoDuplicado"
+              examples:
+                recebido:
+                  summary: Primeira entrega do protocolo
+                  value: "3"
+                duplicado:
+                  summary: Protocolo já gravado
+                  value: "5"
+        "400":
+          description: Protocolo ausente. Corpo em texto puro `0`. Nenhum registro é criado.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/CodigoInvalido"
+              example: "0"
+        "429":
+          $ref: "#/components/responses/LimiteExcedido"
+
+components:
+  responses:
+    LimiteExcedido:
+      description: |
+        Mais de 60 chamadas por minuto a partir do mesmo IP.
+        O limite é o do Viabiliza (`regin_recebe`), não o da API da JUCEB.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Too Many Requests
+
+  schemas:
+    CodigoRecebido:
+      type: string
+      enum: ["3"]
+      description: Sucesso. Mesmo código que o `testeEnvio` da JUCEB compara.
+    CodigoDuplicado:
+      type: string
+      enum: ["5"]
+      description: Protocolo duplicado. Mesmo código que o `testeEnvio` da JUCEB compara.
+    CodigoInvalido:
+      type: string
+      enum: ["0"]
+      description: Requisição recusada pelo Viabiliza por falta de protocolo.
+
+    EnvioDto:
+      type: object
+      description: |
+        Espelho do schema `EnvioDto` da OpenAPI de produção da JUCEB
+        (`/api_integracao/v3/api-docs`). Na Junta, `dataGeracao`, `json` e
+        `protocolo` são obrigatórios. No Viabiliza, a única rejeição explícita
+        é `protocolo` vazio (HTTP 400, corpo `0`).
+      required: [protocolo]
+      properties:
+        protocolo:
+          type: string
+          description: Número do processo na Junta. Chave de duplicidade.
+          example: "43747"
+        dataGeracao:
+          type: string
+          format: date-time
+          description: Data e hora de geração do envelope (ISO 8601, como na OpenAPI da JUCEB).
+          example: "2026-09-16T16:00:00.000Z"
+        json:
+          $ref: "#/components/schemas/Ruc"
+        cnpjDestino:
+          type: string
+          description: CNPJ da instituição que recebe. Na OpenAPI da JUCEB, 14 dígitos com pontuação opcional.
+          example: "13927801000149"
+        cnpjEmpresa:
+          type: string
+          description: CNPJ da empresa, quando a Junta envia.
+          example: "13927801000149"
+        cnpjOrigem:
+          type: string
+          description: CNPJ de origem dos dados. Na OpenAPI da JUCEB, 14 dígitos com pontuação opcional.
+          example: "13927801000149"
+        codFuncao:
+          type: integer
+          format: int32
+          description: |
+            Código de função do envelope, conforme a JUCEB. O Viabiliza grava
+            o inteiro recebido e não restringe a lista. Exemplo da OpenAPI da
+            Junta: `3`.
+          example: 3
+        nire:
+          type: string
+          description: NIRE ou matrícula, quando a Junta envia.
+        servico:
+          type: string
+          description: Serviço REGIN. No guia e na OpenAPI da JUCEB, `WsProSol098`.
+          example: WsProSol098
+        xml:
+          type: string
+          description: Payload legado em XML. A integração atual usa `json`.
+
+    Ruc:
+      type: object
+      description: |
+        Schema `Ruc` da OpenAPI da JUCEB. O objeto completo (todos os grupos
+        `rowset`) está naquela documentação. Abaixo, só os campos que o
+        Viabiliza lê para abrir o processo. Os demais são armazenados no
+        envelope e não alteram o código de retorno.
+      properties:
+        rowset:
+          $ref: "#/components/schemas/RowsetViabiliza"
+
+    RowsetViabiliza:
+      type: object
+      description: Recorte do `ROWSET` da JUCEB usado na protocolação.
+      properties:
+        RUC_GENERAL:
+          type: object
+          description: Empresa. Schema `RUCGENERAL` na OpenAPI da JUCEB.
+          properties:
+            RGE_CGC_CPF:
+              type: string
+              description: CNPJ ou CPF da empresa.
+            RGE_NOMB:
+              type: string
+              description: Nome empresarial.
+        RUC_ESTAB:
+          type: object
+          description: |
+            Estabelecimento. Schema `RUCESTAB` na OpenAPI da JUCEB.
+            Sem área, logradouro, bairro ou CEP, o processo não é aberto.
+          properties:
+            RES_AREA:
+              type: string
+              description: Área utilizada. Precisa ser maior que zero para protocolar.
+            RES_DIRECCION:
+              type: string
+              description: Logradouro.
+            RES_NUME:
+              type: string
+              description: Número. Vazio vira `s/n`.
+            RES_IDENT_COMP:
+              type: string
+              description: Complemento.
+            RES_URBANIZACION:
+              type: string
+              description: Bairro.
+            RES_ZONA_POSTAL:
+              type: string
+              description: CEP.
+        GROUPRUC_ACTV_ECON:
+          type: object
+          description: Atividades. Schema `GROUPRUCACTVECON` na OpenAPI da JUCEB.
+          properties:
+            RUC_ACTV_ECON:
+              type: array
+              items:
+                type: object
+                properties:
+                  RAE_TAE_COD_ACTVD:
+                    type: string
+                    description: Código da atividade (CNAE).
+                  RAE_CALIF_ACTV:
+                    type: string
+                    description: "`1` marca a atividade principal. Sem principal, o processo não é aberto."
+        GROUPRUC_GEN_PROTOCOLO:
+          type: object
+          description: Dados genéricos do protocolo. Schema `GROUPRUCGENPROTOCOLO` na OpenAPI da JUCEB.
+          properties:
+            RUC_GEN_PROTOCOLO:
+              type: array
+              items:
+                type: object
+                properties:
+                  RGP_TGE_COD_TIP_TAB:
+                    type: string
+                    description: "`5` identifica a inscrição imobiliária."
+                  RGP_VALOR:
+                    type: string
+                    description: Valor do item. Na tabulação 5, a inscrição imobiliária.
