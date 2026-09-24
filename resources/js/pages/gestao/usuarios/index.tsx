@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Label from '@/components/form/label';
+import Input from '@/components/form/input';
 import { PowerIcon } from '@/components/icons';
 import Select from '@/components/form/select';
 import Avatar from '@/components/ui/avatar';
@@ -26,6 +27,8 @@ interface UserItem {
     roles: string[];
     inactivated_at: string | null;
     cpf_masked: string;
+    auth_type: 'ad' | 'local';
+    ad_username: string | null;
 }
 
 type UsersTab = 'gestao' | 'portal';
@@ -166,10 +169,80 @@ function RoleModal({ user, roles, onClose }: { user: UserItem; roles: string[]; 
     );
 }
 
+function AuthTypeModal({ user, onClose }: { user: UserItem; onClose: () => void }) {
+    const [authType, setAuthType] = useState<'ad' | 'local'>(user.auth_type);
+    const [adUsername, setAdUsername] = useState(user.ad_username ?? '');
+
+    return (
+        <Modal isOpen onClose={onClose} className="m-4 max-w-[507px] p-6 lg:p-8">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Tipo de autenticação</h4>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Defina como {user.name} ({user.email}) entra no console.
+            </p>
+
+            <Form action={`/gestao/usuarios/${user.id}/autenticacao`} method="put" onSuccess={onClose} className="mt-6">
+                {({ errors, processing }) => (
+                    <div className="flex flex-col gap-5">
+                        <div>
+                            <Label htmlFor={`auth-type-${user.id}`}>Autenticação</Label>
+                            <Select
+                                id={`auth-type-${user.id}`}
+                                name="auth_type"
+                                value={authType}
+                                onChange={(value) => setAuthType(value as 'ad' | 'local')}
+                                options={[
+                                    { value: 'local', label: 'Local (senha do sistema)' },
+                                    { value: 'ad', label: 'Active Directory (rede corporativa)' },
+                                ]}
+                            />
+                            {errors.auth_type && <p className="mt-1.5 text-theme-xs text-error-500">{errors.auth_type}</p>}
+                        </div>
+
+                        {authType === 'ad' && (
+                            <div>
+                                <Label htmlFor={`ad-username-${user.id}`}>Conta AD</Label>
+                                <Input
+                                    id={`ad-username-${user.id}`}
+                                    name="ad_username"
+                                    value={adUsername}
+                                    onChange={(event) => setAdUsername(event.target.value)}
+                                    placeholder="ex.: filipefalcao"
+                                    autoComplete="off"
+                                />
+                                {errors.ad_username && (
+                                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.ad_username}</p>
+                                )}
+                            </div>
+                        )}
+
+                        {authType !== user.auth_type && (
+                            <p className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                {authType === 'ad'
+                                    ? 'A senha local deixará de valer; o acesso passa a ser validado na rede corporativa.'
+                                    : 'O usuário receberá um e-mail para definir a nova senha local.'}
+                            </p>
+                        )}
+
+                        <div className="flex items-center justify-end gap-3">
+                            <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>
+                                Cancelar
+                            </Button>
+                            <Button size="sm" type="submit" disabled={processing}>
+                                {processing ? 'Salvando...' : 'Salvar'}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Form>
+        </Modal>
+    );
+}
+
 export default function UsersIndex({ users, filters, counts, roles }: UsersIndexProps) {
     const [search, setSearch] = useState(filters.search ?? '');
     const isFirstRender = useRef(true);
     const [roleUser, setRoleUser] = useState<UserItem | null>(null);
+    const [authTypeUser, setAuthTypeUser] = useState<UserItem | null>(null);
     const [activationUser, setActivationUser] = useState<UserItem | null>(null);
     const [activationProcessing, setActivationProcessing] = useState(false);
 
@@ -244,6 +317,9 @@ export default function UsersIndex({ users, filters, counts, roles }: UsersIndex
                     <div className="flex justify-end gap-2">
                         <TableAction tone="neutral" href={`/gestao/acessos/${user.id}`}>
                             Acessos
+                        </TableAction>
+                        <TableAction tone="neutral" onClick={() => setAuthTypeUser(user)}>
+                            Autenticação
                         </TableAction>
                         <TableAction tone="brand" onClick={() => setRoleUser(user)}>
                             Alterar papel
@@ -350,6 +426,8 @@ export default function UsersIndex({ users, filters, counts, roles }: UsersIndex
             </Card>
 
             {roleUser && <RoleModal user={roleUser} roles={roles} onClose={() => setRoleUser(null)} />}
+
+            {authTypeUser && <AuthTypeModal user={authTypeUser} onClose={() => setAuthTypeUser(null)} />}
 
             {activationContent && (
                 <ConfirmDialog
