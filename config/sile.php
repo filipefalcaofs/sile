@@ -12,7 +12,7 @@ return [
             'require_numbers' => true,
             'require_symbols' => false,
         ],
-        'login' => ['max_attempts' => 5],
+        'login' => ['max_attempts' => 5, 'max_attempts_per_ip' => 30],
         'password_reset_expire' => 60,
         'govbr' => ['minimum_level' => 'bronze'],
     ],
@@ -32,6 +32,7 @@ return [
         'procuracoes' => true,
         'cnpj_lookup' => true,
         'govbr_login' => false,
+        'ad_login' => true,
         'geocoding' => true,
         'geoserver_zona' => true,
         // Regras territoriais por poligonal (RT-02/03/04) consultando o
@@ -288,6 +289,10 @@ return [
             'timeout' => 8,
             'jwk_cache_ttl' => 3600,
             'jwt_leeway' => 60,
+        ],
+        'sedur_auth' => [
+            'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd',
+            'timeout' => 8,
         ],
         'geocoding' => [
             'base_url' => 'https://nominatim.openstreetmap.org',
