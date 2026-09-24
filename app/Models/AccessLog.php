@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * Não usa HasAuditoria — access_logs já É dado de auditoria.
  */
-#[Fillable(['user_id', 'email', 'event', 'ip_address', 'user_agent', 'channel'])]
+#[Fillable(['user_id', 'email', 'event', 'ip_address', 'user_agent', 'channel', 'origin'])]
 class AccessLog extends Model
 {
     /** @use HasFactory<AccessLogFactory> */
