@@ -1,5 +1,7 @@
 /**
  * Catálogo único da sidebar de Gestão. Fonte de verdade do menu e do Cmd+K.
+ *
+ * Antes de incluir, mover ou criar grupo, siga a árvore de grupos do console.
  */
 
 export type GestaoNavIcon =

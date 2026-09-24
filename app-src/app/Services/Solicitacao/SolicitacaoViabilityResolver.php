@@ -64,10 +64,13 @@ class SolicitacaoViabilityResolver
 
         foreach ($this->orderedCnaes($request) as $cnae) {
             $respostas = $request->respostasDaPlanilha($cnae->code);
+            $territorio = null;
 
-            $result = $ponto === null
-                ? $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $respostas)
-                : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area, $tipoImovel, $respostas);
+            $result = $territorio !== null
+                ? $this->consulta->consultarComTerritorio($territorio, $cnae->code, $area, $tipoImovel, $respostas)
+                : ($ponto === null
+                    ? $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $respostas)
+                    : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area, $tipoImovel, $respostas));
 
             $veredito = $result->vereditoLocacional();
 
