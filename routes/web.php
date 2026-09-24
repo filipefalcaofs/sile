@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Regin\ReginDocumentacaoController;
 use App\Http\Controllers\Regin\ReginRecebeController;
 use App\Http\Controllers\VerificacaoDocumentoController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,11 @@ Route::redirect('/', '/portal');
 Route::get('/verificar-documento/{codigo}', [VerificacaoDocumentoController::class, 'show'])
     ->middleware('throttle:consulta-protocolo')
     ->name('verificar-documento');
+
+// Swagger UI da URL municipal. Fora do throttle do recebe para a tela não
+// consumir a cota das chamadas da JUCEB.
+Route::get('/api_integracao/docs', [ReginDocumentacaoController::class, 'show'])->name('regin.docs');
+Route::get('/api_integracao/docs/openapi.yaml', [ReginDocumentacaoController::class, 'spec'])->name('regin.docs.spec');
 
 // Contrato JUCEB/REGIN (Guia Técnico v2.10): GET=3, POST=3 recebido / 5 duplicado.
 // Público de propósito — a JUCEB chama a URL municipal, sem sessão Laravel.
