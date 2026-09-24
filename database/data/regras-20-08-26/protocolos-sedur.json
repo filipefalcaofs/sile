@@ -1,5 +1,5 @@
 {
-  "origem": "Protocolos SEDUR (pasta compartilhada de validação + PDFs 207, 244, 375, 855, 2250, 8161, 8195, 8225, 13336, 61131) e oito processos sintéticos de teste (dupla-r*) com dois CNAEs de regras distintas da planilha 20.08.26. Campos pessoais omitidos. Tipo de imóvel e área entram no motor como se tivessem chegado do REGIN.",
+  "origem": "Protocolos SEDUR (pasta compartilhada de validação + PDFs 207, 244, 375, 855, 2250, 8161, 8195, 8225, 13336, 61131) e oito processos sintéticos de teste (dupla-r*) com dois CNAEs de regras distintas da planilha 20.08.26. Campos pessoais omitidos. Tipo de imóvel e área entram no motor como se tivessem chegado do REGIN. Inscrições 594902-5 e 25076-2: endereço e área do Cadastro Imobiliário (SEFAZ via BFF SEDUR), zona oficial do GeoServer SEDUR (ZPR 3) e via local (fora do Mapa 04 LOUOS).",
   "protocolos": [
     {
       "codigo": "abrigado-2108519",
@@ -684,6 +684,34 @@
       "atividades": [
         { "cnae": "4789-0/04", "perguntas": [{ "codigo": "P19", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] },
         { "cnae": "1061-9/02", "perguntas": [{ "codigo": "P2", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "594902-5",
+      "rotulo": "Inscrição 594902-5 — escritório (P11 não)",
+      "processo": "5921000030-00990024/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Residencial",
+      "area_utilizada": 205.0,
+      "zona": "ZPR 3",
+      "via": "VL",
+      "inscricao_imobiliaria": "594902-5",
+      "atividades": [
+        { "cnae": "7311-4/00", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
+      ]
+    },
+    {
+      "codigo": "25076-2",
+      "rotulo": "Inscrição 25076-2 — escritório (P11 não)",
+      "processo": "5921000030-00990025/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Residencial",
+      "area_utilizada": 32.0,
+      "zona": "ZPR 3",
+      "via": "VL",
+      "inscricao_imobiliaria": "25076-2",
+      "atividades": [
+        { "cnae": "4681-8/01", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
       ]
     }
   ]

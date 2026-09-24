@@ -60,8 +60,10 @@ class ReginProtocoloSimulacaoTest extends TestCase
 
         $codigos = array_column($catalogo, 'codigo');
 
-        $this->assertCount(43, $catalogo);
+        $this->assertCount(45, $catalogo);
         $this->assertContains('43747', $codigos);
+        $this->assertContains('594902-5', $codigos);
+        $this->assertContains('25076-2', $codigos);
         $this->assertContains('abrigado-2108519', $codigos);
         $this->assertContains('sede-virtual', $codigos);
         $this->assertContains('13336', $codigos);
@@ -92,6 +94,31 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertContains('dupla-r1-r24', $codigos);
         $this->assertContains('dupla-r25-r52', $codigos);
         $this->assertContains('dupla-r26-r51', $codigos);
+    }
+
+    public function test_inscricoes_reais_trazem_territorio_descoberto_da_base_oficial(): void
+    {
+        $catalogo = app(ReginProtocoloCatalog::class);
+
+        $pituba = $catalogo->porCodigo('594902-5');
+        $this->assertSame('594902-5', $pituba['inscricao_imobiliaria']);
+        $this->assertSame('ZPR 3', $pituba['zona']);
+        $this->assertSame('VL', $pituba['via']);
+        $this->assertSame('Edificação Residencial', $pituba['tipo_imovel']);
+        $this->assertSame(205.0, $pituba['area_utilizada']);
+        $this->assertSame('7311-4/00', $pituba['atividades'][0]['cnae']);
+        $this->assertSame('P11', $pituba['atividades'][0]['perguntas'][0]['codigo']);
+        $this->assertFalse($pituba['atividades'][0]['perguntas'][0]['valor']);
+
+        $garcia = $catalogo->porCodigo('25076-2');
+        $this->assertSame('25076-2', $garcia['inscricao_imobiliaria']);
+        $this->assertSame('ZPR 3', $garcia['zona']);
+        $this->assertSame('VL', $garcia['via']);
+        $this->assertSame('Edificação Residencial', $garcia['tipo_imovel']);
+        $this->assertSame(32.0, $garcia['area_utilizada']);
+        $this->assertSame('4681-8/01', $garcia['atividades'][0]['cnae']);
+        $this->assertSame('P11', $garcia['atividades'][0]['perguntas'][0]['codigo']);
+        $this->assertFalse($garcia['atividades'][0]['perguntas'][0]['valor']);
     }
 
     public function test_novos_protocolos_trazem_cnae_zona_via_e_respostas_do_pdf(): void
@@ -154,7 +181,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
             );
         }
 
-        $this->assertSame(20, count(array_filter(
+        $this->assertSame(22, count(array_filter(
             $todos,
             static fn (array $p): bool => ! str_starts_with((string) $p['codigo'], 'dupla-')
                 && ! str_starts_with((string) $p['codigo'], 'regra-'),
@@ -378,7 +405,7 @@ class ReginProtocoloSimulacaoTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/risco/simulacao-regin')
-                ->has('protocolos', 43)
+                ->has('protocolos', 45)
                 ->has('execucoes', 0)
                 ->where('aviso', fn ($aviso) => is_string($aviso) && str_contains($aviso, 'REGIN')));
 
