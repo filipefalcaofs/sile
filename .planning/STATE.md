@@ -27,6 +27,32 @@ progress:
 
 # Project State
 
+## 2026-09-24 — Autenticação AD do console (API institucional SEDUR)
+
+Decisões:
+- Console híbrido: `users.auth_type` (ad|local) + `users.ad_username` (unique); vínculo determinístico, sem inferência por e-mail/CPF.
+- AD só valida identidade; sessão, autorização (Spatie) e auditoria seguem Laravel (guard gestao). Sem fallback de conta AD para senha local.
+- Token Bearer da API SEDUR é transitório (descartado ao fim da request de login); senha AD nunca persistida/logada.
+- `pessoaView` somente com o CPF do próprio usuário autenticado (minimização LGPD); consulta a terceiros pelo console BLOQUEADA.
+- Spec: docs/superpowers/specs/2026-09-24-login-ad-console-design.md
+
+Pendências externas (bloqueios):
+- TI-SEDUR: escopo/TTL do token do /auth; ambiente de homologação da API e credenciais de teste. A integração só se conclui com validação contra homologação real, com evidência da chamada registrada.
+- DPO: base legal do tratamento de nome/CPF de servidores; janela de retenção de access_logs.
+- SEDUR: política de desprovisionamento (hoje: validação a cada login + inativação manual; sincronização proativa depende de a API oferecer consulta de status funcional).
+
+## Regras territoriais RT-01 a RT-05 + hub Motor de regras (2026-09-23)
+
+Pacote normativo SEDUR 2026-08-28 ("Especificação de Regras de Negócio e Tratamentos do Sistema") implementado como **dado versionado** (domínio `territorial` em `rule_versions`, sensível/quatro olhos), plugado no motor de decisão. Spec de referência: `docs/superpowers/specs/2026-08-28-regras-territoriais-louos-design.md`.
+
+- **Modelo:** `territorial_rules` (tipo/efeito/alvo: cod_log, camada WFS + filtro CQL, zona_alvo, motivo_analise, decision_text_id, ativo) + `territorial_rule_cnaes` + `territorial_rule_addresses` (CODLOG/número/bairro). Enums `TerritorialRuleType`/`TerritorialRuleEffect`; `RuleDomain::Territorial`; `TipoGatilho::RegraTerritorial` (queda do expresso).
+- **CODLOG no processo:** `viability_requests.cod_log` materializado pelo `TerritorioProcessoService` a partir do atributo CODLOG da camada de vias versionada (mesma disciplina write-once de zona/bairro; backfill `geo:materializar-territorio` cobre cod_log) e exposto na ficha (`localizacao.cod_log`). DECISÃO: sem fallback WFS de logradouro — `DWithin` em metros é não confiável no WFS (armadilha medida no inventário GeoServer); a fonte do CODLOG é a camada de vias (em produção, carga integral).
+- **Motor:** `TerritorialRuleService::avaliar` roda no `FluxoExpressoService` logo após a resolução fresca — RT-01 (logradouro 212 × 21 CNAEs deduplicados; OPEN-RT-1 resolvido por código) INDEFERE com o texto legal do art. 172-A (decision_texts `territorial.indeferimento.logradouro_cnae`, placeholders :alvo/:fundamento); poligonais ativas (ZEM/ZPAM/ZUE) encaminham à análise com o motivo EXATO do requisito + queda `regra_territorial`; allow-list de Itaigara não defere, só devolve ao fluxo. Casamento por CODLOG oficial; sem CODLOG, fallback por nome normalizado do logradouro. CNAE marcado para exclusão não dispara RT-01. Degradação honesta (CA-RT-09): ponto ausente/camada indisponível/WFS fora → análise com a indisponibilidade registrada, NUNCA deferimento por omissão. Toggle de fluxo `features.geoserver_territorio` (parâmetro 98).
+- **RT-05 (a)/(b):** gancho no `LouosEnquadramentoService` — permissão do Quadro 10 com marcador `(a)`/`(b)` em `observacao` só vale nas localizações da allow-list versionada (RT-05-A: via 578 + bairros Calçada/São Cristóvão; RT-05-B: 8 vias ZCLMu); fora → proibido; sem CODLOG/bairro → pendente. PENDÊNCIA DE CURADORIA: o CSV oficial do Quadro 10 não traz a coluna/marcadores de observação — quais células carregam (a)/(b) depende da fonte oficial SEDUR (mecanismo pronto e testado; dado pendente).
+- **Hub Motor de regras:** `/gestao/louos` vira hub com abas Quadros LOUOS / Enquadramento (a "Planilha de regras" migrou; rota antiga redireciona) / Regras territoriais (CRUD versionado: edição grava no rascunho, publicação quatro olhos, reativar/descartar — `TerritorialRuleDraftService` + `TerritorialRuleCopier`). Menu: "Quadros LOUOS" → "Motor de regras" (anyOf consultar-louos/consultar-cnaes), "Planilha de regras" sai da sidebar (grupo Regras 12→11); cada aba re-checa a permissão do domínio no controller.
+- **Poligonais DESTRAVADAS (2026-09-23, evidência ao vivo do host de produção via exec no sile-app — a rede de dev é barrada pelo firewall):** RT-02 Vela Branca/Itaigara e RT-03 ABM ATIVAS com filtros confirmados — loteamentos em `parcelamento_poligonal:VM_PARCELAMENTO` (atributo PARCELAMENTO em minúsculas: `PARCELAMENTO ILIKE 'vela branca'` / `'itaigara'`; Itaigara inclui o loteamento + desdobros/remembramento do mesmo nome) e ABM na camada POLIGONAL `borda_maritima:VM_BORDA_MARITIMA_TRECHOS` (`TRECHOS IN ('5','6')` — a `l_savam:VM_L_SAVAM_TRECHOS_ABM_2016` é LineString e não serve para ponto-em-polígono). Query combinada INTERSECTS+filtro CQL provada ao vivo nos dois casos; ZEM/ZPAM/ZUE reconfirmadas. **Bloqueios honestos remanescentes:** RT-05 (c) ("depósitos de produtos perigosos somente em centralidades") NÃO implementada — qualitativa, depende do mapeamento SEDUR de subcategorias × centralidades (OPEN-RT-4). OPEN-RT-2: Hiperideal com CODLOG 5209 presumido (mesma via do item 10) — confirmar com a SEDUR. OPEN-RT-3: grafia "AMB" reproduzida do documento oficial. Curadoria pendente: o CSV oficial do Quadro 10 não traz os marcadores (a)/(b) — quais células carregam a observação depende da fonte oficial SEDUR (mecanismo pronto e testado).
+- **Verificação:** suítes Louos/Expresso/Geo/Analise/Tratamento verdes (TerritorialRuleSchema/Seeder/Service/Crud + FluxoExpressoTerritorial + LouosQuadro10Observacao + TerritorioProcesso + ficha); vitest gestao-nav 13/13; tsc/build verdes. Consulta prévia/simulação NÃO avaliam RT-01 (são orientativas; a decisão autoritativa é o protocolo) — avaliar aviso prévio como melhoria futura. NOTA DEV: sem rota de rede ao GeoServer (firewall), as regras de poligonal ativas degradam TODA decisão para análise (CA-RT-09) — o exemplo de deferimento navegável do ExpressoDevSeeder depende da rota ao GeoServer ou da futura importação versionada das camadas ZEM/ZPAM/ZUE (HU-107); em teste, o WFS é mockado (permitido).
+
 ## Parametrização enxuta (2026-09-22)
 
 Pedido do usuário: a parametrização estava exagerada. A política vigente deixa de ser "nenhum valor de negócio hardcoded".
