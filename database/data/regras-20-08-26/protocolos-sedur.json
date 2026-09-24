@@ -713,6 +713,20 @@
       "atividades": [
         { "cnae": "4681-8/01", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
       ]
+    },
+    {
+      "codigo": "34467-2",
+      "rotulo": "Inscrição 34467-2",
+      "processo": "5921000030-00990026/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": "Edificação Comercial",
+      "area_utilizada": 180.0,
+      "zona": "ZPR 3",
+      "via": "VA-II",
+      "inscricao_imobiliaria": "34467-2",
+      "atividades": [
+        { "cnae": "4681-8/02", "perguntas": [] }
+      ]
     }
   ]
 }
