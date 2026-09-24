@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\AuthType;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\User;
@@ -33,6 +34,7 @@ class UserFactory extends Factory
             'phone' => fake()->numerify('(71) 9####-####'),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'auth_type' => AuthType::Local,
             'remember_token' => Str::random(10),
         ];
     }
@@ -78,6 +80,17 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'inactivated_at' => now(),
+        ]);
+    }
+
+    /**
+     * Conta vinculada ao AD corporativo (autenticação via API SEDUR).
+     */
+    public function ad(?string $username = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'auth_type' => AuthType::Ad,
+            'ad_username' => $username ?? fake()->userName(),
         ]);
     }
 
