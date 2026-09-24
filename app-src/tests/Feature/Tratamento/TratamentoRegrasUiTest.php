@@ -11,6 +11,11 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
+/**
+ * A planilha de enquadramento virou aba do hub Motor de regras
+ * (/gestao/louos?aba=enquadramento). A rota antiga (/gestao/regras-tratamento)
+ * redireciona para a aba — links existentes não quebram.
+ */
 class TratamentoRegrasUiTest extends TestCase
 {
     use LazilyRefreshDatabase;
@@ -22,7 +27,14 @@ class TratamentoRegrasUiTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    public function test_pagina_mostra_planilha_vigente(): void
+    public function test_rota_antiga_redireciona_para_a_aba_do_hub(): void
+    {
+        $this->actingAs(User::factory()->administrador()->withAcceptedLgpdTerm()->create(), 'gestao')
+            ->get('/gestao/regras-tratamento')
+            ->assertRedirect('/gestao/louos?aba=enquadramento');
+    }
+
+    public function test_aba_enquadramento_mostra_planilha_vigente(): void
     {
         $versao = RuleVersion::factory()->create([
             'domain' => RuleDomain::RiscoTratamento,
@@ -31,23 +43,24 @@ class TratamentoRegrasUiTest extends TestCase
         (new TratamentoRegrasImportService)->import($versao, database_path('data/regras-20-08-26'));
 
         $this->actingAs(User::factory()->administrador()->withAcceptedLgpdTerm()->create(), 'gestao')
-            ->get('/gestao/regras-tratamento')
+            ->get('/gestao/louos?aba=enquadramento')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('gestao/tratamento/index')
-                ->where('versao', 'planilha-20-08-26')
-                ->where('contagens.perguntas', 32)
-                ->has('perguntas', 32));
+                ->component('gestao/louos/index')
+                ->where('aba', 'enquadramento')
+                ->where('enquadramento.versao', 'planilha-20-08-26')
+                ->where('enquadramento.contagens.perguntas', 32)
+                ->has('enquadramento.perguntas', 32));
     }
 
-    public function test_pagina_sem_versao_nao_inventa_planilha(): void
+    public function test_aba_enquadramento_sem_versao_nao_inventa_planilha(): void
     {
         $this->actingAs(User::factory()->administrador()->withAcceptedLgpdTerm()->create(), 'gestao')
-            ->get('/gestao/regras-tratamento')
+            ->get('/gestao/louos?aba=enquadramento')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('gestao/tratamento/index')
-                ->where('versao', null)
-                ->where('contagens.cnaes', 0));
+                ->component('gestao/louos/index')
+                ->where('enquadramento.versao', null)
+                ->where('enquadramento.contagens.cnaes', 0));
     }
 }

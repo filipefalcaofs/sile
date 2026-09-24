@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * do FluxoExpressoService (decisão SEDUR 22/09/2026 — a planilha prevalece
  * sobre a RN-041-B).
  */
-#[Fillable(['rule_version_id', 'regra', 'pergunta', 'resposta', 'faixa', 'tipo_dirige', 'codigo_louos', 'fluxo', 'chave'])]
+#[Fillable(['rule_version_id', 'regra', 'pergunta', 'resposta', 'faixa', 'tipo_dirige', 'codigo_louos', 'fluxo', 'bloqueia', 'chave'])]
 class TratamentoRegraRamo extends Model
 {
     /** @use HasFactory<TratamentoRegraRamoFactory> */
@@ -35,6 +35,7 @@ class TratamentoRegraRamo extends Model
             'pergunta' => 'integer',
             'resposta' => 'boolean',
             'tipo_dirige' => 'boolean',
+            'bloqueia' => 'boolean',
         ];
     }
 

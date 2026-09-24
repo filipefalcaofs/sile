@@ -1,7 +1,7 @@
 /**
  * Catálogo único da sidebar de Gestão. Fonte de verdade do menu e do Cmd+K.
  *
- * Antes de incluir, mover ou criar grupo, siga a árvore de grupos do console.
+ * Antes de incluir, mover ou criar grupo: seguir a árvore de decisão do menu.
  */
 
 export type GestaoNavIcon =
@@ -25,7 +25,6 @@ export type GestaoNavIcon =
     | 'road'
     | 'checklist'
     | 'paperclip'
-    | 'sheet'
     | 'flask'
     | 'chart'
     | 'clock'
@@ -142,7 +141,7 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 icon: 'bolt',
                 permission: 'manter-gatilhos-risco',
             },
-            { name: 'Quadros LOUOS', href: '/gestao/louos', icon: 'book', permission: 'consultar-louos' },
+            { name: 'Motor de regras', href: '/gestao/louos', icon: 'book', permission: ['consultar-louos', 'consultar-cnaes'] },
             { name: 'Zonas', href: '/gestao/louos/zonas', icon: 'hexagon', permission: 'manter-louos' },
             { name: 'Vias', href: '/gestao/louos/vias', icon: 'road', permission: 'manter-louos' },
             {
@@ -156,12 +155,6 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 href: '/gestao/escritorio-virtual/anexos',
                 icon: 'paperclip',
                 permission: 'manter-cnaes',
-            },
-            {
-                name: 'Planilha de regras',
-                href: '/gestao/regras-tratamento',
-                icon: 'sheet',
-                permission: 'consultar-cnaes',
             },
             { name: 'Simulação de regras', href: '/gestao/louos/simulacao', icon: 'flask', permission: 'manter-louos' },
         ],

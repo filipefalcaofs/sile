@@ -6,11 +6,19 @@ use App\Enums\RuleDomain;
 use App\Enums\RuleVersionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\PublishLouosVersionRequest;
+use App\Models\DecisionText;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\RuleVersion;
+use App\Models\TerritorialRule;
+use App\Models\TratamentoCnaeBinding;
+use App\Models\TratamentoEnquadramento;
+use App\Models\TratamentoPendencia;
+use App\Models\TratamentoPergunta;
+use App\Models\TratamentoRegra;
 use App\Services\Louos\LouosMaintenanceService;
 use App\Services\Rules\RuleVersionService;
+use App\Services\Territorial\TerritorialRuleDraftService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
 use DomainException;
@@ -21,12 +29,14 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Consulta e manutenção dos Quadros da LOUOS no console SEDUR (HU-015..018 /
- * HU-046). A consulta lista a versão vigente de cada Quadro (resumo +
- * listagem paginada do selecionado, com busca/auditoria); a publicação gera uma
- * NOVA versão por quatro olhos (LouosMaintenanceService), preservando a anterior
- * — nunca edição destrutiva. Os Quadros vigentes são 10 e 11A. Espelha o
- * RiscoController (server-driven). Gate cross-guard via permission: nas rotas.
+ * Hub "Motor de regras" do console SEDUR (HU-015..018 / HU-046 + pacote
+ * normativo 2026-08-28): uma tela, três abas — Quadros LOUOS (10 e 11A),
+ * Enquadramento (planilha de tratamento vigente) e Regras territoriais
+ * (RT-01 a RT-05). A consulta lista a versão vigente de cada domínio; a
+ * publicação gera uma NOVA versão por quatro olhos, preservando a anterior —
+ * nunca edição destrutiva. Gate cross-guard via permission: nas rotas; cada
+ * aba re-checa a permissão do seu domínio (consultar-louos para quadros e
+ * territoriais, consultar-cnaes para enquadramento).
  */
 class LouosController extends Controller
 {
@@ -36,6 +46,17 @@ class LouosController extends Controller
      * inflar o catálogo de parâmetros) — precedente do RiscoController.
      */
     private const PER_PAGE_OPTIONS = [10, 15, 25, 50];
+
+    /**
+     * Abas do hub e a permissão exigida por cada uma.
+     *
+     * @var array<string, string>
+     */
+    private const ABAS = [
+        'quadros' => 'consultar-louos',
+        'enquadramento' => 'consultar-cnaes',
+        'territoriais' => 'consultar-louos',
+    ];
 
     /**
      * Param `quadro` → domínio de regra versionada do Quadro.
@@ -51,10 +72,21 @@ class LouosController extends Controller
         private LouosMaintenanceService $maintenance,
         private RuleVersionService $ruleVersions,
         private AuditService $audit,
+        private TerritorialRuleDraftService $territorialDrafts,
     ) {}
 
     public function index(Request $request): Response
     {
+        $aba = $request->string('aba')->toString();
+
+        if (! array_key_exists($aba, self::ABAS)) {
+            $aba = 'quadros';
+        }
+
+        // Cada aba re-checa a permissão do seu domínio — a rota aceita as duas
+        // (consultar-louos|consultar-cnaes) porque o hub é compartilhado.
+        abort_unless($request->user()->can(self::ABAS[$aba]), 403);
+
         $quadro = $request->string('quadro')->toString();
 
         if (! array_key_exists($quadro, self::QUADRO_DOMAINS)) {
@@ -72,13 +104,16 @@ class LouosController extends Controller
 
         $vigente = RuleVersion::vigente($domain)->first();
 
-        $itens = $this->listarQuadro($quadro, $vigente, $search, $perPage);
+        $itens = $aba === 'quadros'
+            ? $this->listarQuadro($quadro, $vigente, $search, $perPage)
+            : null;
 
         $this->audit->log(
             logName: 'louos',
             event: 'consulta-quadros',
-            description: 'Consulta dos Quadros vigentes da LOUOS no console',
+            description: 'Consulta do hub Motor de regras no console',
             properties: [
+                'aba' => $aba,
                 'quadro' => $quadro,
                 'versao' => $vigente?->version,
                 'busca' => $search !== '' ? $search : null,
@@ -88,6 +123,7 @@ class LouosController extends Controller
         );
 
         return Inertia::render('gestao/louos/index', [
+            'aba' => $aba,
             'quadros' => $this->resumoQuadros(),
             'quadroSelecionado' => $quadro,
             'itens' => $itens,
@@ -100,7 +136,150 @@ class LouosController extends Controller
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'urlRascunho' => route('gestao.louos.rascunho.show', ['quadro' => $quadro], false),
             'urlManual' => route('gestao.louos.manual', ['quadro' => $quadro], false),
+            'enquadramento' => $aba === 'enquadramento' ? $this->dadosEnquadramento() : null,
+            'territoriais' => $aba === 'territoriais' ? $this->dadosTerritoriais() : null,
         ]);
+    }
+
+    /**
+     * Dados da aba Enquadramento: a planilha de tratamento vigente (versão,
+     * contagens e perguntas) — migrada da tela "Planilha de regras", cuja rota
+     * antiga redireciona para cá.
+     *
+     * @return array{versao: string|null, contagens: array<string, int>, perguntas: array<int, mixed>}
+     */
+    private function dadosEnquadramento(): array
+    {
+        $vigente = RuleVersion::vigente(RuleDomain::RiscoTratamento)->first();
+
+        $perguntas = $vigente === null
+            ? []
+            : TratamentoPergunta::query()
+                ->where('rule_version_id', $vigente->getKey())
+                ->orderBy('numero')
+                ->get(['numero', 'texto', 'referencia'])
+                ->all();
+
+        $rascunho = RuleVersion::query()
+            ->where('domain', RuleDomain::RiscoTratamento->value)
+            ->where('status', RuleVersionStatus::Rascunho->value)
+            ->latest('id')
+            ->first();
+
+        $pendencias = $rascunho === null
+            ? []
+            : TratamentoPendencia::query()
+                ->where('rule_version_id', $rascunho->getKey())
+                ->orderBy('regra')
+                ->get(['regra', 'motivo'])
+                ->all();
+
+        return [
+            'versao' => $vigente?->version,
+            'contagens' => [
+                'cnaes' => $vigente === null ? 0 : TratamentoEnquadramento::query()->where('rule_version_id', $vigente->getKey())->distinct()->count('cnae'),
+                'enquadramentos' => $vigente === null ? 0 : TratamentoEnquadramento::query()->where('rule_version_id', $vigente->getKey())->count(),
+                'perguntas' => count($perguntas),
+                'regras' => $vigente === null ? 0 : TratamentoRegra::query()->where('rule_version_id', $vigente->getKey())->count(),
+                'bindings' => $vigente === null ? 0 : TratamentoCnaeBinding::query()->where('rule_version_id', $vigente->getKey())->count(),
+            ],
+            'perguntas' => $perguntas,
+            'rascunho' => $rascunho === null ? null : [
+                'id' => $rascunho->getKey(),
+                'versao' => $rascunho->version,
+                'arquivo' => $rascunho->source,
+                'autor_id' => $rascunho->created_by,
+                'pendencias' => $pendencias,
+            ],
+        ];
+    }
+
+    /**
+     * Dados da aba Regras territoriais (RT-01 a RT-05): a versão VIGENTE é a
+     * referência; com rascunho aberto, a listagem mostra o rascunho (é ele que
+     * está sendo editado) com o aviso de quem é o autor — a publicação é
+     * quatro olhos (outro mantenedor).
+     *
+     * @return array<string, mixed>
+     */
+    private function dadosTerritoriais(): array
+    {
+        $vigente = RuleVersion::vigente(RuleDomain::Territorial)->first();
+        $rascunho = $this->territorialDrafts->rascunhoAtual();
+        $exibida = $rascunho ?? $vigente;
+
+        $regras = $exibida === null
+            ? []
+            : TerritorialRule::query()
+                ->where('rule_version_id', $exibida->getKey())
+                ->with(['cnaes', 'addresses'])
+                ->orderBy('id')
+                ->get()
+                ->map(fn (TerritorialRule $regra): array => [
+                    'id' => $regra->id,
+                    'codigo' => $regra->codigo,
+                    'titulo' => $regra->titulo,
+                    'tipo' => $regra->tipo->value,
+                    'tipo_label' => $regra->tipo->label(),
+                    'efeito' => $regra->efeito->value,
+                    'efeito_label' => $regra->efeito->label(),
+                    'cod_log' => $regra->cod_log,
+                    'logradouro_nome' => $regra->logradouro_nome,
+                    'camada' => $regra->camada,
+                    'camada_filtro' => $regra->camada_filtro,
+                    'zona_alvo' => $regra->zona_alvo,
+                    'motivo_analise' => $regra->motivo_analise,
+                    'base_legal' => $regra->base_legal,
+                    'decision_text_id' => $regra->decision_text_id,
+                    'ativo' => $regra->ativo,
+                    'cnaes' => $regra->cnaes->pluck('cnae')->sort()->values()->all(),
+                    'addresses' => $regra->addresses->map(fn ($endereco): array => [
+                        'rotulo' => $endereco->rotulo,
+                        'cod_log' => $endereco->cod_log,
+                        'logradouro_nome' => $endereco->logradouro_nome,
+                        'numero_porta' => $endereco->numero_porta,
+                        'bairro' => $endereco->bairro,
+                    ])->values()->all(),
+                ])
+                ->all();
+
+        return [
+            'versao_vigente' => $vigente?->version,
+            'versao_exibida' => $exibida?->version,
+            'rascunho' => $rascunho === null ? null : [
+                'id' => $rascunho->id,
+                'version' => $rascunho->version,
+                'autor' => $rascunho->author?->name,
+                'autor_id' => $rascunho->created_by,
+            ],
+            'regras' => $regras,
+            'versoes' => RuleVersion::query()
+                ->where('domain', RuleDomain::Territorial->value)
+                ->orderByRaw('case when status = ? then 0 when status = ? then 1 else 2 end', [
+                    RuleVersionStatus::Vigente->value,
+                    RuleVersionStatus::Rascunho->value,
+                ])
+                ->orderByDesc('id')
+                ->get()
+                ->map(fn (RuleVersion $versao): array => [
+                    'id' => $versao->id,
+                    'version' => $versao->version,
+                    'status' => $versao->status->value,
+                    'status_label' => $versao->status->label(),
+                    'valid_from' => $versao->valid_from?->toDateString(),
+                    'valid_to' => $versao->valid_to?->toDateString(),
+                    'total' => TerritorialRule::query()->where('rule_version_id', $versao->getKey())->count(),
+                    'vigente' => $versao->status === RuleVersionStatus::Vigente,
+                    'rascunho' => $versao->status === RuleVersionStatus::Rascunho,
+                    'autor_id' => $versao->created_by,
+                ])
+                ->values()
+                ->all(),
+            'textos' => DecisionText::query()
+                ->orderBy('key')
+                ->get(['id', 'key', 'description'])
+                ->all(),
+        ];
     }
 
     /**

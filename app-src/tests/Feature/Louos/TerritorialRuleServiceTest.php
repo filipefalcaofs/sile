@@ -146,6 +146,9 @@ class TerritorialRuleServiceTest extends TestCase
     {
         Http::fake(fn () => Http::response($this->featureCollectionComFeicao()));
 
+        // Isola a ZEM: as demais poligonais também casariam com o fake.
+        TerritorialRule::query()->where('codigo', '!=', 'RT-03-ZEM')->update(['ativo' => false]);
+
         $request = $this->solicitacao([], ['9602501']);
 
         $verdict = $this->avaliar($request);
@@ -181,13 +184,11 @@ class TerritorialRuleServiceTest extends TestCase
 
     public function test_regra_inativa_nao_e_avaliada(): void
     {
-        // RT-02-VELA-BRANCA nasce inativa (atributo de loteamento pendente):
-        // mesmo com a camada respondendo feição, a regra não dispara.
+        // Todas as poligonais inativas: mesmo com a camada respondendo feição,
+        // nenhuma regra dispara (inativa = bloqueio explícito, visível no cadastro).
         Http::fake(fn () => Http::response($this->featureCollectionComFeicao()));
 
-        TerritorialRule::query()->where('codigo', 'RT-03-ZEM')->update(['ativo' => false]);
-        TerritorialRule::query()->where('codigo', 'RT-03-ZPAM')->update(['ativo' => false]);
-        TerritorialRule::query()->where('codigo', 'RT-04-ZUE')->update(['ativo' => false]);
+        TerritorialRule::query()->update(['ativo' => false]);
 
         $request = $this->solicitacao([], ['9602501']);
 
@@ -196,15 +197,13 @@ class TerritorialRuleServiceTest extends TestCase
         $this->assertSame(TerritorialRuleVerdict::SEM_INCIDENCIA, $verdict->status);
     }
 
-    // CA-RT-04 / CA-RT-05 — allow-list de Itaigara (ativada sob demanda no teste)
+    // CA-RT-04 / CA-RT-05 — allow-list de Itaigara
     public function test_itaigara_fora_da_allowlist_encaminha_com_motivo(): void
     {
         Http::fake(fn () => Http::response($this->featureCollectionComFeicao()));
 
-        TerritorialRule::query()->where('codigo', 'RT-02-ITAIGARA')->update(['ativo' => true]);
-        TerritorialRule::query()->where('codigo', 'RT-03-ZEM')->update(['ativo' => false]);
-        TerritorialRule::query()->where('codigo', 'RT-03-ZPAM')->update(['ativo' => false]);
-        TerritorialRule::query()->where('codigo', 'RT-04-ZUE')->update(['ativo' => false]);
+        // Isola Itaigara: as demais poligonais também casariam com o fake.
+        TerritorialRule::query()->where('codigo', '!=', 'RT-02-ITAIGARA')->update(['ativo' => false]);
 
         $request = $this->solicitacao(['address_number' => '999'], ['9602501']);
         $request->forceFill(['cod_log' => '2631'])->save();
@@ -219,10 +218,7 @@ class TerritorialRuleServiceTest extends TestCase
     {
         Http::fake(fn () => Http::response($this->featureCollectionComFeicao()));
 
-        TerritorialRule::query()->where('codigo', 'RT-02-ITAIGARA')->update(['ativo' => true]);
-        TerritorialRule::query()->where('codigo', 'RT-03-ZEM')->update(['ativo' => false]);
-        TerritorialRule::query()->where('codigo', 'RT-03-ZPAM')->update(['ativo' => false]);
-        TerritorialRule::query()->where('codigo', 'RT-04-ZUE')->update(['ativo' => false]);
+        TerritorialRule::query()->where('codigo', '!=', 'RT-02-ITAIGARA')->update(['ativo' => false]);
 
         $request = $this->solicitacao(['address_number' => '135'], ['9602501']);
         $request->forceFill(['cod_log' => '518'])->save();

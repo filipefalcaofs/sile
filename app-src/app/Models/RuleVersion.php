@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'valid_from',
     'valid_to',
     'source',
+    'content_hash',
     'rules_version',
     'published_at',
     'created_by',

@@ -15,6 +15,7 @@ use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
+use App\Models\TerritorialRule;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
@@ -185,6 +186,10 @@ class FluxoExpressoTerritorialTest extends TestCase
             'type' => 'FeatureCollection',
             'features' => [['type' => 'Feature', 'properties' => ['SUBZONA' => 'ZEM'], 'geometry' => null]],
         ]));
+
+        // Isola a ZEM: o fake responde feição para qualquer camada, e as
+        // demais poligonais ativas casariam antes (ordem de cadastro).
+        TerritorialRule::query()->where('codigo', '!=', 'RT-03-ZEM')->update(['ativo' => false]);
 
         $request = $this->setupDeferivelSemHttp('4712100');
 

@@ -8,6 +8,7 @@ use App\Enums\RuleDomain;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\RuleVersion;
+use App\Models\TratamentoCondicionante;
 use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Territorial\TerritorialRuleService;
 use App\Services\Tratamento\TratamentoRamoInput;
@@ -165,6 +166,15 @@ class LouosEnquadramentoService
      */
     private function consolidar(array $enquadramento, array $quadro10, array $quadro11a, EnquadramentoInput $input): array
     {
+        if (($enquadramento['bloqueia'] ?? false) === true) {
+            return [
+                'resultado' => ResultadoViabilidade::NaoPermitido->value,
+                'fundamentacao' => $this->buildFundamentacao($enquadramento, $quadro10, $quadro11a),
+                'condicionantes' => [],
+                'motivo' => (string) ($enquadramento['motivo'] ?? 'A regra da planilha não permite o prosseguimento deste ramo'),
+            ];
+        }
+
         // Precedência 1 — anti-fachada: sem ramo resolvido não há grupo
         // de uso para verificar permissão; o consolidado é honestamente pendente.
         if (($enquadramento['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
@@ -351,7 +361,42 @@ class LouosEnquadramentoService
             $condicionantes[] = $vagas;
         }
 
-        return [...$condicionantes, ...$this->avaliarRestricoes($input)];
+        return [...$condicionantes, ...$this->condicionantesDaPlanilha($enquadramento), ...$this->avaliarRestricoes($input)];
+    }
+
+    /**
+     * Textos das condicionantes marcadas na linha da planilha vigente.
+     * Informativas na ficha: não rebaixam o veredito sozinhas.
+     *
+     * @param  array<string, mixed>  $enquadramento
+     * @return list<array<string, mixed>>
+     */
+    private function condicionantesDaPlanilha(array $enquadramento): array
+    {
+        $numeros = $enquadramento['condicionantes_planilha'] ?? [];
+
+        if (! is_array($numeros) || $numeros === [] || ($enquadramento['versao_regra'] ?? null) === null) {
+            return [];
+        }
+
+        $versao = RuleVersion::versao(RuleDomain::RiscoTratamento, (string) $enquadramento['versao_regra'])->first();
+
+        if ($versao === null) {
+            return [];
+        }
+
+        return TratamentoCondicionante::query()
+            ->where('rule_version_id', $versao->getKey())
+            ->whereIn('numero', $numeros)
+            ->orderBy('numero')
+            ->get()
+            ->map(fn (TratamentoCondicionante $item): array => [
+                'tipo' => 'planilha',
+                'numero' => $item->numero,
+                'texto' => $item->texto,
+                'motivo' => $item->texto,
+            ])
+            ->all();
     }
 
     /**

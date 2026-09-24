@@ -60,7 +60,8 @@ class RuleVersionService
     /**
      * Publica um rascunho: fecha a vigente anterior do mesmo domínio (sem
      * apagar) e promove o rascunho a vigente, auditando com a versão de regras.
-     * Em domínio sensível, rejeita publicador igual ao autor (quatro olhos).
+     * Em domínio sensível, rejeita publicador igual ao autor (quatro olhos),
+     * salvo quando o chamador dispensa essa exigência.
      *
      * O fechamento da anterior filtra status=vigente e exclui o próprio
      * rascunho: como o rascunho promovido também tem valid_to nulo, fechar
@@ -72,9 +73,10 @@ class RuleVersionService
         RuleVersion $draft,
         ?int $publishedBy = null,
         ?CarbonInterface $validFrom = null,
+        bool $fourEyes = true,
     ): RuleVersion {
-        return DB::transaction(function () use ($draft, $publishedBy, $validFrom): RuleVersion {
-            if ($draft->domain->isSensitive() && $publishedBy !== null && $publishedBy === $draft->created_by) {
+        return DB::transaction(function () use ($draft, $publishedBy, $validFrom, $fourEyes): RuleVersion {
+            if ($fourEyes && $draft->domain->isSensitive() && $publishedBy !== null && $publishedBy === $draft->created_by) {
                 throw new FourEyesViolationException(
                     'A publicação por quatro olhos exige um publicador diferente do autor do rascunho.'
                 );

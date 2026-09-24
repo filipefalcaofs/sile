@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'codigo_tll',
     'especificacao_tll',
     'classificacao',
+    'vagas',
 ])]
 class TratamentoEnquadramento extends Model
 {
@@ -38,6 +39,7 @@ class TratamentoEnquadramento extends Model
             'ate_m2' => 'decimal:2',
             'ate_m2_2' => 'decimal:2',
             'acima_m2' => 'decimal:2',
+            'vagas' => 'array',
         ];
     }
 
