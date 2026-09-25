@@ -7,6 +7,7 @@ use App\Http\Requests\Gestao\LoginRequest;
 use App\Models\AccessLog;
 use App\Models\User;
 use App\Services\Auth\DirectoryAuthenticator;
+use App\Services\Auth\UserSectorAssignmentSync;
 use App\Services\Sedur\SedurAuthInvalidCredentialsException;
 use App\Services\Sedur\SedurAuthSettings;
 use App\Services\Sedur\SedurAuthUnavailableException;
@@ -173,7 +174,29 @@ class LoginController extends Controller
             ]);
         }
 
-        if ($resultado->sincronizacaoFalhou) {
+        $sincronizacaoFalhou = $resultado->sincronizacaoFalhou;
+
+        // Sincronização cadastral com minimização: somente o nome oficial.
+        // name está no fillable — a auditoria HasAuditoria registra a mudança.
+        if ($resultado->nome !== null && $resultado->nome !== $user->name) {
+            $user->update(['name' => $resultado->nome]);
+        }
+
+        // Lotação via discovery (mesmo token transitório). Falha aqui não
+        // derruba o login — identidade já validada no /auth.
+        if ($resultado->setorCodigo !== null || $resultado->setorNome !== null) {
+            try {
+                app(UserSectorAssignmentSync::class)->syncFromDiscovery(
+                    $user,
+                    $resultado->setorCodigo,
+                    $resultado->setorNome,
+                );
+            } catch (\Throwable) {
+                $sincronizacaoFalhou = true;
+            }
+        }
+
+        if ($sincronizacaoFalhou) {
             AccessLog::create([
                 'user_id' => $user->id,
                 'email' => $user->email,
@@ -183,12 +206,6 @@ class LoginController extends Controller
                 'channel' => 'gestao',
                 'origin' => 'ad',
             ]);
-        }
-
-        // Sincronização cadastral com minimização: somente o nome oficial.
-        // name está no fillable — a auditoria HasAuditoria registra a mudança.
-        if ($resultado->nome !== null && $resultado->nome !== $user->name) {
-            $user->update(['name' => $resultado->nome]);
         }
 
         return true;

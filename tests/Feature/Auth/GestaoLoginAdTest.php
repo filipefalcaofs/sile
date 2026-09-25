@@ -36,6 +36,12 @@ class GestaoLoginAdTest extends TestCase
     {
         Http::fake([
             '*/ws-autenticacao/auth' => Http::response(['token' => 'tk-fake']),
+            '*/ws-autenticacao/discovery' => Http::response([
+                'lotacao' => [
+                    'codigo' => null,
+                    'nome' => null,
+                ],
+            ]),
             '*/pessoaView/buscarPorCPF/*' => Http::response([
                 'nome' => $nome,
                 'endereco' => 'Rua Exemplo, 1',
@@ -250,6 +256,7 @@ class GestaoLoginAdTest extends TestCase
     {
         Http::fake([
             '*/ws-autenticacao/auth' => Http::response(['token' => 'tk-fake']),
+            '*/ws-autenticacao/discovery' => Http::response([], 502),
             '*/pessoaView/buscarPorCPF/*' => Http::response([], 502),
         ]);
 

@@ -29,23 +29,32 @@ class SedurDirectoryAuthenticatorTest extends TestCase
     {
         Http::fake([
             '*/ws-autenticacao/auth' => Http::response(['token' => 'tk-1']),
+            '*/ws-autenticacao/discovery' => Http::response([
+                'lotacao' => ['codigo' => '0231400300', 'nome' => 'Triagem'],
+            ]),
             '*/pessoaView/buscarPorCPF/*' => Http::response(['nome' => 'Filipe Falcao']),
         ]);
 
         $resultado = $this->authenticator()->attempt('filipefalcao', 'senha', '12345678901');
 
         $this->assertSame('Filipe Falcao', $resultado->nome);
+        $this->assertSame('0231400300', $resultado->setorCodigo);
+        $this->assertSame('Triagem', $resultado->setorNome);
         $this->assertFalse($resultado->sincronizacaoFalhou);
     }
 
     public function test_sem_cpf_nao_consulta_pessoa_view(): void
     {
-        Http::fake(['*/ws-autenticacao/auth' => Http::response(['token' => 'tk-1'])]);
+        Http::fake([
+            '*/ws-autenticacao/auth' => Http::response(['token' => 'tk-1']),
+            '*/ws-autenticacao/discovery' => Http::response(['lotacao' => ['codigo' => '1', 'nome' => 'A']]),
+        ]);
 
         $resultado = $this->authenticator()->attempt('filipefalcao', 'senha');
 
         $this->assertNull($resultado->nome);
-        Http::assertSentCount(1);
+        $this->assertSame('1', $resultado->setorCodigo);
+        Http::assertSentCount(2);
     }
 
     public function test_credencial_invalida_propaga_excecao_especifica(): void
@@ -70,6 +79,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
     {
         Http::fake([
             '*/ws-autenticacao/auth' => Http::response(['token' => 'tk-1']),
+            '*/ws-autenticacao/discovery' => Http::response(['lotacao' => ['codigo' => '1', 'nome' => 'A']]),
             '*/pessoaView/buscarPorCPF/*' => Http::response([], 502),
         ]);
 
@@ -77,5 +87,21 @@ class SedurDirectoryAuthenticatorTest extends TestCase
 
         $this->assertNull($resultado->nome);
         $this->assertTrue($resultado->sincronizacaoFalhou);
+        $this->assertSame('1', $resultado->setorCodigo);
+    }
+
+    public function test_falha_no_discovery_nao_derruba_a_autenticacao(): void
+    {
+        Http::fake([
+            '*/ws-autenticacao/auth' => Http::response(['token' => 'tk-1']),
+            '*/ws-autenticacao/discovery' => Http::response([], 502),
+            '*/pessoaView/buscarPorCPF/*' => Http::response(['nome' => 'Filipe Falcao']),
+        ]);
+
+        $resultado = $this->authenticator()->attempt('filipefalcao', 'senha', '12345678901');
+
+        $this->assertSame('Filipe Falcao', $resultado->nome);
+        $this->assertTrue($resultado->sincronizacaoFalhou);
+        $this->assertNull($resultado->setorCodigo);
     }
 }
