@@ -24,12 +24,24 @@ class GestaoLoginTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
+    public function test_conta_local_autentica_com_o_email_cadastrado(): void
+    {
+        $administrador = User::factory()->administrador()->create();
+
+        $this->post('/gestao/login', [
+            'identifier' => $administrador->email,
+            'password' => 'password',
+        ])->assertRedirect('/gestao');
+
+        $this->assertAuthenticatedAs($administrador, 'gestao');
+    }
+
     public function test_servidor_autentica_no_guard_gestao_sem_tocar_o_portal(): void
     {
         $administrador = User::factory()->administrador()->create();
 
         $response = $this->post('/gestao/login', [
-            'email' => $administrador->email,
+            'identifier' => $administrador->email,
             'password' => 'password',
         ]);
 
@@ -65,11 +77,11 @@ class GestaoLoginTest extends TestCase
         $cidadao = User::factory()->cidadao()->create();
 
         $response = $this->post('/gestao/login', [
-            'email' => $cidadao->email,
+            'identifier' => $cidadao->email,
             'password' => 'password',
         ]);
 
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors('identifier');
 
         $this->assertGuest('gestao');
 
@@ -85,11 +97,11 @@ class GestaoLoginTest extends TestCase
         $administrador = User::factory()->administrador()->create();
 
         $response = $this->post('/gestao/login', [
-            'email' => $administrador->email,
+            'identifier' => $administrador->email,
             'password' => 'senha-errada',
         ]);
 
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors('identifier');
 
         $this->assertGuest('gestao');
 
@@ -105,12 +117,12 @@ class GestaoLoginTest extends TestCase
         $administrador = User::factory()->administrador()->inactive()->create();
 
         $response = $this->post('/gestao/login', [
-            'email' => $administrador->email,
+            'identifier' => $administrador->email,
             'password' => 'password',
         ]);
 
         $response->assertSessionHasErrors([
-            'email' => 'Sua conta está inativa. Procure o administrador do sistema.',
+            'identifier' => 'Sua conta está inativa. Procure o administrador do sistema.',
         ]);
 
         $this->assertGuest('gestao');
@@ -126,13 +138,13 @@ class GestaoLoginTest extends TestCase
         $analista = User::factory()->analista()->unverified()->create();
 
         $response = $this->post('/gestao/login', [
-            'email' => $analista->email,
+            'identifier' => $analista->email,
             'password' => 'password',
         ]);
 
         // Mensagem neutra, sem remeter ao portal (separação de ambientes).
         $response->assertSessionHasErrors([
-            'email' => 'Confirme seu e-mail institucional antes de acessar o console.',
+            'identifier' => 'Confirme seu e-mail institucional antes de acessar o console.',
         ]);
 
         $this->assertGuest('gestao');
@@ -148,18 +160,18 @@ class GestaoLoginTest extends TestCase
 
         foreach (range(1, $max) as $tentativa) {
             $this->post('/gestao/login', [
-                'email' => $administrador->email,
+                'identifier' => $administrador->email,
                 'password' => 'senha-errada',
             ]);
         }
 
         $response = $this->post('/gestao/login', [
-            'email' => $administrador->email,
+            'identifier' => $administrador->email,
             'password' => 'senha-errada',
         ]);
 
         $this->assertGuest('gestao');
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors('identifier');
 
         $this->assertDatabaseHas('access_logs', [
             'email' => $administrador->email,
@@ -175,7 +187,7 @@ class GestaoLoginTest extends TestCase
         $this->get('/gestao/cnaes')->assertRedirect('/gestao/login');
 
         $response = $this->post('/gestao/login', [
-            'email' => $administrador->email,
+            'identifier' => $administrador->email,
             'password' => 'password',
         ]);
 
