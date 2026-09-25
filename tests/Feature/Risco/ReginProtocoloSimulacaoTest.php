@@ -130,6 +130,26 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertSame([], $comercio['atividades'][0]['perguntas']);
     }
 
+    public function test_inscricao_real_desenha_poligono_no_endereco_do_imovel(): void
+    {
+        // Regressão da divergência de zona (relato SEDUR 25/09): o polígono fixo
+        // de homologação no Centro caía na zona fictícia ZCN-1 e o materializar
+        // do protocolo sobrescrevia a zona real (ZPR 3) do catálogo. O polígono
+        // deve ser desenhado no endereço real da inscrição (Cadastro Imobiliário).
+        $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('594902-5');
+
+        $processo = ViabilityRequest::query()->find($relatorio['processo_id']);
+
+        $this->assertNotNull($processo);
+        $anel = $processo->property_polygon_geojson['coordinates'][0];
+        $centroLng = array_sum(array_column($anel, 0)) / count($anel);
+        $centroLat = array_sum(array_column($anel, 1)) / count($anel);
+
+        // Pituba (Rua Hilton Rodrigues, 300) — não o quadrado fixo do Centro.
+        $this->assertEqualsWithDelta(-38.465458, $centroLng, 0.001);
+        $this->assertEqualsWithDelta(-13.001053, $centroLat, 0.001);
+    }
+
     public function test_novos_protocolos_trazem_cnae_zona_via_e_respostas_do_pdf(): void
     {
         $catalogo = app(ReginProtocoloCatalog::class);

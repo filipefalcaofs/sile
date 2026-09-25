@@ -310,7 +310,7 @@ class ReginProtocoloSimulacaoService
             'address_neighborhood' => null,
             'address_zip' => '40000000',
             'property_registration' => $this->inscricaoDoCatalogo($protocolo),
-            'property_polygon_geojson' => self::POLIGONO_HOMOLOGACAO,
+            'property_polygon_geojson' => $this->poligonoDoProtocolo($protocolo),
             'is_virtual_office' => $sedeVirtual,
             'wants_virtual_office_hq' => $sedeVirtual,
             'simulation_snapshot' => $relatorio,
@@ -341,6 +341,40 @@ class ReginProtocoloSimulacaoService
         $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $ator);
 
         return $solicitacao->fresh() ?? $solicitacao;
+    }
+
+    /**
+     * Polígono do imóvel: quando o catálogo traz o ponto real da inscrição
+     * (Cadastro Imobiliário), desenha o quadrado ao redor dele — assim a zona
+     * materializada no protocolo (TerritorioProcessoService) bate com a zona do
+     * catálogo e o mapa mostra o local de verdade. Sem ponto, cai no quadrado
+     * fixo de homologação (Centro). Quadrado ~33 m, GeoJSON em [lng, lat].
+     *
+     * @param  array<string, mixed>  $protocolo
+     * @return array{type: string, coordinates: list<list<list<float>>>}
+     */
+    private function poligonoDoProtocolo(array $protocolo): array
+    {
+        $ponto = $protocolo['ponto'] ?? null;
+        $lat = is_array($ponto) && is_numeric($ponto['lat'] ?? null) ? (float) $ponto['lat'] : null;
+        $lng = is_array($ponto) && is_numeric($ponto['lng'] ?? null) ? (float) $ponto['lng'] : null;
+
+        if ($lat === null || $lng === null) {
+            return self::POLIGONO_HOMOLOGACAO;
+        }
+
+        $delta = 0.0003;
+
+        return [
+            'type' => 'Polygon',
+            'coordinates' => [[
+                [$lng - $delta, $lat - $delta],
+                [$lng + $delta, $lat - $delta],
+                [$lng + $delta, $lat + $delta],
+                [$lng - $delta, $lat + $delta],
+                [$lng - $delta, $lat - $delta],
+            ]],
+        ];
     }
 
     private function processoExistente(string $codigo, string $referencia): ?ViabilityRequest
