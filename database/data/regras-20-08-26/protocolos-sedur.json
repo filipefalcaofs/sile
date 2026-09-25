@@ -696,6 +696,7 @@
       "zona": "ZPR 3",
       "via": "VL",
       "inscricao_imobiliaria": "594902-5",
+      "ponto": { "lat": -13.001053, "lng": -38.465458 },
       "atividades": [
         { "cnae": "7311-4/00", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
       ]
@@ -710,6 +711,7 @@
       "zona": "ZPR 3",
       "via": "VL",
       "inscricao_imobiliaria": "25076-2",
+      "ponto": { "lat": -12.992304, "lng": -38.518220 },
       "atividades": [
         { "cnae": "4681-8/01", "perguntas": [{ "codigo": "P11", "texto": "A atividade será desenvolvida no local?", "resposta": "Não, no local funcionará o escritório da empresa.", "valor": false }] }
       ]
@@ -724,6 +726,7 @@
       "zona": "ZPR 3",
       "via": "VA-II",
       "inscricao_imobiliaria": "34467-2",
+      "ponto": { "lat": -12.977769, "lng": -38.516404 },
       "atividades": [
         { "cnae": "4681-8/02", "perguntas": [] }
       ]
