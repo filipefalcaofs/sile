@@ -3,8 +3,10 @@
 namespace Tests\Feature\Tratamento;
 
 use App\Models\TratamentoCnaeBinding;
+use App\Models\TratamentoCondicionante;
 use App\Models\TratamentoEnquadramento;
 use App\Models\TratamentoPergunta;
+use App\Models\TratamentoRegraRamo;
 use Database\Seeders\TratamentoRegrasSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -36,5 +38,23 @@ class TratamentoRegrasSeederTest extends TestCase
             'Re-seed não deve apagar nem reimportar uma planilha já carregada.',
         );
         $this->assertSame(2850, TratamentoEnquadramento::query()->count());
+    }
+
+    public function test_seeder_completa_a_carga_quando_faltam_ramos_e_condicionantes(): void
+    {
+        $this->seed(TratamentoRegrasSeeder::class);
+
+        // Reproduz o estado de produção do incidente VIA-2026-000149: versão
+        // vigente carregada antes do regras-fluxo.csv existir — enquadramentos
+        // presentes, ramos e condicionantes zerados.
+        TratamentoRegraRamo::query()->delete();
+        TratamentoCondicionante::query()->delete();
+
+        $this->seed(TratamentoRegrasSeeder::class);
+
+        $this->assertSame(191, TratamentoRegraRamo::query()->count(), 'Re-seed deve completar os ramos curados ausentes.');
+        $this->assertSame(32, TratamentoCondicionante::query()->count(), 'Re-seed deve completar as condicionantes ausentes.');
+        $this->assertSame(2850, TratamentoEnquadramento::query()->count(), 'A carga existente não pode ser apagada na completude.');
+        $this->assertSame(3114, TratamentoCnaeBinding::query()->count());
     }
 }

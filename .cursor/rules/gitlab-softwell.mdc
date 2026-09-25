@@ -19,6 +19,8 @@ Sempre que o usuário pedir para subir versão, publicar, fazer push ou atualiza
 
 Só com pedido explícito. Fast-forward; nunca `--force` em `main`.
 
+Toda publicação cria uma tag anotada SemVer `vX.Y.Z` no commit empurrado, sequencial no remote de destino. PATCH para correção, MINOR para funcionalidade compatível, MAJOR para mudança incompatível. A mensagem da tag explica o que foi enviado. Empurrar só essa tag (`git push softwell vX.Y.Z`). Nunca `git push --tags`. Sem a tag, a publicação não está completa. A mesma regra vale para a SEMIT e para qualquer outro projeto.
+
 ```bash
 git remote get-url softwell
 git push -u softwell HEAD

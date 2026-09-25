@@ -4,6 +4,7 @@ import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import Label from '@/components/form/label';
+import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import type { SharedProps } from '@/types';
 
 interface Pergunta {
@@ -17,6 +18,54 @@ interface Pendencia {
     motivo: string;
 }
 
+interface Regra {
+    numero: number;
+    tratamento: string;
+    referencia: string | null;
+}
+
+interface Ramo {
+    regra: number;
+    pergunta: number | null;
+    resposta: boolean | null;
+    faixa: string | null;
+    tipo_dirige: boolean | null;
+    codigo_louos: string | null;
+    fluxo: string;
+    bloqueia: boolean;
+}
+
+interface Condicionante {
+    numero: number;
+    texto: string;
+    observacao: string | null;
+}
+
+interface Cnlu {
+    codigo: string;
+    texto: string;
+}
+
+interface Nota {
+    chave: string;
+    texto: string;
+}
+
+interface EnquadramentoLinha {
+    cnae: string;
+    codigo_louos: string;
+    subcategoria: string;
+    grupo: string;
+    risco: string;
+    ate_m2: string | null;
+    enquadramento2: string | null;
+    enquadramento3: string | null;
+    acima_m2: string | null;
+    classificacao: string | null;
+    codigo_tll: string | null;
+    regra: number | null;
+}
+
 export interface EnquadramentoData {
     versao: string | null;
     contagens: {
@@ -24,9 +73,23 @@ export interface EnquadramentoData {
         enquadramentos: number;
         perguntas: number;
         regras: number;
+        ramos: number;
+        condicionantes: number;
         bindings: number;
     };
     perguntas: Pergunta[];
+    regras: Regra[];
+    ramos: Ramo[];
+    condicionantes: Condicionante[];
+    cnlu: Cnlu[];
+    notas: Nota[];
+    enquadramentos: {
+        data: EnquadramentoLinha[];
+        links: PaginationLink[];
+        from: number | null;
+        to: number | null;
+        total: number;
+    };
     rascunho: {
         id: number;
         versao: string;
@@ -43,7 +106,7 @@ export interface EnquadramentoData {
  * o Quadro 11A.
  */
 export default function AbaEnquadramento({ enquadramento }: { enquadramento: EnquadramentoData }) {
-    const { versao, contagens, perguntas, rascunho } = enquadramento;
+    const { versao, contagens, perguntas, regras, ramos, condicionantes, cnlu, notas, enquadramentos, rascunho } = enquadramento;
     const { auth } = usePage<SharedProps>().props;
     const canMaintain = auth.permissions.includes('manter-louos');
     const form = useForm<{ arquivo: File | null }>({ arquivo: null });
@@ -142,8 +205,8 @@ export default function AbaEnquadramento({ enquadramento }: { enquadramento: Enq
                     <div className="flex flex-wrap items-center gap-2">
                         <Badge color="success">{versao}</Badge>
                         <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {contagens.cnaes} CNAEs · {contagens.enquadramentos} enquadramentos · {contagens.regras}{' '}
-                            regras
+                            {contagens.cnaes} CNAEs · {contagens.enquadramentos} enquadramentos · {contagens.regras} regras ·{' '}
+                            {contagens.ramos} ramos · {contagens.condicionantes} condicionantes
                         </span>
                     </div>
                 </CardContent>
@@ -168,6 +231,156 @@ export default function AbaEnquadramento({ enquadramento }: { enquadramento: Enq
                             ))}
                         </ol>
                     )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader title="Regras" description="Texto de cada regra da versão vigente. A Regra 45 não existe na planilha." />
+                <CardContent>
+                    <ol className="flex flex-col gap-4">
+                        {regras.map((regra) => (
+                            <li key={regra.numero} className="text-sm text-gray-800 dark:text-white/90">
+                                <span className="font-medium">R{regra.numero}.</span>
+                                <span className="mt-1 block whitespace-pre-wrap">{regra.tratamento}</span>
+                                {regra.referencia && (
+                                    <span className="mt-1 block text-gray-500 dark:text-gray-400">{regra.referencia}</span>
+                                )}
+                            </li>
+                        ))}
+                    </ol>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader title="Ramos" description="Pergunta, resposta, faixa, tipo de imóvel, código LOUOS e fluxo que o motor casa." />
+                <CardContent>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead>
+                                <tr className="text-gray-500 dark:text-gray-400">
+                                    <th className="py-2 pr-3">Regra</th>
+                                    <th className="py-2 pr-3">Pergunta</th>
+                                    <th className="py-2 pr-3">Resposta</th>
+                                    <th className="py-2 pr-3">Faixa</th>
+                                    <th className="py-2 pr-3">Tipo</th>
+                                    <th className="py-2 pr-3">LOUOS</th>
+                                    <th className="py-2 pr-3">Fluxo</th>
+                                    <th className="py-2">Bloqueia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {ramos.map((ramo, indice) => (
+                                    <tr key={`${ramo.regra}-${indice}`} className="border-t border-gray-200 dark:border-gray-800">
+                                        <td className="py-2 pr-3">{ramo.regra}</td>
+                                        <td className="py-2 pr-3">{ramo.pergunta ?? '—'}</td>
+                                        <td className="py-2 pr-3">{ramo.resposta === null ? '—' : ramo.resposta ? 'Sim' : 'Não'}</td>
+                                        <td className="py-2 pr-3">{ramo.faixa ?? '—'}</td>
+                                        <td className="py-2 pr-3">{ramo.tipo_dirige ? 'Dirige regra' : '—'}</td>
+                                        <td className="py-2 pr-3">{ramo.codigo_louos ?? '—'}</td>
+                                        <td className="py-2 pr-3">{ramo.fluxo}</td>
+                                        <td className="py-2">{ramo.bloqueia ? 'Sim' : 'Não'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader title="Condicionantes" description="Textos que acompanham a decisão quando a linha do CNAE marca o número." />
+                <CardContent>
+                    {condicionantes.length === 0 ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Nenhuma condicionante nesta versão.</p>
+                    ) : (
+                        <ol className="flex flex-col gap-3">
+                            {condicionantes.map((item) => (
+                                <li key={item.numero} className="text-sm text-gray-800 dark:text-white/90">
+                                    <span className="font-medium">{item.numero}.</span> {item.texto}
+                                </li>
+                            ))}
+                        </ol>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader title="Análise CNLU" description="Códigos que o motor manda para análise quando o subgrupo casa com a lista." />
+                <CardContent>
+                    {cnlu.length === 0 ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum código CNLU nesta versão.</p>
+                    ) : (
+                        <ul className="flex flex-col gap-2 text-sm text-gray-800 dark:text-white/90">
+                            {cnlu.map((item) => (
+                                <li key={item.codigo}>
+                                    <span className="font-medium">{item.codigo}.</span> {item.texto}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </CardContent>
+            </Card>
+
+            {notas.length > 0 && (
+                <Card>
+                    <CardHeader title="Notas da planilha" description="Condicionante geral e pergunta de regra geral." />
+                    <CardContent>
+                        <ul className="flex flex-col gap-3 text-sm text-gray-800 dark:text-white/90">
+                            {notas.map((nota) => (
+                                <li key={nota.chave}>
+                                    <span className="font-medium">{nota.chave}.</span>
+                                    <span className="mt-1 block whitespace-pre-wrap">{nota.texto}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            )}
+
+            <Card>
+                <CardHeader
+                    title="Enquadramentos"
+                    description="Linha que o motor escolhe: CNAE, código LOUOS, faixas de área, risco, classificação e TLL."
+                />
+                <CardContent>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead>
+                                <tr className="text-gray-500 dark:text-gray-400">
+                                    <th className="py-2 pr-3">CNAE</th>
+                                    <th className="py-2 pr-3">LOUOS</th>
+                                    <th className="py-2 pr-3">Subcategoria</th>
+                                    <th className="py-2 pr-3">Risco</th>
+                                    <th className="py-2 pr-3">Até m²</th>
+                                    <th className="py-2 pr-3">Faixa 2</th>
+                                    <th className="py-2 pr-3">Faixa 3</th>
+                                    <th className="py-2 pr-3">Classificação</th>
+                                    <th className="py-2">TLL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {enquadramentos.data.map((linha) => (
+                                    <tr key={`${linha.cnae}-${linha.codigo_louos}-${linha.subcategoria}`} className="border-t border-gray-200 dark:border-gray-800">
+                                        <td className="py-2 pr-3">{linha.cnae}</td>
+                                        <td className="py-2 pr-3">{linha.codigo_louos}</td>
+                                        <td className="py-2 pr-3">{linha.subcategoria}</td>
+                                        <td className="py-2 pr-3">{linha.risco}</td>
+                                        <td className="py-2 pr-3">{linha.ate_m2 ?? '—'}</td>
+                                        <td className="py-2 pr-3">{linha.enquadramento2 ?? '—'}</td>
+                                        <td className="py-2 pr-3">{linha.enquadramento3 ?? '—'}</td>
+                                        <td className="py-2 pr-3">{linha.classificacao ?? '—'}</td>
+                                        <td className="py-2">{linha.codigo_tll ?? '—'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="mt-4">
+                        <Pagination
+                            links={enquadramentos.links}
+                            meta={{ from: enquadramentos.from, to: enquadramentos.to, total: enquadramentos.total }}
+                        />
+                    </div>
                 </CardContent>
             </Card>
                 </>

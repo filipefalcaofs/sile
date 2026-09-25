@@ -4,6 +4,7 @@ namespace App\Services\Tratamento;
 
 use App\Models\RuleVersion;
 use App\Models\TratamentoCnaeBinding;
+use App\Models\TratamentoCondicionante;
 use App\Models\TratamentoEnquadramento;
 use App\Models\TratamentoPergunta;
 use App\Models\TratamentoRegra;
@@ -86,6 +87,28 @@ class TratamentoRegrasImportService
         // o fluxo expresso/semiexpresso do ramo é dado extraído dos textos
         // oficiais das regras — arquivo opcional; sem ele, a versão fica sem
         // ramos e o resolver cai na heurística (degradação honesta).
+        $condPath = $dir.'/condicionantes.csv';
+
+        if (is_file($condPath)) {
+            $conds = $this->lerCsv($condPath, ['numero', 'texto', 'observacao', 'usar_em_predio_comercial']);
+            $lidos += $conds['lidos'];
+            $rejected = [...$rejected, ...$conds['rejeitados']];
+            $this->contarUpsert(
+                TratamentoCondicionante::class,
+                $version,
+                array_map(fn (array $row): array => [
+                    'rule_version_id' => $version->getKey(),
+                    'numero' => (int) $row['numero'],
+                    'texto' => $row['texto'],
+                    'observacao' => $row['observacao'] !== '' ? $row['observacao'] : null,
+                ], $conds['rows']),
+                ['rule_version_id', 'numero'],
+                ['texto', 'observacao'],
+                $importados,
+                $atualizados,
+            );
+        }
+
         $fluxoPath = $dir.'/regras-fluxo.csv';
 
         if (is_file($fluxoPath)) {
