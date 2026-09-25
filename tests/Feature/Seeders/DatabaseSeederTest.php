@@ -319,21 +319,19 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        // Catálogo oficial SUCOM (HU-138), sem Simplifica e sem Recursos.
-        $this->assertSame(
-            SectorSeeder::NAMES,
-            Sector::query()->orderBy('id')->pluck('name')->all(),
+        // Catálogo oficial CEIN (planilha centro-informacao-setor), sem inventar setores.
+        $this->assertSame(282, Sector::query()->whereNotNull('code')->count());
+        $this->assertTrue(
+            Sector::query()->where('code', SectorSeeder::SECTOR_CODE)->where('active', true)->exists(),
         );
         $this->assertFalse(
-            Sector::query()->where('name', 'like', '%Simplifica%')->exists(),
-        );
-        $this->assertFalse(
-            Sector::query()->where('name', 'Recursos')->exists(),
+            Sector::query()->where('name', 'like', '%Simplifica%')->whereNull('code')->exists(),
         );
 
-        $setor = Sector::query()->where('name', SectorSeeder::SECTOR_NAME)->first();
-        $this->assertNotNull($setor, 'Esperava a Diretoria Geral de Análise e Licenciamento.');
+        $setor = Sector::query()->where('code', SectorSeeder::SECTOR_CODE)->first();
+        $this->assertNotNull($setor, 'Esperava o Setor de Triagem e Distribuição (CEIN).');
         $this->assertTrue($setor->active);
+        $this->assertSame(SectorSeeder::SECTOR_NAME, $setor->name);
 
         // Usuários dev da gestão (dados fictícios): um analista e um gestor,
         // ambos com o termo LGPD aceito e VINCULADOS ao setor — tornam a caixa,
@@ -380,14 +378,14 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
 
         // Setores/usuários/textos-padrão da análise estáveis no re-seed
-        // (firstOrCreate por chave estável — nada é duplicado).
-        $this->assertSame(count(SectorSeeder::NAMES), Sector::query()->count());
-        $this->assertSame(1, Sector::query()->where('name', SectorSeeder::SECTOR_NAME)->count());
+        // (sync por código CEIN / firstOrCreate — nada é duplicado).
+        $this->assertSame(282, Sector::query()->whereNotNull('code')->count());
+        $this->assertSame(1, Sector::query()->where('code', SectorSeeder::SECTOR_CODE)->count());
         $this->assertSame(1, User::query()->where('email', 'analista@sile.dev')->count());
         $this->assertSame(1, User::query()->where('email', 'gestor@sile.dev')->count());
         $this->assertSame(1, User::query()->where('email', 'apoio@sile.dev')->count());
         $analistaId = User::query()->where('email', 'analista@sile.dev')->value('id');
-        $setorId = Sector::query()->where('name', SectorSeeder::SECTOR_NAME)->value('id');
+        $setorId = Sector::query()->where('code', SectorSeeder::SECTOR_CODE)->value('id');
         $this->assertSame(
             1,
             DB::table('sector_user')->where('user_id', $analistaId)->where('sector_id', $setorId)->count(),
