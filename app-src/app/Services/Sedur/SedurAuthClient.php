@@ -3,7 +3,9 @@
 namespace App\Services\Sedur;
 
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Cliente HTTP da API institucional SEDUR (ws-autenticacao + ws-gp). Segue o
@@ -42,14 +44,17 @@ class SedurAuthClient
     public function sessao(string $usuario, string $senha): array
     {
         try {
-            $response = Http::timeout($this->timeout())
-                ->acceptJson()
+            $response = $this->http()
                 ->asJson()
                 ->post($this->settings->baseUrl().'/ws-autenticacao/auth', [
                     'usuario' => $usuario,
                     'senha' => $senha,
                 ]);
-        } catch (ConnectionException) {
+        } catch (ConnectionException $exception) {
+            Log::warning('API de autenticação institucional indisponível.', [
+                'motivo' => $exception->getMessage(),
+            ]);
+
             throw new SedurAuthUnavailableException('API de autenticação institucional indisponível.');
         }
 
@@ -60,6 +65,10 @@ class SedurAuthClient
         $token = $response->json('token');
 
         if (! $response->successful() || ! is_string($token) || $token === '') {
+            Log::warning('Falha ao autenticar na API institucional.', [
+                'status' => $response->status(),
+            ]);
+
             throw new SedurAuthUnavailableException('Falha ao autenticar na API institucional.');
         }
 
@@ -81,8 +90,7 @@ class SedurAuthClient
     public function discovery(string $token): array
     {
         try {
-            $response = Http::timeout($this->timeout())
-                ->acceptJson()
+            $response = $this->http()
                 ->withToken($token)
                 ->get($this->settings->baseUrl().'/ws-autenticacao/discovery');
         } catch (ConnectionException) {
@@ -182,8 +190,7 @@ class SedurAuthClient
     public function pessoaPorCpf(string $token, string $cpf): array
     {
         try {
-            $response = Http::timeout($this->timeout())
-                ->acceptJson()
+            $response = $this->http()
                 ->withToken($token)
                 ->get($this->settings->baseUrl().'/ws-gp/view/pessoaView/buscarPorCPF/'.$cpf);
         } catch (ConnectionException) {
@@ -226,8 +233,55 @@ class SedurAuthClient
         return null;
     }
 
+    private function http(): PendingRequest
+    {
+        $request = Http::timeout($this->timeout())
+            ->connectTimeout(10)
+            ->acceptJson();
+
+        $proxy = $this->proxy();
+
+        if ($proxy !== null) {
+            $request = $request->withOptions(['proxy' => $proxy]);
+        }
+
+        return $request;
+    }
+
+    /**
+     * A rede da prefeitura sai por proxy. O cURL do build lê HTTPS_PROXY; o
+     * cliente HTTP do PHP não. Sem isto a chamada ao AD falha só dentro do OKD.
+     */
+    private function proxy(): ?string
+    {
+        $proxy = getenv('https_proxy') ?: getenv('HTTPS_PROXY') ?: getenv('http_proxy') ?: getenv('HTTP_PROXY') ?: '';
+
+        if (! is_string($proxy) || $proxy === '') {
+            return null;
+        }
+
+        $host = parse_url($this->settings->baseUrl(), PHP_URL_HOST);
+        $noProxy = getenv('no_proxy') ?: getenv('NO_PROXY') ?: '';
+
+        foreach (explode(',', (string) $noProxy) as $entry) {
+            $entry = trim($entry);
+
+            if ($entry === '' || ! is_string($host)) {
+                continue;
+            }
+
+            $suffix = ltrim($entry, '.');
+
+            if ($entry === '*' || $host === $suffix || str_ends_with($host, '.'.$suffix)) {
+                return null;
+            }
+        }
+
+        return $proxy;
+    }
+
     private function timeout(): int
     {
-        return (int) config('sile.integrations.sedur_auth.timeout', 8);
+        return (int) config('sile.integrations.sedur_auth.timeout', 30);
     }
 }

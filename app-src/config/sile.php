@@ -292,7 +292,7 @@ return [
         ],
         'sedur_auth' => [
             'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd',
-            'timeout' => 8,
+            'timeout' => 30,
         ],
         'geocoding' => [
             'base_url' => 'https://nominatim.openstreetmap.org',
