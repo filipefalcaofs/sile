@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Gestao;
 
+use App\Enums\AuthType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\LoginRequest;
 use App\Models\AccessLog;
 use App\Models\User;
 use App\Services\Auth\DirectoryAuthenticator;
+use App\Services\Auth\DirectoryAuthResult;
 use App\Services\Auth\UserSectorAssignmentSync;
 use App\Services\Sedur\SedurAuthInvalidCredentialsException;
 use App\Services\Sedur\SedurAuthSettings;
@@ -53,10 +55,14 @@ class LoginController extends Controller
             })
             ->first();
 
+        if ($user === null) {
+            $user = $this->registrarPrimeiroAcessoAd($request, $identifier);
+        }
+
         // Anti-oráculo: o estado da conta (inativa, sem permissão) só é
         // revelado com credencial correta, e a falha de credencial tem a
         // mesma mensagem para conta local, AD ou inexistente.
-        if (! $user || ! $this->credencialValida($request, $user)) {
+        if (! $user || (! $request->attributes->get('ad_ja_validado') && ! $this->credencialValida($request, $user))) {
             RateLimiter::hit($this->throttleKey($request), 60);
             RateLimiter::hit($this->ipThrottleKey($request), 60);
 
@@ -122,6 +128,103 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('gestao.login');
+    }
+
+    /**
+     * Primeiro acesso: o identificador ainda não existe no Viabiliza. As três
+     * APIs (auth, discovery e pessoaView) validam e preenchem a conta. A senha
+     * local nasce inutilizável; o token não é gravado.
+     */
+    private function registrarPrimeiroAcessoAd(LoginRequest $request, string $identifier): ?User
+    {
+        if (! $this->sedurAuth->enabled() || str_contains($identifier, ' ')) {
+            return null;
+        }
+
+        $this->markOrigin($request, 'ad');
+
+        try {
+            $resultado = $this->directory->attempt($identifier, $request->validated('password'));
+        } catch (SedurAuthInvalidCredentialsException) {
+            return null;
+        } catch (SedurAuthUnavailableException) {
+            AccessLog::create([
+                'user_id' => null,
+                'email' => $identifier,
+                'event' => 'ad-indisponivel',
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 500),
+                'channel' => 'gestao',
+                'origin' => 'ad',
+            ]);
+
+            throw ValidationException::withMessages([
+                'identifier' => __('Autenticação institucional indisponível no momento. Tente novamente em instantes.'),
+            ]);
+        }
+
+        $request->attributes->set('ad_ja_validado', true);
+
+        $email = $resultado->email ?: $identifier.'@salvador.ba.gov.br';
+        $usuario = User::query()
+            ->where('email', $email)
+            ->when($resultado->cpf, fn ($query) => $query->orWhere('cpf', $resultado->cpf))
+            ->first();
+
+        $atributos = [
+            'name' => $resultado->nome ?: $identifier,
+            'email' => $usuario->email ?? $email,
+            'cpf' => $resultado->cpf ?: $usuario?->cpf,
+            'phone' => $resultado->telefone ?: $usuario?->phone,
+            'password' => Str::random(64),
+            'auth_type' => AuthType::Ad,
+            'ad_username' => $identifier,
+            'email_verified_at' => $usuario?->email_verified_at ?? now(),
+        ];
+
+        if ($usuario === null) {
+            $usuario = new User;
+        }
+
+        $usuario->forceFill($atributos)->save();
+
+        if (! $usuario->can('acessar-gestao')) {
+            $usuario->givePermissionTo('acessar-gestao');
+        }
+
+        if ($resultado->setorCodigo !== null || $resultado->setorNome !== null) {
+            try {
+                app(UserSectorAssignmentSync::class)->syncFromDiscovery(
+                    $usuario,
+                    $resultado->setorCodigo,
+                    $resultado->setorNome,
+                );
+            } catch (\Throwable) {
+                $resultado = new DirectoryAuthResult(
+                    nome: $resultado->nome,
+                    sincronizacaoFalhou: true,
+                    setorCodigo: $resultado->setorCodigo,
+                    setorNome: $resultado->setorNome,
+                    cpf: $resultado->cpf,
+                    email: $resultado->email,
+                    telefone: $resultado->telefone,
+                );
+            }
+        }
+
+        if ($resultado->sincronizacaoFalhou) {
+            AccessLog::create([
+                'user_id' => $usuario->id,
+                'email' => $usuario->email,
+                'event' => 'ad-sincronizacao-falhou',
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 500),
+                'channel' => 'gestao',
+                'origin' => 'ad',
+            ]);
+        }
+
+        return $usuario;
     }
 
     /**

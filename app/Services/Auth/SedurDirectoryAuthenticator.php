@@ -16,45 +16,64 @@ class SedurDirectoryAuthenticator implements DirectoryAuthenticator
 
     public function attempt(string $adUsername, string $password, ?string $cpf = null): DirectoryAuthResult
     {
-        $token = $this->client->autenticar($adUsername, $password);
+        $sessao = $this->client->sessao($adUsername, $password);
+        $token = $sessao['token'];
+        $cpfConsulta = $sessao['cpf'] ?: $this->somenteDigitos($cpf);
 
         $setorCodigo = null;
         $setorNome = null;
+        $email = null;
+        $telefone = null;
+        $nome = null;
         $sincronizacaoFalhou = false;
 
         try {
-            $lotacao = $this->client->discovery($token);
-            $setorCodigo = $lotacao['codigo'];
-            $setorNome = $lotacao['nome'];
+            $discovery = $this->client->discovery($token);
+            $setorCodigo = $discovery['codigo'];
+            $setorNome = $discovery['nome'];
+            $email = $discovery['email'];
+            $telefone = $discovery['telefone'];
+            $nome = $discovery['nomePessoa'];
         } catch (SedurAuthUnavailableException) {
             $sincronizacaoFalhou = true;
         }
 
-        if ($cpf === null || $cpf === '') {
+        if ($cpfConsulta === null) {
             return new DirectoryAuthResult(
-                nome: null,
+                nome: $nome,
                 sincronizacaoFalhou: $sincronizacaoFalhou,
                 setorCodigo: $setorCodigo,
                 setorNome: $setorNome,
+                cpf: null,
+                email: $email,
+                telefone: $telefone,
             );
         }
 
         try {
-            $pessoa = $this->client->pessoaPorCpf($token, $cpf);
+            $pessoa = $this->client->pessoaPorCpf($token, $cpfConsulta);
+            $nome = $pessoa['nome'] ?: $nome;
+            $email = $pessoa['email'] ?: $email;
+            $telefone = $pessoa['telefone'] ?: $telefone;
         } catch (SedurAuthUnavailableException) {
-            return new DirectoryAuthResult(
-                nome: null,
-                sincronizacaoFalhou: true,
-                setorCodigo: $setorCodigo,
-                setorNome: $setorNome,
-            );
+            $sincronizacaoFalhou = true;
         }
 
         return new DirectoryAuthResult(
-            nome: $pessoa['nome'],
+            nome: $nome,
             sincronizacaoFalhou: $sincronizacaoFalhou,
             setorCodigo: $setorCodigo,
             setorNome: $setorNome,
+            cpf: $cpfConsulta,
+            email: $email,
+            telefone: $telefone,
         );
+    }
+
+    private function somenteDigitos(?string $valor): ?string
+    {
+        $digitos = preg_replace('/\D/', '', (string) $valor);
+
+        return $digitos !== '' ? $digitos : null;
     }
 }

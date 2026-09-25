@@ -97,7 +97,12 @@ class SedurAuthClientTest extends TestCase
 
         $pessoa = $this->client()->pessoaPorCpf('tk-123', '12345678901');
 
-        $this->assertSame(['nome' => 'Filipe Falcao'], $pessoa);
+        $this->assertSame([
+            'nome' => 'Filipe Falcao',
+            'email' => null,
+            'telefone' => '71999990000',
+        ], $pessoa);
+        $this->assertArrayNotHasKey('endereco', $pessoa);
 
         Http::assertSent(fn ($request) => $request->url() === 'https://sedur.test/k8s/prd/ws-gp/view/pessoaView/buscarPorCPF/12345678901'
             && $request->hasHeader('Authorization', 'Bearer tk-123'));
@@ -124,10 +129,8 @@ class SedurAuthClientTest extends TestCase
 
         $lotacao = $this->client()->discovery('tk-123');
 
-        $this->assertSame([
-            'codigo' => '0231400300',
-            'nome' => 'SUCOM-GERAE-STD-Setor de Triagem e Distribuição',
-        ], $lotacao);
+        $this->assertSame('0231400300', $lotacao['codigo']);
+        $this->assertSame('SUCOM-GERAE-STD-Setor de Triagem e Distribuição', $lotacao['nome']);
 
         Http::assertSent(fn ($request) => $request->url() === 'https://sedur.test/k8s/prd/ws-autenticacao/discovery'
             && $request->hasHeader('Authorization', 'Bearer tk-123'));

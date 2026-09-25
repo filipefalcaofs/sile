@@ -7,6 +7,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -63,6 +64,47 @@ class GestaoLoginAdTest extends TestCase
         $this->assertAuthenticatedAs($servidor, 'gestao');
         Http::assertSent(fn ($request) => $request->method() === 'POST'
             && ($request->data()['usuario'] ?? null) === 'filipefalcao');
+    }
+
+    public function test_primeiro_acesso_ad_registra_o_usuario_com_os_dados_da_api(): void
+    {
+        Http::fake([
+            '*/ws-autenticacao/auth' => Http::response([
+                'cpf' => '06681065570',
+                'token' => 'tk-fake',
+                'expiration' => '2026-09-25T23:33:28',
+            ]),
+            '*/ws-autenticacao/discovery' => Http::response([
+                'email' => 'filipefalcao@salvador.ba.gov.br',
+                'nome' => 'Filipe Falcão',
+                'lotacao' => [
+                    'codigo' => '0231400300',
+                    'nome' => 'SUCOM-GERAE-STD-Setor de Triagem e Distribuição',
+                ],
+            ]),
+            '*/pessoaView/buscarPorCPF/06681065570' => Http::response([
+                'nome' => 'Filipe Falcão',
+                'telefone' => '71999990000',
+            ]),
+        ]);
+
+        $this->post('/gestao/login', [
+            'identifier' => 'filipefalcao',
+            'password' => 'senha-corporativa',
+        ])->assertRedirect('/gestao');
+
+        $usuario = User::query()->where('ad_username', 'filipefalcao')->first();
+
+        $this->assertNotNull($usuario);
+        $this->assertAuthenticatedAs($usuario, 'gestao');
+        $this->assertTrue($usuario->isAdAccount());
+        $this->assertSame('06681065570', $usuario->cpf);
+        $this->assertSame('Filipe Falcão', $usuario->name);
+        $this->assertSame('filipefalcao@salvador.ba.gov.br', $usuario->email);
+        $this->assertNotNull($usuario->email_verified_at);
+        $this->assertTrue($usuario->can('acessar-gestao'));
+        $this->assertFalse(Hash::check('senha-corporativa', $usuario->password));
+        $this->assertDatabaseMissing('users', ['remember_token' => 'tk-fake']);
     }
 
     public function test_usuario_ad_autentica_pela_api_e_sincroniza_o_nome(): void

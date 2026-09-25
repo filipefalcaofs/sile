@@ -27,6 +27,20 @@ class SedurAuthClient
      */
     public function autenticar(string $usuario, string $senha): string
     {
+        return $this->sessao($usuario, $senha)['token'];
+    }
+
+    /**
+     * Abre a sessão corporativa. O CPF vem no corpo do /auth e alimenta a
+     * pessoaView; o token só segue para discovery e pessoaView nesta request.
+     *
+     * @return array{token: string, cpf: ?string}
+     *
+     * @throws SedurAuthInvalidCredentialsException credencial rejeitada pela API
+     * @throws SedurAuthUnavailableException API fora, erro HTTP ou contrato inválido
+     */
+    public function sessao(string $usuario, string $senha): array
+    {
         try {
             $response = Http::timeout($this->timeout())
                 ->acceptJson()
@@ -49,13 +63,18 @@ class SedurAuthClient
             throw new SedurAuthUnavailableException('Falha ao autenticar na API institucional.');
         }
 
-        return $token;
+        $cpf = preg_replace('/\D/', '', (string) $response->json('cpf'));
+
+        return [
+            'token' => $token,
+            'cpf' => $cpf !== '' ? $cpf : null,
+        ];
     }
 
     /**
      * Consulta a lotação do próprio autenticado (GET discovery).
      *
-     * @return array{codigo: ?string, nome: ?string}
+     * @return array{codigo: ?string, nome: ?string, email: ?string, telefone: ?string, nomePessoa: ?string}
      *
      * @throws SedurAuthUnavailableException API fora ou erro HTTP
      */
@@ -77,7 +96,16 @@ class SedurAuthClient
         /** @var mixed $payload */
         $payload = $response->json();
 
-        return $this->extractLotacao(is_array($payload) ? $payload : []);
+        $dados = is_array($payload) ? $payload : [];
+        $lotacao = $this->extractLotacao($dados);
+
+        return [
+            'codigo' => $lotacao['codigo'],
+            'nome' => $lotacao['nome'],
+            'email' => $this->firstString($dados, ['email', 'mail', 'emailInstitucional', 'email_institucional']),
+            'telefone' => $this->firstString($dados, ['telefone', 'phone', 'celular']),
+            'nomePessoa' => $this->firstString($dados, ['nome', 'name', 'nomeCompleto', 'nome_completo']),
+        ];
     }
 
     /**
@@ -147,7 +175,7 @@ class SedurAuthClient
      * Busca a pessoa pelo CPF e extrai SOMENTE o nome (minimização LGPD): o
      * restante do payload é descartado na mesma request, sem persistência.
      *
-     * @return array{nome: ?string}
+     * @return array{nome: ?string, email: ?string, telefone: ?string}
      *
      * @throws SedurAuthUnavailableException API fora ou erro HTTP
      */
@@ -166,9 +194,15 @@ class SedurAuthClient
             throw new SedurAuthUnavailableException('Falha ao consultar dados da pessoa.');
         }
 
-        $nome = $response->json('nome');
+        /** @var mixed $payload */
+        $payload = $response->json();
+        $dados = is_array($payload) ? $payload : [];
 
-        return ['nome' => is_string($nome) && $nome !== '' ? $nome : null];
+        return [
+            'nome' => $this->firstString($dados, ['nome', 'name', 'nomeCompleto', 'nome_completo']),
+            'email' => $this->firstString($dados, ['email', 'mail', 'emailInstitucional', 'email_institucional']),
+            'telefone' => $this->firstString($dados, ['telefone', 'phone', 'celular']),
+        ];
     }
 
     /**
