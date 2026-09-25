@@ -111,4 +111,47 @@ class SedurAuthClientTest extends TestCase
 
         $this->client()->pessoaPorCpf('tk-123', '12345678901');
     }
+
+    public function test_discovery_extrai_lotacao_aninhada(): void
+    {
+        Http::fake(['*/ws-autenticacao/discovery' => Http::response([
+            'lotacao' => [
+                'codigo' => '0231400300',
+                'nome' => 'SUCOM-GERAE-STD-Setor de Triagem e Distribuição',
+            ],
+            'outros' => 'ignorado',
+        ])]);
+
+        $lotacao = $this->client()->discovery('tk-123');
+
+        $this->assertSame([
+            'codigo' => '0231400300',
+            'nome' => 'SUCOM-GERAE-STD-Setor de Triagem e Distribuição',
+        ], $lotacao);
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://sedur.test/k8s/prd/ws-autenticacao/discovery'
+            && $request->hasHeader('Authorization', 'Bearer tk-123'));
+    }
+
+    public function test_extract_lotacao_aceita_chaves_cein_no_root(): void
+    {
+        $lotacao = $this->client()->extractLotacao([
+            'ceinNumero' => '8888888888',
+            'ceinDescricao' => 'Setor Homologacao',
+        ]);
+
+        $this->assertSame([
+            'codigo' => '8888888888',
+            'nome' => 'Setor Homologacao',
+        ], $lotacao);
+    }
+
+    public function test_discovery_com_falha_e_indisponibilidade(): void
+    {
+        Http::fake(['*/ws-autenticacao/discovery' => Http::response('erro', 502)]);
+
+        $this->expectException(SedurAuthUnavailableException::class);
+
+        $this->client()->discovery('tk-123');
+    }
 }
