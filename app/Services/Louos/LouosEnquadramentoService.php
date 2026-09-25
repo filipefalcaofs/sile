@@ -602,6 +602,14 @@ class LouosEnquadramentoService
                 continue;
             }
 
+            // Condicionante da planilha de tratamento é informativa na ficha
+            // (HU-135) e NÃO rebaixa o veredito sozinha — quem rebaixa é a
+            // condicionante urbanística do Quadro 10, a condição de via (11A),
+            // a vaga não conforme ou a restrição especial (ZEIS).
+            if (($condicionante['tipo'] ?? null) === 'planilha') {
+                continue;
+            }
+
             return true;
         }
 
