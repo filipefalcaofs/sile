@@ -12,10 +12,14 @@ use App\Models\LouosQuadro11CondicaoVia;
 use App\Models\RuleVersion;
 use App\Models\TerritorialRule;
 use App\Models\TratamentoCnaeBinding;
+use App\Models\TratamentoCnluItem;
+use App\Models\TratamentoCondicionante;
 use App\Models\TratamentoEnquadramento;
+use App\Models\TratamentoNota;
 use App\Models\TratamentoPendencia;
 use App\Models\TratamentoPergunta;
 use App\Models\TratamentoRegra;
+use App\Models\TratamentoRegraRamo;
 use App\Services\Louos\LouosMaintenanceService;
 use App\Services\Rules\RuleVersionService;
 use App\Services\Territorial\TerritorialRuleDraftService;
@@ -136,7 +140,7 @@ class LouosController extends Controller
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'urlRascunho' => route('gestao.louos.rascunho.show', ['quadro' => $quadro], false),
             'urlManual' => route('gestao.louos.manual', ['quadro' => $quadro], false),
-            'enquadramento' => $aba === 'enquadramento' ? $this->dadosEnquadramento() : null,
+            'enquadramento' => $aba === 'enquadramento' ? $this->dadosEnquadramento($search, $perPage) : null,
             'territoriais' => $aba === 'territoriais' ? $this->dadosTerritoriais() : null,
         ]);
     }
@@ -148,7 +152,7 @@ class LouosController extends Controller
      *
      * @return array{versao: string|null, contagens: array<string, int>, perguntas: array<int, mixed>}
      */
-    private function dadosEnquadramento(): array
+    private function dadosEnquadramento(string $search, int $perPage): array
     {
         $vigente = RuleVersion::vigente(RuleDomain::RiscoTratamento)->first();
 
@@ -174,16 +178,73 @@ class LouosController extends Controller
                 ->get(['regra', 'motivo'])
                 ->all();
 
+        $id = $vigente?->getKey();
+
+        $regras = $id === null
+            ? []
+            : TratamentoRegra::query()->where('rule_version_id', $id)->orderBy('numero')->get(['numero', 'tratamento', 'referencia'])->all();
+
+        $ramos = $id === null
+            ? []
+            : TratamentoRegraRamo::query()->where('rule_version_id', $id)->orderBy('regra')->orderBy('id')->get(['regra', 'pergunta', 'resposta', 'faixa', 'tipo_dirige', 'codigo_louos', 'fluxo', 'bloqueia'])->all();
+
+        $condicionantes = $id === null
+            ? []
+            : TratamentoCondicionante::query()->where('rule_version_id', $id)->orderBy('numero')->get(['numero', 'texto', 'observacao'])->all();
+
+        $cnlu = $id === null
+            ? []
+            : TratamentoCnluItem::query()->where('rule_version_id', $id)->orderBy('codigo')->get(['codigo', 'texto'])->all();
+
+        $notas = $id === null
+            ? []
+            : TratamentoNota::query()->where('rule_version_id', $id)->orderBy('chave')->get(['chave', 'texto'])->all();
+
+        $enquadramentos = TratamentoEnquadramento::query()
+            ->where('rule_version_id', $id ?? 0)
+            ->when($search !== '', fn ($query) => $query->where(function ($inner) use ($search) {
+                $inner->whereLike('cnae', "%{$search}%", caseSensitive: false)
+                    ->orWhereLike('codigo_louos', "%{$search}%", caseSensitive: false)
+                    ->orWhereLike('subcategoria', "%{$search}%", caseSensitive: false)
+                    ->orWhereLike('risco', "%{$search}%", caseSensitive: false);
+            }))
+            ->orderBy('cnae')
+            ->orderBy('codigo_louos')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn (TratamentoEnquadramento $linha) => [
+                'cnae' => $linha->cnae,
+                'codigo_louos' => $linha->codigo_louos,
+                'subcategoria' => $linha->subcategoria,
+                'grupo' => $linha->grupo,
+                'risco' => $linha->risco,
+                'ate_m2' => $linha->ate_m2,
+                'enquadramento2' => $linha->enquadramento2,
+                'enquadramento3' => $linha->enquadramento3,
+                'acima_m2' => $linha->acima_m2,
+                'classificacao' => $linha->classificacao,
+                'codigo_tll' => $linha->codigo_tll,
+                'regra' => $linha->regra,
+            ]);
+
         return [
             'versao' => $vigente?->version,
             'contagens' => [
-                'cnaes' => $vigente === null ? 0 : TratamentoEnquadramento::query()->where('rule_version_id', $vigente->getKey())->distinct()->count('cnae'),
-                'enquadramentos' => $vigente === null ? 0 : TratamentoEnquadramento::query()->where('rule_version_id', $vigente->getKey())->count(),
+                'cnaes' => $id === null ? 0 : TratamentoEnquadramento::query()->where('rule_version_id', $id)->distinct()->count('cnae'),
+                'enquadramentos' => $id === null ? 0 : TratamentoEnquadramento::query()->where('rule_version_id', $id)->count(),
                 'perguntas' => count($perguntas),
-                'regras' => $vigente === null ? 0 : TratamentoRegra::query()->where('rule_version_id', $vigente->getKey())->count(),
-                'bindings' => $vigente === null ? 0 : TratamentoCnaeBinding::query()->where('rule_version_id', $vigente->getKey())->count(),
+                'regras' => count($regras),
+                'ramos' => count($ramos),
+                'condicionantes' => count($condicionantes),
+                'bindings' => $id === null ? 0 : TratamentoCnaeBinding::query()->where('rule_version_id', $id)->count(),
             ],
             'perguntas' => $perguntas,
+            'regras' => $regras,
+            'ramos' => $ramos,
+            'condicionantes' => $condicionantes,
+            'cnlu' => $cnlu,
+            'notas' => $notas,
+            'enquadramentos' => $enquadramentos,
             'rascunho' => $rascunho === null ? null : [
                 'id' => $rascunho->getKey(),
                 'versao' => $rascunho->version,

@@ -50,7 +50,13 @@ class TratamentoRegrasUiTest extends TestCase
                 ->where('aba', 'enquadramento')
                 ->where('enquadramento.versao', 'planilha-20-08-26')
                 ->where('enquadramento.contagens.perguntas', 32)
-                ->has('enquadramento.perguntas', 32));
+                ->where('enquadramento.contagens.regras', 59)
+                ->where('enquadramento.contagens.condicionantes', 32)
+                ->has('enquadramento.perguntas', 32)
+                ->has('enquadramento.regras', 59)
+                ->has('enquadramento.ramos')
+                ->has('enquadramento.condicionantes', 32)
+                ->has('enquadramento.enquadramentos.data'));
     }
 
     public function test_aba_enquadramento_sem_versao_nao_inventa_planilha(): void

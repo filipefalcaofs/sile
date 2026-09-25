@@ -61,7 +61,7 @@ python3 .cursor/skills/publicar-softwell-semit/scripts/montar-entrega-semit.py \
 
 4. Se o script sair com código 2, corrigir no diretório gerado as referências que ele listar. Não trazer de volta arquivo excluído.
 5. Substituir `app-src/` do clone pelo `app-src/` gerado.
-6. Copiar para a raiz do clone os arquivos que o script deixou ao lado de `app-src/`: `Dockerfile`, `DockerFile_supervisord`, `DockerFile_schedule` e `.dockerignore`. Eles vêm de `docker/okd/` e seguem o padrão S2I do SIGVISA (imagem `viabiliza/php-84`, usuário 1001, `assemble`). Não reescrever esses arquivos a partir do Dockerfile de Portainer. Não deixar `Dockerfile` dentro de `app-src`. O shim do Composer fica em `app-src/.s2i/`.
+6. Copiar para a raiz do clone os arquivos que o script deixou ao lado de `app-src/`: `Dockerfile`, `DockerFile_supervisord`, `DockerFile_schedule` e `.dockerignore`. Eles vêm de `docker/okd/` e seguem o padrão S2I (imagem `registry.salvador.ba.gov.br/library/php-oracle:8.4`, usuário 1001, `assemble`). Não reescrever esses arquivos a partir do Dockerfile de Portainer. Não trocar esse `FROM` de volta para `viabiliza/php-84`. Não deixar `Dockerfile` dentro de `app-src`. O shim do Composer fica em `app-src/.s2i/`.
 7. Se `docker-compose.portainer-*.yml` mudou, atualizar os arquivos da raiz. O seed do compose de aplicação roda `php artisan db:seed --force` e carrega só catálogo oficial. Sem `DemonstracaoClienteSeeder` e sem `SILE_DEMO_DATA`.
 8. Se o payload alterou `resources/js`, `resources/css` ou o menu, em `app-src`: `npm ci && npm run build && npx vitest run resources/js/navigation/gestao-nav.test.ts`. Não versionar `node_modules`.
 9. Rodar de novo a varredura do script sobre a árvore final. Só seguir com saída 0.
@@ -89,7 +89,34 @@ git push origin HEAD:homologa   # se for o destino pedido
 git push origin HEAD:main       # se for o destino pedido
 ```
 
-Tag `vX.Y.Z` só quando `VERSION` mudar. Enviar só essa tag: `git push origin vX.Y.Z`. Nunca `git push --tags`.
+## Tag SemVer — sempre, nos dois destinos
+
+Toda publicação na Softwell e na SEMIT, neste projeto e em qualquer outro, termina com uma tag anotada `vX.Y.Z` no commit empurrado. Sem essa tag a publicação não está completa.
+
+A sequência é a do remote de destino. A maior tag `vX.Y.Z` já publicada sobe um passo:
+
+- correção compatível: PATCH (`v1.2.3` → `v1.2.4`)
+- funcionalidade compatível: MINOR, PATCH zera (`v1.2.3` → `v1.3.0`)
+- mudança incompatível: MAJOR, o resto zera (`v1.2.3` → `v2.0.0`)
+
+Sem tag anterior, a primeira é `v0.1.0`, ou o número que o arquivo `VERSION` já tiver. Se o projeto tem `VERSION`, o arquivo fica igual à tag no mesmo commit.
+
+A mensagem da tag explica o que foi enviado: destino, branches e o conteúdo, em português. Uma tag por publicação. Nunca reutilizar, nunca mover tag antiga, nunca `git push --tags`.
+
+- Softwell: `git tag -a vX.Y.Z -m "..." && git push softwell vX.Y.Z`
+- SEMIT: a tag aponta para o commit da árvore limpa, no clone temporário, e vai com `git push origin vX.Y.Z`
+
+```bash
+git tag -a v0.2.0 -m "$(cat <<'EOF'
+SEMIT homologa e main.
+
+Importação versionada da planilha de regras de tratamento no Motor de regras.
+Quem importa pode publicar o próprio rascunho. Arquivo repetido não abre outra versão.
+
+EOF
+)"
+git push origin v0.2.0
+```
 
 Conferir com `git ls-remote` se `main` e `homologa` apontam para o commit esperado. Apagar o clone em `/tmp`.
 
