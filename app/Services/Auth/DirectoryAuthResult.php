@@ -15,5 +15,8 @@ final readonly class DirectoryAuthResult
         public bool $sincronizacaoFalhou = false,
         public ?string $setorCodigo = null,
         public ?string $setorNome = null,
+        public ?string $cpf = null,
+        public ?string $email = null,
+        public ?string $telefone = null,
     ) {}
 }
