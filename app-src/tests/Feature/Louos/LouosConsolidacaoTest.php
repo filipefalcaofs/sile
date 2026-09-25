@@ -225,6 +225,25 @@ class LouosConsolidacaoTest extends TestCase
         $this->assertStringNotContainsString('Quadro 7', (string) $result->consolidado['motivo']);
     }
 
+    public function test_condicionantes_da_planilha_sao_informativas_e_nao_rebaixam_o_veredito(): void
+    {
+        // As condicionantes da planilha de tratamento (ex.: 4712-1/00 traz
+        // [1,3,6,7,10]) alimentam a ficha do parecer (HU-135), mas NÃO rebaixam
+        // o veredito sozinhas — quem rebaixa é condicionante urbanística do
+        // Quadro 10, condição de via (11A), vaga não conforme ou ZEIS.
+        $this->seedTratamento();
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $result = $this->service()->enquadrar($this->inputMinimercado(
+            $this->territorio($this->zonaIdentificada('ZR-1')),
+        ));
+
+        $this->assertSame(ResultadoViabilidade::Permitido->value, $result->resultado());
+
+        $tipos = array_column($result->consolidado['condicionantes'], 'tipo');
+        $this->assertContains('planilha', $tipos, 'A condicionante da planilha deve constar na ficha.');
+    }
+
     public function test_permitido_condicionado_consolida_com_condicoes(): void
     {
         // RN-006: zona 'permitido_condicionado' → permitido_com_condicoes, com a
