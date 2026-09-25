@@ -47,10 +47,10 @@ Regras de integridade (validação no cadastro/edição de usuários do console)
 ## 5. Fluxo de login (console)
 
 ```
-POST /gestao/login (email ou identificador + senha)
+POST /gestao/login (identificador + senha)
  1. Throttle (antes de qualquer chamada externa) — hoje email|ip; estender com
     limites separados por usuário e por IP (contém password spraying contra o AD)
- 2. Localiza User local (pelo identificador de login já existente)
+ 2. Localiza User local por e-mail ou por ad_username, de forma determinística
  3. auth_type = local → Hash::check (fluxo atual, intacto)
     auth_type = ad   → DirectoryAuthenticator::attempt(ad_username, senha)
                        → POST /ws-autenticacao/auth
@@ -72,6 +72,16 @@ Notas:
 - A senha AD existe apenas na variável da request: nunca persistida (nem `users.password`, nem `parameters`, nem cache, nem sessão), nunca logada, nunca em exceção. O client relança exceção limpa (padrão `ReginHttpClient`).
 - O token Bearer é usado na sequência auth → discovery/pessoaView **dentro da mesma request** e descartado ao final. Sem cache, sem sessão, sem cookie.
 - `discovery` é chamado no login AD para validar a saúde/contrato da integração; se o plano de implementação constatar que é redundante com `auth`, pode ser removido do fluxo quente e usado apenas no teste de conexão da tela de parâmetros.
+
+### 5.1 Experiência de identificação no login
+
+O único campo de identificação da tela passa a ser **“E-mail institucional ou usuário AD”**, do tipo texto e com `autocomplete="username"`. O placeholder é `nome@salvador.ba.gov.br ou filipefalcao`.
+
+A orientação visível informa: “Use o usuário da rede corporativa (ex.: filipefalcao) ou o e-mail da conta local.” Assim, a pessoa com conta AD entende que deve informar a credencial corporativa; quem usa conta local reconhece o e-mail como identificador.
+
+Não há seletor “AD” × “local”: o Laravel identifica o mecanismo pelo cadastro da conta, reduzindo escolha errada e não expondo o tipo de autenticação de contas que não existem. As falhas de identificação e de senha permanecem em uma mensagem genérica (`auth.failed`), preservando o anti-oráculo.
+
+O link “Esqueceu?” permanece. Para uma conta AD, o fluxo de recuperação continua sem enviar e-mail e mantém a resposta genérica; a senha corporativa é alterada fora do SILE.
 
 ## 6. Componentes
 
