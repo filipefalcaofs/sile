@@ -16,6 +16,7 @@ class SectorFactory extends Factory
     public function definition(): array
     {
         return [
+            'code' => null,
             'name' => 'Setor '.ucfirst(fake()->unique()->word()),
             'active' => true,
         ];

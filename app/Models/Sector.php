@@ -12,10 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Setor da SEDUR (HU-138) — a caixa de distribuição da análise técnica. Agrupa
  * os analistas (N:N via sector_user) que recebem os processos encaminhados.
- * active permite inativar sem excluir (setor com pendência não some, só deixa
- * de receber novas distribuições).
+ * code é o CEIN_NUMERO institucional (catálogo oficial); active permite
+ * inativar sem excluir (setor com pendência não some, só deixa de receber
+ * novas distribuições).
  */
-#[Fillable(['name', 'active'])]
+#[Fillable(['code', 'name', 'active'])]
 class Sector extends Model
 {
     /** @use HasFactory<SectorFactory> */
