@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Minuta de ofício — registro do endpoint REGIN</title>
+<style>
+  @page { size: A4; margin: 12mm 16mm 10mm 16mm; }
+  body { font-family: "Times New Roman", Times, serif; font-size: 11pt; line-height: 1.22; color: #111; }
+  header, .org, .rodape { text-align: left; }
+  header { border-bottom: 2px solid #111; padding-bottom: 6px; margin-bottom: 8px; }
+  .org { font-size: 11pt; font-weight: bold; }
+  .minuta { float: right; font-size: 9pt; letter-spacing: 0.12em; border: 1px solid #111; padding: 2px 8px; }
+  p { margin: 0 0 6px; text-align: justify; }
+  .meta, .esq, .assinatura p { text-align: left; }
+  .meta { margin: 0 0 2px; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 8px; font-size: 10.5pt; }
+  th, td { border: 1px solid #222; padding: 6px 8px; vertical-align: top; text-align: left; }
+  th { width: 28%; background: #f3f3f3; font-weight: bold; }
+  code { font-family: "Courier New", Courier, monospace; font-size: 10pt; }
+  ul { margin: 2px 0 7px 18px; padding: 0; }
+  li { margin: 0 0 2px; text-align: left; }
+  .assinatura { margin-top: 12px; }
+  .assinatura p { margin: 0; text-align: left; }
+  .linha { margin: 14px 0 4px; width: 280px; border-top: 1px solid #111; }
+  .rodape { margin-top: 8px; font-size: 9pt; color: #333; border-top: 1px solid #ccc; padding-top: 4px; text-align: left; }
+</style>
+</head>
+<body>
+<header>
+  <span class="minuta">MINUTA</span>
+  <div class="org">PREFEITURA MUNICIPAL DE SALVADOR<br>
+    <span style="font-weight:normal;font-size:10pt;">Secretaria Municipal de Desenvolvimento Urbano — SEDUR<br>
+    Coordenadoria de Tecnologia da Informação — CTI<br>
+    <span style="font-weight:normal;font-size:9pt;">Av. Antônio Carlos Magalhães, 3244 — Caminho das Árvores — Salvador/BA — www.sedur.salvador.ba.gov.br</span></span>
+  </div>
+</header>
+
+<p class="meta"><strong>Ofício nº</strong> _____ /2026 — CTI/SEDUR</p>
+<p class="meta"><strong>Salvador,</strong> 24 de setembro de 2026.</p>
+
+<p class="meta" style="margin-top:10px;"><strong>À</strong><br>
+Junta Comercial do Estado da Bahia — JUCEB<br>
+A/C: Área responsável pela integração REGIN / Prosolution</p>
+
+<p class="meta"><strong>Assunto:</strong> Registro da URL da SEDUR para recebimento dos processos de viabilidade (homologação e produção).</p>
+
+<p>Prezados Senhores,</p>
+
+<p>A Secretaria Municipal de Desenvolvimento Urbano — SEDUR, por meio de sua Coordenadoria de Tecnologia da Informação — CTI, solicita o registro das URLs do sistema Viabiliza como endereço da instituição para recebimento dos processos de viabilidade locacional enviados pelo REGIN.</p>
+
+<p>O contrato é o da API de integração já publicada pela JUCEB (Guia Técnico PSCS e OpenAPI de produção): o REGIN chama a URL da Prefeitura, serviço <code>WsProSol098</code>, envelope <code>EnvioDto</code>. Não há token nem header <code>JWT</code> nesta chamada. O <code>JWT</code> permanece apenas nas chamadas que o Viabiliza faz à API da JUCEB.</p>
+
+<p>O teste de conectividade é <code>GET</code> na URL abaixo. A resposta é texto puro <code>3</code>. Em seguida, o <code>POST</code> do processo usa a mesma URL. A resposta também é texto puro:</p>
+
+<ul>
+  <li><code>3</code> — processo recebido;</li>
+  <li><code>5</code> — protocolo já recebido (duplicado);</li>
+  <li><code>0</code> — protocolo ausente (HTTP 400).</li>
+</ul>
+
+<table>
+  <tr>
+    <th>Ambiente</th>
+    <th>URL de recebimento</th>
+  </tr>
+  <tr>
+    <td>Homologação</td>
+    <td><code>https://viabiliza-hml.salvador.ba.gov.br/api_integracao/recebe</code></td>
+  </tr>
+  <tr>
+    <td>Produção</td>
+    <td><code>https://viabiliza.salvador.ba.gov.br/api_integracao/recebe</code></td>
+  </tr>
+</table>
+
+<p>Pedimos que a homologação do REGIN aponte somente para a URL de homologação, e a produção do REGIN somente para a URL de produção. O CNPJ da Prefeitura Municipal de Salvador, usado no envelope, é <strong>13.927.801/0001-49</strong>.</p>
+
+<p>A documentação Swagger, com os dois servidores, está em <code>https://viabiliza-hml.salvador.ba.gov.br/api_integracao/docs</code> (homologação) e <code>https://viabiliza.salvador.ba.gov.br/api_integracao/docs</code> (produção).</p>
+
+<p>O endereço deste ofício substitui o informado em 19 de agosto de 2026. O sistema é o Viabiliza (<code>viabiliza</code>), e não <code>viabilidade</code>.</p>
+
+<p><strong>Contato técnico</strong></p>
+<ul>
+  <li>Filipe Falcão — Líder técnico (Sudoeste Informática)</li>
+  <li>E-mail: fillipe.falcao@sudoesteinformatica.com.br</li>
+  <li>Telefone: +55 75 99157-2090</li>
+</ul>
+
+<p>Certos da atenção, colocamo-nos à disposição para o teste de envio (<code>testeEnvio</code>) assim que as URLs estiverem registradas.</p>
+
+<p>Atenciosamente,</p>
+
+<div class="assinatura">
+  <p style="text-align:left"><strong>Anderson Cleber Magalhães Deiró</strong><br>
+  Coordenador de Tecnologia da Informação — CTI/SEDUR</p>
+</div>
+</body>
+</html>
