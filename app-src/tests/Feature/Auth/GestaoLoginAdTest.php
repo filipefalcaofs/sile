@@ -36,12 +36,33 @@ class GestaoLoginAdTest extends TestCase
     {
         Http::fake([
             '*/ws-autenticacao/auth' => Http::response(['token' => 'tk-fake']),
+            '*/ws-autenticacao/discovery' => Http::response([
+                'lotacao' => [
+                    'codigo' => null,
+                    'nome' => null,
+                ],
+            ]),
             '*/pessoaView/buscarPorCPF/*' => Http::response([
                 'nome' => $nome,
                 'endereco' => 'Rua Exemplo, 1',
                 'telefone' => '71999990000',
             ]),
         ]);
+    }
+
+    public function test_usuario_ad_autentica_com_o_usuario_da_rede_corporativa(): void
+    {
+        $this->fakeAdSucesso();
+        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+
+        $this->post('/gestao/login', [
+            'identifier' => 'filipefalcao',
+            'password' => 'senha-corporativa',
+        ])->assertRedirect('/gestao');
+
+        $this->assertAuthenticatedAs($servidor, 'gestao');
+        Http::assertSent(fn ($request) => $request->method() === 'POST'
+            && ($request->data()['usuario'] ?? null) === 'filipefalcao');
     }
 
     public function test_usuario_ad_autentica_pela_api_e_sincroniza_o_nome(): void
@@ -53,7 +74,7 @@ class GestaoLoginAdTest extends TestCase
         ]);
 
         $response = $this->post('/gestao/login', [
-            'email' => $servidor->email,
+            'identifier' => $servidor->email,
             'password' => 'senha-corporativa',
         ]);
 
@@ -83,17 +104,17 @@ class GestaoLoginAdTest extends TestCase
         $servidorLocal = User::factory()->administrador()->create();
 
         $respostaAd = $this->post('/gestao/login', [
-            'email' => $servidorAd->email,
+            'identifier' => $servidorAd->email,
             'password' => 'senha-errada',
         ]);
 
         $respostaLocal = $this->post('/gestao/login', [
-            'email' => $servidorLocal->email,
+            'identifier' => $servidorLocal->email,
             'password' => 'senha-errada',
         ]);
 
-        $respostaAd->assertSessionHasErrors(['email' => __('auth.failed')]);
-        $respostaLocal->assertSessionHasErrors(['email' => __('auth.failed')]);
+        $respostaAd->assertSessionHasErrors(['identifier' => __('auth.failed')]);
+        $respostaLocal->assertSessionHasErrors(['identifier' => __('auth.failed')]);
 
         $this->assertGuest('gestao');
 
@@ -111,12 +132,12 @@ class GestaoLoginAdTest extends TestCase
         $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
 
         $response = $this->post('/gestao/login', [
-            'email' => $servidor->email,
+            'identifier' => $servidor->email,
             'password' => 'password',
         ]);
 
         $response->assertSessionHasErrors([
-            'email' => 'Autenticação institucional indisponível no momento. Tente novamente em instantes.',
+            'identifier' => 'Autenticação institucional indisponível no momento. Tente novamente em instantes.',
         ]);
 
         $this->assertGuest('gestao');
@@ -136,12 +157,12 @@ class GestaoLoginAdTest extends TestCase
         $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
 
         $response = $this->post('/gestao/login', [
-            'email' => $servidor->email,
+            'identifier' => $servidor->email,
             'password' => 'senha-corporativa',
         ]);
 
         $response->assertSessionHasErrors([
-            'email' => 'A autenticação corporativa está desabilitada. Procure o administrador do sistema.',
+            'identifier' => 'A autenticação corporativa está desabilitada. Procure o administrador do sistema.',
         ]);
 
         $this->assertGuest('gestao');
@@ -160,7 +181,7 @@ class GestaoLoginAdTest extends TestCase
         $servidor = User::factory()->administrador()->create();
 
         $this->post('/gestao/login', [
-            'email' => $servidor->email,
+            'identifier' => $servidor->email,
             'password' => 'password',
         ])->assertRedirect('/gestao');
 
@@ -182,15 +203,15 @@ class GestaoLoginAdTest extends TestCase
 
         foreach (range(1, 3) as $tentativa) {
             $this->post('/gestao/login', [
-                'email' => $servidor->email,
+                'identifier' => $servidor->email,
                 'password' => 'senha-errada',
             ]);
         }
 
         $this->post('/gestao/login', [
-            'email' => $servidor->email,
+            'identifier' => $servidor->email,
             'password' => 'senha-errada',
-        ])->assertSessionHasErrors('email');
+        ])->assertSessionHasErrors('identifier');
 
         Http::assertSentCount(3);
     }
@@ -202,9 +223,9 @@ class GestaoLoginAdTest extends TestCase
         $cidadao = User::factory()->cidadao()->ad('filipefalcao')->create();
 
         $this->post('/gestao/login', [
-            'email' => $cidadao->email,
+            'identifier' => $cidadao->email,
             'password' => 'senha-corporativa',
-        ])->assertSessionHasErrors('email');
+        ])->assertSessionHasErrors('identifier');
 
         $this->assertGuest('gestao');
 
@@ -222,10 +243,10 @@ class GestaoLoginAdTest extends TestCase
         $servidor = User::factory()->administrador()->ad('filipefalcao')->inactive()->create();
 
         $this->post('/gestao/login', [
-            'email' => $servidor->email,
+            'identifier' => $servidor->email,
             'password' => 'senha-corporativa',
         ])->assertSessionHasErrors([
-            'email' => 'Sua conta está inativa. Procure o administrador do sistema.',
+            'identifier' => 'Sua conta está inativa. Procure o administrador do sistema.',
         ]);
 
         $this->assertGuest('gestao');
@@ -235,13 +256,14 @@ class GestaoLoginAdTest extends TestCase
     {
         Http::fake([
             '*/ws-autenticacao/auth' => Http::response(['token' => 'tk-fake']),
+            '*/ws-autenticacao/discovery' => Http::response([], 502),
             '*/pessoaView/buscarPorCPF/*' => Http::response([], 502),
         ]);
 
         $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
 
         $this->post('/gestao/login', [
-            'email' => $servidor->email,
+            'identifier' => $servidor->email,
             'password' => 'senha-corporativa',
         ])->assertRedirect('/gestao');
 
@@ -261,7 +283,7 @@ class GestaoLoginAdTest extends TestCase
         $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
 
         $this->post('/gestao/login', [
-            'email' => $servidor->email,
+            'identifier' => $servidor->email,
             'password' => 'SuperSecreta123',
         ]);
 

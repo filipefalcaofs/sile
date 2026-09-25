@@ -7,6 +7,7 @@ use App\Http\Requests\Gestao\LoginRequest;
 use App\Models\AccessLog;
 use App\Models\User;
 use App\Services\Auth\DirectoryAuthenticator;
+use App\Services\Auth\UserSectorAssignmentSync;
 use App\Services\Sedur\SedurAuthInvalidCredentialsException;
 use App\Services\Sedur\SedurAuthSettings;
 use App\Services\Sedur\SedurAuthUnavailableException;
@@ -43,8 +44,13 @@ class LoginController extends Controller
     {
         $this->ensureIsNotRateLimited($request);
 
+        $identifier = Str::lower($request->validated('identifier'));
+
         $user = User::query()
-            ->where('email', Str::lower($request->validated('email')))
+            ->where(function ($query) use ($identifier) {
+                $query->where('email', $identifier)
+                    ->orWhere('ad_username', $identifier);
+            })
             ->first();
 
         // Anti-oráculo: o estado da conta (inativa, sem permissão) só é
@@ -55,11 +61,11 @@ class LoginController extends Controller
             RateLimiter::hit($this->ipThrottleKey($request), 60);
 
             event(new Failed('gestao', $user, [
-                'email' => $request->validated('email'),
+                'email' => $user?->email ?? $request->validated('identifier'),
                 'origin' => $user === null ? null : ($user->isAdAccount() ? 'ad' : 'local'),
             ]));
 
-            throw ValidationException::withMessages(['email' => __('auth.failed')]);
+            throw ValidationException::withMessages(['identifier' => __('auth.failed')]);
         }
 
         if ($user->isInactive()) {
@@ -74,7 +80,7 @@ class LoginController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                'email' => __('Sua conta está inativa. Procure o administrador do sistema.'),
+                'identifier' => __('Sua conta está inativa. Procure o administrador do sistema.'),
             ]);
         }
 
@@ -85,13 +91,13 @@ class LoginController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                'email' => __('Esta conta não tem acesso ao console de gestão.'),
+                'identifier' => __('Esta conta não tem acesso ao console de gestão.'),
             ]);
         }
 
         if (! $user->hasVerifiedEmail()) {
             throw ValidationException::withMessages([
-                'email' => __('Confirme seu e-mail institucional antes de acessar o console.'),
+                'identifier' => __('Confirme seu e-mail institucional antes de acessar o console.'),
             ]);
         }
 
@@ -140,7 +146,7 @@ class LoginController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                'email' => __('A autenticação corporativa está desabilitada. Procure o administrador do sistema.'),
+                'identifier' => __('A autenticação corporativa está desabilitada. Procure o administrador do sistema.'),
             ]);
         }
 
@@ -164,11 +170,33 @@ class LoginController extends Controller
             ]);
 
             throw ValidationException::withMessages([
-                'email' => __('Autenticação institucional indisponível no momento. Tente novamente em instantes.'),
+                'identifier' => __('Autenticação institucional indisponível no momento. Tente novamente em instantes.'),
             ]);
         }
 
-        if ($resultado->sincronizacaoFalhou) {
+        $sincronizacaoFalhou = $resultado->sincronizacaoFalhou;
+
+        // Sincronização cadastral com minimização: somente o nome oficial.
+        // name está no fillable — a auditoria HasAuditoria registra a mudança.
+        if ($resultado->nome !== null && $resultado->nome !== $user->name) {
+            $user->update(['name' => $resultado->nome]);
+        }
+
+        // Lotação via discovery (mesmo token transitório). Falha aqui não
+        // derruba o login — identidade já validada no /auth.
+        if ($resultado->setorCodigo !== null || $resultado->setorNome !== null) {
+            try {
+                app(UserSectorAssignmentSync::class)->syncFromDiscovery(
+                    $user,
+                    $resultado->setorCodigo,
+                    $resultado->setorNome,
+                );
+            } catch (\Throwable) {
+                $sincronizacaoFalhou = true;
+            }
+        }
+
+        if ($sincronizacaoFalhou) {
             AccessLog::create([
                 'user_id' => $user->id,
                 'email' => $user->email,
@@ -178,12 +206,6 @@ class LoginController extends Controller
                 'channel' => 'gestao',
                 'origin' => 'ad',
             ]);
-        }
-
-        // Sincronização cadastral com minimização: somente o nome oficial.
-        // name está no fillable — a auditoria HasAuditoria registra a mudança.
-        if ($resultado->nome !== null && $resultado->nome !== $user->name) {
-            $user->update(['name' => $resultado->nome]);
         }
 
         return true;
@@ -204,7 +226,7 @@ class LoginController extends Controller
         $seconds = RateLimiter::availableIn($this->throttleKey($request));
 
         throw ValidationException::withMessages([
-            'email' => __('auth.throttle', [
+            'identifier' => __('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => (int) ceil($seconds / 60),
             ]),
@@ -229,7 +251,7 @@ class LoginController extends Controller
         $seconds = RateLimiter::availableIn($this->ipThrottleKey($request));
 
         throw ValidationException::withMessages([
-            'email' => __('auth.throttle', [
+            'identifier' => __('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => (int) ceil($seconds / 60),
             ]),
@@ -248,7 +270,7 @@ class LoginController extends Controller
 
     protected function throttleKey(LoginRequest $request): string
     {
-        return Str::transliterate(Str::lower($request->validated('email')).'|'.$request->ip());
+        return Str::transliterate(Str::lower($request->validated('identifier')).'|'.$request->ip());
     }
 
     protected function ipThrottleKey(LoginRequest $request): string

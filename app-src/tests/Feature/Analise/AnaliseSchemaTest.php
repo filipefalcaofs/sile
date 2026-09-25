@@ -21,7 +21,7 @@ class AnaliseSchemaTest extends TestCase
     public function test_tabela_sectors_existe_com_colunas(): void
     {
         $this->assertTrue(Schema::hasTable('sectors'));
-        $this->assertTrue(Schema::hasColumns('sectors', ['name', 'active']));
+        $this->assertTrue(Schema::hasColumns('sectors', ['name', 'active', 'code']));
     }
 
     public function test_pivot_sector_user_existe_com_vinculo(): void
