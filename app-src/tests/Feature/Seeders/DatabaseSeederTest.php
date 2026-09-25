@@ -87,7 +87,7 @@ class DatabaseSeederTest extends TestCase
         // analise.escritorio_virtual.pergunta_geral)
         // + 1 da pergunta vinculada de intenção de sede no passo de
         // atividades do portal (SDD escritorio-virtual-telas-portal, Tarefa 3:
-        // analise.escritorio_virtual.pergunta_vinculada).
+        // analise.escritorio_virtual.pergunta_vinculada)
         // + 1 dos atributos de nome da zona na feição (Fase 3 parametrização,
         // item 3.4: geo.zona.atributos_nome).
         // + 3 da Fase 5 (janela de duplicidade + pesos e cortes da auditoria
