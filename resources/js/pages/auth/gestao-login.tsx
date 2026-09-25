@@ -237,7 +237,7 @@ function GestaoLoginContent({ status }: { status?: string }) {
                         Entre no console
                     </h2>
                     <p className={`mt-2.5 ${gestaoLoginMutedClasses}`}>
-                        Use seu e-mail institucional para acessar o ambiente de gestão.
+                        Use o usuário da rede corporativa ou o e-mail da sua conta local para acessar o ambiente de gestão.
                     </p>
 
                     {status && (
@@ -256,30 +256,33 @@ function GestaoLoginContent({ status }: { status?: string }) {
                         {({ errors, processing }) => (
                             <>
                                 <div className="mt-[26px] grid gap-2.5">
-                                    <label htmlFor="email" className={gestaoLoginLabelClasses}>
-                                        E-mail institucional
+                                    <label htmlFor="identifier" className={gestaoLoginLabelClasses}>
+                                        E-mail institucional ou usuário AD
                                     </label>
                                     <input
-                                        id="email"
-                                        type="email"
-                                        name="email"
-                                        inputMode="email"
+                                        id="identifier"
+                                        type="text"
+                                        name="identifier"
                                         autoComplete="username"
                                         autoFocus
                                         required
-                                        placeholder="nome@salvador.ba.gov.br"
-                                        aria-invalid={errors.email ? 'true' : undefined}
+                                        placeholder="nome@salvador.ba.gov.br ou filipefalcao"
+                                        aria-describedby="identifier-help"
+                                        aria-invalid={errors.identifier ? 'true' : undefined}
                                         className={gestaoLoginInputClasses}
                                     />
-                                    {errors.email && (
-                                        <p className="text-[12.5px] text-error-600 dark:text-[oklch(72%_0.16_25)]">{errors.email}</p>
+                                    <p id="identifier-help" className={`text-[12.5px] ${gestaoLoginMutedClasses}`}>
+                                        Use o usuário da rede corporativa (ex.: filipefalcao) ou o e-mail da conta local.
+                                    </p>
+                                    {errors.identifier && (
+                                        <p className="text-[12.5px] text-error-600 dark:text-[oklch(72%_0.16_25)]">{errors.identifier}</p>
                                     )}
                                 </div>
 
                                 <div className="mt-[26px] grid gap-2.5">
                                     <div className="flex items-baseline justify-between">
                                         <label htmlFor="password" className={gestaoLoginLabelClasses}>
-                                            Senha
+                                            Senha da rede corporativa ou da conta local
                                         </label>
                                         <Link href="/gestao/forgot-password" className={gestaoLoginLinkClasses}>
                                             Esqueceu?
