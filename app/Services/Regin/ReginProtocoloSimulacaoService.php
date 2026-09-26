@@ -3,6 +3,7 @@
 namespace App\Services\Regin;
 
 use App\Enums\Fluxo;
+use App\Enums\PropertyLocationSource;
 use App\Enums\RiscoMunicipal;
 use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestOrigin;
@@ -16,6 +17,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Geo\TerritorioProcessoService;
 use App\Services\Geo\TerritoryResult;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Risco\RiscoClassificationService;
@@ -40,23 +42,6 @@ class ReginProtocoloSimulacaoService
 
     public const CONTINGENCIA_RECEBE = 'regin_recebe';
 
-    /**
-     * Polígono de homologação em Salvador — a base GIS oficial ainda não
-     * participa desta simulação; o motor de risco é que decide o encaminhamento.
-     *
-     * @var array{type: string, coordinates: list<list<list<float>>>}
-     */
-    private const POLIGONO_HOMOLOGACAO = [
-        'type' => 'Polygon',
-        'coordinates' => [[
-            [-38.5108, -12.9711],
-            [-38.5108, -12.9709],
-            [-38.5106, -12.9709],
-            [-38.5106, -12.9711],
-            [-38.5108, -12.9711],
-        ]],
-    ];
-
     public function __construct(
         private ReginProtocoloCatalog $catalogo,
         private RiscoClassificationService $risco,
@@ -65,6 +50,7 @@ class ReginProtocoloSimulacaoService
         private FluxoExpressoService $expresso,
         private ReginTipoImovelApplier $tipoImovel,
         private DocumentRequirementResolver $documentos,
+        private TerritorioProcessoService $territorio,
     ) {}
 
     /**
@@ -310,7 +296,6 @@ class ReginProtocoloSimulacaoService
             'address_neighborhood' => null,
             'address_zip' => '40000000',
             'property_registration' => $this->inscricaoDoCatalogo($protocolo),
-            'property_polygon_geojson' => $this->poligonoDoProtocolo($protocolo),
             'is_virtual_office' => $sedeVirtual,
             'wants_virtual_office_hq' => $sedeVirtual,
             'simulation_snapshot' => $relatorio,
@@ -336,6 +321,9 @@ class ReginProtocoloSimulacaoService
             isset($protocolo['tipo_imovel']) ? (string) $protocolo['tipo_imovel'] : null,
         );
 
+        $this->territorio->localizarPelaInscricao($solicitacao);
+        $this->gravarPontoDoCatalogo($solicitacao, $protocolo);
+
         $this->anexarDocumentosObrigatorios($solicitacao, $ator);
         $this->protocolar->protocol($solicitacao->fresh() ?? $solicitacao, $ator);
         $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $ator);
@@ -344,37 +332,31 @@ class ReginProtocoloSimulacaoService
     }
 
     /**
-     * Polígono do imóvel: quando o catálogo traz o ponto real da inscrição
-     * (Cadastro Imobiliário), desenha o quadrado ao redor dele — assim a zona
-     * materializada no protocolo (TerritorioProcessoService) bate com a zona do
-     * catálogo e o mapa mostra o local de verdade. Sem ponto, cai no quadrado
-     * fixo de homologação (Centro). Quadrado ~33 m, GeoJSON em [lng, lat].
+     * Sem ponto do Cadastro Imobiliário, o ponto informado no catálogo da
+     * simulação é a localização. Não desenha polígono: um quadrado em volta
+     * do ponto fazia o motor avaliar outra rua.
      *
      * @param  array<string, mixed>  $protocolo
-     * @return array{type: string, coordinates: list<list<list<float>>>}
      */
-    private function poligonoDoProtocolo(array $protocolo): array
+    private function gravarPontoDoCatalogo(ViabilityRequest $solicitacao, array $protocolo): void
     {
+        if ($solicitacao->pontoDoImovel() !== null) {
+            return;
+        }
+
         $ponto = $protocolo['ponto'] ?? null;
         $lat = is_array($ponto) && is_numeric($ponto['lat'] ?? null) ? (float) $ponto['lat'] : null;
         $lng = is_array($ponto) && is_numeric($ponto['lng'] ?? null) ? (float) $ponto['lng'] : null;
 
         if ($lat === null || $lng === null) {
-            return self::POLIGONO_HOMOLOGACAO;
+            return;
         }
 
-        $delta = 0.0003;
-
-        return [
-            'type' => 'Polygon',
-            'coordinates' => [[
-                [$lng - $delta, $lat - $delta],
-                [$lng + $delta, $lat - $delta],
-                [$lng + $delta, $lat + $delta],
-                [$lng - $delta, $lat + $delta],
-                [$lng - $delta, $lat - $delta],
-            ]],
-        ];
+        $solicitacao->forceFill([
+            'property_point_lat' => $lat,
+            'property_point_lng' => $lng,
+            'property_location_source' => PropertyLocationSource::CatalogoSimulacao,
+        ])->save();
     }
 
     private function processoExistente(string $codigo, string $referencia): ?ViabilityRequest

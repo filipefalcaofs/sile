@@ -84,6 +84,39 @@ final readonly class CnpjData
     }
 
     /**
+     * Reidrata o que o cache guarda: o array de {@see toArray()}, nunca o objeto.
+     * O cache da aplicação não desserializa classes.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public static function fromCached(array $payload): self
+    {
+        $secundarios = $payload['secondary_cnae_codes'] ?? [];
+
+        return new self(
+            cnpj: (string) ($payload['cnpj'] ?? ''),
+            legalName: (string) ($payload['legal_name'] ?? ''),
+            tradeName: isset($payload['trade_name']) ? (string) $payload['trade_name'] : null,
+            legalNatureCode: isset($payload['legal_nature_code']) ? (string) $payload['legal_nature_code'] : null,
+            legalNature: isset($payload['legal_nature']) ? (string) $payload['legal_nature'] : null,
+            sizeCode: isset($payload['size_code']) ? (string) $payload['size_code'] : null,
+            size: isset($payload['size']) ? (string) $payload['size'] : null,
+            primaryCnaeCode: isset($payload['primary_cnae_code']) ? (string) $payload['primary_cnae_code'] : null,
+            secondaryCnaeCodes: is_array($secundarios) ? array_values(array_map(strval(...), $secundarios)) : [],
+            street: isset($payload['street']) ? (string) $payload['street'] : null,
+            number: isset($payload['number']) ? (string) $payload['number'] : null,
+            complement: isset($payload['complement']) ? (string) $payload['complement'] : null,
+            neighborhood: isset($payload['neighborhood']) ? (string) $payload['neighborhood'] : null,
+            city: isset($payload['city']) ? (string) $payload['city'] : null,
+            state: isset($payload['state']) ? (string) $payload['state'] : null,
+            zipCode: isset($payload['zip_code']) ? (string) $payload['zip_code'] : null,
+            phone: isset($payload['phone']) ? (string) $payload['phone'] : null,
+            email: isset($payload['email']) ? (string) $payload['email'] : null,
+            registrationStatus: isset($payload['registration_status']) ? (string) $payload['registration_status'] : null,
+        );
+    }
+
+    /**
      * Contrato snake_case do JSON do endpoint e do formulário React.
      *
      * @return array<string, mixed>

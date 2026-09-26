@@ -8,6 +8,7 @@ use App\Events\ResultadoEmitido;
 use App\Models\AnalysisPendency;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,7 @@ class IndeferirPorPrazoConviteService
     public function __construct(
         private ViabilityRequestStateMachine $stateMachine,
         private AuditService $audit,
+        private DecisionTextCatalog $textos,
     ) {}
 
     /**
@@ -54,7 +56,7 @@ class IndeferirPorPrazoConviteService
             );
         }
 
-        $reason = 'Indeferido por prazo do convite expirado sem resposta do requerente';
+        $reason = $this->textos->get('justificativa.indeferimento.convite_expirado');
 
         $decision = DB::transaction(function () use ($request, $pendency, $reason): ViabilityDecision {
             $decision = ViabilityDecision::create([

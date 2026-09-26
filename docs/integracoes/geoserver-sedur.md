@@ -228,6 +228,22 @@ GET /geoserver/wfs
   &bbox=-38.51,-12.98,-38.49,-12.96,EPSG:4326
 ```
 
+### Carga local de uma camada inteira
+
+Logradouros de Salvador (substitui o snapshot só do Centro):
+
+```bash
+php artisan geo:importar-wfs via logradouro:VM_LOGRADOURO --versao=sedur-logradouros-AAAA-MM --ordenar=CODLOG
+```
+
+WFS 2.0 paginado (`count`/`startIndex`, `sortBy` obrigatório). Página com erro aborta sem publicar versão parcial. Roda no host de produção (a rede de dev é barrada pelo firewall).
+
+Encerrar uma versão sem apagar (ex.: zona fictícia de demonstração):
+
+```bash
+php artisan geo:encerrar-camada zona zona-ficticia-dev
+```
+
 ---
 
 ## 7. Catálogo público (geoservicos)

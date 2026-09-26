@@ -127,6 +127,18 @@ class RegistrationTest extends TestCase
         ]);
     }
 
+    public function test_telefone_sem_ddd_impede_o_cadastro(): void
+    {
+        $this->post('/portal/register', [
+            ...$this->validPayload(),
+            'phone' => '99999-0000',
+        ])->assertSessionHasErrors([
+            'phone' => 'Informe um telefone com DDD e 8 ou 9 dígitos.',
+        ]);
+
+        $this->assertGuest();
+    }
+
     public function test_usuario_autenticado_nao_acessa_cadastro(): void
     {
         $user = User::factory()->cidadao()->create();

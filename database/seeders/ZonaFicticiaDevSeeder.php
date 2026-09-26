@@ -42,12 +42,21 @@ class ZonaFicticiaDevSeeder extends Seeder
      */
     public const ZONA_CODE = 'ZCMe 2';
 
+    /**
+     * Produção nunca recebe a zona fictícia, nem com dados de demonstração
+     * ligados: ela sobrepõe a zona oficial do GeoServer no Centro.
+     */
+    public static function permitido(): bool
+    {
+        return ! app()->environment('production') && DemoMode::allowsDemoSeeders();
+    }
+
     public function run(): void
     {
         // GATE DE AMBIENTE (anti-fachada): a zona fictícia JAMAIS entra em
         // produção — lá a degradação honesta (em_analise sem zona oficial) é o
         // comportamento correto. Só dev/teste para demonstrar o deferimento.
-        if (! DemoMode::allowsDemoSeeders()) {
+        if (! self::permitido()) {
             $this->command?->warn('ZonaFicticiaDevSeeder: ignorado fora de dev/teste (produção mantém a degradação honesta sem zona oficial).');
 
             return;

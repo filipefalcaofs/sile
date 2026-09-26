@@ -130,24 +130,19 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertSame([], $comercio['atividades'][0]['perguntas']);
     }
 
-    public function test_inscricao_real_desenha_poligono_no_endereco_do_imovel(): void
+    public function test_inscricao_real_grava_o_ponto_do_catalogo_sem_poligono_ficticio(): void
     {
-        // Regressão da divergência de zona (relato SEDUR 25/09): o polígono fixo
-        // de homologação no Centro caía na zona fictícia ZCN-1 e o materializar
-        // do protocolo sobrescrevia a zona real (ZPR 3) do catálogo. O polígono
-        // deve ser desenhado no endereço real da inscrição (Cadastro Imobiliário).
+        // Regressão da divergência de zona (relato SEDUR 25/09) e do processo
+        // 00990026/2026: o quadrado fixo de homologação no Centro fazia o motor
+        // avaliar outra rua. Sem polígono desenhado, vale o ponto do catálogo.
         $relatorio = app(ReginProtocoloSimulacaoService::class)->simular('594902-5');
 
         $processo = ViabilityRequest::query()->find($relatorio['processo_id']);
 
         $this->assertNotNull($processo);
-        $anel = $processo->property_polygon_geojson['coordinates'][0];
-        $centroLng = array_sum(array_column($anel, 0)) / count($anel);
-        $centroLat = array_sum(array_column($anel, 1)) / count($anel);
-
-        // Pituba (Rua Hilton Rodrigues, 300) — não o quadrado fixo do Centro.
-        $this->assertEqualsWithDelta(-38.465458, $centroLng, 0.001);
-        $this->assertEqualsWithDelta(-13.001053, $centroLat, 0.001);
+        $this->assertNull($processo->property_polygon_geojson);
+        $this->assertEqualsWithDelta(-38.465458, $processo->property_point_lng, 0.0000001);
+        $this->assertEqualsWithDelta(-13.001053, $processo->property_point_lat, 0.0000001);
     }
 
     public function test_novos_protocolos_trazem_cnae_zona_via_e_respostas_do_pdf(): void
@@ -643,6 +638,8 @@ class ReginProtocoloSimulacaoTest extends TestCase
             ResultadoViabilidade::NaoPermitido->value,
             app(SolicitacaoViabilityResolver::class)->resolve($processo)->consolidado,
         );
+        $this->assertStringContainsString('CNAE 6202-3/00', (string) $processo->decision?->reason);
+        $this->assertStringContainsString('pelo Quadro 11-A da LOUOS', (string) $processo->decision?->reason);
     }
 
     public function test_33072_com_resposta_e_territorio_do_catalogo_defere(): void

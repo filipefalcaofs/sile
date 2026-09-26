@@ -33,6 +33,14 @@ interface SpatialRepository
     public function nearestFeature(GeoLayer $layer, float $lng, float $lat, int $maxMeters): ?array;
 
     /**
+     * Todas as feições até `$maxMeters` do ponto, da mais próxima para a mais
+     * distante (ex.: todos os logradouros em volta do imóvel).
+     *
+     * @return list<array{id: int, properties: array<string, mixed>, distancia_m: float}>
+     */
+    public function featuresWithin(GeoLayer $layer, float $lng, float $lat, int $maxMeters, int $limit = 20): array;
+
+    /**
      * Todas as feições que INTERCEPTAM o ponto (ST_Intersects) — restrições.
      *
      * @return array<int, array{id: int, properties: array<string, mixed>}>

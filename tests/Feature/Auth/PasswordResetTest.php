@@ -126,7 +126,8 @@ class PasswordResetTest extends TestCase
 
         $response = $this->post('/portal/forgot-password', ['email' => 'nao-existe@example.com']);
 
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasNoErrors();
+        $response->assertSessionHas('status', __('passwords.sent'));
 
         Notification::assertNothingSent();
     }

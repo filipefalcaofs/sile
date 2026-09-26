@@ -79,6 +79,7 @@ class StoreProcurationRequest extends FormRequest
     {
         return [
             'attorney_email.exists' => 'Não encontramos uma conta com este e-mail. Oriente o procurador a se cadastrar no Viabiliza primeiro.',
+            'expires_at.after' => 'A validade deve ser uma data futura.',
         ];
     }
 

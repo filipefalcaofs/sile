@@ -21,11 +21,17 @@ interface ConsultaProps {
 type TipoEntrada = 'endereco' | 'cnae' | 'inscricao';
 
 /** Corpo POST dos endpoints /portal/viabilidade/* (07-06). */
+interface PerguntaConsulta {
+    numero: number;
+    texto: string;
+}
+
 interface ConsultaPayload {
     endereco?: string;
     inscricao?: string;
     cnae: string;
     area: number | null;
+    respostas?: Record<number, boolean>;
 }
 
 const ENTRADAS: Array<{ tipo: TipoEntrada; rotulo: string; icon: ComponentType<SVGProps<SVGSVGElement>> }> = [
@@ -142,6 +148,8 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
     const [inscricao, setInscricao] = useState('');
     const [cnae, setCnae] = useState('');
     const [area, setArea] = useState('');
+    const [perguntas, setPerguntas] = useState<PerguntaConsulta[]>([]);
+    const [respostas, setRespostas] = useState<Record<number, boolean>>({});
     const [result, setResult] = useState<ResultadoConsulta | null>(null);
     const [erro, setErro] = useState<string | null>(null);
 
@@ -178,12 +186,18 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
             payload = { inscricao, cnae, area: areaNumero };
         }
 
+        if (perguntas.length > 0) {
+            payload.respostas = respostas;
+        }
+
         // transform() é síncrono: garante o envio do corpo fresco da aba ativa
         // (o dataRef do useHttp só atualiza no efeito pós-render) — precedente 04-07.
         consulta.transform(() => payload);
         consulta.post(url, {
             onSuccess: (response) => {
-                setResult(response);
+                const corpo = response as ResultadoConsulta & { perguntas?: PerguntaConsulta[] };
+                setResult(corpo);
+                setPerguntas(Array.isArray(corpo.perguntas) ? corpo.perguntas : []);
                 setErro(null);
             },
             onError: (errors) => {
@@ -341,7 +355,11 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                                 type="text"
                                                 name="cnae"
                                                 value={cnae}
-                                                onChange={(event) => setCnae(event.target.value)}
+                                                onChange={(event) => {
+                                                    setCnae(event.target.value);
+                                                    setPerguntas([]);
+                                                    setRespostas({});
+                                                }}
                                                 placeholder="Ex.: 4712-1/00"
                                                 maxLength={14}
                                                 disabled={!consultaEnabled}
@@ -362,6 +380,53 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                                 hint="Usada no enquadramento pela planilha vigente (área utilizada)."
                                             />
                                         </div>
+
+                                        {perguntas.length > 0 && (
+                                            <fieldset className="flex flex-col gap-3">
+                                                <legend className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    Perguntas da atividade
+                                                </legend>
+                                                {perguntas
+                                                    .filter((pergunta) => pergunta.numero !== 3 || respostas[2] !== false)
+                                                    .map((pergunta) => (
+                                                        <div key={pergunta.numero} className="flex flex-col gap-2">
+                                                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                                {pergunta.numero}. {pergunta.texto}
+                                                            </p>
+                                                            <div className="flex gap-4">
+                                                                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                                                    <input
+                                                                        type="radio"
+                                                                        name={`pergunta-${pergunta.numero}`}
+                                                                        checked={respostas[pergunta.numero] === true}
+                                                                        onChange={() =>
+                                                                            setRespostas((atual) => ({
+                                                                                ...atual,
+                                                                                [pergunta.numero]: true,
+                                                                            }))
+                                                                        }
+                                                                    />
+                                                                    Sim
+                                                                </label>
+                                                                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                                                    <input
+                                                                        type="radio"
+                                                                        name={`pergunta-${pergunta.numero}`}
+                                                                        checked={respostas[pergunta.numero] === false}
+                                                                        onChange={() =>
+                                                                            setRespostas((atual) => ({
+                                                                                ...atual,
+                                                                                [pergunta.numero]: false,
+                                                                            }))
+                                                                        }
+                                                                    />
+                                                                    Não
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                            </fieldset>
+                                        )}
 
                                         <Button
                                             type="submit"

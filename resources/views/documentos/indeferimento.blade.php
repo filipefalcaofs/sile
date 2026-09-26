@@ -92,6 +92,13 @@
         @endif
     </div>
 
+    @if (! empty($justificativa))
+        <div class="secao">
+            <h2>Justificativa do indeferimento</h2>
+            <p style="white-space: pre-line">{{ $justificativa }}</p>
+        </div>
+    @endif
+
     <div class="secao">
         <h2>Fundamentação legal</h2>
         @if (count($fundamentacao) > 0)

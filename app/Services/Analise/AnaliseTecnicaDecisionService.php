@@ -62,8 +62,12 @@ class AnaliseTecnicaDecisionService
      * @throws DomainException quando a ficha não está finalizada, o processo não
      *                         está em análise ou a ficha não tem CNAEs para decidir
      */
-    public function decide(AnalysisRecord $record, User $analista, ?DecisionOutcome $escolhido = null): AnaliseDecisionResult
-    {
+    public function decide(
+        AnalysisRecord $record,
+        User $analista,
+        ?DecisionOutcome $escolhido = null,
+        ?string $parecer = null,
+    ): AnaliseDecisionResult {
         if (! $record->isFinalizada()) {
             throw new DomainException(
                 'A ficha de análise precisa estar Finalizada para concluir o processo (rascunho não decide).',
@@ -99,10 +103,13 @@ class AnaliseTecnicaDecisionService
         }
 
         $outcome = $escolhido ?? $derivado;
+        $justificativa = $outcome === DecisionOutcome::Indeferida
+            ? $this->justificativaDoIndeferimento($record, $perCnae, $parecer)
+            : null;
 
         try {
             $decision = DB::transaction(
-                fn (): ViabilityDecision => $this->registrarDecisao($request, $record, $analista, $perCnae, $outcome),
+                fn (): ViabilityDecision => $this->registrarDecisao($request, $record, $analista, $perCnae, $outcome, $justificativa),
             );
         } catch (QueryException $e) {
             // Robustez idempotente (mesma defesa da Fase 9): se uma corrida rara
@@ -139,6 +146,7 @@ class AnaliseTecnicaDecisionService
         User $analista,
         array $perCnae,
         DecisionOutcome $outcome,
+        ?string $justificativa,
     ): ViabilityDecision {
         // Sede de escritório virtual (RN-EV-02/03/04): deferida + o analista
         // confirmou sede na ficha + o processo tem o CNAE gatilho (8211-3/00).
@@ -172,7 +180,7 @@ class AnaliseTecnicaDecisionService
             'rules_versions' => $record->engine_rules_versions ?? [],
             'fundamentacao' => $fundamentacao,
             'decision_trace' => $this->decisionTrace($record, $perCnae),
-            'reason' => null,
+            'reason' => $justificativa,
             'decided_by_user_id' => $analista->id,
             'decided_at' => now(),
         ]);
@@ -310,6 +318,40 @@ class AnaliseTecnicaDecisionService
      *
      * @return list<array<string, mixed>>
      */
+    /**
+     * Justificativa do indeferimento humano, visível ao requerente: o parecer
+     * informado na conclusão, senão o parecer da ficha, senão as justificativas
+     * das atividades indeferidas. Sem nenhuma, o indeferimento é recusado.
+     *
+     * @param  list<array<string, mixed>>  $perCnae
+     */
+    private function justificativaDoIndeferimento(AnalysisRecord $record, array $perCnae, ?string $parecer): string
+    {
+        foreach ([$parecer, $record->parecer] as $texto) {
+            if (is_string($texto) && trim($texto) !== '') {
+                return trim($texto);
+            }
+        }
+
+        $porAtividade = [];
+
+        foreach ($perCnae as $item) {
+            $justificativa = $item['justificativa'] ?? null;
+
+            if (($item['status_escolhido'] ?? null) !== DecisionOutcome::Deferida->value && is_string($justificativa) && trim($justificativa) !== '') {
+                $porAtividade[] = 'CNAE '.($item['cnae_formatado'] ?? $item['cnae']).': '.trim($justificativa);
+            }
+        }
+
+        if ($porAtividade === []) {
+            throw new DomainException(
+                'Informe o parecer com o motivo do indeferimento (visível ao requerente) antes de concluir.',
+            );
+        }
+
+        return implode("\n\n", $porAtividade);
+    }
+
     private function perCnaeDaFicha(AnalysisRecord $record): array
     {
         $itens = [];

@@ -162,6 +162,7 @@ class LouosController extends Controller
                 ->where('rule_version_id', $vigente->getKey())
                 ->orderBy('numero')
                 ->get(['numero', 'texto', 'referencia'])
+                ->values()
                 ->all();
 
         $rascunho = RuleVersion::query()
@@ -176,29 +177,30 @@ class LouosController extends Controller
                 ->where('rule_version_id', $rascunho->getKey())
                 ->orderBy('regra')
                 ->get(['regra', 'motivo'])
+                ->values()
                 ->all();
 
         $id = $vigente?->getKey();
 
         $regras = $id === null
             ? []
-            : TratamentoRegra::query()->where('rule_version_id', $id)->orderBy('numero')->get(['numero', 'tratamento', 'referencia'])->all();
+            : TratamentoRegra::query()->where('rule_version_id', $id)->orderBy('numero')->get(['numero', 'tratamento', 'referencia'])->values()->all();
 
         $ramos = $id === null
             ? []
-            : TratamentoRegraRamo::query()->where('rule_version_id', $id)->orderBy('regra')->orderBy('id')->get(['regra', 'pergunta', 'resposta', 'faixa', 'tipo_dirige', 'codigo_louos', 'fluxo', 'bloqueia'])->all();
+            : TratamentoRegraRamo::query()->where('rule_version_id', $id)->orderBy('regra')->orderBy('id')->get(['regra', 'pergunta', 'resposta', 'faixa', 'tipo_dirige', 'codigo_louos', 'fluxo', 'bloqueia'])->values()->all();
 
         $condicionantes = $id === null
             ? []
-            : TratamentoCondicionante::query()->where('rule_version_id', $id)->orderBy('numero')->get(['numero', 'texto', 'observacao'])->all();
+            : TratamentoCondicionante::query()->where('rule_version_id', $id)->orderBy('numero')->get(['numero', 'texto', 'observacao'])->values()->all();
 
         $cnlu = $id === null
             ? []
-            : TratamentoCnluItem::query()->where('rule_version_id', $id)->orderBy('codigo')->get(['codigo', 'texto'])->all();
+            : TratamentoCnluItem::query()->where('rule_version_id', $id)->orderBy('codigo')->get(['codigo', 'texto'])->values()->all();
 
         $notas = $id === null
             ? []
-            : TratamentoNota::query()->where('rule_version_id', $id)->orderBy('chave')->get(['chave', 'texto'])->all();
+            : TratamentoNota::query()->where('rule_version_id', $id)->orderBy('chave')->get(['chave', 'texto'])->values()->all();
 
         $enquadramentos = TratamentoEnquadramento::query()
             ->where('rule_version_id', $id ?? 0)
@@ -226,6 +228,8 @@ class LouosController extends Controller
                 'codigo_tll' => $linha->codigo_tll,
                 'regra' => $linha->regra,
             ]);
+
+        $enquadramentos->setCollection($enquadramentos->getCollection()->values());
 
         return [
             'versao' => $vigente?->version,

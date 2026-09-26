@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Tratamento\TratamentoRegrasImportService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -53,6 +54,10 @@ class TratamentoRegrasUiTest extends TestCase
                 ->where('enquadramento.contagens.regras', 59)
                 ->where('enquadramento.contagens.condicionantes', 32)
                 ->has('enquadramento.perguntas', 32)
+                ->where('enquadramento.perguntas', fn (Collection $perguntas): bool => array_is_list($perguntas->all()))
+                ->where('enquadramento.regras', fn (Collection $regras): bool => array_is_list($regras->all()))
+                ->where('enquadramento.ramos', fn (Collection $ramos): bool => array_is_list($ramos->all()))
+                ->where('enquadramento.enquadramentos.data', fn (Collection $linhas): bool => array_is_list($linhas->all()))
                 ->has('enquadramento.regras', 59)
                 ->has('enquadramento.ramos')
                 ->has('enquadramento.condicionantes', 32)

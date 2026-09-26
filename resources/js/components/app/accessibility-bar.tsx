@@ -49,8 +49,26 @@ export default function AccessibilityBar() {
     }, [fontStep]);
 
     useEffect(() => {
+        const aoEscurecer = (evento: Event) => {
+            if ((evento as CustomEvent<string>).detail === 'dark') {
+                setContrast(false);
+            }
+        };
+
+        window.addEventListener('sile:theme', aoEscurecer);
+
+        return () => window.removeEventListener('sile:theme', aoEscurecer);
+    }, []);
+
+    useEffect(() => {
         document.documentElement.classList.toggle('acc-contrast', contrast);
         localStorage.setItem('acc-contrast', contrast ? '1' : '0');
+
+        if (contrast) {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            window.dispatchEvent(new CustomEvent('sile:acc-contrast', { detail: true }));
+        }
     }, [contrast]);
 
     return (

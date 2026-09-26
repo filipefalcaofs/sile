@@ -15,11 +15,11 @@ use Illuminate\Database\Eloquent\Collection;
 /**
  * Núcleo reutilizável da resolução de viabilidade por solicitação (09-04): itera
  * os CNAEs (principal + complementares) e chama o ConsultaViabilidadeService
- * (Fase 7) PELO PONTO da própria solicitação (centroide do polígono do imóvel —
- * sem geocodificar de novo), PROPAGANDO o veredito do motor LOUOS e o
- * encaminhamento do motor de risco por CNAE (RN-001 — nunca lógica de decisão
- * paralela). Sem polígono, degrada honesto para a via CNAE (risco + enquadramento da planilha,
- * sem território → veredito pendente).
+ * (Fase 7) PELO PONTO da própria solicitação (`pontoDoImovel()`: centroide do
+ * polígono ou ponto gravado do Cadastro Imobiliário), PROPAGANDO o veredito
+ * do motor LOUOS e o encaminhamento do motor de risco por CNAE (RN-001 —
+ * nunca lógica de decisão paralela). Sem ponto, degrada honesto para a via
+ * CNAE (risco + enquadramento da planilha, sem território → veredito pendente).
  *
  * Consolida a tendência (pior caso entre os CNAEs) e coleta as versões
  * representativas das regras, devolvendo um ResolvedViability — SEM persistir e
@@ -56,7 +56,7 @@ class SolicitacaoViabilityResolver
      */
     public function resolve(ViabilityRequest $request): ResolvedViability
     {
-        $ponto = $this->centroid($request->property_polygon_geojson);
+        $ponto = $request->pontoDoImovel();
         $area = $request->used_area_m2 !== null ? (float) $request->used_area_m2 : null;
         $tipoImovel = $this->tipoImovel($request);
 
@@ -153,37 +153,5 @@ class SolicitacaoViabilityResolver
         }
 
         return $pior;
-    }
-
-    /**
-     * Centroide (lat, lng) pela média dos vértices únicos do anel exterior —
-     * cálculo portável em PHP (igual em SQLite e Postgres), reusando o ponto que
-     * a solicitação já tem (08-06) sem geocodificar de novo. Retorna null sem
-     * polígono (a resolução degrada para a via CNAE).
-     *
-     * @param  array<string, mixed>|null  $geojson
-     * @return array{lat: float, lng: float}|null
-     */
-    private function centroid(?array $geojson): ?array
-    {
-        /** @var array<int, array<int, float|int>>|null $ring */
-        $ring = $geojson['coordinates'][0] ?? null;
-
-        if (! is_array($ring) || $ring === []) {
-            return null;
-        }
-
-        // Remove o vértice de fechamento (igual ao primeiro) para não enviesar.
-        if (count($ring) > 1 && $ring[0] === $ring[count($ring) - 1]) {
-            array_pop($ring);
-        }
-
-        $lngs = array_map(static fn (array $point): float => (float) $point[0], $ring);
-        $lats = array_map(static fn (array $point): float => (float) $point[1], $ring);
-
-        return [
-            'lat' => array_sum($lats) / count($lats),
-            'lng' => array_sum($lngs) / count($lngs),
-        ];
     }
 }

@@ -171,6 +171,33 @@ class FichaUiSmokeTest extends TestCase
                 ->where('localizacao.poligono', null));
     }
 
+    public function test_ficha_mostra_as_camadas_do_imovel(): void
+    {
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocol_number' => 'VIA-'.now()->year.'-000125',
+            'protocoled_at' => now(),
+        ]);
+        $processo->forceFill(['camadas_incidentes' => [
+            'logradouro_tributario' => ['cod_log' => '212', 'nome' => 'Avenida Lafayete Coutinho'],
+            'logradouros_proximos' => [['cod_log' => '212', 'nome' => 'Avenida Lafayete Coutinho', 'distancia_m' => 26.6]],
+            'camadas' => [['regra' => 'RT-03-ABM', 'titulo' => 'ABM', 'status' => 'dentro', 'elemento' => 'Trecho 5', 'incide' => true]],
+        ]])->save();
+
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('localizacao.camadas.logradouro_tributario.cod_log', '212')
+                ->where('localizacao.camadas.camadas.0.elemento', 'Trecho 5'));
+    }
+
     public function test_ficha_expoe_o_checklist_dos_quadros_lido_do_snapshot(): void
     {
         $processo = ViabilityRequest::factory()->create([

@@ -100,7 +100,7 @@ class ViabilityDecisionTest extends TestCase
 
         $this->assertSame(DecisionOutcome::Indeferida, $decision->outcome);
         $this->assertNull($decision->tvl_product_number);
-        $this->assertSame('indeferido sem atuação', $decision->reason);
+        $this->assertStringStartsWith('Indeferido sem atuação', (string) $decision->reason);
     }
 
     public function test_decisao_e_um_para_um_com_a_solicitacao(): void

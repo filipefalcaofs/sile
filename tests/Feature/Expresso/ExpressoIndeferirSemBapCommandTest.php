@@ -54,7 +54,7 @@ class ExpressoIndeferirSemBapCommandTest extends TestCase
 
         $decision = ViabilityDecision::query()->where('viability_request_id', $vencida->id)->first();
         $this->assertNotNull($decision);
-        $this->assertSame('indeferido sem atuação', $decision->reason);
+        $this->assertStringStartsWith('Indeferido sem atuação', (string) $decision->reason);
     }
 
     public function test_indeferimento_comunica_regin_e_ignora_sefaz(): void

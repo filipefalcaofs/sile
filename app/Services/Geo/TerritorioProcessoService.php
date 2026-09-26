@@ -2,7 +2,11 @@
 
 namespace App\Services\Geo;
 
+use App\Enums\PropertyLocationSource;
 use App\Models\ViabilityRequest;
+use App\Services\Realty\LocalizacaoInscricao;
+use App\Services\Realty\LocalizacaoInscricaoService;
+use App\Support\Audit\AuditService;
 
 /**
  * Materialização do território no processo (Onda GIS): com o acesso full ao
@@ -13,12 +17,16 @@ use App\Models\ViabilityRequest;
  * identificação do imóvel e como rede de segurança no protocolo. Write-once
  * e conservador: só escreve quando a dimensão foi IDENTIFICADA;
  * indisponível/não encontrado NUNCA sobrescreve um valor já materializado
- * (a degradação não apaga dado bom). Sem polígono, não há ponto — nada a
- * materializar.
+ * (a degradação não apaga dado bom). Sem ponto do imóvel (`pontoDoImovel()`),
+ * nada a materializar.
  */
 class TerritorioProcessoService
 {
-    public function __construct(private readonly TerritoryService $territory) {}
+    public function __construct(
+        private readonly TerritoryService $territory,
+        private readonly LocalizacaoInscricaoService $localizacao,
+        private readonly AuditService $audit,
+    ) {}
 
     /**
      * Materializa zona/bairro no processo. Reusa um TerritoryResult já
@@ -29,7 +37,7 @@ class TerritorioProcessoService
     public function materializar(ViabilityRequest $request, ?TerritoryResult $territorio = null): bool
     {
         if ($territorio === null) {
-            $ponto = $this->centroid($request->property_polygon_geojson);
+            $ponto = $request->pontoDoImovel();
 
             if ($ponto === null) {
                 return false;
@@ -72,6 +80,83 @@ class TerritorioProcessoService
     }
 
     /**
+     * Sem polígono e sem ponto, grava o ponto do Cadastro Imobiliário da
+     * inscrição. Outro status (indisponível, sem coordenada, sem inscrição)
+     * não grava nada e fica na auditoria — nunca um ponto inventado.
+     */
+    public function localizarPelaInscricao(ViabilityRequest $request): bool
+    {
+        if ($request->pontoDoImovel() !== null) {
+            return false;
+        }
+
+        $localizacao = $this->localizacao->localizar($request->property_registration);
+
+        if ($localizacao->status !== LocalizacaoInscricao::LOCALIZADA) {
+            $this->audit->log(
+                logName: 'geo',
+                event: 'localizacao-inscricao',
+                description: "Localização pela inscrição não gravada ({$localizacao->status}) na solicitação #{$request->id}",
+                properties: [
+                    'viability_request_id' => $request->id,
+                    'inscricao' => $request->property_registration,
+                    'status' => $localizacao->status,
+                ],
+                subject: $request,
+                result: $localizacao->status,
+            );
+
+            return false;
+        }
+
+        $request->forceFill([
+            'property_point_lat' => $localizacao->lat,
+            'property_point_lng' => $localizacao->lng,
+            'property_location_source' => PropertyLocationSource::CadastroImobiliario,
+        ])->save();
+
+        return true;
+    }
+
+    /**
+     * O logradouro tributário da inscrição é o CODLOG do processo. Quando a
+     * via mais próxima tinha gravado outro código, a troca fica auditada.
+     */
+    public function aplicarLogradouroTributario(ViabilityRequest $request): bool
+    {
+        $codLog = $this->localizacao->localizar($request->property_registration)->codLogTributario;
+
+        if ($codLog === null) {
+            return false;
+        }
+
+        $anterior = is_string($request->cod_log) ? trim($request->cod_log) : '';
+
+        if ($anterior === $codLog) {
+            return false;
+        }
+
+        if ($anterior !== '') {
+            $this->audit->log(
+                logName: 'geo',
+                event: 'logradouro-tributario-diverge',
+                description: "Logradouro tributário {$codLog} substitui o CODLOG {$anterior} da via mais próxima na solicitação #{$request->id}",
+                properties: [
+                    'viability_request_id' => $request->id,
+                    'cod_log_anterior' => $anterior,
+                    'cod_log_tributario' => $codLog,
+                ],
+                subject: $request,
+                result: 'divergente',
+            );
+        }
+
+        $request->forceFill(['cod_log' => $codLog])->save();
+
+        return true;
+    }
+
+    /**
      * CODLOG da via identificada (atributo oficial do cadastro municipal nas
      * propriedades da feição). SÓ quando a via foi identificada e o atributo
      * veio preenchido — indisponível/não encontrado/sem atributo devolvem
@@ -111,38 +196,5 @@ class TerritorioProcessoService
         $nome = $dim['nome'] ?? null;
 
         return is_string($nome) && trim($nome) !== '' ? trim($nome) : null;
-    }
-
-    /**
-     * Centroide (lat, lng) pela média dos vértices únicos do anel exterior —
-     * mesma aproximação da SolicitacaoViabilityResolver. null sem polígono
-     * confiável (nunca uma coordenada inventada).
-     *
-     * @param  array<string, mixed>|null  $geojson
-     * @return array{lat: float, lng: float}|null
-     */
-    private function centroid(?array $geojson): ?array
-    {
-        $anel = $geojson['coordinates'][0] ?? null;
-
-        if (! is_array($anel) || count($anel) < 3) {
-            return null;
-        }
-
-        $vertices = [];
-        foreach ($anel as $vertice) {
-            if (is_array($vertice) && count($vertice) >= 2 && is_numeric($vertice[0]) && is_numeric($vertice[1])) {
-                $vertices[(string) $vertice[0].','.(string) $vertice[1]] = [(float) $vertice[0], (float) $vertice[1]];
-            }
-        }
-
-        if ($vertices === []) {
-            return null;
-        }
-
-        $lng = array_sum(array_column($vertices, 0)) / count($vertices);
-        $lat = array_sum(array_column($vertices, 1)) / count($vertices);
-
-        return ['lat' => $lat, 'lng' => $lng];
     }
 }

@@ -1,0 +1,192 @@
+<?php
+
+namespace Tests\Feature\Geo;
+
+use App\Enums\GeoLayerType;
+use App\Enums\PropertyLocationSource;
+use App\Enums\ViabilityRequestOrigin;
+use App\Models\Cnae;
+use App\Models\GeoLayer;
+use App\Models\User;
+use App\Models\ViabilityRequest;
+use App\Services\Geo\SpatialRepository;
+use App\Services\Realty\PropertyRegistryLookup;
+use App\Services\Realty\PropertyRegistryResult;
+use App\Services\Realty\PropertyRegistryUnavailableException;
+use App\Services\Solicitacao\ProtocolarSolicitacaoService;
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Spatie\Activitylog\Models\Activity;
+use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\TestCase;
+
+class LocalizacaoPelaInscricaoTest extends TestCase
+{
+    use LazilyRefreshDatabase;
+
+    private FakeSpatialRepository $espacial;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        GeoLayer::factory()->vigente()->create(['type' => GeoLayerType::Bairro, 'version' => 'bairro-2024']);
+        GeoLayer::factory()->vigente()->create(['type' => GeoLayerType::Zona, 'version' => 'zoneamento-louos-2026']);
+        GeoLayer::factory()->vigente()->create(['type' => GeoLayerType::Via, 'version' => 'logradouro-2024']);
+
+        $this->espacial = new FakeSpatialRepository;
+        $this->espacial->setContaining(GeoLayerType::Bairro, ['id' => 1, 'properties' => ['NOME_BAIRRO' => 'Comércio']]);
+        $this->espacial->setContaining(GeoLayerType::Zona, ['id' => 2, 'properties' => ['NOME' => 'ZCN-1']]);
+        $this->espacial->setNearest(GeoLayerType::Via, [
+            'id' => 3,
+            'properties' => ['CODLOG' => '958', 'NOME_LOGRADOURO' => 'Rua Luiz Murat'],
+            'distancia_m' => 25.9,
+        ]);
+        $this->app->instance(SpatialRepository::class, $this->espacial);
+    }
+
+    /**
+     * @param  array<string, mixed>  $atributos
+     */
+    private function rascunhoRegin(array $atributos = []): ViabilityRequest
+    {
+        $solicitacao = ViabilityRequest::factory()->draft()->create([
+            'origin' => ViabilityRequestOrigin::Regin,
+            'property_polygon_geojson' => null,
+            'property_registration' => '344672',
+            'used_area_m2' => 120,
+            ...$atributos,
+        ]);
+
+        $cnae = Cnae::factory()->create();
+        $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => true]);
+
+        return $solicitacao;
+    }
+
+    private function fakeCadastro(?string $codLog, ?float $lat = -12.977769, ?float $lng = -38.516404, bool $indisponivel = false): void
+    {
+        $this->app->instance(PropertyRegistryLookup::class, new class($codLog, $lat, $lng, $indisponivel) implements PropertyRegistryLookup
+        {
+            public function __construct(
+                private ?string $codLog,
+                private ?float $lat,
+                private ?float $lng,
+                private bool $indisponivel,
+            ) {}
+
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                if ($this->indisponivel) {
+                    throw new PropertyRegistryUnavailableException($inscricao);
+                }
+
+                return new PropertyRegistryResult(
+                    latitude: $this->lat,
+                    longitude: $this->lng,
+                    inscricao: $inscricao,
+                    raw: [
+                        'CodigoLogradouroTributario' => $this->codLog,
+                        'LogradouroTributario' => 'Avenida Lafayete Coutinho',
+                    ],
+                );
+            }
+        });
+    }
+
+    public function test_processo_regin_sem_poligono_protocola_com_ponto_do_cadastro_imobiliario(): void
+    {
+        $this->fakeCadastro('212');
+        $ator = User::factory()->create();
+        $solicitacao = $this->rascunhoRegin();
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $ator);
+
+        $solicitacao->refresh();
+
+        $this->assertEqualsWithDelta(-12.977769, $solicitacao->property_point_lat, 0.0000001);
+        $this->assertEqualsWithDelta(-38.516404, $solicitacao->property_point_lng, 0.0000001);
+        $this->assertSame(PropertyLocationSource::CadastroImobiliario, $solicitacao->property_location_source);
+        $this->assertSame('ZCN-1', $solicitacao->zona_codigo);
+        $this->assertSame('Comércio', $solicitacao->bairro_oficial);
+        $this->assertSame('212', $solicitacao->cod_log);
+    }
+
+    public function test_cadastro_indisponivel_protocola_sem_ponto_e_audita(): void
+    {
+        $this->fakeCadastro(null, indisponivel: true);
+        $ator = User::factory()->create();
+        $solicitacao = $this->rascunhoRegin();
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $ator);
+
+        $solicitacao->refresh();
+
+        $this->assertNull($solicitacao->property_point_lat);
+        $this->assertNull($solicitacao->property_location_source);
+        $this->assertTrue(
+            Activity::query()->where('event', 'localizacao-inscricao')->where('subject_id', $solicitacao->id)->exists(),
+        );
+    }
+
+    public function test_logradouro_tributario_sobrepoe_a_via_mais_proxima_e_audita_a_divergencia(): void
+    {
+        $this->fakeCadastro('212');
+        $ator = User::factory()->create();
+        $solicitacao = $this->rascunhoRegin();
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $ator);
+
+        $this->assertSame('212', $solicitacao->fresh()->cod_log);
+
+        $auditoria = Activity::query()->where('event', 'logradouro-tributario-diverge')->first();
+
+        $this->assertNotNull($auditoria);
+        $this->assertSame('958', $auditoria->properties['cod_log_anterior']);
+        $this->assertSame('212', $auditoria->properties['cod_log_tributario']);
+    }
+
+    public function test_sem_inscricao_mantem_o_codlog_da_via_mais_proxima(): void
+    {
+        $this->fakeCadastro('212');
+        $ator = User::factory()->create();
+        $solicitacao = $this->rascunhoRegin(['property_registration' => null]);
+        $solicitacao->forceFill([
+            'property_point_lat' => -12.977769,
+            'property_point_lng' => -38.516404,
+            'property_location_source' => PropertyLocationSource::CatalogoSimulacao,
+        ])->save();
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $ator);
+
+        $this->assertSame('958', $solicitacao->fresh()->cod_log);
+    }
+
+    public function test_processo_com_poligono_nao_grava_ponto_mas_aplica_o_logradouro_tributario(): void
+    {
+        $this->fakeCadastro('212');
+        $ator = User::factory()->create();
+        $solicitacao = $this->rascunhoRegin([
+            'property_polygon_geojson' => [
+                'type' => 'Polygon',
+                'coordinates' => [[
+                    [-38.5108, -12.9711],
+                    [-38.5108, -12.9709],
+                    [-38.5106, -12.9709],
+                    [-38.5106, -12.9711],
+                    [-38.5108, -12.9711],
+                ]],
+            ],
+        ]);
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $ator);
+
+        $solicitacao->refresh();
+
+        $this->assertNull($solicitacao->property_point_lat);
+        $this->assertNull($solicitacao->property_location_source);
+        $this->assertSame('212', $solicitacao->cod_log);
+    }
+}

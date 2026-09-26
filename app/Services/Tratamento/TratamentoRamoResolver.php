@@ -8,12 +8,62 @@ use App\Models\RuleVersion;
 use App\Models\TratamentoCnaeBinding;
 use App\Models\TratamentoCnluItem;
 use App\Models\TratamentoEnquadramento;
+use App\Models\TratamentoPergunta;
 use App\Models\TratamentoRegraRamo;
 use App\Services\Risco\TipoImovel;
 use Illuminate\Support\Collection;
 
 class TratamentoRamoResolver
 {
+    /**
+     * Perguntas da planilha vigente para o CNAE, no formato 0000-0/00.
+     * A consulta pública exibe estas perguntas e devolve as respostas.
+     *
+     * @return list<array{numero: int, texto: string}>
+     */
+    public function perguntasExibidas(string $cnae): array
+    {
+        $digitos = (string) preg_replace('/\D/', '', $cnae);
+
+        if (strlen($digitos) !== 7) {
+            return [];
+        }
+
+        $formatado = substr($digitos, 0, 4).'-'.substr($digitos, 4, 1).'/'.substr($digitos, 5, 2);
+        $versao = RuleVersion::vigente(RuleDomain::RiscoTratamento)->first();
+
+        if ($versao === null) {
+            return [];
+        }
+
+        $numeros = TratamentoCnaeBinding::query()
+            ->where('rule_version_id', $versao->getKey())
+            ->where('cnae', $formatado)
+            ->get()
+            ->pluck('perguntas')
+            ->flatten()
+            ->filter(fn (mixed $numero): bool => $numero !== null && $numero !== '')
+            ->map(fn (mixed $numero): int => (int) $numero)
+            ->unique()
+            ->sort()
+            ->values();
+
+        if ($numeros->isEmpty()) {
+            return [];
+        }
+
+        $textos = TratamentoPergunta::query()
+            ->where('rule_version_id', $versao->getKey())
+            ->whereIn('numero', $numeros->all())
+            ->get()
+            ->keyBy(fn (TratamentoPergunta $pergunta): int => (int) $pergunta->numero);
+
+        return $numeros->map(fn (int $numero): array => [
+            'numero' => $numero,
+            'texto' => (string) ($textos->get($numero)?->texto ?? "Pergunta {$numero}"),
+        ])->all();
+    }
+
     public function resolver(TratamentoRamoInput $input): TratamentoRamoResult
     {
         $versao = $this->resolverVersao($input);

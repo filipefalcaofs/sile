@@ -6,6 +6,7 @@ use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\GeocoderException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -168,6 +169,9 @@ class NominatimGeocoderTest extends TestCase
 
         $geocoder = app(Geocoder::class);
         $geocoder->geocode('Praça da Sé, Salvador');
+
+        $this->assertIsArray(Cache::get('sile.geocoding.'.sha1('Praça da Sé, Salvador')));
+
         $geocoder->geocode('Praça da Sé, Salvador');
 
         Http::assertSentCount(1);

@@ -25,6 +25,8 @@ use App\Services\Analise\AnalysisSlaService;
 use App\Services\Auditoria\DecisionTraceBuilder;
 use App\Services\EscritorioVirtual\AbrigadoResolver;
 use App\Services\EscritorioVirtual\DesvincularInscricaoService;
+use App\Services\Geo\CamadasIncidentesService;
+use App\Services\Geo\LocalizacaoDivergenciaService;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
@@ -77,6 +79,9 @@ class FluxoExpressoService
         private AbrigadoResolver $abrigadoResolver,
         private DesvincularInscricaoService $desvincular,
         private TerritorialRuleService $territorialRules,
+        private LocalizacaoDivergenciaService $localizacaoDivergencia,
+        private JustificativaIndeferimentoBuilder $justificativa,
+        private CamadasIncidentesService $camadasIncidentes,
     ) {}
 
     /**
@@ -210,6 +215,11 @@ class FluxoExpressoService
         // Reexecução FRESCA dos motores — a decisão é autoritativa, não o snapshot.
         $resolved = $this->resolver->resolve($request);
 
+        // Inventário das camadas do imóvel (logradouros, bairro, zona, ABM,
+        // ZEM, ZPAM, ZUE, loteamentos) gravado no processo antes das regras
+        // territoriais, que reaproveitam as mesmas consultas ao GeoServer.
+        $this->camadasIncidentes->materializar($request);
+
         // Regras territoriais (RT-01 a RT-05 — pacote normativo SEDUR
         // 2026-08-28): o LUGAR manda antes do risco e do enquadramento. RT-01
         // (logradouro × CNAE proibido) indefere com o texto legal da regra;
@@ -220,6 +230,21 @@ class FluxoExpressoService
 
         if ($territorial->status === TerritorialRuleVerdict::INDEFERIR) {
             return $this->indeferirTerritorial($request, $resolved, $territorial, $actor);
+        }
+
+        // HU-037 RN-005: polígono desenhado em zona diferente da zona da
+        // inscrição. Depois do indeferimento territorial (a RT-01 não depende
+        // do polígono) e antes das poligonais, que também encaminham.
+        $divergencia = $this->localizacaoDivergencia->avaliar($request);
+
+        if ($divergencia !== null) {
+            return $this->encaminharAnalise(
+                $request,
+                $divergencia,
+                $actor,
+                $resolved,
+                gatilho: TipoGatilho::LocalizacaoDivergente,
+            );
         }
 
         if ($territorial->status === TerritorialRuleVerdict::ENCAMINHAR_ANALISE) {
@@ -357,8 +382,9 @@ class FluxoExpressoService
         ?User $actor,
         ?ResolvedViability $resolved = null,
         ?TerritorialRuleVerdict $territorial = null,
+        ?TipoGatilho $gatilho = null,
     ): DecisionResult {
-        DB::transaction(function () use ($request, $reason, $actor, $resolved, $territorial): void {
+        DB::transaction(function () use ($request, $reason, $actor, $resolved, $territorial, $gatilho): void {
             $this->stateMachine->transition(
                 $request,
                 ViabilityRequestStatus::EmAnalise,
@@ -396,7 +422,7 @@ class FluxoExpressoService
                 rulesVersion: $resolved !== null ? $this->rulesVersionRepresentativa($resolved->rules_versions) : null,
             );
 
-            $this->capturarQueda($request, $reason, $resolved, $territorial);
+            $this->capturarQueda($request, $reason, $resolved, $territorial, $gatilho);
         });
 
         // APÓS o commit: gatilho da pré-análise (10-08). Sem listener no ambiente
@@ -444,8 +470,25 @@ class FluxoExpressoService
      * roteamento; e CNAE sem gatilho de contexto registra `tipo_gatilho` NULL —
      * NUNCA um gatilho inventado.
      */
-    private function capturarQueda(ViabilityRequest $request, string $reason, ?ResolvedViability $resolved, ?TerritorialRuleVerdict $territorial = null): void
-    {
+    private function capturarQueda(
+        ViabilityRequest $request,
+        string $reason,
+        ?ResolvedViability $resolved,
+        ?TerritorialRuleVerdict $territorial = null,
+        ?TipoGatilho $gatilho = null,
+    ): void {
+        if ($gatilho === TipoGatilho::LocalizacaoDivergente) {
+            ExpressoQueda::create([
+                'viability_request_id' => $request->id,
+                'cnae' => null,
+                'tipo_gatilho' => $gatilho->value,
+                'dimensao' => 'localizacao',
+                'motivo' => $reason,
+            ]);
+
+            return;
+        }
+
         // Queda territorial (RT-02/03/04 e degradação CA-RT-09): a regra de
         // lugar é a razão do encaminhamento — linha de nível-processo com o
         // motivo EXATO da regra, gatilho regra_territorial.
@@ -808,7 +851,7 @@ class FluxoExpressoService
                     'rules_versions' => $resolved->rules_versions,
                     'fundamentacao' => $this->fundamentacaoConsolidada($resolved),
                     'decision_trace' => $this->decisionTrace($resolved),
-                    'reason' => null,
+                    'reason' => $outcome === DecisionOutcome::Indeferida ? $this->justificativa->build($resolved) : null,
                     'decided_by_user_id' => $actor?->id,
                     'decided_at' => now(),
                 ]);

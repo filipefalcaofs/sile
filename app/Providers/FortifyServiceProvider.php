@@ -6,6 +6,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Http\Responses\RespostaRecuperacaoSenhaSemRevelarConta;
 use App\Models\AccessLog;
 use App\Models\User;
 use App\Services\GovBr\GovBr;
@@ -21,6 +22,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
+use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
@@ -37,6 +39,8 @@ class FortifyServiceProvider extends ServiceProvider
         // do portal leva sempre ao portal — a gestão exige o login interno
         // (/gestao/login, guard gestao). URL pretendida da gestão é
         // descartada para ninguém aterrissar no login interno sem querer.
+        $this->app->bind(FailedPasswordResetLinkRequestResponse::class, RespostaRecuperacaoSenhaSemRevelarConta::class);
+
         $this->app->instance(LoginResponse::class, new class implements LoginResponse
         {
             public function toResponse($request)

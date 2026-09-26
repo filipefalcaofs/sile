@@ -55,6 +55,19 @@ class ProfileTest extends TestCase
         $this->assertSame('(71) 98888-7777', $user->phone);
     }
 
+    public function test_telefone_sem_ddd_e_rejeitado(): void
+    {
+        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($user)->patch('/portal/conta/perfil', [
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => '98888-7777',
+        ])->assertSessionHasErrors([
+            'phone' => 'Informe um telefone com DDD e 8 ou 9 dígitos.',
+        ]);
+    }
+
     public function test_atualizacao_gera_auditoria_sem_campos_sensiveis(): void
     {
         $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();

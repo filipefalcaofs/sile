@@ -94,7 +94,7 @@ class AnaliseDecidirCommandTest extends TestCase
 
         $request = $this->processoEmAnalise([
             ['cnae' => '4712100', 'status_sugerido' => 'deferida', 'status_escolhido' => 'deferida'],
-            ['cnae' => '5611201', 'status_sugerido' => 'deferida', 'status_escolhido' => 'indeferida'],
+            ['cnae' => '5611201', 'status_sugerido' => 'deferida', 'status_escolhido' => 'indeferida', 'justificativa' => 'Uso proibido na zona pelo Quadro 10.'],
         ]);
 
         $this->artisan('analise:decidir', ['solicitacao' => $request->id, '--finalizar' => true])
@@ -103,6 +103,19 @@ class AnaliseDecidirCommandTest extends TestCase
 
         $this->assertSame(ViabilityRequestStatus::Indeferida, $request->fresh()->status);
         $this->assertNull($request->fresh()->decision->tvl_product_number);
+        $this->assertStringContainsString('Uso proibido na zona pelo Quadro 10.', (string) $request->fresh()->decision->reason);
+    }
+
+    public function test_indeferimento_sem_justificativa_nao_decide(): void
+    {
+        $request = $this->processoEmAnalise([
+            ['cnae' => '5611201', 'status_sugerido' => 'deferida', 'status_escolhido' => 'indeferida'],
+        ]);
+
+        $this->artisan('analise:decidir', ['solicitacao' => $request->id, '--finalizar' => true]);
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);
+        $this->assertNull($request->fresh()->decision);
     }
 
     public function test_rascunho_sem_finalizar_sai_honesto_sem_decidir(): void

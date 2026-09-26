@@ -36,6 +36,8 @@ class DecisionTextController extends Controller
         'analise' => 'Análise técnica',
         'justificativa' => 'Justificativa fundamentada',
         'explicacao' => 'Explicação da decisão',
+        'territorial' => 'Regras territoriais',
+        'localizacao' => 'Localização do imóvel',
     ];
 
     /**

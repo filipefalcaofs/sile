@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { ReactNode } from 'react';
 import { rotuloFluxoRisco } from '@/components/analise/processo-ui';
 import PageHeader from '@/components/app/page-header';
+import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
 import { MapaSection } from '@/components/geo/mapa-section';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
@@ -107,6 +108,7 @@ interface Localizacao {
     zona: string | null;
     via: string | null;
     is_public_area: boolean | null;
+    camadas?: CamadasImovel | null;
 }
 
 interface DadosTvl {
@@ -1621,6 +1623,18 @@ export default function FichaAnaliseShow({
                         </CardContent>
                     </Card>
                 </div>
+
+                {localizacao?.camadas && (
+                    <Card>
+                        <CardHeader
+                            title="Camadas do imóvel"
+                            description="Elemento identificado em cada camada geográfica no ponto do imóvel."
+                        />
+                        <CardContent>
+                            <CamadasImovelLista camadas={localizacao.camadas} />
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card>
                     <CardHeader title="Dados da Viabilidade" description="Paridade com a ficha do legado (SAPS)." />

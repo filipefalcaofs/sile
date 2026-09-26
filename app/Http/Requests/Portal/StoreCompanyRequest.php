@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Portal;
 
+use App\Rules\TelefoneComDdd;
 use App\Rules\ValidCnpj;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -61,7 +62,7 @@ class StoreCompanyRequest extends FormRequest
             'state' => ['nullable', 'string', 'size:2'],
             'zip_code' => ['nullable', 'string', 'size:8'],
             'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:11'],
+            'phone' => ['nullable', 'string', 'max:11', new TelefoneComDdd],
         ];
     }
 

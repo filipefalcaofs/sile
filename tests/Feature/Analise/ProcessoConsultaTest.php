@@ -239,6 +239,19 @@ class ProcessoConsultaTest extends TestCase
                 ->where('filtros.per_page', 10));
     }
 
+    public function test_exportacao_com_periodo_invertido_nao_gera_arquivo(): void
+    {
+        $this->processo();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get('/gestao/processos?data_de=2026-09-22&data_ate=2026-09-01&formato=csv')
+            ->assertOk()
+            ->assertHeaderMissing('content-disposition')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('erroPeriodo', 'A data inicial não pode ser posterior à data final.')
+                ->where('processos.total', 0));
+    }
+
     public function test_exporta_csv_do_conjunto_filtrado(): void
     {
         $alvo = $this->processo(['status' => ViabilityRequestStatus::EmAnalise]);

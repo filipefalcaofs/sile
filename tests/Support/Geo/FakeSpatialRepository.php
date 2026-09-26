@@ -34,6 +34,12 @@ class FakeSpatialRepository implements SpatialRepository
     /** @var array<int, string> */
     public array $intersectingCalls = [];
 
+    /** @var array<string, list<array{id: int, properties: array<string, mixed>, distancia_m: float}>> */
+    private array $within = [];
+
+    /** @var array<int, string> */
+    public array $withinCalls = [];
+
     /**
      * @param  array{id: int, properties: array<string, mixed>}|null  $response
      */
@@ -77,5 +83,29 @@ class FakeSpatialRepository implements SpatialRepository
         $this->intersectingCalls[] = $layer->type->value;
 
         return $this->intersecting[$layer->type->value] ?? [];
+    }
+
+    /**
+     * @param  list<array{id: int, properties: array<string, mixed>, distancia_m: float}>  $responses
+     */
+    public function setWithin(GeoLayerType $type, array $responses): void
+    {
+        $this->within[$type->value] = $responses;
+    }
+
+    public function featuresWithin(GeoLayer $layer, float $lng, float $lat, int $maxMeters, int $limit = 20): array
+    {
+        $this->withinCalls[] = $layer->type->value;
+
+        $itens = $this->within[$layer->type->value] ?? [];
+
+        if ($itens === [] && isset($this->nearest[$layer->type->value])) {
+            $itens = [$this->nearest[$layer->type->value]];
+        }
+
+        return array_slice(array_values(array_filter(
+            $itens,
+            fn (array $item): bool => $item['distancia_m'] <= $maxMeters,
+        )), 0, $limit);
     }
 }

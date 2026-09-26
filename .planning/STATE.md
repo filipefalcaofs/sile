@@ -41,6 +41,25 @@ Pendências externas (bloqueios):
 - DPO: base legal do tratamento de nome/CPF de servidores; janela de retenção de access_logs.
 - SEDUR: política de desprovisionamento (hoje: validação a cada login + inativação manual; sincronização proativa depende de a API oferecer consulta de status funcional).
 
+## Justificativa em todo indeferimento e camadas do imóvel (2026-09-26)
+
+Spec: `docs/superpowers/specs/2026-09-26-justificativa-indeferimento-e-camadas-design.md`.
+
+- **Invariante:** `ViabilityDecision` indeferida sem `reason` não é gravada (exceção no model). Expresso Quadro 10/11A usa os textos padrão `justificativa.conclusao.nao_permitido` / `nao_permitido_via` (um parágrafo por CNAE, `JustificativaIndeferimentoBuilder`); RT-01 mantém o texto do art. 172-A; sem BAP e convite expirado passam ao catálogo (`justificativa.indeferimento.*`). Análise técnica: parecer da conclusão, senão parecer da ficha, senão justificativas das atividades indeferidas; sem nenhum, o indeferimento é recusado.
+- **Onde aparece:** card "Parecer" no detalhe do processo (gestão) e no protocolo do portal; PDF de indeferimento ("Justificativa do indeferimento"); REGIN `JUSTIFICATIVA_ANALISE` = motivo + fundamentação (≤ 10.000). Consulta pública segue sem motivo.
+- **Camadas do imóvel:** `viability_requests.camadas_incidentes` (logradouro tributário, logradouros num raio de 30 m, bairro, zona e cada poligonal das regras territoriais com o elemento — ex.: ABM "Trecho 5" — e se a regra incide), gravado na decisão expressa e exibido na ficha e no detalhe. WFS memorizado por execução (inventário e regras usam a mesma consulta).
+- **Dados de produção (verificado 2026-09-26):** camada de vias `geosalvador-logradouros-centro` cobre só o Centro (800 feições) → comando `geo:importar-wfs via logradouro:VM_LOGRADOURO --versao=...` para Salvador inteira. Zona fictícia `zona-ficticia-dev` VIGENTE em produção (seeder de demonstração) → `geo:encerrar-camada zona zona-ficticia-dev` (aprovado pelo usuário, rodar após o deploy); `ZonaFicticiaDevSeeder` agora recusa `production` mesmo com `demo_data`.
+- **PENDÊNCIA SEDUR:** redação oficial dos indeferimentos por BAP vencido e por convite expirado (entram editáveis na tela de textos de decisão).
+
+## Localização pela inscrição imobiliária (2026-09-26)
+
+Spec: `docs/superpowers/specs/2026-09-26-localizacao-pela-inscricao-design.md`. Caso de origem: processo 5921000030-00990026/2026, deferido porque a simulação usava um polígono fixo de homologação a 459 m do imóvel.
+
+- **Logradouro:** `CodigoLogradouroTributario` do Cadastro Imobiliário (SEFAZ) é o `cod_log` do processo e sobrepõe a via mais próxima. A via mais próxima só vale sem inscrição ou sem código tributário. Atualiza a fonte do CODLOG descrita na seção de 2026-09-23. Motivo medido na inscrição 344672: o ponto correto fica a 25,9 m da Rua Luiz Murat e a 26,6 m da Av. Lafayete Coutinho — a geometria não decide a rua.
+- **Ponto sem polígono inventado:** `property_point_lat/lng` e `property_location_source`. `ViabilityRequest::pontoDoImovel()` é a fonte do motor (centroide do polígono, senão o ponto gravado). A simulação REGIN não desenha mais o quadrado fixo. Processo REGIN sem polígono grava o ponto da SEFAZ no protocolo; SEFAZ indisponível fica sem ponto, com auditoria.
+- **HU-037 RN-005:** polígono desenhado em zona diferente da zona do ponto da inscrição encaminha à análise (`TipoGatilho::LocalizacaoDivergente`), depois do indeferimento da RT-01. A via não entra na comparação. Sem ponto ou sem zona, a verificação não bloqueia e fica auditada como não realizada.
+- **PENDÊNCIA SEDUR:** base de lotes com inscrição imobiliária e cobertura da cidade (cadastro multifinalitário ou `inscricoes_imobiliaria` do `ws-sigs`). `parcelamento_lotes` só cobre loteamentos aprovados; o Comércio não está nela. Sem essa base não há polígono do lote em todos os casos, e a HU-037 RN-004 (sobreposição com o lote oficial) continua bloqueada.
+
 ## Regras territoriais RT-01 a RT-05 + hub Motor de regras (2026-09-23)
 
 Pacote normativo SEDUR 2026-08-28 ("Especificação de Regras de Negócio e Tratamentos do Sistema") implementado como **dado versionado** (domínio `territorial` em `rule_versions`, sensível/quatro olhos), plugado no motor de decisão. Spec de referência: `docs/superpowers/specs/2026-08-28-regras-territoriais-louos-design.md`.

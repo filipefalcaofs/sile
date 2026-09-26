@@ -23,43 +23,69 @@ class BrasilApiCnpjLookup implements CnpjLookup
             config('sile.integrations.cnpj_lookup.base_url'),
         ), '/');
 
-        return Cache::remember(
-            "sile.cnpj_lookup.{$cnpj}",
-            (int) config('sile.integrations.cnpj_lookup.cache_ttl', 86400),
-            function () use ($baseUrl, $cnpj): CnpjData {
-                try {
-                    $response = Http::timeout((int) Settings::get(
-                        'integrations.cnpj_lookup.timeout',
-                        config('sile.integrations.cnpj_lookup.timeout', 8),
-                    ))
-                        ->connectTimeout(3)
-                        ->retry(
-                            (int) Settings::get(
-                                'integrations.cnpj_lookup.retries',
-                                config('sile.integrations.cnpj_lookup.retries', 2),
-                            ),
-                            (int) Settings::get(
-                                'integrations.cnpj_lookup.backoff_ms',
-                                config('sile.integrations.cnpj_lookup.backoff_ms', 200),
-                            ),
-                            throw: false,
-                        )
-                        ->acceptJson()
-                        ->get("{$baseUrl}/{$cnpj}");
-                } catch (ConnectionException $exception) {
-                    throw new CnpjLookupException($cnpj);
-                }
+        $key = "sile.cnpj_lookup.{$cnpj}";
+        $ttl = (int) config('sile.integrations.cnpj_lookup.cache_ttl', 86400);
+        $buscar = function () use ($baseUrl, $cnpj): array {
+            try {
+                $response = Http::timeout((int) Settings::get(
+                    'integrations.cnpj_lookup.timeout',
+                    config('sile.integrations.cnpj_lookup.timeout', 8),
+                ))
+                    ->connectTimeout(3)
+                    ->retry(
+                        (int) Settings::get(
+                            'integrations.cnpj_lookup.retries',
+                            config('sile.integrations.cnpj_lookup.retries', 2),
+                        ),
+                        (int) Settings::get(
+                            'integrations.cnpj_lookup.backoff_ms',
+                            config('sile.integrations.cnpj_lookup.backoff_ms', 200),
+                        ),
+                        throw: false,
+                    )
+                    ->acceptJson()
+                    ->get("{$baseUrl}/{$cnpj}");
+            } catch (ConnectionException $exception) {
+                throw new CnpjLookupException($cnpj);
+            }
 
-                if ($response->status() === 404) {
-                    throw new CnpjNotFoundException($cnpj);
-                }
+            if ($response->status() === 404) {
+                throw new CnpjNotFoundException($cnpj);
+            }
 
-                if ($response->failed()) {
-                    throw new CnpjLookupException($cnpj, $response->status());
-                }
+            if ($response->failed()) {
+                throw new CnpjLookupException($cnpj, $response->status());
+            }
 
-                return CnpjData::fromBrasilApi($response->json());
-            },
-        );
+            return CnpjData::fromBrasilApi($response->json())->toArray();
+        };
+
+        return CnpjData::fromCached($this->lembrar($key, $ttl, $buscar));
+    }
+
+    /**
+     * O cache guarda array. Entrada antiga (objeto) ou falha de desserialização
+     * é descartada e buscada de novo. Falha da Receita não é cacheada.
+     *
+     * @param  \Closure(): array<string, mixed>  $buscar
+     * @return array<string, mixed>
+     */
+    private function lembrar(string $key, int $ttl, \Closure $buscar): array
+    {
+        try {
+            $payload = Cache::remember($key, $ttl, $buscar);
+        } catch (CnpjNotFoundException|CnpjLookupException $exception) {
+            throw $exception;
+        } catch (\Throwable) {
+            Cache::forget($key);
+            $payload = Cache::remember($key, $ttl, $buscar);
+        }
+
+        if (! is_array($payload)) {
+            Cache::forget($key);
+            $payload = Cache::remember($key, $ttl, $buscar);
+        }
+
+        return $payload;
     }
 }

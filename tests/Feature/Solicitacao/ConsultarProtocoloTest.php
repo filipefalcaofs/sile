@@ -5,6 +5,7 @@ namespace Tests\Feature\Solicitacao;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Parameter;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\TimelineSolicitacao;
@@ -166,6 +167,34 @@ class ConsultarProtocoloTest extends TestCase
                 ->where('timeline.etapas.0.rotulo', ViabilityRequestStatus::Protocolada->publicLabel())
                 ->where('timeline.status_atual.label', ViabilityRequestStatus::Protocolada->label())
             );
+    }
+
+    public function test_dono_ve_o_motivo_do_indeferimento_no_parecer(): void
+    {
+        $user = $this->portalUser();
+        $solicitacao = $this->protocoladaDoUsuario($user);
+        ViabilityDecision::factory()->indeferida()->create([
+            'viability_request_id' => $solicitacao->id,
+            'reason' => 'Uso proibido na zona ZPR-1 segundo o Quadro 10 da LOUOS.',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('portal.solicitacoes.show', $solicitacao))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('parecer.outcome', 'indeferida')
+                ->where('parecer.motivo', 'Uso proibido na zona ZPR-1 segundo o Quadro 10 da LOUOS.'));
+    }
+
+    public function test_sem_decisao_nao_ha_parecer(): void
+    {
+        $user = $this->portalUser();
+        $solicitacao = $this->protocoladaDoUsuario($user);
+
+        $this->actingAs($user)
+            ->get(route('portal.solicitacoes.show', $solicitacao))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('parecer', null));
     }
 
     public function test_terceiro_nao_consulta(): void

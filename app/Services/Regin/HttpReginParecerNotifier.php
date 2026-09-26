@@ -62,7 +62,26 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
         ];
     }
 
+    /**
+     * Motivo da decisão (reason) seguido da fundamentação legal, no limite de
+     * 10.000 caracteres do campo JUSTIFICATIVA_ANALISE da PSCS.
+     */
     private function justificativa(ViabilityDecision $decision): string
+    {
+        $motivo = trim((string) $decision->reason);
+        $fundamentacao = $this->fundamentacao($decision);
+
+        $texto = match (true) {
+            $motivo !== '' && $fundamentacao !== null => $motivo."\n\nFundamentação legal: ".$fundamentacao,
+            $motivo !== '' => $motivo,
+            $fundamentacao !== null => $fundamentacao,
+            default => "Viabilidade {$decision->outcome->value} pelo motor de regras.",
+        };
+
+        return mb_substr($texto, 0, 10000);
+    }
+
+    private function fundamentacao(ViabilityDecision $decision): ?string
     {
         $fundacao = $decision->fundamentacao;
 
@@ -83,10 +102,10 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
             ));
 
             if ($linhas !== []) {
-                return implode(' ', $linhas);
+                return implode('; ', $linhas);
             }
         }
 
-        return "Viabilidade {$decision->outcome->value} pelo motor de regras.";
+        return null;
     }
 }

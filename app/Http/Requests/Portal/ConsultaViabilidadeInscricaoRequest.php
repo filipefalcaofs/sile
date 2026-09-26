@@ -28,6 +28,8 @@ class ConsultaViabilidadeInscricaoRequest extends FormRequest
             'inscricao' => ['required', 'string', 'max:60'],
             'cnae' => ['required', 'string', 'max:14'],
             'area' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
+            'respostas' => ['nullable', 'array'],
+            'respostas.*' => ['boolean'],
         ];
     }
 
