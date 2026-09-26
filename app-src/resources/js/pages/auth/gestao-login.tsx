@@ -103,7 +103,7 @@ function BrandStage() {
         <section className={gestaoLoginBrandStageClasses} aria-label="Apresentação do console">
             <ZoneMap />
 
-            <header className="relative z-1 flex items-center justify-between gap-4">
+            <header className="relative z-1 flex shrink-0 items-center justify-between gap-4">
                 <span className="flex items-center gap-3.5">
                     <span className="grid size-[46px] place-items-center rounded-xl border border-white/16 bg-[oklch(47%_0.135_252)]">
                         <LogoMark className="size-[23px] text-white" />
@@ -125,7 +125,7 @@ function BrandStage() {
                 </span>
             </header>
 
-            <div className="relative z-1 flex max-w-[720px] flex-1 flex-col justify-center py-12 motion-safe:animate-[sile-rise_0.6s_0.12s_cubic-bezier(0.2,0.7,0.2,1)_both]">
+            <div className="relative z-1 flex min-h-0 max-w-[720px] flex-1 flex-col justify-center py-[clamp(16px,4vh,48px)] motion-safe:animate-[sile-rise_0.6s_0.12s_cubic-bezier(0.2,0.7,0.2,1)_both]">
                 <p
                     className={`${monoFont} mb-[30px] flex items-center gap-3 text-[11px] leading-none font-medium tracking-[0.1em] text-[oklch(67%_0.025_250)] uppercase before:h-px before:w-8 before:bg-[oklch(64%_0.155_250)] before:content-['']`}
                 >
@@ -144,7 +144,7 @@ function BrandStage() {
                 </p>
             </div>
 
-            <dl className="relative z-1 flex items-end justify-between gap-6 border-t border-white/8 pt-6 motion-safe:animate-[sile-rise_0.6s_0.22s_cubic-bezier(0.2,0.7,0.2,1)_both]">
+            <dl className="relative z-1 flex shrink-0 items-end justify-between gap-6 border-t border-white/8 pt-[clamp(16px,2.5vh,24px)] motion-safe:animate-[sile-rise_0.6s_0.22s_cubic-bezier(0.2,0.7,0.2,1)_both]">
                 <div className="flex gap-[clamp(28px,3.5vw,64px)]">
                     {footStats.map((stat) => (
                         <div key={stat.label}>
@@ -226,17 +226,17 @@ function GestaoLoginContent({ status }: { status?: string }) {
             <BrandStage />
 
             <section className={gestaoLoginPanelClasses} aria-labelledby="panel-title">
-                <div className="flex justify-end">
+                <div className="flex shrink-0 justify-end">
                     <ThemeToggleButton />
                 </div>
-                <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center motion-safe:animate-[sile-rise_0.6s_0.18s_cubic-bezier(0.2,0.7,0.2,1)_both]">
+                <div className="mx-auto flex min-h-0 w-full max-w-[400px] flex-1 flex-col justify-center overflow-hidden motion-safe:animate-[sile-rise_0.6s_0.18s_cubic-bezier(0.2,0.7,0.2,1)_both]">
                     <p className={`${monoFont} mb-3.5 text-[10.5px] leading-none font-medium tracking-[0.1em] text-brand-500 uppercase dark:text-[oklch(64%_0.155_250)]`}>
                         Acesso restrito
                     </p>
-                    <h2 id="panel-title" className={`${displayFont} text-[30px] leading-[1.1] font-extrabold tracking-[-0.02em]`}>
+                    <h2 id="panel-title" className={`${displayFont} text-[clamp(24px,5vw,30px)] leading-[1.1] font-extrabold tracking-[-0.02em]`}>
                         Entre no console
                     </h2>
-                    <p className={`mt-2.5 ${gestaoLoginMutedClasses}`}>
+                    <p className={`mt-2 max-[740px]:text-[13px] ${gestaoLoginMutedClasses}`}>
                         Use o usuário da rede corporativa ou o e-mail da sua conta local para acessar o ambiente de gestão.
                     </p>
 
@@ -255,7 +255,7 @@ function GestaoLoginContent({ status }: { status?: string }) {
                     <Form action="/gestao/login" method="post">
                         {({ errors, processing }) => (
                             <>
-                                <div className="mt-[26px] grid gap-2.5">
+                                <div className="mt-5 grid gap-2 max-[740px]:mt-4 max-[740px]:gap-1.5">
                                     <label htmlFor="identifier" className={gestaoLoginLabelClasses}>
                                         E-mail institucional ou usuário AD
                                     </label>
@@ -271,7 +271,7 @@ function GestaoLoginContent({ status }: { status?: string }) {
                                         aria-invalid={errors.identifier ? 'true' : undefined}
                                         className={gestaoLoginInputClasses}
                                     />
-                                    <p id="identifier-help" className={`text-[12.5px] ${gestaoLoginMutedClasses}`}>
+                                    <p id="identifier-help" className={`text-[12.5px] max-[740px]:text-xs ${gestaoLoginMutedClasses}`}>
                                         Use o usuário da rede corporativa (ex.: filipefalcao) ou o e-mail da conta local.
                                     </p>
                                     {errors.identifier && (
@@ -279,7 +279,7 @@ function GestaoLoginContent({ status }: { status?: string }) {
                                     )}
                                 </div>
 
-                                <div className="mt-[26px] grid gap-2.5">
+                                <div className="mt-5 grid gap-2 max-[740px]:mt-4 max-[740px]:gap-1.5">
                                     <div className="flex items-baseline justify-between">
                                         <label htmlFor="password" className={gestaoLoginLabelClasses}>
                                             Senha da rede corporativa ou da conta local
@@ -322,7 +322,7 @@ function GestaoLoginContent({ status }: { status?: string }) {
                                     )}
                                 </div>
 
-                                <label className={`mt-[22px] flex cursor-pointer items-center gap-2.5 ${gestaoLoginMutedClasses} select-none`}>
+                                <label className={`mt-4 flex cursor-pointer items-center gap-2.5 max-[740px]:mt-3 max-[740px]:text-[13px] ${gestaoLoginMutedClasses} select-none`}>
                                     <input
                                         id="remember"
                                         name="remember"
@@ -352,14 +352,14 @@ function GestaoLoginContent({ status }: { status?: string }) {
                         )}
                     </Form>
 
-                    <p className={`mt-[30px] border-t ${gestaoLoginDividerClasses} pt-[22px] text-[12.5px] ${gestaoLoginFaintClasses}`}>
+                    <p className={`mt-5 border-t ${gestaoLoginDividerClasses} pt-4 text-[12.5px] max-[740px]:mt-4 max-[740px]:pt-3 max-[740px]:text-xs ${gestaoLoginFaintClasses}`}>
                         Acesso exclusivo para servidores autorizados pela SEDUR. Atividades nesta
                         sessão são registradas para fins de auditoria.
                     </p>
                 </div>
 
                 <div
-                    className={`${monoFont} mx-auto flex w-full max-w-[400px] flex-wrap justify-between gap-3 pt-6 text-[10px] leading-[1.7] font-medium tracking-[0.07em] uppercase ${gestaoLoginFaintClasses}`}
+                    className={`${monoFont} mx-auto flex w-full max-w-[400px] shrink-0 flex-wrap justify-between gap-3 pt-4 text-[10px] leading-[1.7] font-medium tracking-[0.07em] uppercase max-[740px]:pt-3 ${gestaoLoginFaintClasses}`}
                 >
                     <span>SEDUR · VIABILIZA</span>
                     <AppVersion className="normal-case tracking-[0.04em]" />

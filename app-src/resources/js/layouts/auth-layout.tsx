@@ -37,7 +37,7 @@ function BrandGridPattern() {
 
 function BrandPanel() {
     return (
-        <div className="relative hidden w-full overflow-hidden bg-brand-950 lg:flex lg:w-1/2">
+        <div className="relative hidden h-full min-h-0 w-full overflow-hidden bg-brand-950 lg:flex lg:w-1/2">
             <img
                 src="/images/salvador-hero.jpg"
                 alt=""
@@ -117,10 +117,10 @@ function ThemeToggleButton() {
 export default function AuthLayout({ title, subtitle, icon, children }: AuthLayoutProps) {
     return (
         <ThemeProvider>
-            <div className="relative z-1 bg-gray-50 p-4 dark:bg-gray-900 sm:p-0">
-                <div className="relative flex min-h-screen w-full flex-col justify-center lg:flex-row">
-                    <div className="flex w-full flex-1 flex-col lg:w-1/2">
-                        <div className="mx-auto flex w-full max-w-lg items-center justify-between gap-4 pt-6 sm:pt-8">
+            <div className="relative z-1 flex h-dvh flex-col overflow-hidden overscroll-none bg-gray-50 dark:bg-gray-900">
+                <div className="relative flex h-full min-h-0 w-full flex-col lg:flex-row">
+                    <div className="flex w-full min-h-0 flex-1 flex-col lg:w-1/2">
+                        <div className="mx-auto flex w-full max-w-lg shrink-0 items-center justify-between gap-4 px-4 pt-4 sm:px-0 sm:pt-8">
                             <Link
                                 href="/"
                                 aria-label="Ir para a página inicial do Viabiliza"
@@ -134,7 +134,7 @@ export default function AuthLayout({ title, subtitle, icon, children }: AuthLayo
                             </Link>
                             <ThemeToggleButton />
                         </div>
-                        <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center py-6 sm:py-8">
+                        <div className="mx-auto flex w-full max-w-lg min-h-0 flex-1 flex-col justify-center px-4 py-4 sm:px-0 sm:py-8">
                             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm sm:p-8 dark:border-gray-800 dark:bg-white/[0.03]">
                                 <div className="mb-5 sm:mb-6">
                                     {icon && (
