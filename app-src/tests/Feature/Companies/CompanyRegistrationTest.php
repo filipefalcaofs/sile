@@ -148,6 +148,15 @@ class CompanyRegistrationTest extends TestCase
         $this->assertDatabaseHas('companies', ['cnpj' => '12ABC34501DE35']);
     }
 
+    public function test_telefone_sem_ddd_e_rejeitado(): void
+    {
+        $this->actingAs($this->portalUser())
+            ->post('/portal/empresas', $this->payload(['phone' => '3333-0000']))
+            ->assertSessionHasErrors([
+                'phone' => 'Informe um telefone com DDD e 8 ou 9 dígitos.',
+            ]);
+    }
+
     public function test_telefone_e_cep_sao_normalizados_para_digitos(): void
     {
         $user = $this->portalUser();

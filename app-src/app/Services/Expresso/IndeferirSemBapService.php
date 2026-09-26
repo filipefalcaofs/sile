@@ -7,6 +7,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Events\ResultadoEmitido;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
 use Illuminate\Support\Facades\DB;
@@ -22,8 +23,8 @@ use InvalidArgumentException;
  * Honestidade do registro: o indeferimento é PROCEDIMENTAL (faltou atuação no
  * prazo), NÃO um veredito locacional "nao_permitido". Por isso consolidated_result
  * é o marcador 'sem_atuacao_bap' e per_cnae/rules_versions ficam vazios — não há
- * reavaliação dos motores aqui; quem carrega o motivo legível é o reason
- * 'indeferido sem atuação' (RN-002).
+ * reavaliação dos motores aqui; quem carrega o motivo legível é o reason, com
+ * o texto `justificativa.indeferimento.sem_bap` do catálogo (RN-002).
  *
  * RN-003 (sem SEFAZ): NÃO aciona o gateway da SEFAZ direto. O ResultadoEmitido
  * dispara os listeners da Wave 4 — ComunicarResultadoRegin (comunica o parecer)
@@ -35,6 +36,7 @@ class IndeferirSemBapService
     public function __construct(
         private ViabilityRequestStateMachine $stateMachine,
         private AuditService $audit,
+        private DecisionTextCatalog $textos,
     ) {}
 
     /**
@@ -51,7 +53,9 @@ class IndeferirSemBapService
             );
         }
 
-        $decision = DB::transaction(function () use ($request): ViabilityDecision {
+        $justificativa = $this->textos->get('justificativa.indeferimento.sem_bap');
+
+        $decision = DB::transaction(function () use ($request, $justificativa): ViabilityDecision {
             $decision = ViabilityDecision::create([
                 'viability_request_id' => $request->id,
                 'flow' => 'expresso',
@@ -61,7 +65,7 @@ class IndeferirSemBapService
                 'per_cnae' => [],
                 'rules_versions' => [],
                 'fundamentacao' => [],
-                'reason' => 'indeferido sem atuação',
+                'reason' => $justificativa,
                 'decided_by_user_id' => null,
                 'decided_at' => now(),
             ]);
@@ -83,7 +87,7 @@ class IndeferirSemBapService
                     'protocol_number' => $request->protocol_number,
                     'outcome' => DecisionOutcome::Indeferida->value,
                     'consolidado' => 'sem_atuacao_bap',
-                    'motivo' => 'indeferido sem atuação',
+                    'motivo' => $justificativa,
                     'bap_due_at' => $request->bap_due_at?->toIso8601String(),
                 ],
                 subject: $request,

@@ -10,6 +10,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Ai\ExplicacaoCidadaoService;
 use App\Services\Solicitacao\TimelineSolicitacao;
 use App\Support\Audit\AuditService;
+use App\Support\ParecerDecisao;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
@@ -57,6 +58,8 @@ class ConsultaProtocoloController extends Controller
             // exibição do card de explicação: sem decisão, o card NÃO aparece (não
             // há o que explicar). Com decisão, o front carrega a prop deferida.
             'temDecisao' => $solicitacao->decision()->exists(),
+            // Parecer oficial do próprio pedido: resultado, motivo e fundamentação.
+            'parecer' => ParecerDecisao::de($solicitacao->decision()->first()),
             // Explicação da decisão em linguagem cidadã (HU-119) — versão leiga da
             // explicabilidade da HU-099. Prop DEFERIDA (carregada sob demanda pelo
             // card quando há decisão). Ao resolver, dispara a explicação de forma

@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Rules\TelefoneComDdd;
 use App\Rules\ValidCpf;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -27,7 +28,7 @@ class CreateNewUser implements CreatesNewUsers
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'cpf' => ['required', 'string', new ValidCpf, 'unique:users,cpf'],
-            'phone' => ['required', 'string', 'max:20'],
+            'phone' => ['required', 'string', 'max:20', new TelefoneComDdd],
             'password' => $this->passwordRules(),
         ], [], [
             'name' => 'nome',

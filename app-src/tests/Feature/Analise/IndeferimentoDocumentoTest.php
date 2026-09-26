@@ -116,6 +116,20 @@ class IndeferimentoDocumentoTest extends TestCase
         $this->assertNotEmpty($response->json('download_url'));
     }
 
+    public function test_documento_traz_a_justificativa_do_indeferimento(): void
+    {
+        $processo = $this->processoIndeferido();
+        $processo->decision->forceFill(['reason' => 'Uso proibido na zona ZPR-1 segundo o Quadro 10 da LOUOS.'])->save();
+
+        $dados = app(IndeferimentoPdfService::class)->montarDados($processo->decision->fresh(), 'IND-TESTE');
+
+        $this->assertSame('Uso proibido na zona ZPR-1 segundo o Quadro 10 da LOUOS.', $dados['justificativa']);
+
+        $html = view('documentos.indeferimento', $dados + ['assinatura' => null])->render();
+        $this->assertStringContainsString('Justificativa do indeferimento', $html);
+        $this->assertStringContainsString('Uso proibido na zona ZPR-1 segundo o Quadro 10 da LOUOS.', $html);
+    }
+
     public function test_bloqueia_emissao_de_decisao_deferida_com_422(): void
     {
         $processo = $this->processoDeferido();

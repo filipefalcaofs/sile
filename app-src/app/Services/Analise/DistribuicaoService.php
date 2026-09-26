@@ -98,6 +98,10 @@ class DistribuicaoService
      */
     public function assumir(ViabilityRequest $request, User $analista): void
     {
+        if ($request->assigned_user_id !== null && (int) $request->assigned_user_id !== $analista->id) {
+            throw DistribuicaoException::jaAtribuido($request);
+        }
+
         $this->atribuir($request, $analista, $analista, 'assumir', 'Analista assumiu o processo da caixa do setor');
     }
 

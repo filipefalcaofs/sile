@@ -43,6 +43,24 @@ final readonly class GeocodeResult
     }
 
     /**
+     * Reidrata o array gravado no cache ({@see toArray()}).
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public static function fromCached(array $payload): self
+    {
+        $address = $payload['address'] ?? [];
+
+        return new self(
+            latitude: (float) ($payload['latitude'] ?? 0),
+            longitude: (float) ($payload['longitude'] ?? 0),
+            displayName: (string) ($payload['display_name'] ?? ''),
+            confidence: isset($payload['confidence']) ? (float) $payload['confidence'] : null,
+            address: is_array($address) ? $address : [],
+        );
+    }
+
+    /**
      * Contrato snake_case do JSON do endpoint e do mapa.
      *
      * @return array<string, mixed>

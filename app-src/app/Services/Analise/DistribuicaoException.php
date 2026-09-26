@@ -24,6 +24,11 @@ class DistribuicaoException extends RuntimeException
         return new self("Analista #{$analista->id} não está vinculado ao setor da solicitação #{$request->id}.");
     }
 
+    public static function jaAtribuido(ViabilityRequest $request): self
+    {
+        return new self("Solicitação #{$request->id} já está com um analista. A troca de responsável é feita pela redistribuição.");
+    }
+
     public static function analiseConcluida(ViabilityRequest $request): self
     {
         return new self("Solicitação #{$request->id} já teve a análise concluída — não pode ser redistribuída.");

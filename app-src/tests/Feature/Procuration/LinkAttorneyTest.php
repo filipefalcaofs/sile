@@ -84,6 +84,21 @@ class LinkAttorneyTest extends TestCase
         $this->assertTrue($procuration->expires_at->isFuture());
     }
 
+    public function test_validade_passada_pede_data_futura(): void
+    {
+        $grantor = $this->portalUser();
+        $attorney = $this->portalUser();
+
+        $this->actingAs($grantor)
+            ->post('/portal/procuracoes', [
+                'attorney_email' => $attorney->email,
+                'expires_at' => now()->subDay()->format('Y-m-d'),
+            ])
+            ->assertSessionHasErrors([
+                'expires_at' => 'A validade deve ser uma data futura.',
+            ]);
+    }
+
     public function test_vinculo_gera_auditoria(): void
     {
         $grantor = $this->portalUser();

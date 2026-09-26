@@ -11,6 +11,8 @@ use App\Models\TerritorialRule;
 use App\Models\ViabilityRequest;
 use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Geo\GeoServerWfsCamadaClient;
+use App\Services\Realty\LocalizacaoInscricao;
+use App\Services\Realty\LocalizacaoInscricaoService;
 use App\Support\Audit\AuditService;
 
 /**
@@ -38,6 +40,7 @@ class TerritorialRuleService
         private DecisionTextCatalog $textos,
         private AuditService $audit,
         private GeoServerWfsCamadaClient $wfs,
+        private LocalizacaoInscricaoService $localizacao,
     ) {}
 
     /**
@@ -167,18 +170,69 @@ class TerritorialRuleService
     }
 
     /**
-     * RT-01: o logradouro da regra (CODLOG; nome como fallback) + algum CNAE
-     * da lista entre os CNAEs NÃO marcados para exclusão (excluir uma
-     * atividade proibida não é instalação).
+     * RT-01: algum CNAE da lista entre os CNAEs NÃO marcados para exclusão
+     * (excluir uma atividade proibida não é instalação) + o logradouro da
+     * regra. O CNAE é checado primeiro para só consultar o Cadastro
+     * Imobiliário quando a restrição pode de fato incidir.
      *
      * @return array{efeito: TerritorialRuleEffect, motivo: string}|null
      */
     private function casarLogradouroCnae(TerritorialRule $regra, ViabilityRequest $request): ?array
     {
-        if (! $this->mesmoLogradouro($regra, $request)) {
+        if (! $this->temCnaeDaRegra($regra, $request)) {
             return null;
         }
 
+        if ($this->mesmoLogradouro($regra, $request)) {
+            return [
+                'efeito' => TerritorialRuleEffect::Indeferir,
+                'motivo' => $this->textoIndeferimento($regra),
+            ];
+        }
+
+        return match ($this->logradouroTributarioCasa($regra, $request)) {
+            true => [
+                'efeito' => TerritorialRuleEffect::Indeferir,
+                'motivo' => $this->textoIndeferimento($regra),
+            ],
+            null => [
+                'efeito' => TerritorialRuleEffect::EncaminharAnalise,
+                'motivo' => $this->textos->render('territorial.motivo.cadastro_indisponivel', [
+                    ':regra' => $regra->titulo,
+                ]),
+            ],
+            false => null,
+        };
+    }
+
+    /**
+     * Segunda fonte do CODLOG: o logradouro tributário da inscrição no
+     * Cadastro Imobiliário SEFAZ — a mesma numeração usada pela SEDUR na
+     * regra. A via mais próxima do centroide no GIS pode ser outra (lote de
+     * esquina, polígono deslocado). True = casa; false = outra via ou sem
+     * inscrição; null = cadastro indisponível (não dá para descartar).
+     */
+    private function logradouroTributarioCasa(TerritorialRule $regra, ViabilityRequest $request): ?bool
+    {
+        if (blank($regra->cod_log)) {
+            return false;
+        }
+
+        $localizacao = $this->localizacao->localizar($request->property_registration);
+
+        if ($localizacao->status === LocalizacaoInscricao::INDISPONIVEL) {
+            return null;
+        }
+
+        if ($localizacao->codLogTributario === null) {
+            return false;
+        }
+
+        return $localizacao->codLogTributario === ltrim(trim((string) $regra->cod_log), '0');
+    }
+
+    private function temCnaeDaRegra(TerritorialRule $regra, ViabilityRequest $request): bool
+    {
         $codigosRegra = $regra->cnaes->pluck('cnae')->all();
 
         $cnaes = $request->cnaes()
@@ -188,25 +242,15 @@ class TerritorialRuleService
             })
             ->get();
 
-        $incidente = null;
-
         foreach ($cnaes as $cnae) {
             $digitos = (string) preg_replace('/\D/', '', (string) $cnae->code);
 
             if (in_array($digitos, $codigosRegra, true)) {
-                $incidente = $cnae;
-                break;
+                return true;
             }
         }
 
-        if ($incidente === null) {
-            return null;
-        }
-
-        return [
-            'efeito' => TerritorialRuleEffect::Indeferir,
-            'motivo' => $this->textoIndeferimento($regra),
-        ];
+        return false;
     }
 
     /**

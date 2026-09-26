@@ -20,6 +20,10 @@ enum TipoGatilho: string
     // ZPAM, ABM, ZUE), não do risco da atividade.
     case RegraTerritorial = 'regra_territorial';
 
+    // HU-037 RN-005: o polígono desenhado cai em zona diferente da zona do
+    // ponto da inscrição no Cadastro Imobiliário.
+    case LocalizacaoDivergente = 'localizacao_divergente';
+
     public function label(): string
     {
         return match ($this) {
@@ -27,6 +31,7 @@ enum TipoGatilho: string
             self::ZeisEspecial => 'ZEIS especial',
             self::DadosDoProcesso => 'Dados do processo',
             self::RegraTerritorial => 'Regra territorial',
+            self::LocalizacaoDivergente => 'Localização divergente',
         };
     }
 }

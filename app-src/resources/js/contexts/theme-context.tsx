@@ -19,10 +19,23 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const [isInitialized, setIsInitialized] = useState(false);
 
     useEffect(() => {
+        const contraste = localStorage.getItem('acc-contrast') === '1';
         const savedTheme = localStorage.getItem('theme') as Theme | null;
 
-        setTheme(savedTheme ?? 'light');
+        setTheme(contraste ? 'light' : (savedTheme ?? 'light'));
         setIsInitialized(true);
+    }, []);
+
+    useEffect(() => {
+        const aoContraste = (evento: Event) => {
+            if ((evento as CustomEvent<boolean>).detail) {
+                setTheme('light');
+            }
+        };
+
+        window.addEventListener('sile:acc-contrast', aoContraste);
+
+        return () => window.removeEventListener('sile:acc-contrast', aoContraste);
     }, []);
 
     useEffect(() => {
@@ -30,6 +43,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             localStorage.setItem('theme', theme);
             if (theme === 'dark') {
                 document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('acc-contrast');
+                localStorage.setItem('acc-contrast', '0');
+                window.dispatchEvent(new CustomEvent('sile:theme', { detail: 'dark' }));
             } else {
                 document.documentElement.classList.remove('dark');
             }

@@ -105,8 +105,37 @@ export interface EnquadramentoData {
  * regras". Quem permite ou proíbe na zona continua sendo o Quadro 10; na via,
  * o Quadro 11A.
  */
+function comoLista<T>(valor: T[] | Record<string, T> | null | undefined): T[] {
+    if (Array.isArray(valor)) {
+        return valor;
+    }
+
+    if (valor && typeof valor === 'object') {
+        return Object.values(valor);
+    }
+
+    return [];
+}
+
 export default function AbaEnquadramento({ enquadramento }: { enquadramento: EnquadramentoData }) {
-    const { versao, contagens, perguntas, regras, ramos, condicionantes, cnlu, notas, enquadramentos, rascunho } = enquadramento;
+    const { versao, contagens } = enquadramento;
+    const perguntas = comoLista(enquadramento.perguntas);
+    const regras = comoLista(enquadramento.regras);
+    const ramos = comoLista(enquadramento.ramos);
+    const condicionantes = comoLista(enquadramento.condicionantes);
+    const cnlu = comoLista(enquadramento.cnlu);
+    const notas = comoLista(enquadramento.notas);
+    const paginado = enquadramento.enquadramentos;
+    const enquadramentos = {
+        data: comoLista<EnquadramentoLinha>(paginado?.data),
+        links: paginado?.links ?? [],
+        from: paginado?.from ?? null,
+        to: paginado?.to ?? null,
+        total: paginado?.total ?? 0,
+    };
+    const rascunho = enquadramento.rascunho
+        ? { ...enquadramento.rascunho, pendencias: comoLista(enquadramento.rascunho.pendencias) }
+        : null;
     const { auth } = usePage<SharedProps>().props;
     const canMaintain = auth.permissions.includes('manter-louos');
     const form = useForm<{ arquivo: File | null }>({ arquivo: null });

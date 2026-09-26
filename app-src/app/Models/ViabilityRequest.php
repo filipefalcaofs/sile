@@ -7,6 +7,7 @@ use App\Enums\AnalysisCategory;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\IntencaoAtividade;
+use App\Enums\PropertyLocationSource;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Enums\VirtualOfficeIntent;
@@ -33,10 +34,12 @@ use Illuminate\Support\Collection;
  * analysis_stage_started_at, analysis_due_at) também ficam FORA do fillable:
  * são escritas pelos serviços de distribuição (HU-080/081) e de SLA (HU-144),
  * nunca pelo cidadão. O território materializado (zona_codigo, bairro_oficial,
- * cod_log — Onda GIS) idem: é escrito pelo TerritorioProcessoService a partir
- * da identificação espacial, nunca pelo cidadão. cod_log é o CODLOG oficial
- * do logradouro — casamento das regras territoriais por endereço (RT-01,
- * allow-list de Itaigara, allow-lists de via do Quadro 10).
+ * cod_log, property_point_lat/lng, property_location_source) idem: é escrito
+ * pelos serviços de localização a partir da identificação espacial ou do
+ * Cadastro Imobiliário, nunca pelo cidadão. cod_log é o CODLOG oficial do
+ * logradouro — casamento das regras territoriais por endereço (RT-01,
+ * allow-list de Itaigara, allow-lists de via do Quadro 10). O ponto gravado
+ * só entra quando não há polígono; a origem diz de qual fonte ele veio.
  */
 #[Fillable([
     'origin',
@@ -102,6 +105,10 @@ class ViabilityRequest extends Model
             'status' => ViabilityRequestStatus::class,
             'origin' => ViabilityRequestOrigin::class,
             'property_polygon_geojson' => 'array',
+            'property_point_lat' => 'float',
+            'property_point_lng' => 'float',
+            'property_location_source' => PropertyLocationSource::class,
+            'camadas_incidentes' => 'array',
             'simulation_snapshot' => 'array',
             'simulation_rules_versions' => 'array',
             'used_area_m2' => 'decimal:2',
@@ -126,6 +133,59 @@ class ViabilityRequest extends Model
             'assigned_at' => 'datetime',
             'analysis_stage_started_at' => 'datetime',
             'analysis_due_at' => 'datetime',
+        ];
+    }
+
+    /**
+     * Ponto (lat, lng) usado pelos motores. O polígono desenhado manda: o
+     * centroide do anel exterior. Sem polígono, vale o ponto gravado (Cadastro
+     * Imobiliário ou catálogo da simulação). Sem os dois, não há ponto.
+     *
+     * @return array{lat: float, lng: float}|null
+     */
+    public function pontoDoImovel(): ?array
+    {
+        $centroide = $this->centroideDoPoligono();
+
+        if ($centroide !== null) {
+            return $centroide;
+        }
+
+        if ($this->property_point_lat === null || $this->property_point_lng === null) {
+            return null;
+        }
+
+        return [
+            'lat' => (float) $this->property_point_lat,
+            'lng' => (float) $this->property_point_lng,
+        ];
+    }
+
+    /**
+     * Centroide pela média dos vértices do anel exterior, sem o vértice de
+     * fechamento. Mesmo cálculo que o resolver de viabilidade usava.
+     *
+     * @return array{lat: float, lng: float}|null
+     */
+    private function centroideDoPoligono(): ?array
+    {
+        $geojson = $this->property_polygon_geojson;
+        $ring = is_array($geojson) ? ($geojson['coordinates'][0] ?? null) : null;
+
+        if (! is_array($ring) || $ring === []) {
+            return null;
+        }
+
+        if (count($ring) > 1 && $ring[0] === $ring[count($ring) - 1]) {
+            array_pop($ring);
+        }
+
+        $lngs = array_map(static fn (array $point): float => (float) $point[0], $ring);
+        $lats = array_map(static fn (array $point): float => (float) $point[1], $ring);
+
+        return [
+            'lat' => array_sum($lats) / count($lats),
+            'lng' => array_sum($lngs) / count($lngs),
         ];
     }
 

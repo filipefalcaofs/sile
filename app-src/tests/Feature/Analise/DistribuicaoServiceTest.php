@@ -289,6 +289,23 @@ class DistribuicaoServiceTest extends TestCase
         ]);
     }
 
+    public function test_assumir_processo_de_outro_analista_exige_redistribuicao(): void
+    {
+        $sector = Sector::factory()->create();
+        $titular = $this->analistaDoSetor($sector);
+        $outro = $this->analistaDoSetor($sector);
+        $request = $this->processoAtribuido($sector, $titular);
+
+        try {
+            $this->service()->assumir($request, $outro);
+            $this->fail('Esperava DistribuicaoException ao assumir processo já atribuído.');
+        } catch (DistribuicaoException $exception) {
+            $this->assertStringContainsString('redistribuição', $exception->getMessage());
+        }
+
+        $this->assertSame($titular->id, $request->fresh()->assigned_user_id);
+    }
+
     public function test_assumir_por_analista_fora_do_setor_e_bloqueado(): void
     {
         // HU-081: quem não está no setor não pode assumir o processo.

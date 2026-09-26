@@ -147,6 +147,8 @@ final class DecisionTextCatalog
             'justificativa.conclusao.permitido_com_condicoes' => 'Diante do enquadramento acima, manifesta-se pelo deferimento desta atividade na zona :zona, condicionado ao cumprimento das exigências urbanísticas incidentes.',
             'justificativa.conclusao.nao_permitido' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso proibido na zona :zona segundo o Quadro 10 da LOUOS.',
             'justificativa.conclusao.nao_permitido_via' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso vedado na classe viária :classe_via pelo Quadro 11-A da LOUOS.',
+            'justificativa.indeferimento.sem_bap' => 'Indeferido sem atuação: o prazo de atuação na Junta Comercial (BAP) venceu sem que o requerente concluísse o registro, e a solicitação não pôde prosseguir.',
+            'justificativa.indeferimento.convite_expirado' => 'Indeferido por prazo do convite expirado sem resposta do requerente: os esclarecimentos solicitados pela análise técnica não foram apresentados no prazo.',
             'justificativa.conclusao.padrao' => 'Não há elementos suficientes para deferir ou indeferir. Encaminha-se a atividade à análise técnica, sem sugerir desfecho locacional.',
 
             // Explicabilidade da decisão (DecisionExplanationService) — títulos.
@@ -173,6 +175,8 @@ final class DecisionTextCatalog
             // placeholders do alvo e do fundamento lidos da própria regra.
             'territorial.indeferimento.logradouro_cnae' => 'A solicitação está localizada no :alvo e contempla atividade(s) econômica(s) abrangida(s) pelas restrições estabelecidas no :fundamento. Dessa forma, considerando o disposto na legislação vigente, o pedido não atende aos requisitos legais para deferimento, razão pela qual a solicitação é indeferida.',
             'territorial.motivo.camada_indisponivel' => 'Não foi possível verificar a restrição territorial ":regra" (camada geográfica indisponível) — segue para análise técnica.',
+            'territorial.motivo.cadastro_indisponivel' => 'Não foi possível verificar a restrição territorial ":regra" (Cadastro Imobiliário indisponível para conferir o logradouro tributário) — segue para análise técnica.',
+            'localizacao.motivo.divergencia_zona' => 'Localização divergente (HU-037 RN-005): o polígono informado está na zona :zona_poligono e a inscrição imobiliária, na zona :zona_inscricao — segue para análise técnica.',
             'louos.motivo.quadro10_observacao_fora_da_lista' => 'Uso sujeito à observação :observacao do Quadro 10 permitido somente nas localizações listadas — endereço fora da allow-list',
             'louos.motivo.quadro10_observacao_sem_verificacao' => 'Uso sujeito à observação :observacao do Quadro 10, mas sem CODLOG/bairro para verificar a allow-list de localizações',
         ];

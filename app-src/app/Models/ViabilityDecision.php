@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\DecisionOutcome;
 use Database\Factories\ViabilityDecisionFactory;
+use DomainException;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -44,6 +45,19 @@ class ViabilityDecision extends Model
 {
     /** @use HasFactory<ViabilityDecisionFactory> */
     use HasFactory;
+
+    /**
+     * Todo indeferimento carrega a justificativa legível (reason) que quem
+     * consulta o parecer lê: gestão, portal, PDF e REGIN.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (ViabilityDecision $decision): void {
+            if ($decision->outcome === DecisionOutcome::Indeferida && trim((string) $decision->reason) === '') {
+                throw new DomainException('Indeferimento sem justificativa: informe o motivo (reason) da decisão.');
+            }
+        });
+    }
 
     /**
      * @return array<string, string>

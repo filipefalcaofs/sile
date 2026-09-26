@@ -19,6 +19,7 @@ use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\ProcessosReportSource;
 use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
+use App\Support\ParecerDecisao;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,8 +63,9 @@ class ProcessoController extends Controller
         $filtros = $this->filtros($request);
         $ordem = $this->ordem($request);
         $consulta = $filtros + ['ordem' => $ordem];
+        $periodoInvertido = $this->periodoInvertido($filtros);
 
-        if (in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
+        if (! $periodoInvertido && in_array($request->string('formato')->lower()->toString(), ['csv', 'xlsx', 'pdf'], true)) {
             return app(ReportExporter::class)->export(
                 app(ProcessosReportSource::class),
                 ReportFilters::fromArray($consulta),
@@ -73,7 +75,6 @@ class ProcessoController extends Controller
         }
 
         $perPage = $this->perPage($request);
-        $periodoInvertido = $this->periodoInvertido($filtros);
 
         if ($periodoInvertido) {
             $processos = new LengthAwarePaginator([], 0, $perPage, 1, [
@@ -188,6 +189,7 @@ class ProcessoController extends Controller
 
         return Inertia::render('gestao/processos/show', [
             'processo' => (new ProcessoResource($viabilityRequest))->resolve(),
+            'parecer' => ParecerDecisao::de($viabilityRequest->decision),
             // Explicabilidade passo a passo (HU-099): projeção PURA do
             // decision_trace gravado (RN-005), só quando há decisão — sem
             // desfecho não há explicação inventada. Prop ADITIVA sob o gate
@@ -209,6 +211,12 @@ class ProcessoController extends Controller
             // mostra o que existe e degrada honestamente quando não há polígono.
             'geo' => [
                 'poligono' => $viabilityRequest->property_polygon_geojson,
+                'ponto' => $viabilityRequest->property_polygon_geojson ? null : $viabilityRequest->pontoDoImovel(),
+                'origem' => $viabilityRequest->property_location_source === null ? null : [
+                    'value' => $viabilityRequest->property_location_source->value,
+                    'label' => $viabilityRequest->property_location_source->label(),
+                ],
+                'camadas' => $viabilityRequest->camadas_incidentes,
             ],
             // Próximas transições manuais oferecidas ao analista no dropdown
             // do detalhe (Tarefa 10) — vazio quando o processo ainda não tem

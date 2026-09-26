@@ -3,6 +3,7 @@
 namespace App\Services\Viabilidade;
 
 use App\Services\Decisao\DecisionTextCatalog;
+use App\Services\Geo\ForaDeSalvadorException;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\TerritoryResult;
@@ -63,6 +64,10 @@ class ConsultaViabilidadeService
     public function consultarPorEndereco(string $endereco, string $cnae, ?float $area = null, array $respostas = []): ConsultaViabilidadeResult
     {
         $geocode = $this->geocoder->geocode($endereco);
+
+        if (! $geocode->estaEmSalvador()) {
+            throw new ForaDeSalvadorException($endereco);
+        }
 
         $input = ConsultaViabilidadeInput::paraEndereco($endereco, $cnae, $area, $respostas);
 

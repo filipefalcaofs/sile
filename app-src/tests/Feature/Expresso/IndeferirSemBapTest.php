@@ -7,6 +7,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Events\ResultadoEmitido;
 use App\Models\Activity;
 use App\Models\ViabilityRequest;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Expresso\BusinessDeadlineCalculator;
 use App\Services\Expresso\IndeferirSemBapService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -42,7 +43,8 @@ class IndeferirSemBapTest extends TestCase
         $decision = app(IndeferirSemBapService::class)->indeferir($request);
 
         $this->assertSame(DecisionOutcome::Indeferida, $decision->outcome);
-        $this->assertSame('indeferido sem atuação', $decision->reason);
+        $this->assertSame(app(DecisionTextCatalog::class)->get('justificativa.indeferimento.sem_bap'), $decision->reason);
+        $this->assertStringStartsWith('Indeferido sem atuação', (string) $decision->reason);
         $this->assertSame('expresso', $decision->flow);
         $this->assertNull($decision->tvl_product_number);
         $this->assertNull($decision->decided_by_user_id);

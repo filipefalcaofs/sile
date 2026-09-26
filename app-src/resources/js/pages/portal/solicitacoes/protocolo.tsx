@@ -2,6 +2,7 @@ import { Head, Link, WhenVisible } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
+import ParecerCard, { type ParecerDecisao } from '@/components/decisao/parecer-card';
 import { AlertIcon, CheckCircleIcon, InfoIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
@@ -83,6 +84,8 @@ interface ProtocoloProps {
     publicLink: string | null;
     /** Há decisão registrada? Governa a exibição do card de explicação (HU-119). */
     temDecisao: boolean;
+    /** Parecer oficial: resultado, motivo e fundamentação legal. */
+    parecer: ParecerDecisao | null;
     /** Explicação da decisão em linguagem cidadã (HU-119) — prop deferida. */
     explicacaoIa?: ExplicacaoIa[];
 }
@@ -325,7 +328,14 @@ function ExplicacaoCidadaCard({ explicacoes }: { explicacoes: ExplicacaoIa[] }) 
     );
 }
 
-export default function Protocolo({ solicitacao, timeline, publicLink, temDecisao, explicacaoIa }: ProtocoloProps) {
+export default function Protocolo({
+    solicitacao,
+    timeline,
+    publicLink,
+    temDecisao,
+    parecer,
+    explicacaoIa,
+}: ProtocoloProps) {
     const titulo = solicitacao.protocol_number ?? 'Solicitação de viabilidade';
 
     return (
@@ -396,6 +406,8 @@ export default function Protocolo({ solicitacao, timeline, publicLink, temDecisa
                         </div>
                     </CardContent>
                 </Card>
+
+                {parecer && <ParecerCard parecer={parecer} />}
 
                 {/* Explicação da decisão em linguagem cidadã (HU-119): só aparece
                     quando há decisão registrada; carregada sob demanda (deferida)

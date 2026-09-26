@@ -12,6 +12,7 @@ use App\Services\Cnpj\CnpjNotFoundException;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -97,8 +98,12 @@ class CnpjLookupTest extends TestCase
 
         $service = app(CnpjLookup::class);
         $service->lookup('00000000000191');
-        $service->lookup('00000000000191');
 
+        $this->assertIsArray(Cache::get('sile.cnpj_lookup.00000000000191'));
+
+        $deNovo = $service->lookup('00000000000191');
+
+        $this->assertSame('BANCO DO BRASIL SA', $deNovo->legalName);
         Http::assertSentCount(1);
     }
 

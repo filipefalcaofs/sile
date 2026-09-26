@@ -11,6 +11,8 @@ import {
 } from '@/components/analise/processo-ui';
 import DecisionExplanation, { type DecisionExplanationData } from '@/components/auditoria/decision-explanation';
 import PageHeader from '@/components/app/page-header';
+import ParecerCard, { type ParecerDecisao } from '@/components/decisao/parecer-card';
+import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
 import { MapaSection } from '@/components/geo/mapa-section';
 import Select from '@/components/form/select';
 import { AlertIcon, ArrowRightIcon, MapPinIcon } from '@/components/icons';
@@ -32,9 +34,14 @@ interface TimelineItem {
 
 interface ShowProps {
     processo: ProcessoItem;
+    /** Parecer da decisão (resultado, motivo e fundamentação); null sem decisão. */
+    parecer: ParecerDecisao | null;
     timeline: TimelineItem[];
     geo: {
         poligono: Polygon | null;
+        ponto: { lat: number; lng: number } | null;
+        origem: { value: string; label: string } | null;
+        camadas: CamadasImovel | null;
     };
     /** Explicabilidade passo a passo (HU-099); null quando não há decisão. */
     explicacao?: DecisionExplanationData | null;
@@ -104,7 +111,15 @@ function DescItem({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-export default function Show({ processo, timeline, geo, explicacao, analysisStatusProximas, conclusaoOpcoes }: ShowProps) {
+export default function Show({
+    processo,
+    parecer,
+    timeline,
+    geo,
+    explicacao,
+    analysisStatusProximas,
+    conclusaoOpcoes,
+}: ShowProps) {
     const { auth } = usePage<SharedProps>().props;
     const podeAnalisar = auth.permissions.includes('analisar-processos');
     const podeConcluirAnalise = processo.status === 'em_analise' || processo.status === 'deferida';
@@ -139,7 +154,7 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
         ...(explicacao ? [{ value: 'explicabilidade' as const, label: 'Explicabilidade' }] : []),
     ];
 
-    const centro = centroide(geo.poligono);
+    const centro = centroide(geo.poligono) ?? geo.ponto;
 
     // A timeline vem do backend do mais recente para o mais antigo; exibimos em
     // ordem cronológica (mais antigo primeiro) para a leitura do fluxo, com a
@@ -278,6 +293,8 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
                                 );
                             })}
                         </div>
+
+                        {aba === 'informacoes' && parecer && <ParecerCard parecer={parecer} />}
 
                         {aba === 'informacoes' && (
                             <Card>
@@ -474,13 +491,24 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
                         <Card>
                             <CardHeader title="Localização do imóvel" />
                             <CardContent>
-                                {centro && geo.poligono ? (
-                                    <MapaSection
-                                        lat={centro.lat}
-                                        lng={centro.lng}
-                                        draggable={false}
-                                        camadas={[{ id: 'poligono', type: 'poligono', geojson: geo.poligono }]}
-                                    />
+                                {centro ? (
+                                    <div className="space-y-3">
+                                        <MapaSection
+                                            lat={centro.lat}
+                                            lng={centro.lng}
+                                            draggable={false}
+                                            camadas={
+                                                geo.poligono
+                                                    ? [{ id: 'poligono', type: 'poligono', geojson: geo.poligono }]
+                                                    : []
+                                            }
+                                        />
+                                        {geo.origem && !geo.poligono ? (
+                                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                Localização pelo {geo.origem.label} (ponto, sem o desenho do lote).
+                                            </p>
+                                        ) : null}
+                                    </div>
                                 ) : (
                                     <EmptyState
                                         icon={<MapPinIcon className="size-6" />}
@@ -490,6 +518,15 @@ export default function Show({ processo, timeline, geo, explicacao, analysisStat
                                 )}
                             </CardContent>
                         </Card>
+
+                        {geo.camadas && (
+                            <Card>
+                                <CardHeader title="Camadas do imóvel" />
+                                <CardContent>
+                                    <CamadasImovelLista camadas={geo.camadas} />
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
                 </div>
             </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TelefoneComDdd;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -28,7 +29,7 @@ class ProfileUpdateRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255',
                 Rule::unique('users')->ignore($this->user()->id)],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:20', new TelefoneComDdd],
         ];
     }
 

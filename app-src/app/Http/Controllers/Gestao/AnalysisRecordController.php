@@ -437,7 +437,8 @@ class AnalysisRecordController extends Controller
      *   ponto_referencia: string|null,
      *   zona: string|null,
      *   via: string|null,
-     *   is_public_area: bool|null
+     *   is_public_area: bool|null,
+     *   camadas: array<string, mixed>|null
      * }
      */
     private function localizacaoDoImovel(ViabilityRequest $request, array $cadastro = []): array
@@ -468,6 +469,7 @@ class AnalysisRecordController extends Controller
             'zona' => $zona,
             'via' => $via,
             'is_public_area' => $request->is_public_area,
+            'camadas' => $request->camadas_incidentes,
         ];
     }
 

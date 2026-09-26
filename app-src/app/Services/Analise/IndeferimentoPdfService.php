@@ -105,6 +105,7 @@ class IndeferimentoPdfService
             'empresa' => $this->dadosEmpresa($request?->company),
             'imovel' => $this->dadosImovel($request),
             'atividades' => $this->atividadesIndeferidas($decision),
+            'justificativa' => $decision->reason,
             'fundamentacao' => $this->listaDeTexto($decision->fundamentacao),
             'motivos' => $this->listaDeTexto($ficha?->analysis_reasons),
             'parecer' => $ficha?->parecer,

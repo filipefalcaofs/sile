@@ -23,11 +23,13 @@ use App\Services\Cnpj\CnpjLookup;
 use App\Services\Expresso\DatabaseHolidayProvider;
 use App\Services\Expresso\HolidayProvider;
 use App\Services\Geo\Geocoder;
+use App\Services\Geo\GeoServerWfsCamadaClient;
 use App\Services\Geo\NominatimGeocoder;
 use App\Services\Geo\PostgisSpatialRepository;
 use App\Services\Geo\SpatialRepository;
 use App\Services\GovBr\GovBrIdTokenValidator;
 use App\Services\GovBr\GovBrProvider;
+use App\Services\Realty\LocalizacaoInscricaoService;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\SedurSefazPropertyRegistryLookup;
 use App\Services\Regin\BapRegistry;
@@ -91,6 +93,11 @@ class AppServiceProvider extends ServiceProvider
         // SEDUR/SEFAZ. Toggle features.cadastro_imobiliario desligado degrada
         // honesto (nunca inventa ponto).
         $this->app->bind(PropertyRegistryLookup::class, SedurSefazPropertyRegistryLookup::class);
+
+        // Uma consulta SEFAZ por inscrição e por execução: protocolo, CODLOG
+        // tributário e a checagem de divergência compartilham o resultado.
+        $this->app->scoped(LocalizacaoInscricaoService::class);
+        $this->app->scoped(GeoServerWfsCamadaClient::class);
 
         // Fonte de feriados (HU-137) atrás de contrato: o BusinessDeadlineCalculator
         // (HU-129) desconta os feriados ativos via este provider para medir

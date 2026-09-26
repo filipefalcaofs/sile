@@ -54,6 +54,24 @@ class PostgisSpatialRepository implements SpatialRepository
         ];
     }
 
+    public function featuresWithin(GeoLayer $layer, float $lng, float $lat, int $maxMeters, int $limit = 20): array
+    {
+        return DB::table('geo_features')
+            ->where('geo_layer_id', $layer->id)
+            ->whereRaw('ST_DWithin(geometry::geography, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?)', [$lng, $lat, $maxMeters])
+            ->orderByRaw('ST_Distance(geometry::geography, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography)', [$lng, $lat])
+            ->selectRaw('id, properties, ST_Distance(geometry::geography, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) AS distancia_m', [$lng, $lat])
+            ->limit($limit)
+            ->get()
+            ->map(fn (object $row): array => [
+                'id' => (int) $row->id,
+                'properties' => $this->decodeProperties($row->properties),
+                'distancia_m' => (float) $row->distancia_m,
+            ])
+            ->values()
+            ->all();
+    }
+
     public function intersectingFeatures(GeoLayer $layer, float $lng, float $lat): array
     {
         return DB::table('geo_features')

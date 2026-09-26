@@ -3,6 +3,7 @@
 namespace App\Services\Geo;
 
 use App\Support\Settings;
+use Closure;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -25,56 +26,82 @@ class NominatimGeocoder implements Geocoder
             config('sile.integrations.geocoding.base_url'),
         ), '/');
 
-        return Cache::remember(
-            'sile.geocoding.'.sha1($address),
-            (int) config('sile.integrations.geocoding.cache_ttl', 86400),
-            function () use ($baseUrl, $address): GeocodeResult {
-                try {
-                    $response = Http::withHeaders([
-                        'User-Agent' => (string) config('sile.integrations.geocoding.user_agent'),
-                    ])
-                        ->timeout((int) Settings::get(
-                            'integrations.geocoding.timeout',
-                            config('sile.integrations.geocoding.timeout', 8),
-                        ))
-                        ->connectTimeout(3)
-                        ->retry(
-                            (int) Settings::get(
-                                'integrations.geocoding.retries',
-                                config('sile.integrations.geocoding.retries', 2),
-                            ),
-                            (int) Settings::get(
-                                'integrations.geocoding.backoff_ms',
-                                config('sile.integrations.geocoding.backoff_ms', 1000),
-                            ),
-                            throw: false,
-                        )
-                        ->acceptJson()
-                        ->get("{$baseUrl}/search", [
-                            'q' => $address,
-                            'format' => 'jsonv2',
-                            'addressdetails' => 1,
-                            'countrycodes' => 'br',
-                            'limit' => 1,
-                        ]);
-                } catch (ConnectionException $exception) {
-                    throw new GeocoderException($address);
-                }
+        $key = 'sile.geocoding.'.sha1($address);
+        $ttl = (int) config('sile.integrations.geocoding.cache_ttl', 86400);
+        $buscar = function () use ($baseUrl, $address): array {
+            try {
+                $response = Http::withHeaders([
+                    'User-Agent' => (string) config('sile.integrations.geocoding.user_agent'),
+                ])
+                    ->timeout((int) Settings::get(
+                        'integrations.geocoding.timeout',
+                        config('sile.integrations.geocoding.timeout', 8),
+                    ))
+                    ->connectTimeout(3)
+                    ->retry(
+                        (int) Settings::get(
+                            'integrations.geocoding.retries',
+                            config('sile.integrations.geocoding.retries', 2),
+                        ),
+                        (int) Settings::get(
+                            'integrations.geocoding.backoff_ms',
+                            config('sile.integrations.geocoding.backoff_ms', 1000),
+                        ),
+                        throw: false,
+                    )
+                    ->acceptJson()
+                    ->get("{$baseUrl}/search", [
+                        'q' => $address,
+                        'format' => 'jsonv2',
+                        'addressdetails' => 1,
+                        'countrycodes' => 'br',
+                        'limit' => 1,
+                    ]);
+            } catch (ConnectionException $exception) {
+                throw new GeocoderException($address);
+            }
 
-                if ($response->failed()) {
-                    throw new GeocoderException($address, $response->status());
-                }
+            if ($response->failed()) {
+                throw new GeocoderException($address, $response->status());
+            }
 
-                $payload = $response->json();
+            $payload = $response->json();
 
-                // Corpo vazio ([]), HTML de bloqueio (não-array) ou objeto de
-                // erro sem o primeiro resultado: endereço não localizado.
-                if (! is_array($payload) || ! isset($payload[0]) || ! is_array($payload[0])) {
-                    throw new AddressNotFoundException($address);
-                }
+            // Corpo vazio ([]), HTML de bloqueio (não-array) ou objeto de
+            // erro sem o primeiro resultado: endereço não localizado.
+            if (! is_array($payload) || ! isset($payload[0]) || ! is_array($payload[0])) {
+                throw new AddressNotFoundException($address);
+            }
 
-                return GeocodeResult::fromNominatim($payload[0]);
-            },
-        );
+            return GeocodeResult::fromNominatim($payload[0])->toArray();
+        };
+
+        return GeocodeResult::fromCached($this->lembrar($key, $ttl, $buscar));
+    }
+
+    /**
+     * O cache guarda array. Entrada antiga (objeto) é descartada. Falha do
+     * Nominatim não é cacheada.
+     *
+     * @param  Closure(): array<string, mixed>  $buscar
+     * @return array<string, mixed>
+     */
+    private function lembrar(string $key, int $ttl, Closure $buscar): array
+    {
+        try {
+            $payload = Cache::remember($key, $ttl, $buscar);
+        } catch (AddressNotFoundException|GeocoderException $exception) {
+            throw $exception;
+        } catch (\Throwable) {
+            Cache::forget($key);
+            $payload = Cache::remember($key, $ttl, $buscar);
+        }
+
+        if (! is_array($payload)) {
+            Cache::forget($key);
+            $payload = Cache::remember($key, $ttl, $buscar);
+        }
+
+        return $payload;
     }
 }

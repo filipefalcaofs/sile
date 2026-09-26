@@ -73,4 +73,43 @@ class HttpReginParecerNotifierTest extends TestCase
 
         $this->assertSame(4, $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['STATUS_ANALISE']);
     }
+
+    public function test_indeferimento_envia_a_justificativa_seguida_da_fundamentacao(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create(['external_reference' => '00990026']);
+        $decision = ViabilityDecision::factory()->indeferida()->create([
+            'viability_request_id' => $request->id,
+            'reason' => 'A solicitação está localizada no logradouro 212 – Avenida Lafayette Coutinho.',
+            'fundamentacao' => ['art. 172-A da Lei Municipal nº 9.148/2016'],
+        ]);
+
+        $espiao = $this->clienteEspiao();
+        $this->app->instance(ReginHttpClient::class, $espiao);
+
+        $this->app->make(HttpReginParecerNotifier::class)->notifyParecer($request, $decision);
+
+        $justificativa = $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'];
+
+        $this->assertStringStartsWith('A solicitação está localizada no logradouro 212', $justificativa);
+        $this->assertStringContainsString('Fundamentação legal: art. 172-A da Lei Municipal nº 9.148/2016', $justificativa);
+    }
+
+    public function test_justificativa_respeita_o_limite_do_campo(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create(['external_reference' => '1']);
+        $decision = ViabilityDecision::factory()->indeferida()->create([
+            'viability_request_id' => $request->id,
+            'reason' => str_repeat('a', 12000),
+        ]);
+
+        $espiao = $this->clienteEspiao();
+        $this->app->instance(ReginHttpClient::class, $espiao);
+
+        $this->app->make(HttpReginParecerNotifier::class)->notifyParecer($request, $decision);
+
+        $this->assertLessThanOrEqual(
+            10000,
+            mb_strlen($espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE']),
+        );
+    }
 }

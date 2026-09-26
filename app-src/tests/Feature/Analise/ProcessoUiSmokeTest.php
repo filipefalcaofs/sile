@@ -3,8 +3,10 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStage;
+use App\Enums\PropertyLocationSource;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -122,6 +124,63 @@ class ProcessoUiSmokeTest extends TestCase
                 ->has('processo.bap')
                 ->has('processo.tvl_product_number')
                 ->has('timeline')
-                ->where('geo.poligono.type', 'Polygon'));
+                ->where('geo.poligono.type', 'Polygon')
+                ->where('geo.ponto', null));
+    }
+
+    public function test_detalhe_mostra_o_parecer_com_o_motivo_do_indeferimento(): void
+    {
+        $processo = $this->processo(['status' => ViabilityRequestStatus::Indeferida]);
+        ViabilityDecision::factory()->indeferida()->create([
+            'viability_request_id' => $processo->id,
+            'reason' => 'A solicitação está localizada no logradouro 212 – Avenida Lafayette Coutinho.',
+            'fundamentacao' => ['art. 172-A da Lei Municipal nº 9.148/2016'],
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('parecer.outcome', 'indeferida')
+                ->where('parecer.outcome_label', 'Indeferida')
+                ->where('parecer.motivo', 'A solicitação está localizada no logradouro 212 – Avenida Lafayette Coutinho.')
+                ->where('parecer.fundamentacao.0', 'art. 172-A da Lei Municipal nº 9.148/2016'));
+    }
+
+    public function test_detalhe_mostra_o_ponto_do_cadastro_quando_nao_ha_poligono(): void
+    {
+        $processo = $this->processo(['property_polygon_geojson' => null]);
+        $processo->forceFill([
+            'property_point_lat' => -12.977769,
+            'property_point_lng' => -38.516404,
+            'property_location_source' => PropertyLocationSource::CadastroImobiliario,
+        ])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/processos/show')
+                ->where('geo.poligono', null)
+                ->where('geo.ponto.lat', -12.977769)
+                ->where('geo.ponto.lng', -38.516404)
+                ->where('geo.origem.value', 'cadastro_imobiliario')
+                ->where('geo.origem.label', 'Cadastro Imobiliário'));
+    }
+
+    public function test_detalhe_mostra_as_camadas_do_imovel(): void
+    {
+        $processo = $this->processo();
+        $processo->forceFill(['camadas_incidentes' => [
+            'logradouro_tributario' => ['cod_log' => '212', 'nome' => 'Avenida Lafayete Coutinho'],
+            'camadas' => [['regra' => 'RT-03-ABM', 'status' => 'dentro', 'elemento' => 'Trecho 5', 'incide' => true]],
+        ]])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('geo.camadas.logradouro_tributario.nome', 'Avenida Lafayete Coutinho')
+                ->where('geo.camadas.camadas.0.elemento', 'Trecho 5'));
     }
 }

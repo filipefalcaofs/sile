@@ -50,6 +50,8 @@ class DecisionTextSeeder extends Seeder
         'justificativa.conclusao.nao_permitido' => 'Conclusão da justificativa quando o veredito é não permitido. Placeholder: :zona.',
         'justificativa.conclusao.nao_permitido_via' => 'Conclusão da justificativa quando o veredito é não permitido por vedação da via (Quadro 11-A). Placeholder: :classe_via.',
         'justificativa.conclusao.padrao' => 'Conclusão da justificativa quando não há elementos para deferir ou indeferir.',
+        'justificativa.indeferimento.sem_bap' => 'Justificativa do indeferimento automático por prazo de atuação na Junta (BAP) vencido. Redação oficial pendente SEDUR.',
+        'justificativa.indeferimento.convite_expirado' => 'Justificativa do indeferimento automático por convite expirado sem resposta do requerente. Redação oficial pendente SEDUR.',
         'explicacao.titulo.entrada' => 'Título do passo de entrada na explicação da decisão.',
         'explicacao.titulo.risco' => 'Título do passo de classificação de risco na explicação da decisão.',
         'explicacao.titulo.enquadramento' => 'Título do passo de enquadramento de uso na explicação da decisão.',
@@ -66,6 +68,8 @@ class DecisionTextSeeder extends Seeder
         'explicacao.motivo.permitido_com_quadro10' => 'Motivo da consolidação legada permitida que cita o Quadro 10.',
         'territorial.indeferimento.logradouro_cnae' => 'Mensagem de indeferimento automático por logradouro × CNAE (RT-01). Placeholders: :alvo (ex.: logradouro 212 – Avenida Lafayette Coutinho), :fundamento (base legal da regra).',
         'territorial.motivo.camada_indisponivel' => 'Motivo do encaminhamento à análise quando a camada geográfica de uma regra territorial está indisponível. Placeholder: :regra.',
+        'territorial.motivo.cadastro_indisponivel' => 'Motivo do encaminhamento à análise quando o Cadastro Imobiliário está indisponível para conferir o logradouro tributário de uma regra de logradouro × CNAE. Placeholder: :regra.',
+        'localizacao.motivo.divergencia_zona' => 'Motivo do encaminhamento à análise quando o polígono desenhado e a inscrição imobiliária caem em zonas diferentes (HU-037 RN-005). Placeholders: :zona_poligono, :zona_inscricao.',
         'louos.motivo.quadro10_observacao_fora_da_lista' => 'Motivo do Quadro 10 quando o uso sujeito à observação (a)/(b) está fora das localizações permitidas. Placeholder: :observacao.',
         'louos.motivo.quadro10_observacao_sem_verificacao' => 'Motivo do Quadro 10 quando não há CODLOG/bairro para verificar a allow-list da observação (a)/(b). Placeholder: :observacao.',
     ];

@@ -149,6 +149,48 @@ class ConsultaViabilidadePublicaTest extends TestCase
         $this->assertSame('endereco', $activity->properties['tipo']);
     }
 
+    public function test_endereco_fora_de_salvador_nao_consulta_nem_grava_historico(): void
+    {
+        $this->app->instance(Geocoder::class, new class implements Geocoder
+        {
+            public function geocode(string $address): GeocodeResult
+            {
+                return new GeocodeResult(
+                    latitude: -23.5505,
+                    longitude: -46.6333,
+                    displayName: 'São Paulo, São Paulo, Brasil',
+                    confidence: 0.9,
+                    address: ['city' => 'São Paulo', 'state' => 'São Paulo'],
+                );
+            }
+        });
+
+        $this->postJson('/portal/viabilidade/endereco', [
+            'endereco' => 'Avenida Paulista, São Paulo',
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+        ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'O endereço está fora do município de Salvador. A consulta de viabilidade abrange apenas Salvador.')
+            ->assertJsonMissingPath('veredito_locacional');
+
+        $this->assertSame(0, ViabilityQuery::query()->count());
+    }
+
+    public function test_consulta_por_cnae_devolve_as_perguntas_da_planilha(): void
+    {
+        $resposta = $this->postJson('/portal/viabilidade/cnae', [
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+        ])->assertOk();
+
+        $perguntas = $resposta->json('perguntas');
+        $this->assertIsArray($perguntas);
+        $this->assertTrue(array_is_list($perguntas));
+        $this->assertSame(11, $perguntas[0]['numero']);
+        $this->assertNotSame('', $perguntas[0]['texto']);
+    }
+
     public function test_endereco_nao_localizado_retorna_mensagem_honesta(): void
     {
         // Anti-fachada: endereço não localizado devolve mensagem HONESTA (404),

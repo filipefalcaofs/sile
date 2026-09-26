@@ -6,6 +6,7 @@ use App\Enums\Fluxo;
 use App\Enums\RiscoSanitario;
 use App\Models\Cnae;
 use App\Services\Geo\AddressNotFoundException;
+use App\Services\Geo\ForaDeSalvadorException;
 use App\Services\Geo\GeocoderException;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Risco\RiscoResult;
@@ -65,6 +66,10 @@ class ConsultaViabilidadeCommand extends Command
                 $inscricao !== null => $service->consultarPorInscricao($inscricao, $cnae, $area),
                 default => $service->consultarPorCnae($cnae, $area),
             };
+        } catch (ForaDeSalvadorException $exception) {
+            $this->error($exception->getMessage());
+
+            return self::FAILURE;
         } catch (AddressNotFoundException) {
             // Sem fachada: endereço não localizado NUNCA vira resultado falso.
             $this->error("Endereço não localizado: '{$endereco}'. Revise o endereço ou consulte por CNAE.");

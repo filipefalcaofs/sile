@@ -8,7 +8,9 @@ use App\Http\Requests\Portal\ConsultaViabilidadeEnderecoRequest;
 use App\Http\Requests\Portal\ConsultaViabilidadeInscricaoRequest;
 use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
+use App\Services\Geo\ForaDeSalvadorException;
 use App\Services\Geo\GeocoderException;
+use App\Services\Tratamento\TratamentoRamoResolver;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
 use Illuminate\Http\JsonResponse;
@@ -28,6 +30,7 @@ class ConsultaViabilidadeController extends Controller
 {
     public function __construct(
         private ConsultaViabilidadeService $service,
+        private TratamentoRamoResolver $ramos,
     ) {}
 
     /**
@@ -48,17 +51,16 @@ class ConsultaViabilidadeController extends Controller
     public function endereco(ConsultaViabilidadeEnderecoRequest $request): JsonResponse
     {
         try {
-            $respostas = [];
-            foreach ($request->validated('respostas') ?? [] as $numero => $valor) {
-                $respostas[(int) $numero] = (bool) $valor;
-            }
-
             $result = $this->service->consultarPorEndereco(
                 $request->validated('endereco'),
                 $request->validated('cnae'),
                 $request->validated('area') !== null ? (float) $request->validated('area') : null,
-                $respostas,
+                $this->respostasInformadas($request->validated('respostas')),
             );
+        } catch (ForaDeSalvadorException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
         } catch (AddressNotFoundException) {
             return response()->json([
                 'message' => 'Endereço não localizado. Revise o endereço ou posicione a consulta por CNAE.',
@@ -71,7 +73,7 @@ class ConsultaViabilidadeController extends Controller
 
         $this->registrarHistorico($request, $result);
 
-        return response()->json($result->toArray());
+        return $this->jsonComPerguntas($result, $request->validated('cnae'));
     }
 
     /**
@@ -82,21 +84,16 @@ class ConsultaViabilidadeController extends Controller
      */
     public function cnae(ConsultaViabilidadeCnaeRequest $request): JsonResponse
     {
-        $respostas = [];
-        foreach ($request->validated('respostas') ?? [] as $numero => $valor) {
-            $respostas[(int) $numero] = (bool) $valor;
-        }
-
         $result = $this->service->consultarPorCnae(
             $request->validated('cnae'),
             $request->validated('area') !== null ? (float) $request->validated('area') : null,
             null,
-            $respostas,
+            $this->respostasInformadas($request->validated('respostas')),
         );
 
         $this->registrarHistorico($request, $result);
 
-        return response()->json($result->toArray());
+        return $this->jsonComPerguntas($result, $request->validated('cnae'));
     }
 
     /**
@@ -113,11 +110,12 @@ class ConsultaViabilidadeController extends Controller
             $request->validated('inscricao'),
             $request->validated('cnae'),
             $request->validated('area') !== null ? (float) $request->validated('area') : null,
+            $this->respostasInformadas($request->validated('respostas')),
         );
 
         $this->registrarHistorico($request, $result);
 
-        return response()->json($result->toArray());
+        return $this->jsonComPerguntas($result, $request->validated('cnae'));
     }
 
     /**
@@ -148,5 +146,28 @@ class ConsultaViabilidadeController extends Controller
             'ip_address' => $request->ip(),
             'created_at' => now(),
         ]);
+    }
+
+    /**
+     * @param  array<int|string, mixed>|null  $informadas
+     * @return array<int, bool>
+     */
+    private function respostasInformadas(?array $informadas): array
+    {
+        $respostas = [];
+
+        foreach ($informadas ?? [] as $numero => $valor) {
+            $respostas[(int) $numero] = (bool) $valor;
+        }
+
+        return $respostas;
+    }
+
+    private function jsonComPerguntas(ConsultaViabilidadeResult $result, string $cnae): JsonResponse
+    {
+        $payload = $result->toArray();
+        $payload['perguntas'] = $this->ramos->perguntasExibidas($cnae);
+
+        return response()->json($payload);
     }
 }

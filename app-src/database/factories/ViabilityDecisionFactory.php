@@ -53,7 +53,10 @@ class ViabilityDecisionFactory extends Factory
                 'Lei nº 9.148/2016 (LOUOS) — nR1-01',
                 'Decreto nº 32.636/2020 — classificação de risco',
             ],
-            'reason' => null,
+            // Todo indeferimento tem justificativa (invariante do model).
+            'reason' => fn (array $atributos): ?string => ($atributos['outcome'] ?? null) === DecisionOutcome::Indeferida
+                ? 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso proibido na zona ZPR-1 segundo o Quadro 10 da LOUOS.'
+                : null,
             'decided_by_user_id' => null,
             'decided_at' => now(),
         ];
@@ -68,6 +71,7 @@ class ViabilityDecisionFactory extends Factory
             'outcome' => DecisionOutcome::Indeferida,
             'consolidated_result' => 'nao_permitido',
             'tvl_product_number' => null,
+            'reason' => 'Diante do enquadramento acima, manifesta-se pelo indeferimento desta atividade, por ser o uso proibido na zona ZPR-1 segundo o Quadro 10 da LOUOS.',
             'per_cnae' => [
                 [
                     'cnae' => '4712100',
@@ -88,7 +92,7 @@ class ViabilityDecisionFactory extends Factory
     public function semAtuacaoBap(): static
     {
         return $this->indeferida()->state(fn () => [
-            'reason' => 'indeferido sem atuação',
+            'reason' => 'Indeferido sem atuação: o prazo de atuação na Junta Comercial (BAP) venceu sem que o requerente concluísse o registro, e a solicitação não pôde prosseguir.',
         ]);
     }
 }

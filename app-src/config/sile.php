@@ -44,11 +44,6 @@ return [
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,
         'fluxo_expresso' => true,
-        // Bypass de HOMOLOGAÇÃO do motor de risco (simulação REGIN): ligado,
-        // processo nascido do simulador com veredito pendente (zona oficial
-        // pendente SEDUR) emite TVL como permitido. DESLIGADO por default —
-        // NUNCA ligar em produção; remoção definitiva antes do go-live.
-        'simulacao_protocolo' => false,
         'notificacao_resultado_expresso' => true,
         'analise_tecnica' => true,
         // Toggles de canal da comunicação multicanal (EP11). E-mail e in-app
@@ -85,6 +80,9 @@ return [
         // Constante técnica (raio em metros da "via mais próxima"): fica SÓ
         // aqui, NÃO entra no catálogo do ParameterSeeder — precedente [02-02].
         'via_max_metros' => 50,
+        // Raio (metros) dos logradouros em volta do imóvel registrados no
+        // inventário de camadas — constante técnica, fora do catálogo.
+        'logradouros_proximos_metros' => 30,
         // Constante TÉCNICA de upload (fora do catálogo HU-014 — precedente
         // [02-02]): teto em MB do GeoJSON importado pela gestão de camadas.
         // É limite de infraestrutura (tamanho de request), não valor de

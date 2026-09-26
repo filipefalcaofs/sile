@@ -7,6 +7,9 @@ use App\Models\Cnae;
 use App\Models\RuleVersion;
 use App\Models\TerritorialRule;
 use App\Models\ViabilityRequest;
+use App\Services\Realty\PropertyRegistryLookup;
+use App\Services\Realty\PropertyRegistryResult;
+use App\Services\Realty\PropertyRegistryUnavailableException;
 use App\Services\Territorial\TerritorialRuleService;
 use App\Services\Territorial\TerritorialRuleVerdict;
 use Database\Seeders\DecisionTextSeeder;
@@ -111,6 +114,98 @@ class TerritorialRuleServiceTest extends TestCase
 
         $this->assertSame(TerritorialRuleVerdict::INDEFERIR, $verdict->status);
         $this->assertSame('RT-01', $verdict->regra?->codigo);
+    }
+
+    /**
+     * Fake do Cadastro Imobiliário SEFAZ: devolve o logradouro tributário
+     * informado, ou lança a exceção de indisponibilidade quando null.
+     */
+    private function fakeCadastro(?string $codigoLogradouroTributario): object
+    {
+        $fake = new class($codigoLogradouroTributario) implements PropertyRegistryLookup
+        {
+            public int $chamadas = 0;
+
+            public function __construct(private ?string $codigo) {}
+
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                $this->chamadas++;
+
+                if ($this->codigo === null) {
+                    throw new PropertyRegistryUnavailableException($inscricao);
+                }
+
+                return new PropertyRegistryResult(
+                    latitude: null,
+                    longitude: null,
+                    inscricao: $inscricao,
+                    source: 'SEFAZ via SEDUR',
+                    raw: ['CodigoLogradouroTributario' => $this->codigo, 'LogradouroTributario' => 'Avenida Lafayete Coutinho'],
+                );
+            }
+        };
+
+        $this->app->instance(PropertyRegistryLookup::class, $fake);
+
+        return $fake;
+    }
+
+    public function test_rt01_indefere_pelo_logradouro_tributario_quando_codlog_espacial_diverge(): void
+    {
+        Http::fake(fn () => Http::response($this->featureCollectionVazia()));
+        $this->fakeCadastro('212');
+
+        $request = $this->solicitacao(['property_registration' => '344672', 'address_street' => 'Simulação REGIN'], ['4681802']);
+        $request->forceFill(['cod_log' => '881'])->save();
+
+        $verdict = $this->avaliar($request);
+
+        $this->assertSame(TerritorialRuleVerdict::INDEFERIR, $verdict->status);
+        $this->assertSame('RT-01', $verdict->regra?->codigo);
+        $this->assertStringContainsString('art. 172-A', (string) $verdict->motivo);
+    }
+
+    public function test_rt01_logradouro_tributario_de_outra_via_nao_incide(): void
+    {
+        Http::fake(fn () => Http::response($this->featureCollectionVazia()));
+        $this->fakeCadastro('999');
+
+        $request = $this->solicitacao(['property_registration' => '344672'], ['4681802']);
+        $request->forceFill(['cod_log' => '881'])->save();
+
+        $verdict = $this->avaliar($request);
+
+        $this->assertSame(TerritorialRuleVerdict::SEM_INCIDENCIA, $verdict->status);
+    }
+
+    public function test_rt01_cadastro_indisponivel_encaminha_analise_sem_deferir(): void
+    {
+        Http::fake(fn () => Http::response($this->featureCollectionVazia()));
+        $this->fakeCadastro(null);
+
+        $request = $this->solicitacao(['property_registration' => '344672'], ['4681802']);
+        $request->forceFill(['cod_log' => '881'])->save();
+
+        $verdict = $this->avaliar($request);
+
+        $this->assertSame(TerritorialRuleVerdict::ENCAMINHAR_ANALISE, $verdict->status);
+        $this->assertSame('RT-01', $verdict->regra?->codigo);
+        $this->assertStringContainsString('Cadastro Imobiliário', (string) $verdict->motivo);
+    }
+
+    public function test_rt01_nao_consulta_cadastro_sem_cnae_da_lista(): void
+    {
+        Http::fake(fn () => Http::response($this->featureCollectionVazia()));
+        $cadastro = $this->fakeCadastro('212');
+
+        $request = $this->solicitacao(['property_registration' => '344672'], ['9602501']);
+        $request->forceFill(['cod_log' => '881'])->save();
+
+        $verdict = $this->avaliar($request);
+
+        $this->assertSame(TerritorialRuleVerdict::SEM_INCIDENCIA, $verdict->status);
+        $this->assertSame(0, $cadastro->chamadas);
     }
 
     public function test_rt01_ignora_cnae_marcado_para_exclusao(): void

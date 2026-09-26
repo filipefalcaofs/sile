@@ -117,6 +117,65 @@ class AnaliseTecnicaDecisionTest extends TestCase
         Event::assertDispatched(ResultadoEmitido::class);
     }
 
+    public function test_indeferimento_usa_o_parecer_da_ficha_como_justificativa(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $ficha = $this->fichaFinalizada(
+            [['cnae' => '5611201', 'status_sugerido' => 'deferida', 'status_escolhido' => 'indeferida']],
+            ['parecer' => 'Uso vedado na via local pelo Quadro 11-A.'],
+        );
+
+        $this->service()->decide($ficha, $this->analista());
+
+        $this->assertSame('Uso vedado na via local pelo Quadro 11-A.', $ficha->viabilityRequest->fresh()->decision->reason);
+    }
+
+    public function test_parecer_informado_na_conclusao_prevalece_sobre_o_da_ficha(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $ficha = $this->fichaFinalizada(
+            [['cnae' => '5611201', 'status_sugerido' => 'deferida', 'status_escolhido' => 'indeferida']],
+            ['parecer' => 'Parecer da ficha.'],
+        );
+
+        $this->service()->decide($ficha, $this->analista(), DecisionOutcome::Indeferida, 'Parecer da conclusão.');
+
+        $this->assertSame('Parecer da conclusão.', $ficha->viabilityRequest->fresh()->decision->reason);
+    }
+
+    public function test_sem_parecer_usa_a_justificativa_das_atividades_indeferidas(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $ficha = $this->fichaFinalizada(
+            [
+                ['cnae' => '4712100', 'cnae_formatado' => '4712-1/00', 'status_escolhido' => 'deferida', 'justificativa' => 'Permitido.'],
+                ['cnae' => '5611201', 'cnae_formatado' => '5611-2/01', 'status_escolhido' => 'indeferida', 'justificativa' => 'Proibido na zona ZPR-1.'],
+            ],
+            ['parecer' => null],
+        );
+
+        $this->service()->decide($ficha, $this->analista());
+
+        $reason = (string) $ficha->viabilityRequest->fresh()->decision->reason;
+        $this->assertSame('CNAE 5611-2/01: Proibido na zona ZPR-1.', $reason);
+    }
+
+    public function test_indeferimento_sem_parecer_nem_justificativa_e_recusado(): void
+    {
+        $ficha = $this->fichaFinalizada(
+            [['cnae' => '5611201', 'status_sugerido' => 'deferida', 'status_escolhido' => 'indeferida']],
+            ['parecer' => null],
+        );
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Informe o parecer com o motivo do indeferimento');
+
+        $this->service()->decide($ficha, $this->analista());
+    }
+
     public function test_defere_o_caso_pendente_sem_zona_com_fundamentacao_da_ficha(): void
     {
         // Anti-fachada inversa: o motor consolidou PENDENTE (zona oficial ausente)

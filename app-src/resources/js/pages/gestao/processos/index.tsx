@@ -473,8 +473,9 @@ export default function ConsultaProcessos({
                         )}
                     </Button>
                     <a
-                        href={csvHref}
-                        className="inline-flex h-11 items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.03]"
+                        href={erroPeriodo ? undefined : csvHref}
+                        aria-disabled={erroPeriodo ? true : undefined}
+                        className={`inline-flex h-11 items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.03] ${erroPeriodo ? 'pointer-events-none opacity-50' : ''}`}
                     >
                         <FileIcon className="size-5" />
                         Exportar CSV

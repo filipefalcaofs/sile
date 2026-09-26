@@ -18,7 +18,22 @@ use Throwable;
  */
 class GeoServerWfsCamadaClient
 {
+    /**
+     * Resultado por (camada, ponto, filtro) na mesma execução: o inventário de
+     * camadas e a avaliação das regras territoriais não repetem a chamada.
+     *
+     * @var array<string, GeoServerCamadaHit>
+     */
+    private array $memo = [];
+
     public function consultar(string $typeName, float $lat, float $lng, ?string $filtroExtra = null): GeoServerCamadaHit
+    {
+        $chave = implode('|', [$typeName, sprintf('%.7f', $lat), sprintf('%.7f', $lng), (string) $filtroExtra]);
+
+        return $this->memo[$chave] ??= $this->consultarNoGeoServer($typeName, $lat, $lng, $filtroExtra);
+    }
+
+    private function consultarNoGeoServer(string $typeName, float $lat, float $lng, ?string $filtroExtra): GeoServerCamadaHit
     {
         if (! Settings::enabled('geoserver_territorio')) {
             return new GeoServerCamadaHit(

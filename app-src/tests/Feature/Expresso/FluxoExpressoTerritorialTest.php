@@ -4,6 +4,7 @@ namespace Tests\Feature\Expresso;
 
 use App\Enums\DecisionOutcome;
 use App\Enums\GeoLayerType;
+use App\Enums\PropertyLocationSource;
 use App\Enums\Quadro10Permissao;
 use App\Enums\RiscoMunicipal;
 use App\Enums\RuleDomain;
@@ -19,6 +20,8 @@ use App\Models\TerritorialRule;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Realty\PropertyRegistryLookup;
+use App\Services\Realty\PropertyRegistryResult;
 use Database\Seeders\DecisionTextSeeder;
 use Database\Seeders\PropertyTypeSeeder;
 use Database\Seeders\RiskTriggerSeeder;
@@ -161,8 +164,62 @@ class FluxoExpressoTerritorialTest extends TestCase
             'sedur-2026-08-28-regras-territoriais',
             $decisao->rules_versions['territorial']['regras'] ?? null,
         );
+        $this->assertIsArray($request->fresh()->camadas_incidentes);
+        $this->assertNotEmpty($request->fresh()->camadas_incidentes['camadas']);
 
         Event::assertDispatched(ResultadoEmitido::class);
+    }
+
+    public function test_rt01_indefere_pelo_logradouro_tributario_do_cadastro_quando_gis_aponta_outra_via(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
+        {
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                return new PropertyRegistryResult(
+                    latitude: null,
+                    longitude: null,
+                    inscricao: $inscricao,
+                    raw: ['CodigoLogradouroTributario' => '212', 'LogradouroTributario' => 'Avenida Lafayete Coutinho'],
+                );
+            }
+        });
+
+        $request = $this->setupDeferivel('4681802');
+        $request->forceFill([
+            'cod_log' => '881',
+            'property_registration' => '344672',
+            'address_street' => 'Simulação REGIN',
+        ])->save();
+
+        $result = $this->service()->decide($request);
+
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $result->status);
+
+        $decisao = $request->fresh()->decision;
+
+        $this->assertSame(DecisionOutcome::Indeferida, $decisao->outcome);
+        $this->assertNull($decisao->tvl_product_number);
+        $this->assertStringContainsString('art. 172-A', (string) $decisao->reason);
+    }
+
+    public function test_regras_de_poligonal_avaliam_o_ponto_do_cadastro_quando_nao_ha_poligono(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $request = $this->setupDeferivel('4712100');
+        $request->forceFill([
+            'property_polygon_geojson' => null,
+            'property_point_lat' => -12.977769,
+            'property_point_lng' => -38.516404,
+            'property_location_source' => PropertyLocationSource::CadastroImobiliario,
+        ])->save();
+
+        $result = $this->service()->decide($request->fresh());
+
+        $this->assertSame(ViabilityRequestStatus::Deferida, $result->status);
     }
 
     // CA-RT-02

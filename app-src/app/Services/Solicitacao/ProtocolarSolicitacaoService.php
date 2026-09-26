@@ -67,15 +67,18 @@ class ProtocolarSolicitacaoService
             );
         });
 
-        // Território MATERIALIZADO (Onda GIS) como rede de segurança: a tela do
-        // imóvel já grava zona/bairro oficiais na identificação; aqui cobre o
-        // que chegou sem passar por ela (ex.: importações). Só quando falta —
-        // nunca sobrescreve (a regra conservadora é do serviço). Fora da
-        // transação e sem bloquear o protocolo: a degradação do GIS já é
-        // comunicada pelo TerritoryService.
-        if ($request->zona_codigo === null || $request->bairro_oficial === null) {
+        // Sem polígono, o ponto vem da inscrição (Cadastro SEFAZ). A
+        // materialização cobre zona/bairro/CODLOG da via quando ainda faltam.
+        // O logradouro tributário, quando a inscrição o traz, é a fonte do
+        // CODLOG e sobrepõe a via mais próxima. Fora da transação: a
+        // indisponibilidade da SEFAZ ou do GIS não desfaz o protocolo.
+        $this->territorioProcesso->localizarPelaInscricao($request);
+
+        if ($request->zona_codigo === null || $request->bairro_oficial === null || $request->cod_log === null) {
             $this->territorioProcesso->materializar($request);
         }
+
+        $this->territorioProcesso->aplicarLogradouroTributario($request);
 
         // Disparo APÓS o commit: a transação já fechou aqui. O evento implementa
         // ShouldDispatchAfterCommit como defesa adicional contra disparo precoce.

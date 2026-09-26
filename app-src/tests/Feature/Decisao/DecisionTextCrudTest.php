@@ -71,8 +71,8 @@ class DecisionTextCrudTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/textos-decisao/index')
-                // 6 grupos históricos + territorial (RT-01 a RT-05, 2026-09-23)
-                ->has('grupos', 7)
+                // 6 grupos históricos + territorial (2026-09-23) + localização (2026-09-26)
+                ->has('grupos', 8)
                 ->has('grupos.0', fn (Assert $grupo) => $grupo
                     ->where('prefixo', 'base_legal')
                     ->has('label')

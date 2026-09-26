@@ -52,7 +52,7 @@ class ConclusaoAnaliseService
             if ($resultado->encerraDeferimento()) {
                 $this->aplicarEncerramento($request, $ator, $resultado, $parecer);
             } else {
-                $this->concluirPelaFicha($request, $ator, $resultado);
+                $this->concluirPelaFicha($request, $ator, $resultado, $parecer);
             }
         }
 
@@ -63,7 +63,7 @@ class ConclusaoAnaliseService
         }
     }
 
-    private function concluirPelaFicha(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado): void
+    private function concluirPelaFicha(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer): void
     {
         $record = $request->currentAnalysisRecord()->first();
 
@@ -71,7 +71,7 @@ class ConclusaoAnaliseService
             throw new DomainException('A ficha de análise ainda não foi criada para este processo.');
         }
 
-        $this->decisao->decide($record, $ator, $resultado->decisionOutcome());
+        $this->decisao->decide($record, $ator, $resultado->decisionOutcome(), $parecer);
     }
 
     private function aplicarEncerramento(
