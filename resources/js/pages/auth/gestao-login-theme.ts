@@ -4,14 +4,14 @@ export const gestaoLoginMonoFont = "font-[ui-monospace,'SF_Mono',Menlo,monospace
 export const gestaoLoginBrandForeground = 'text-[oklch(96%_0.008_250)]';
 
 export const gestaoLoginBrandStageClasses = [
-    'relative hidden flex-col overflow-hidden',
+    'relative hidden min-h-0 flex-col overflow-hidden',
     gestaoLoginBrandForeground,
     "bg-[linear-gradient(180deg,oklch(12.5%_0.03_255_/_0.55)_0%,oklch(12.5%_0.03_255_/_0.2)_38%,oklch(12.5%_0.032_255_/_0.86)_100%),linear-gradient(100deg,oklch(12.5%_0.032_255_/_0.9)_0%,oklch(12.5%_0.03_255_/_0.42)_60%,oklch(12.5%_0.03_255_/_0.18)_100%),url('/images/salvador-hero.jpg')]",
-    'bg-cover bg-center px-[clamp(28px,5vw,96px)] py-[clamp(28px,3.5vw,56px)] min-[1101px]:flex',
+    'bg-cover bg-center px-[clamp(28px,5vw,96px)] py-[clamp(28px,3.5vw,56px)] min-[1101px]:flex min-[1101px]:h-full',
 ].join(' ');
 
 export const gestaoLoginShellClasses = [
-    'grid min-h-screen grid-cols-1 bg-gray-50',
+    'grid h-dvh grid-cols-1 overflow-hidden overscroll-none bg-gray-50',
     "font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','Segoe_UI',system-ui,sans-serif]",
     'text-gray-900 antialiased',
     'dark:bg-[oklch(15%_0.034_255)] dark:text-[oklch(96%_0.008_250)]',
@@ -19,11 +19,10 @@ export const gestaoLoginShellClasses = [
 ].join(' ');
 
 export const gestaoLoginPanelClasses = [
-    'flex min-h-screen flex-col bg-white',
-    'px-[clamp(32px,4vw,72px)] py-[clamp(28px,3.5vw,56px)]',
-    'min-[1101px]:min-h-0 min-[1101px]:border-l min-[1101px]:border-gray-200',
+    'flex h-full min-h-0 flex-col overflow-hidden bg-white',
+    'px-[clamp(22px,4vw,72px)] py-[clamp(20px,3.5vw,56px)]',
+    'min-[1101px]:border-l min-[1101px]:border-gray-200',
     'dark:bg-[oklch(19%_0.038_255)] min-[1101px]:dark:border-white/8',
-    'max-sm:px-[22px]',
 ].join(' ');
 
 export const gestaoLoginLabelClasses = [
@@ -33,7 +32,7 @@ export const gestaoLoginLabelClasses = [
 ].join(' ');
 
 export const gestaoLoginInputClasses = [
-    'w-full rounded-xl border border-gray-200 bg-white p-4 text-[15px] font-medium text-gray-900',
+    'w-full rounded-xl border border-gray-200 bg-white p-4 text-[15px] font-medium text-gray-900 max-[740px]:p-3.5 max-[740px]:text-sm',
     'transition-all duration-150 placeholder:text-gray-400',
     'hover:border-gray-300 focus:border-brand-500 focus:bg-white',
     'focus:shadow-[0_0_0_4px_oklch(64%_0.155_250_/_0.18)] focus:ring-0 focus:outline-none',
@@ -55,8 +54,8 @@ export const gestaoLoginLinkClasses =
 export const gestaoLoginDividerClasses = 'border-gray-200 dark:border-white/8';
 
 export const gestaoLoginSubmitClasses = [
-    'group mt-7 inline-flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl',
-    'bg-brand-500 p-[17px] text-[15px] leading-none font-bold tracking-[0.01em] text-white',
+    'group mt-5 inline-flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl max-[740px]:mt-4',
+    'bg-brand-500 p-[17px] text-[15px] leading-none font-bold tracking-[0.01em] text-white max-[740px]:p-4 max-[740px]:text-sm',
     'transition-all duration-150 hover:bg-brand-600',
     'focus-visible:shadow-[0_0_0_4px_oklch(64%_0.155_250_/_0.3)] focus-visible:outline-none',
     'active:translate-y-px active:shadow-none disabled:pointer-events-none disabled:opacity-75',
