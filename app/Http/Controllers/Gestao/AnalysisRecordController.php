@@ -106,6 +106,8 @@ class AnalysisRecordController extends Controller
                 'protocol_number' => $viabilityRequest->protocol_number,
                 'status' => $viabilityRequest->status->value,
                 'status_label' => $viabilityRequest->status->label(),
+                'renovacao' => $viabilityRequest->isRenewal(),
+                'tvl_numero' => $viabilityRequest->renews?->decision?->tvl_product_number,
             ],
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Enums\DecisionOutcome;
+use App\Enums\TvlKind;
 use App\Http\Controllers\Controller;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\AnaliseTecnicaDecisionService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -34,8 +36,22 @@ class ProcessoDecisaoController extends Controller
             ]);
         }
 
+        $dados = $request->validate([
+            'tvl_kind' => ['nullable', Rule::enum(TvlKind::class)],
+            'tvl_valid_until' => ['nullable', 'date'],
+            'condicionantes_atendidos' => ['nullable', 'boolean'],
+        ]);
+
         try {
-            $result = $this->decision->decide($record, $request->user());
+            $result = $this->decision->decide(
+                $record,
+                $request->user(),
+                tvlKind: isset($dados['tvl_kind']) ? TvlKind::from($dados['tvl_kind']) : null,
+                tvlValidUntil: $dados['tvl_valid_until'] ?? null,
+                condicionantesAtendidos: $request->exists('condicionantes_atendidos')
+                    ? $request->boolean('condicionantes_atendidos')
+                    : null,
+            );
         } catch (DomainException $e) {
             // Erro acionável na própria tela (relatório SEDUR 21/09, item 07) —
             // nunca a página genérica de 422.
