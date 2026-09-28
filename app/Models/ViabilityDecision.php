@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DecisionOutcome;
+use App\Enums\TvlKind;
 use Database\Factories\ViabilityDecisionFactory;
 use DomainException;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -33,6 +34,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'is_virtual_office_tenant',
     'virtual_office_hq_tvl_number',
     'tvl_product_number',
+    'tvl_kind',
+    'tvl_valid_until',
     'per_cnae',
     'rules_versions',
     'fundamentacao',
@@ -66,6 +69,8 @@ class ViabilityDecision extends Model
     {
         return [
             'outcome' => DecisionOutcome::class,
+            'tvl_kind' => TvlKind::class,
+            'tvl_valid_until' => 'date',
             'is_virtual_office_hq' => 'boolean',
             'is_virtual_office_tenant' => 'boolean',
             'per_cnae' => 'array',
