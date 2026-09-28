@@ -4,6 +4,7 @@ namespace App\Services\Sector;
 
 use App\Models\Sector;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 use SplFileObject;
 
@@ -31,6 +32,18 @@ class OfficialSectorCatalogSync
      */
     public function sync(?string $csvPath = null): array
     {
+        // A migration de carga do catálogo roda antes de sectors.code existir.
+        // A migration que cria a coluna é quem sincroniza o CSV oficial.
+        if (! Schema::hasColumn((new Sector)->getTable(), 'code')) {
+            return [
+                'created' => 0,
+                'updated' => 0,
+                'reactivated' => 0,
+                'deactivated' => 0,
+                'total' => 0,
+            ];
+        }
+
         $path = $csvPath ?? database_path(self::RELATIVE_CSV);
 
         if (! is_readable($path)) {
