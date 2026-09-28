@@ -6,8 +6,11 @@ use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Sector\OfficialSectorCatalogSync;
+use Database\Seeders\SectorSeeder;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -18,6 +21,28 @@ use Tests\TestCase;
 class OfficialSectorCatalogSyncTest extends TestCase
 {
     use LazilyRefreshDatabase;
+
+    public function test_nao_consulta_code_quando_a_coluna_ainda_nao_existe(): void
+    {
+        $this->dropSectorCodeColumn();
+
+        $report = app(OfficialSectorCatalogSync::class)->sync();
+
+        $this->assertSame(0, $report['created']);
+        $this->assertSame(0, $report['updated']);
+        $this->assertSame(0, $report['total']);
+        $this->assertFalse(Schema::hasColumn((new Sector)->getTable(), 'code'));
+    }
+
+    public function test_seeder_de_setor_nao_quebra_antes_da_coluna_code(): void
+    {
+        $this->dropSectorCodeColumn();
+
+        $this->seed(SectorSeeder::class);
+
+        $this->assertFalse(Schema::hasColumn((new Sector)->getTable(), 'code'));
+        $this->assertSame(0, Sector::query()->count());
+    }
 
     public function test_carrega_setores_do_csv_oficial_com_codigo_cein(): void
     {
@@ -121,5 +146,15 @@ class OfficialSectorCatalogSyncTest extends TestCase
             DB::table('sector_user')->where('user_id', $analista->id)->where('sector_id', $setor->id)->count(),
         );
         $this->assertSame('0231400300', $setor->fresh()->code);
+    }
+
+    private function dropSectorCodeColumn(): void
+    {
+        $tableName = (new Sector)->getTable();
+
+        Schema::table($tableName, function (Blueprint $table) {
+            $table->dropUnique(['code']);
+            $table->dropColumn('code');
+        });
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Sector;
 use App\Models\User;
 use App\Services\Sector\OfficialSectorCatalogSync;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Catálogo oficial de setores (CEIN) + usuários de gestão de DESENVOLVIMENTO
@@ -36,6 +37,10 @@ class SectorSeeder extends Seeder
 
     public function run(): void
     {
+        if (! Schema::hasColumn((new Sector)->getTable(), 'code')) {
+            return;
+        }
+
         app(OfficialSectorCatalogSync::class)->sync();
 
         $sector = Sector::query()
