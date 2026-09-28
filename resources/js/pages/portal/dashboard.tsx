@@ -134,6 +134,12 @@ const quickActions: QuickAction[] = [
         icon: <ListIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
     },
     {
+        name: 'Renovar TVL',
+        label: 'Prorrogue um TVL provisório',
+        href: '/portal/renovacao',
+        icon: <CheckCircleIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
+    },
+    {
         name: 'Procurações',
         label: 'Vínculos de representação',
         href: '/portal/procuracoes',
