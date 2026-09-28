@@ -43,7 +43,7 @@ use Illuminate\Support\Collection;
  */
 #[Fillable([
     'origin',
-    'service_type_id', 'company_id', 'requester_user_id', 'created_by_user_id', 'assisted_attendance_id',
+    'service_type_id', 'renews_viability_request_id', 'company_id', 'requester_user_id', 'created_by_user_id', 'assisted_attendance_id',
     'used_area_m2', 'property_registration',
     'address_street', 'address_number', 'address_complement', 'address_neighborhood', 'address_zip', 'address_reference',
     'property_polygon_geojson',
@@ -236,6 +236,21 @@ class ViabilityRequest extends Model
     public function serviceType(): BelongsTo
     {
         return $this->belongsTo(ViabilityServiceType::class, 'service_type_id');
+    }
+
+    /**
+     * Solicitação de origem que esta renovação prorroga. Nula fora da renovação.
+     *
+     * @return BelongsTo<ViabilityRequest, $this>
+     */
+    public function renews(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'renews_viability_request_id');
+    }
+
+    public function isRenewal(): bool
+    {
+        return $this->renews_viability_request_id !== null;
     }
 
     /**
