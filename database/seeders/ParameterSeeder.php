@@ -372,6 +372,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:3650'],
                 'description' => 'Janela (dias) da detecção de reincidência por CNPJ — alerta com link ao processo anterior, nunca bloqueia (direito de petição). Definição oficial pendente SEDUR',
             ],
+            'renovacao.intervalo_meses' => [
+                'group' => 'solicitacao',
+                'type' => 'integer',
+                'default_value' => '3',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:60'],
+                'description' => 'Intervalo mínimo (meses) entre renovações do mesmo TVL. Dentro do intervalo o sistema recusa um novo protocolo',
+            ],
             'features.fluxo_expresso' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -794,6 +801,7 @@ class ParameterSeeder extends Seeder
             'analise.escritorio_virtual.cnae_gatilho_sede',
             'features.fluxo_expresso',
             'features.simulacao_protocolo',
+            'renovacao.intervalo_meses',
         ];
     }
 }
