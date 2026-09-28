@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\CatalogoOficialSchema;
 use Database\Seeders\CatalogoOficialSeeder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Artisan;
@@ -15,6 +16,12 @@ return new class extends Migration
     public function up(): void
     {
         if (app()->runningUnitTests() || app()->environment('testing')) {
+            return;
+        }
+
+        // Schema posterior (condicionantes, sectors.code) ainda não rodou.
+        // A migration 2026_09_28_150800 assume a carga quando o schema existir.
+        if (! CatalogoOficialSchema::pronto()) {
             return;
         }
 

@@ -14,11 +14,16 @@ use App\Services\Rules\RuleVersionService;
 use App\Services\Tratamento\TratamentoRegrasImportService;
 use App\Support\Audit\AuditService;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class TratamentoRegrasSeeder extends Seeder
 {
     public function run(): void
     {
+        if (! Schema::hasTable((new TratamentoCondicionante)->getTable())) {
+            return;
+        }
+
         $rules = app(RuleVersionService::class);
 
         $version = RuleVersion::vigente(RuleDomain::RiscoTratamento)->first();
