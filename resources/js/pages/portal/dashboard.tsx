@@ -135,7 +135,7 @@ const quickActions: QuickAction[] = [
     },
     {
         name: 'Renovar TVL',
-        label: 'Prorrogue um TVL provisório',
+        label: 'Prorrogue um TVL provisório deste portal',
         href: '/portal/renovacao',
         icon: <CheckCircleIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
     },

@@ -23,7 +23,7 @@ Regras centrais do documento que o design preserva:
 | Decisão | Escolha |
 |---|---|
 | Escopo | Fluxo completo: portal do cidadão + análise semi-expressa + nova validade + envio SEFAZ (gateway hoje bloqueado/auditado, Fase 13) |
-| Origem do TVL | **Unificada**: o cidadão informa CNPJ/nº do TVL e o sistema resolve a origem (SIGS ou Viabiliza) sem o cidadão saber |
+| Origem do TVL | **Só a deste sistema.** O documento chama de origem Simplifica; o Viabiliza substituiu esse sistema, então a renovação acontece aqui. TVL de origem SIGS continua sendo renovado no SIGS |
 | Validade/tipo | Campos na decisão: `tvl_kind` (provisória/definitiva) + `tvl_valid_until`, preenchidos na conclusão da análise |
 | Identificação | A partir das empresas do cidadão: painel lista TVLs provisórios elegíveis com botão **Renovar** |
 | Fluxo do cidadão | Wizard curto em 4 etapas |
@@ -33,7 +33,7 @@ Regras centrais do documento que o design preserva:
 
 ## 1. Visão geral e jornada
 
-O cidadão entra no portal (gov.br ou e-mail/senha), abre **Meu painel** e vê, nas empresas dele, os TVLs provisórios elegíveis com o botão **Renovar**. Toca, cai num wizard de 4 passos, confirma, marca as declarações e protocola. O processo vai para análise semi-expressa; o analista confere condicionantes e, ao deferir, define tipo e nova validade. O sistema registra e tenta enviar status + nova data à SEFAZ. TLL/DAM sai depois da alteração da data.
+O cidadão entra no portal (gov.br ou e-mail/senha), abre **Meu painel** e vê, nas empresas dele, os TVLs provisórios **deste sistema** com o botão **Renovar**. TVL nascido no SIGS não aparece nesta lista: a renovação dele continua no SIGS. Toca, cai num wizard de 4 passos, confirma, marca as declarações e protocola. O processo vai para análise semi-expressa; o analista confere condicionantes e, ao deferir, define tipo e nova validade. O sistema registra e tenta enviar status + nova data à SEFAZ. TLL/DAM sai depois da alteração da data.
 
 Princípio de UX: o cidadão **não redigita o que o sistema já sabe**. Endereço e atividades vêm preenchidos e são somente leitura.
 
@@ -102,7 +102,7 @@ Catálogo por tipo de serviço (reuso de `LegalTerm` ou `service_declarations`):
 ## Fora de escopo / pendências (sem fachada)
 
 - Envio real à SEFAZ e emissão de DAM/TLL: gateway `Unavailable` hoje; integração real é Fase 13, registrada como pendência. Nada é simulado.
-- TVL nascido no SIGS: o fluxo unificado resolve a origem, mas a migração/leitura do acervo SIGS depende de dados do legado (pendência SEDUR já registrada).
+- TVL de origem SIGS: a renovação permanece no SIGS. Este módulo não consulta, não importa e não protocola esse acervo.
 
 ## Convenções
 

@@ -8,8 +8,9 @@ use App\Models\ViabilityRequest;
 use App\Support\Settings;
 
 /**
- * Diz se um TVL já deferido pode abrir renovação. A primeira regra que falha
- * devolve o motivo em linguagem simples — nunca um bloqueio silencioso.
+ * Diz se um TVL já deferido neste sistema pode abrir renovação. A primeira
+ * regra que falha devolve o motivo em linguagem simples. TVL de origem SIGS
+ * não entra aqui: a renovação dele continua no SIGS.
  */
 class RenovacaoElegibilidadeService
 {

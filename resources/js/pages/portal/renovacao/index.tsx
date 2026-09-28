@@ -37,7 +37,7 @@ export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
             <PageHeader title="Renovar TVL" breadcrumbs={[{ label: 'Meu painel', href: '/portal/painel' }]} />
 
             <p className="mb-6 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
-                Escolha o TVL provisório que você quer prorrogar. Endereço e atividades não mudam na renovação.
+                Escolha o TVL provisório emitido por este portal. Endereço e atividades não mudam na renovação. TVL do SIGS continua sendo renovado no SIGS.
             </p>
 
             {tvls.length === 0 ? (
@@ -45,7 +45,7 @@ export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
                     <CardContent>
                         <EmptyState
                             title="Nenhum TVL para renovar"
-                            description="Quando uma viabilidade provisória das suas empresas estiver deferida, ela aparece aqui."
+                            description="Quando uma viabilidade provisória emitida por este portal estiver deferida, ela aparece aqui. TVL do SIGS continua sendo renovado no SIGS."
                         />
                     </CardContent>
                 </Card>

@@ -20,9 +20,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Renovação de TVL provisório no portal. A lista mostra os TVLs das empresas
- * do cidadão, elegíveis ou com o motivo do bloqueio. O wizard só abre quando
- * a renovação pode ser protocolada.
+ * Renovação de TVL provisório emitido por este portal (o que o requisito
+ * chamava de origem Simplifica). A lista mostra os TVLs das empresas do
+ * cidadão que existem aqui, elegíveis ou com o motivo do bloqueio. TVL de
+ * origem SIGS não entra: a renovação dele continua no SIGS.
  */
 class RenovacaoController extends Controller
 {
