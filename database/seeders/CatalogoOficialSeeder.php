@@ -38,6 +38,7 @@ class CatalogoOficialSeeder extends Seeder
             ZonaSeeder::class,
             ViaSeeder::class,
             ViabilityServiceTypeSeeder::class,
+            ServiceDeclarationSeeder::class,
             DocumentRequirementSeeder::class,
             GeoLayerSeeder::class,
             GeoServerLayerSeeder::class,
