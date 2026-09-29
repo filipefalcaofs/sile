@@ -11,7 +11,6 @@ use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\DocumentRequirement;
-use App\Models\GeoLayer;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\LouosQuadro10Permissao;

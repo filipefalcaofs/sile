@@ -73,6 +73,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 || ($request->is('portal/empresas/consultar-cnpj') && $request->expectsJson())
                 || ($request->is('portal/viabilidade/*') && $request->expectsJson())
                 || ($request->is('gestao/territorio/*') && $request->expectsJson())
+                || ($request->is('gestao/contingencia/consultar-*') && $request->expectsJson())
                 || ($request->is('gestao/processos/*') && $request->expectsJson()),
         );
 

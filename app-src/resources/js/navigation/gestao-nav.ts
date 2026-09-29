@@ -1,7 +1,5 @@
 /**
  * Catálogo único da sidebar de Gestão. Fonte de verdade do menu e do Cmd+K.
- *
- * Antes de incluir, mover ou criar grupo, percorrer a árvore de decisão do menu.
  */
 
 export type GestaoNavIcon =
@@ -53,7 +51,6 @@ export type GestaoNavIcon =
     | 'pen'
     | 'file-text'
     | 'link'
-    | 'id-card'
     | 'server'
     | 'mail-pulse'
     | 'spark';
@@ -278,13 +275,7 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
             { name: 'Termos legais', href: '/gestao/termos-legais', icon: 'scale', permission: 'manter-parametros' },
             { name: 'Textos decisórios', href: '/gestao/textos-decisao', icon: 'pen', permission: 'manter-parametros' },
             { name: 'Minutas e textos-padrão', href: '/gestao/textos-padrao', icon: 'file-text', permission: 'manter-parametros' },
-            { name: 'API REGIN', href: '/gestao/config-regin', icon: 'link', permission: 'manter-parametros' },
-            {
-                name: 'API de inscrição imobiliária',
-                href: '/gestao/config-inscricao-imobiliaria',
-                icon: 'id-card',
-                permission: 'manter-parametros',
-            },
+            { name: 'APIs', href: '/gestao/config-apis', icon: 'link', permission: 'manter-parametros' },
             { name: 'Servidores de e-mail', href: '/gestao/config-email', icon: 'server', permission: 'manter-config-email' },
             { name: 'Monitoramento de e-mails', href: '/gestao/emails', icon: 'mail-pulse', permission: 'monitorar-emails' },
             { name: 'Configuração de IA', href: '/gestao/config-ia', icon: 'spark', permission: 'manter-config-ia' },

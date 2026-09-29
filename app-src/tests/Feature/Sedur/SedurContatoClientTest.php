@@ -88,6 +88,45 @@ class SedurContatoClientTest extends TestCase
         $this->assertSame('EMPRESA APOS RETENTATIVA', $empresa->razaoSocial);
     }
 
+    public function test_consulta_cpf_na_rota_de_pessoa_fisica(): void
+    {
+        Http::fake([
+            'https://sedur.test/k8s/prd/ws-contato/pessoafisica/cpf/52998224725' => Http::response([
+                'nome' => 'Maria Silva',
+                'dataNascimento' => '1990-01-01',
+                'telefone' => '71999999999',
+                'email' => 'maria@example.com',
+            ]),
+        ]);
+
+        $pessoa = app(SedurContatoClient::class)->consultarCpf('529.982.247-25');
+
+        $this->assertSame('52998224725', $pessoa->cpf);
+        $this->assertSame('Maria Silva', $pessoa->nome);
+    }
+
+    public function test_consulta_cpf_le_nome_em_chave_alternativa_dentro_de_pessoa_fisica(): void
+    {
+        Http::fake([
+            '*/pessoafisica/cpf/*' => Http::response([
+                'pessoaFisica' => ['nomeCompleto' => 'João Souza'],
+            ]),
+        ]);
+
+        $pessoa = app(SedurContatoClient::class)->consultarCpf('52998224725');
+
+        $this->assertSame('João Souza', $pessoa->nome);
+    }
+
+    public function test_cpf_inexistente_quando_a_api_responde_404(): void
+    {
+        Http::fake(['*/pessoafisica/cpf/*' => Http::response([], 404)]);
+
+        $this->expectException(SedurContatoNaoEncontradoException::class);
+
+        app(SedurContatoClient::class)->consultarCpf('52998224725');
+    }
+
     public function test_servico_indisponivel_depois_das_tentativas(): void
     {
         Http::fake([
