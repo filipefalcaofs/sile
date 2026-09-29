@@ -64,7 +64,6 @@ class SolicitacaoViabilityResolver
 
         foreach ($this->orderedCnaes($request) as $cnae) {
             $respostas = $request->respostasDaPlanilha($cnae->code);
-
             $result = $ponto === null
                 ? $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $respostas)
                 : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area, $tipoImovel, $respostas);

@@ -2,10 +2,14 @@
 
 namespace App\Services\Realty;
 
+use App\Enums\PropertyLocationSource;
+use App\Services\Geo\GeocodeResult;
+
 /**
  * Localização de uma inscrição no Cadastro Imobiliário (SEFAZ via SEDUR).
- * Ponto e logradouro tributário só existem quando a consulta os devolveu —
- * status diferente de `localizada` nunca traz coordenada inventada.
+ * Sem coordenada no cadastro, o ponto pode vir da geocodificação do
+ * endereço devolvido (logradouro e número). Status diferente de `localizada`
+ * nunca traz coordenada.
  */
 final readonly class LocalizacaoInscricao
 {
@@ -25,6 +29,8 @@ final readonly class LocalizacaoInscricao
         public ?float $lng = null,
         public ?string $codLogTributario = null,
         public ?string $logradouroTributario = null,
+        public ?PropertyLocationSource $origemPonto = null,
+        public ?GeocodeResult $geocode = null,
     ) {}
 
     public function temPonto(): bool

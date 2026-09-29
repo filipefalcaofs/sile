@@ -44,6 +44,11 @@ return [
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,
         'fluxo_expresso' => true,
+        // Bypass de HOMOLOGAÇÃO do motor de risco (simulação REGIN): ligado,
+        // processo nascido do simulador com veredito pendente (zona oficial
+        // pendente SEDUR) emite TVL como permitido. DESLIGADO por default —
+        // NUNCA ligar em produção; remoção definitiva antes do go-live.
+        'simulacao_protocolo' => false,
         'notificacao_resultado_expresso' => true,
         'analise_tecnica' => true,
         // Toggles de canal da comunicação multicanal (EP11). E-mail e in-app
@@ -297,7 +302,7 @@ return [
             'timeout' => 8,
         ],
         'geocoding' => [
-            'base_url' => 'https://nominatim.openstreetmap.org',
+            'base_url' => 'https://nominatim-hmlg.salvador.ba.gov.br',
             'user_agent' => 'Viabiliza-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',
             'timeout' => 8,
             'retries' => 2,

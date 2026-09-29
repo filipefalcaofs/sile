@@ -32,6 +32,29 @@ final readonly class PropertyRegistryResult
      *
      * @return array<string, mixed>
      */
+    /**
+     * Endereço para geocodificar quando o cadastro trouxe logradouro e número
+     * e não trouxe coordenada. Sem os dois, não há o que buscar.
+     */
+    public function enderecoParaGeocode(): ?string
+    {
+        $endereco = trim((string) ($this->cadastro?->endereco ?? ''));
+        $numero = trim((string) ($this->cadastro?->numero_porta ?? ''));
+
+        if ($endereco === '' || $numero === '') {
+            return null;
+        }
+
+        $bairro = trim((string) ($this->cadastro?->bairro ?? ''));
+        $texto = $endereco;
+
+        if ($bairro !== '') {
+            $texto .= ', '.$bairro;
+        }
+
+        return $texto.', Salvador';
+    }
+
     public function toArray(): array
     {
         return [

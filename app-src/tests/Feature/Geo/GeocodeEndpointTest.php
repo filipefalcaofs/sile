@@ -113,7 +113,7 @@ class GeocodeEndpointTest extends TestCase
 
         $activity = Activity::query()->where('event', 'geocodificacao')->latest('id')->first();
         $this->assertSame('Praça da Sé, Salvador', $activity->properties['endereco']);
-        $this->assertSame('nominatim.openstreetmap.org', $activity->properties['provider']);
+        $this->assertSame('nominatim-hmlg.salvador.ba.gov.br', $activity->properties['provider']);
     }
 
     public function test_endereco_fora_de_salvador_e_recusado(): void

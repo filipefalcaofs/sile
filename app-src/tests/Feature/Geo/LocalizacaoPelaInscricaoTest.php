@@ -9,7 +9,10 @@ use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Geo\Geocoder;
+use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Realty\PropertyCadastroCampos;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
 use App\Services\Realty\PropertyRegistryUnavailableException;
@@ -112,6 +115,66 @@ class LocalizacaoPelaInscricaoTest extends TestCase
         $this->assertSame('ZCN-1', $solicitacao->zona_codigo);
         $this->assertSame('Comércio', $solicitacao->bairro_oficial);
         $this->assertSame('212', $solicitacao->cod_log);
+    }
+
+    public function test_cadastro_sem_coordenada_protocola_com_ponto_geocodificado(): void
+    {
+        $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
+        {
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                return new PropertyRegistryResult(
+                    latitude: null,
+                    longitude: null,
+                    inscricao: $inscricao,
+                    raw: ['CodigoLogradouroTributario' => '1625', 'LogradouroTributario' => '3ª Travessa Alto dos Coqueiros'],
+                    cadastro: new PropertyCadastroCampos(
+                        inscricao: $inscricao,
+                        endereco: '3ª Travessa Alto dos Coqueiros, 212',
+                        numero_metrico: null,
+                        loteamento: null,
+                        quadra: null,
+                        lote: null,
+                        conjunto_edificio: null,
+                        bloco: null,
+                        sub_unidade: null,
+                        numero_sub_unidade: null,
+                        bairro: 'Matatu',
+                        cep: null,
+                        area_construida_m2: null,
+                        tipo_imovel: null,
+                        data_lancamento: null,
+                        situacao_cadastral: null,
+                        contribuinte: null,
+                        cpf_cnpj: null,
+                        numero_porta: '212',
+                        area_terreno_m2: null,
+                        valor_venal_iptu: null,
+                        logradouro_tributario: '1625 - 3ª Travessa Alto dos Coqueiros',
+                        situacao_fiscal: null,
+                        data_emissao_certidao: null,
+                    ),
+                );
+            }
+        });
+        $this->app->instance(Geocoder::class, new class implements Geocoder
+        {
+            public function geocode(string $address): GeocodeResult
+            {
+                return new GeocodeResult(-12.965785, -38.484540, 'Matatu, Salvador', 0.5, ['city' => 'Salvador', 'state' => 'Bahia']);
+            }
+        });
+        $ator = User::factory()->create();
+        $solicitacao = $this->rascunhoRegin(['property_registration' => '625553']);
+
+        app(ProtocolarSolicitacaoService::class)->protocol($solicitacao, $ator);
+
+        $solicitacao->refresh();
+
+        $this->assertSame(PropertyLocationSource::Geocodificacao, $solicitacao->property_location_source);
+        $this->assertEqualsWithDelta(-12.965785, $solicitacao->property_point_lat, 0.000001);
+        $this->assertEqualsWithDelta(-38.484540, $solicitacao->property_point_lng, 0.000001);
+        $this->assertSame('1625', $solicitacao->cod_log);
     }
 
     public function test_cadastro_indisponivel_protocola_sem_ponto_e_audita(): void

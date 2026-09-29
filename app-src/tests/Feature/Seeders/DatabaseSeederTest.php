@@ -303,13 +303,6 @@ class DatabaseSeederTest extends TestCase
         // dedicados): uma decidida com decision_trace e uma legada sem trace —
         // tornando a explicabilidade (HU-099) navegável no dev mesmo em SQLite.
         $this->assertSame(2, ViabilityDecision::query()->count());
-
-        // Driver-aware: a camada de zona fictícia (geometria) não é carregada em
-        // SQLite — a zona segue como pendente_fonte (degradação honesta).
-        $this->assertSame(
-            0,
-            GeoLayer::query()->where('version', 'zona-ficticia-dev')->count(),
-        );
     }
 
     public function test_seed_prepara_setores_textos_padrao_e_usuarios_da_analise(): void

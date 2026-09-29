@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(92, Parameter::query()->count());
+        $this->assertSame(93, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'tll'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -185,7 +185,7 @@ class ParameterSeederTest extends TestCase
         $this->assertNotNull($baseUrl);
         $this->assertSame('integracoes', $baseUrl->group);
         $this->assertSame('string', $baseUrl->type);
-        $this->assertSame('https://nominatim.openstreetmap.org', $baseUrl->default_value);
+        $this->assertSame('https://nominatim-hmlg.salvador.ba.gov.br', $baseUrl->default_value);
         $this->assertSame(['required', 'url'], $baseUrl->validation_rules);
         $this->assertTrue($baseUrl->requires_connection_test);
 
@@ -861,6 +861,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(92, Parameter::query()->count());
+        $this->assertSame(93, Parameter::query()->count());
     }
 }

@@ -2,17 +2,29 @@
 
 namespace App\Services\Realty;
 
+use App\Enums\PropertyLocationSource;
+use App\Services\Geo\AddressNotFoundException;
+use App\Services\Geo\Geocoder;
+use App\Services\Geo\GeocodeResult;
+use App\Services\Geo\GeocoderException;
+
 /**
  * Consulta a localização da inscrição no Cadastro Imobiliário uma vez por
  * execução (requisição ou job): protocolo, CODLOG tributário, regra territorial
  * e a checagem de divergência reaproveitam o mesmo resultado.
+ *
+ * Sem coordenada no cadastro, e com logradouro e número, o ponto sai do
+ * Nominatim. Falha ou endereço fora de Salvador mantém o status sem coordenada.
  */
 class LocalizacaoInscricaoService
 {
     /** @var array<string, LocalizacaoInscricao> */
     private array $memo = [];
 
-    public function __construct(private PropertyRegistryLookup $cadastro) {}
+    public function __construct(
+        private PropertyRegistryLookup $cadastro,
+        private Geocoder $geocoder,
+    ) {}
 
     public function localizar(?string $inscricao): LocalizacaoInscricao
     {
@@ -44,12 +56,56 @@ class LocalizacaoInscricaoService
 
         $temPonto = $resultado->latitude !== null && $resultado->longitude !== null;
 
+        if ($temPonto) {
+            return new LocalizacaoInscricao(
+                status: LocalizacaoInscricao::LOCALIZADA,
+                lat: $resultado->latitude,
+                lng: $resultado->longitude,
+                codLogTributario: $codLog !== '' ? $codLog : null,
+                logradouroTributario: $nome !== '' ? $nome : null,
+                origemPonto: PropertyLocationSource::CadastroImobiliario,
+            );
+        }
+
+        $geocode = $this->geocodificar($resultado);
+
+        if ($geocode !== null) {
+            return new LocalizacaoInscricao(
+                status: LocalizacaoInscricao::LOCALIZADA,
+                lat: $geocode->latitude,
+                lng: $geocode->longitude,
+                codLogTributario: $codLog !== '' ? $codLog : null,
+                logradouroTributario: $nome !== '' ? $nome : null,
+                origemPonto: PropertyLocationSource::Geocodificacao,
+                geocode: $geocode,
+            );
+        }
+
         return new LocalizacaoInscricao(
-            status: $temPonto ? LocalizacaoInscricao::LOCALIZADA : LocalizacaoInscricao::SEM_COORDENADA,
-            lat: $temPonto ? $resultado->latitude : null,
-            lng: $temPonto ? $resultado->longitude : null,
+            status: LocalizacaoInscricao::SEM_COORDENADA,
             codLogTributario: $codLog !== '' ? $codLog : null,
             logradouroTributario: $nome !== '' ? $nome : null,
         );
+    }
+
+    private function geocodificar(PropertyRegistryResult $resultado): ?GeocodeResult
+    {
+        $endereco = $resultado->enderecoParaGeocode();
+
+        if ($endereco === null) {
+            return null;
+        }
+
+        try {
+            $geocode = $this->geocoder->geocode($endereco);
+        } catch (AddressNotFoundException|GeocoderException) {
+            return null;
+        }
+
+        if (! $geocode->estaEmSalvador()) {
+            return null;
+        }
+
+        return $geocode;
     }
 }

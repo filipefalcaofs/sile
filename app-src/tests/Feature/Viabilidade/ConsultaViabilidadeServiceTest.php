@@ -9,6 +9,7 @@ use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeocodeResult;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Realty\PropertyCadastroCampos;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
@@ -281,6 +282,56 @@ class ConsultaViabilidadeServiceTest extends TestCase
         // Risco e Quadro 7 reais (pipeline completa).
         $this->assertSame('classificado', $result->risco->municipal['status']);
         $this->assertSame('identificado', $result->enquadramento->enquadramento['status']);
+    }
+
+    public function test_inscricao_sem_coordenada_geocodifica_o_endereco_e_roda_o_territorio(): void
+    {
+        $this->app->instance(PropertyRegistryLookup::class, new class implements PropertyRegistryLookup
+        {
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                return new PropertyRegistryResult(
+                    latitude: null,
+                    longitude: null,
+                    inscricao: $inscricao,
+                    source: 'fake-cadastro',
+                    cadastro: new PropertyCadastroCampos(
+                        inscricao: $inscricao,
+                        endereco: '3ª Travessa Alto dos Coqueiros, 212',
+                        numero_metrico: null,
+                        loteamento: null,
+                        quadra: null,
+                        lote: null,
+                        conjunto_edificio: null,
+                        bloco: null,
+                        sub_unidade: null,
+                        numero_sub_unidade: null,
+                        bairro: 'Matatu',
+                        cep: null,
+                        area_construida_m2: null,
+                        tipo_imovel: null,
+                        data_lancamento: null,
+                        situacao_cadastral: null,
+                        contribuinte: null,
+                        cpf_cnpj: null,
+                        numero_porta: '212',
+                        area_terreno_m2: null,
+                        valor_venal_iptu: null,
+                        logradouro_tributario: '1625 - 3ª Travessa Alto dos Coqueiros',
+                        situacao_fiscal: null,
+                        data_emissao_certidao: null,
+                    ),
+                );
+            }
+        });
+        $this->fakeGeocoder(-12.965785, -38.484540);
+        $this->fakeTerritorioBairroSemZona();
+
+        $result = $this->service()->consultarPorInscricao('625553', self::CNAE_MINIMERCADO, 33.0, [11 => true]);
+
+        $this->assertNotNull($result->geocode);
+        $this->assertNotNull($result->territory);
+        $this->assertEqualsWithDelta(-12.965785, $result->geocode->latitude, 0.000001);
     }
 
     public function test_inscricao_indisponivel_degrada_para_cnae_com_aviso_e_nunca_inventa_ponto(): void
