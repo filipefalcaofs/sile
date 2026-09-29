@@ -72,12 +72,12 @@ export default function RenovacaoWizard({
 
     return (
         <PortalLayout>
-            <Head title="Renovar TVL" />
+            <Head title="Renovação de Viabilidade" />
             <PageHeader
-                title="Renovar TVL"
+                title="Renovação de Viabilidade"
                 breadcrumbs={[
                     { label: 'Meu painel', href: '/portal/painel' },
-                    { label: 'Renovar TVL', href: '/portal/renovacao' },
+                    { label: 'Renovação de Viabilidade', href: '/portal/renovacao' },
                 ]}
             />
 

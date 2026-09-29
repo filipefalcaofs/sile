@@ -14,6 +14,7 @@ use App\Services\Sedur\SedurAuthInvalidCredentialsException;
 use App\Services\Sedur\SedurAuthSettings;
 use App\Services\Sedur\SedurAuthUnavailableException;
 use App\Support\Audit\AuditService;
+use App\Support\Auth\GestaoIntendedRedirect;
 use App\Support\Settings;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
@@ -40,6 +41,7 @@ class LoginController extends Controller
     public function __construct(
         private DirectoryAuthenticator $directory,
         private SedurAuthSettings $sedurAuth,
+        private GestaoIntendedRedirect $intendedRedirect,
     ) {}
 
     public function store(LoginRequest $request): RedirectResponse
@@ -116,7 +118,12 @@ class LoginController extends Controller
         // (inclusive um eventual login do portal no guard web).
         $request->session()->regenerate();
 
-        return redirect()->intended(route('gestao.dashboard'));
+        $destino = $this->intendedRedirect->resolveTarget(
+            $request,
+            route('gestao.dashboard'),
+        );
+
+        return redirect($destino);
     }
 
     public function destroy(Request $request): RedirectResponse

@@ -18,7 +18,7 @@ Base de produção: `https://api.sedur.salvador.ba.gov.br/k8s/prd`.
 ## 2. Decisões de escopo (aprovadas pelo usuário)
 
 1. **Autenticação híbrida:** AD e local coexistem. O cadastro de usuários continua no Laravel, inclusive para quem não tem conta AD.
-2. **Tipo de autenticação explícito no cadastro:** cada usuário tem `auth_type` (`ad` | `local`). Para `ad`, o cadastro armazena a conta corporativa em `ad_username` (ex.: `filipefalcao`). O vínculo é determinístico — nunca inferido por e-mail ou CPF.
+2. **Tipo de autenticação explícito no cadastro:** cada usuário tem `auth_type` (`ad` | `local`). Para `ad`, o cadastro armazena a conta corporativa em `ad_username` (ex.: `seuusuarioad`). O vínculo é determinístico — nunca inferido por e-mail ou CPF.
 3. **CPF não é identificador da conta AD:** o CPF (já `unique` em `users`) é usado apenas para consultar/sincronizar dados da pessoa via `pessoaView`, no interesse do próprio usuário autenticado.
 4. **Sessão sempre Laravel:** após qualquer validação (AD ou local), a sessão é a sessão Laravel do guard `gestao` (cookie `sile_gestao_session`, CSRF, logout, Spatie, auditoria). O token Bearer da API fica restrito ao backend, nunca exposto ao navegador.
 5. **Sem fallback silencioso:** usuário `ad` com API indisponível recebe erro honesto de indisponibilidade — nunca cai para senha local.
@@ -75,9 +75,9 @@ Notas:
 
 ### 5.1 Experiência de identificação no login
 
-O único campo de identificação da tela passa a ser **“E-mail institucional ou usuário AD”**, do tipo texto e com `autocomplete="username"`. O placeholder é `nome@salvador.ba.gov.br ou filipefalcao`.
+O único campo de identificação da tela passa a ser **“E-mail institucional ou usuário AD”**, do tipo texto e com `autocomplete="username"`. O placeholder é `nome@salvador.ba.gov.br ou seuusuarioad`.
 
-A orientação visível informa: “Use o usuário da rede corporativa (ex.: filipefalcao) ou o e-mail da conta local.” Assim, a pessoa com conta AD entende que deve informar a credencial corporativa; quem usa conta local reconhece o e-mail como identificador.
+A orientação visível informa: “Use o usuário da rede corporativa (ex.: seuusuarioad) ou o e-mail da conta local.” Assim, a pessoa com conta AD entende que deve informar a credencial corporativa; quem usa conta local reconhece o e-mail como identificador.
 
 Não há seletor “AD” × “local”: o Laravel identifica o mecanismo pelo cadastro da conta, reduzindo escolha errada e não expondo o tipo de autenticação de contas que não existem. As falhas de identificação e de senha permanecem em uma mensagem genérica (`auth.failed`), preservando o anti-oráculo.
 

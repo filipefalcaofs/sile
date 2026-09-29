@@ -2,7 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import AppShell from '@/components/app/app-shell';
 import type { SidebarGroup } from '@/components/app/app-sidebar';
-import { AlertIcon, CheckCircleIcon, FileIcon, GridIcon, GroupIcon, ListIcon, SearchIcon } from '@/components/icons';
+import { AlertIcon, CheckCircleIcon, FileIcon, GridIcon, GroupIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import { ThemeProvider } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
@@ -13,21 +13,19 @@ interface PortalLayoutProps {
 
 const groups: SidebarGroup[] = [
     {
+        label: 'Minha conta',
+        items: [{ name: 'Meus acessos', href: '/portal/acessos', icon: <GroupIcon /> }],
+    },
+    {
         label: 'Início',
         items: [{ name: 'Meu painel', href: '/portal/painel', icon: <GridIcon /> }],
     },
     {
         label: 'Serviços',
         items: [
-            { name: 'Minhas empresas', href: '/portal/empresas', icon: <ListIcon /> },
-            { name: 'Renovar TVL', href: '/portal/renovacao', icon: <CheckCircleIcon /> },
-            { name: 'Consultas de viabilidade', href: '/portal/viabilidade/historico', icon: <SearchIcon /> },
-            { name: 'Procurações', href: '/portal/procuracoes', icon: <FileIcon /> },
+            { name: 'Meus processos', href: '/portal/solicitacoes', icon: <FileIcon /> },
+            { name: 'Renovação de Viabilidade', href: '/portal/renovacao', icon: <CheckCircleIcon /> },
         ],
-    },
-    {
-        label: 'Minha conta',
-        items: [{ name: 'Meus acessos', href: '/portal/acessos', icon: <GroupIcon /> }],
     },
 ];
 

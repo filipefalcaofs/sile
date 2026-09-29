@@ -54,16 +54,16 @@ class GestaoLoginAdTest extends TestCase
     public function test_usuario_ad_autentica_com_o_usuario_da_rede_corporativa(): void
     {
         $this->fakeAdSucesso();
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
-            'identifier' => 'filipefalcao',
+            'identifier' => 'seuusuarioad',
             'password' => 'senha-corporativa',
         ])->assertRedirect('/gestao');
 
         $this->assertAuthenticatedAs($servidor, 'gestao');
         Http::assertSent(fn ($request) => $request->method() === 'POST'
-            && ($request->data()['usuario'] ?? null) === 'filipefalcao');
+            && ($request->data()['usuario'] ?? null) === 'seuusuarioad');
     }
 
     public function test_primeiro_acesso_ad_registra_o_usuario_com_os_dados_da_api(): void
@@ -75,7 +75,7 @@ class GestaoLoginAdTest extends TestCase
                 'expiration' => '2026-09-25T23:33:28',
             ]),
             '*/ws-autenticacao/discovery' => Http::response([
-                'email' => 'filipefalcao@salvador.ba.gov.br',
+                'email' => 'seuusuarioad@salvador.ba.gov.br',
                 'nome' => 'Filipe Falcão',
                 'lotacao' => [
                     'codigo' => '0231400300',
@@ -89,18 +89,18 @@ class GestaoLoginAdTest extends TestCase
         ]);
 
         $this->post('/gestao/login', [
-            'identifier' => 'filipefalcao',
+            'identifier' => 'seuusuarioad',
             'password' => 'senha-corporativa',
         ])->assertRedirect('/gestao');
 
-        $usuario = User::query()->where('ad_username', 'filipefalcao')->first();
+        $usuario = User::query()->where('ad_username', 'seuusuarioad')->first();
 
         $this->assertNotNull($usuario);
         $this->assertAuthenticatedAs($usuario, 'gestao');
         $this->assertTrue($usuario->isAdAccount());
         $this->assertSame('06681065570', $usuario->cpf);
         $this->assertSame('Filipe Falcão', $usuario->name);
-        $this->assertSame('filipefalcao@salvador.ba.gov.br', $usuario->email);
+        $this->assertSame('seuusuarioad@salvador.ba.gov.br', $usuario->email);
         $this->assertNotNull($usuario->email_verified_at);
         $this->assertTrue($usuario->can('acessar-gestao'));
         $this->assertFalse(Hash::check('senha-corporativa', $usuario->password));
@@ -111,7 +111,7 @@ class GestaoLoginAdTest extends TestCase
     {
         $this->fakeAdSucesso();
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create([
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create([
             'name' => 'Nome Antigo',
         ]);
 
@@ -124,7 +124,7 @@ class GestaoLoginAdTest extends TestCase
         $this->assertAuthenticatedAs($servidor, 'gestao');
 
         Http::assertSent(fn ($request) => $request->url() === 'https://sedur.test/k8s/prd/ws-autenticacao/auth'
-            && $request['usuario'] === 'filipefalcao'
+            && $request['usuario'] === 'seuusuarioad'
             && $request['senha'] === 'senha-corporativa');
 
         $this->assertSame('Nome Sincronizado', $servidor->fresh()->name);
@@ -142,7 +142,7 @@ class GestaoLoginAdTest extends TestCase
     {
         Http::fake(['*/ws-autenticacao/auth' => Http::response([], 401)]);
 
-        $servidorAd = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidorAd = User::factory()->administrador()->ad('seuusuarioad')->create();
         $servidorLocal = User::factory()->administrador()->create();
 
         $respostaAd = $this->post('/gestao/login', [
@@ -171,7 +171,7 @@ class GestaoLoginAdTest extends TestCase
     {
         Http::fake(['*/ws-autenticacao/auth' => Http::response('erro', 500)]);
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         $response = $this->post('/gestao/login', [
             'identifier' => $servidor->email,
@@ -196,7 +196,7 @@ class GestaoLoginAdTest extends TestCase
         config(['sile.features.ad_login' => false]);
         Http::fake();
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         $response = $this->post('/gestao/login', [
             'identifier' => $servidor->email,
@@ -241,7 +241,7 @@ class GestaoLoginAdTest extends TestCase
         config(['sile.security.login.max_attempts' => 3]);
         Http::fake(['*/ws-autenticacao/auth' => Http::response([], 401)]);
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         foreach (range(1, 3) as $tentativa) {
             $this->post('/gestao/login', [
@@ -262,7 +262,7 @@ class GestaoLoginAdTest extends TestCase
     {
         $this->fakeAdSucesso();
 
-        $cidadao = User::factory()->cidadao()->ad('filipefalcao')->create();
+        $cidadao = User::factory()->cidadao()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
             'identifier' => $cidadao->email,
@@ -282,7 +282,7 @@ class GestaoLoginAdTest extends TestCase
     {
         $this->fakeAdSucesso();
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->inactive()->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->inactive()->create();
 
         $this->post('/gestao/login', [
             'identifier' => $servidor->email,
@@ -302,7 +302,7 @@ class GestaoLoginAdTest extends TestCase
             '*/pessoaView/buscarPorCPF/*' => Http::response([], 502),
         ]);
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
             'identifier' => $servidor->email,
@@ -322,7 +322,7 @@ class GestaoLoginAdTest extends TestCase
     {
         $this->fakeAdSucesso();
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
             'identifier' => $servidor->email,

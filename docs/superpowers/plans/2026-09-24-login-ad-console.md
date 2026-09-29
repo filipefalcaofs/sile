@@ -65,20 +65,20 @@ class AuthTypeUserTest extends TestCase
 
     public function test_usuario_ad_tem_conta_vinculada_e_e_reconhecido(): void
     {
-        $user = User::factory()->ad('filipefalcao')->create();
+        $user = User::factory()->ad('seuusuarioad')->create();
 
         $this->assertSame(AuthType::Ad, $user->fresh()->auth_type);
-        $this->assertSame('filipefalcao', $user->ad_username);
+        $this->assertSame('seuusuarioad', $user->ad_username);
         $this->assertTrue($user->isAdAccount());
     }
 
     public function test_ad_username_e_unico(): void
     {
-        User::factory()->ad('filipefalcao')->create();
+        User::factory()->ad('seuusuarioad')->create();
 
         $this->expectException(\Illuminate\Database\QueryException::class);
 
-        User::factory()->ad('filipefalcao')->create();
+        User::factory()->ad('seuusuarioad')->create();
     }
 }
 ```
@@ -326,12 +326,12 @@ class SedurAuthClientTest extends TestCase
     {
         Http::fake(['*/ws-autenticacao/auth' => Http::response(['token' => 'tk-123'])]);
 
-        $token = $this->client()->autenticar('filipefalcao', 'senha-corporativa');
+        $token = $this->client()->autenticar('seuusuarioad', 'senha-corporativa');
 
         $this->assertSame('tk-123', $token);
 
         Http::assertSent(fn ($request) => $request->url() === 'https://sedur.test/k8s/prd/ws-autenticacao/auth'
-            && $request['usuario'] === 'filipefalcao'
+            && $request['usuario'] === 'seuusuarioad'
             && $request['senha'] === 'senha-corporativa');
     }
 
@@ -341,7 +341,7 @@ class SedurAuthClientTest extends TestCase
 
         $this->expectException(SedurAuthInvalidCredentialsException::class);
 
-        $this->client()->autenticar('filipefalcao', 'senha-errada');
+        $this->client()->autenticar('seuusuarioad', 'senha-errada');
     }
 
     public function test_erro_http_da_api_e_indisponibilidade(): void
@@ -350,7 +350,7 @@ class SedurAuthClientTest extends TestCase
 
         $this->expectException(SedurAuthUnavailableException::class);
 
-        $this->client()->autenticar('filipefalcao', 'senha-corporativa');
+        $this->client()->autenticar('seuusuarioad', 'senha-corporativa');
     }
 
     public function test_falha_de_conexao_e_indisponibilidade(): void
@@ -359,7 +359,7 @@ class SedurAuthClientTest extends TestCase
 
         $this->expectException(SedurAuthUnavailableException::class);
 
-        $this->client()->autenticar('filipefalcao', 'senha-corporativa');
+        $this->client()->autenticar('seuusuarioad', 'senha-corporativa');
     }
 
     public function test_resposta_sem_token_e_indisponibilidade(): void
@@ -368,7 +368,7 @@ class SedurAuthClientTest extends TestCase
 
         $this->expectException(SedurAuthUnavailableException::class);
 
-        $this->client()->autenticar('filipefalcao', 'senha-corporativa');
+        $this->client()->autenticar('seuusuarioad', 'senha-corporativa');
     }
 
     public function test_senha_nunca_aparece_na_mensagem_das_excecoes(): void
@@ -376,7 +376,7 @@ class SedurAuthClientTest extends TestCase
         Http::fake(['*/ws-autenticacao/auth' => Http::response('senha-corporativa vazada no corpo', 500)]);
 
         try {
-            $this->client()->autenticar('filipefalcao', 'senha-corporativa');
+            $this->client()->autenticar('seuusuarioad', 'senha-corporativa');
             $this->fail('Esperava SedurAuthUnavailableException.');
         } catch (SedurAuthUnavailableException $e) {
             $this->assertStringNotContainsString('senha-corporativa', $e->getMessage());
@@ -638,7 +638,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
             '*/pessoaView/buscarPorCPF/*' => Http::response(['nome' => 'Filipe Falcao']),
         ]);
 
-        $resultado = $this->authenticator()->attempt('filipefalcao', 'senha', '12345678901');
+        $resultado = $this->authenticator()->attempt('seuusuarioad', 'senha', '12345678901');
 
         $this->assertSame('Filipe Falcao', $resultado->nome);
         $this->assertFalse($resultado->sincronizacaoFalhou);
@@ -648,7 +648,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
     {
         Http::fake(['*/ws-autenticacao/auth' => Http::response(['token' => 'tk-1'])]);
 
-        $resultado = $this->authenticator()->attempt('filipefalcao', 'senha');
+        $resultado = $this->authenticator()->attempt('seuusuarioad', 'senha');
 
         $this->assertNull($resultado->nome);
         Http::assertSentCount(1);
@@ -660,7 +660,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
 
         $this->expectException(SedurAuthInvalidCredentialsException::class);
 
-        $this->authenticator()->attempt('filipefalcao', 'senha-errada', '12345678901');
+        $this->authenticator()->attempt('seuusuarioad', 'senha-errada', '12345678901');
     }
 
     public function test_indisponibilidade_no_auth_propaga_indisponibilidade(): void
@@ -669,7 +669,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
 
         $this->expectException(SedurAuthUnavailableException::class);
 
-        $this->authenticator()->attempt('filipefalcao', 'senha', '12345678901');
+        $this->authenticator()->attempt('seuusuarioad', 'senha', '12345678901');
     }
 
     public function test_falha_na_pessoa_view_nao_derruba_a_autenticacao(): void
@@ -679,7 +679,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
             '*/pessoaView/buscarPorCPF/*' => Http::response([], 502),
         ]);
 
-        $resultado = $this->authenticator()->attempt('filipefalcao', 'senha', '12345678901');
+        $resultado = $this->authenticator()->attempt('seuusuarioad', 'senha', '12345678901');
 
         $this->assertNull($resultado->nome);
         $this->assertTrue($resultado->sincronizacaoFalhou);
@@ -1016,7 +1016,7 @@ class GestaoLoginAdTest extends TestCase
     {
         $this->fakeAdSucesso();
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create([
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create([
             'name' => 'Nome Antigo',
         ]);
 
@@ -1029,7 +1029,7 @@ class GestaoLoginAdTest extends TestCase
         $this->assertAuthenticatedAs($servidor, 'gestao');
 
         Http::assertSent(fn ($request) => $request->url() === 'https://sedur.test/k8s/prd/ws-autenticacao/auth'
-            && $request['usuario'] === 'filipefalcao'
+            && $request['usuario'] === 'seuusuarioad'
             && $request['senha'] === 'senha-corporativa');
 
         // Sincronização com minimização: só o nome muda; telefone e demais
@@ -1049,7 +1049,7 @@ class GestaoLoginAdTest extends TestCase
     {
         Http::fake(['*/ws-autenticacao/auth' => Http::response([], 401)]);
 
-        $servidorAd = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidorAd = User::factory()->administrador()->ad('seuusuarioad')->create();
         $servidorLocal = User::factory()->administrador()->create();
 
         $respostaAd = $this->post('/gestao/login', [
@@ -1080,7 +1080,7 @@ class GestaoLoginAdTest extends TestCase
 
         // A conta AD tem um hash local (legado da criação); a senha local
         // correta NÃO pode autenticar — não há fallback silencioso.
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         $response = $this->post('/gestao/login', [
             'email' => $servidor->email,
@@ -1105,7 +1105,7 @@ class GestaoLoginAdTest extends TestCase
         config(['sile.features.ad_login' => false]);
         Http::fake();
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         $response = $this->post('/gestao/login', [
             'email' => $servidor->email,
@@ -1150,7 +1150,7 @@ class GestaoLoginAdTest extends TestCase
         config(['sile.security.login.max_attempts' => 3]);
         Http::fake(['*/ws-autenticacao/auth' => Http::response([], 401)]);
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         foreach (range(1, 3) as $tentativa) {
             $this->post('/gestao/login', [
@@ -1173,7 +1173,7 @@ class GestaoLoginAdTest extends TestCase
     {
         $this->fakeAdSucesso();
 
-        $cidadao = User::factory()->cidadao()->ad('filipefalcao')->create();
+        $cidadao = User::factory()->cidadao()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
             'email' => $cidadao->email,
@@ -1193,7 +1193,7 @@ class GestaoLoginAdTest extends TestCase
     {
         $this->fakeAdSucesso();
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->inactive()->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->inactive()->create();
 
         $this->post('/gestao/login', [
             'email' => $servidor->email,
@@ -1212,7 +1212,7 @@ class GestaoLoginAdTest extends TestCase
             '*/pessoaView/buscarPorCPF/*' => Http::response([], 502),
         ]);
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
             'email' => $servidor->email,
@@ -1232,7 +1232,7 @@ class GestaoLoginAdTest extends TestCase
     {
         $this->fakeAdSucesso();
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
             'email' => $servidor->email,
@@ -1582,14 +1582,14 @@ class UserAuthTypeTest extends TestCase
 
         $response = $this->put("/gestao/usuarios/{$servidor->id}/autenticacao", [
             'auth_type' => 'ad',
-            'ad_username' => 'filipefalcao',
+            'ad_username' => 'seuusuarioad',
         ]);
 
         $response->assertSessionHasNoErrors();
 
         $servidor->refresh();
         $this->assertSame(AuthType::Ad, $servidor->auth_type);
-        $this->assertSame('filipefalcao', $servidor->ad_username);
+        $this->assertSame('seuusuarioad', $servidor->ad_username);
         $this->assertFalse(Hash::check('password', $servidor->password));
 
         $this->assertDatabaseHas('activity_log', [
@@ -1611,12 +1611,12 @@ class UserAuthTypeTest extends TestCase
     public function test_ad_username_precisa_ser_unico(): void
     {
         $this->gestorLogado();
-        User::factory()->ad('filipefalcao')->create();
+        User::factory()->ad('seuusuarioad')->create();
         $outro = User::factory()->analista()->create();
 
         $this->put("/gestao/usuarios/{$outro->id}/autenticacao", [
             'auth_type' => 'ad',
-            'ad_username' => 'filipefalcao',
+            'ad_username' => 'seuusuarioad',
         ])->assertSessionHasErrors('ad_username');
     }
 
@@ -1627,7 +1627,7 @@ class UserAuthTypeTest extends TestCase
 
         $this->put("/gestao/usuarios/{$servidor->id}/autenticacao", [
             'auth_type' => 'local',
-            'ad_username' => 'filipefalcao',
+            'ad_username' => 'seuusuarioad',
         ])->assertSessionHasErrors('ad_username');
     }
 
@@ -1635,7 +1635,7 @@ class UserAuthTypeTest extends TestCase
     {
         Notification::fake();
         $this->gestorLogado();
-        $servidor = User::factory()->analista()->ad('filipefalcao')->create();
+        $servidor = User::factory()->analista()->ad('seuusuarioad')->create();
 
         $this->put("/gestao/usuarios/{$servidor->id}/autenticacao", [
             'auth_type' => 'local',
@@ -1652,12 +1652,12 @@ class UserAuthTypeTest extends TestCase
     {
         Notification::fake();
         $this->gestorLogado();
-        $servidor = User::factory()->analista()->ad('filipefalcao')->create();
+        $servidor = User::factory()->analista()->ad('seuusuarioad')->create();
         $hashAntes = $servidor->password;
 
         $this->put("/gestao/usuarios/{$servidor->id}/autenticacao", [
             'auth_type' => 'ad',
-            'ad_username' => 'filipefalcao',
+            'ad_username' => 'seuusuarioad',
         ])->assertSessionHasNoErrors();
 
         $this->assertSame($hashAntes, $servidor->fresh()->password);
@@ -1673,7 +1673,7 @@ class UserAuthTypeTest extends TestCase
 
         $this->put("/gestao/usuarios/{$servidor->id}/autenticacao", [
             'auth_type' => 'ad',
-            'ad_username' => 'filipefalcao',
+            'ad_username' => 'seuusuarioad',
         ])->assertForbidden();
     }
 }
@@ -1880,7 +1880,7 @@ function AuthTypeModal({ user, onClose }: { user: UserItem; onClose: () => void 
                                     name="ad_username"
                                     value={adUsername}
                                     onChange={(event) => setAdUsername(event.target.value)}
-                                    placeholder="ex.: filipefalcao"
+                                    placeholder="ex.: seuusuarioad"
                                     autoComplete="off"
                                 />
                                 {errors.ad_username && (
@@ -1989,7 +1989,7 @@ class GestaoAdPasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $servidorAd = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidorAd = User::factory()->administrador()->ad('seuusuarioad')->create();
         $servidorLocal = User::factory()->administrador()->create();
 
         $respostaAd = $this->post('/gestao/forgot-password', ['email' => $servidorAd->email]);
@@ -2005,7 +2005,7 @@ class GestaoAdPasswordResetTest extends TestCase
 
     public function test_conta_ad_nao_redefine_senha_mesmo_com_token_valido(): void
     {
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
         $hashAntes = $servidor->password;
 
         $token = Password::broker('users')->createToken($servidor);
@@ -2023,7 +2023,7 @@ class GestaoAdPasswordResetTest extends TestCase
 
     public function test_conta_ad_nao_altera_senha_pela_area_da_conta(): void
     {
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->withAcceptedLgpdTerm()->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($servidor, 'gestao');
 

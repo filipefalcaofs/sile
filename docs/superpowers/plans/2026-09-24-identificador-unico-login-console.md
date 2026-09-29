@@ -38,15 +38,15 @@ Em `tests/Feature/Auth/GestaoLoginAdTest.php`, trocar os payloads AD para `ident
 public function test_usuario_ad_autentica_com_o_usuario_da_rede_corporativa(): void
 {
     $this->fakeAdSucesso();
-    $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+    $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
     $this->post('/gestao/login', [
-        'identifier' => 'filipefalcao',
+        'identifier' => 'seuusuarioad',
         'password' => 'senha-corporativa',
     ])->assertRedirect('/gestao');
 
     $this->assertAuthenticatedAs($servidor, 'gestao');
-    Http::assertSent(fn ($request) => $request['usuario'] === 'filipefalcao');
+    Http::assertSent(fn ($request) => $request['usuario'] === 'seuusuarioad');
 }
 ```
 
@@ -178,13 +178,13 @@ E-mail institucional ou usuário AD
     autoComplete="username"
     autoFocus
     required
-    placeholder="nome@salvador.ba.gov.br ou filipefalcao"
+    placeholder="nome@salvador.ba.gov.br ou seuusuarioad"
     aria-describedby="identifier-help"
     aria-invalid={errors.identifier ? 'true' : undefined}
     className={gestaoLoginInputClasses}
 />
 <p id="identifier-help" className={`text-[12.5px] ${gestaoLoginMutedClasses}`}>
-    Use o usuário da rede corporativa (ex.: filipefalcao) ou o e-mail da conta local.
+    Use o usuário da rede corporativa (ex.: seuusuarioad) ou o e-mail da conta local.
 </p>
 {errors.identifier && (
     <p className="text-[12.5px] text-error-600 dark:text-[oklch(72%_0.16_25)]">
@@ -237,7 +237,7 @@ Expected: nenhum arquivo pendente de formatação.
 Abrir `/gestao/login` e confirmar:
 
 1. O texto mostra os dois caminhos (“usuário da rede corporativa” e “e-mail da conta local”).
-2. O input aceita `filipefalcao` sem a validação nativa de e-mail.
+2. O input aceita `seuusuarioad` sem a validação nativa de e-mail.
 3. O placeholder contém os dois exemplos.
 4. A ajuda está associada ao campo por `aria-describedby`.
 5. Erros aparecem abaixo do campo e não revelam se o identificador é AD ou local.

@@ -194,6 +194,36 @@ class GestaoLoginTest extends TestCase
         $response->assertRedirect('/gestao/cnaes');
     }
 
+    public function test_intended_de_processo_inexistente_cai_no_painel_apos_login(): void
+    {
+        $administrador = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+
+        $this->get('/gestao/processos/99999/ficha')->assertRedirect('/gestao/login');
+
+        $response = $this->post('/gestao/login', [
+            'identifier' => $administrador->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect('/gestao');
+    }
+
+    public function test_intended_externo_e_descartado_no_login_interno(): void
+    {
+        $administrador = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+
+        $this->get('/gestao/cnaes')->assertRedirect('/gestao/login');
+
+        session(['url.intended' => 'https://example.com/phishing']);
+
+        $response = $this->post('/gestao/login', [
+            'identifier' => $administrador->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect('/gestao');
+    }
+
     public function test_logout_da_gestao_preserva_a_sessao_do_portal(): void
     {
         $administrador = User::factory()->administrador()->withAcceptedLgpdTerm()->create();

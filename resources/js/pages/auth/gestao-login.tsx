@@ -266,13 +266,13 @@ function GestaoLoginContent({ status }: { status?: string }) {
                                         autoComplete="username"
                                         autoFocus
                                         required
-                                        placeholder="nome@salvador.ba.gov.br ou filipefalcao"
+                                        placeholder="nome@salvador.ba.gov.br ou seuusuarioad"
                                         aria-describedby="identifier-help"
                                         aria-invalid={errors.identifier ? 'true' : undefined}
                                         className={gestaoLoginInputClasses}
                                     />
                                     <p id="identifier-help" className={`text-[12.5px] max-[740px]:text-xs ${gestaoLoginMutedClasses}`}>
-                                        Use o usuário da rede corporativa (ex.: filipefalcao) ou o e-mail da conta local.
+                                        Use o usuário da rede corporativa (ex.: seuusuarioad) ou o e-mail da conta local.
                                     </p>
                                     {errors.identifier && (
                                         <p className="text-[12.5px] text-error-600 dark:text-[oklch(72%_0.16_25)]">{errors.identifier}</p>

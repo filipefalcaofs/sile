@@ -1,7 +1,7 @@
 # Stack da aplicação Viabiliza — Portainer clona a branch main e faz o build no host.
 #
 # Fluxo:
-#   git push em main (GitLab Softwell) → auto-update (~5 min) → docker compose build + up
+#   git push em main (GitLab Softwell) → redeploy manual no Portainer → docker compose build + up
 #
 # A imagem NÃO vem do GHCR. Tag local: sile:git
 # pull_policy: build obriga rebuild quando o Git muda (compose up sozinho reusa cache).

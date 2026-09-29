@@ -11,7 +11,7 @@ Máquina de desenvolvimento: Apple Silicon — **não** precisa buildar imagem l
 ## Fluxo obrigatório
 
 ```
-Commit na main (GitLab Softwell) → Portainer clona a main → build da Dockerfile → sobe o stack
+Commit na main (GitLab Softwell) → redeploy manual no Portainer → clona a main → build da Dockerfile → sobe o stack
 ```
 
 O compose de produção (`docker-compose.portainer-full.yml`) usa `build:` + `pull_policy: build` e a tag local `sile:git`. Não usar `ghcr.io/...:latest` nem `pull_policy: always` nesse arquivo — isso faria o Portainer puxar imagem de registry em vez de rebuildar.
@@ -26,15 +26,20 @@ Remote: `https://gitlab.softwell.com.br/techpulse/sile.git`. Fast-forward; nunca
 
 Frontend: `public/build` entra no git (o Dockerfile não roda `npm run build`). Mudança em React/TSX exige `npm run build` e commit de `public/build` antes do push.
 
-### 2. Portainer (já configurado)
+### 2. Redeploy manual no Portainer (obrigatório)
 
-- **Stacks > sile-app > Repository:** GitLab Softwell
+O stack **não** puxa a `main` automaticamente após o push. Cada publicação exige redeploy manual. **Não encerrar no push** — só concluir com container `sile-app` healthy, `/up` 200 e `appVersion` igual à tag publicada (detalhes na skill `publicar-softwell-semit`):
+
+1. **Stacks** → **sile-app**
+2. **Pull and redeploy** (ou **Update the stack** com pull do repositório)
+3. Aguardar rebuild da imagem `sile:git` no host (pode levar vários minutos; `composer install` roda no build)
+
+Configuração do stack:
+
+- **Repository:** GitLab Softwell (`https://gitlab.softwell.com.br/techpulse/sile.git`)
 - **Branch:** `refs/heads/main`
 - **Compose path:** `docker-compose.portainer-full.yml`
-- **Auto update:** intervalo 5 min
 - **Re-pull image:** desligado (o build é local; pull de registry sobrescreveria `sile:git`)
-
-O primeiro deploy após um commit na main pode levar vários minutos (composer install no host).
 
 ## Fallback opcional (GHCR)
 
@@ -55,6 +60,7 @@ Só se o build no host estiver indisponível: `./scripts/portainer-build-push.sh
 
 | Erro | Causa | Solução |
 |---|---|---|
-| Stack não atualiza após push | Token GitLab do Portainer expirado | Renovar PAT/deploy token em Stacks > sile-app > Git |
+| Stack não atualiza após push | Redeploy manual não foi feito | Stacks > sile-app > Pull and redeploy |
+| Redeploy falha ao clonar | Token GitLab do Portainer expirado | Renovar PAT/deploy token em Stacks > sile-app > Git |
 | UI antiga após push só de TSX | `public/build` não foi commitado | `npm run build` e commit de `public/build` |
 | Imagem GHCR no lugar de `sile:git` | `pull_policy: always` ou Force pull image | Voltar para `pull_policy: build` e desligar re-pull |

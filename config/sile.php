@@ -297,6 +297,10 @@ return [
             'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd',
             'timeout' => 8,
         ],
+        'sedur_contato' => [
+            'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-contato',
+            'timeout' => 8,
+        ],
         'geocoding' => [
             'base_url' => 'https://nominatim.openstreetmap.org',
             'user_agent' => 'Viabiliza-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',

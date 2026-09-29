@@ -40,6 +40,62 @@ A branch no Softwell é a branch atual. Se o usuário nomear outra, publicar ess
 
 O Softwell leva o ambiente de desenvolvimento (`.cursor`, docs, testes, simulador). Isso não vai para o SEMIT.
 
+### Redeploy no Portainer (obrigatório após o push)
+
+O push na `main` do GitLab Softwell **não** atualiza o ambiente sozinho. O stack **não** puxa a branch automaticamente — é preciso redeploy manual.
+
+**Regra de entrega:** quando o usuário pedir publicação Softwell ou redeploy, **não parar no push**. Executar o redeploy e só encerrar com a aplicação **no ar e saudável**, com evidência (container healthy + HTTP 200 + versão esperada).
+
+Stack: **`sile-app`** (endpoint `local`, id **172**). Imagem: **`sile:git`**. Compose: **`docker-compose.portainer-full.yml`**. URL típica: **`http://144.22.212.3:8082`**.
+
+#### 1. Credencial Git no Portainer
+
+O stack precisa de **Personal Access Token** do GitLab Softwell, não de senha de usuário.
+
+- **Username:** `oauth2`
+- **Password:** PAT com escopo `read_repository`
+- Obter da máquina de dev (não versionar): `printf 'protocol=https\nhost=gitlab.softwell.com.br\n\n' | git credential fill`
+
+Se `StackGitRedeploy` falhar com *HTTP Basic: Access denied*, atualizar a credencial via **StackUpdateGit** (`RepositoryAuthorizationType: 1`, `RepositoryProvider: 2` GitLab) antes de tentar de novo.
+
+#### 2. Redeploy preferencial (MCP Portainer)
+
+```
+StackGitRedeploy(id=172, endpointId=3, RepositoryReferenceName=refs/heads/main, RepullImageAndRedeploy=false)
+```
+
+`RepullImageAndRedeploy` fica **false** — o compose usa `pull_policy: build` e rebuilda `sile:git` no host.
+
+Se retornar *Stack is not created from git* ou `GitConfig: null`, o metadado Git do stack está corrompido — usar fallback (passo 3) ou recriar o stack como **Git repository** na UI do Portainer.
+
+#### 3. Fallback — rebuild no host (quando Git do Portainer falha)
+
+One-off com socket Docker e volume do compose do Portainer:
+
+```bash
+docker run --rm \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /var/lib/docker/volumes/pt_data/_data/compose/172:/compose \
+  -w /compose docker:27-cli sh -c '
+    git clone --depth 1 -b main https://oauth2:<PAT>@gitlab.softwell.com.br/techpulse/sile.git /tmp/sile &&
+    rsync -a --delete --exclude stack.env /tmp/sile/ /compose/ &&
+    docker compose --env-file stack.env -f docker-compose.portainer-full.yml up -d --build
+  '
+```
+
+Substituir `<PAT>` pelo token real (nunca commitar). Preservar `stack.env` do host.
+
+#### 4. Verificação obrigatória (evidência fresca)
+
+1. Container **`sile-app`**: `State=running`, health **healthy** (`docker_proxy` → `/containers/sile-app/json`).
+2. HTTP: **`/up` → 200**, **`/gestao/login` → 200**, **`/portal/login` → 200**.
+3. Versão: prop **`appVersion`** na página Inertia = tag publicada (ex.: `0.29.1`).
+4. Mudança de frontend: nos chunks `auth-layout-*.js` / `gestao-login-*.js`, confirmar classes novas (ex.: `h-dvh`, `overflow-hidden`) — o HTML SSR não traz classes Tailwind.
+
+Só considerar o deploy Softwell **concluído** após esses quatro pontos. Push + tag no GitLab é só metade do fluxo.
+
+Frontend: `public/build` entra no git (o Dockerfile não roda `npm run build`). Mudança em React/TSX exige `npm run build` e commit de `public/build` antes do push — senão o redeploy sobe UI antiga mesmo com código PHP atualizado.
+
 ## SEMIT
 
 Produção é `main`. Homologação é `homologa`. Não criar nem atualizar branch `prod`.

@@ -194,6 +194,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:255'],
                 'description' => 'Client Secret da credencial do Login Único GOV.BR (armazenado criptografado)',
             ],
+            'integrations.sedur_contato.base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-contato',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'URL base da consulta cadastral de CNPJ e CPF da SEDUR (ws-contato). Troque o trecho prd por hml para homologação',
+            ],
             'integrations.sedur_auth.base_url' => [
                 'group' => 'integracoes',
                 'type' => 'string',

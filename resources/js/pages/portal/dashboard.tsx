@@ -10,7 +10,6 @@ import {
     GroupIcon,
     ListIcon,
     PencilIcon,
-    SearchIcon,
 } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -53,9 +52,9 @@ interface RascunhoResumo {
 
 interface DashboardProps {
     indicadores: {
-        em_andamento: number;
-        empresas: number;
-        consultas: number | null;
+        em_analise: number;
+        processos: number;
+        em_convite: number;
     };
     atencao: {
         pendencias: PendenciaResumo[];
@@ -122,10 +121,10 @@ function formatDate(value: string | null): string {
 
 const quickActions: QuickAction[] = [
     {
-        name: 'Consulta de viabilidade',
-        label: 'Verifique se a atividade é permitida',
-        href: '/portal/viabilidade',
-        icon: <SearchIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
+        name: 'Meus processos',
+        label: 'Viabilidades e renovações em seu nome',
+        href: '/portal/solicitacoes',
+        icon: <FileIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
     },
     {
         name: 'Minhas empresas',
@@ -134,16 +133,10 @@ const quickActions: QuickAction[] = [
         icon: <ListIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
     },
     {
-        name: 'Renovar TVL',
-        label: 'Prorrogue um TVL provisório deste portal',
+        name: 'Renovação de Viabilidade',
+        label: 'Prorrogue uma viabilidade provisória deste portal',
         href: '/portal/renovacao',
         icon: <CheckCircleIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
-    },
-    {
-        name: 'Procurações',
-        label: 'Vínculos de representação',
-        href: '/portal/procuracoes',
-        icon: <FileIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
     },
     {
         name: 'Meus acessos',
@@ -153,49 +146,39 @@ const quickActions: QuickAction[] = [
     },
 ];
 
-export default function Dashboard({ indicadores, atencao, solicitacoesRecentes, emRepresentacao }: DashboardProps) {
-    const { auth, notificacoes } = usePage<SharedProps>().props;
+export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }: DashboardProps) {
+    const { auth } = usePage<SharedProps>().props;
 
     const temAtencao = atencao.pendencias.length > 0 || atencao.rascunhos.length > 0;
 
-    const possibleIndicators: (Indicator | null)[] = [
+    const possibleIndicators: Indicator[] = [
         {
-            key: 'andamento',
-            label: 'Em andamento',
-            value: numberFormat.format(indicadores.em_andamento),
-            note: 'solicitações em processamento',
+            key: 'analise',
+            label: 'Em Análise',
+            value: numberFormat.format(indicadores.em_analise),
+            note: 'processos em análise',
             icon: <FileIcon className="size-6" aria-hidden="true" />,
             tone: 'brand',
+            href: '/portal/solicitacoes',
         },
         {
-            key: 'empresas',
-            label: 'Empresas vinculadas',
-            value: numberFormat.format(indicadores.empresas),
-            note: 'com vínculo ativo',
+            key: 'processos',
+            label: 'Meus Processos',
+            value: numberFormat.format(indicadores.processos),
+            note: 'processos com os seus dados',
             icon: <ListIcon className="size-6" aria-hidden="true" />,
             tone: 'info',
+            href: '/portal/solicitacoes',
         },
-        indicadores.consultas !== null
-            ? {
-                  key: 'consultas',
-                  label: 'Consultas feitas',
-                  value: numberFormat.format(indicadores.consultas),
-                  note: 'consultas de viabilidade',
-                  icon: <SearchIcon className="size-6" aria-hidden="true" />,
-                  tone: 'success',
-              }
-            : null,
-        !emRepresentacao
-            ? {
-                  key: 'notificacoes',
-                  label: 'Notificações não lidas',
-                  value: numberFormat.format(notificacoes.nao_lidas),
-                  note: 'avisos do seu processo',
-                  icon: <BellIcon className="size-6" aria-hidden="true" />,
-                  tone: 'warning',
-                  href: '/portal/notificacoes',
-              }
-            : null,
+        {
+            key: 'convite',
+            label: 'Em Convite',
+            value: numberFormat.format(indicadores.em_convite),
+            note: 'processos aguardando a sua resposta',
+            icon: <BellIcon className="size-6" aria-hidden="true" />,
+            tone: 'warning',
+            href: '/portal/solicitacoes',
+        },
     ];
 
     const indicators = possibleIndicators.filter((indicator): indicator is Indicator => indicator !== null);

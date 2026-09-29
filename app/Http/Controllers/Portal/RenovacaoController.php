@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Portal;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Portal\LookupCnpjRequest;
 use App\Http\Requests\Portal\ProtocolarRenovacaoRequest;
+use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\ServiceDeclaration;
 use App\Models\User;
@@ -12,8 +14,12 @@ use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Renovacao\RenovacaoElegibilidadeService;
 use App\Services\Renovacao\RenovacaoProtocoloService;
+use App\Services\Sedur\SedurContatoClient;
+use App\Services\Sedur\SedurContatoIndisponivelException;
+use App\Services\Sedur\SedurContatoNaoEncontradoException;
 use App\Support\Representation\CurrentRepresentation;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -30,6 +36,7 @@ class RenovacaoController extends Controller
     public function __construct(
         private RenovacaoElegibilidadeService $elegibilidade,
         private RenovacaoProtocoloService $protocolo,
+        private SedurContatoClient $contato,
     ) {}
 
     public function index(Request $request): Response
@@ -62,6 +69,63 @@ class RenovacaoController extends Controller
 
         return Inertia::render('portal/renovacao/index', [
             'tvls' => $tvls,
+        ]);
+    }
+
+    public function consultarCnpj(LookupCnpjRequest $request): JsonResponse
+    {
+        $cnpj = preg_replace('/\D/', '', (string) $request->validated('cnpj')) ?? '';
+
+        if (strlen($cnpj) !== 14) {
+            return response()->json([
+                'message' => 'Informe um CNPJ numérico de 14 dígitos.',
+            ], 422);
+        }
+
+        try {
+            $empresa = $this->contato->consultarCnpj($cnpj);
+        } catch (SedurContatoNaoEncontradoException) {
+            return response()->json([
+                'message' => 'CNPJ não encontrado na base da SEDUR.',
+            ], 404);
+        } catch (SedurContatoIndisponivelException) {
+            return response()->json([
+                'message' => 'A consulta cadastral da SEDUR está indisponível agora. Tente de novo em instantes.',
+            ], 503);
+        }
+
+        $usuario = $this->usuarioEfetivo($request);
+        $empresas = Company::query()
+            ->where('cnpj', $cnpj)
+            ->whereIn('id', $this->empresasDo($usuario))
+            ->pluck('id');
+
+        $viabilidades = ViabilityRequest::query()
+            ->whereIn('company_id', $empresas)
+            ->where('status', ViabilityRequestStatus::Deferida)
+            ->whereHas('decision', fn ($query) => $query->whereNotNull('tvl_product_number'))
+            ->with('decision')
+            ->orderBy('id')
+            ->get()
+            ->map(function (ViabilityRequest $origem): array {
+                $avaliacao = $this->elegibilidade->avaliar($origem);
+
+                return [
+                    'id' => $origem->id,
+                    'numero' => $origem->decision?->tvl_product_number,
+                    'elegivel' => $avaliacao->elegivel,
+                    'motivo' => $avaliacao->motivo,
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'cnpj' => $empresa->cnpj,
+            'razao_social' => $empresa->razaoSocial,
+            'nome_fantasia' => $empresa->nomeFantasia,
+            'telefone' => $empresa->telefone,
+            'endereco' => $empresa->endereco,
+            'viabilidades' => $viabilidades,
         ]);
     }
 

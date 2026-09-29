@@ -35,7 +35,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
             '*/pessoaView/buscarPorCPF/*' => Http::response(['nome' => 'Filipe Falcao']),
         ]);
 
-        $resultado = $this->authenticator()->attempt('filipefalcao', 'senha', '12345678901');
+        $resultado = $this->authenticator()->attempt('seuusuarioad', 'senha', '12345678901');
 
         $this->assertSame('Filipe Falcao', $resultado->nome);
         $this->assertSame('0231400300', $resultado->setorCodigo);
@@ -50,7 +50,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
             '*/ws-autenticacao/discovery' => Http::response(['lotacao' => ['codigo' => '1', 'nome' => 'A']]),
         ]);
 
-        $resultado = $this->authenticator()->attempt('filipefalcao', 'senha');
+        $resultado = $this->authenticator()->attempt('seuusuarioad', 'senha');
 
         $this->assertNull($resultado->nome);
         $this->assertSame('1', $resultado->setorCodigo);
@@ -63,7 +63,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
 
         $this->expectException(SedurAuthInvalidCredentialsException::class);
 
-        $this->authenticator()->attempt('filipefalcao', 'senha-errada', '12345678901');
+        $this->authenticator()->attempt('seuusuarioad', 'senha-errada', '12345678901');
     }
 
     public function test_indisponibilidade_no_auth_propaga_indisponibilidade(): void
@@ -72,7 +72,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
 
         $this->expectException(SedurAuthUnavailableException::class);
 
-        $this->authenticator()->attempt('filipefalcao', 'senha', '12345678901');
+        $this->authenticator()->attempt('seuusuarioad', 'senha', '12345678901');
     }
 
     public function test_falha_na_pessoa_view_nao_derruba_a_autenticacao(): void
@@ -83,7 +83,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
             '*/pessoaView/buscarPorCPF/*' => Http::response([], 502),
         ]);
 
-        $resultado = $this->authenticator()->attempt('filipefalcao', 'senha', '12345678901');
+        $resultado = $this->authenticator()->attempt('seuusuarioad', 'senha', '12345678901');
 
         $this->assertNull($resultado->nome);
         $this->assertTrue($resultado->sincronizacaoFalhou);
@@ -98,7 +98,7 @@ class SedurDirectoryAuthenticatorTest extends TestCase
             '*/pessoaView/buscarPorCPF/*' => Http::response(['nome' => 'Filipe Falcao']),
         ]);
 
-        $resultado = $this->authenticator()->attempt('filipefalcao', 'senha', '12345678901');
+        $resultado = $this->authenticator()->attempt('seuusuarioad', 'senha', '12345678901');
 
         $this->assertSame('Filipe Falcao', $resultado->nome);
         $this->assertTrue($resultado->sincronizacaoFalhou);

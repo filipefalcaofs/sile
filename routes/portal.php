@@ -135,6 +135,7 @@ Route::middleware(['auth:web', 'verified'])
             // com {solicitacao} entram em 08-06/08-11. O store degrada de forma
             // comunicada com o toggle features.solicitacao_viabilidade off.
             Route::get('renovacao', [RenovacaoController::class, 'index'])->name('renovacao.index');
+            Route::post('renovacao/consultar-cnpj', [RenovacaoController::class, 'consultarCnpj'])->name('renovacao.consultar-cnpj');
             Route::get('renovacao/{origem}', [RenovacaoController::class, 'show'])->name('renovacao.show');
             Route::post('renovacao/{origem}', [RenovacaoController::class, 'store'])->name('renovacao.store');
 

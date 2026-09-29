@@ -26,7 +26,7 @@ class GestaoAdPasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $servidorAd = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidorAd = User::factory()->administrador()->ad('seuusuarioad')->create();
         $servidorLocal = User::factory()->administrador()->create();
 
         $respostaAd = $this->post('/gestao/forgot-password', ['email' => $servidorAd->email]);
@@ -41,7 +41,7 @@ class GestaoAdPasswordResetTest extends TestCase
 
     public function test_conta_ad_nao_redefine_senha_mesmo_com_token_valido(): void
     {
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
         $hashAntes = $servidor->password;
 
         $token = Password::broker('users')->createToken($servidor);
@@ -59,7 +59,7 @@ class GestaoAdPasswordResetTest extends TestCase
 
     public function test_conta_ad_nao_altera_senha_pela_area_da_conta(): void
     {
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->withAcceptedLgpdTerm()->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->withAcceptedLgpdTerm()->create();
 
         $this->actingAs($servidor, 'gestao');
 

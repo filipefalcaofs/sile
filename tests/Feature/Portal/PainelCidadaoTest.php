@@ -83,9 +83,9 @@ class PainelCidadaoTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('portal/dashboard')
-                ->where('indicadores.em_andamento', 2)
-                ->where('indicadores.empresas', 1)
-                ->where('indicadores.consultas', 2)
+                ->where('indicadores.em_analise', 1)
+                ->where('indicadores.processos', 4)
+                ->where('indicadores.em_convite', 0)
                 ->where('emRepresentacao', false));
     }
 
@@ -171,9 +171,9 @@ class PainelCidadaoTest extends TestCase
             ->get('/portal/painel')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->where('indicadores.em_andamento', 0)
-                ->where('indicadores.empresas', 0)
-                ->where('indicadores.consultas', 0)
+                ->where('indicadores.em_analise', 0)
+                ->where('indicadores.processos', 0)
+                ->where('indicadores.em_convite', 0)
                 ->has('atencao.pendencias', 0)
                 ->has('atencao.rascunhos', 0)
                 ->has('solicitacoesRecentes', 0)
@@ -214,11 +214,10 @@ class PainelCidadaoTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('emRepresentacao', true)
                 // Solicitações/empresas do representado.
-                ->where('indicadores.em_andamento', 1)
-                ->where('indicadores.empresas', 1)
+                ->where('indicadores.em_analise', 0)
+                ->where('indicadores.processos', 1)
+                ->where('indicadores.em_convite', 0)
                 ->has('solicitacoesRecentes', 1)
-                ->where('solicitacoesRecentes.0.id', $grantorReq->id)
-                // Consultas (pessoais do procurador) omitidas em representação.
-                ->where('indicadores.consultas', null));
+                ->where('solicitacoesRecentes.0.id', $grantorReq->id));
     }
 }

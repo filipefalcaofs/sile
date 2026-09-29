@@ -1,7 +1,12 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useHttp } from '@inertiajs/react';
+import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
+import Input from '@/components/form/input';
+import Label from '@/components/form/label';
+import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import Button from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import PortalLayout from '@/layouts/portal-layout';
 
@@ -14,6 +19,15 @@ interface TvlItem {
     tipo: string | null;
     empresa: string | null;
     endereco: string | null;
+}
+
+interface ConsultaCnpj {
+    cnpj: string;
+    razao_social: string;
+    nome_fantasia: string | null;
+    telefone: string | null;
+    endereco: string | null;
+    viabilidades: { id: number; numero: string | null; elegivel: boolean; motivo: string | null }[];
 }
 
 function formatDate(value: string | null): string {
@@ -31,21 +45,100 @@ function formatDate(value: string | null): string {
 }
 
 export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
+    const consulta = useHttp<{ cnpj: string }, ConsultaCnpj>({ cnpj: '' });
+    const [cnpj, setCnpj] = useState('');
+    const [resultado, setResultado] = useState<ConsultaCnpj | null>(null);
+    const [erro, setErro] = useState<string | null>(null);
+
+    function buscarCnpj() {
+        setErro(null);
+        setResultado(null);
+        consulta.setData('cnpj', cnpj);
+        consulta.post('/portal/renovacao/consultar-cnpj', {
+            onSuccess: (resposta: unknown) => setResultado(resposta as ConsultaCnpj),
+            onError: (payload: { message?: string }) => {
+                setErro(payload?.message ?? 'Não foi possível consultar o CNPJ na SEDUR.');
+            },
+        });
+    }
+
     return (
         <PortalLayout>
-            <Head title="Renovar TVL" />
-            <PageHeader title="Renovar TVL" breadcrumbs={[{ label: 'Meu painel', href: '/portal/painel' }]} />
+            <Head title="Renovação de Viabilidade" />
+            <PageHeader title="Renovação de Viabilidade" breadcrumbs={[{ label: 'Meu painel', href: '/portal/painel' }]} />
 
             <p className="mb-6 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
-                Escolha o TVL provisório emitido por este portal. Endereço e atividades não mudam na renovação. TVL do SIGS continua sendo renovado no SIGS.
+                Informe o CNPJ da empresa. O sistema consulta a base da SEDUR e localiza a viabilidade provisória deste portal. Viabilidade do SIGS continua sendo renovada no SIGS.
             </p>
+
+            <Card className="mb-6">
+                <CardHeader title="CNPJ da empresa" description="A consulta valida os dados cadastrais na SEDUR." />
+                <CardContent className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <div className="w-full sm:max-w-xs">
+                            <Label htmlFor="cnpj-renovacao">CNPJ</Label>
+                            <Input
+                                id="cnpj-renovacao"
+                                inputMode="numeric"
+                                autoComplete="off"
+                                value={cnpj}
+                                placeholder="00.000.000/0000-00"
+                                onChange={(event) => setCnpj(event.target.value)}
+                            />
+                        </div>
+                        <Button className="min-h-11" onClick={buscarCnpj} loading={consulta.processing} disabled={cnpj.trim() === ''}>
+                            Consultar
+                        </Button>
+                    </div>
+                    {erro && <Alert variant="error" title="Consulta não concluída" message={erro} />}
+                    {resultado && (
+                        <dl className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+                            <div>
+                                <dt className="text-gray-500">Razão social</dt>
+                                <dd className="font-medium text-gray-800 dark:text-white/90">{resultado.razao_social || '—'}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-gray-500">Nome fantasia</dt>
+                                <dd className="font-medium text-gray-800 dark:text-white/90">{resultado.nome_fantasia || '—'}</dd>
+                            </div>
+                            <div className="md:col-span-2">
+                                <dt className="text-gray-500">Endereço na SEDUR</dt>
+                                <dd className="font-medium text-gray-800 dark:text-white/90">{resultado.endereco || '—'}</dd>
+                            </div>
+                            {resultado.viabilidades.length === 0 ? (
+                                <p className="md:col-span-2 text-gray-600 dark:text-gray-300">
+                                    Não há viabilidade provisória deste portal para esse CNPJ.
+                                </p>
+                            ) : (
+                                <ul className="md:col-span-2 flex flex-col gap-2">
+                                    {resultado.viabilidades.map((item) => (
+                                        <li key={item.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                            <span>Viabilidade {item.numero}</span>
+                                            {item.elegivel ? (
+                                                <Link
+                                                    href={`/portal/renovacao/${item.id}`}
+                                                    className="inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-medium text-white"
+                                                >
+                                                    Renovar
+                                                </Link>
+                                            ) : (
+                                                <span className="text-gray-600 dark:text-gray-300">{item.motivo}</span>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </dl>
+                    )}
+                </CardContent>
+            </Card>
 
             {tvls.length === 0 ? (
                 <Card>
                     <CardContent>
                         <EmptyState
-                            title="Nenhum TVL para renovar"
-                            description="Quando uma viabilidade provisória emitida por este portal estiver deferida, ela aparece aqui. TVL do SIGS continua sendo renovado no SIGS."
+                            title="Nenhuma viabilidade para renovar"
+                            description="Quando uma viabilidade provisória emitida por este portal estiver deferida, ela aparece aqui. Viabilidade do SIGS continua sendo renovada no SIGS."
                         />
                     </CardContent>
                 </Card>
