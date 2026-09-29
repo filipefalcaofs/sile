@@ -87,6 +87,8 @@ interface Processo {
     protocol_number: string | null;
     status: string;
     status_label: string;
+    renovacao?: boolean;
+    tvl_numero?: string | null;
 }
 
 interface TextoPadrao {
@@ -787,6 +789,9 @@ export default function FichaAnaliseShow({
     );
     const [conditions, setConditions] = useState<string[]>(() => ficha.conditions ?? []);
     const [parecer, setParecer] = useState<string>(() => ficha.parecer ?? '');
+    const [tvlKind, setTvlKind] = useState<'provisoria' | 'definitiva'>('provisoria');
+    const [tvlValidUntil, setTvlValidUntil] = useState('');
+    const [condicionantesAtendidos, setCondicionantesAtendidos] = useState(true);
     const [parking, setParking] = useState<Parking>(() => ficha.parking ?? {});
     const [sedeEscritorioVirtual, setSedeEscritorioVirtual] = useState<boolean>(() => ficha.is_virtual_office_hq ?? false);
     const [novaCondicao, setNovaCondicao] = useState('');
@@ -1073,7 +1078,13 @@ export default function FichaAnaliseShow({
         setErroAcao(null);
         router.post(
             `/gestao/processos/${processo.id}/decidir`,
-            {},
+            processo.renovacao
+                ? {
+                      tvl_kind: tvlKind,
+                      tvl_valid_until: tvlValidUntil,
+                      condicionantes_atendidos: condicionantesAtendidos,
+                  }
+                : {},
             {
                 preserveScroll: true,
                 onSuccess: () => setShowDecidir(false),
@@ -2603,6 +2614,42 @@ export default function FichaAnaliseShow({
                     <>
                         O resultado (deferir/indeferir) é construído a partir da ficha finalizada e o processo é
                         encerrado. A ação é auditada e dispara as comunicações cabíveis.
+                        {processo.renovacao && (
+                            <span className="mt-3 flex flex-col gap-3 text-left font-normal text-gray-700 dark:text-gray-300">
+                                <span>
+                                    TVL {processo.tvl_numero ?? '—'}. A renovação não gera número novo: informe o tipo
+                                    liberado e a nova validade.
+                                </span>
+                                <label className="flex min-h-11 items-center gap-2 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        checked={condicionantesAtendidos}
+                                        onChange={(event) => setCondicionantesAtendidos(event.target.checked)}
+                                    />
+                                    Condicionantes do TVL provisório atendidos
+                                </label>
+                                <label className="flex flex-col gap-1 text-sm">
+                                    Tipo liberado
+                                    <select
+                                        className="min-h-11 rounded-lg border border-gray-300 px-3 dark:border-gray-700 dark:bg-gray-900"
+                                        value={tvlKind}
+                                        onChange={(event) => setTvlKind(event.target.value as 'provisoria' | 'definitiva')}
+                                    >
+                                        <option value="provisoria">Provisória</option>
+                                        <option value="definitiva">Definitiva</option>
+                                    </select>
+                                </label>
+                                <label className="flex flex-col gap-1 text-sm">
+                                    Nova data de validade
+                                    <input
+                                        type="date"
+                                        className="min-h-11 rounded-lg border border-gray-300 px-3 dark:border-gray-700 dark:bg-gray-900"
+                                        value={tvlValidUntil}
+                                        onChange={(event) => setTvlValidUntil(event.target.value)}
+                                    />
+                                </label>
+                            </span>
+                        )}
                         {erroAcao && (
                             <span className="mt-2 block font-medium text-error-600 dark:text-error-500">
                                 {erroAcao}

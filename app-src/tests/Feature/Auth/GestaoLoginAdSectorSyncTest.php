@@ -46,7 +46,7 @@ class GestaoLoginAdSectorSyncTest extends TestCase
             '*/pessoaView/buscarPorCPF/*' => Http::response(['nome' => 'Nome Sincronizado']),
         ]);
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create([
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create([
             'name' => 'Nome Antigo',
         ]);
 
@@ -78,7 +78,7 @@ class GestaoLoginAdSectorSyncTest extends TestCase
             '*/pessoaView/buscarPorCPF/*' => Http::response(['nome' => 'Nome Ok']),
         ]);
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
             'identifier' => $servidor->email,
@@ -105,10 +105,10 @@ class GestaoLoginAdSectorSyncTest extends TestCase
             '*/pessoaView/buscarPorCPF/*' => Http::response(['nome' => 'Servidor']),
         ]);
 
-        $servidor = User::factory()->administrador()->ad('filipefalcao')->create();
+        $servidor = User::factory()->administrador()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
-            'identifier' => 'filipefalcao',
+            'identifier' => 'seuusuarioad',
             'password' => 'senha-corporativa',
         ])->assertRedirect('/gestao');
 

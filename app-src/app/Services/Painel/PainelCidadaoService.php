@@ -6,9 +6,7 @@ use App\Enums\AnalysisPendencyStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Resources\Portal\SolicitacaoResumoResource;
 use App\Models\AnalysisPendency;
-use App\Models\Company;
 use App\Models\User;
-use App\Models\ViabilityQuery;
 use App\Models\ViabilityRequest;
 
 /**
@@ -16,24 +14,11 @@ use App\Models\ViabilityRequest;
  * recebe o usuário EFETIVO (representado quando "em nome de") e o usuário LOGADO,
  * e devolve um array pronto para a página Inertia.
  *
- * Escopo (LGPD): solicitações/empresas usam o efetivo; consultas usam o logado e
- * são omitidas (null) em representação, para não somar titulares distintos.
+ * Escopo (LGPD): os processos são do efetivo. Em representação, o painel mostra
+ * os processos do representado, não os do procurador.
  */
 class PainelCidadaoService
 {
-    /**
-     * Estados não terminais que contam como "em andamento" (rascunho fica de
-     * fora — aparece no bloco de atenção, não é processo em curso).
-     *
-     * @var list<ViabilityRequestStatus>
-     */
-    private const EM_ANDAMENTO = [
-        ViabilityRequestStatus::Protocolada,
-        ViabilityRequestStatus::EmAnalise,
-        ViabilityRequestStatus::EmPendencia,
-        ViabilityRequestStatus::AguardandoBap,
-    ];
-
     /**
      * @return array<string, mixed>
      */
@@ -42,7 +27,7 @@ class PainelCidadaoService
         $emRepresentacao = $efetivo->id !== $logado->id;
 
         return [
-            'indicadores' => $this->indicadores($efetivo, $logado, $emRepresentacao),
+            'indicadores' => $this->indicadores($efetivo),
             'atencao' => $this->atencao($efetivo),
             'solicitacoesRecentes' => $this->solicitacoesRecentes($efetivo),
             'emRepresentacao' => $emRepresentacao,
@@ -50,9 +35,9 @@ class PainelCidadaoService
     }
 
     /**
-     * @return array{em_andamento: int, empresas: int, consultas: int|null}
+     * @return array{em_analise: int, processos: int, em_convite: int}
      */
-    private function indicadores(User $efetivo, User $logado, bool $emRepresentacao): array
+    private function indicadores(User $efetivo): array
     {
         $porStatus = ViabilityRequest::query()
             ->where('requester_user_id', $efetivo->id)
@@ -60,13 +45,10 @@ class PainelCidadaoService
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        $emAndamento = collect(self::EM_ANDAMENTO)
-            ->sum(fn (ViabilityRequestStatus $status): int => (int) ($porStatus[$status->value] ?? 0));
-
         return [
-            'em_andamento' => (int) $emAndamento,
-            'empresas' => Company::countForUser($efetivo),
-            'consultas' => $emRepresentacao ? null : ViabilityQuery::forUser($logado)->count(),
+            'em_analise' => (int) ($porStatus[ViabilityRequestStatus::EmAnalise->value] ?? 0),
+            'processos' => (int) $porStatus->sum(),
+            'em_convite' => (int) ($porStatus[ViabilityRequestStatus::EmPendencia->value] ?? 0),
         ];
     }
 

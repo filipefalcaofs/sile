@@ -3,11 +3,13 @@
 namespace App\Services\Regin;
 
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 /**
  * Teste de conexão REAL contra o /acesso/auth da URL ativa (homolog ou prod).
- * Falha é honesta; o resultado nunca carrega senha, JWT ou corpo da API.
+ * Falha é honesta: a mensagem leva o erro de conexão ou o corpo HTTP.
+ * Senha e JWT nunca aparecem no resultado.
  */
 class ReginConnectionTester
 {
@@ -32,10 +34,10 @@ class ReginConnectionTester
                     'username' => $this->settings->username(),
                     'password' => $this->settings->password(),
                 ]);
-        } catch (ConnectionException) {
+        } catch (ConnectionException $exception) {
             return new ReginConnectionResult(
                 false,
-                "Ambiente de {$ambiente} indisponível. Confira a URL e a rede.",
+                $this->semSegredo("Ambiente de {$ambiente} indisponível. ".$exception->getMessage()),
             );
         }
 
@@ -43,10 +45,41 @@ class ReginConnectionTester
             return new ReginConnectionResult(true, "Conexão com a {$ambiente} bem-sucedida.");
         }
 
+        $detalhe = $this->detalheHttp($response);
+
         if ($response->unauthorized() || $response->forbidden()) {
-            return new ReginConnectionResult(false, 'Credencial rejeitada pelo REGIN.');
+            return new ReginConnectionResult(false, $this->semSegredo("Credencial rejeitada pelo REGIN. {$detalhe}"));
         }
 
-        return new ReginConnectionResult(false, "Falha ao autenticar no ambiente de {$ambiente}.");
+        return new ReginConnectionResult(
+            false,
+            $this->semSegredo("Falha ao autenticar no ambiente de {$ambiente}. {$detalhe}"),
+        );
+    }
+
+    private function detalheHttp(Response $response): string
+    {
+        $corpo = trim($response->body());
+
+        if (strlen($corpo) > 1500) {
+            $corpo = substr($corpo, 0, 1500).'…';
+        }
+
+        $corpo = preg_replace('/("token"\s*:\s*")[^"]+/', '$1[redigido]', $corpo) ?? $corpo;
+
+        return $corpo === ''
+            ? 'HTTP '.$response->status()
+            : 'HTTP '.$response->status().': '.$corpo;
+    }
+
+    private function semSegredo(string $texto): string
+    {
+        $senha = $this->settings->password();
+
+        if ($senha === '') {
+            return $texto;
+        }
+
+        return str_replace($senha, '[redigido]', $texto);
     }
 }

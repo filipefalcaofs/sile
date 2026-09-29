@@ -23,19 +23,19 @@ class AuthTypeUserTest extends TestCase
 
     public function test_usuario_ad_tem_conta_vinculada_e_e_reconhecido(): void
     {
-        $user = User::factory()->ad('filipefalcao')->create();
+        $user = User::factory()->ad('seuusuarioad')->create();
 
         $this->assertSame(AuthType::Ad, $user->fresh()->auth_type);
-        $this->assertSame('filipefalcao', $user->ad_username);
+        $this->assertSame('seuusuarioad', $user->ad_username);
         $this->assertTrue($user->isAdAccount());
     }
 
     public function test_ad_username_e_unico(): void
     {
-        User::factory()->ad('filipefalcao')->create();
+        User::factory()->ad('seuusuarioad')->create();
 
         $this->expectException(QueryException::class);
 
-        User::factory()->ad('filipefalcao')->create();
+        User::factory()->ad('seuusuarioad')->create();
     }
 }

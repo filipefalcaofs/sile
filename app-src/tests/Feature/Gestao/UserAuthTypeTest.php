@@ -38,14 +38,14 @@ class UserAuthTypeTest extends TestCase
 
         $response = $this->put("/gestao/usuarios/{$servidor->id}/autenticacao", [
             'auth_type' => 'ad',
-            'ad_username' => 'filipefalcao',
+            'ad_username' => 'seuusuarioad',
         ]);
 
         $response->assertSessionHasNoErrors();
 
         $servidor->refresh();
         $this->assertSame(AuthType::Ad, $servidor->auth_type);
-        $this->assertSame('filipefalcao', $servidor->ad_username);
+        $this->assertSame('seuusuarioad', $servidor->ad_username);
         $this->assertFalse(Hash::check('password', $servidor->password));
 
         $this->assertDatabaseHas('activity_log', [
@@ -67,12 +67,12 @@ class UserAuthTypeTest extends TestCase
     public function test_ad_username_precisa_ser_unico(): void
     {
         $this->gestorLogado();
-        User::factory()->ad('filipefalcao')->create();
+        User::factory()->ad('seuusuarioad')->create();
         $outro = User::factory()->analista()->create();
 
         $this->put("/gestao/usuarios/{$outro->id}/autenticacao", [
             'auth_type' => 'ad',
-            'ad_username' => 'filipefalcao',
+            'ad_username' => 'seuusuarioad',
         ])->assertSessionHasErrors('ad_username');
     }
 
@@ -83,7 +83,7 @@ class UserAuthTypeTest extends TestCase
 
         $this->put("/gestao/usuarios/{$servidor->id}/autenticacao", [
             'auth_type' => 'local',
-            'ad_username' => 'filipefalcao',
+            'ad_username' => 'seuusuarioad',
         ])->assertSessionHasErrors('ad_username');
     }
 
@@ -91,7 +91,7 @@ class UserAuthTypeTest extends TestCase
     {
         Notification::fake();
         $this->gestorLogado();
-        $servidor = User::factory()->analista()->ad('filipefalcao')->create();
+        $servidor = User::factory()->analista()->ad('seuusuarioad')->create();
 
         $this->put("/gestao/usuarios/{$servidor->id}/autenticacao", [
             'auth_type' => 'local',
@@ -108,12 +108,12 @@ class UserAuthTypeTest extends TestCase
     {
         Notification::fake();
         $this->gestorLogado();
-        $servidor = User::factory()->analista()->ad('filipefalcao')->create();
+        $servidor = User::factory()->analista()->ad('seuusuarioad')->create();
         $hashAntes = $servidor->password;
 
         $this->put("/gestao/usuarios/{$servidor->id}/autenticacao", [
             'auth_type' => 'ad',
-            'ad_username' => 'filipefalcao',
+            'ad_username' => 'seuusuarioad',
         ])->assertSessionHasNoErrors();
 
         $this->assertSame($hashAntes, $servidor->fresh()->password);
@@ -129,7 +129,7 @@ class UserAuthTypeTest extends TestCase
 
         $this->put("/gestao/usuarios/{$servidor->id}/autenticacao", [
             'auth_type' => 'ad',
-            'ad_username' => 'filipefalcao',
+            'ad_username' => 'seuusuarioad',
         ])->assertForbidden();
     }
 }

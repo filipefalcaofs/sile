@@ -30,12 +30,12 @@ class SedurAuthClientTest extends TestCase
     {
         Http::fake(['*/ws-autenticacao/auth' => Http::response(['token' => 'tk-123'])]);
 
-        $token = $this->client()->autenticar('filipefalcao', 'senha-corporativa');
+        $token = $this->client()->autenticar('seuusuarioad', 'senha-corporativa');
 
         $this->assertSame('tk-123', $token);
 
         Http::assertSent(fn ($request) => $request->url() === 'https://sedur.test/k8s/prd/ws-autenticacao/auth'
-            && $request['usuario'] === 'filipefalcao'
+            && $request['usuario'] === 'seuusuarioad'
             && $request['senha'] === 'senha-corporativa');
     }
 
@@ -45,7 +45,7 @@ class SedurAuthClientTest extends TestCase
 
         $this->expectException(SedurAuthInvalidCredentialsException::class);
 
-        $this->client()->autenticar('filipefalcao', 'senha-errada');
+        $this->client()->autenticar('seuusuarioad', 'senha-errada');
     }
 
     public function test_erro_http_da_api_e_indisponibilidade(): void
@@ -54,7 +54,7 @@ class SedurAuthClientTest extends TestCase
 
         $this->expectException(SedurAuthUnavailableException::class);
 
-        $this->client()->autenticar('filipefalcao', 'senha-corporativa');
+        $this->client()->autenticar('seuusuarioad', 'senha-corporativa');
     }
 
     public function test_falha_de_conexao_e_indisponibilidade(): void
@@ -63,7 +63,7 @@ class SedurAuthClientTest extends TestCase
 
         $this->expectException(SedurAuthUnavailableException::class);
 
-        $this->client()->autenticar('filipefalcao', 'senha-corporativa');
+        $this->client()->autenticar('seuusuarioad', 'senha-corporativa');
     }
 
     public function test_resposta_sem_token_e_indisponibilidade(): void
@@ -72,7 +72,7 @@ class SedurAuthClientTest extends TestCase
 
         $this->expectException(SedurAuthUnavailableException::class);
 
-        $this->client()->autenticar('filipefalcao', 'senha-corporativa');
+        $this->client()->autenticar('seuusuarioad', 'senha-corporativa');
     }
 
     public function test_senha_nunca_aparece_na_mensagem_das_excecoes(): void
@@ -80,7 +80,7 @@ class SedurAuthClientTest extends TestCase
         Http::fake(['*/ws-autenticacao/auth' => Http::response('senha-corporativa vazada no corpo', 500)]);
 
         try {
-            $this->client()->autenticar('filipefalcao', 'senha-corporativa');
+            $this->client()->autenticar('seuusuarioad', 'senha-corporativa');
             $this->fail('Esperava SedurAuthUnavailableException.');
         } catch (SedurAuthUnavailableException $e) {
             $this->assertStringNotContainsString('senha-corporativa', $e->getMessage());

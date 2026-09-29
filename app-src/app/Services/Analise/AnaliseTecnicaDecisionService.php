@@ -4,6 +4,7 @@ namespace App\Services\Analise;
 
 use App\Enums\DecisionOutcome;
 use App\Enums\ResultadoViabilidade;
+use App\Enums\TvlKind;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\ResultadoEmitido;
 use App\Models\AnalysisRecord;
@@ -67,6 +68,9 @@ class AnaliseTecnicaDecisionService
         User $analista,
         ?DecisionOutcome $escolhido = null,
         ?string $parecer = null,
+        ?TvlKind $tvlKind = null,
+        ?string $tvlValidUntil = null,
+        ?bool $condicionantesAtendidos = null,
     ): AnaliseDecisionResult {
         if (! $record->isFinalizada()) {
             throw new DomainException(
@@ -96,6 +100,10 @@ class AnaliseTecnicaDecisionService
 
         $derivado = $this->outcome($perCnae);
 
+        if ($request->isRenewal() && $condicionantesAtendidos === false) {
+            $escolhido = DecisionOutcome::Indeferida;
+        }
+
         if ($escolhido === DecisionOutcome::Deferida && $derivado !== DecisionOutcome::Deferida) {
             throw new DomainException(
                 'Não é possível deferir: há atividade indeferida na ficha. Ajuste a atividade ou escolha Indeferido.',
@@ -103,13 +111,29 @@ class AnaliseTecnicaDecisionService
         }
 
         $outcome = $escolhido ?? $derivado;
+
+        if ($request->isRenewal() && $outcome === DecisionOutcome::Deferida && ($tvlKind === null || blank($tvlValidUntil))) {
+            throw new DomainException(
+                'Informe o tipo (provisória ou definitiva) e a nova data de validade para deferir a renovação.',
+            );
+        }
+
         $justificativa = $outcome === DecisionOutcome::Indeferida
             ? $this->justificativaDoIndeferimento($record, $perCnae, $parecer)
             : null;
 
         try {
             $decision = DB::transaction(
-                fn (): ViabilityDecision => $this->registrarDecisao($request, $record, $analista, $perCnae, $outcome, $justificativa),
+                fn (): ViabilityDecision => $this->registrarDecisao(
+                    $request,
+                    $record,
+                    $analista,
+                    $perCnae,
+                    $outcome,
+                    $justificativa,
+                    $tvlKind,
+                    $tvlValidUntil,
+                ),
             );
         } catch (QueryException $e) {
             // Robustez idempotente (mesma defesa da Fase 9): se uma corrida rara
@@ -147,6 +171,8 @@ class AnaliseTecnicaDecisionService
         array $perCnae,
         DecisionOutcome $outcome,
         ?string $justificativa,
+        ?TvlKind $tvlKind = null,
+        ?string $tvlValidUntil = null,
     ): ViabilityDecision {
         // Sede de escritório virtual (RN-EV-02/03/04): deferida + o analista
         // confirmou sede na ficha + o processo tem o CNAE gatilho (8211-3/00).
@@ -175,7 +201,11 @@ class AnaliseTecnicaDecisionService
             'is_virtual_office_hq' => $isSede,
             'is_virtual_office_tenant' => $abrigado !== null,
             'virtual_office_hq_tvl_number' => $abrigado['hq_tvl_number'] ?? null,
-            'tvl_product_number' => $outcome === DecisionOutcome::Deferida ? $this->tvl->generate() : null,
+            'tvl_product_number' => $outcome === DecisionOutcome::Deferida && ! $request->isRenewal()
+                ? $this->tvl->generate()
+                : null,
+            'tvl_kind' => $request->isRenewal() && $outcome === DecisionOutcome::Deferida ? $tvlKind : null,
+            'tvl_valid_until' => $request->isRenewal() && $outcome === DecisionOutcome::Deferida ? $tvlValidUntil : null,
             'per_cnae' => $perCnae,
             'rules_versions' => $record->engine_rules_versions ?? [],
             'fundamentacao' => $fundamentacao,

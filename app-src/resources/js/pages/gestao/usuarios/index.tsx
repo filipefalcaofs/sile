@@ -206,7 +206,7 @@ function AuthTypeModal({ user, onClose }: { user: UserItem; onClose: () => void 
                                     name="ad_username"
                                     value={adUsername}
                                     onChange={(event) => setAdUsername(event.target.value)}
-                                    placeholder="ex.: filipefalcao"
+                                    placeholder="ex.: seuusuarioad"
                                     autoComplete="off"
                                 />
                                 {errors.ad_username && (

@@ -194,6 +194,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'max:255'],
                 'description' => 'Client Secret da credencial do Login Único GOV.BR (armazenado criptografado)',
             ],
+            'integrations.sedur_contato.base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-contato',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'URL base da consulta cadastral de CNPJ e CPF da SEDUR (ws-contato). Troque o trecho prd por hml para homologação',
+            ],
             'integrations.sedur_auth.base_url' => [
                 'group' => 'integracoes',
                 'type' => 'string',
@@ -371,6 +378,13 @@ class ParameterSeeder extends Seeder
                 'default_value' => '180',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:3650'],
                 'description' => 'Janela (dias) da detecção de reincidência por CNPJ — alerta com link ao processo anterior, nunca bloqueia (direito de petição). Definição oficial pendente SEDUR',
+            ],
+            'renovacao.intervalo_meses' => [
+                'group' => 'solicitacao',
+                'type' => 'integer',
+                'default_value' => '3',
+                'validation_rules' => ['required', 'integer', 'min:1', 'max:60'],
+                'description' => 'Intervalo mínimo (meses) entre renovações do mesmo TVL. Dentro do intervalo o sistema recusa um novo protocolo',
             ],
             'features.fluxo_expresso' => [
                 'group' => 'features',
@@ -786,6 +800,7 @@ class ParameterSeeder extends Seeder
             'risco.dimensao_tvl',
             'analise.escritorio_virtual.cnae_gatilho_sede',
             'features.fluxo_expresso',
+            'renovacao.intervalo_meses',
         ];
     }
 }
