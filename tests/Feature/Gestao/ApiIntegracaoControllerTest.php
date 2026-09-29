@@ -33,13 +33,14 @@ class ApiIntegracaoControllerTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/config-apis/index')
                 ->where('aba', 'regin')
-                ->has('abas', 9)
+                ->has('abas', 7)
                 ->where('abas.0.nome', 'REGIN')
                 ->where('abas.1.nome', 'Inscrição imobiliária')
                 ->where('abas.2.nome', 'CPF e CNPJ')
-                ->where('abas.2.campos.0.valor', 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-contato')
-                ->where('abas.5.campos.3.valor', null)
-                ->where('abas.5.campos.3.tem_valor', true))
+                ->where('abas.2.campos.2.valor', 'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-contato')
+                ->where('abas.2.campos.3.valor', 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-contato')
+                ->where('abas.4.campos.5.valor', null)
+                ->where('abas.4.campos.5.tem_valor', true))
             ->assertDontSee('segredo-govbr-que-nao-pode-aparecer');
     }
 
@@ -48,7 +49,10 @@ class ApiIntegracaoControllerTest extends TestCase
         $this->actingAs($this->admin(), 'gestao')
             ->put('/gestao/config-apis/sedur_contato', [
                 'campos' => [
-                    'base_url' => 'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-contato',
+                    'habilitada' => '1',
+                    'em_producao' => '0',
+                    'url_homologacao' => 'https://api.sedur.salvador.ba.gov.br/k8s/hml/ws-contato',
+                    'url_producao' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-contato',
                 ],
             ])
             ->assertRedirect(route('gestao.config-apis.edit', ['aba' => 'sedur_contato']));
@@ -88,10 +92,15 @@ class ApiIntegracaoControllerTest extends TestCase
         $this->actingAs($this->admin(), 'gestao')
             ->from('/gestao/config-apis?aba=sedur_contato')
             ->put('/gestao/config-apis/sedur_contato', [
-                'campos' => ['base_url' => 'nao-e-url'],
+                'campos' => [
+                    'habilitada' => '1',
+                    'em_producao' => '0',
+                    'url_homologacao' => 'nao-e-url',
+                    'url_producao' => 'https://api.sedur.salvador.ba.gov.br/k8s/prd/ws-contato',
+                ],
             ])
             ->assertRedirect('/gestao/config-apis?aba=sedur_contato')
-            ->assertSessionHasErrors('campos.base_url');
+            ->assertSessionHasErrors('campos.url_homologacao');
     }
 
     public function test_analista_nao_acessa(): void

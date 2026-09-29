@@ -5,6 +5,7 @@ namespace Tests\Feature\Companies;
 use App\Models\Activity;
 use App\Models\Parameter;
 use App\Models\User;
+use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjData;
 use App\Services\Cnpj\CnpjLookup;
 use App\Services\Cnpj\CnpjLookupException;
@@ -27,8 +28,24 @@ class CnpjLookupTest extends TestCase
         Http::preventStrayRequests();
     }
 
+    private function sedurEmpresa(): array
+    {
+        return [
+            'cnpj' => '00000000000191',
+            'razaoSocial' => 'BANCO DO BRASIL SA',
+            'nomeFantasia' => 'DIRECAO GERAL',
+            'telefone' => '6134939002',
+            'endereco' => [
+                'logradouro' => 'SAUN Quadra 5',
+                'municipio' => 'Brasilia',
+                'uf' => 'DF',
+            ],
+        ];
+    }
+
     /**
      * Payload REAL da BrasilAPI (Banco do Brasil) registrado na pesquisa.
+     * Cobre só o adaptador antigo, que não é mais o binding da aplicação.
      *
      * @return array<string, mixed>
      */
@@ -56,7 +73,7 @@ class CnpjLookupTest extends TestCase
 
     public function test_lookup_retorna_dto_com_dados_do_provider(): void
     {
-        Http::fake(['*/00000000000191' => Http::response($this->brasilApiFixture(), 200)]);
+        Http::fake(['*' => Http::response($this->sedurEmpresa(), 200)]);
 
         $data = app(CnpjLookup::class)->lookup('00000000000191');
 
@@ -64,15 +81,9 @@ class CnpjLookupTest extends TestCase
         $this->assertSame('00000000000191', $data->cnpj);
         $this->assertSame('BANCO DO BRASIL SA', $data->legalName);
         $this->assertSame('DIRECAO GERAL', $data->tradeName);
-        $this->assertSame('2038', $data->legalNatureCode);
-        $this->assertSame('05', $data->sizeCode);
-        $this->assertSame('6422100', $data->primaryCnaeCode);
-        $this->assertSame(['6499999'], $data->secondaryCnaeCodes);
-        $this->assertSame('BRASILIA', $data->city);
-        $this->assertSame('DF', $data->state);
-        $this->assertSame('70040912', $data->zipCode);
+        $this->assertNull($data->primaryCnaeCode);
         $this->assertSame('6134939002', $data->phone);
-        $this->assertSame('ATIVA', $data->registrationStatus);
+        $this->assertStringContainsString('SAUN Quadra 5', (string) $data->street);
     }
 
     public function test_lookup_usa_url_parametrizada(): void
@@ -80,23 +91,23 @@ class CnpjLookupTest extends TestCase
         $this->seed(ParameterSeeder::class);
 
         Parameter::query()
-            ->where('key', 'integrations.cnpj_lookup.base_url')
+            ->where('key', 'integrations.sedur_contato.base_url')
             ->first()
-            ->update(['value' => 'https://minhareceita.org']);
+            ->update(['value' => 'https://sedur.test/k8s/hml/ws-contato']);
 
-        Http::fake(['minhareceita.org/*' => Http::response($this->brasilApiFixture(), 200)]);
+        Http::fake(['sedur.test/*' => Http::response($this->sedurEmpresa(), 200)]);
 
         $data = app(CnpjLookup::class)->lookup('00000000000191');
 
         $this->assertSame('BANCO DO BRASIL SA', $data->legalName);
-        Http::assertSent(fn ($request) => str_contains($request->url(), 'minhareceita.org'));
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sedur.test/k8s/hml/ws-contato/pessoajuridica/cnpj/00000000000191'));
     }
 
     public function test_lookup_cacheia_somente_sucesso(): void
     {
         Http::fake(['*/00000000000191' => Http::response($this->brasilApiFixture(), 200)]);
 
-        $service = app(CnpjLookup::class);
+        $service = app(BrasilApiCnpjLookup::class);
         $service->lookup('00000000000191');
 
         $this->assertIsArray(Cache::get('sile.cnpj_lookup.00000000000191'));
@@ -122,7 +133,7 @@ class CnpjLookupTest extends TestCase
                 ->push($this->brasilApiFixture(), 200),
         ]);
 
-        $service = app(CnpjLookup::class);
+        $service = app(BrasilApiCnpjLookup::class);
 
         try {
             $service->lookup('00000000000191');
@@ -151,7 +162,7 @@ class CnpjLookupTest extends TestCase
 
     public function test_consulta_com_sucesso_retorna_dados_para_o_formulario(): void
     {
-        Http::fake(['*/00000000000191' => Http::response($this->brasilApiFixture(), 200)]);
+        Http::fake(['*' => Http::response($this->sedurEmpresa(), 200)]);
 
         $this->actingAs($this->portalUser())
             ->postJson('/portal/empresas/consultar-cnpj', ['cnpj' => '00.000.000/0001-91'])
@@ -183,7 +194,7 @@ class CnpjLookupTest extends TestCase
 
     public function test_consulta_com_sucesso_e_auditada(): void
     {
-        Http::fake(['*/00000000000191' => Http::response($this->brasilApiFixture(), 200)]);
+        Http::fake(['*' => Http::response($this->sedurEmpresa(), 200)]);
 
         $this->actingAs($this->portalUser())
             ->postJson('/portal/empresas/consultar-cnpj', ['cnpj' => '00.000.000/0001-91'])
@@ -201,7 +212,7 @@ class CnpjLookupTest extends TestCase
             ->first();
 
         $this->assertSame('00000000000191', $activity->properties['cnpj']);
-        $this->assertSame('brasilapi.com.br', $activity->properties['provider']);
+        $this->assertSame('api.sedur.salvador.ba.gov.br', $activity->properties['provider']);
     }
 
     public function test_cnpj_invalido_e_rejeitado_sem_consultar(): void
@@ -223,7 +234,7 @@ class CnpjLookupTest extends TestCase
         $this->actingAs($this->portalUser())
             ->postJson('/portal/empresas/consultar-cnpj', ['cnpj' => '00.000.000/0001-91'])
             ->assertStatus(404)
-            ->assertJsonPath('message', 'CNPJ não encontrado na base da Receita Federal.');
+            ->assertJsonPath('message', 'CNPJ não encontrado na base da SEDUR.');
 
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'empresas',

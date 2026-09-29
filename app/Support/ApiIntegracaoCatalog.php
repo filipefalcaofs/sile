@@ -21,11 +21,9 @@ class ApiIntegracaoCatalog
             self::inscricao(),
             self::sedurContato(),
             self::sedurAuth(),
-            self::cnpj(),
             self::govbr(),
             self::geocoding(),
             self::geoserver(),
-            self::whatsapp(),
         ];
     }
 
@@ -98,11 +96,19 @@ class ApiIntegracaoCatalog
         return [
             'id' => 'sedur_contato',
             'nome' => 'CPF e CNPJ',
-            'descricao' => 'Consulta cadastral anônima da SEDUR (ws-contato). Troque prd por hml na URL para homologação.',
+            'descricao' => 'Consulta cadastral da SEDUR (ws-contato) para CPF e CNPJ. O interruptor escolhe a URL ativa.',
             'teste' => null,
-            'espelhar_url_ativa' => null,
+            'espelhar_url_ativa' => [
+                'destino' => 'integrations.sedur_contato.base_url',
+                'interruptor' => 'em_producao',
+                'producao' => 'url_producao',
+                'homologacao' => 'url_homologacao',
+            ],
             'campos' => [
-                self::url('base_url', 'integrations.sedur_contato.base_url', 'URL base'),
+                self::interruptor('habilitada', 'features.cnpj_lookup', 'Consulta de CNPJ no cadastro de empresa'),
+                self::interruptor('em_producao', 'integrations.sedur_contato.em_producao', 'Usar produção'),
+                self::url('url_homologacao', 'integrations.sedur_contato.url_homologacao', 'URL de homologação'),
+                self::url('url_producao', 'integrations.sedur_contato.url_producao', 'URL de produção'),
             ],
         ];
     }
@@ -115,30 +121,19 @@ class ApiIntegracaoCatalog
         return [
             'id' => 'sedur_auth',
             'nome' => 'Autenticação SEDUR',
-            'descricao' => 'API institucional de login AD. A credencial é a do próprio servidor, não fica gravada aqui.',
+            'descricao' => 'API institucional de login AD. O interruptor escolhe a URL ativa. A credencial é a do próprio servidor.',
             'teste' => null,
-            'espelhar_url_ativa' => null,
+            'espelhar_url_ativa' => [
+                'destino' => 'integrations.sedur_auth.base_url',
+                'interruptor' => 'em_producao',
+                'producao' => 'url_producao',
+                'homologacao' => 'url_homologacao',
+            ],
             'campos' => [
                 self::interruptor('habilitada', 'features.ad_login', 'Login AD habilitado'),
-                self::url('base_url', 'integrations.sedur_auth.base_url', 'URL base'),
-            ],
-        ];
-    }
-
-    /**
-     * @return Aba
-     */
-    private static function cnpj(): array
-    {
-        return [
-            'id' => 'cnpj',
-            'nome' => 'CNPJ (Receita)',
-            'descricao' => 'Consulta de CNPJ no cadastro de empresa, pelos dados abertos da Receita Federal.',
-            'teste' => null,
-            'espelhar_url_ativa' => null,
-            'campos' => [
-                self::interruptor('habilitada', 'features.cnpj_lookup', 'Consulta habilitada'),
-                self::url('base_url', 'integrations.cnpj_lookup.base_url', 'URL base'),
+                self::interruptor('em_producao', 'integrations.sedur_auth.em_producao', 'Usar produção'),
+                self::url('url_homologacao', 'integrations.sedur_auth.url_homologacao', 'URL de homologação'),
+                self::url('url_producao', 'integrations.sedur_auth.url_producao', 'URL de produção'),
             ],
         ];
     }
@@ -151,12 +146,19 @@ class ApiIntegracaoCatalog
         return [
             'id' => 'govbr',
             'nome' => 'GOV.BR',
-            'descricao' => 'Login Único. Staging usa sso.staging.acesso.gov.br; produção usa sso.acesso.gov.br.',
+            'descricao' => 'Login Único. O interruptor escolhe a URL ativa.',
             'teste' => null,
-            'espelhar_url_ativa' => null,
+            'espelhar_url_ativa' => [
+                'destino' => 'integrations.govbr.base_url',
+                'interruptor' => 'em_producao',
+                'producao' => 'url_producao',
+                'homologacao' => 'url_homologacao',
+            ],
             'campos' => [
                 self::interruptor('habilitada', 'features.govbr_login', 'Login GOV.BR habilitado'),
-                self::url('base_url', 'integrations.govbr.base_url', 'URL base'),
+                self::interruptor('em_producao', 'integrations.govbr.em_producao', 'Usar produção'),
+                self::url('url_homologacao', 'integrations.govbr.url_homologacao', 'URL de homologação'),
+                self::url('url_producao', 'integrations.govbr.url_producao', 'URL de produção'),
                 self::senha('client_id', 'integrations.govbr.client_id', 'Client ID'),
                 self::senha('client_secret', 'integrations.govbr.client_secret', 'Client Secret'),
                 self::escolha('nivel', 'security.govbr.minimum_level', 'Nível mínimo', [
@@ -176,12 +178,19 @@ class ApiIntegracaoCatalog
         return [
             'id' => 'geocoding',
             'nome' => 'Geocodificação',
-            'descricao' => 'Nominatim da Prefeitura, usado quando o cadastro não traz coordenada.',
+            'descricao' => 'Nominatim da Prefeitura. O interruptor escolhe a URL ativa. Sem host próprio de um ambiente, o valor inicial repete a URL já conhecida.',
             'teste' => null,
-            'espelhar_url_ativa' => null,
+            'espelhar_url_ativa' => [
+                'destino' => 'integrations.geocoding.base_url',
+                'interruptor' => 'em_producao',
+                'producao' => 'url_producao',
+                'homologacao' => 'url_homologacao',
+            ],
             'campos' => [
                 self::interruptor('habilitada', 'features.geocoding', 'Geocodificação habilitada'),
-                self::url('base_url', 'integrations.geocoding.base_url', 'URL base'),
+                self::interruptor('em_producao', 'integrations.geocoding.em_producao', 'Usar produção'),
+                self::url('url_homologacao', 'integrations.geocoding.url_homologacao', 'URL de homologação'),
+                self::url('url_producao', 'integrations.geocoding.url_producao', 'URL de produção'),
             ],
         ];
     }
@@ -194,32 +203,20 @@ class ApiIntegracaoCatalog
         return [
             'id' => 'geoserver',
             'nome' => 'GeoServer',
-            'descricao' => 'WFS/WMS de zoneamento da SEDUR.',
+            'descricao' => 'WFS/WMS de zoneamento. O interruptor escolhe a URL ativa. Sem host próprio de um ambiente, o valor inicial repete a URL já conhecida.',
             'teste' => null,
-            'espelhar_url_ativa' => null,
+            'espelhar_url_ativa' => [
+                'destino' => 'integrations.geoserver.base_url',
+                'interruptor' => 'em_producao',
+                'producao' => 'url_producao',
+                'homologacao' => 'url_homologacao',
+            ],
             'campos' => [
                 self::interruptor('zona', 'features.geoserver_zona', 'Consulta de zona habilitada'),
                 self::interruptor('territorio', 'features.geoserver_territorio', 'Regras territoriais habilitadas'),
-                self::url('base_url', 'integrations.geoserver.base_url', 'URL base'),
-            ],
-        ];
-    }
-
-    /**
-     * @return Aba
-     */
-    private static function whatsapp(): array
-    {
-        return [
-            'id' => 'whatsapp',
-            'nome' => 'WhatsApp',
-            'descricao' => 'API comercial de notificação. Sem URL e token, o canal permanece desligado.',
-            'teste' => null,
-            'espelhar_url_ativa' => null,
-            'campos' => [
-                self::interruptor('habilitada', 'features.notificacao_whatsapp', 'Canal habilitado'),
-                self::url('base_url', 'integrations.whatsapp.base_url', 'URL base'),
-                self::senha('token', 'integrations.whatsapp.token', 'Token'),
+                self::interruptor('em_producao', 'integrations.geoserver.em_producao', 'Usar produção'),
+                self::url('url_homologacao', 'integrations.geoserver.url_homologacao', 'URL de homologação'),
+                self::url('url_producao', 'integrations.geoserver.url_producao', 'URL de produção'),
             ],
         ];
     }

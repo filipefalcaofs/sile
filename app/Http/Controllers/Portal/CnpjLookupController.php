@@ -14,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 
 /**
  * HU-021 — consulta dos dados cadastrais por CNPJ para pré-preenchimento do
- * cadastro de empresa. Toda saída (sucesso, não encontrado, indisponibilidade
+ * cadastro de empresa, na base cadastral da SEDUR (ws-contato). Toda saída (sucesso, não encontrado, indisponibilidade
  * e bloqueio por toggle) é auditada (CA-02); com features.cnpj_lookup desligado
  * nenhum request HTTP sai (degradação comunicada, cadastro manual segue).
  */
@@ -65,7 +65,7 @@ class CnpjLookupController extends Controller
             );
 
             return response()->json([
-                'message' => 'CNPJ não encontrado na base da Receita Federal.',
+                'message' => 'CNPJ não encontrado na base da SEDUR.',
             ], 404);
         } catch (CnpjLookupException|ConnectionException) {
             $this->audit->log(
@@ -83,14 +83,14 @@ class CnpjLookupController extends Controller
     }
 
     /**
-     * Host do provider em uso (BrasilAPI ou minhareceita, conforme parâmetro).
+     * Host da consulta cadastral da SEDUR em uso.
      */
     private function provider(): ?string
     {
         return parse_url(
             (string) Settings::get(
-                'integrations.cnpj_lookup.base_url',
-                config('sile.integrations.cnpj_lookup.base_url'),
+                'integrations.sedur_contato.base_url',
+                config('sile.integrations.sedur_contato.base_url'),
             ),
             PHP_URL_HOST,
         );

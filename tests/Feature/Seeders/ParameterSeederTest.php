@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(93, Parameter::query()->count());
+        $this->assertSame(104, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'tll'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -42,14 +42,7 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('1', $cnpjLookup->default_value);
         $this->assertSame(['required', 'boolean'], $cnpjLookup->validation_rules);
 
-        $baseUrl = Parameter::query()->where('key', 'integrations.cnpj_lookup.base_url')->first();
-
-        $this->assertNotNull($baseUrl);
-        $this->assertSame('integracoes', $baseUrl->group);
-        $this->assertSame('string', $baseUrl->type);
-        $this->assertSame('https://brasilapi.com.br/api/cnpj/v1', $baseUrl->default_value);
-        $this->assertSame(['required', 'url'], $baseUrl->validation_rules);
-        $this->assertTrue($baseUrl->requires_connection_test);
+        $this->assertNull(Parameter::query()->where('key', 'integrations.cnpj_lookup.base_url')->first());
     }
 
     public function test_seeder_registra_parametros_da_fundacao_assincrona(): void
@@ -560,8 +553,8 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        // Toggles de canal (HU-014): e-mail e in-app nascem ligados; WhatsApp
-        // nasce DESLIGADO (bloqueio honesto — provedor real só na Fase 13).
+        // Toggles de canal: o canal oficial ao requerente é o e-mail. O aviso
+        // interno (in-app) também nasce ligado. WhatsApp não entra no catálogo.
         $email = Parameter::query()->where('key', 'features.notificacao_email')->first();
         $this->assertNotNull($email);
         $this->assertSame('features', $email->group);
@@ -578,17 +571,12 @@ class ParameterSeederTest extends TestCase
         $this->assertSame(['required', 'boolean'], $inApp->validation_rules);
         $this->assertNull($inApp->value);
 
-        $whatsapp = Parameter::query()->where('key', 'features.notificacao_whatsapp')->first();
-        $this->assertNotNull($whatsapp);
-        $this->assertSame('features', $whatsapp->group);
-        $this->assertSame('boolean', $whatsapp->type);
-        $this->assertSame('0', $whatsapp->default_value);
-        $this->assertSame(['required', 'boolean'], $whatsapp->validation_rules);
-        $this->assertFalse($whatsapp->typedValue());
-        $this->assertNull($whatsapp->value);
+        $this->assertNull(Parameter::query()->where('key', 'features.notificacao_whatsapp')->first());
+        $this->assertNull(Parameter::query()->where('key', 'integrations.whatsapp.base_url')->first());
+        $this->assertNull(Parameter::query()->where('key', 'integrations.whatsapp.token')->first());
 
-        // Grupo NOVO notificacoes: mapa de canais por tipo (intersecção com os
-        // toggles; WhatsApp fora por default).
+        // Grupo NOVO notificacoes: mapa de canais por tipo. O canal oficial
+        // ao requerente é o e-mail.
         $mapaCanais = Parameter::query()->where('key', 'notificacoes.mapa_canais')->first();
         $this->assertNotNull($mapaCanais);
         $this->assertSame('notificacoes', $mapaCanais->group);
@@ -636,27 +624,6 @@ class ParameterSeederTest extends TestCase
         $this->assertNull(Parameter::query()->where('key', 'notificacoes.pendencia.corpo')->first());
         $this->assertStringContainsString('{protocolo}', (string) config('sile.notificacoes.pendencia.assunto'));
         $this->assertStringContainsString('{pendencia}', (string) config('sile.notificacoes.pendencia.corpo'));
-
-        // Credenciais do WhatsApp (integração com teste de conexão + segredo
-        // criptografado), prontas para a Fase 13 ligar só o binding.
-        $baseUrl = Parameter::query()->where('key', 'integrations.whatsapp.base_url')->first();
-        $this->assertNotNull($baseUrl);
-        $this->assertSame('integracoes', $baseUrl->group);
-        $this->assertSame('string', $baseUrl->type);
-        $this->assertSame('', $baseUrl->default_value);
-        $this->assertSame(['nullable', 'url'], $baseUrl->validation_rules);
-        $this->assertTrue($baseUrl->requires_connection_test);
-        $this->assertFalse($baseUrl->sensitive);
-        $this->assertNull($baseUrl->value);
-
-        $token = Parameter::query()->where('key', 'integrations.whatsapp.token')->first();
-        $this->assertNotNull($token);
-        $this->assertSame('integracoes', $token->group);
-        $this->assertSame('string', $token->type);
-        $this->assertNull($token->default_value);
-        $this->assertSame(['nullable', 'string', 'max:255'], $token->validation_rules);
-        $this->assertTrue($token->sensitive);
-        $this->assertNull($token->value);
     }
 
     public function test_seeder_registra_parametros_de_auditoria_e_abuso(): void
@@ -861,6 +828,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(93, Parameter::query()->count());
+        $this->assertSame(104, Parameter::query()->count());
     }
 }

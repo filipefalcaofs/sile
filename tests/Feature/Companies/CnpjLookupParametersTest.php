@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Companies;
 
-use App\Services\Cnpj\CnpjLookup;
+use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjLookupException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -58,7 +58,7 @@ class CnpjLookupParametersTest extends TestCase
                 ->push($this->brasilApiFixture(), 200),
         ]);
 
-        $service = app(CnpjLookup::class);
+        $service = app(BrasilApiCnpjLookup::class);
 
         try {
             $service->lookup('00000000000191');
