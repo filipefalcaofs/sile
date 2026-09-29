@@ -99,7 +99,7 @@ class NominatimGeocoderTest extends TestCase
         app(Geocoder::class)->geocode('Praça da Sé, Salvador');
 
         Http::assertSent(function ($request) {
-            return str_contains($request->url(), '/search')
+            return str_contains($request->url(), 'https://nominatim-hmlg.salvador.ba.gov.br/search')
                 && $request['format'] === 'jsonv2'
                 && $request['countrycodes'] === 'br'
                 && (string) $request['limit'] === '1';

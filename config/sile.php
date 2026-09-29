@@ -302,7 +302,7 @@ return [
             'timeout' => 8,
         ],
         'geocoding' => [
-            'base_url' => 'https://nominatim.openstreetmap.org',
+            'base_url' => 'https://nominatim-hmlg.salvador.ba.gov.br',
             'user_agent' => 'Viabiliza-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',
             'timeout' => 8,
             'retries' => 2,

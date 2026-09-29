@@ -185,7 +185,7 @@ class ParameterSeederTest extends TestCase
         $this->assertNotNull($baseUrl);
         $this->assertSame('integracoes', $baseUrl->group);
         $this->assertSame('string', $baseUrl->type);
-        $this->assertSame('https://nominatim.openstreetmap.org', $baseUrl->default_value);
+        $this->assertSame('https://nominatim-hmlg.salvador.ba.gov.br', $baseUrl->default_value);
         $this->assertSame(['required', 'url'], $baseUrl->validation_rules);
         $this->assertTrue($baseUrl->requires_connection_test);
 

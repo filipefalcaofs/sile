@@ -290,10 +290,10 @@ class ParameterSeeder extends Seeder
             'integrations.geocoding.base_url' => [
                 'group' => 'integracoes',
                 'type' => 'string',
-                'default_value' => 'https://nominatim.openstreetmap.org',
+                'default_value' => 'https://nominatim-hmlg.salvador.ba.gov.br',
                 'validation_rules' => ['required', 'url'],
                 'requires_connection_test' => true,
-                'description' => 'URL base do serviço de geocodificação (Nominatim; trocável por self-host sem deploy)',
+                'description' => 'URL base do serviço de geocodificação (Nominatim de homologação da Prefeitura)',
             ],
             'geo.validacao.sobreposicao_minima' => [
                 'group' => 'geo',

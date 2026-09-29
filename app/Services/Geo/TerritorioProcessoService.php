@@ -81,8 +81,9 @@ class TerritorioProcessoService
 
     /**
      * Sem polígono e sem ponto, grava o ponto do Cadastro Imobiliário da
-     * inscrição. Outro status (indisponível, sem coordenada, sem inscrição)
-     * não grava nada e fica na auditoria — nunca um ponto inventado.
+     * inscrição. Se o cadastro trouxe logradouro e número sem coordenada, o
+     * ponto gravado é o da geocodificação. Outro status não grava nada e
+     * fica na auditoria.
      */
     public function localizarPelaInscricao(ViabilityRequest $request): bool
     {
@@ -112,7 +113,7 @@ class TerritorioProcessoService
         $request->forceFill([
             'property_point_lat' => $localizacao->lat,
             'property_point_lng' => $localizacao->lng,
-            'property_location_source' => PropertyLocationSource::CadastroImobiliario,
+            'property_location_source' => $localizacao->origemPonto ?? PropertyLocationSource::CadastroImobiliario,
         ])->save();
 
         return true;

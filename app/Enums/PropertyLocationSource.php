@@ -11,6 +11,7 @@ enum PropertyLocationSource: string
     case Poligono = 'poligono';
     case CadastroImobiliario = 'cadastro_imobiliario';
     case CatalogoSimulacao = 'catalogo_simulacao';
+    case Geocodificacao = 'geocodificacao';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum PropertyLocationSource: string
             self::Poligono => 'Polígono do imóvel',
             self::CadastroImobiliario => 'Cadastro Imobiliário',
             self::CatalogoSimulacao => 'Catálogo da simulação',
+            self::Geocodificacao => 'Geocodificação do endereço',
         };
     }
 }
