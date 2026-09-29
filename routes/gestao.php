@@ -5,12 +5,15 @@ use App\Http\Controllers\Gestao\AbusoController;
 use App\Http\Controllers\Gestao\AccessHistoryController;
 use App\Http\Controllers\Gestao\AiConfigurationController;
 use App\Http\Controllers\Gestao\AnalysisRecordController;
+use App\Http\Controllers\Gestao\ApiIntegracaoController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
 use App\Http\Controllers\Gestao\AuditoriaController;
 use App\Http\Controllers\Gestao\AuditoriaPreditivaController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\ConclusaoAnaliseController;
+use App\Http\Controllers\Gestao\ConsultarDocumentoContingenciaController;
+use App\Http\Controllers\Gestao\ConsultarInscricaoContingenciaController;
 use App\Http\Controllers\Gestao\Conta\PasswordController as ContaPasswordController;
 use App\Http\Controllers\Gestao\Conta\ProfileController as ContaProfileController;
 use App\Http\Controllers\Gestao\ContingenciaController;
@@ -312,6 +315,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('config-inscricao-imobiliaria', [InscricaoImobiliariaIntegrationController::class, 'edit'])->name('config-inscricao-imobiliaria.edit');
             Route::put('config-inscricao-imobiliaria', [InscricaoImobiliariaIntegrationController::class, 'update'])->name('config-inscricao-imobiliaria.update');
             Route::post('config-inscricao-imobiliaria/testar', [InscricaoImobiliariaIntegrationController::class, 'test'])->name('config-inscricao-imobiliaria.testar');
+            Route::get('config-apis', [ApiIntegracaoController::class, 'edit'])->name('config-apis.edit');
+            Route::put('config-apis/{aba}', [ApiIntegracaoController::class, 'update'])->name('config-apis.update');
         });
 
         // Território (HU-029+): consulta territorial, geocodificação e validação
@@ -592,6 +597,15 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:registrar-contingencia')->prefix('contingencia')->name('contingencia.')->group(function () {
             Route::get('/', [ContingenciaController::class, 'create'])->name('create');
             Route::get('cnaes-disponiveis', CnaeSearchController::class)->name('cnaes-disponiveis');
+            Route::post('consultar-inscricao', ConsultarInscricaoContingenciaController::class)
+                ->middleware('throttle:inscricao-lookup')
+                ->name('consultar-inscricao');
+            Route::post('consultar-cpf', [ConsultarDocumentoContingenciaController::class, 'cpf'])
+                ->middleware('throttle:sedur-contato')
+                ->name('consultar-cpf');
+            Route::post('consultar-cnpj', [ConsultarDocumentoContingenciaController::class, 'cnpj'])
+                ->middleware('throttle:sedur-contato')
+                ->name('consultar-cnpj');
             Route::post('/', [ContingenciaController::class, 'store'])->name('store');
         });
 

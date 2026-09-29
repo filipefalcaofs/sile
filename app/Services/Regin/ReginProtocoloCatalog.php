@@ -38,7 +38,10 @@ class ReginProtocoloCatalog
      */
     private function payload(): array
     {
-        $path = database_path('data/regras-20-08-26/protocolos-sedur.json');
+        $path = (string) config(
+            'sile.regin_simulacao.catalogo',
+            database_path('data/regras-20-08-26/protocolos-sedur.json'),
+        );
 
         if (! is_file($path)) {
             throw new RuntimeException("Catálogo de protocolos SEDUR ausente em {$path}.");

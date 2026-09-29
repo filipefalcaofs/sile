@@ -9,8 +9,9 @@ use Illuminate\Support\Facades\Http;
 
 /**
  * Consulta cadastral anônima da SEDUR (ws-contato). CNPJ e CPF vão só com
- * dígitos no path. Erro de servidor e timeout são retentados; 404 e o 401
- * que a API usa como "não encontrado" não são.
+ * dígitos no path. O CPF usa /pessoafisica/cpf/{cpf} — a rota irmã da de
+ * CNPJ. Erro de servidor e timeout são retentados; 404 e o 401 que a API
+ * usa como "não encontrado" não são.
  */
 class SedurContatoClient
 {
@@ -40,6 +41,28 @@ class SedurContatoClient
             nomeFantasia: $this->texto($registro['nomeFantasia'] ?? null),
             telefone: $this->texto($registro['telefone'] ?? null),
             endereco: $this->endereco($registro['endereco'] ?? $registro['enderecoReceita'] ?? null),
+        );
+    }
+
+    public function consultarCpf(string $cpf): SedurPessoaFisica
+    {
+        $digitos = preg_replace('/\D/', '', $cpf) ?? '';
+        $url = rtrim($this->baseUrl(), '/').'/pessoafisica/cpf/'.$digitos;
+
+        $response = $this->enviar($url);
+        $corpo = $this->corpo($response);
+
+        if ($this->naoEncontrado($response, $corpo)) {
+            throw new SedurContatoNaoEncontradoException('CPF não encontrado na base da SEDUR.');
+        }
+
+        if (! $response->successful() || $corpo === []) {
+            throw new SedurContatoIndisponivelException('Consulta cadastral da SEDUR indisponível.');
+        }
+
+        return new SedurPessoaFisica(
+            cpf: $digitos,
+            nome: $this->nome($this->desembrulhar($corpo)),
         );
     }
 
@@ -117,7 +140,7 @@ class SedurContatoClient
      */
     private function desembrulhar(array $corpo): array
     {
-        foreach (['data', 'result', 'pessoaJuridica', 'empresa'] as $chave) {
+        foreach (['data', 'result', 'pessoaJuridica', 'empresa', 'pessoaFisica', 'pessoa', 'contato'] as $chave) {
             if (isset($corpo[$chave]) && is_array($corpo[$chave]) && ! array_is_list($corpo[$chave])) {
                 return $corpo[$chave];
             }
@@ -146,6 +169,22 @@ class SedurContatoClient
         ], fn (mixed $parte): bool => is_string($parte) && trim($parte) !== '');
 
         return $partes === [] ? null : implode(', ', $partes);
+    }
+
+    /**
+     * @param  array<string, mixed>  $registro
+     */
+    private function nome(array $registro): string
+    {
+        foreach (['nome', 'name', 'nomeContato', 'nomeCompleto', 'nomePessoa', 'nomeContribuinte'] as $chave) {
+            $texto = $this->texto($registro[$chave] ?? null);
+
+            if ($texto !== null) {
+                return $texto;
+            }
+        }
+
+        return '';
     }
 
     private function texto(mixed $valor): ?string

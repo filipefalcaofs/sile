@@ -267,6 +267,8 @@ return [
     'seguranca' => [
         'throttle' => [
             'cnpj_lookup' => ['por_minuto' => 30],
+            'inscricao_lookup' => ['por_minuto' => 30],
+            'sedur_contato' => ['por_minuto' => 30],
             'geocoding' => ['por_minuto' => 60],
             'consulta_viabilidade' => ['por_minuto' => 20],
             'consulta_protocolo' => ['por_minuto' => 30],
@@ -472,5 +474,10 @@ return [
     ],
     'parameters' => [
         'cache_ttl' => 300,
+    ],
+    // Catálogo exibido no simulador REGIN. A suíte aponta para o arquivo
+    // histórico; o arquivo padrão traz só o lote de sete inscrições.
+    'regin_simulacao' => [
+        'catalogo' => database_path('data/regras-20-08-26/protocolos-sedur.json'),
     ],
 ];

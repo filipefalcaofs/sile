@@ -279,12 +279,6 @@ export const GESTAO_NAV_ICON_MARKS: Record<GestaoNavIcon, readonly Mark[]> = {
         { k: 'c', cx: 17, cy: 12, r: 3 },
         { k: 'l', x1: 10, y1: 12, x2: 14, y2: 12 },
     ],
-    'id-card': [
-        { k: 'r', x: 3, y: 6, w: 18, h: 12, rx: 1.5 },
-        { k: 'c', cx: 8.5, cy: 12, r: 2 },
-        { k: 'l', x1: 13, y1: 10, x2: 18, y2: 10 },
-        { k: 'l', x1: 13, y1: 14, x2: 17, y2: 14 },
-    ],
     server: [
         { k: 'r', x: 4, y: 4, w: 16, h: 5, rx: 1 },
         { k: 'r', x: 4, y: 10, w: 16, h: 5, rx: 1 },

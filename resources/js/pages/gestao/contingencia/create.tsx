@@ -57,6 +57,17 @@ interface Ponto {
     lng: number;
 }
 
+interface ConsultaInscricao {
+    address_street: string | null;
+    address_number: string | null;
+    address_complement: string | null;
+    address_neighborhood: string | null;
+    address_zip: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    message?: string;
+}
+
 interface ContingenciaForm {
     beneficiary_cpf: string;
     company_cnpj: string;
@@ -107,6 +118,36 @@ const EMPTY_FORM: ContingenciaForm = {
 
 const SEARCH_DEBOUNCE_MS = 350;
 const MIN_SEARCH_LENGTH = 2;
+
+function texto(valor: string | null | undefined): boolean {
+    return valor !== null && valor !== undefined && valor.trim() !== '';
+}
+
+function mensagemDaConsulta(data: unknown, fallback = 'Não foi possível consultar a inscrição. Preencha o endereço manualmente.'): string {
+    let body: unknown = data;
+
+    if (typeof data === 'string') {
+        try {
+            body = JSON.parse(data) as unknown;
+        } catch {
+            return fallback;
+        }
+    }
+
+    if (body && typeof body === 'object' && 'message' in body && typeof body.message === 'string' && body.message.trim() !== '') {
+        return body.message;
+    }
+
+    return fallback;
+}
+
+function resumoSedur(nome: string | null, cadastrado: boolean, documento: 'CPF' | 'CNPJ'): string {
+    const situacao = cadastrado
+        ? 'Já cadastrado no Viabiliza.'
+        : `Encontrado na SEDUR, mas este ${documento} ainda não está cadastrado no Viabiliza.`;
+
+    return nome ? `${nome}. ${situacao}` : situacao;
+}
 
 /**
  * Quadrado (~33 m) ao redor do ponto informado — perímetro mínimo do imóvel
@@ -252,14 +293,133 @@ function CnaeSearch({
  */
 export default function RegistrarContingencia({ serviceTypes, documentRequirements, tiposImovel, mapa }: ContingenciaProps) {
     const { data, setData, post, processing, errors } = useForm<ContingenciaForm>(EMPTY_FORM);
+    const consultaInscricao = useHttp({ inscricao: '' });
+    const consultaCpf = useHttp({ cpf: '' });
+    const consultaCnpj = useHttp({ cnpj: '' });
 
     const [ponto, setPonto] = useState<Ponto | null>(null);
+    const [consultaErro, setConsultaErro] = useState<string | null>(null);
+    const [cpfResumo, setCpfResumo] = useState<string | null>(null);
+    const [cpfErro, setCpfErro] = useState<string | null>(null);
+    const [cnpjResumo, setCnpjResumo] = useState<string | null>(null);
+    const [cnpjErro, setCnpjErro] = useState<string | null>(null);
     const [principalLabel, setPrincipalLabel] = useState<string | null>(null);
     const [complementares, setComplementares] = useState<CnaeOption[]>([]);
 
     function moverMarcador(latlng: Ponto) {
         setPonto(latlng);
         setData('property_polygon_geojson', quadradoAoRedor(latlng.lat, latlng.lng));
+    }
+
+    function buscarInscricao() {
+        const inscricao = data.property_registration.trim();
+
+        if (inscricao === '') {
+            setConsultaErro('Informe a inscrição imobiliária.');
+
+            return;
+        }
+
+        setConsultaErro(null);
+        consultaInscricao.setData('inscricao', inscricao);
+        consultaInscricao.post('/gestao/contingencia/consultar-inscricao', {
+            onSuccess: (response: unknown) => {
+                const payload = response as ConsultaInscricao;
+                const latitude = payload.latitude;
+                const longitude = payload.longitude;
+                const temPonto = latitude !== null && longitude !== null && latitude !== undefined && longitude !== undefined;
+
+                setData((current) => ({
+                    ...current,
+                    ...(texto(payload.address_street) ? { address_street: payload.address_street as string } : {}),
+                    ...(texto(payload.address_number) ? { address_number: payload.address_number as string } : {}),
+                    ...(texto(payload.address_complement) ? { address_complement: payload.address_complement as string } : {}),
+                    ...(texto(payload.address_neighborhood) ? { address_neighborhood: payload.address_neighborhood as string } : {}),
+                    ...(texto(payload.address_zip) ? { address_zip: payload.address_zip as string } : {}),
+                    ...(temPonto ? { property_polygon_geojson: quadradoAoRedor(latitude, longitude) } : {}),
+                }));
+
+                if (temPonto) {
+                    setPonto({ lat: latitude, lng: longitude });
+                }
+
+                const preencheu = texto(payload.address_street) || texto(payload.address_neighborhood) || temPonto;
+
+                if (!preencheu) {
+                    setConsultaErro('Inscrição localizada, mas o cadastro não trouxe endereço. Preencha o imóvel manualmente.');
+                }
+            },
+            onError: (erros: { inscricao?: string }) => {
+                setConsultaErro(erros.inscricao ?? 'Não foi possível consultar a inscrição. Preencha o endereço manualmente.');
+            },
+            onHttpException: (response: { data?: unknown }) => {
+                setConsultaErro(mensagemDaConsulta(response.data));
+            },
+            onNetworkError: () => {
+                setConsultaErro('Não foi possível consultar a inscrição. Preencha o endereço manualmente.');
+            },
+        });
+    }
+
+    function buscarCpf() {
+        const cpf = data.beneficiary_cpf.trim();
+
+        if (cpf === '') {
+            setCpfErro('Informe o CPF do beneficiário.');
+            setCpfResumo(null);
+
+            return;
+        }
+
+        setCpfErro(null);
+        setCpfResumo(null);
+        consultaCpf.setData('cpf', cpf);
+        consultaCpf.post('/gestao/contingencia/consultar-cpf', {
+            onSuccess: (response: unknown) => {
+                const payload = response as { nome: string | null; cadastrado: boolean };
+                setCpfResumo(resumoSedur(payload.nome, payload.cadastrado, 'CPF'));
+            },
+            onError: (erros: { cpf?: string }) => {
+                setCpfErro(erros.cpf ?? 'Não foi possível consultar o CPF na SEDUR.');
+            },
+            onHttpException: (response: { data?: unknown }) => {
+                setCpfErro(mensagemDaConsulta(response.data, 'Não foi possível consultar o CPF na SEDUR.'));
+            },
+            onNetworkError: () => {
+                setCpfErro('Não foi possível consultar o CPF na SEDUR.');
+            },
+        });
+    }
+
+    function buscarCnpj() {
+        const cnpj = data.company_cnpj.trim();
+
+        if (cnpj === '') {
+            setCnpjErro('Informe o CNPJ da empresa.');
+            setCnpjResumo(null);
+
+            return;
+        }
+
+        setCnpjErro(null);
+        setCnpjResumo(null);
+        consultaCnpj.setData('cnpj', cnpj);
+        consultaCnpj.post('/gestao/contingencia/consultar-cnpj', {
+            onSuccess: (response: unknown) => {
+                const payload = response as { razao_social: string | null; nome_fantasia: string | null; cadastrado: boolean };
+                const nome = [payload.razao_social, payload.nome_fantasia].filter(texto).join(' — ');
+                setCnpjResumo(resumoSedur(nome || null, payload.cadastrado, 'CNPJ'));
+            },
+            onError: (erros: { cnpj?: string }) => {
+                setCnpjErro(erros.cnpj ?? 'Não foi possível consultar o CNPJ na SEDUR.');
+            },
+            onHttpException: (response: { data?: unknown }) => {
+                setCnpjErro(mensagemDaConsulta(response.data, 'Não foi possível consultar o CNPJ na SEDUR.'));
+            },
+            onNetworkError: () => {
+                setCnpjErro('Não foi possível consultar o CNPJ na SEDUR.');
+            },
+        });
     }
 
     function selecionarPrincipal(cnae: CnaeOption) {
@@ -322,38 +482,70 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
 
             <form onSubmit={submit} className="flex flex-col gap-4 md:gap-6">
                 <Card>
-                    <CardHeader title="Beneficiário e empresa" description="Cidadão beneficiário (por CPF) e empresa (por CNPJ) já cadastrados no sistema." />
+                    <CardHeader title="Beneficiário e empresa" description="Busque o CPF e o CNPJ na base da SEDUR para conferir o nome. O protocolo exige que o cidadão e a empresa já estejam cadastrados no Viabiliza." />
                     <CardContent>
                         <div className="grid gap-5 sm:grid-cols-2">
                             <div>
                                 <Label htmlFor="beneficiary_cpf" required>
                                     CPF do beneficiário
                                 </Label>
-                                <Input
-                                    id="beneficiary_cpf"
-                                    type="text"
-                                    name="beneficiary_cpf"
-                                    value={data.beneficiary_cpf}
-                                    onChange={(event) => setData('beneficiary_cpf', event.target.value)}
-                                    placeholder="000.000.000-00"
-                                    error={!!errors.beneficiary_cpf}
-                                    hint={errors.beneficiary_cpf}
-                                />
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                    <div className="flex-1">
+                                        <Input
+                                            id="beneficiary_cpf"
+                                            type="text"
+                                            name="beneficiary_cpf"
+                                            value={data.beneficiary_cpf}
+                                            onChange={(event) => setData('beneficiary_cpf', event.target.value)}
+                                            placeholder="000.000.000-00"
+                                            error={!!errors.beneficiary_cpf || !!cpfErro}
+                                            hint={errors.beneficiary_cpf}
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={buscarCpf}
+                                        disabled={consultaCpf.processing}
+                                        loading={consultaCpf.processing}
+                                    >
+                                        {consultaCpf.processing ? 'Buscando...' : 'Buscar CPF'}
+                                    </Button>
+                                </div>
+                                {cpfErro && <p className="mt-1.5 text-theme-xs text-error-500">{cpfErro}</p>}
+                                {cpfResumo && !cpfErro && <p className="mt-1.5 text-theme-xs text-gray-500 dark:text-gray-400">{cpfResumo}</p>}
                             </div>
                             <div>
                                 <Label htmlFor="company_cnpj" required>
                                     CNPJ da empresa
                                 </Label>
-                                <Input
-                                    id="company_cnpj"
-                                    type="text"
-                                    name="company_cnpj"
-                                    value={data.company_cnpj}
-                                    onChange={(event) => setData('company_cnpj', event.target.value)}
-                                    placeholder="00.000.000/0000-00"
-                                    error={!!errors.company_cnpj}
-                                    hint={errors.company_cnpj}
-                                />
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                    <div className="flex-1">
+                                        <Input
+                                            id="company_cnpj"
+                                            type="text"
+                                            name="company_cnpj"
+                                            value={data.company_cnpj}
+                                            onChange={(event) => setData('company_cnpj', event.target.value)}
+                                            placeholder="00.000.000/0000-00"
+                                            error={!!errors.company_cnpj || !!cnpjErro}
+                                            hint={errors.company_cnpj}
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={buscarCnpj}
+                                        disabled={consultaCnpj.processing}
+                                        loading={consultaCnpj.processing}
+                                    >
+                                        {consultaCnpj.processing ? 'Buscando...' : 'Buscar CNPJ'}
+                                    </Button>
+                                </div>
+                                {cnpjErro && <p className="mt-1.5 text-theme-xs text-error-500">{cnpjErro}</p>}
+                                {cnpjResumo && !cnpjErro && <p className="mt-1.5 text-theme-xs text-gray-500 dark:text-gray-400">{cnpjResumo}</p>}
                             </div>
                         </div>
                     </CardContent>
@@ -412,7 +604,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                 </Card>
 
                 <Card>
-                    <CardHeader title="Imóvel" description="Os mesmos dados que o REGIN grava no processo: tipo, inscrição, polígono, área e endereço." />
+                    <CardHeader title="Imóvel" description="Informe a inscrição para buscar o endereço no Cadastro Imobiliário, ou preencha manualmente." />
                     <CardContent>
                         <div className="flex flex-col gap-5">
                             <div className="grid gap-5 sm:grid-cols-2">
@@ -432,16 +624,33 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                 </div>
                                 <div>
                                     <Label htmlFor="property_registration">Inscrição imobiliária</Label>
-                                    <Input
-                                        id="property_registration"
-                                        type="text"
-                                        name="property_registration"
-                                        value={data.property_registration}
-                                        onChange={(event) => setData('property_registration', event.target.value)}
-                                        placeholder="0010010010"
-                                        error={!!errors.property_registration}
-                                        hint={errors.property_registration}
-                                    />
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                        <div className="flex-1">
+                                            <Input
+                                                id="property_registration"
+                                                type="text"
+                                                name="property_registration"
+                                                value={data.property_registration}
+                                                onChange={(event) => setData('property_registration', event.target.value)}
+                                                placeholder="0010010010"
+                                                error={!!errors.property_registration || !!consultaErro}
+                                                hint={errors.property_registration}
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={buscarInscricao}
+                                            disabled={consultaInscricao.processing}
+                                            loading={consultaInscricao.processing}
+                                        >
+                                            {consultaInscricao.processing ? 'Buscando...' : 'Buscar inscrição'}
+                                        </Button>
+                                    </div>
+                                    {consultaErro && (
+                                        <p className="mt-1.5 text-theme-xs text-error-500">{consultaErro}</p>
+                                    )}
                                 </div>
                             </div>
 

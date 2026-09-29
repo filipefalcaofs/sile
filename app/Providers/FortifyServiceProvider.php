@@ -185,6 +185,18 @@ class FortifyServiceProvider extends ServiceProvider
             )->by($request->user()?->id ?: $request->ip());
         });
 
+        RateLimiter::for('inscricao-lookup', function (Request $request) {
+            return Limit::perMinute(
+                (int) config('sile.seguranca.throttle.inscricao_lookup.por_minuto', 30),
+            )->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('sedur-contato', function (Request $request) {
+            return Limit::perMinute(
+                (int) config('sile.seguranca.throttle.sedur_contato.por_minuto', 30),
+            )->by($request->user()?->id ?: $request->ip());
+        });
+
         // Throttle da geocodificação (HU-029) — Nominatim recomenda ~1 req/s;
         // o limite por minuto é administrável sem deploy (espelha cnpj-lookup).
         RateLimiter::for('geocoding', function (Request $request) {
