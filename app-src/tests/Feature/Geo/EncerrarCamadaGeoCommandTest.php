@@ -33,5 +33,4 @@ class EncerrarCamadaGeoCommandTest extends TestCase
     {
         $this->artisan('geo:encerrar-camada', ['type' => 'zona', 'versao' => 'nao-existe'])->assertFailed();
     }
-
 }

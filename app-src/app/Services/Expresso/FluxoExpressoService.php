@@ -10,7 +10,6 @@ use App\Enums\IntencaoAtividade;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\SefazNotificationEvent;
 use App\Enums\TipoGatilho;
-use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\EncaminhadoParaAnalise;
 use App\Events\ResultadoEmitido;
