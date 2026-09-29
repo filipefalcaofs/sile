@@ -149,7 +149,9 @@ export default function ConfigRegin({ config }: Props) {
                             {({ errors, processing }) => (
                                 <div className="space-y-3">
                                     {errors.regin_connection && (
-                                        <p className="text-theme-sm text-error-500">{errors.regin_connection}</p>
+                                        <p className="text-theme-sm break-all whitespace-pre-wrap text-error-500">
+                                            {errors.regin_connection}
+                                        </p>
                                     )}
                                     <Button size="sm" type="submit" variant="outline" disabled={processing}>
                                         {processing ? 'Testando…' : 'Testar conexão na URL ativa'}

@@ -79,18 +79,20 @@ class ReginConnectionTesterTest extends TestCase
         $result = app(ReginConnectionTester::class)->test();
 
         $this->assertFalse($result->ok);
-        $this->assertStringContainsStringIgnoringCase('credencial', $result->mensagem);
+        $this->assertStringContainsString('HTTP 401', $result->mensagem);
+        $this->assertStringContainsString('invalida', $result->mensagem);
         $this->assertStringNotContainsString('senha-de-teste-nao-vazar', $result->mensagem);
     }
 
-    public function test_timeout_devolve_falha_sanitizada(): void
+    public function test_timeout_devolve_o_erro_real_da_conexao(): void
     {
-        Http::fake(fn () => throw new ConnectionException('cURL error 28: Connection timed out after 8000 ms'));
+        Http::fake(fn () => throw new ConnectionException('cURL error 28: Connection timed out after 8000 ms for http://10.57.247.9:8080/api_integracao/acesso/auth'));
 
         $result = app(ReginConnectionTester::class)->test();
 
         $this->assertFalse($result->ok);
-        $this->assertStringContainsStringIgnoringCase('indisponível', $result->mensagem);
-        $this->assertStringNotContainsString('cURL', $result->mensagem);
+        $this->assertStringContainsString('cURL error 28: Connection timed out after 8000 ms', $result->mensagem);
+        $this->assertStringContainsString('http://10.57.247.9:8080/api_integracao/acesso/auth', $result->mensagem);
+        $this->assertStringNotContainsString('senha-de-teste-nao-vazar', $result->mensagem);
     }
 }
