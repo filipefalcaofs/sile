@@ -18,8 +18,8 @@ use App\Services\Analise\PostgisPrecedentRepository;
 use App\Services\Analise\PrecedentRepository;
 use App\Services\Auth\DirectoryAuthenticator;
 use App\Services\Auth\SedurDirectoryAuthenticator;
-use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjLookup;
+use App\Services\Cnpj\SedurCnpjLookup;
 use App\Services\Expresso\DatabaseHolidayProvider;
 use App\Services\Expresso\HolidayProvider;
 use App\Services\Geo\Geocoder;
@@ -66,10 +66,8 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(DirectoryAuthenticator::class, SedurDirectoryAuthenticator::class);
 
-        // Provider público inicial (BrasilAPI / dados abertos RFB). A Fase 13
-        // (HU-105) troca este binding pelo provider conveniado da Receita
-        // Federal sem tocar controllers ou telas.
-        $this->app->bind(CnpjLookup::class, BrasilApiCnpjLookup::class);
+        // Consulta de CNPJ do cadastro de empresa: base da SEDUR (ws-contato).
+        $this->app->bind(CnpjLookup::class, SedurCnpjLookup::class);
 
         // Geocodificação pública inicial (Nominatim/OSM). A Fase 13 troca este
         // binding por self-host ou pela base geográfica da SEDUR sem tocar
