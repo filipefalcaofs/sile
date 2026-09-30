@@ -1,7 +1,9 @@
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { ReactNode } from 'react';
 import { CloseIcon } from '@/components/icons';
+import { backdropFade, modalPop } from '@/lib/motion';
 
 interface ModalProps {
     isOpen: boolean;
@@ -99,42 +101,50 @@ export function Modal({
         };
     }, [isOpen]);
 
-    if (!isOpen) {
-        return null;
-    }
-
     const contentClasses = isFullscreen ? 'w-full h-full' : 'relative w-full rounded-3xl bg-white dark:bg-gray-900';
 
+    // Sem early return quando fechado: o AnimatePresence precisa continuar
+    // montado para executar a animação de saída do painel e do backdrop.
     return createPortal(
-        <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
-            {!isFullscreen && (
-                <div
-                    className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
-                    aria-hidden="true"
-                    onClick={onClose}
-                ></div>
-            )}
-            <div
-                ref={modalRef}
-                role="dialog"
-                aria-modal="true"
-                tabIndex={-1}
-                className={`${contentClasses} ${className ?? ''} focus:outline-hidden`}
-                onClick={(e) => e.stopPropagation()}
-            >
-                {showCloseButton && (
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        aria-label="Fechar"
-                        className="absolute right-3 top-3 z-999 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white sm:right-6 sm:top-6 sm:h-11 sm:w-11"
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
+                    {!isFullscreen && (
+                        <motion.div
+                            className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
+                            aria-hidden="true"
+                            onClick={onClose}
+                            initial={backdropFade.initial}
+                            animate={backdropFade.animate}
+                            exit={backdropFade.exit}
+                        />
+                    )}
+                    <motion.div
+                        ref={modalRef}
+                        role="dialog"
+                        aria-modal="true"
+                        tabIndex={-1}
+                        className={`${contentClasses} ${className ?? ''} focus:outline-hidden`}
+                        onClick={(e) => e.stopPropagation()}
+                        initial={modalPop.initial}
+                        animate={modalPop.animate}
+                        exit={modalPop.exit}
                     >
-                        <CloseIcon />
-                    </button>
-                )}
-                <div>{children}</div>
-            </div>
-        </div>,
+                        {showCloseButton && (
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                aria-label="Fechar"
+                                className="absolute right-3 top-3 z-999 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white sm:right-6 sm:top-6 sm:h-11 sm:w-11"
+                            >
+                                <CloseIcon />
+                            </button>
+                        )}
+                        <div>{children}</div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>,
         document.body,
     );
 }

@@ -1,5 +1,7 @@
 import { Link } from '@inertiajs/react';
+import { motion } from 'motion/react';
 import { AlertIcon, CheckCircleIcon, InfoIcon } from '@/components/icons';
+import { fadeInUp } from '@/lib/motion';
 
 interface AlertProps {
     variant: 'success' | 'error' | 'warning' | 'info';
@@ -45,7 +47,11 @@ export default function Alert({
     };
 
     return (
-        <div className={`rounded-xl border p-4 ${variantClasses[variant].container}`}>
+        <motion.div
+            initial={fadeInUp.initial}
+            animate={fadeInUp.animate}
+            className={`rounded-xl border p-4 ${variantClasses[variant].container}`}
+        >
             <div className="flex items-start gap-3">
                 <div className={`-mt-0.5 ${variantClasses[variant].icon}`}>{icons[variant]}</div>
 
@@ -64,6 +70,6 @@ export default function Alert({
                     )}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

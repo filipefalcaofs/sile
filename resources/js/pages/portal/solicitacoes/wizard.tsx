@@ -5,6 +5,7 @@ import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
+import { StepTransition } from '@/components/motion';
 import EtapaAtividades from '@/components/solicitacao/etapa-atividades';
 import EtapaDocumentos from '@/components/solicitacao/etapa-documentos';
 import EtapaImovel from '@/components/solicitacao/etapa-imovel';
@@ -394,62 +395,64 @@ function WizardEdicao({
 
             <Stepper steps={STEPS} current={step} concluidos={concluidos} onSelect={setStep} />
 
-            {step === 'imovel' && (
-                <EtapaImovel
-                    solicitacaoId={solicitacao.id}
-                    initialPolygon={solicitacao.property_polygon_geojson}
-                    address={solicitacao.address}
-                    usedArea={solicitacao.used_area_m2}
-                    indicators={solicitacao.indicators}
-                    escritorioVirtual={solicitacao.escritorio_virtual}
-                    territorio={territorio}
-                    areaAlert={areaAlert}
-                    onSaved={avancar}
-                />
-            )}
+            <StepTransition stepKey={step}>
+                {step === 'imovel' && (
+                    <EtapaImovel
+                        solicitacaoId={solicitacao.id}
+                        initialPolygon={solicitacao.property_polygon_geojson}
+                        address={solicitacao.address}
+                        usedArea={solicitacao.used_area_m2}
+                        indicators={solicitacao.indicators}
+                        escritorioVirtual={solicitacao.escritorio_virtual}
+                        territorio={territorio}
+                        areaAlert={areaAlert}
+                        onSaved={avancar}
+                    />
+                )}
 
-            {step === 'atividades' && (
-                <EtapaAtividades
-                    solicitacaoId={solicitacao.id}
-                    cnaes={solicitacao.cnaes}
-                    max={cnaesComplementaresMax}
-                    isAlteracaoAtividade={solicitacao.is_alteracao_atividade}
-                    confirmaPerdaCondicaoSede={solicitacao.confirma_perda_condicao_sede}
-                    wantsVirtualOfficeTenant={solicitacao.indicators.wants_virtual_office_tenant}
-                    wantsVirtualOfficeHq={solicitacao.indicators.wants_virtual_office_hq}
-                    escritorioVirtual={solicitacao.escritorio_virtual}
-                    onSaved={avancar}
-                />
-            )}
+                {step === 'atividades' && (
+                    <EtapaAtividades
+                        solicitacaoId={solicitacao.id}
+                        cnaes={solicitacao.cnaes}
+                        max={cnaesComplementaresMax}
+                        isAlteracaoAtividade={solicitacao.is_alteracao_atividade}
+                        confirmaPerdaCondicaoSede={solicitacao.confirma_perda_condicao_sede}
+                        wantsVirtualOfficeTenant={solicitacao.indicators.wants_virtual_office_tenant}
+                        wantsVirtualOfficeHq={solicitacao.indicators.wants_virtual_office_hq}
+                        escritorioVirtual={solicitacao.escritorio_virtual}
+                        onSaved={avancar}
+                    />
+                )}
 
-            {step === 'documentos' && (
-                <EtapaDocumentos
-                    solicitacaoId={solicitacao.id}
-                    documentos={solicitacao.documentos}
-                    requisitosObrigatorios={requisitosObrigatorios}
-                    requisitosFaltantes={requisitosFaltantes}
-                    anexosConfig={anexosConfig}
-                    onContinue={avancar}
-                />
-            )}
+                {step === 'documentos' && (
+                    <EtapaDocumentos
+                        solicitacaoId={solicitacao.id}
+                        documentos={solicitacao.documentos}
+                        requisitosObrigatorios={requisitosObrigatorios}
+                        requisitosFaltantes={requisitosFaltantes}
+                        anexosConfig={anexosConfig}
+                        onContinue={avancar}
+                    />
+                )}
 
-            {step === 'simulacao' && (
-                <EtapaSimulacao
-                    solicitacaoId={solicitacao.id}
-                    simulation={solicitacao.simulation}
-                    simulacaoEnabled={simulacaoEnabled}
-                    onContinue={avancar}
-                />
-            )}
+                {step === 'simulacao' && (
+                    <EtapaSimulacao
+                        solicitacaoId={solicitacao.id}
+                        simulation={solicitacao.simulation}
+                        simulacaoEnabled={simulacaoEnabled}
+                        onContinue={avancar}
+                    />
+                )}
 
-            {step === 'revisao' && (
-                <EtapaRevisao
-                    solicitacao={solicitacao}
-                    requisitosFaltantes={requisitosFaltantes}
-                    simulation={solicitacao.simulation}
-                    sugestoesResumo={sugestoesResumo}
-                />
-            )}
+                {step === 'revisao' && (
+                    <EtapaRevisao
+                        solicitacao={solicitacao}
+                        requisitosFaltantes={requisitosFaltantes}
+                        simulation={solicitacao.simulation}
+                        sugestoesResumo={sugestoesResumo}
+                    />
+                )}
+            </StepTransition>
         </>
     );
 }

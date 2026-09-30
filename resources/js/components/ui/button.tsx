@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
 
 interface ButtonProps {
@@ -73,7 +74,7 @@ export default function Button({
     const isDisabled = disabled || loading;
 
     return (
-        <button
+        <motion.button
             type={type}
             className={`inline-flex items-center justify-center gap-2 rounded-lg transition disabled:cursor-not-allowed ${
                 sizeClasses[size]
@@ -81,10 +82,11 @@ export default function Button({
             onClick={onClick}
             disabled={isDisabled}
             aria-busy={loading || undefined}
+            whileTap={isDisabled ? undefined : { scale: 0.97 }}
         >
             {loading ? <Spinner /> : startIcon && <span className="flex items-center">{startIcon}</span>}
             {children}
             {endIcon && <span className="flex items-center">{endIcon}</span>}
-        </button>
+        </motion.button>
     );
 }
