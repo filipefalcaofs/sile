@@ -480,12 +480,12 @@ class PreAnaliseServiceTest extends TestCase
         $record = $this->service()->preAnalisar($request);
         $motivos = implode("\n", $record->analysis_reasons ?? []);
 
-        $this->assertStringContainsString('4712-1/00', $motivos);
-        $this->assertStringContainsString('Nível alto (municipal)', $motivos);
-        $this->assertStringContainsString('Galpão', $motivos);
-        $this->assertStringContainsString('ZR-1', $motivos);
-        $this->assertStringContainsString('Quadro 10', $motivos);
-        $this->assertGreaterThanOrEqual(2, count($record->analysis_reasons ?? []));
+        $this->assertSame(
+            ['CNAE 4712-1/00 — Nível alto (municipal) encaminhado para análise técnica'],
+            $record->analysis_reasons,
+        );
+        $this->assertStringNotContainsString('Galpão', $motivos);
+        $this->assertStringNotContainsString('Quadro 10', $motivos);
     }
 
     public function test_resource_mantem_justificativa_vazia_para_o_analista(): void

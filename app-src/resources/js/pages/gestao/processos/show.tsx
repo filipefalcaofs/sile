@@ -30,6 +30,19 @@ interface TimelineItem {
     to_label: string;
     reason: string | null;
     em: string | null;
+    ator?: string | null;
+    atribuido?: string | null;
+}
+
+interface SetorEncaminhamento {
+    id: number;
+    name: string;
+}
+
+interface AnalistaEncaminhamento {
+    id: number;
+    name: string;
+    setores: number[];
 }
 
 interface ShowProps {
@@ -123,7 +136,12 @@ export default function Show({
     explicacao,
     analysisStatusProximas,
     conclusaoOpcoes,
-}: ShowProps) {
+    setoresEncaminhamento = [],
+    analistasEncaminhamento = [],
+}: ShowProps & {
+    setoresEncaminhamento?: SetorEncaminhamento[];
+    analistasEncaminhamento?: AnalistaEncaminhamento[];
+}) {
     const { auth } = usePage<SharedProps>().props;
     const podeAnalisar = auth.permissions.includes('analisar-processos');
     const podeConcluirAnalise = processo.status === 'em_analise' || processo.status === 'deferida';
@@ -132,6 +150,9 @@ export default function Show({
     const [resultadoConclusao, setResultadoConclusao] = useState('');
     const [conclusaoProcessing, setConclusaoProcessing] = useState(false);
     const [erroConclusao, setErroConclusao] = useState<string | null>(null);
+    const [situacaoAnalise, setSituacaoAnalise] = useState('');
+    const [setorEncaminhamento, setSetorEncaminhamento] = useState('');
+    const [analistaEncaminhamento, setAnalistaEncaminhamento] = useState('');
 
     function concluirAnalise() {
         setErroConclusao(null);
@@ -315,8 +336,12 @@ export default function Show({
                                         <DescItem label="Inscrição imobiliária">{processo.inscricao ?? '—'}</DescItem>
                                         <DescItem label="Tipo de imóvel">{processo.tipo_imovel ?? '—'}</DescItem>
                                         <DescItem label="Origem">{processo.origin_label}</DescItem>
-                                        {processo.contingency_reason && (
-                                            <DescItem label="Motivo da contingência">{processo.contingency_reason}</DescItem>
+                                        {processo.motivo_da_analise ? (
+                                            <DescItem label="Motivo do encaminhamento">{processo.motivo_da_analise}</DescItem>
+                                        ) : (
+                                            processo.contingency_reason && (
+                                                <DescItem label="Motivo da contingência">{processo.contingency_reason}</DescItem>
+                                            )
                                         )}
                                         <DescItem label="Status">{processo.status_label}</DescItem>
                                         <DescItem label="Situação da análise">
@@ -351,26 +376,86 @@ export default function Show({
                                         )}
                                         {podeAnalisar && analysisStatusProximas.length > 0 && (
                                             <DescItem label="Alterar situação da análise">
-                                                <select
-                                                    className="rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
-                                                    defaultValue=""
-                                                    onChange={(e) => {
-                                                        if (e.target.value) {
-                                                            router.post(
-                                                                `/gestao/processos/${processo.id}/status-analise`,
-                                                                { status: e.target.value },
-                                                                { preserveScroll: true },
-                                                            );
-                                                        }
-                                                    }}
-                                                >
-                                                    <option value="">Selecione…</option>
-                                                    {analysisStatusProximas.map((o) => (
-                                                        <option key={o.value} value={o.value}>
-                                                            {o.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                <div className="flex flex-col gap-2">
+                                                    <select
+                                                        className="rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                                                        value={situacaoAnalise}
+                                                        onChange={(e) => {
+                                                            const valor = e.target.value;
+                                                            setSituacaoAnalise(valor);
+                                                            if (valor !== '' && valor !== 'encaminhado') {
+                                                                router.post(
+                                                                    `/gestao/processos/${processo.id}/status-analise`,
+                                                                    { status: valor },
+                                                                    { preserveScroll: true },
+                                                                );
+                                                            }
+                                                        }}
+                                                    >
+                                                        <option value="">Selecione…</option>
+                                                        {analysisStatusProximas.map((o) => (
+                                                            <option key={o.value} value={o.value}>
+                                                                {o.label}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {situacaoAnalise === 'encaminhado' && (
+                                                        <>
+                                                            <select
+                                                                aria-label="Setor"
+                                                                className="rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                                                                value={setorEncaminhamento}
+                                                                onChange={(e) => {
+                                                                    setSetorEncaminhamento(e.target.value);
+                                                                    setAnalistaEncaminhamento('');
+                                                                }}
+                                                            >
+                                                                <option value="">Setor</option>
+                                                                {setoresEncaminhamento.map((setor) => (
+                                                                    <option key={setor.id} value={setor.id}>
+                                                                        {setor.name}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                            <select
+                                                                aria-label="Usuário"
+                                                                className="rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                                                                value={analistaEncaminhamento}
+                                                                onChange={(e) => setAnalistaEncaminhamento(e.target.value)}
+                                                            >
+                                                                <option value="">Usuário</option>
+                                                                {analistasEncaminhamento
+                                                                    .filter((analista) =>
+                                                                        setorEncaminhamento === ''
+                                                                            ? false
+                                                                            : analista.setores.includes(Number(setorEncaminhamento)),
+                                                                    )
+                                                                    .map((analista) => (
+                                                                        <option key={analista.id} value={analista.id}>
+                                                                            {analista.name}
+                                                                        </option>
+                                                                    ))}
+                                                            </select>
+                                                            <Button
+                                                                size="sm"
+                                                                disabled={setorEncaminhamento === '' || analistaEncaminhamento === ''}
+                                                                onClick={() =>
+                                                                    router.post(
+                                                                        `/gestao/processos/${processo.id}/status-analise`,
+                                                                        {
+                                                                            status: 'encaminhado',
+                                                                            sector_id: Number(setorEncaminhamento),
+                                                                            user_id: Number(analistaEncaminhamento),
+                                                                        },
+                                                                        { preserveScroll: true },
+                                                                    )
+                                                                }
+                                                            >
+                                                                Encaminhar
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </DescItem>
                                         )}
                                         <DescItem label="Serviço">
@@ -424,6 +509,16 @@ export default function Show({
                                                             <span className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
                                                                 {evento.to_label}
                                                             </span>
+                                                            {evento.ator && (
+                                                                <span className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                                    Distribuição: {evento.ator}
+                                                                </span>
+                                                            )}
+                                                            {evento.atribuido && (
+                                                                <span className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                                    Atribuído: {evento.atribuido}
+                                                                </span>
+                                                            )}
                                                             {duracao && (
                                                                 <Badge color="light" size="sm">
                                                                     {duracao}

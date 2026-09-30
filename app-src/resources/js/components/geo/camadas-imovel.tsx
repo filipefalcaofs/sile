@@ -13,6 +13,7 @@ export interface CamadasImovel {
     logradouros_proximos?: { cod_log: string | null; nome: string | null; distancia_m: number }[];
     bairro?: { status: string; nome: string | null } | null;
     zona?: { status: string; nome: string | null } | null;
+    via?: string | null;
     camadas?: CamadaPoligonal[];
 }
 
@@ -54,17 +55,9 @@ export default function CamadasImovelLista({ camadas }: { camadas: CamadasImovel
                 ? `${camadas.logradouro_tributario.cod_log} — ${camadas.logradouro_tributario.nome ?? ''}`.trim()
                 : '—',
         },
-        {
-            camada: 'Logradouros próximos',
-            elemento:
-                camadas.logradouros_proximos && camadas.logradouros_proximos.length > 0
-                    ? camadas.logradouros_proximos
-                          .map((item) => `${item.cod_log ?? '?'} — ${item.nome ?? ''} (${item.distancia_m} m)`)
-                          .join('; ')
-                    : 'Nenhum logradouro identificado no raio',
-        },
         { camada: 'Bairro', elemento: textoDimensao(camadas.bairro) },
         { camada: 'Zona', elemento: textoDimensao(camadas.zona) },
+        { camada: 'Via', elemento: camadas.via?.trim() ? camadas.via : '—' },
         ...(camadas.camadas ?? []).map((camada) => ({
             camada: camada.titulo ?? camada.regra,
             elemento: textoCamada(camada),

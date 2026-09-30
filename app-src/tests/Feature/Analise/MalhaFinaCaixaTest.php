@@ -4,6 +4,7 @@ namespace Tests\Feature\Analise;
 
 use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\MalhaFinaService;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -51,7 +52,18 @@ class MalhaFinaCaixaTest extends TestCase
 
     private function emMalhaFina(ViabilityRequest $processo, User $ator): ViabilityRequest
     {
-        app(MalhaFinaService::class)->encaminhar($processo, $ator, 'Revisão de rotina.');
+        $processo->forceFill([
+            'status' => ViabilityRequestStatus::Deferida,
+            'analysis_status' => null,
+        ])->save();
+
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $processo->id,
+            'flow' => 'expresso',
+            'tvl_product_number' => 'TVL-'.$processo->protocol_number,
+        ]);
+
+        app(MalhaFinaService::class)->encaminhar($processo->fresh(), $ator, 'Revisão de rotina.');
 
         return $processo->fresh();
     }

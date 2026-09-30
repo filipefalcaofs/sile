@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Analise;
 
+use App\Enums\AnalysisStatus;
 use App\Models\AnalysisRecord;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -107,6 +108,31 @@ class PrecedentServiceTest extends TestCase
                 'analyst' => 'João Analista',
             ],
         ];
+    }
+
+    public function test_conta_processos_em_analise_do_mesmo_imovel(): void
+    {
+        $ficha = $this->fichaComSnapshot(null);
+        $ficha->viabilityRequest->forceFill(['property_registration' => '123456'])->save();
+
+        ViabilityRequest::factory()->create([
+            'property_registration' => '123456',
+            'analysis_status' => AnalysisStatus::EmAnalise,
+        ]);
+        ViabilityRequest::factory()->create([
+            'property_registration' => '123456',
+            'analysis_status' => AnalysisStatus::AnaliseConcluida,
+        ]);
+        ViabilityRequest::factory()->create([
+            'property_registration' => '999999',
+            'analysis_status' => AnalysisStatus::EmAnalise,
+        ]);
+
+        $this->app->instance(PrecedentRepository::class, new FakePrecedentRepository);
+
+        $painel = $this->service()->forRecord($ficha->fresh());
+
+        $this->assertSame(1, $painel['em_analise']);
     }
 
     public function test_precedentes_do_imovel_sem_cpf_no_payload(): void

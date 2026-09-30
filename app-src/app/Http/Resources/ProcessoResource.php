@@ -47,6 +47,7 @@ class ProcessoResource extends JsonResource
             'origin_label' => $this->origin->label(),
             'tipo_imovel' => $this->tipo_imovel,
             'contingency_reason' => $this->contingency_reason,
+            'motivo_da_analise' => $this->motivoDaAnalise(),
             'empresa' => $this->company?->trade_name ?: $this->company?->legal_name,
             'cnpj' => $this->company?->formatted_cnpj,
             'imovel' => $this->enderecoResumo(),
@@ -174,6 +175,29 @@ class ProcessoResource extends JsonResource
      * Motivo gravado na transição protocolada→em_analise. Null quando houve
      * decisão automática ou quando a transição não registrou motivo.
      */
+    private function motivoDaAnalise(): ?string
+    {
+        $this->resource->loadMissing('currentAnalysisRecord');
+
+        $linhas = $this->currentAnalysisRecord?->analysis_reasons;
+        $textos = is_array($linhas)
+            ? array_values(array_filter($linhas, fn (mixed $linha): bool => is_string($linha) && trim($linha) !== ''))
+            : [];
+
+        if ($textos === []) {
+            return $this->motivoEncaminhamento();
+        }
+
+        $texto = implode(' / ', $textos);
+        $fluxo = $this->analysis_category?->label();
+
+        if (is_string($fluxo) && $fluxo !== '' && ! str_contains(mb_strtolower($texto), mb_strtolower($fluxo))) {
+            $texto .= ' / Fluxo '.mb_strtolower($fluxo);
+        }
+
+        return $texto;
+    }
+
     private function motivoEncaminhamento(): ?string
     {
         if (! $this->semDecisaoAutomatica()) {

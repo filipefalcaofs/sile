@@ -11,12 +11,10 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Malha fina (HU-136): encaminhamento humano PROVOCADO de qualquer processo para
- * revisão/auditoria interna. É ORTOGONAL ao status — liga a flag in_fine_mesh e
- * grava uma linha em fine_mesh_referrals, SEM transicionar o status (NÃO chama a
- * StateMachine): atinge QUALQUER status, inclusive deferida/indeferida (RN-001,
- * corrige o bug legado que recusava deferidos), porque é flag + tabela, não
- * estado — não muda o desfecho, só sinaliza revisão. O motivo é OBRIGATÓRIO
+ * Malha fina (HU-136): encaminhamento humano de processo decidido pelo fluxo
+ * expresso, para submetê-lo à análise humana. Liga a flag in_fine_mesh e grava
+ * fine_mesh_referrals, SEM transicionar o status. Processo que já está no eixo
+ * de análise humana não é elegível (RN-005). O motivo é OBRIGATÓRIO
  * (RN-002) e cada ação audita SÍNCRONO por processo. É repetível (cada chamada é
  * uma nova linha) e em lote (RN-004 — mesmo motivo, auditoria por processo,
  * falhas isoladas). Distinta do semi-expresso (gatilho automático) e da caixa de
@@ -32,14 +30,29 @@ class MalhaFinaService
         private AuditService $audit,
     ) {}
 
+    private function exigirFluxoExpresso(ViabilityRequest $request): void
+    {
+        $request->loadMissing('decision');
+
+        $decisaoExpressa = $request->decision?->flow === 'expresso';
+        $emAnaliseHumana = $request->analysis_status !== null;
+
+        if (! $decisaoExpressa || $emAnaliseHumana) {
+            throw new MalhaFinaException('Malha fina só se aplica a processo decidido pelo fluxo expresso.');
+        }
+    }
+
     /**
      * Encaminha um processo à malha fina. Motivo OBRIGATÓRIO (RN-002): string
-     * vazia (ou só espaços) lança MalhaFinaException e NADA é gravado. Funciona em
-     * qualquer status (RN-001) — não valida nem transiciona o status.
+     * vazia (ou só espaços) lança MalhaFinaException e NADA é gravado. Só processo
+     * decidido pelo fluxo expresso, fora da análise humana (RN-001/RN-005).
      */
     public function encaminhar(ViabilityRequest $request, User $ator, string $motivo, ?int $sectorId = null): FineMeshReferral
     {
-        return $this->registrar($request, $ator, $this->motivoObrigatorio($motivo), $sectorId);
+        $motivo = $this->motivoObrigatorio($motivo);
+        $this->exigirFluxoExpresso($request);
+
+        return $this->registrar($request, $ator, $motivo, $sectorId);
     }
 
     /**
@@ -95,6 +108,7 @@ class MalhaFinaService
 
         foreach ($requests as $request) {
             try {
+                $this->exigirFluxoExpresso($request);
                 $this->registrar($request, $ator, $motivo, $sectorId);
                 $ok++;
             } catch (Throwable $e) {

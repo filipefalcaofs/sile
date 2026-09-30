@@ -284,10 +284,7 @@ class FluxoExpressoService
         // decidir nem emitir. Anti-fachada: jamais um deferimento/indeferimento
         // inventado (a base oficial liga o caminho de decisão).
         //
-        // Exceção da homologação do motor de risco, só com a flag de protocolo ligada:
-        // o conjunto já foi classificado pelo Decreto; a zona oficial ainda
-        // não está neste ambiente. Baixo/Médio segue o expresso (TVL) sem
-        // fingir zoneamento. Processo REGIN de verdade continua bloqueado aqui.
+        // Sem zona oficial o veredito pendente segue para análise.
         if ($resolved->consolidado === ResultadoViabilidade::Pendente->value
             && ! $this->bypassSimulacaoHomologacao($request)) {
             return $this->encaminharAnalise(

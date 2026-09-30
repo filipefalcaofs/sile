@@ -234,7 +234,7 @@ class AnaliseSmokeTest extends TestCase
         $request->forceFill(['status' => ViabilityRequestStatus::Deferida])->save();
         ViabilityDecision::factory()->create([
             'viability_request_id' => $request->id,
-            'flow' => 'analise_tecnica',
+            'flow' => 'expresso',
         ]);
         $gestor = User::factory()->create();
 

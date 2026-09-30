@@ -303,7 +303,6 @@ class DatabaseSeederTest extends TestCase
         // dedicados): uma decidida com decision_trace e uma legada sem trace —
         // tornando a explicabilidade (HU-099) navegável no dev mesmo em SQLite.
         $this->assertSame(2, ViabilityDecision::query()->count());
-
     }
 
     public function test_seed_prepara_setores_textos_padrao_e_usuarios_da_analise(): void

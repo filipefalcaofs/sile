@@ -166,6 +166,7 @@ interface CnaeZona {
 interface PrecedentesResponse {
     imovel: PrecedenteImovel[];
     cnae_zona: CnaeZona;
+    em_analise?: number;
 }
 
 type DiffValor = { de: unknown; para: unknown };
@@ -1591,6 +1592,7 @@ export default function FichaAnaliseShow({
                     <ResumoProcessoCard
                         sugestoes={sugestoesIa ?? []}
                         iaFicha={iaFicha}
+                        restricoes={analysisReasons}
                         status={resumoStatus}
                         mensagem={resumoMensagem}
                         gerando={resumoHttp.processing || resumoStatus === 'aguardando'}
@@ -1664,6 +1666,49 @@ export default function FichaAnaliseShow({
                                     Zona urbanística e via oficiais seguem pendentes SEDUR (Quadro 10).
                                 </p>
                             )}
+
+                            <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <DescItem label="Atividade está estabelecida em área pública?">
+                                    {localizacao?.is_public_area === null || localizacao?.is_public_area === undefined
+                                        ? '—'
+                                        : localizacao.is_public_area
+                                          ? 'Sim'
+                                          : 'Não'}
+                                </DescItem>
+                                <div>
+                                    <Label className="mb-1.5">Endereço correto?</Label>
+                                    <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Endereço correto?">
+                                        {[
+                                            { valor: true, label: 'Sim' },
+                                            { valor: false, label: 'Não' },
+                                        ].map((opcao) => {
+                                            const ativo = addressConfirmed === opcao.valor;
+
+                                            return (
+                                                <button
+                                                    key={opcao.label}
+                                                    type="button"
+                                                    role="radio"
+                                                    aria-checked={ativo}
+                                                    disabled={!editavel}
+                                                    onClick={() => setAddressConfirmed(opcao.valor)}
+                                                    className={`rounded-lg px-3 py-1.5 text-theme-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                                        ativo
+                                                            ? 'bg-brand-500 text-white'
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
+                                                    }`}
+                                                >
+                                                    {opcao.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </dl>
+                            <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
+                                Área pública é informada pelo requerente na solicitação; "Endereço correto?" é uma confirmação do
+                                analista.
+                            </p>
                         </CardContent>
                     </Card>
                 </div>
@@ -1696,57 +1741,6 @@ export default function FichaAnaliseShow({
                         </dl>
                         <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
                             A marcação de sede de escritório virtual é editada no card da atividade CNAE gatilho, abaixo.
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader
-                        title="Confirmações do imóvel"
-                        description="Paridade com a ficha do legado (SAPS) — confirmações de nível de processo."
-                    />
-                    <CardContent>
-                        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <DescItem label="Atividade está estabelecida em área pública?">
-                                {localizacao?.is_public_area === null || localizacao?.is_public_area === undefined
-                                    ? '—'
-                                    : localizacao.is_public_area
-                                      ? 'Sim'
-                                      : 'Não'}
-                            </DescItem>
-                            <div>
-                                <Label className="mb-1.5">Endereço correto?</Label>
-                                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Endereço correto?">
-                                    {[
-                                        { valor: true, label: 'Sim' },
-                                        { valor: false, label: 'Não' },
-                                    ].map((opcao) => {
-                                        const ativo = addressConfirmed === opcao.valor;
-
-                                        return (
-                                            <button
-                                                key={opcao.label}
-                                                type="button"
-                                                role="radio"
-                                                aria-checked={ativo}
-                                                disabled={!editavel}
-                                                onClick={() => setAddressConfirmed(opcao.valor)}
-                                                className={`rounded-lg px-3 py-1.5 text-theme-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                                                    ativo
-                                                        ? 'bg-brand-500 text-white'
-                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
-                                                }`}
-                                            >
-                                                {opcao.label}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </dl>
-                        <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
-                            Área pública é informada pelo requerente na solicitação; "Endereço correto?" é uma confirmação do
-                            analista.
                         </p>
                     </CardContent>
                 </Card>
@@ -1798,136 +1792,9 @@ export default function FichaAnaliseShow({
                             </Card>
                         )}
 
-                        {/* Justificativa do processo — consolidada no início, fora da
-                            ficha (relatório de usabilidade SEDUR 19/09, item 24):
-                            atividades com LOUOS × TLL × valor, risco do
-                            estabelecimento com o CNAE que elevou e só a
-                            fundamentação legal vigente. */}
-                        {perCnae.length > 0 && (
-                            <Card>
-                                <CardHeader
-                                    title="Justificativa"
-                                    description="Enquadramento e risco por atividade, com a fundamentação legal vigente."
-                                />
-                                <CardContent>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left text-theme-sm">
-                                            <thead>
-                                                <tr className="border-b border-gray-200 text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:border-gray-800 dark:text-gray-500">
-                                                    <th className="py-2 pr-4">Atividade</th>
-                                                    <th className="py-2 pr-4">LOUOS</th>
-                                                    <th className="py-2 pr-4">TLL</th>
-                                                    <th className="py-2 pr-4">Valor TLL</th>
-                                                    <th className="py-2">Risco</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {perCnae.map((item, indice) => (
-                                                    <tr
-                                                        key={`justificativa-${item.cnae}-${indice}`}
-                                                        className="border-b border-gray-100 last:border-0 dark:border-gray-800"
-                                                    >
-                                                        <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">
-                                                            {item.cnae_formatado ?? item.cnae}
-                                                        </td>
-                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
-                                                            {item.codigo_louos ?? '—'}
-                                                        </td>
-                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
-                                                            {item.codigo_tll ?? '—'}
-                                                        </td>
-                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
-                                                            {item.valor_tll != null && item.valor_tll !== ''
-                                                                ? formatarMoeda(item.valor_tll)
-                                                                : '—'}
-                                                        </td>
-                                                        <td className="py-2 text-gray-600 dark:text-gray-400">
-                                                            {[item.risco_municipal, rotuloRiscoSanitario(item.risco_sanitario)]
-                                                                .filter(Boolean)
-                                                                .join(' · ') || '—'}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {(() => {
-                                        const maisRestritivo = perCnae.reduce<(typeof perCnae)[number] | null>(
-                                            (maior, item) => {
-                                                const rank = Math.max(
-                                                    riscoRank(item.risco_municipal),
-                                                    riscoRank(rotuloRiscoSanitario(item.risco_sanitario)),
-                                                );
-                                                const rankMaior =
-                                                    maior === null
-                                                        ? 0
-                                                        : Math.max(
-                                                              riscoRank(maior.risco_municipal),
-                                                              riscoRank(rotuloRiscoSanitario(maior.risco_sanitario)),
-                                                          );
-
-                                                return rank > rankMaior ? item : maior;
-                                            },
-                                            null,
-                                        );
-
-                                        if (maisRestritivo === null) {
-                                            return null;
-                                        }
-
-                                        const riscoEstabelecimento = [
-                                            maisRestritivo.risco_municipal,
-                                            rotuloRiscoSanitario(maisRestritivo.risco_sanitario),
-                                        ]
-                                            .filter(Boolean)
-                                            .join(' · ');
-
-                                        return (
-                                            <p className="mt-4 text-theme-sm text-gray-700 dark:text-gray-300">
-                                                Risco do estabelecimento: <strong>{riscoEstabelecimento}</strong>
-                                                {perCnae.length > 1 && (
-                                                    <>
-                                                        {' '}
-                                                        — elevado pelo CNAE{' '}
-                                                        {maisRestritivo.cnae_formatado ?? maisRestritivo.cnae} (mais
-                                                        restritivo da solicitação)
-                                                    </>
-                                                )}
-                                                .
-                                            </p>
-                                        );
-                                    })()}
-
-                                    {(() => {
-                                        const fundamentacao = [
-                                            ...new Set(
-                                                perCnae.flatMap((item) => item.fundamentacao ?? []),
-                                            ),
-                                        ];
-
-                                        if (fundamentacao.length === 0) {
-                                            return null;
-                                        }
-
-                                        return (
-                                            <ul className="mt-3 list-inside list-disc text-theme-xs text-gray-500 dark:text-gray-400">
-                                                {fundamentacao.map((ref) => (
-                                                    <li key={ref}>{ref}</li>
-                                                ))}
-                                            </ul>
-                                        );
-                                    })()}
-                                </CardContent>
-                            </Card>
-                        )}
-
                         {/* Enquadramento por CNAE (espelha a ficha SAPS) */}
                         <Card>
-                            <CardHeader
-                                title="Enquadramento por atividade (CNAE)"
-                                description="Pré-preenchido pelo sistema (LOUOS e risco): a decisão nasce marcada conforme os Quadros 10/11-A — confirme ou altere. Justificativa e parecer são do analista."
-                            />
+                            <CardHeader title="Enquadramento por atividade (CNAE)" />
                             <CardContent>
                                 {perCnae.length === 0 ? (
                                     <EmptyState
@@ -1938,7 +1805,8 @@ export default function FichaAnaliseShow({
                                     <ul className="space-y-5">
                                         {perCnae.map((item, indice) => {
                                             const escolhido = item.status_escolhido ?? null;
-                                            const opcoesCnae = enquadramentoOpcoes[item.cnae] ?? [];
+                                            const digitosCnae = item.cnae.replace(/\D/g, '');
+                                            const opcoesCnae = enquadramentoOpcoes[item.cnae] ?? enquadramentoOpcoes[digitosCnae] ?? [];
                                             const enquadramentoAtual = `${item.codigo_louos ?? ''}|${item.codigo_tll ?? ''}`;
                                             const atualForaDaPlanilha =
                                                 item.codigo_louos != null &&
@@ -2123,56 +1991,6 @@ export default function FichaAnaliseShow({
                                                         </DescItem>
                                                     </div>
 
-                                                    <div className="mt-3">
-                                                        <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-                                                            <Label htmlFor={`justificativa-${indice}`}>Justificativa</Label>
-                                                            {editavel && iaFicha.justificativa_disponivel && (
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    disabled={
-                                                                        !item.status_escolhido ||
-                                                                        justificativaIa.processing ||
-                                                                        justificativaStatus[item.cnae] === 'solicitando' ||
-                                                                        justificativaStatus[item.cnae] === 'aguardando'
-                                                                    }
-                                                                    onClick={() => sugerirJustificativa(item.cnae)}
-                                                                >
-                                                                    {justificativaStatus[item.cnae] === 'solicitando' ||
-                                                                    justificativaStatus[item.cnae] === 'aguardando'
-                                                                        ? 'Sugerindo…'
-                                                                        : 'Sugerir com IA'}
-                                                                </Button>
-                                                            )}
-                                                        </div>
-                                                        <Textarea
-                                                            id={`justificativa-${indice}`}
-                                                            rows={8}
-                                                            disabled={!editavel}
-                                                            placeholder="Justificativa da atividade — a manifestação é do analista…"
-                                                            value={item.justificativa ?? ''}
-                                                            onChange={(valor) =>
-                                                                atualizarCnae(indice, { justificativa: valor })
-                                                            }
-                                                        />
-                                                        {editavel && iaFicha.justificativa_disponivel && !item.status_escolhido && (
-                                                            <p className="mt-1 text-theme-xs text-gray-400 dark:text-gray-500">
-                                                                Decida o enquadramento da atividade (deferida ou indeferida) para
-                                                                habilitar a sugestão da IA.
-                                                            </p>
-                                                        )}
-                                                        {editavel && justificativaStatus[item.cnae] === 'indisponivel' && (
-                                                            <p className="mt-1 text-theme-xs text-error-600 dark:text-error-400">
-                                                                {justificativaMensagem[item.cnae] ??
-                                                                    'Sugestão de justificativa indisponível no momento.'}
-                                                            </p>
-                                                        )}
-                                                        {editavel && justificativaStatus[item.cnae] === 'pronta' && (
-                                                            <p className="mt-1 text-theme-xs text-gray-400 dark:text-gray-500">
-                                                                Sugestão da IA aplicada ao campo — revise e ajuste antes de salvar.
-                                                            </p>
-                                                        )}
-                                                    </div>
                                                 </li>
                                             );
                                         })}
@@ -2180,6 +1998,130 @@ export default function FichaAnaliseShow({
                                 )}
                             </CardContent>
                         </Card>
+
+                        {/* Justificativa do processo — consolidada no início, fora da
+                            ficha (relatório de usabilidade SEDUR 19/09, item 24):
+                            atividades com LOUOS × TLL × valor, risco do
+                            estabelecimento com o CNAE que elevou e só a
+                            fundamentação legal vigente. */}
+                        {perCnae.length > 0 && (
+                            <Card>
+                                <CardHeader
+                                    title="Classificação de Risco e Fundamentação Legal"
+                                    description="Enquadramento e risco por atividade, com a fundamentação legal vigente."
+                                />
+                                <CardContent>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-theme-sm">
+                                            <thead>
+                                                <tr className="border-b border-gray-200 text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:border-gray-800 dark:text-gray-500">
+                                                    <th className="py-2 pr-4">Atividade</th>
+                                                    <th className="py-2 pr-4">LOUOS</th>
+                                                    <th className="py-2 pr-4">TLL</th>
+                                                    <th className="py-2 pr-4">Valor TLL</th>
+                                                    <th className="py-2">Risco</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {perCnae.map((item, indice) => (
+                                                    <tr
+                                                        key={`justificativa-${item.cnae}-${indice}`}
+                                                        className="border-b border-gray-100 last:border-0 dark:border-gray-800"
+                                                    >
+                                                        <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">
+                                                            {item.cnae_formatado ?? item.cnae}
+                                                        </td>
+                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                                                            {item.codigo_louos ?? '—'}
+                                                        </td>
+                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                                                            {item.codigo_tll ?? '—'}
+                                                        </td>
+                                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                                                            {item.valor_tll != null && item.valor_tll !== ''
+                                                                ? formatarMoeda(item.valor_tll)
+                                                                : '—'}
+                                                        </td>
+                                                        <td className="py-2 text-gray-600 dark:text-gray-400">
+                                                            {[item.risco_municipal, rotuloRiscoSanitario(item.risco_sanitario)]
+                                                                .filter(Boolean)
+                                                                .join(' · ') || '—'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {(() => {
+                                        const maisRestritivo = perCnae.reduce<(typeof perCnae)[number] | null>(
+                                            (maior, item) => {
+                                                const rank = Math.max(
+                                                    riscoRank(item.risco_municipal),
+                                                    riscoRank(rotuloRiscoSanitario(item.risco_sanitario)),
+                                                );
+                                                const rankMaior =
+                                                    maior === null
+                                                        ? 0
+                                                        : Math.max(
+                                                              riscoRank(maior.risco_municipal),
+                                                              riscoRank(rotuloRiscoSanitario(maior.risco_sanitario)),
+                                                          );
+
+                                                return rank > rankMaior ? item : maior;
+                                            },
+                                            null,
+                                        );
+
+                                        if (maisRestritivo === null) {
+                                            return null;
+                                        }
+
+                                        const riscoEstabelecimento = [
+                                            maisRestritivo.risco_municipal,
+                                            rotuloRiscoSanitario(maisRestritivo.risco_sanitario),
+                                        ]
+                                            .filter(Boolean)
+                                            .join(' · ');
+
+                                        return (
+                                            <p className="mt-4 text-theme-sm text-gray-700 dark:text-gray-300">
+                                                Risco do estabelecimento: <strong>{riscoEstabelecimento}</strong>
+                                                {perCnae.length > 1 && (
+                                                    <>
+                                                        {' '}
+                                                        — elevado pelo CNAE{' '}
+                                                        {maisRestritivo.cnae_formatado ?? maisRestritivo.cnae} (mais
+                                                        restritivo da solicitação)
+                                                    </>
+                                                )}
+                                                .
+                                            </p>
+                                        );
+                                    })()}
+
+                                    {(() => {
+                                        const fundamentacao = [
+                                            ...new Set(
+                                                perCnae.flatMap((item) => item.fundamentacao ?? []),
+                                            ),
+                                        ];
+
+                                        if (fundamentacao.length === 0) {
+                                            return null;
+                                        }
+
+                                        return (
+                                            <ul className="mt-3 list-inside list-disc text-theme-xs text-gray-500 dark:text-gray-400">
+                                                {fundamentacao.map((ref) => (
+                                                    <li key={ref}>{ref}</li>
+                                                ))}
+                                            </ul>
+                                        );
+                                    })()}
+                                </CardContent>
+                            </Card>
+                        )}
 
                         {/* Condicionantes */}
                         <Card>
@@ -2428,49 +2370,6 @@ export default function FichaAnaliseShow({
                             </CardContent>
                         </Card>
 
-                        {/* Tramitação (paridade com o legado, spec 2026-07-24) */}
-                        <Card>
-                            <CardHeader
-                                title="Tramitação"
-                                description="Histórico do eixo operacional da análise."
-                                actions={
-                                    <Button
-                                        size="xs"
-                                        variant="outline"
-                                        onClick={() => imprimirExtratoTramitacao(processo.protocol_number, tramitacao, auth.user?.name ?? '—')}
-                                    >
-                                        Imprimir Extrato da Tramitação
-                                    </Button>
-                                }
-                            />
-                            <CardContent>
-                                {tramitacao.length === 0 ? (
-                                    <EmptyState
-                                        title="Sem tramitação registrada"
-                                        description="O histórico do eixo operacional aparece aqui conforme o processo tramita."
-                                    />
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left text-theme-sm">
-                                            <thead>
-                                                <tr className="border-b border-gray-200 text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:border-gray-800 dark:text-gray-500">
-                                                    <th className="py-2 pr-4">Data</th>
-                                                    <th className="py-2 pr-4">Setor</th>
-                                                    <th className="py-2 pr-4">Usuário</th>
-                                                    <th className="py-2 pr-4">Status</th>
-                                                    <th className="py-2" />
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {tramitacao.map((item, indice) => (
-                                                    <TramitacaoLinha key={`${item.data}-${indice}`} item={item} />
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
                     </div>
 
                     {/* Coluna lateral: abrigados, precedentes, ações (mapa/localização
@@ -2547,12 +2446,6 @@ export default function FichaAnaliseShow({
                                     {processo.status === 'em_pendencia' && (
                                         <Button onClick={() => setShowCancelarConvite(true)} variant="ghost" size="sm">
                                             Cancelar convite
-                                        </Button>
-                                    )}
-
-                                    {podeMalhaFina && (
-                                        <Button onClick={() => setShowMalhaFina(true)} variant="ghost" size="sm">
-                                            Encaminhar para a malha fina
                                         </Button>
                                     )}
 
@@ -3053,6 +2946,7 @@ function SugestoesIaSkeleton() {
 function ResumoProcessoCard({
     sugestoes,
     iaFicha,
+    restricoes,
     status,
     mensagem,
     gerando,
@@ -3060,6 +2954,7 @@ function ResumoProcessoCard({
 }: {
     sugestoes: SugestaoIa[];
     iaFicha: IaFicha;
+    restricoes: string[];
     status: 'idle' | 'solicitando' | 'aguardando' | 'pronta' | 'indisponivel' | 'timeout';
     mensagem: string | null;
     gerando: boolean;
@@ -3088,6 +2983,18 @@ function ResumoProcessoCard({
                 }
             />
             <CardContent>
+                {restricoes.length > 0 && (
+                    <ul className="mb-4 space-y-2" aria-label="Restrições do processo">
+                        {restricoes.map((restricao) => (
+                            <li
+                                key={restricao}
+                                className="rounded-lg border border-gray-200 p-3 text-theme-sm text-gray-700 dark:border-gray-800 dark:text-gray-300"
+                            >
+                                {restricao}
+                            </li>
+                        ))}
+                    </ul>
+                )}
                 {resumos.length === 0 ? (
                     <div className="space-y-2">
                         {status === 'aguardando' || status === 'solicitando' ? (
@@ -3651,6 +3558,9 @@ function PrecedentesPanel({
                         <div>
                             <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
                                 Processos do imóvel
+                            </p>
+                            <p className="mt-1 text-theme-sm text-gray-700 dark:text-gray-300">
+                                Em análise neste imóvel: {dados.em_analise ?? 0}
                             </p>
                             {dados.imovel.length === 0 ? (
                                 <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
