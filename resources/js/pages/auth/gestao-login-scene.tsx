@@ -4,8 +4,11 @@ import { LogoMark } from '@/components/app/logo';
 import {
     ESTADOS_FUNDIDOS,
     ESTADOS_SHELL,
+    LEITURAS_ESPERA,
+    PONTOS_ANALISE,
     TAXA_PADRAO,
     TAXAS,
+    TEMPO_LEITURA,
     TEXTOS_ESTADO,
     alvosPorEstado,
     corDoEstado,
@@ -45,6 +48,9 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
     const linha = useRef<SVGPathElement>(null);
     const noInicial = useRef<SVGCircleElement>(null);
     const noFinal = useRef<SVGCircleElement>(null);
+    const varredura = useRef<HTMLDivElement>(null);
+    const pontos = useRef<Array<HTMLDivElement | null>>([]);
+    const focoLuz = useRef<HTMLDivElement>(null);
 
     // Valores lidos pelo loop sem provocar re-render.
     const estadoRef = useRef(estado);
@@ -59,6 +65,7 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
     const mouseSuave = useRef({ x: 0, y: 0 });
     const blurAnterior = useRef<number[]>([-1, -1, -1]);
     const fotoAnterior = useRef('');
+    const [leitura, setLeitura] = useState(0);
 
     useEffect(() => {
         const onResize = () => setAmplo(window.innerWidth >= LARGURA_MINIMA_PALCO);
@@ -66,6 +73,17 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
 
         return () => window.removeEventListener('resize', onResize);
     }, []);
+
+    // Em espera, a linha de estado alterna entre as leituras da central.
+    useEffect(() => {
+        if (estado !== 'idle') {
+            return;
+        }
+
+        const intervalo = setInterval(() => setLeitura((atual) => (atual + 1) % LEITURAS_ESPERA.length), TEMPO_LEITURA);
+
+        return () => clearInterval(intervalo);
+    }, [estado]);
 
     // Cada entrada em validating ou denied soma uma volta ao arco. A base
     // acumulada evita que a próxima volta recue o ângulo já percorrido.
@@ -226,6 +244,51 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
 
             const palcoAtual = stageRef.current;
 
+            // Varredura: em espera percorre o palco; com a sessão aberta,
+            // converge para a região da cena. Sem movimento reduzido.
+            if (varredura.current && palcoAtual) {
+                const largura = palcoAtual.getBoundingClientRect().width;
+                const emEspera = estadoRef.current === 'idle';
+                const progresso = emEspera ? (agora % 9000) / 9000 : 0.5 + Math.sin(agora * 0.0009) * 0.08;
+                const alvoX = emEspera ? progresso * largura : base.x + Math.sin(agora * 0.0009) * 40;
+
+                varredura.current.style.transform = `translateX(${alvoX.toFixed(1)}px)`;
+                varredura.current.style.opacity = reduzido || noShell ? '0' : emEspera ? '0.5' : '0.35';
+            }
+
+            // Pontos de análise: acendem em sequência sobre a cidade; com a
+            // sessão aberta mudam para o azul de autorização.
+            if (palcoAtual) {
+                const caixaPalco = palcoAtual.getBoundingClientRect();
+                const sessaoAberta = estadoRef.current !== 'idle';
+
+                PONTOS_ANALISE.forEach(([fx, fy], indice) => {
+                    const el = pontos.current[indice];
+
+                    if (!el) {
+                        return;
+                    }
+
+                    const pulso = reduzido ? 0.4 : 0.5 + Math.sin(agora * 0.0011 + indice * 1.7) * 0.5;
+                    const opacidade = noShell ? 0 : sessaoAberta ? 0.25 + pulso * 0.5 : 0.12 + pulso * 0.3;
+
+                    el.style.transform = `translate(${(fx * caixaPalco.width).toFixed(1)}px, ${(fy * caixaPalco.height).toFixed(1)}px)`;
+                    el.style.opacity = opacidade.toFixed(3);
+                    el.style.background = sessaoAberta ? AZUL : 'rgba(255,255,255,0.7)';
+                });
+            }
+
+            // Foco de luz na cidade: cresce na autorização e some no docking.
+            if (focoLuz.current) {
+                const autorizando = estadoRef.current === 'authorized' || estadoRef.current === 'preparing';
+                const alvo = noShell || reduzido ? 0 : autorizando ? 0.55 : estadoRef.current === 'validating' ? 0.3 : 0;
+                const atualLuz = Number(focoLuz.current.dataset.o ?? '0');
+                const proximo = atualLuz + (alvo - atualLuz) * (1 - Math.exp(-3 * dt));
+
+                focoLuz.current.dataset.o = proximo.toFixed(4);
+                focoLuz.current.style.opacity = proximo.toFixed(3);
+            }
+
             if (palcoAtual && linha.current) {
                 const direita = palcoAtual.getBoundingClientRect().right;
                 const x0 = base.x + 152;
@@ -277,15 +340,40 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
 
     const fundido = ESTADOS_FUNDIDOS.includes(estado);
     const noShell = ESTADOS_SHELL.includes(fase);
-    // O disco fica visível do authorized ao docking: fundo do tile até o
-    // docking, quando vira transparente para o logo da sidebar aparecer.
-    const discoVisivel = fase === 'authorized' || fase === 'preparing' || fase === 'docking';
     const { numero, texto } = TEXTOS_ESTADO[estado];
+    const textoExibido = estado === 'idle' ? LEITURAS_ESPERA[leitura] : texto;
     const cor = corDoEstado(estado);
     const mostraOperador = tipoConta !== null && ['session', 'secure', 'ready', 'validating', 'authorized'].includes(estado);
 
     return (
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-6">
+            {/* Varredura territorial e pontos de análise, sobre a cidade */}
+            <div
+                ref={varredura}
+                className="absolute top-0 bottom-0 w-px opacity-0"
+                style={{
+                    background: 'linear-gradient(180deg, transparent, oklch(64% 0.155 250 / 0.5) 30%, oklch(64% 0.155 250 / 0.5) 70%, transparent)',
+                    boxShadow: '0 0 24px 4px oklch(64% 0.155 250 / 0.18)',
+                }}
+            />
+            {PONTOS_ANALISE.map((_, indice) => (
+                <div
+                    key={indice}
+                    ref={(el) => {
+                        pontos.current[indice] = el;
+                    }}
+                    className="absolute size-[5px] rounded-full opacity-0"
+                    style={{ background: 'rgba(255,255,255,0.7)', boxShadow: '0 0 8px 2px rgba(255,255,255,0.25)' }}
+                />
+            ))}
+            <div
+                ref={focoLuz}
+                className="absolute inset-0 opacity-0"
+                style={{
+                    background: 'radial-gradient(circle at 70% 47%, oklch(64% 0.155 250 / 0.35) 0%, transparent 55%)',
+                }}
+            />
+
             <svg className="absolute inset-0 size-full overflow-visible">
                 <path ref={linha} d="M0 0" fill="none" stroke="oklch(64% 0.155 250 / 0.85)" strokeWidth="1" style={{ opacity: 0 }} />
                 <circle ref={noInicial} cx="0" cy="0" r="2.5" fill={AZUL} style={{ opacity: 0 }} />
@@ -296,13 +384,13 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
                 {/* Linha de estado e linha do operador, acima da cena */}
                 <div className="absolute -top-[268px] -left-[220px] grid w-[440px] justify-items-center gap-2.5">
                     <div
-                        key={estado + texto}
+                        key={estado + textoExibido}
                         className={`${gestaoLoginMonoFont} flex items-center gap-2.5 text-[10.5px] font-medium tracking-[0.1em] whitespace-nowrap uppercase motion-safe:animate-[sile-rise_0.55s_cubic-bezier(0.2,0.7,0.2,1)_both]`}
                         style={{ color: cor }}
                     >
                         <span className="tabular-nums text-[oklch(50%_0.02_250)]">{numero} / 06</span>
                         <span className="h-px w-[18px] opacity-70" style={{ background: cor }} />
-                        <span>{texto}</span>
+                        <span>{textoExibido}</span>
                     </div>
                     <span
                         className={`${gestaoLoginMonoFont} text-[10px] tracking-[0.08em] text-[oklch(67%_0.025_250)] uppercase transition-all duration-500`}

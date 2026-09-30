@@ -58,6 +58,30 @@ export const TEXTOS_ESTADO: Record<EstadoLogico, { numero: string; texto: string
     docking: { numero: '06', texto: 'Central de viabilidade aberta' },
 };
 
+/** Leituras que a central alterna enquanto espera, a cada ~4 s. */
+export const LEITURAS_ESPERA = [
+    'Central em espera',
+    'Varredura territorial ativa',
+    'Motor de regras em sincronia',
+] as const;
+
+export const TEMPO_LEITURA = 4000;
+
+/**
+ * Posições fixas dos pontos de análise sobre a cidade, em fração da largura
+ * e da altura do palco. Oito consultas territoriais sendo processadas.
+ */
+export const PONTOS_ANALISE: ReadonlyArray<readonly [number, number]> = [
+    [0.18, 0.32],
+    [0.31, 0.58],
+    [0.44, 0.24],
+    [0.52, 0.71],
+    [0.63, 0.42],
+    [0.72, 0.62],
+    [0.81, 0.3],
+    [0.88, 0.55],
+];
+
 export function corDoEstado(estado: EstadoLogico): string {
     if (estado === 'denied') {
         return 'oklch(78% 0.13 25)';
