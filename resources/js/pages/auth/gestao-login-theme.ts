@@ -4,25 +4,52 @@ export const gestaoLoginMonoFont = "font-[ui-monospace,'SF_Mono',Menlo,monospace
 export const gestaoLoginBrandForeground = 'text-[oklch(96%_0.008_250)]';
 
 export const gestaoLoginBrandStageClasses = [
-    'relative hidden min-h-0 flex-col overflow-hidden',
+    'relative hidden min-h-0 shrink-0 flex-col overflow-hidden',
     gestaoLoginBrandForeground,
-    "bg-[linear-gradient(180deg,oklch(12.5%_0.03_255_/_0.55)_0%,oklch(12.5%_0.03_255_/_0.2)_38%,oklch(12.5%_0.032_255_/_0.86)_100%),linear-gradient(100deg,oklch(12.5%_0.032_255_/_0.9)_0%,oklch(12.5%_0.03_255_/_0.42)_60%,oklch(12.5%_0.03_255_/_0.18)_100%),url('/images/salvador-hero.jpg')]",
-    'bg-cover bg-center px-[clamp(28px,5vw,96px)] py-[clamp(28px,3.5vw,56px)] min-[1101px]:flex min-[1101px]:h-full',
+    'bg-[oklch(12.5%_0.03_255)]',
+    'px-[clamp(28px,5vw,96px)] py-[clamp(28px,3.5vw,56px)]',
+    'min-[1101px]:flex min-[1101px]:h-full',
+    'min-[1101px]:w-[calc(100%-clamp(440px,34vw,580px))]',
+    'transition-[width,padding] duration-[1.05s] ease-[cubic-bezier(0.7,0,0.2,1)]',
+    // Docking: o palco vira a sidebar do console (290px, padding 32/20).
+    'data-[docking=true]:min-[1101px]:w-[290px] data-[docking=true]:px-5 data-[docking=true]:py-8',
+].join(' ');
+
+/** Camada da foto: separada do palco para receber blur, brilho e escala animados. */
+export const gestaoLoginStagePhotoClasses = [
+    'pointer-events-none absolute -inset-[30px] z-0',
+    "bg-[url('/images/salvador-hero.jpg')] bg-cover bg-center",
+    'will-change-[filter,transform]',
+].join(' ');
+
+/** Os dois gradientes navy do palco, acima da foto. */
+export const gestaoLoginStageGradientClasses = [
+    'pointer-events-none absolute inset-0 z-0',
+    'bg-[linear-gradient(180deg,oklch(12.5%_0.03_255_/_0.55)_0%,oklch(12.5%_0.03_255_/_0.2)_38%,oklch(12.5%_0.032_255_/_0.86)_100%),linear-gradient(100deg,oklch(12.5%_0.032_255_/_0.9)_0%,oklch(12.5%_0.03_255_/_0.42)_60%,oklch(12.5%_0.03_255_/_0.18)_100%)]',
+].join(' ');
+
+/** Véu do console: a cidade fica levemente visível sob a sidebar. */
+export const gestaoLoginStageVeilClasses = [
+    'pointer-events-none absolute inset-0 z-0 bg-[#0c111d] opacity-0',
+    'transition-opacity duration-1000 ease-linear delay-[0.25s]',
+    'data-[docking=true]:opacity-92',
 ].join(' ');
 
 export const gestaoLoginShellClasses = [
-    'grid h-dvh grid-cols-1 overflow-hidden overscroll-none bg-gray-50',
+    'flex h-dvh overflow-hidden overscroll-none bg-gray-50',
     "font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','Segoe_UI',system-ui,sans-serif]",
     'text-gray-900 antialiased',
     'dark:bg-[oklch(15%_0.034_255)] dark:text-[oklch(96%_0.008_250)]',
-    'min-[1101px]:grid-cols-[minmax(0,1fr)_clamp(440px,34vw,580px)]',
 ].join(' ');
 
 export const gestaoLoginPanelClasses = [
-    'flex h-full min-h-0 flex-col overflow-hidden bg-white',
+    'flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white',
     'px-[clamp(22px,4vw,72px)] py-[clamp(20px,3.5vw,56px)]',
     'min-[1101px]:border-l min-[1101px]:border-gray-200',
     'dark:bg-[oklch(19%_0.038_255)] min-[1101px]:dark:border-white/8',
+    'transition-[background-color,border-color] duration-600 ease-linear delay-300',
+    'data-[docking=true]:border-transparent data-[docking=true]:bg-[#f9fafb]',
+    'data-[docking=true]:dark:border-transparent data-[docking=true]:dark:bg-[#f9fafb]',
 ].join(' ');
 
 export const gestaoLoginLabelClasses = [

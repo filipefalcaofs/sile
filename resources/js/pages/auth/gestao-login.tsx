@@ -1,6 +1,6 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import { useRef, useState } from 'react';
+import type { KeyboardEvent, RefObject } from 'react';
 import { AppVersion } from '@/components/app/app-version';
 import { LogoMark } from '@/components/app/logo';
 import { ArrowRightIcon, EyeCloseIcon, EyeIcon, MoonIcon, SunIcon } from '@/components/icons';
@@ -10,6 +10,9 @@ import {
     gestaoLoginBrandForeground,
     gestaoLoginBrandStageClasses,
     gestaoLoginDisplayFont,
+    gestaoLoginStageGradientClasses,
+    gestaoLoginStagePhotoClasses,
+    gestaoLoginStageVeilClasses,
     gestaoLoginDividerClasses,
     gestaoLoginFaintClasses,
     gestaoLoginInputClasses,
@@ -48,61 +51,22 @@ const footStats = [
     { label: 'LOUOS', value: 'Lei nº 9.148/2016', mono: true },
 ];
 
-function ZoneMap() {
-    return (
-        <svg
-            className="pointer-events-none absolute inset-0 z-0 size-full opacity-45"
-            viewBox="0 0 1200 900"
-            preserveAspectRatio="xMidYMid slice"
-            aria-hidden="true"
-        >
-            <g fill="none" stroke="rgba(255,255,255,0.055)" strokeWidth="1">
-                <path d="M-40 180 L220 140 L360 220 L520 170 L700 240 L880 190 L1080 260 L1260 210" />
-                <path d="M-40 360 L180 330 L340 410 L560 350 L760 430 L960 370 L1240 440" />
-                <path d="M-40 560 L240 520 L420 600 L640 540 L840 620 L1060 560 L1260 630" />
-                <path d="M-40 760 L260 720 L460 790 L700 730 L920 800 L1240 750" />
-                <path d="M160 -40 L200 240 L150 480 L210 720 L170 940" />
-                <path d="M440 -40 L480 200 L430 440 L500 700 L450 940" />
-                <path d="M740 -40 L700 220 L770 460 L710 700 L780 940" />
-                <path d="M1020 -40 L1060 260 L1000 520 L1070 760 L1030 940" />
-            </g>
-            {/* zona destacada: único segundo uso do acento na tela */}
-            <g>
-                <path
-                    d="M480 200 L700 240 L760 430 L560 350 L430 440 Z"
-                    fill="oklch(64% 0.155 250 / 0.05)"
-                    stroke="oklch(64% 0.155 250 / 0.32)"
-                    strokeWidth="1.2"
-                />
-                <circle
-                    className="motion-safe:animate-[sile-zone-pulse_3.2s_ease-in-out_infinite]"
-                    cx="612"
-                    cy="318"
-                    r="5"
-                    fill="oklch(64% 0.155 250 / 0.85)"
-                />
-                <circle cx="612" cy="318" r="14" fill="none" stroke="oklch(64% 0.155 250 / 0.25)" strokeWidth="1" />
-                <text className="font-mono text-[11px] tracking-[0.08em] fill-white/16" x="630" y="306">
-                    ZUS-04 · VIÁVEL
-                </text>
-            </g>
-            <text className="font-mono text-[11px] tracking-[0.08em] fill-white/16" x="186" y="508">
-                ZPR-12
-            </text>
-            <text className="font-mono text-[11px] tracking-[0.08em] fill-white/16" x="806" y="612">
-                ZCM-07
-            </text>
-            <text className="font-mono text-[11px] tracking-[0.08em] fill-white/16" x="980" y="282">
-                ZEIS-03
-            </text>
-        </svg>
-    );
-}
+function BrandStage({
+    docking,
+    stageRef,
+    photoRef,
+}: {
+    docking: boolean;
+    stageRef: RefObject<HTMLElement | null>;
+    photoRef: RefObject<HTMLDivElement | null>;
+}) {
+    const marca = docking ? 'true' : 'false';
 
-function BrandStage() {
     return (
-        <section className={gestaoLoginBrandStageClasses} aria-label="Apresentação do console">
-            <ZoneMap />
+        <section ref={stageRef} className={gestaoLoginBrandStageClasses} data-docking={marca} aria-label="Apresentação do console">
+            <div ref={photoRef} className={gestaoLoginStagePhotoClasses} aria-hidden="true" />
+            <div className={gestaoLoginStageGradientClasses} aria-hidden="true" />
+            <div className={gestaoLoginStageVeilClasses} data-docking={marca} aria-hidden="true" />
 
             <header className="relative z-1 flex shrink-0 items-center justify-between gap-4">
                 <span className="flex items-center gap-3.5">
@@ -203,6 +167,8 @@ function GestaoLoginContent({ status }: { status?: string }) {
     const { flash } = usePage<SharedProps>().props;
     const [showPassword, setShowPassword] = useState(false);
     const [capsLockOn, setCapsLockOn] = useState(false);
+    const stageRef = useRef<HTMLElement>(null);
+    const photoRef = useRef<HTMLDivElement>(null);
 
     const handlePasswordKeyUp = (event: KeyboardEvent<HTMLInputElement>) => {
         if (typeof event.getModifierState === 'function') {
@@ -221,11 +187,10 @@ function GestaoLoginContent({ status }: { status?: string }) {
                 />
                 <style>{`
                     @keyframes sile-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-                    @keyframes sile-zone-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.9; } }
                 `}</style>
             </Head>
 
-            <BrandStage />
+            <BrandStage docking={false} stageRef={stageRef} photoRef={photoRef} />
 
             <section className={gestaoLoginPanelClasses} aria-labelledby="panel-title">
                 <div className="flex shrink-0 justify-end">

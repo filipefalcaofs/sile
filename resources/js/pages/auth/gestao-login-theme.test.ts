@@ -5,6 +5,9 @@ import {
     gestaoLoginLabelClasses,
     gestaoLoginPanelClasses,
     gestaoLoginShellClasses,
+    gestaoLoginStageGradientClasses,
+    gestaoLoginStagePhotoClasses,
+    gestaoLoginStageVeilClasses,
 } from './gestao-login-theme';
 
 function hasLightAndDark(classes: string, lightToken: string): void {
@@ -37,5 +40,27 @@ describe('Tema do login da gestão', () => {
     it('palco institucional mantém texto claro no fundo escuro, independente do tema', () => {
         expect(gestaoLoginBrandStageClasses).toContain('text-[oklch(96%_0.008_250)]');
         expect(gestaoLoginBrandStageClasses).not.toContain('text-gray-900');
+    });
+
+    it('shell é flex para a largura do palco poder animar', () => {
+        expect(gestaoLoginShellClasses).toContain('flex');
+        expect(gestaoLoginShellClasses).not.toContain('grid-cols-[');
+    });
+
+    it('palco não carrega mais a foto no background e anima a largura', () => {
+        expect(gestaoLoginBrandStageClasses).not.toContain('salvador-hero.jpg');
+        expect(gestaoLoginBrandStageClasses).toContain('transition-[width,padding]');
+    });
+
+    it('foto ficou numa camada própria, que o loop consegue desfocar', () => {
+        expect(gestaoLoginStagePhotoClasses).toContain('salvador-hero.jpg');
+        expect(gestaoLoginStagePhotoClasses).toContain('-inset-[30px]');
+        expect(gestaoLoginStagePhotoClasses).toContain('bg-cover');
+    });
+
+    it('gradientes e véu do console são camadas separadas acima da foto', () => {
+        expect(gestaoLoginStageGradientClasses).toContain('linear-gradient');
+        expect(gestaoLoginStageVeilClasses).toContain('bg-[#0c111d]');
+        expect(gestaoLoginStageVeilClasses).toContain('opacity-0');
     });
 });
