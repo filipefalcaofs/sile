@@ -9,6 +9,8 @@ use App\Models\ReginRecebimento;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginProcessoProtocolador;
+use App\Services\Regin\ReginRecebeService;
+use App\Support\Audit\AuditService;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Database\Seeders\RiskTriggerSeeder;
@@ -67,6 +69,67 @@ class ReginRecebeEndpointTest extends TestCase
         $this->assertNotSame('3', $response->getContent());
         $this->assertNotSame('5', $response->getContent());
         $this->assertSame(0, ReginRecebimento::query()->count());
+    }
+
+    public function test_data_geracao_invalida_grava_nulo_e_devolve_3(): void
+    {
+        $response = $this->postJson('/api_integracao/recebe', $this->envioDto('43747', [
+            'dataGeracao' => 'nao-e-uma-data',
+        ]));
+
+        $response->assertOk();
+        $this->assertSame('3', $response->getContent());
+        $this->assertDatabaseHas('regin_recebimentos', [
+            'protocolo' => '43747',
+            'data_geracao' => null,
+        ]);
+    }
+
+    public function test_json_malformado_devolve_0_sem_gravar(): void
+    {
+        $response = $this->call(
+            'POST',
+            '/api_integracao/recebe',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'text/plain'],
+            '{ isto nao e json',
+        );
+
+        $response->assertStatus(400);
+        $this->assertSame('0', $response->getContent());
+        $this->assertSame(0, ReginRecebimento::query()->count());
+    }
+
+    public function test_falha_na_auditoria_nao_derruba_o_ack_nem_apaga_o_recebimento(): void
+    {
+        $this->mock(AuditService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('log')->andThrow(new RuntimeException('trilha indisponível'));
+        });
+
+        $response = $this->postJson('/api_integracao/recebe', $this->envioDto('43747'));
+
+        $response->assertOk();
+        $this->assertSame('3', $response->getContent());
+        $this->assertDatabaseHas('regin_recebimentos', [
+            'protocolo' => '43747',
+        ]);
+    }
+
+    public function test_erro_tecnico_devolve_500_em_texto_puro_sem_vazar_detalhe(): void
+    {
+        $this->mock(ReginRecebeService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('receive')->andThrow(new RuntimeException('SQLSTATE[08006] segredo do banco'));
+        });
+
+        $response = $this->postJson('/api_integracao/recebe', $this->envioDto('43747'));
+
+        $response->assertStatus(500);
+        $response->assertHeader('Content-Type', 'text/plain; charset=UTF-8');
+        $this->assertSame('erro interno', $response->getContent());
+        $this->assertStringNotContainsString('SQLSTATE', $response->getContent());
+        $this->assertStringNotContainsString('<html', $response->getContent());
     }
 
     public function test_post_audita_recebimento_sem_ruc_no_log(): void

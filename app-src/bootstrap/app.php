@@ -13,11 +13,13 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -124,6 +126,31 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return null;
+        });
+
+        // Erro técnico no recebimento REGIN: o guia só define 3 e 5. Não há
+        // código de negócio para falha de banco, então o HTTP continua 500
+        // (o REGIN reenvia) e o corpo sai em texto puro, sem HTML, SQL ou
+        // stack. 4xx (throttle, protocolo ausente) seguem o tratamento deles.
+        $exceptions->render(function (Throwable $exception, Request $request) {
+            if (! $request->is('api_integracao/recebe')) {
+                return null;
+            }
+
+            if ($exception instanceof HttpExceptionInterface && $exception->getStatusCode() < 500) {
+                return null;
+            }
+
+            Log::error('regin.recebe', [
+                'correlacao' => $request->headers->get('X-Request-Id'),
+                'protocolo' => $request->input('protocolo'),
+                'cod_funcao' => $request->input('codFuncao'),
+                'servico' => $request->input('servico'),
+                'etapa' => 'recebe',
+                'excecao' => $exception::class,
+            ]);
+
+            return response('erro interno', 500, ['Content-Type' => 'text/plain; charset=UTF-8']);
         });
 
         // Sessão/CSRF expirado (419) em navegação web volta à página anterior

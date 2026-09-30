@@ -97,9 +97,8 @@ class ReginRecebeService
             report($exception);
 
             // Só a classe da exceção: a mensagem pode carregar valores do
-            // envelope (dado pessoal). O detalhe fica no log.
-            $this->audit->log(
-                'regin',
+            // envelope (dado pessoal). O detalhe fica no log do report().
+            $this->registrar(
                 'protocolar',
                 'Processo recebido via REGIN não pôde ser aberto',
                 [
@@ -114,8 +113,7 @@ class ReginRecebeService
 
     private function auditar(ReginRecebimento $recebimento, string $protocolo, string $codigo, string $resultado): void
     {
-        $this->audit->log(
-            'regin',
+        $this->registrar(
             'recebe',
             'Processo recebido via REGIN',
             [
@@ -126,6 +124,37 @@ class ReginRecebeService
             $resultado,
             personalData: true,
         );
+    }
+
+    /**
+     * A trilha nunca pode derrubar o ack. O envelope (ou a duplicidade) já foi
+     * decidido quando a auditoria roda; se a trilha falhar, o REGIN ainda
+     * precisa receber 3 ou 5 — senão ele reenvia e a Junta registra erro de
+     * um recebimento que já está gravado.
+     *
+     * @param  array<string, mixed>  $properties
+     */
+    private function registrar(
+        string $evento,
+        string $descricao,
+        array $properties,
+        ReginRecebimento $recebimento,
+        string $resultado,
+        bool $personalData = false,
+    ): void {
+        try {
+            $this->audit->log(
+                'regin',
+                $evento,
+                $descricao,
+                $properties,
+                $recebimento,
+                $resultado,
+                personalData: $personalData,
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 
     private function texto(mixed $valor): ?string
@@ -154,6 +183,10 @@ class ReginRecebeService
             return null;
         }
 
-        return Carbon::parse($valor);
+        try {
+            return Carbon::parse($valor);
+        } catch (InvalidArgumentException) {
+            return null;
+        }
     }
 }
