@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Surface } from '@/components/motion';
 
 type DeltaTone = 'up' | 'down' | 'neutral';
 
@@ -36,7 +37,7 @@ const toneStyles: Record<KpiTone, string> = {
  */
 export default function KpiCard({ label, value, icon, tone = 'brand', delta, note }: KpiCardProps) {
     return (
-        <div className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
+        <Surface className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
             {icon && (
                 <div
                     className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${toneStyles[tone]}`}
@@ -54,6 +55,6 @@ export default function KpiCard({ label, value, icon, tone = 'brand', delta, not
                     </p>
                 )}
             </div>
-        </div>
+        </Surface>
     );
 }

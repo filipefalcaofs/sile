@@ -1,15 +1,22 @@
-import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import { Head, Link, router, useHttp, usePage } from '@inertiajs/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { FormEvent, KeyboardEvent, ReactNode, RefObject } from 'react';
 import { AppVersion } from '@/components/app/app-version';
 import { LogoMark } from '@/components/app/logo';
-import { ArrowRightIcon, EyeCloseIcon, EyeIcon, MoonIcon, SunIcon } from '@/components/icons';
+import { ArrowRightIcon, CheckCircleIcon, EyeCloseIcon, EyeIcon, MoonIcon, SunIcon } from '@/components/icons';
 import { ThemeProvider, useTheme } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
+import { sequenciaDeEntrada } from './gestao-login-docking';
+import GestaoLoginScene from './gestao-login-scene';
+import { TEMPOS, classificarIdentificador, estadoLogico } from './gestao-login-scene-state';
+import type { FaseLogin, TipoConta } from './gestao-login-scene-state';
 import {
     gestaoLoginBrandForeground,
     gestaoLoginBrandStageClasses,
     gestaoLoginDisplayFont,
+    gestaoLoginStageGradientClasses,
+    gestaoLoginStagePhotoClasses,
+    gestaoLoginStageVeilClasses,
     gestaoLoginDividerClasses,
     gestaoLoginFaintClasses,
     gestaoLoginInputClasses,
@@ -28,7 +35,7 @@ import {
  * (2026-06-12): split em duas colunas. Palco de marca à esquerda com foto de
  * Salvador sob gradientes navy, mapa de zoneamento estilizado em hairlines
  * (referência à viabilidade locacional), headline display em Archivo 900 caps
- * com o diferencial do console — o motor decide, o analista confirma — e logos
+ * com mensagem institucional — decisões que constroem a cidade — e logos
  * oficiais (PMS + SEDUR) no rodapé. Coluna de acesso à direita em
  * superfície elevada separada por hairline. Abaixo de 1100px o palco some e
  * só o formulário é exibido. Sem cadastro: contas internas são administradas
@@ -43,68 +50,40 @@ const displayFont = gestaoLoginDisplayFont;
 const monoFont = gestaoLoginMonoFont;
 
 const footStats = [
-    { label: 'Expresso', value: 'Sem analista', mono: false },
-    { label: 'Análise', value: 'Confirma a decisão', mono: false },
-    { label: 'LOUOS', value: 'Lei nº 9.148/2016', mono: true },
+    { label: 'Em tempo real', value: 'Viabilidade com análise imediata', mono: false },
+    { label: '100% auditável', value: 'Rastreabilidade e histórico de cada decisão', mono: false },
+    { label: 'Segurança jurídica', value: 'Conformidade com a LOUOS — Lei nº 9.148/2016', mono: false },
 ];
 
-function ZoneMap() {
-    return (
-        <svg
-            className="pointer-events-none absolute inset-0 z-0 size-full opacity-45"
-            viewBox="0 0 1200 900"
-            preserveAspectRatio="xMidYMid slice"
-            aria-hidden="true"
-        >
-            <g fill="none" stroke="rgba(255,255,255,0.055)" strokeWidth="1">
-                <path d="M-40 180 L220 140 L360 220 L520 170 L700 240 L880 190 L1080 260 L1260 210" />
-                <path d="M-40 360 L180 330 L340 410 L560 350 L760 430 L960 370 L1240 440" />
-                <path d="M-40 560 L240 520 L420 600 L640 540 L840 620 L1060 560 L1260 630" />
-                <path d="M-40 760 L260 720 L460 790 L700 730 L920 800 L1240 750" />
-                <path d="M160 -40 L200 240 L150 480 L210 720 L170 940" />
-                <path d="M440 -40 L480 200 L430 440 L500 700 L450 940" />
-                <path d="M740 -40 L700 220 L770 460 L710 700 L780 940" />
-                <path d="M1020 -40 L1060 260 L1000 520 L1070 760 L1030 940" />
-            </g>
-            {/* zona destacada: único segundo uso do acento na tela */}
-            <g>
-                <path
-                    d="M480 200 L700 240 L760 430 L560 350 L430 440 Z"
-                    fill="oklch(64% 0.155 250 / 0.05)"
-                    stroke="oklch(64% 0.155 250 / 0.32)"
-                    strokeWidth="1.2"
-                />
-                <circle
-                    className="motion-safe:animate-[sile-zone-pulse_3.2s_ease-in-out_infinite]"
-                    cx="612"
-                    cy="318"
-                    r="5"
-                    fill="oklch(64% 0.155 250 / 0.85)"
-                />
-                <circle cx="612" cy="318" r="14" fill="none" stroke="oklch(64% 0.155 250 / 0.25)" strokeWidth="1" />
-                <text className="font-mono text-[11px] tracking-[0.08em] fill-white/16" x="630" y="306">
-                    ZUS-04 · VIÁVEL
-                </text>
-            </g>
-            <text className="font-mono text-[11px] tracking-[0.08em] fill-white/16" x="186" y="508">
-                ZPR-12
-            </text>
-            <text className="font-mono text-[11px] tracking-[0.08em] fill-white/16" x="806" y="612">
-                ZCM-07
-            </text>
-            <text className="font-mono text-[11px] tracking-[0.08em] fill-white/16" x="980" y="282">
-                ZEIS-03
-            </text>
-        </svg>
-    );
-}
+function BrandStage({
+    docking,
+    stageRef,
+    photoRef,
+    selo,
+    emRepouso,
+    children,
+}: {
+    docking: boolean;
+    stageRef: RefObject<HTMLElement | null>;
+    photoRef: RefObject<HTMLDivElement | null>;
+    selo: TipoConta | null;
+    emRepouso: boolean;
+    children: ReactNode;
+}) {
+    const marca = docking ? 'true' : 'false';
+    const saidaDoPalco = docking
+        ? 'translate-y-[-10px] opacity-0 transition-all duration-400'
+        : 'translate-y-0 opacity-100 transition-all duration-400 delay-[0.9s]';
 
-function BrandStage() {
     return (
-        <section className={gestaoLoginBrandStageClasses} aria-label="Apresentação do console">
-            <ZoneMap />
+        <section ref={stageRef} className={gestaoLoginBrandStageClasses} data-docking={marca} aria-label="Apresentação do console">
+            <div ref={photoRef} className={gestaoLoginStagePhotoClasses} aria-hidden="true" />
+            <div className={gestaoLoginStageGradientClasses} aria-hidden="true" />
+            <div className={gestaoLoginStageVeilClasses} data-docking={marca} aria-hidden="true" />
 
-            <header className="relative z-1 flex shrink-0 items-center justify-between gap-4">
+            <header
+                className={`relative z-1 flex shrink-0 items-center justify-between gap-4 transition-opacity duration-400 ${docking ? 'opacity-0' : 'opacity-100 delay-[0.9s]'}`}
+            >
                 <span className="flex items-center gap-3.5">
                     <span className="grid size-[46px] place-items-center rounded-xl border border-white/16 bg-[oklch(47%_0.135_252)]">
                         <LogoMark className="size-[23px] text-white" />
@@ -119,34 +98,40 @@ function BrandStage() {
                     </span>
                 </span>
                 <span
-                    className={`${monoFont} inline-flex items-center gap-2 rounded-full border border-white/8 bg-black/18 px-4 py-2 text-[10.5px] leading-none font-medium tracking-[0.08em] text-[oklch(67%_0.025_250)] uppercase backdrop-blur-[4px]`}
+                    className={`${monoFont} inline-flex items-center gap-2 rounded-full border bg-black/18 px-4 py-2 text-[10.5px] leading-none font-medium tracking-[0.08em] text-[oklch(67%_0.025_250)] uppercase backdrop-blur-[4px] transition-colors duration-500`}
+                    style={{ borderColor: emRepouso ? 'rgba(255,255,255,0.08)' : 'oklch(64% 0.155 250 / 0.35)' }}
                 >
                     <span className="size-1.5 rounded-full bg-[oklch(70%_0.14_160)]" aria-hidden="true" />
                     Ambiente interno
+                    <span
+                        className="inline-block overflow-hidden whitespace-nowrap text-[oklch(80%_0.09_250)] transition-all duration-700 ease-[cubic-bezier(0.2,0.7,0.2,1)]"
+                        style={{ maxWidth: selo && !docking ? '240px' : '0px', opacity: selo && !docking ? 1 : 0 }}
+                    >
+                        {selo ? ` · ${selo.selo}` : ''}
+                    </span>
                 </span>
             </header>
 
-            <div className="relative z-1 flex min-h-0 max-w-[720px] flex-1 flex-col justify-center py-[clamp(16px,4vh,48px)] motion-safe:animate-[sile-rise_0.6s_0.12s_cubic-bezier(0.2,0.7,0.2,1)_both]">
+            <div className={`relative z-1 flex min-h-0 max-w-[720px] flex-1 flex-col justify-center py-[clamp(16px,4vh,48px)] motion-safe:animate-[sile-rise_0.6s_0.12s_cubic-bezier(0.2,0.7,0.2,1)_both] ${saidaDoPalco}`}>
                 <p
                     className={`${monoFont} mb-[30px] flex items-center gap-3 text-[11px] leading-none font-medium tracking-[0.1em] text-[oklch(67%_0.025_250)] uppercase before:h-px before:w-8 before:bg-[oklch(64%_0.155_250)] before:content-['']`}
                 >
-                    Decisão de viabilidade locacional
+                    Sistema de viabilidade locacional
                 </p>
                 <h1
                     className={`${displayFont} ${gestaoLoginBrandForeground} text-[clamp(34px,3.2vw,54px)] leading-[1.04] font-extrabold tracking-[-0.02em] text-balance uppercase`}
                 >
-                    O motor decide.
+                    Decisões que
                     <br />
-                    O analista confirma.
+                    constroem a cidade.
                 </h1>
-                <p className="mt-[22px] max-w-[52ch] text-[clamp(15px,1.05vw,17px)] leading-[1.65] font-normal text-[oklch(67%_0.025_250)]">
-                    Aplica a LOUOS e a classificação de risco e já entrega a decisão. Quando a
-                    lei permite, encerra sem analista. Quando a análise humana é obrigatória, o
-                    processo chega com essa decisão para o analista confirmar.
+                <p className="mt-[22px] max-w-[42ch] text-[clamp(15px,1.05vw,17px)] leading-[1.65] font-normal text-[oklch(67%_0.025_250)]">
+                    Uma plataforma inteligente para transformar regras urbanísticas em decisões mais
+                    claras, seguras e fundamentadas.
                 </p>
             </div>
 
-            <dl className="relative z-1 flex shrink-0 items-end justify-between gap-6 border-t border-white/8 pt-[clamp(16px,2.5vh,24px)] motion-safe:animate-[sile-rise_0.6s_0.22s_cubic-bezier(0.2,0.7,0.2,1)_both]">
+            <dl className={`relative z-1 flex shrink-0 items-end justify-between gap-6 border-t border-white/8 pt-[clamp(16px,2.5vh,24px)] motion-safe:animate-[sile-rise_0.6s_0.22s_cubic-bezier(0.2,0.7,0.2,1)_both] ${saidaDoPalco}`}>
                 <div className="flex gap-[clamp(28px,3.5vw,64px)]">
                     {footStats.map((stat) => (
                         <div key={stat.label}>
@@ -157,7 +142,7 @@ function BrandStage() {
                                 className={
                                     stat.mono
                                         ? `${monoFont} ${gestaoLoginBrandForeground} text-sm leading-[1.3] font-semibold tabular-nums`
-                                        : `${gestaoLoginBrandForeground} text-[14.5px] leading-[1.3] font-semibold`
+                                        : `${gestaoLoginBrandForeground} max-w-[18ch] text-[13px] leading-[1.35] font-semibold text-pretty`
                                 }
                             >
                                 {stat.value}
@@ -179,6 +164,8 @@ function BrandStage() {
                     />
                 </div>
             </dl>
+
+            {children}
         </section>
     );
 }
@@ -203,12 +190,150 @@ function GestaoLoginContent({ status }: { status?: string }) {
     const { flash } = usePage<SharedProps>().props;
     const [showPassword, setShowPassword] = useState(false);
     const [capsLockOn, setCapsLockOn] = useState(false);
+    const [fase, setFase] = useState<FaseLogin>('idle');
+    const [tipoConta, setTipoConta] = useState<TipoConta | null>(null);
+    const [campoComFoco, setCampoComFoco] = useState<'ident' | 'senha' | null>(null);
+    const [erroLogin, setErroLogin] = useState<string | null>(null);
+    const [shakeX, setShakeX] = useState(0);
+
+    const stageRef = useRef<HTMLElement>(null);
+    const photoRef = useRef<HTMLDivElement>(null);
+    const identRef = useRef<HTMLInputElement>(null);
+    const senhaRef = useRef<HTMLInputElement>(null);
+    const botaoRef = useRef<HTMLButtonElement>(null);
+    const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const cancelarSequencia = useRef<() => void>(() => {});
+
+    const form = useHttp<{ identifier: string; password: string; remember: boolean }, { destino: string }>({
+        identifier: '',
+        password: '',
+        remember: true,
+    });
+
+    const estado = estadoLogico({
+        fase,
+        identificador: form.data.identifier.trim(),
+        temSenha: form.data.password !== '',
+        comFoco: campoComFoco !== null,
+        tipoConta,
+    });
+
+    const alvoLinhaRef = (
+        campoComFoco === 'senha'
+            ? senhaRef
+            : campoComFoco === 'ident'
+              ? identRef
+              : estado === 'ready'
+                ? botaoRef
+                : form.data.password !== ''
+                  ? senhaRef
+                  : identRef
+    ) as RefObject<HTMLElement | null>;
+
+    useEffect(
+        () => () => {
+            clearTimeout(debounce.current);
+            cancelarSequencia.current();
+        },
+        [],
+    );
+
+    const sacudir = () => {
+        [10, -8, 6, -4, 2, 0].forEach((deslocamento, indice) => {
+            setTimeout(() => setShakeX(deslocamento), indice * 70);
+        });
+    };
+
+    const aoDigitarIdentificador = (valor: string) => {
+        form.setData('identifier', valor);
+        setErroLogin(null);
+        clearTimeout(debounce.current);
+        debounce.current = setTimeout(
+            () => setTipoConta(classificarIdentificador(valor)),
+            TEMPOS.debounceIdentificador,
+        );
+    };
+
+    const enviar = (evento: FormEvent) => {
+        evento.preventDefault();
+
+        if (fase !== 'idle') {
+            return;
+        }
+
+        clearTimeout(debounce.current);
+        setErroLogin(null);
+        setFase('validating');
+        setTipoConta(classificarIdentificador(form.data.identifier) ?? { rotulo: 'Conta local', selo: 'Conta local' });
+
+        const inicio = performance.now();
+        const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const comPiso = (acao: () => void) => {
+            const restante = Math.max(0, TEMPOS.pisoValidacao - (performance.now() - inicio));
+            setTimeout(acao, reduzido ? 0 : restante);
+        };
+
+        form.post('/gestao/login', {
+            headers: { 'X-Viabiliza-Login-Async': '1' },
+            onSuccess: (resposta) => {
+                comPiso(() => {
+                    cancelarSequencia.current = sequenciaDeEntrada({
+                        destino: resposta.destino,
+                        reduzido,
+                        aoMudarFase: setFase,
+                        navegar: (destino) => router.visit(destino, { preserveScroll: false }),
+                    });
+                });
+            },
+            onError: (erros) => {
+                comPiso(() => {
+                    setFase('denied');
+                    form.setData('password', '');
+                    sacudir();
+                    setTimeout(() => {
+                        setFase('idle');
+                        setErroLogin(
+                            (erros.identifier as string | undefined) ??
+                                'Credenciais não conferem. A tentativa foi registrada para fins de auditoria.',
+                        );
+                    }, TEMPOS.denied);
+                });
+            },
+        });
+    };
+
+    const rotuloBotao = useMemo(() => {
+        if (fase === 'validating') {
+            return 'Validando credencial…';
+        }
+
+        if (fase === 'denied') {
+            return 'Credencial não confere';
+        }
+
+        if (fase === 'authorized') {
+            return 'Operador autorizado';
+        }
+
+        if (fase !== 'idle') {
+            return 'Abrindo a central…';
+        }
+
+        if (erroLogin) {
+            return 'Tentar novamente';
+        }
+
+        return 'Entrar no console';
+    }, [fase, erroLogin]);
 
     const handlePasswordKeyUp = (event: KeyboardEvent<HTMLInputElement>) => {
         if (typeof event.getModifierState === 'function') {
             setCapsLockOn(event.getModifierState('CapsLock'));
         }
     };
+
+    const noDocking = fase === 'docking';
 
     return (
         <main className={gestaoLoginShellClasses}>
@@ -221,13 +346,35 @@ function GestaoLoginContent({ status }: { status?: string }) {
                 />
                 <style>{`
                     @keyframes sile-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-                    @keyframes sile-zone-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.9; } }
                 `}</style>
             </Head>
 
-            <BrandStage />
+            <BrandStage
+                docking={noDocking}
+                stageRef={stageRef}
+                photoRef={photoRef}
+                selo={tipoConta}
+                emRepouso={estado === 'idle'}
+            >
+                <GestaoLoginScene
+                    estado={estado}
+                    fase={fase}
+                    tipoConta={tipoConta}
+                    photoRef={photoRef}
+                    alvoLinhaRef={alvoLinhaRef}
+                    stageRef={stageRef}
+                />
+            </BrandStage>
 
-            <section className={gestaoLoginPanelClasses} aria-labelledby="panel-title">
+            <section className={gestaoLoginPanelClasses} data-docking={noDocking ? 'true' : 'false'} aria-labelledby="panel-title">
+                <div
+                    className="flex min-h-0 flex-1 flex-col transition-all duration-350"
+                    style={{
+                        opacity: noDocking ? 0 : 1,
+                        transform: noDocking ? 'translateY(-8px)' : 'none',
+                        pointerEvents: noDocking ? 'none' : 'auto',
+                    }}
+                >
                 <div className="flex shrink-0 justify-end">
                     <ThemeToggleButton />
                 </div>
@@ -248,20 +395,19 @@ function GestaoLoginContent({ status }: { status?: string }) {
                         </p>
                     )}
 
-                    {flash.error && (
+                    {(erroLogin ?? flash.error) && (
                         <p className="mt-6 rounded-xl border border-error-500/35 bg-error-50 px-4 py-3 text-sm text-error-600 dark:border-[oklch(64%_0.19_25_/_0.35)] dark:bg-[oklch(64%_0.19_25_/_0.1)] dark:text-[oklch(80%_0.12_25)]">
-                            {flash.error}
+                            {erroLogin ?? flash.error}
                         </p>
                     )}
 
-                    <Form action="/gestao/login" method="post">
-                        {({ errors, processing }) => (
-                            <>
+                    <form onSubmit={enviar} noValidate style={{ transform: `translateX(${shakeX}px)`, transition: 'transform 0.07s ease' }}>
                                 <div className="mt-5 grid gap-2 max-[740px]:mt-4 max-[740px]:gap-1.5">
                                     <label htmlFor="identifier" className={gestaoLoginLabelClasses}>
                                         E-mail institucional ou usuário AD
                                     </label>
                                     <input
+                                        ref={identRef}
                                         id="identifier"
                                         type="text"
                                         name="identifier"
@@ -270,15 +416,20 @@ function GestaoLoginContent({ status }: { status?: string }) {
                                         required
                                         placeholder="nome@salvador.ba.gov.br ou seuusuarioad"
                                         aria-describedby="identifier-help"
-                                        aria-invalid={errors.identifier ? 'true' : undefined}
+                                        aria-invalid={erroLogin ? 'true' : undefined}
                                         className={gestaoLoginInputClasses}
+                                        value={form.data.identifier}
+                                        onChange={(evento) => aoDigitarIdentificador(evento.target.value)}
+                                        onFocus={() => setCampoComFoco('ident')}
+                                        onBlur={() => {
+                                            setCampoComFoco(null);
+                                            clearTimeout(debounce.current);
+                                            setTipoConta(classificarIdentificador(form.data.identifier));
+                                        }}
                                     />
                                     <p id="identifier-help" className={`text-[12.5px] max-[740px]:text-xs ${gestaoLoginMutedClasses}`}>
                                         Use o usuário da rede corporativa (ex.: seuusuarioad) ou o e-mail da conta local.
                                     </p>
-                                    {errors.identifier && (
-                                        <p className="text-[12.5px] text-error-600 dark:text-[oklch(72%_0.16_25)]">{errors.identifier}</p>
-                                    )}
                                 </div>
 
                                 <div className="mt-5 grid gap-2 max-[740px]:mt-4 max-[740px]:gap-1.5">
@@ -292,15 +443,25 @@ function GestaoLoginContent({ status }: { status?: string }) {
                                     </div>
                                     <div className="relative">
                                         <input
+                                            ref={senhaRef}
                                             id="password"
                                             type={showPassword ? 'text' : 'password'}
                                             name="password"
                                             autoComplete="current-password"
                                             required
                                             onKeyUp={handlePasswordKeyUp}
-                                            onBlur={() => setCapsLockOn(false)}
-                                            aria-invalid={errors.password ? 'true' : undefined}
+                                            aria-invalid={erroLogin ? 'true' : undefined}
                                             className={`${gestaoLoginInputClasses} pr-14`}
+                                            value={form.data.password}
+                                            onChange={(evento) => {
+                                                form.setData('password', evento.target.value);
+                                                setErroLogin(null);
+                                            }}
+                                            onFocus={() => setCampoComFoco('senha')}
+                                            onBlur={() => {
+                                                setCampoComFoco(null);
+                                                setCapsLockOn(false);
+                                            }}
                                         />
                                         <button
                                             type="button"
@@ -319,9 +480,6 @@ function GestaoLoginContent({ status }: { status?: string }) {
                                     {capsLockOn && (
                                         <p className="text-xs text-[oklch(78%_0.14_85)]">Caps Lock está ativado.</p>
                                     )}
-                                    {errors.password && (
-                                        <p className="text-[12.5px] text-error-600 dark:text-[oklch(72%_0.16_25)]">{errors.password}</p>
-                                    )}
                                 </div>
 
                                 <label className={`mt-4 flex cursor-pointer items-center gap-2.5 max-[740px]:mt-3 max-[740px]:text-[13px] ${gestaoLoginMutedClasses} select-none`}>
@@ -329,30 +487,30 @@ function GestaoLoginContent({ status }: { status?: string }) {
                                         id="remember"
                                         name="remember"
                                         type="checkbox"
-                                        defaultChecked
+                                        checked={form.data.remember}
+                                        onChange={(evento) => form.setData('remember', evento.target.checked)}
                                         className="size-4 cursor-pointer accent-brand-600 dark:accent-[oklch(47%_0.135_252)]"
                                     />
                                     Manter conectado neste dispositivo
                                 </label>
 
                                 <button
+                                    ref={botaoRef}
                                     type="submit"
-                                    disabled={processing}
+                                    disabled={fase !== 'idle'}
                                     className={gestaoLoginSubmitClasses}
                                 >
-                                    {processing ? 'Verificando…' : 'Entrar no console'}
-                                    {!processing && (
-                                        <span
-                                            className="transition-transform duration-150 group-hover:translate-x-[3px]"
-                                            aria-hidden="true"
-                                        >
+                                    {rotuloBotao}
+                                    {fase === 'idle' && (
+                                        <span className="transition-transform duration-150 group-hover:translate-x-[3px]" aria-hidden="true">
                                             <ArrowRightIcon className="size-[18px]" />
                                         </span>
                                     )}
+                                    {(fase === 'authorized' || fase === 'preparing' || fase === 'docking') && (
+                                        <CheckCircleIcon className="size-[18px]" aria-hidden="true" />
+                                    )}
                                 </button>
-                            </>
-                        )}
-                    </Form>
+                    </form>
 
                     <p className={`mt-5 border-t ${gestaoLoginDividerClasses} pt-4 text-[12.5px] max-[740px]:mt-4 max-[740px]:pt-3 max-[740px]:text-xs ${gestaoLoginFaintClasses}`}>
                         Acesso exclusivo para servidores autorizados pela SEDUR. Atividades nesta
@@ -365,6 +523,7 @@ function GestaoLoginContent({ status }: { status?: string }) {
                 >
                     <span>SEDUR · VIABILIZA</span>
                     <AppVersion className="normal-case tracking-[0.04em]" />
+                </div>
                 </div>
             </section>
         </main>

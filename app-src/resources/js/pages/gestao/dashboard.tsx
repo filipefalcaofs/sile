@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import { RevealLink, Surface } from '@/components/motion';
 import Chart from '@/components/ui/chart/chart';
 import type { EChartsOption } from '@/components/ui/chart/echarts-core';
 import { ExportMenu } from '@/components/ui/data-table/export-menu';
@@ -500,7 +501,7 @@ function CartaoAcao({ acao, operacao }: { acao: AcaoOperacao; operacao: Operacao
     const tom = TOM_ACAO[acao.tom];
 
     return (
-        <Link
+        <RevealLink
             href={hrefAcao(acao.chave, operacao)}
             className={`flex flex-col gap-2.5 rounded-2xl border p-5 transition hover:border-brand-500 ${tom.card}`}
         >
@@ -513,7 +514,7 @@ function CartaoAcao({ acao, operacao }: { acao: AcaoOperacao; operacao: Operacao
             </span>
             <span className="text-[13px] leading-[18px] text-gray-500 dark:text-gray-400">{acao.nota}</span>
             <span className="text-[13px] font-semibold text-brand-500 dark:text-brand-400">{acao.acao} →</span>
-        </Link>
+        </RevealLink>
     );
 }
 
@@ -533,7 +534,7 @@ function CartaoResultado({
     nota: string;
 }) {
     return (
-        <Link
+        <RevealLink
             href={href}
             className="rounded-2xl border border-gray-200 bg-white px-5 py-4 transition hover:border-brand-500 dark:border-gray-800 dark:bg-white/[0.03]"
         >
@@ -545,7 +546,7 @@ function CartaoResultado({
                 {delta && <span className={`text-[13px] font-semibold ${DELTA[tomDelta]}`}>{delta}</span>}
             </span>
             <p className="mt-1.5 text-[13px] leading-[18px] text-gray-500 dark:text-gray-400">{nota}</p>
-        </Link>
+        </RevealLink>
     );
 }
 
@@ -696,7 +697,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
                 </section>
 
                 <section className="flex flex-wrap items-stretch gap-5">
-                    <div className="min-w-0 flex-[3_1_460px] rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <Surface className="min-w-0 flex-[3_1_460px] rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Entrada, saída e processos em andamento</h3>
@@ -730,9 +731,9 @@ export default function Dashboard({ kpis }: DashboardProps) {
                                 </strong>
                             </div>
                         </div>
-                    </div>
+                    </Surface>
 
-                    <div className="min-w-0 flex-[1_1_320px] rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <Surface className="min-w-0 flex-[1_1_320px] rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                         <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Automação (fluxo expresso)</h3>
                         <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">Quanto a LOUOS resolve sem analista — e o que está derrubando.</p>
                         <div className="mt-4 flex items-baseline gap-2.5">
@@ -758,11 +759,11 @@ export default function Dashboard({ kpis }: DashboardProps) {
                                 />
                             )}
                         </div>
-                    </div>
+                    </Surface>
                 </section>
 
                 <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-                    <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <Surface className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                         <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Onde o processo para</h3>
                         <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">
                             Tempo médio por etapa contra o prazo parametrizado, em dias úteis.
@@ -771,9 +772,9 @@ export default function Dashboard({ kpis }: DashboardProps) {
                         <p className="mt-4 border-t border-gray-100 pt-3 text-[13px] leading-[18px] text-gray-500 dark:border-gray-800 dark:text-gray-400">
                             Marcador cinza = prazo parametrizado. A espera pelo requerente é medida à parte e não conta como atraso da SEDUR. Sem amostras, a etapa fica sem tempo médio.
                         </p>
-                    </div>
+                    </Surface>
 
-                    <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <Surface className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                         <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Há quanto tempo estão em andamento</h3>
                         <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">
                             Processos em aberto por tempo desde o protocolo. O clique abre a lista em andamento.
@@ -805,10 +806,10 @@ export default function Dashboard({ kpis }: DashboardProps) {
                                 </Link>
                             ))}
                         </div>
-                    </div>
+                    </Surface>
                 </section>
 
-                <section className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                <Surface className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
                     <div className="flex flex-wrap items-end justify-between gap-3 px-5 pt-5 pb-3.5">
                         <div>
                             <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Carga e produtividade</h3>
@@ -980,7 +981,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
                             </p>
                         </>
                     )}
-                </section>
+                </Surface>
 
                 <p className="mb-2 text-[13px] text-gray-500 dark:text-gray-400">
                     Configuração do sistema (CNAEs, usuários, perfis, parâmetros) fica no menu lateral — não ocupa mais espaço no painel.

@@ -638,8 +638,8 @@ export default function AbusoIndex({
                 </Card>
             </div>
 
-            {resolucao && (
-                <Modal isOpen onClose={fecharResolucao} className="m-4 max-w-[560px] p-6 lg:p-8">
+            <Modal isOpen={resolucao !== null} onClose={fecharResolucao} className="m-4 max-w-[560px] p-6 lg:p-8">
+                {resolucao && (
                     <form onSubmit={submeterResolucao}>
                         <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">{acaoLabel}</h4>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -681,8 +681,8 @@ export default function AbusoIndex({
                             </Button>
                         </div>
                     </form>
-                </Modal>
-            )}
+                )}
+            </Modal>
         </>
     );
 }

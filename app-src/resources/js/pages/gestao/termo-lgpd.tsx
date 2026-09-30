@@ -1,6 +1,7 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import Checkbox from '@/components/form/checkbox';
+import { MotionProvider, RevealScope, Surface } from '@/components/motion';
 import Button from '@/components/ui/button';
 import { ThemeProvider } from '@/contexts/theme-context';
 
@@ -18,9 +19,11 @@ export default function TermoLgpd({ term }: TermoLgpdProps) {
 
     return (
         <ThemeProvider>
+            <MotionProvider>
             <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8 dark:bg-gray-900">
                 <Head title="Termo de Consentimento LGPD — Gestão SEDUR" />
-                <div className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03] sm:p-8">
+                <RevealScope>
+                <Surface className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03] sm:p-8">
                     <header className="mb-6">
                         <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">
                             {term.title}
@@ -65,8 +68,10 @@ export default function TermoLgpd({ term }: TermoLgpdProps) {
                             </div>
                         )}
                     </Form>
-                </div>
+                </Surface>
+                </RevealScope>
             </main>
+            </MotionProvider>
         </ThemeProvider>
     );
 }

@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
+import { RevealLink } from '@/components/motion';
 import {
     AlertIcon,
     ArrowRightIcon,
@@ -361,7 +362,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                 <div className="col-span-12">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
                         {quickActions.map((action) => (
-                            <Link
+                            <RevealLink
                                 key={action.href}
                                 href={action.href}
                                 className="group rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-brand-300 hover:shadow-theme-md dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-500/40 md:p-6"
@@ -378,7 +379,7 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                                     </div>
                                     <ArrowRightIcon className="mb-1.5 size-5 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-brand-500 dark:text-gray-500 dark:group-hover:text-brand-400" aria-hidden="true" />
                                 </div>
-                            </Link>
+                            </RevealLink>
                         ))}
                     </div>
                 </div>

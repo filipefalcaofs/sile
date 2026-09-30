@@ -78,7 +78,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 || ($request->is('portal/viabilidade/*') && $request->expectsJson())
                 || ($request->is('gestao/territorio/*') && $request->expectsJson())
                 || ($request->is('gestao/contingencia/consultar-*') && $request->expectsJson())
-                || ($request->is('gestao/processos/*') && $request->expectsJson()),
+                || ($request->is('gestao/processos/*') && $request->expectsJson())
+                // Login assíncrono do console (cena de alinhamento): a falha de
+                // credencial precisa voltar 422 em JSON, não redirect, para o
+                // front animar a recusa antes de mostrar o erro.
+                || ($request->is('gestao/login') && $request->expectsJson()),
         );
 
         // CA-04 transversal: todo 403 de autorização é auditado num ponto único.

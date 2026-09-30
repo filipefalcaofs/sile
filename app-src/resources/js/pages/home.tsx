@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import type { ComponentType, SVGProps } from 'react';
 import AccessibilityBar from '@/components/app/accessibility-bar';
+import { MotionProvider, RevealLink, RevealScope, Surface } from '@/components/motion';
 import Logo from '@/components/app/logo';
 import {
     ArrowRightIcon,
@@ -240,6 +241,8 @@ function ServicesSection() {
                     </p>
                 </div>
 
+                <MotionProvider>
+                <RevealScope>
                 <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     {services.map((service) => {
                         const cardClasses =
@@ -265,16 +268,18 @@ function ServicesSection() {
                         );
 
                         return service.href ? (
-                            <Link key={service.title} href={service.href} className={cardClasses}>
+                            <RevealLink key={service.title} href={service.href} className={cardClasses}>
                                 {cardContent}
-                            </Link>
+                            </RevealLink>
                         ) : (
-                            <div key={service.title} className={cardClasses}>
+                            <Surface key={service.title} className={cardClasses}>
                                 {cardContent}
-                            </div>
+                            </Surface>
                         );
                     })}
                 </div>
+                </RevealScope>
+                </MotionProvider>
             </div>
         </section>
     );

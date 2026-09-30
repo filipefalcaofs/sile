@@ -2,6 +2,7 @@ import { Form, Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Input from '@/components/form/input';
+import { Surface } from '@/components/motion';
 import Label from '@/components/form/label';
 import { EyeCloseIcon, EyeIcon } from '@/components/icons';
 import Button from '@/components/ui/button';
@@ -53,7 +54,7 @@ export default function Senha({ passwordRules }: SenhaProps) {
     return (
         <>
             <Head title="Alterar senha — Gestão SEDUR" />
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+            <Surface className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
                 <div className="mb-6">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
                         Alterar senha
@@ -104,7 +105,7 @@ export default function Senha({ passwordRules }: SenhaProps) {
                         </div>
                     )}
                 </Form>
-            </div>
+            </Surface>
         </>
     );
 }

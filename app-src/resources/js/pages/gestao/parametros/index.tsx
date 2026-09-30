@@ -2,6 +2,7 @@ import { Form, Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
+import { Surface } from '@/components/motion';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
 import Switch from '@/components/form/switch';
@@ -308,7 +309,8 @@ export default function ParametersIndex({ groups }: ParametersIndexProps) {
                     </nav>
                 </div>
 
-                <section
+                <Surface
+                    component="section"
                     key={activeGroup}
                     role="tabpanel"
                     id={`panel-${activeGroup}`}
@@ -325,7 +327,7 @@ export default function ParametersIndex({ groups }: ParametersIndexProps) {
                             <ParameterSection item={item} />
                         </div>
                     ))}
-                </section>
+                </Surface>
             </div>
         </>
     );

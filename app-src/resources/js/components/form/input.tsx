@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes } from 'react';
+import { Presence } from '@/components/motion';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     success?: boolean;
@@ -35,15 +36,15 @@ export default function Input({
         <div className="relative">
             <input disabled={disabled} className={inputClasses} {...rest} />
 
-            {hint && (
+            <Presence open={Boolean(hint)}>
                 <p
-                    className={`mt-1.5 text-xs ${
+                    className={`pt-1.5 text-xs ${
                         error ? 'text-error-500' : success ? 'text-success-500' : 'text-gray-500'
                     }`}
                 >
                     {hint}
                 </p>
-            )}
+            </Presence>
         </div>
     );
 }

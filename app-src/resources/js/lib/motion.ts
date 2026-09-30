@@ -17,6 +17,27 @@ export const motionDuration = {
     slow: 0.32,
 } as const;
 
+/**
+ * Entrada de cartão e painel: sobe o bastante para a leitura acompanhar,
+ * sem passar de 350 ms. A fila anda de 55 ms e trava no 7º item
+ * (~385 ms): o restante entra junto, para uma lista longa não parecer carregamento.
+ */
+export const surfaceEnter = {
+    y: 14,
+    duration: 0.34,
+} as const;
+
+export const revealStepSeconds = 0.055;
+export const revealMaxIndex = 7;
+
+export function revealDelay(index: number): number {
+    if (!Number.isFinite(index) || index <= 0) {
+        return 0;
+    }
+
+    return Math.min(Math.floor(index), revealMaxIndex) * revealStepSeconds;
+}
+
 export const motionEase = {
     out: [0.16, 1, 0.3, 1],
     inOut: [0.4, 0, 0.2, 1],
@@ -35,24 +56,24 @@ export const fadeIn = {
     exit: { opacity: 0, transition: { duration: motionDuration.fast, ease: motionEase.inOut } },
 } as const satisfies Variants;
 
-/** Entrada padrão de conteúdo: sobe 8px desvanecendo. */
+/** Entrada padrão de conteúdo: sobe 14px desvanecendo. */
 export const fadeInUp = {
-    initial: { opacity: 0, y: 8 },
-    animate: { opacity: 1, y: 0, transition: { duration: motionDuration.base, ease: motionEase.out } },
-    exit: { opacity: 0, y: 4, transition: { duration: motionDuration.fast, ease: motionEase.inOut } },
+    initial: { opacity: 0, y: 14 },
+    animate: { opacity: 1, y: 0, transition: { duration: motionDuration.slow, ease: motionEase.out } },
+    exit: { opacity: 0, y: 8, transition: { duration: motionDuration.base, ease: motionEase.inOut } },
 } as const satisfies Variants;
 
-/** Entrada de página ao navegar (Inertia) — quase imperceptível. */
+/** Entrada de página ao navegar (Inertia). */
 export const pageEnter = {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0, transition: { duration: motionDuration.base, ease: motionEase.out } },
+    initial: { opacity: 0, y: 14 },
+    animate: { opacity: 1, y: 0, transition: { duration: motionDuration.slow, ease: motionEase.out } },
 } as const satisfies Variants;
 
-/** Modais e diálogos: escala 96% → 100% com leve subida. */
+/** Modais e diálogos: escala 96% → 100% com subida legível. */
 export const modalPop = {
-    initial: { opacity: 0, scale: 0.96, y: 10 },
-    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: motionDuration.base, ease: motionEase.out } },
-    exit: { opacity: 0, scale: 0.97, y: 6, transition: { duration: motionDuration.fast, ease: motionEase.inOut } },
+    initial: { opacity: 0, scale: 0.96, y: 14 },
+    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: motionDuration.slow, ease: motionEase.out } },
+    exit: { opacity: 0, scale: 0.98, y: 8, transition: { duration: motionDuration.base, ease: motionEase.inOut } },
 } as const satisfies Variants;
 
 /** Fundo escuro de modais e da sidebar móvel. */
@@ -72,7 +93,7 @@ export const dropdownPop = {
 /** Troca de etapa em wizards: desliza 16px na horizontal. */
 export const stepSlide = {
     initial: { opacity: 0, x: 16 },
-    animate: { opacity: 1, x: 0, transition: { duration: motionDuration.base, ease: motionEase.out } },
+    animate: { opacity: 1, x: 0, transition: { duration: motionDuration.slow, ease: motionEase.out } },
 } as const satisfies Variants;
 
 /** Contêiner de lista com escalonamento curto entre os filhos. */

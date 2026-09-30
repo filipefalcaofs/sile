@@ -18,6 +18,7 @@ use App\Support\Auth\GestaoIntendedRedirect;
 use App\Support\Settings;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,7 +45,7 @@ class LoginController extends Controller
         private GestaoIntendedRedirect $intendedRedirect,
     ) {}
 
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): RedirectResponse|JsonResponse
     {
         $this->ensureIsNotRateLimited($request);
 
@@ -122,6 +123,14 @@ class LoginController extends Controller
             $request,
             route('gestao.dashboard'),
         );
+
+        // O console anima a entrada antes de navegar (cena de alinhamento do
+        // login). Um redirect aqui faria o Inertia trocar a página na hora e
+        // cortar a animação — com o header, o destino volta em JSON e a
+        // navegação acontece no fim da sequência.
+        if ($request->hasHeader('X-Viabiliza-Login-Async')) {
+            return response()->json(['destino' => $destino]);
+        }
 
         return redirect($destino);
     }

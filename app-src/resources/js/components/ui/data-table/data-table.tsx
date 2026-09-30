@@ -1,8 +1,6 @@
-import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
 import { ChevronDownIcon, SortIcon } from '@/components/icons';
 import { Skeleton } from '@/components/ui/skeleton';
-import { staggerList, tableRowFade } from '@/lib/motion';
 import type { ColumnDef, SortState } from './types';
 
 interface DataTableProps<T> {
@@ -113,12 +111,7 @@ export default function DataTable<T>({
                             })}
                         </tr>
                     </thead>
-                    <motion.tbody
-                        className="divide-y divide-gray-100 dark:divide-white/[0.05]"
-                        variants={staggerList}
-                        initial="initial"
-                        animate="animate"
-                    >
+                    <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                         {loading
                             ? Array.from({ length: skeletonRows }, (_, index) => (
                                   <tr key={index}>
@@ -130,9 +123,8 @@ export default function DataTable<T>({
                                   </tr>
                               ))
                             : rows.map((row) => (
-                                  <motion.tr
+                                  <tr
                                       key={rowKey(row)}
-                                      variants={tableRowFade}
                                       className="transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
                                   >
                                       {columns.map((column) => (
@@ -143,14 +135,14 @@ export default function DataTable<T>({
                                               {column.cell(row)}
                                           </td>
                                       ))}
-                                  </motion.tr>
+                                  </tr>
                               ))}
                         {showEmpty && (
                             <tr>
                                 <td colSpan={columns.length}>{emptyState}</td>
                             </tr>
                         )}
-                    </motion.tbody>
+                    </tbody>
                 </table>
             </div>
         </div>

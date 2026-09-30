@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import AppHeader from '@/components/app/app-header';
 import AppSidebar from '@/components/app/app-sidebar';
+import { consumirEntradaConsole } from '@/components/app/console-entrance';
 import type { SidebarGroup, SidebarVariant } from '@/components/app/app-sidebar';
 import Backdrop from '@/components/app/backdrop';
 import { MotionProvider, PageTransition } from '@/components/motion';
@@ -31,8 +33,11 @@ function ShellContent({
 }: AppShellProps) {
     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
+    // Consumido no primeiro render: a cascata roda só na chegada vinda do login.
+    const [entradaDoLogin] = useState(consumirEntradaConsole);
+
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen" data-entrada-console={entradaDoLogin ? 'true' : undefined}>
             <AppSidebar
                 groups={groups}
                 homeHref={homeHref}
