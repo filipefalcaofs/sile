@@ -65,8 +65,8 @@ export default function Button({
         primary:
             'bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300 focus-visible:outline-brand-500',
         outline:
-            'bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white focus-visible:outline-brand-500 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300 dark:disabled:hover:bg-gray-800',
-        ghost: 'text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent focus-visible:outline-brand-500 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-300',
+            'bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white focus-visible:outline-brand-500 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-white dark:disabled:hover:bg-gray-800',
+        ghost: 'text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent focus-visible:outline-brand-500 dark:text-gray-200 dark:hover:bg-white/[0.05] dark:hover:text-white',
         danger: 'bg-error-500 text-white shadow-theme-xs hover:bg-error-600 disabled:bg-error-300 focus-visible:outline-error-500',
     };
 

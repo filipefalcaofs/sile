@@ -93,11 +93,11 @@ function CreateHolidayModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
                 {({ errors, processing }) => (
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor="create-holiday-date">Data</Label>
+                            <Label required htmlFor="create-holiday-date">Data</Label>
                             <Input id="create-holiday-date" type="date" name="date" required error={!!errors.date} hint={errors.date} />
                         </div>
                         <div>
-                            <Label htmlFor="create-holiday-name">Nome</Label>
+                            <Label required htmlFor="create-holiday-name">Nome</Label>
                             <Input
                                 id="create-holiday-name"
                                 type="text"
@@ -149,7 +149,7 @@ function EditHolidayModal({ holiday, onClose }: { holiday: HolidayItem; onClose:
                 {({ errors, processing }) => (
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor={`edit-holiday-date-${holiday.id}`}>Data</Label>
+                            <Label required htmlFor={`edit-holiday-date-${holiday.id}`}>Data</Label>
                             <Input
                                 id={`edit-holiday-date-${holiday.id}`}
                                 type="date"
@@ -161,7 +161,7 @@ function EditHolidayModal({ holiday, onClose }: { holiday: HolidayItem; onClose:
                             />
                         </div>
                         <div>
-                            <Label htmlFor={`edit-holiday-name-${holiday.id}`}>Nome</Label>
+                            <Label required htmlFor={`edit-holiday-name-${holiday.id}`}>Nome</Label>
                             <Input
                                 id={`edit-holiday-name-${holiday.id}`}
                                 type="text"

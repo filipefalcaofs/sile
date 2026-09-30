@@ -95,13 +95,15 @@ function NotificationCard({
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-                {notificacao.data.url && (
+                {notificacao.data.url ? (
                     <a
                         href={notificacao.data.url}
                         className="inline-flex items-center rounded-lg px-3 py-2 text-theme-xs font-medium text-brand-500 ring-1 ring-inset ring-brand-200 transition hover:bg-brand-50 dark:text-brand-400 dark:ring-brand-500/30 dark:hover:bg-brand-500/10"
                     >
                         Abrir
                     </a>
+                ) : (
+                    <span className="text-theme-xs text-gray-500 dark:text-gray-400">Solicitação indisponível</span>
                 )}
                 {notificacao.lida ? (
                     <Badge size="sm" color="light">

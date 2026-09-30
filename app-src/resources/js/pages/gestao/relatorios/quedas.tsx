@@ -224,7 +224,7 @@ export default function QuedasExpresso({ taxa, serie, ranking, filtros }: Quedas
                 title="Quedas do fluxo expresso"
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
-                    { label: 'Relatórios' },
+                    { label: 'Indicadores' },
                     { label: 'Quedas do fluxo expresso' },
                 ]}
             />

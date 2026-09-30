@@ -76,6 +76,7 @@ class StandardTextController extends Controller
                 'active' => in_array($active, ['0', '1'], true) ? $active : '',
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
+            'categorias' => StandardText::query()->distinct()->orderBy('category')->pluck('category')->values()->all(),
         ]);
     }
 

@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests\Gestao;
 
+use App\Models\AiConfiguration;
 use App\Services\Ai\AiBaseUrlGuard;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class UpdateAiConfigurationRequest extends FormRequest
 {
@@ -46,6 +48,23 @@ class UpdateAiConfigurationRequest extends FormRequest
             'active' => ['required', 'boolean'],
             'is_default' => ['required', 'boolean'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            if (! $this->boolean('active')) {
+                return;
+            }
+
+            $configuracao = $this->route('aiConfiguration');
+            $temChaveNova = filled($this->input('api_key'));
+            $temChaveAtual = $configuracao instanceof AiConfiguration && filled($configuracao->api_key);
+
+            if (! $temChaveNova && ! $temChaveAtual) {
+                $validator->errors()->add('api_key', 'Informe a chave de API para ativar a configuração.');
+            }
+        });
     }
 
     protected function baseUrlRule(): Closure

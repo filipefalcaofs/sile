@@ -98,7 +98,7 @@ class ComprovanteProtocoloService
             'imovel' => [
                 'endereco' => $endereco,
                 'bairro' => $solicitacao->address_neighborhood,
-                'cep' => $solicitacao->address_zip,
+                'cep' => self::cepFormatado($solicitacao->address_zip),
                 'area_m2' => $solicitacao->used_area_m2,
             ],
             'atividades' => $solicitacao->cnaes
@@ -113,5 +113,16 @@ class ComprovanteProtocoloService
             'verification_code' => $codigo,
             'url_verificacao' => url('/verificar-documento/'.$codigo),
         ];
+    }
+
+    public static function cepFormatado(?string $cep): ?string
+    {
+        $digitos = preg_replace('/\D/', '', (string) $cep) ?? '';
+
+        if (strlen($digitos) !== 8) {
+            return $cep;
+        }
+
+        return substr($digitos, 0, 5).'-'.substr($digitos, 5);
     }
 }

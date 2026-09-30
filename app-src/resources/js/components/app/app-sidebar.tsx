@@ -133,7 +133,7 @@ export default function AppSidebar({
         ? 'bg-gray-950 border-white/[0.06]'
         : 'bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 border-gray-200';
 
-    const headingStyles = isConsole ? 'text-white/30' : 'text-gray-400';
+    const headingStyles = isConsole ? 'text-gray-300' : 'text-gray-400';
 
     const itemStyles = (active: boolean) => {
         if (isConsole) {

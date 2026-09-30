@@ -387,7 +387,7 @@ export default function CaixaSetorIndex({
                             })}
                         </div>
 
-                        <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex flex-wrap items-center gap-3">
                                 {selecaoAtiva && (
                                     <Button variant="outline" onClick={() => distribuicaoInteligente(null)}>

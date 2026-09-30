@@ -208,7 +208,7 @@ function CreatePropertyTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose
                 <form onSubmit={handleSubmit} className="mt-6">
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor="create-code">Código</Label>
+                            <Label required htmlFor="create-code">Código</Label>
                             <Input
                                 id="create-code"
                                 type="text"
@@ -222,7 +222,7 @@ function CreatePropertyTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose
                             />
                         </div>
                         <div>
-                            <Label htmlFor="create-label">Rótulo</Label>
+                            <Label required htmlFor="create-label">Rótulo</Label>
                             <Input
                                 id="create-label"
                                 type="text"
@@ -354,7 +354,7 @@ function EditPropertyTypeModal({ propertyType, onClose }: { propertyType: Proper
                             />
                         </div>
                         <div>
-                            <Label htmlFor={`edit-label-${propertyType.id}`}>Rótulo</Label>
+                            <Label required htmlFor={`edit-label-${propertyType.id}`}>Rótulo</Label>
                             <Input
                                 id={`edit-label-${propertyType.id}`}
                                 type="text"

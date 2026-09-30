@@ -105,7 +105,7 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
 
     public function toMail(object $notifiable): MailMessage
     {
-        $url = route('portal.solicitacoes.show', $this->viabilityRequestId);
+        $url = route('portal.solicitacoes.pendencias', $this->viabilityRequestId);
 
         $assunto = $this->withPlaceholders((string) config('sile.notificacoes.pendencia.assunto', "Convite na sua solicitação de viabilidade {$this->protocolNumber}"));
 
@@ -136,7 +136,7 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
             'protocol_number' => $this->protocolNumber,
             'summary' => "A análise técnica registrou um convite na solicitação {$this->protocolNumber}: {$this->descricao}",
             'viability_request_id' => $this->viabilityRequestId,
-            'url' => route('portal.solicitacoes.show', $this->viabilityRequestId),
+            'url' => route('portal.solicitacoes.pendencias', $this->viabilityRequestId),
         ];
     }
 
@@ -146,7 +146,7 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
      */
     public function toWhatsApp(object $notifiable): WhatsAppMessage
     {
-        $url = route('portal.solicitacoes.show', $this->viabilityRequestId);
+        $url = route('portal.solicitacoes.pendencias', $this->viabilityRequestId);
 
         return new WhatsAppMessage(
             to: '',

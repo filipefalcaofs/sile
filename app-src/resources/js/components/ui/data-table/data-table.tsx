@@ -78,7 +78,7 @@ export default function DataTable<T>({
                                         key={column.id}
                                         scope="col"
                                         aria-sort={ariaSortOf(column.id, sort)}
-                                        className={`${cellPadding} text-theme-xs font-medium text-gray-500 dark:text-gray-400 ${alignStyles[column.align ?? 'start']} ${column.headerClassName ?? ''}`}
+                                        className={`${cellPadding} text-theme-xs font-medium text-gray-500 dark:text-gray-200 ${alignStyles[column.align ?? 'start']} ${column.headerClassName ?? ''}`}
                                     >
                                         {column.sortable && onSortChange ? (
                                             <button

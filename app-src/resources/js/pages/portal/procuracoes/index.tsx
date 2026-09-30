@@ -69,7 +69,7 @@ function SituationBadge({ item }: { item: ProcurationItem }) {
 function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
     return (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h2>
+            <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">{pageTitle}</h1>
             <nav aria-label="Trilha de navegação">
                 <ol className="flex flex-wrap items-center gap-1.5">
                     <li>

@@ -120,7 +120,7 @@ function NewLegalTermModal({ tipos, onClose }: { tipos: string[]; onClose: () =>
                         )}
                     </div>
                     <div>
-                        <Label htmlFor="novo-titulo">Título</Label>
+                        <Label required htmlFor="novo-titulo">Título</Label>
                         <Input
                             id="novo-titulo"
                             type="text"
@@ -133,7 +133,7 @@ function NewLegalTermModal({ tipos, onClose }: { tipos: string[]; onClose: () =>
                         />
                     </div>
                     <div>
-                        <Label htmlFor="novo-conteudo">Conteúdo</Label>
+                        <Label required htmlFor="novo-conteudo">Conteúdo</Label>
                         <textarea
                             id="novo-conteudo"
                             rows={10}
@@ -183,7 +183,7 @@ function EditLegalTermModal({ termo, onClose }: { termo: LegalTermItem; onClose:
             <form onSubmit={handleSubmit} className="mt-6">
                 <div className="flex flex-col gap-5">
                     <div>
-                        <Label htmlFor={`edit-titulo-${termo.id}`}>Título</Label>
+                        <Label required htmlFor={`edit-titulo-${termo.id}`}>Título</Label>
                         <Input
                             id={`edit-titulo-${termo.id}`}
                             type="text"
@@ -196,7 +196,7 @@ function EditLegalTermModal({ termo, onClose }: { termo: LegalTermItem; onClose:
                         />
                     </div>
                     <div>
-                        <Label htmlFor={`edit-conteudo-${termo.id}`}>Conteúdo</Label>
+                        <Label required htmlFor={`edit-conteudo-${termo.id}`}>Conteúdo</Label>
                         <textarea
                             id={`edit-conteudo-${termo.id}`}
                             rows={10}

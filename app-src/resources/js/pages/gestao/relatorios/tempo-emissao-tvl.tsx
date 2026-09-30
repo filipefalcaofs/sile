@@ -327,7 +327,7 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
                 title="Tempo de Emissão de TVL"
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
-                    { label: 'Relatórios' },
+                    { label: 'Indicadores' },
                     { label: 'Tempo de Emissão de TVL' },
                 ]}
             />
@@ -338,7 +338,7 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
                 <Card>
                     <CardHeader
                         title="Filtros"
-                        description="Recorte por serviço, período de emissão, resultado e CNAE. O período recorta pela emissão do TVL — sem processos no recorte, a tabela fica vazia (nunca um dado inventado)."
+                        description="Recorte por serviço, período de emissão, resultado e CNAE. O período usa a data de emissão do TVL. Sem processos no recorte, a tabela fica vazia."
                         actions={<ExportMenu url={URL_TEMPO_EMISSAO_TVL} params={exportParams} />}
                     />
                     <CardContent>

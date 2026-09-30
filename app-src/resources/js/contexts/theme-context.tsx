@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
 type Theme = 'light' | 'dark';
@@ -17,42 +17,40 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
     const [theme, setTheme] = useState<Theme>('light');
     const [isInitialized, setIsInitialized] = useState(false);
+    const usuarioTrocou = useRef(false);
 
     useEffect(() => {
-        const contraste = localStorage.getItem('acc-contrast') === '1';
         const savedTheme = localStorage.getItem('theme') as Theme | null;
 
-        setTheme(contraste ? 'light' : (savedTheme ?? 'light'));
+        setTheme(savedTheme === 'dark' ? 'dark' : 'light');
         setIsInitialized(true);
     }, []);
 
     useEffect(() => {
-        const aoContraste = (evento: Event) => {
-            if ((evento as CustomEvent<boolean>).detail) {
-                setTheme('light');
-            }
-        };
+        if (!isInitialized) {
+            return;
+        }
 
-        window.addEventListener('sile:acc-contrast', aoContraste);
+        localStorage.setItem('theme', theme);
 
-        return () => window.removeEventListener('sile:acc-contrast', aoContraste);
-    }, []);
+        if (usuarioTrocou.current) {
+            usuarioTrocou.current = false;
+            localStorage.setItem('acc-contrast', '0');
+            document.documentElement.classList.remove('acc-contrast');
+            window.dispatchEvent(new CustomEvent('sile:theme-usuario'));
+        }
 
-    useEffect(() => {
-        if (isInitialized) {
-            localStorage.setItem('theme', theme);
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
-                document.documentElement.classList.remove('acc-contrast');
-                localStorage.setItem('acc-contrast', '0');
-                window.dispatchEvent(new CustomEvent('sile:theme', { detail: 'dark' }));
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
+        const contraste = localStorage.getItem('acc-contrast') === '1';
+
+        if (theme === 'dark' && !contraste) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
         }
     }, [theme, isInitialized]);
 
     const toggleTheme = () => {
+        usuarioTrocou.current = true;
         setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
     };
 

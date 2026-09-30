@@ -76,27 +76,27 @@ function ServerFormModal({ server, isOpen, onClose }: { server?: EmailServerItem
                             <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Servidor</h5>
                             <div className="grid gap-5 sm:grid-cols-2">
                                 <div>
-                                    <Label htmlFor="name">Nome</Label>
+                                    <Label required htmlFor="name">Nome</Label>
                                     <Input id="name" name="name" type="text" required defaultValue={server?.name} placeholder="SEDUR SMTP" error={!!errors.name} hint={errors.name} />
                                 </div>
                                 <div>
-                                    <Label htmlFor="driver">Driver</Label>
+                                    <Label required htmlFor="driver">Driver</Label>
                                     <Select id="driver" name="driver" value="smtp" onChange={() => {}} options={[{ value: 'smtp', label: 'SMTP' }]} />
                                 </div>
                                 <div>
-                                    <Label htmlFor="host">Host SMTP</Label>
+                                    <Label required htmlFor="host">Host SMTP</Label>
                                     <Input id="host" name="host" type="text" required defaultValue={server?.host} placeholder="smtp.gmail.com" error={!!errors.host} hint={errors.host} />
                                 </div>
                                 <div>
-                                    <Label htmlFor="port">Porta</Label>
+                                    <Label required htmlFor="port">Porta</Label>
                                     <Input id="port" name="port" type="number" required min={1} max={65535} defaultValue={server?.port ?? 587} error={!!errors.port} hint={errors.port ?? 'Inteiro de 1 a 65535'} />
                                 </div>
                                 <div>
-                                    <Label htmlFor="encryption">Criptografia</Label>
+                                    <Label required htmlFor="encryption">Criptografia</Label>
                                     <Select id="encryption" name="encryption" value={encryption} onChange={setEncryption} options={ENCRYPTION_OPTIONS} />
                                 </div>
                                 <div>
-                                    <Label htmlFor="timeout">Timeout (segundos)</Label>
+                                    <Label required htmlFor="timeout">Timeout (segundos)</Label>
                                     <Input id="timeout" name="timeout" type="number" required min={1} max={300} defaultValue={server?.timeout ?? 30} error={!!errors.timeout} hint={errors.timeout ?? 'Inteiro de 1 a 300 segundos'} />
                                 </div>
                             </div>
@@ -122,11 +122,11 @@ function ServerFormModal({ server, isOpen, onClose }: { server?: EmailServerItem
                                     />
                                 </div>
                                 <div>
-                                    <Label htmlFor="from_address">E-mail do remetente</Label>
+                                    <Label required htmlFor="from_address">E-mail do remetente</Label>
                                     <Input id="from_address" name="from_address" type="text" inputMode="email" autoComplete="off" required defaultValue={server?.from_address} placeholder="nao-responda@viabiliza.salvador.ba.gov.br" error={!!errors.from_address} hint={errors.from_address} />
                                 </div>
                                 <div>
-                                    <Label htmlFor="from_name">Nome do remetente</Label>
+                                    <Label required htmlFor="from_name">Nome do remetente</Label>
                                     <Input id="from_name" name="from_name" type="text" required defaultValue={server?.from_name} error={!!errors.from_name} hint={errors.from_name} />
                                 </div>
                             </div>
@@ -170,7 +170,7 @@ function TestConnectionModal({ server, onClose }: { server: EmailServerItem; onC
                 {({ errors, processing }) => (
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor="recipient">E-mail destinatário</Label>
+                            <Label required htmlFor="recipient">E-mail destinatário</Label>
                             <Input id="recipient" name="recipient" type="email" required placeholder="voce@exemplo.com" error={!!errors.recipient} hint={errors.recipient} />
                         </div>
                         <div className="flex items-center justify-end gap-3">
@@ -234,7 +234,7 @@ function ServerCard({
                 </dl>
 
                 {canMaintain && (
-                    <div className="mt-5 flex items-center gap-4 border-t border-gray-100 pt-4 dark:border-gray-800">
+                    <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-gray-100 pt-4 dark:border-gray-800">
                         <button type="button" onClick={onTest} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 transition hover:text-brand-500 dark:text-gray-300">
                             <MailIcon className="size-4.5" />
                             Testar

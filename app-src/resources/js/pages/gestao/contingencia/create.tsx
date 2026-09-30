@@ -291,6 +291,41 @@ function CnaeSearch({
  * protocola pelo MESMO motor do canal normal — muda só a origem (`contingencia`,
  * auditada) e o ator. O processo nasce com origem "contingência" (aviso visível).
  */
+function formatCpf(raw: string): string {
+    const digitos = raw.replace(/\D/g, '').slice(0, 11);
+    if (digitos.length <= 3) {
+        return digitos;
+    }
+    if (digitos.length <= 6) {
+        return `${digitos.slice(0, 3)}.${digitos.slice(3)}`;
+    }
+    if (digitos.length <= 9) {
+        return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6)}`;
+    }
+
+    return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9)}`;
+}
+
+function formatCnpj(raw: string): string {
+    const digitos = raw.replace(/\D/g, '').slice(0, 14);
+    const partes = [digitos.slice(0, 2), digitos.slice(2, 5), digitos.slice(5, 8), digitos.slice(8, 12), digitos.slice(12, 14)];
+    let resultado = partes[0];
+    if (partes[1]) {
+        resultado += `.${partes[1]}`;
+    }
+    if (partes[2]) {
+        resultado += `.${partes[2]}`;
+    }
+    if (partes[3]) {
+        resultado += `/${partes[3]}`;
+    }
+    if (partes[4]) {
+        resultado += `-${partes[4]}`;
+    }
+
+    return resultado;
+}
+
 export default function RegistrarContingencia({ serviceTypes, documentRequirements, tiposImovel, mapa }: ContingenciaProps) {
     const { data, setData, post, processing, errors } = useForm<ContingenciaForm>(EMPTY_FORM);
     const consultaInscricao = useHttp({ inscricao: '' });
@@ -496,8 +531,9 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                             type="text"
                                             name="beneficiary_cpf"
                                             value={data.beneficiary_cpf}
-                                            onChange={(event) => setData('beneficiary_cpf', event.target.value)}
+                                            onChange={(event) => setData('beneficiary_cpf', formatCpf(event.target.value))}
                                             placeholder="000.000.000-00"
+                                            maxLength={14}
                                             error={!!errors.beneficiary_cpf || !!cpfErro}
                                             hint={errors.beneficiary_cpf}
                                         />
@@ -527,7 +563,8 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                             type="text"
                                             name="company_cnpj"
                                             value={data.company_cnpj}
-                                            onChange={(event) => setData('company_cnpj', event.target.value)}
+                                            onChange={(event) => setData('company_cnpj', formatCnpj(event.target.value))}
+                                            maxLength={18}
                                             placeholder="00.000.000/0000-00"
                                             error={!!errors.company_cnpj || !!cnpjErro}
                                             hint={errors.company_cnpj}

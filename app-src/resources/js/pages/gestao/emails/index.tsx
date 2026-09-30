@@ -127,7 +127,7 @@ export default function EmailsIndex({ logs, filters, counts }: EmailsProps) {
                 breadcrumbs={[{ label: 'Painel', href: '/gestao' }]}
             />
 
-            <div className="mb-5 grid grid-cols-3 gap-4">
+            <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <SummaryCard label="Na fila" count={counts.na_fila} color="warning" />
                 <SummaryCard label="Enviados" count={counts.enviado} color="success" />
                 <SummaryCard label="Falharam" count={counts.falhou} color="error" />
@@ -140,7 +140,7 @@ export default function EmailsIndex({ logs, filters, counts }: EmailsProps) {
                 />
                 <CardContent>
                     <div className="space-y-5">
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                             {FILTER_TABS.map((tab) => (
                                 <button
                                     key={String(tab.value)}

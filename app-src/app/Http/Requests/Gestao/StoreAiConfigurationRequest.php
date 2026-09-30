@@ -37,7 +37,7 @@ class StoreAiConfigurationRequest extends FormRequest
             // Anti-SSRF: base_url administrável é tratada como SSRF (https + allowlist).
             // A mesma guarda é re-checada no client (defesa em profundidade).
             'base_url' => ['required', 'string', 'max:255', $this->baseUrlRule()],
-            'api_key' => ['nullable', 'string', 'max:500'],
+            'api_key' => ['nullable', 'string', 'max:500', 'required_if:active,true,1'],
             'model' => ['required', 'string', 'max:255'],
             'temperature' => ['required', 'numeric', 'min:0', 'max:2'],
             'max_tokens' => ['required', 'integer', 'min:1', 'max:1000000'],
@@ -61,6 +61,16 @@ class StoreAiConfigurationRequest extends FormRequest
     /**
      * @return array<string, string>
      */
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'api_key.required_if' => 'Informe a chave de API para ativar a configuração.',
+        ];
+    }
+
     public function attributes(): array
     {
         return [

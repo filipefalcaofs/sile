@@ -64,6 +64,10 @@ function centroide(poligono: Polygon | null): { lat: number; lng: number } | nul
         anel[0][0] === anel[anel.length - 1][0] && anel[0][1] === anel[anel.length - 1][1];
     const pontos = fechado ? anel.slice(0, -1) : anel;
 
+    if (pontos.some(([lng, lat]) => !Number.isFinite(lng) || !Number.isFinite(lat))) {
+        return null;
+    }
+
     const soma = pontos.reduce(
         (acumulado, [lng, lat]) => ({ lng: acumulado.lng + lng, lat: acumulado.lat + lat }),
         { lng: 0, lat: 0 },
@@ -154,7 +158,11 @@ export default function Show({
         ...(explicacao ? [{ value: 'explicabilidade' as const, label: 'Explicabilidade' }] : []),
     ];
 
-    const centro = centroide(geo.poligono) ?? geo.ponto;
+    const centroCalculado = centroide(geo.poligono) ?? geo.ponto;
+    const centro =
+        centroCalculado && Number.isFinite(centroCalculado.lat) && Number.isFinite(centroCalculado.lng)
+            ? centroCalculado
+            : null;
 
     // A timeline vem do backend do mais recente para o mais antigo; exibimos em
     // ordem cronológica (mais antigo primeiro) para a leitura do fluxo, com a

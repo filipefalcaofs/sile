@@ -175,6 +175,7 @@ class RegistrarContingenciaRequest extends FormRequest
         return [
             'beneficiary_cpf.required' => 'Informe o CPF do beneficiário.',
             'company_cnpj.required' => 'Informe o CNPJ da empresa beneficiária.',
+            'company_cnpj.max' => 'Informe um CNPJ válido.',
             'contingency_reason.required' => 'Informe o motivo da contingência.',
             'property_polygon_geojson.required' => 'Defina o imóvel (polígono) no mapa.',
             'property_polygon_geojson.coordinates.0.min' => 'O polígono do imóvel precisa de pelo menos 4 pontos.',
@@ -188,6 +189,17 @@ class RegistrarContingenciaRequest extends FormRequest
             'documents.*.file' => 'Um dos anexos enviados é inválido.',
             'documents.*.mimetypes' => 'O tipo de um dos anexos não é permitido.',
             'documents.*.max' => 'Um dos anexos excede o tamanho máximo permitido.',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'beneficiary_cpf' => 'CPF do beneficiário',
+            'company_cnpj' => 'CNPJ da empresa',
         ];
     }
 }

@@ -445,6 +445,16 @@ function valorOuTraco(valor: string | null | undefined): string {
     return valor && valor.trim() !== '' ? valor : '—';
 }
 
+function cepMascarado(valor: string | null | undefined): string {
+    const digitos = (valor ?? '').replace(/\D/g, '');
+
+    if (digitos.length !== 8) {
+        return valorOuTraco(valor);
+    }
+
+    return `${digitos.slice(0, 5)}-${digitos.slice(5)}`;
+}
+
 /**
  * Campos da certidão cadastral exibidos na ficha. Sem destaque âmbar e sem
  * repetir endereço/bairro/CEP — esses ficam no bloco Localização, logo acima
@@ -612,7 +622,9 @@ function Textarea({
         }
 
         el.style.height = 'auto';
-        el.style.height = `${el.scrollHeight}px`;
+        const altura = Math.min(el.scrollHeight, 160);
+        el.style.height = `${altura}px`;
+        el.style.overflowY = el.scrollHeight > 160 ? 'auto' : 'hidden';
     }, [value]);
 
     return (
@@ -624,7 +636,8 @@ function Textarea({
             disabled={disabled}
             placeholder={placeholder}
             onChange={(event) => onChange(event.target.value)}
-            className="w-full resize-none overflow-hidden rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            maxLength={2000}
+            className="w-full max-h-40 resize-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
         />
     );
 }
@@ -875,6 +888,7 @@ export default function FichaAnaliseShow({
     const [erroAcao, setErroAcao] = useState<string | null>(null);
     const [showPendencia, setShowPendencia] = useState(false);
     const [descricaoPendencia, setDescricaoPendencia] = useState('');
+    const [erroPendencia, setErroPendencia] = useState<string | null>(null);
     const [showCancelarConvite, setShowCancelarConvite] = useState(false);
     const [parecerCancelamento, setParecerCancelamento] = useState('');
     const [cancelarConviteProcessing, setCancelarConviteProcessing] = useState(false);
@@ -1045,7 +1059,7 @@ export default function FichaAnaliseShow({
 
     function novaRevisao() {
         acao.post(`${fichaUrl}/nova-revisao`, {
-            onSuccess: () => router.reload(),
+            onSuccess: () => router.visit(window.location.href, { preserveState: false, preserveScroll: true }),
             onHttpException: () => false,
         });
     }
@@ -1098,6 +1112,7 @@ export default function FichaAnaliseShow({
     }
 
     function abrirPendencia() {
+        setErroPendencia(null);
         router.post(
             `/gestao/processos/${processo.id}/pendencias`,
             { descricao: descricaoPendencia },
@@ -1108,6 +1123,16 @@ export default function FichaAnaliseShow({
                 onSuccess: () => {
                     setShowPendencia(false);
                     setDescricaoPendencia('');
+                    setErroPendencia(null);
+                },
+                onError: (erros) => {
+                    const primeiro = Object.values(erros)[0];
+                    const texto = typeof primeiro === 'string'
+                        ? primeiro
+                        : Array.isArray(primeiro) && typeof primeiro[0] === 'string'
+                          ? primeiro[0]
+                          : '';
+                    setErroPendencia(texto || 'A descrição passou do limite de 2.000 caracteres.');
                 },
             },
         );
@@ -1580,7 +1605,7 @@ export default function FichaAnaliseShow({
                                 <DescItem label="Logradouro">{valorOuTraco(localizacao?.logradouro)}</DescItem>
                                 <DescItem label="Nº Métrico">{valorOuTraco(localizacao?.numero_metrico)}</DescItem>
                                 <DescItem label="Bairro">{valorOuTraco(localizacao?.bairro)}</DescItem>
-                                <DescItem label="CEP">{valorOuTraco(localizacao?.cep)}</DescItem>
+                                <DescItem label="CEP">{cepMascarado(localizacao?.cep)}</DescItem>
                                 <DescItem label="Ponto de Referência">
                                     {valorOuTraco(localizacao?.ponto_referencia)}
                                 </DescItem>
@@ -2507,7 +2532,7 @@ export default function FichaAnaliseShow({
                                     )}
 
                                     <Button onClick={() => setShowPendencia(true)} variant="ghost" size="sm">
-                                        Colocar em Convite
+                                        Colocar em convite
                                     </Button>
 
                                     {processo.status === 'em_pendencia' && (
@@ -2524,7 +2549,7 @@ export default function FichaAnaliseShow({
 
                                     {podeEncaminharVistoria && (
                                         <Button onClick={() => setShowVistoria(true)} variant="ghost" size="sm">
-                                            Encaminhar para a Vistoria
+                                            Encaminhar para a vistoria
                                         </Button>
                                     )}
 
@@ -2716,8 +2741,8 @@ export default function FichaAnaliseShow({
             )}
 
             {showPendencia && (
-                <Modal isOpen onClose={() => setShowPendencia(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
-                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Colocar em Convite</h4>
+                <Modal isOpen onClose={() => setShowPendencia(false)} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Colocar em convite</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         O processo vai para “em convite” e o requerente é notificado para complementar.
                     </p>
@@ -2733,6 +2758,11 @@ export default function FichaAnaliseShow({
                             onChange={setDescricaoPendencia}
                         />
                     </div>
+                    {erroPendencia && (
+                        <p role="alert" className="mt-3 text-sm text-error-600 dark:text-error-400">
+                            {erroPendencia}
+                        </p>
+                    )}
                     <div className="mt-6 flex items-center justify-end gap-3">
                         <Button variant="outline" size="sm" onClick={() => setShowPendencia(false)}>
                             Cancelar
@@ -2743,14 +2773,14 @@ export default function FichaAnaliseShow({
                             disabled={descricaoPendencia.trim() === ''}
                             loading={pendenciaProcessing}
                         >
-                            Colocar em Convite
+                            Colocar em convite
                         </Button>
                     </div>
                 </Modal>
             )}
 
             {showCancelarConvite && (
-                <Modal isOpen onClose={() => setShowCancelarConvite(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
+                <Modal isOpen onClose={() => setShowCancelarConvite(false)} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Cancelar convite</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         O convite é cancelado e a análise reaberta. Registre o parecer com o motivo do cancelamento.
@@ -2790,9 +2820,9 @@ export default function FichaAnaliseShow({
                         setShowVistoria(false);
                         setErroEncaminhar(null);
                     }}
-                    className="m-4 max-w-[560px] p-6 lg:p-8"
+                    className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8"
                 >
-                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para a Vistoria</h4>
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para a vistoria</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         O processo vai para a caixa do setor de vistoria, sem responsável, para o apoio distribuir a
                         um vistoriador — e o status de análise muda para Vistoriar. Quando a ficha for concluída, o
@@ -2865,7 +2895,7 @@ export default function FichaAnaliseShow({
                         setShowMalhaFina(false);
                         setErroMalhaFina(null);
                     }}
-                    className="m-4 max-w-[560px] p-6 lg:p-8"
+                    className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8"
                 >
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Encaminhar para a malha fina</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">

@@ -172,6 +172,7 @@ class ConsultaViabilidadePublicaTest extends TestCase
         ])
             ->assertStatus(422)
             ->assertJsonPath('message', 'O endereço está fora do município de Salvador. A consulta de viabilidade abrange apenas Salvador.')
+            ->assertJsonPath('errors.endereco.0', 'O endereço está fora do município de Salvador. A consulta de viabilidade abrange apenas Salvador.')
             ->assertJsonMissingPath('veredito_locacional');
 
         $this->assertSame(0, ViabilityQuery::query()->count());

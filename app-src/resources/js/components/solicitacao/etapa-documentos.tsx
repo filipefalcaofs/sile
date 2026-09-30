@@ -188,7 +188,9 @@ export default function EtapaDocumentos({
                     <form onSubmit={enviar} className="flex flex-col gap-5">
                         {requisitosObrigatorios.length > 0 && (
                             <div>
-                                <Label htmlFor="requirement_id">Vincular a um requisito (opcional)</Label>
+                                <Label htmlFor="requirement_id" required>
+                                    Vincular a um requisito obrigatório
+                                </Label>
                                 <Select
                                     id="requirement_id"
                                     value={data.requirement_id}
@@ -197,7 +199,7 @@ export default function EtapaDocumentos({
                                         value: String(requisito.id),
                                         label: requisito.name,
                                     }))}
-                                    placeholder="Anexo avulso (sem requisito)"
+                                    placeholder="Selecione o requisito que este arquivo atende"
                                 />
                             </div>
                         )}
@@ -212,7 +214,7 @@ export default function EtapaDocumentos({
                                 type="file"
                                 name="file"
                                 onChange={(event) => setData('file', event.target.files?.[0] ?? null)}
-                                className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-brand-600 hover:file:bg-brand-100 dark:text-gray-400 dark:file:bg-brand-500/15 dark:file:text-brand-400"
+                                className="block w-full cursor-pointer text-sm text-gray-600 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-brand-600 hover:file:bg-brand-100 dark:text-gray-400 dark:file:bg-brand-500/15 dark:file:text-brand-400"
                             />
                             {errors.file && <p className="mt-1.5 text-theme-xs text-error-500">{errors.file}</p>}
                         </div>

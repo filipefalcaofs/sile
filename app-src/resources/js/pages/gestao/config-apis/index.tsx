@@ -151,7 +151,7 @@ export default function ConfigApis({ aba, abas }: Props) {
                                                 }
 
                                                 return (
-                                                    <div key={campo.id}>
+                                                    <div key={campo.id} className="min-w-0">
                                                         <Label htmlFor={`${selecionada.id}-${campo.id}`}>{campo.rotulo}</Label>
                                                         <Input
                                                             id={`${selecionada.id}-${campo.id}`}

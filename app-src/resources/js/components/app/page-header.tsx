@@ -43,12 +43,14 @@ export default function PageHeader({ title, breadcrumbs = [], actions }: PageHea
     return (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">{title}</h2>
+                <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">{title}</h1>
                 {actions}
             </div>
             <nav aria-label="Trilha de navegação">
                 <ol className="flex flex-wrap items-center gap-1.5">
-                    {breadcrumbs.map((item) => (
+                    {breadcrumbs
+                        .filter((item) => item.label !== title)
+                        .map((item) => (
                         <li key={item.label}>
                             {item.href ? (
                                 <Link

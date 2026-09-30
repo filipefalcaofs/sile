@@ -85,9 +85,10 @@ class ExportDriversTest extends TestCase
     {
         ViabilityRequest::factory()->create(['address_neighborhood' => 'Pituba']);
 
-        $bytes = app(PdfExporter::class)->stream($this->definition())->getContent();
+        $resposta = app(PdfExporter::class)->stream($this->definition());
 
-        $this->assertStringStartsWith('%PDF', (string) $bytes);
+        $this->assertStringStartsWith('%PDF', (string) $resposta->getContent());
+        $this->assertStringContainsString('attachment', (string) $resposta->headers->get('content-disposition'));
     }
 
     #[Test]

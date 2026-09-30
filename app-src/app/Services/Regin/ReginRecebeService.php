@@ -30,7 +30,7 @@ class ReginRecebeService
             throw new InvalidArgumentException('Protocolo obrigatório.');
         }
 
-        return DB::transaction(function () use ($envelope, $protocolo): string {
+        $recebimento = DB::transaction(function () use ($envelope, $protocolo): ?ReginRecebimento {
             $existente = ReginRecebimento::query()
                 ->where('protocolo', $protocolo)
                 ->lockForUpdate()
@@ -39,7 +39,7 @@ class ReginRecebeService
             if ($existente !== null) {
                 $this->auditar($existente, $protocolo, '5', 'duplicado');
 
-                return '5';
+                return null;
             }
 
             $recebimento = ReginRecebimento::query()->create([
@@ -55,21 +55,56 @@ class ReginRecebeService
                 'envelope' => $envelope,
             ]);
 
-            try {
-                $processo = $this->protocolador->protocolar($recebimento);
-
-                if ($processo !== null) {
-                    $recebimento->update(['viability_request_id' => $processo->id]);
-                }
-            } catch (Throwable) {
-                // O ack 3 é do envelope. Sem catálogo/motor, o recebimento fica
-                // sem processo — nunca finge que protocolou.
-            }
-
             $this->auditar($recebimento, $protocolo, '3', 'sucesso');
 
-            return '3';
+            return $recebimento;
         });
+
+        if ($recebimento === null) {
+            return '5';
+        }
+
+        $this->protocolar($recebimento);
+
+        return '3';
+    }
+
+    /**
+     * Abre o processo DEPOIS do commit do envelope. Fora da transação por
+     * necessidade, não por estilo: a protocolação consulta o Cadastro
+     * Imobiliário e o GeoServer e escreve em várias tabelas — no PostgreSQL,
+     * uma query que falhe aborta a transação inteira, e a auditoria seguinte
+     * derrubaria o ack com 500, desfazendo o recebimento já reconhecido.
+     *
+     * A falha fica REGISTRADA (log da exceção + auditoria com resultado
+     * `falha`): o recebimento sem processo é pendência visível, nunca silêncio.
+     */
+    private function protocolar(ReginRecebimento $recebimento): void
+    {
+        try {
+            $processo = $this->protocolador->protocolar($recebimento);
+
+            if ($processo !== null) {
+                $recebimento->update(['viability_request_id' => $processo->id]);
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+
+            // Só a classe da exceção nas propriedades: a mensagem pode carregar
+            // valores do envelope (dado pessoal). O detalhe fica no log.
+            $this->audit->log(
+                'regin',
+                'protocolar',
+                'Processo recebido via REGIN não pôde ser aberto',
+                [
+                    'protocolo' => $recebimento->protocolo,
+                    'excecao' => $exception::class,
+                ],
+                $recebimento,
+                'falha',
+                personalData: false,
+            );
+        }
     }
 
     private function auditar(ReginRecebimento $recebimento, string $protocolo, string $codigo, string $resultado): void

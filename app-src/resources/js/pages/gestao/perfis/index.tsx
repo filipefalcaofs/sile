@@ -183,7 +183,7 @@ function CreateRoleModal({
                 {({ errors, processing }) => (
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor="create-name">Nome do perfil</Label>
+                            <Label required htmlFor="create-name">Nome do perfil</Label>
                             <div className="w-full sm:max-w-sm">
                                 <Input
                                     id="create-name"

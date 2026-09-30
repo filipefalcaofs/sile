@@ -84,15 +84,16 @@ class ReginConnectionTesterTest extends TestCase
         $this->assertStringNotContainsString('senha-de-teste-nao-vazar', $result->mensagem);
     }
 
-    public function test_timeout_devolve_o_erro_real_da_conexao(): void
+    public function test_timeout_explica_a_falha_em_portugues_sem_detalhe_tecnico(): void
     {
         Http::fake(fn () => throw new ConnectionException('cURL error 28: Connection timed out after 8000 ms for http://10.57.247.9:8080/api_integracao/acesso/auth'));
 
         $result = app(ReginConnectionTester::class)->test();
 
         $this->assertFalse($result->ok);
-        $this->assertStringContainsString('cURL error 28: Connection timed out after 8000 ms', $result->mensagem);
-        $this->assertStringContainsString('http://10.57.247.9:8080/api_integracao/acesso/auth', $result->mensagem);
+        $this->assertStringContainsString('Não foi possível conectar', $result->mensagem);
+        $this->assertStringNotContainsString('cURL error', $result->mensagem);
+        $this->assertStringNotContainsString('http://10.57.247.9:8080', $result->mensagem);
         $this->assertStringNotContainsString('senha-de-teste-nao-vazar', $result->mensagem);
     }
 }

@@ -29,7 +29,7 @@ export default function Pagination({ links, meta }: PaginationProps) {
     return (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {meta && meta.from !== null && meta.to !== null ? (
-                <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                <p className="text-theme-sm text-gray-500 dark:text-gray-200">
                     Mostrando <span className="font-medium text-gray-700 dark:text-gray-300">{meta.from}</span>
                     {'–'}
                     <span className="font-medium text-gray-700 dark:text-gray-300">{meta.to}</span> de{' '}
@@ -48,7 +48,7 @@ export default function Pagination({ links, meta }: PaginationProps) {
                             className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm font-medium transition ${
                                 link.active
                                     ? 'bg-brand-500 text-white'
-                                    : 'text-gray-700 hover:bg-brand-50 hover:text-brand-500 dark:text-gray-400 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400'
+                                    : 'text-gray-700 hover:bg-brand-50 hover:text-brand-500 dark:text-gray-200 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400'
                             }`}
                             dangerouslySetInnerHTML={{ __html: link.label }}
                         />

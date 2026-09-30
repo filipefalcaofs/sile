@@ -315,14 +315,14 @@ export default function IndicadoresViabilidade({
             <Head title="Indicadores de viabilidade" />
             <PageHeader
                 title="Indicadores de viabilidade"
-                breadcrumbs={[{ label: 'Painel', href: '/gestao' }, { label: 'Relatórios' }, { label: 'Indicadores de viabilidade' }]}
+                breadcrumbs={[{ label: 'Painel', href: '/gestao' }, { label: 'Indicadores' }, { label: 'Indicadores de viabilidade' }]}
             />
 
             <div className="space-y-4 md:space-y-6">
                 <Card>
                     <CardHeader
                         title="Filtros"
-                        description="Recorte por período, bairro, CNAE e categoria. Os números são reais sobre as solicitações protocoladas — sem dados no recorte, os indicadores ficam vazios (nunca um número inventado)."
+                        description="Recorte por período, bairro, CNAE e categoria. Os números vêm das solicitações protocoladas. Sem dados no recorte, os indicadores ficam vazios."
                         actions={
                             <ExportMenu url={URL_INDICADORES} params={currentParams} label="Exportar indicadores" />
                         }
