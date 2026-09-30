@@ -1,0 +1,6 @@
+[     169ms] [LOG] 🔍 Browser logger active (MCP server detected). Posting to: http://localhost:8000/_boost/browser-logs @ http://localhost:8000/gestao/cnaes:19
+[     193ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8000/gestao/cnaes:78
+[  161857ms] [LOG] 🔍 Browser logger active (MCP server detected). Posting to: http://localhost:8000/_boost/browser-logs @ http://localhost:8000/gestao/cnaes?direction=asc&per_page=15&search=restaurante&sort=description:19
+[  161866ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8000/gestao/cnaes?direction=asc&per_page=15&search=restaurante&sort=description:78
+[  178542ms] [LOG] 🔍 Browser logger active (MCP server detected). Posting to: http://localhost:8000/_boost/browser-logs @ http://localhost:8000/gestao/cnaes?direction=asc&per_page=15&search=restaurante&sort=description:19
+[  178550ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8000/gestao/cnaes?direction=asc&per_page=15&search=restaurante&sort=description:78

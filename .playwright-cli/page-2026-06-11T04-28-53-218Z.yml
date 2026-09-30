@@ -1,0 +1,133 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - link "SILE Gestão SEDUR" [ref=e6] [cursor=pointer]:
+      - /url: /gestao
+      - generic [ref=e7]:
+        - img [ref=e9]
+        - generic [ref=e11]:
+          - generic [ref=e12]: SILE
+          - generic [ref=e13]: Gestão SEDUR
+    - navigation [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - heading "Visão geral" [level=2] [ref=e18]
+          - list [ref=e19]:
+            - listitem [ref=e20]:
+              - link "Painel" [ref=e21] [cursor=pointer]:
+                - /url: /gestao
+                - img [ref=e23]
+                - generic [ref=e25]: Painel
+        - generic [ref=e26]:
+          - heading "Cadastros" [level=2] [ref=e27]
+          - list [ref=e28]:
+            - listitem [ref=e29]:
+              - link "CNAEs" [ref=e30] [cursor=pointer]:
+                - /url: /gestao/cnaes
+                - img [ref=e32]
+                - generic [ref=e34]: CNAEs
+            - listitem [ref=e35]:
+              - link "Usuários" [ref=e36] [cursor=pointer]:
+                - /url: /gestao/usuarios
+                - img [ref=e38]
+                - generic [ref=e40]: Usuários
+            - listitem [ref=e41]:
+              - link "Perfis" [ref=e42] [cursor=pointer]:
+                - /url: /gestao/perfis
+                - img [ref=e44]
+                - generic [ref=e47]: Perfis
+        - generic [ref=e48]:
+          - heading "Sistema" [level=2] [ref=e49]
+          - list [ref=e50]:
+            - listitem [ref=e51]:
+              - link "Parâmetros" [ref=e52] [cursor=pointer]:
+                - /url: /gestao/parametros
+                - img [ref=e54]
+                - generic [ref=e56]: Parâmetros
+  - generic [ref=e57]:
+    - banner [ref=e58]:
+      - generic [ref=e59]:
+        - button "Alternar menu lateral" [ref=e61] [cursor=pointer]:
+          - img [ref=e62]
+        - generic [ref=e64]:
+          - button "Alternar tema" [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+          - button "AS Administrador SILE" [ref=e70] [cursor=pointer]:
+            - generic [ref=e71]: AS
+            - generic [ref=e72]: Administrador SILE
+            - img [ref=e73]
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - heading "Perfis e permissões" [level=2] [ref=e78]
+        - navigation "Trilha de navegação" [ref=e79]:
+          - list [ref=e80]:
+            - listitem [ref=e81]:
+              - link "Painel" [ref=e82] [cursor=pointer]:
+                - /url: /gestao
+                - text: Painel
+                - img [ref=e83]
+            - listitem [ref=e85]: Perfis e permissões
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - heading "Perfis cadastrados" [level=3] [ref=e89]
+            - paragraph [ref=e90]: "Segregação de funções: perfis com permissões granulares por funcionalidade"
+          - button "Novo perfil" [ref=e92] [cursor=pointer]
+        - table [ref=e96]:
+          - rowgroup [ref=e97]:
+            - row "Perfil Permissões Usuários Ações" [ref=e98]:
+              - columnheader "Perfil" [ref=e99]
+              - columnheader "Permissões" [ref=e100]
+              - columnheader "Usuários" [ref=e101]
+              - columnheader "Ações" [ref=e102]
+          - rowgroup [ref=e103]:
+            - row "administrador Estrutural acessar-gestao consultar-acessos-de-qualquer-conta manter-cnaes manter-usuarios manter-perfis manter-parametros consultar-cnaes 1 usuário Editar" [ref=e104]:
+              - cell "administrador Estrutural" [ref=e105]:
+                - generic [ref=e106]:
+                  - generic [ref=e107]: administrador
+                  - generic [ref=e108]: Estrutural
+              - cell "acessar-gestao consultar-acessos-de-qualquer-conta manter-cnaes manter-usuarios manter-perfis manter-parametros consultar-cnaes" [ref=e109]:
+                - generic [ref=e110]:
+                  - generic [ref=e111]: acessar-gestao
+                  - generic [ref=e112]: consultar-acessos-de-qualquer-conta
+                  - generic [ref=e113]: manter-cnaes
+                  - generic [ref=e114]: manter-usuarios
+                  - generic [ref=e115]: manter-perfis
+                  - generic [ref=e116]: manter-parametros
+                  - generic [ref=e117]: consultar-cnaes
+              - cell "1 usuário" [ref=e118]
+              - cell "Editar" [ref=e119]:
+                - button "Editar" [ref=e121] [cursor=pointer]
+            - row "analista Estrutural acessar-gestao consultar-cnaes 0 usuários Editar" [ref=e122]:
+              - cell "analista Estrutural" [ref=e123]:
+                - generic [ref=e124]:
+                  - generic [ref=e125]: analista
+                  - generic [ref=e126]: Estrutural
+              - cell "acessar-gestao consultar-cnaes" [ref=e127]:
+                - generic [ref=e128]:
+                  - generic [ref=e129]: acessar-gestao
+                  - generic [ref=e130]: consultar-cnaes
+              - cell "0 usuários" [ref=e131]
+              - cell "Editar" [ref=e132]:
+                - button "Editar" [ref=e134] [cursor=pointer]
+            - row "cidadao Estrutural gerenciar-procuracoes-proprias 0 usuários Editar" [ref=e135]:
+              - cell "cidadao Estrutural" [ref=e136]:
+                - generic [ref=e137]:
+                  - generic [ref=e138]: cidadao
+                  - generic [ref=e139]: Estrutural
+              - cell "gerenciar-procuracoes-proprias" [ref=e140]:
+                - generic [ref=e142]: gerenciar-procuracoes-proprias
+              - cell "0 usuários" [ref=e143]
+              - cell "Editar" [ref=e144]:
+                - button "Editar" [ref=e146] [cursor=pointer]
+            - row "gestor Estrutural acessar-gestao consultar-cnaes 0 usuários Editar" [ref=e147]:
+              - cell "gestor Estrutural" [ref=e148]:
+                - generic [ref=e149]:
+                  - generic [ref=e150]: gestor
+                  - generic [ref=e151]: Estrutural
+              - cell "acessar-gestao consultar-cnaes" [ref=e152]:
+                - generic [ref=e153]:
+                  - generic [ref=e154]: acessar-gestao
+                  - generic [ref=e155]: consultar-cnaes
+              - cell "0 usuários" [ref=e156]
+              - cell "Editar" [ref=e157]:
+                - button "Editar" [ref=e159] [cursor=pointer]

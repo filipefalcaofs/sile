@@ -1,0 +1,145 @@
+- generic [ref=e62]:
+  - complementary [ref=e63]:
+    - link "SIMPLIFICA Gestão SEDUR" [ref=e65] [cursor=pointer]:
+      - /url: /gestao
+      - generic [ref=e66]:
+        - img [ref=e68]
+        - generic [ref=e70]:
+          - generic [ref=e71]: SIMPLIFICA
+          - generic [ref=e72]: Gestão SEDUR
+    - navigation [ref=e74]:
+      - generic [ref=e75]:
+        - generic [ref=e76]:
+          - heading "Visão geral" [level=2] [ref=e77]
+          - list [ref=e78]:
+            - listitem [ref=e79]:
+              - link "Painel" [ref=e80] [cursor=pointer]:
+                - /url: /gestao
+                - img [ref=e82]
+                - generic [ref=e84]: Painel
+        - generic [ref=e85]:
+          - heading "Cadastros" [level=2] [ref=e86]
+          - list [ref=e87]:
+            - listitem [ref=e88]:
+              - link "CNAEs" [ref=e89] [cursor=pointer]:
+                - /url: /gestao/cnaes
+                - img [ref=e91]
+                - generic [ref=e93]: CNAEs
+            - listitem [ref=e94]:
+              - link "Usuários" [ref=e95] [cursor=pointer]:
+                - /url: /gestao/usuarios
+                - img [ref=e97]
+                - generic [ref=e99]: Usuários
+            - listitem [ref=e100]:
+              - link "Perfis" [ref=e101] [cursor=pointer]:
+                - /url: /gestao/perfis
+                - img [ref=e103]
+                - generic [ref=e106]: Perfis
+        - generic [ref=e107]:
+          - heading "Sistema" [level=2] [ref=e108]
+          - list [ref=e109]:
+            - listitem [ref=e110]:
+              - link "Parâmetros" [ref=e111] [cursor=pointer]:
+                - /url: /gestao/parametros
+                - img [ref=e113]
+                - generic [ref=e115]: Parâmetros
+  - generic [ref=e116]:
+    - banner [ref=e117]:
+      - generic [ref=e118]:
+        - button "Alternar menu lateral" [ref=e120] [cursor=pointer]:
+          - img [ref=e121]
+        - generic [ref=e123]:
+          - button "Alternar tema" [ref=e125] [cursor=pointer]:
+            - img [ref=e126]
+          - button "AS Administrador SILE" [ref=e129] [cursor=pointer]:
+            - generic [ref=e130]: AS
+            - generic [ref=e131]: Administrador SILE
+            - img [ref=e132]
+    - generic [ref=e134]:
+      - generic [ref=e135]:
+        - heading "Painel de gestão" [level=2] [ref=e137]
+        - navigation "Trilha de navegação" [ref=e138]:
+          - list [ref=e139]:
+            - listitem [ref=e140]:
+              - generic [ref=e141]:
+                - text: Gestão
+                - img [ref=e142]
+            - listitem [ref=e144]: Painel de gestão
+      - generic [ref=e145]:
+        - generic [ref=e147]:
+          - generic [ref=e148]:
+            - img [ref=e150]
+            - generic [ref=e152]:
+              - generic [ref=e153]: CNAEs ativos
+              - heading "1.331" [level=4] [ref=e154]
+              - paragraph [ref=e155]:
+                - generic [ref=e156]: de 1.331 cadastrados
+          - generic [ref=e157]:
+            - img [ref=e159]
+            - generic [ref=e161]:
+              - generic [ref=e162]: Usuários ativos
+              - heading "3" [level=4] [ref=e163]
+              - paragraph [ref=e164]:
+                - generic [ref=e165]: de 3 contas
+          - generic [ref=e166]:
+            - img [ref=e168]
+            - generic [ref=e171]:
+              - generic [ref=e172]: Perfis de acesso
+              - heading "4" [level=4] [ref=e173]
+              - paragraph [ref=e174]:
+                - generic [ref=e175]: 8 permissões granulares
+          - generic [ref=e176]:
+            - img [ref=e178]
+            - generic [ref=e180]:
+              - generic [ref=e181]: Acessos recentes
+              - heading "6" [level=4] [ref=e182]
+              - paragraph [ref=e183]:
+                - generic [ref=e184]: logins em 7 dias
+        - generic [ref=e186]:
+          - link "Cadastro de atividades CNAEs" [ref=e187] [cursor=pointer]:
+            - /url: /gestao/cnaes
+            - img [ref=e189]
+            - generic [ref=e191]:
+              - generic [ref=e192]:
+                - text: Cadastro de atividades
+                - heading "CNAEs" [level=4] [ref=e193]
+              - img [ref=e194]
+          - link "Contas do sistema Usuários" [ref=e196] [cursor=pointer]:
+            - /url: /gestao/usuarios
+            - img [ref=e198]
+            - generic [ref=e200]:
+              - generic [ref=e201]:
+                - text: Contas do sistema
+                - heading "Usuários" [level=4] [ref=e202]
+              - img [ref=e203]
+          - link "Perfis e permissões Perfis" [ref=e205] [cursor=pointer]:
+            - /url: /gestao/perfis
+            - img [ref=e207]
+            - generic [ref=e210]:
+              - generic [ref=e211]:
+                - text: Perfis e permissões
+                - heading "Perfis" [level=4] [ref=e212]
+              - img [ref=e213]
+          - link "Configurações do sistema Parâmetros" [ref=e215] [cursor=pointer]:
+            - /url: /gestao/parametros
+            - img [ref=e217]
+            - generic [ref=e219]:
+              - generic [ref=e220]:
+                - text: Configurações do sistema
+                - heading "Parâmetros" [level=4] [ref=e221]
+              - img [ref=e222]
+        - generic [ref=e225]:
+          - generic [ref=e227]:
+            - heading "Sessão atual" [level=3] [ref=e228]
+            - paragraph [ref=e229]: Conta conectada ao ambiente de gestão da SEDUR.
+          - generic [ref=e231]:
+            - generic [ref=e232]:
+              - term [ref=e233]: Nome
+              - definition [ref=e234]: Administrador SILE
+            - generic [ref=e235]:
+              - term [ref=e236]: E-mail
+              - definition [ref=e237]: admin@sile.dev
+            - generic [ref=e238]:
+              - term [ref=e239]: Papéis
+              - definition [ref=e240]:
+                - generic [ref=e241]: administrador

@@ -1,0 +1,324 @@
+- generic [ref=e198]:
+  - complementary [ref=e199]:
+    - link "SILE Gestão SEDUR" [ref=e201] [cursor=pointer]:
+      - /url: /gestao
+      - generic [ref=e202]:
+        - generic [ref=e203]: SILE
+        - generic [ref=e204]: Gestão SEDUR
+    - navigation [ref=e206]:
+      - generic [ref=e207]:
+        - generic [ref=e208]:
+          - heading "Visão geral" [level=2] [ref=e209]
+          - list [ref=e210]:
+            - listitem [ref=e211]:
+              - link "Painel" [ref=e212] [cursor=pointer]:
+                - /url: /gestao
+                - img [ref=e214]
+                - generic [ref=e216]: Painel
+        - generic [ref=e217]:
+          - heading "Cadastros" [level=2] [ref=e218]
+          - list [ref=e219]:
+            - listitem [ref=e220]:
+              - link "CNAEs" [ref=e221] [cursor=pointer]:
+                - /url: /gestao/cnaes
+                - img [ref=e223]
+                - generic [ref=e225]: CNAEs
+            - listitem [ref=e226]:
+              - link "Usuários" [ref=e227] [cursor=pointer]:
+                - /url: /gestao/usuarios
+                - img [ref=e229]
+                - generic [ref=e231]: Usuários
+            - listitem [ref=e232]:
+              - link "Perfis" [ref=e233] [cursor=pointer]:
+                - /url: /gestao/perfis
+                - img [ref=e235]
+                - generic [ref=e238]: Perfis
+        - generic [ref=e239]:
+          - heading "Sistema" [level=2] [ref=e240]
+          - list [ref=e241]:
+            - listitem [ref=e242]:
+              - link "Parâmetros" [ref=e243] [cursor=pointer]:
+                - /url: /gestao/parametros
+                - img [ref=e245]
+                - generic [ref=e247]: Parâmetros
+  - generic [ref=e248]:
+    - banner [ref=e249]:
+      - generic [ref=e250]:
+        - button "Alternar menu lateral" [ref=e252] [cursor=pointer]:
+          - img [ref=e253]
+        - generic [ref=e255]:
+          - button "Alternar tema" [ref=e257] [cursor=pointer]:
+            - img [ref=e258]
+          - button "AS Administrador SILE" [ref=e261] [cursor=pointer]:
+            - generic [ref=e262]: AS
+            - generic [ref=e263]: Administrador SILE
+            - img [ref=e264]
+    - generic [ref=e266]:
+      - generic [ref=e267]:
+        - heading "CNAEs" [level=2] [ref=e268]
+        - navigation "Trilha de navegação" [ref=e269]:
+          - list [ref=e270]:
+            - listitem [ref=e271]:
+              - link "Painel" [ref=e272] [cursor=pointer]:
+                - /url: /gestao
+                - text: Painel
+                - img [ref=e273]
+            - listitem [ref=e275]: CNAEs
+      - generic [ref=e276]:
+        - generic [ref=e277]:
+          - generic [ref=e278]:
+            - heading "CNAEs cadastrados" [level=3] [ref=e279]
+            - paragraph [ref=e280]: Estrutura oficial CNAE-Subclasses 2.3 (IBGE/CONCLA)
+          - button "Cadastrar CNAE" [active] [ref=e281] [cursor=pointer]
+        - generic [ref=e283]:
+          - generic [ref=e284]:
+            - generic [ref=e285]: Buscar CNAEs
+            - searchbox "Buscar CNAEs" [ref=e288]
+          - table [ref=e291]:
+            - rowgroup [ref=e292]:
+              - row "Código Denominação Classe Situação Ações" [ref=e293]:
+                - columnheader "Código" [ref=e294]
+                - columnheader "Denominação" [ref=e295]
+                - columnheader "Classe" [ref=e296]
+                - columnheader "Situação" [ref=e297]
+                - columnheader "Ações" [ref=e298]
+            - rowgroup [ref=e299]:
+              - row "0111-3/01 Cultivo de arroz 01.11-3 Ativo Editar Desativar Excluir" [ref=e300]:
+                - cell "0111-3/01" [ref=e301]
+                - cell "Cultivo de arroz" [ref=e302]
+                - cell "01.11-3" [ref=e303]
+                - cell "Ativo" [ref=e304]:
+                  - generic [ref=e305]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e306]:
+                  - generic [ref=e307]:
+                    - button "Editar" [ref=e308] [cursor=pointer]
+                    - button "Desativar" [ref=e309] [cursor=pointer]
+                    - button "Excluir" [ref=e310] [cursor=pointer]
+              - row "0111-3/02 Cultivo de milho 01.11-3 Ativo Editar Desativar Excluir" [ref=e311]:
+                - cell "0111-3/02" [ref=e312]
+                - cell "Cultivo de milho" [ref=e313]
+                - cell "01.11-3" [ref=e314]
+                - cell "Ativo" [ref=e315]:
+                  - generic [ref=e316]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e317]:
+                  - generic [ref=e318]:
+                    - button "Editar" [ref=e319] [cursor=pointer]
+                    - button "Desativar" [ref=e320] [cursor=pointer]
+                    - button "Excluir" [ref=e321] [cursor=pointer]
+              - row "0111-3/03 Cultivo de trigo 01.11-3 Ativo Editar Desativar Excluir" [ref=e322]:
+                - cell "0111-3/03" [ref=e323]
+                - cell "Cultivo de trigo" [ref=e324]
+                - cell "01.11-3" [ref=e325]
+                - cell "Ativo" [ref=e326]:
+                  - generic [ref=e327]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e328]:
+                  - generic [ref=e329]:
+                    - button "Editar" [ref=e330] [cursor=pointer]
+                    - button "Desativar" [ref=e331] [cursor=pointer]
+                    - button "Excluir" [ref=e332] [cursor=pointer]
+              - row "0111-3/99 Cultivo de outros cereais não especificados anteriormente 01.11-3 Ativo Editar Desativar Excluir" [ref=e333]:
+                - cell "0111-3/99" [ref=e334]
+                - cell "Cultivo de outros cereais não especificados anteriormente" [ref=e335]
+                - cell "01.11-3" [ref=e336]
+                - cell "Ativo" [ref=e337]:
+                  - generic [ref=e338]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e339]:
+                  - generic [ref=e340]:
+                    - button "Editar" [ref=e341] [cursor=pointer]
+                    - button "Desativar" [ref=e342] [cursor=pointer]
+                    - button "Excluir" [ref=e343] [cursor=pointer]
+              - row "0112-1/01 Cultivo de algodão herbáceo 01.12-1 Ativo Editar Desativar Excluir" [ref=e344]:
+                - cell "0112-1/01" [ref=e345]
+                - cell "Cultivo de algodão herbáceo" [ref=e346]
+                - cell "01.12-1" [ref=e347]
+                - cell "Ativo" [ref=e348]:
+                  - generic [ref=e349]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e350]:
+                  - generic [ref=e351]:
+                    - button "Editar" [ref=e352] [cursor=pointer]
+                    - button "Desativar" [ref=e353] [cursor=pointer]
+                    - button "Excluir" [ref=e354] [cursor=pointer]
+              - row "0112-1/02 Cultivo de juta 01.12-1 Ativo Editar Desativar Excluir" [ref=e355]:
+                - cell "0112-1/02" [ref=e356]
+                - cell "Cultivo de juta" [ref=e357]
+                - cell "01.12-1" [ref=e358]
+                - cell "Ativo" [ref=e359]:
+                  - generic [ref=e360]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e361]:
+                  - generic [ref=e362]:
+                    - button "Editar" [ref=e363] [cursor=pointer]
+                    - button "Desativar" [ref=e364] [cursor=pointer]
+                    - button "Excluir" [ref=e365] [cursor=pointer]
+              - row "0112-1/99 Cultivo de outras fibras de lavoura temporária não especificadas anteriormente 01.12-1 Ativo Editar Desativar Excluir" [ref=e366]:
+                - cell "0112-1/99" [ref=e367]
+                - cell "Cultivo de outras fibras de lavoura temporária não especificadas anteriormente" [ref=e368]
+                - cell "01.12-1" [ref=e369]
+                - cell "Ativo" [ref=e370]:
+                  - generic [ref=e371]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e372]:
+                  - generic [ref=e373]:
+                    - button "Editar" [ref=e374] [cursor=pointer]
+                    - button "Desativar" [ref=e375] [cursor=pointer]
+                    - button "Excluir" [ref=e376] [cursor=pointer]
+              - row "0113-0/00 Cultivo de cana-de-açúcar 01.13-0 Ativo Editar Desativar Excluir" [ref=e377]:
+                - cell "0113-0/00" [ref=e378]
+                - cell "Cultivo de cana-de-açúcar" [ref=e379]
+                - cell "01.13-0" [ref=e380]
+                - cell "Ativo" [ref=e381]:
+                  - generic [ref=e382]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e383]:
+                  - generic [ref=e384]:
+                    - button "Editar" [ref=e385] [cursor=pointer]
+                    - button "Desativar" [ref=e386] [cursor=pointer]
+                    - button "Excluir" [ref=e387] [cursor=pointer]
+              - row "0114-8/00 Cultivo de fumo 01.14-8 Ativo Editar Desativar Excluir" [ref=e388]:
+                - cell "0114-8/00" [ref=e389]
+                - cell "Cultivo de fumo" [ref=e390]
+                - cell "01.14-8" [ref=e391]
+                - cell "Ativo" [ref=e392]:
+                  - generic [ref=e393]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e394]:
+                  - generic [ref=e395]:
+                    - button "Editar" [ref=e396] [cursor=pointer]
+                    - button "Desativar" [ref=e397] [cursor=pointer]
+                    - button "Excluir" [ref=e398] [cursor=pointer]
+              - row "0115-6/00 Cultivo de soja 01.15-6 Ativo Editar Desativar Excluir" [ref=e399]:
+                - cell "0115-6/00" [ref=e400]
+                - cell "Cultivo de soja" [ref=e401]
+                - cell "01.15-6" [ref=e402]
+                - cell "Ativo" [ref=e403]:
+                  - generic [ref=e404]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e405]:
+                  - generic [ref=e406]:
+                    - button "Editar" [ref=e407] [cursor=pointer]
+                    - button "Desativar" [ref=e408] [cursor=pointer]
+                    - button "Excluir" [ref=e409] [cursor=pointer]
+              - row "0116-4/01 Cultivo de amendoim 01.16-4 Ativo Editar Desativar Excluir" [ref=e410]:
+                - cell "0116-4/01" [ref=e411]
+                - cell "Cultivo de amendoim" [ref=e412]
+                - cell "01.16-4" [ref=e413]
+                - cell "Ativo" [ref=e414]:
+                  - generic [ref=e415]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e416]:
+                  - generic [ref=e417]:
+                    - button "Editar" [ref=e418] [cursor=pointer]
+                    - button "Desativar" [ref=e419] [cursor=pointer]
+                    - button "Excluir" [ref=e420] [cursor=pointer]
+              - row "0116-4/02 Cultivo de girassol 01.16-4 Ativo Editar Desativar Excluir" [ref=e421]:
+                - cell "0116-4/02" [ref=e422]
+                - cell "Cultivo de girassol" [ref=e423]
+                - cell "01.16-4" [ref=e424]
+                - cell "Ativo" [ref=e425]:
+                  - generic [ref=e426]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e427]:
+                  - generic [ref=e428]:
+                    - button "Editar" [ref=e429] [cursor=pointer]
+                    - button "Desativar" [ref=e430] [cursor=pointer]
+                    - button "Excluir" [ref=e431] [cursor=pointer]
+              - row "0116-4/03 Cultivo de mamona 01.16-4 Ativo Editar Desativar Excluir" [ref=e432]:
+                - cell "0116-4/03" [ref=e433]
+                - cell "Cultivo de mamona" [ref=e434]
+                - cell "01.16-4" [ref=e435]
+                - cell "Ativo" [ref=e436]:
+                  - generic [ref=e437]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e438]:
+                  - generic [ref=e439]:
+                    - button "Editar" [ref=e440] [cursor=pointer]
+                    - button "Desativar" [ref=e441] [cursor=pointer]
+                    - button "Excluir" [ref=e442] [cursor=pointer]
+              - row "0116-4/99 Cultivo de outras oleaginosas de lavoura temporária não especificadas anteriormente 01.16-4 Ativo Editar Desativar Excluir" [ref=e443]:
+                - cell "0116-4/99" [ref=e444]
+                - cell "Cultivo de outras oleaginosas de lavoura temporária não especificadas anteriormente" [ref=e445]
+                - cell "01.16-4" [ref=e446]
+                - cell "Ativo" [ref=e447]:
+                  - generic [ref=e448]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e449]:
+                  - generic [ref=e450]:
+                    - button "Editar" [ref=e451] [cursor=pointer]
+                    - button "Desativar" [ref=e452] [cursor=pointer]
+                    - button "Excluir" [ref=e453] [cursor=pointer]
+              - row "0119-9/01 Cultivo de abacaxi 01.19-9 Ativo Editar Desativar Excluir" [ref=e454]:
+                - cell "0119-9/01" [ref=e455]
+                - cell "Cultivo de abacaxi" [ref=e456]
+                - cell "01.19-9" [ref=e457]
+                - cell "Ativo" [ref=e458]:
+                  - generic [ref=e459]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e460]:
+                  - generic [ref=e461]:
+                    - button "Editar" [ref=e462] [cursor=pointer]
+                    - button "Desativar" [ref=e463] [cursor=pointer]
+                    - button "Excluir" [ref=e464] [cursor=pointer]
+          - generic [ref=e465]:
+            - paragraph [ref=e466]: Mostrando 1–15 de 1331
+            - navigation "Paginação" [ref=e467]:
+              - generic [ref=e468]: « Anterior
+              - link "1" [ref=e469] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=1
+              - link "2" [ref=e470] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=2
+              - link "3" [ref=e471] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=3
+              - link "4" [ref=e472] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=4
+              - link "5" [ref=e473] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=5
+              - link "6" [ref=e474] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=6
+              - link "7" [ref=e475] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=7
+              - link "8" [ref=e476] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=8
+              - link "9" [ref=e477] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=9
+              - link "10" [ref=e478] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=10
+              - generic [ref=e479]: ...
+              - link "88" [ref=e480] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=88
+              - link "89" [ref=e481] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=89
+              - link "Próximo »" [ref=e482] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?page=2
+      - generic [ref=e485]:
+        - button "Fechar" [ref=e486] [cursor=pointer]:
+          - img [ref=e487]
+        - generic [ref=e489]:
+          - heading "Cadastrar CNAE" [level=4] [ref=e490]
+          - paragraph [ref=e491]: Informe o código da subclasse, a denominação e a hierarquia oficial (IBGE/CONCLA).
+          - generic [ref=e493]:
+            - generic [ref=e494]:
+              - generic [ref=e495]:
+                - generic [ref=e496]: Código (DDDD-D/SS)
+                - textbox "Código (DDDD-D/SS)" [ref=e498]:
+                  - /placeholder: 0000-0/00
+              - generic [ref=e499]:
+                - generic [ref=e500]: Denominação
+                - textbox "Denominação" [ref=e502]
+            - generic [ref=e503]:
+              - generic [ref=e504]:
+                - generic [ref=e505]: Seção (código e descrição)
+                - generic [ref=e506]:
+                  - textbox "Seção (código e descrição)" [ref=e509]:
+                    - /placeholder: A
+                  - textbox "Descrição da seção" [ref=e512]
+              - generic [ref=e513]:
+                - generic [ref=e514]: Divisão (código e descrição)
+                - generic [ref=e515]:
+                  - textbox "Divisão (código e descrição)" [ref=e518]:
+                    - /placeholder: "01"
+                  - textbox "Descrição da divisão" [ref=e521]
+              - generic [ref=e522]:
+                - generic [ref=e523]: Grupo (código e descrição)
+                - generic [ref=e524]:
+                  - textbox "Grupo (código e descrição)" [ref=e527]:
+                    - /placeholder: "01.1"
+                  - textbox "Descrição do grupo" [ref=e530]
+              - generic [ref=e531]:
+                - generic [ref=e532]: Classe (código e descrição)
+                - generic [ref=e533]:
+                  - textbox "Classe (código e descrição)" [ref=e536]:
+                    - /placeholder: 01.11-3
+                  - textbox "Descrição da classe" [ref=e539]
+            - generic [ref=e540]:
+              - button "Cancelar" [ref=e541] [cursor=pointer]
+              - button "Salvar" [ref=e542] [cursor=pointer]

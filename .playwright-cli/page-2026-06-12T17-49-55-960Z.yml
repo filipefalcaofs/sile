@@ -1,0 +1,92 @@
+- generic [ref=e74]:
+  - complementary [ref=e75]:
+    - link "SIMPLIFICA Portal do Cidadão" [ref=e77] [cursor=pointer]:
+      - /url: /portal
+      - generic [ref=e78]:
+        - img [ref=e80]
+        - generic [ref=e82]:
+          - generic [ref=e83]: SIMPLIFICA
+          - generic [ref=e84]: Portal do Cidadão
+    - navigation [ref=e86]:
+      - generic [ref=e87]:
+        - generic [ref=e88]:
+          - heading "Início" [level=2] [ref=e89]
+          - list [ref=e90]:
+            - listitem [ref=e91]:
+              - link "Meu painel" [ref=e92] [cursor=pointer]:
+                - /url: /portal/painel
+                - img [ref=e94]
+                - generic [ref=e96]: Meu painel
+        - generic [ref=e97]:
+          - heading "Serviços" [level=2] [ref=e98]
+          - list [ref=e99]:
+            - listitem [ref=e100]:
+              - link "Minhas empresas" [ref=e101] [cursor=pointer]:
+                - /url: /portal/empresas
+                - img [ref=e103]
+                - generic [ref=e105]: Minhas empresas
+            - listitem [ref=e106]:
+              - link "Procurações" [ref=e107] [cursor=pointer]:
+                - /url: /portal/procuracoes
+                - img [ref=e109]
+                - generic [ref=e111]: Procurações
+        - generic [ref=e112]:
+          - heading "Minha conta" [level=2] [ref=e113]
+          - list [ref=e114]:
+            - listitem [ref=e115]:
+              - link "Meus acessos" [ref=e116] [cursor=pointer]:
+                - /url: /portal/acessos
+                - img [ref=e118]
+                - generic [ref=e120]: Meus acessos
+  - generic [ref=e121]:
+    - banner [ref=e122]:
+      - generic [ref=e123]:
+        - button "Alternar menu lateral" [ref=e125] [cursor=pointer]:
+          - img [ref=e126]
+        - generic [ref=e128]:
+          - button "Alternar tema" [ref=e130] [cursor=pointer]:
+            - img [ref=e131]
+          - button "AS Administrador SILE" [ref=e134] [cursor=pointer]:
+            - generic [ref=e135]: AS
+            - generic [ref=e136]: Administrador SILE
+            - img [ref=e137]
+    - generic [ref=e139]:
+      - generic [ref=e140]:
+        - heading "Meu painel" [level=2] [ref=e141]
+        - navigation "Trilha de navegação" [ref=e142]:
+          - list [ref=e143]:
+            - listitem [ref=e144]:
+              - link "Portal" [ref=e145] [cursor=pointer]:
+                - /url: /portal
+                - text: Portal
+                - img [ref=e146]
+            - listitem [ref=e148]: Painel
+      - generic [ref=e149]:
+        - generic [ref=e151]:
+          - link "Vínculos de representação Procurações" [ref=e152] [cursor=pointer]:
+            - /url: /portal/procuracoes
+            - img [ref=e154]
+            - generic [ref=e156]:
+              - generic [ref=e157]:
+                - text: Vínculos de representação
+                - heading "Procurações" [level=4] [ref=e158]
+              - img [ref=e159]
+          - link "Histórico da sua conta Meus acessos" [ref=e161] [cursor=pointer]:
+            - /url: /portal/acessos
+            - img [ref=e163]
+            - generic [ref=e165]:
+              - generic [ref=e166]:
+                - text: Histórico da sua conta
+                - heading "Meus acessos" [level=4] [ref=e167]
+              - img [ref=e168]
+        - generic [ref=e171]:
+          - generic [ref=e172]:
+            - heading "Minha conta" [level=3] [ref=e173]
+            - paragraph [ref=e174]: Bem-vindo(a) ao Simplifica.
+          - generic [ref=e176]:
+            - generic [ref=e177]:
+              - term [ref=e178]: Nome
+              - definition [ref=e179]: Administrador SILE
+            - generic [ref=e180]:
+              - term [ref=e181]: E-mail
+              - definition [ref=e182]: admin@sile.dev

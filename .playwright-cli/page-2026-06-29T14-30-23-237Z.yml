@@ -1,0 +1,279 @@
+- generic [ref=e2]:
+  - generic [ref=e61]:
+    - complementary [ref=e62]:
+      - link "SIMPLIFICA Gestão SEDUR" [ref=e64] [cursor=pointer]:
+        - /url: /gestao
+        - generic [ref=e65]:
+          - img [ref=e67]
+          - generic [ref=e69]:
+            - generic [ref=e70]: SIMPLIFICA
+            - generic [ref=e71]: Gestão SEDUR
+      - navigation [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - button "Início" [expanded] [ref=e76] [cursor=pointer]:
+              - generic [ref=e77]: Início
+              - img [ref=e78]
+            - list [ref=e80]:
+              - listitem [ref=e81]:
+                - link "Painel" [ref=e82] [cursor=pointer]:
+                  - /url: /gestao
+                  - img [ref=e84]
+                  - generic [ref=e86]: Painel
+          - generic [ref=e87]:
+            - button "Atendimento e operação" [expanded] [ref=e88] [cursor=pointer]:
+              - generic [ref=e89]: Atendimento e operação
+              - img [ref=e90]
+            - list [ref=e92]:
+              - listitem [ref=e93]:
+                - link "Consulta territorial" [ref=e94] [cursor=pointer]:
+                  - /url: /gestao/territorio
+                  - img [ref=e96]
+                  - generic [ref=e98]: Consulta territorial
+              - listitem [ref=e99]:
+                - link "Resultados do fluxo expresso" [ref=e100] [cursor=pointer]:
+                  - /url: /gestao/resultados-expresso
+                  - img [ref=e102]
+                  - generic [ref=e104]: Resultados do fluxo expresso
+          - generic [ref=e105]:
+            - button "Análise técnica" [expanded] [ref=e106] [cursor=pointer]:
+              - generic [ref=e107]: Análise técnica
+              - img [ref=e108]
+            - list [ref=e110]:
+              - listitem [ref=e111]:
+                - link "Fila de trabalho" [ref=e112] [cursor=pointer]:
+                  - /url: /gestao/processos/fila
+                  - img [ref=e114]
+                  - generic [ref=e116]: Fila de trabalho
+              - listitem [ref=e117]:
+                - link "Processos" [active] [ref=e118] [cursor=pointer]:
+                  - /url: /gestao/processos
+                  - img [ref=e120]
+                  - generic [ref=e122]: Processos
+          - generic [ref=e123]:
+            - button "Regras do licenciamento" [expanded] [ref=e124] [cursor=pointer]:
+              - generic [ref=e125]: Regras do licenciamento
+              - img [ref=e126]
+            - list [ref=e128]:
+              - listitem [ref=e129]:
+                - link "CNAEs" [ref=e130] [cursor=pointer]:
+                  - /url: /gestao/cnaes
+                  - img [ref=e132]
+                  - generic [ref=e134]: CNAEs
+              - listitem [ref=e135]:
+                - link "Classificação de risco" [ref=e136] [cursor=pointer]:
+                  - /url: /gestao/risco
+                  - img [ref=e138]
+                  - generic [ref=e140]: Classificação de risco
+              - listitem [ref=e141]:
+                - link "Quadros LOUOS" [ref=e142] [cursor=pointer]:
+                  - /url: /gestao/louos
+                  - img [ref=e144]
+                  - generic [ref=e146]: Quadros LOUOS
+          - generic [ref=e147]:
+            - button "Auditoria e compliance" [expanded] [ref=e148] [cursor=pointer]:
+              - generic [ref=e149]: Auditoria e compliance
+              - img [ref=e150]
+            - list [ref=e152]:
+              - listitem [ref=e153]:
+                - link "Trilha de auditoria" [ref=e154] [cursor=pointer]:
+                  - /url: /gestao/auditoria
+                  - img [ref=e156]
+                  - generic [ref=e158]: Trilha de auditoria
+              - listitem [ref=e159]:
+                - link "Conformidade LGPD" [ref=e160] [cursor=pointer]:
+                  - /url: /gestao/lgpd
+                  - img [ref=e162]
+                  - generic [ref=e165]: Conformidade LGPD
+              - listitem [ref=e166]:
+                - link "Alertas de abuso" [ref=e167] [cursor=pointer]:
+                  - /url: /gestao/abuso
+                  - img [ref=e169]
+                  - generic [ref=e171]: Alertas de abuso
+              - listitem [ref=e172]:
+                - link "Auditoria preditiva" [ref=e173] [cursor=pointer]:
+                  - /url: /gestao/auditoria-preditiva
+                  - img [ref=e175]
+                  - generic [ref=e177]: Auditoria preditiva
+          - generic [ref=e178]:
+            - button "Relatórios" [expanded] [ref=e179] [cursor=pointer]:
+              - generic [ref=e180]: Relatórios
+              - img [ref=e181]
+            - list [ref=e183]:
+              - listitem [ref=e184]:
+                - link "Indicadores de viabilidade" [ref=e185] [cursor=pointer]:
+                  - /url: /gestao/relatorios/indicadores
+                  - img [ref=e187]
+                  - generic [ref=e189]: Indicadores de viabilidade
+              - listitem [ref=e190]:
+                - link "Tempo de análise" [ref=e191] [cursor=pointer]:
+                  - /url: /gestao/relatorios/tempo
+                  - img [ref=e193]
+                  - generic [ref=e195]: Tempo de análise
+              - listitem [ref=e196]:
+                - link "Produtividade" [ref=e197] [cursor=pointer]:
+                  - /url: /gestao/relatorios/produtividade
+                  - img [ref=e199]
+                  - generic [ref=e201]: Produtividade
+              - listitem [ref=e202]:
+                - link "Quedas do expresso" [ref=e203] [cursor=pointer]:
+                  - /url: /gestao/relatorios/quedas
+                  - img [ref=e205]
+                  - generic [ref=e207]: Quedas do expresso
+              - listitem [ref=e208]:
+                - link "Painel por bairro" [ref=e209] [cursor=pointer]:
+                  - /url: /gestao/relatorios/geo-bairro
+                  - img [ref=e211]
+                  - generic [ref=e213]: Painel por bairro
+              - listitem [ref=e214]:
+                - link "Saturação locacional" [ref=e215] [cursor=pointer]:
+                  - /url: /gestao/relatorios/saturacao
+                  - img [ref=e217]
+                  - generic [ref=e219]: Saturação locacional
+    - generic [ref=e220]:
+      - banner [ref=e221]:
+        - generic [ref=e222]:
+          - button "Alternar menu lateral" [ref=e224] [cursor=pointer]:
+            - img [ref=e225]
+          - generic [ref=e227]:
+            - generic [ref=e228]:
+              - button "Alternar tema" [ref=e229] [cursor=pointer]:
+                - img [ref=e230]
+              - link "Notificações" [ref=e232] [cursor=pointer]:
+                - /url: /gestao/notificacoes
+                - img [ref=e233]
+            - button "VS Validação SEDUR" [ref=e236] [cursor=pointer]:
+              - generic [ref=e237]: VS
+              - generic [ref=e238]: Validação SEDUR
+              - img [ref=e239]
+      - generic [ref=e241]:
+        - generic [ref=e365]:
+          - heading "Consulta de processos" [level=2] [ref=e367]
+          - navigation "Trilha de navegação" [ref=e368]:
+            - list [ref=e369]:
+              - listitem [ref=e370]:
+                - link "Painel" [ref=e371] [cursor=pointer]:
+                  - /url: /gestao
+                  - text: Painel
+                  - img [ref=e372]
+              - listitem [ref=e374]: Consulta de processos
+        - generic [ref=e375]:
+          - generic [ref=e376]:
+            - generic [ref=e378]:
+              - heading "Filtros" [level=3] [ref=e379]
+              - paragraph [ref=e380]: Localize processos pelos identificadores, empresa, imóvel, responsável e categoria (HU-082).
+            - generic [ref=e382]:
+              - generic [ref=e383]:
+                - generic [ref=e384]:
+                  - generic [ref=e385]: Grupo de status
+                  - combobox "Grupo de status" [ref=e386]:
+                    - option "Todos" [disabled] [selected]
+                    - option "Rascunho"
+                    - option "Em andamento"
+                    - option "Concluído"
+                    - option "Cancelado"
+                - generic [ref=e387]:
+                  - generic [ref=e388]: Status
+                  - combobox "Status" [ref=e389]:
+                    - option "Todos" [disabled] [selected]
+                    - option "Rascunho"
+                    - option "Protocolada"
+                    - option "Cancelada"
+                    - option "Aguardando Junta (BAP)"
+                    - option "Em análise"
+                    - option "Deferida"
+                    - option "Indeferida"
+                    - option "Em pendência"
+                - generic [ref=e390]:
+                  - generic [ref=e391]: Categoria
+                  - combobox "Categoria" [ref=e392]:
+                    - option "Todas" [disabled] [selected]
+                    - option "Expresso"
+                    - option "Semi-expresso"
+                    - option "Malha Fina"
+                    - option "Sede de Escritório"
+                - generic [ref=e393]:
+                  - generic [ref=e394]: Nº do processo
+                  - textbox "Nº do processo" [ref=e396]
+                - generic [ref=e397]:
+                  - generic [ref=e398]: BAP
+                  - textbox "BAP" [ref=e400]
+                - generic [ref=e401]:
+                  - generic [ref=e402]: Produto TVL
+                  - textbox "Produto TVL" [ref=e404]
+                - generic [ref=e405]:
+                  - generic [ref=e406]: Empresa / requerente
+                  - textbox "Empresa / requerente" [ref=e408]
+                - generic [ref=e409]:
+                  - generic [ref=e410]: CNPJ
+                  - textbox "CNPJ" [ref=e412]
+                - generic [ref=e413]:
+                  - generic [ref=e414]: Inscrição imobiliária
+                  - textbox "Inscrição imobiliária" [ref=e416]
+                - generic [ref=e417]:
+                  - generic [ref=e418]: Logradouro
+                  - textbox "Logradouro" [ref=e420]
+                - generic [ref=e421]:
+                  - generic [ref=e422]: Bairro
+                  - textbox "Bairro" [ref=e424]
+                - generic [ref=e425]:
+                  - generic [ref=e426]: CEP
+                  - textbox "CEP" [ref=e428]
+                - generic [ref=e429]:
+                  - generic [ref=e430]: Serviço (ID)
+                  - spinbutton "Serviço (ID)" [ref=e432]
+                - generic [ref=e433]:
+                  - generic [ref=e434]: Setor (ID)
+                  - spinbutton "Setor (ID)" [ref=e436]
+                - generic [ref=e437]:
+                  - generic [ref=e438]: Analista (ID)
+                  - spinbutton "Analista (ID)" [ref=e440]
+                - generic [ref=e441]:
+                  - generic [ref=e442]: Protocolado de
+                  - textbox "Protocolado de" [ref=e444]
+                - generic [ref=e445]:
+                  - generic [ref=e446]: Protocolado até
+                  - textbox "Protocolado até" [ref=e448]
+              - generic [ref=e449]:
+                - button "Filtrar" [ref=e450] [cursor=pointer]
+                - button "Limpar" [ref=e451] [cursor=pointer]
+          - generic [ref=e452]:
+            - generic [ref=e453]:
+              - generic [ref=e454]:
+                - heading "Processos" [level=3] [ref=e455]
+                - paragraph [ref=e456]: Resultado da consulta — paginado no servidor.
+              - link "Exportar CSV" [ref=e458] [cursor=pointer]:
+                - /url: /gestao/processos?formato=csv
+                - img [ref=e459]
+                - text: Exportar CSV
+            - generic [ref=e462]:
+              - generic [ref=e464]:
+                - text: Exibir
+                - combobox "Exibir por página" [ref=e465]:
+                  - option "10"
+                  - option "15" [selected]
+                  - option "25"
+                  - option "50"
+                - text: por página
+              - table [ref=e468]:
+                - rowgroup [ref=e469]:
+                  - row "Processo Empresa Categoria Status Responsável Prazo Ações" [ref=e470]:
+                    - columnheader [ref=e471]:
+                      - checkbox [ref=e474] [cursor=pointer]
+                    - columnheader "Processo" [ref=e475]
+                    - columnheader "Empresa" [ref=e476]
+                    - columnheader "Categoria" [ref=e477]
+                    - columnheader "Status" [ref=e478]
+                    - columnheader "Responsável" [ref=e479]
+                    - columnheader "Prazo" [ref=e480]
+                    - columnheader "Ações" [ref=e481]
+                - rowgroup [ref=e482]:
+                  - row "Nenhum processo cadastrado Os processos protocolados aparecem aqui conforme avançam no fluxo." [ref=e483]:
+                    - cell "Nenhum processo cadastrado Os processos protocolados aparecem aqui conforme avançam no fluxo." [ref=e484]:
+                      - generic [ref=e485]:
+                        - paragraph [ref=e486]: Nenhum processo cadastrado
+                        - paragraph [ref=e487]: Os processos protocolados aparecem aqui conforme avançam no fluxo.
+  - button "Abrir busca" [ref=e360] [cursor=pointer]:
+    - img [ref=e361]
+    - generic [ref=e363]: Buscar
+    - generic [ref=e364]: ⌘K

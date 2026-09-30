@@ -1,0 +1,170 @@
+- generic [ref=e2]:
+  - generic [ref=e61]:
+    - complementary [ref=e62]:
+      - link "SIMPLIFICA Gestão SEDUR" [ref=e64] [cursor=pointer]:
+        - /url: /gestao
+        - generic [ref=e69]:
+          - generic [ref=e70]: SIMPLIFICA
+          - generic [ref=e71]: Gestão SEDUR
+      - navigation [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - button "Início" [expanded] [ref=e76] [cursor=pointer]
+            - list [ref=e80]:
+              - listitem [ref=e81]:
+                - link "Painel" [ref=e82] [cursor=pointer]:
+                  - /url: /gestao
+          - generic [ref=e87]:
+            - button "Atendimento e operação" [expanded] [ref=e88] [cursor=pointer]
+            - list [ref=e92]:
+              - listitem [ref=e93]:
+                - link "Consulta territorial" [ref=e94] [cursor=pointer]:
+                  - /url: /gestao/territorio
+              - listitem [ref=e99]:
+                - link "Resultados do fluxo expresso" [ref=e100] [cursor=pointer]:
+                  - /url: /gestao/resultados-expresso
+          - generic [ref=e105]:
+            - button "Análise técnica" [expanded] [ref=e106] [cursor=pointer]
+            - list [ref=e110]:
+              - listitem [ref=e111]:
+                - link "Fila de trabalho" [ref=e112] [cursor=pointer]:
+                  - /url: /gestao/processos/fila
+              - listitem [ref=e117]:
+                - link "Processos" [ref=e118] [cursor=pointer]:
+                  - /url: /gestao/processos
+          - generic [ref=e123]:
+            - button "Regras do licenciamento" [expanded] [ref=e124] [cursor=pointer]
+            - list [ref=e128]:
+              - listitem [ref=e129]:
+                - link "CNAEs" [ref=e130] [cursor=pointer]:
+                  - /url: /gestao/cnaes
+              - listitem [ref=e135]:
+                - link "Quadros LOUOS" [ref=e136] [cursor=pointer]:
+                  - /url: /gestao/louos
+          - generic [ref=e141]:
+            - button "Auditoria e compliance" [expanded] [ref=e142] [cursor=pointer]
+            - list [ref=e146]:
+              - listitem [ref=e147]:
+                - link "Trilha de auditoria" [ref=e148] [cursor=pointer]:
+                  - /url: /gestao/auditoria
+              - listitem [ref=e153]:
+                - link "Conformidade LGPD" [ref=e154] [cursor=pointer]:
+                  - /url: /gestao/lgpd
+              - listitem [ref=e160]:
+                - link "Alertas de abuso" [ref=e161] [cursor=pointer]:
+                  - /url: /gestao/abuso
+              - listitem [ref=e166]:
+                - link "Auditoria preditiva" [ref=e167] [cursor=pointer]:
+                  - /url: /gestao/auditoria-preditiva
+          - generic [ref=e172]:
+            - button "Relatórios" [expanded] [ref=e173] [cursor=pointer]
+            - list [ref=e177]:
+              - listitem [ref=e178]:
+                - link "Indicadores de viabilidade" [ref=e179] [cursor=pointer]:
+                  - /url: /gestao/relatorios/indicadores
+              - listitem [ref=e184]:
+                - link "Tempo de análise" [ref=e185] [cursor=pointer]:
+                  - /url: /gestao/relatorios/tempo
+              - listitem [ref=e190]:
+                - link "Produtividade" [ref=e191] [cursor=pointer]:
+                  - /url: /gestao/relatorios/produtividade
+              - listitem [ref=e196]:
+                - link "Quedas do expresso" [ref=e197] [cursor=pointer]:
+                  - /url: /gestao/relatorios/quedas
+              - listitem [ref=e202]:
+                - link "Painel por bairro" [ref=e203] [cursor=pointer]:
+                  - /url: /gestao/relatorios/geo-bairro
+              - listitem [ref=e208]:
+                - link "Saturação locacional" [ref=e209] [cursor=pointer]:
+                  - /url: /gestao/relatorios/saturacao
+    - generic [ref=e214]:
+      - banner [ref=e215]:
+        - generic [ref=e216]:
+          - button "Alternar menu lateral" [ref=e218] [cursor=pointer]
+          - generic [ref=e221]:
+            - generic [ref=e222]:
+              - button "Alternar tema" [ref=e223] [cursor=pointer]
+              - link "Notificações" [ref=e226] [cursor=pointer]:
+                - /url: /gestao/notificacoes
+            - button "VS Validação SEDUR" [ref=e230] [cursor=pointer]:
+              - generic [ref=e231]: VS
+              - generic [ref=e232]: Validação SEDUR
+      - generic [ref=e235]:
+        - generic [ref=e236]:
+          - heading "Painel de gestão" [level=2] [ref=e238]
+          - navigation "Trilha de navegação" [ref=e239]:
+            - list [ref=e240]:
+              - listitem [ref=e241]:
+                - generic [ref=e242]: Gestão
+              - listitem [ref=e245]: Painel de gestão
+        - generic [ref=e246]:
+          - generic [ref=e253]:
+            - generic [ref=e254]: CNAEs ativos
+            - heading "1.331" [level=4] [ref=e255]
+            - paragraph [ref=e256]:
+              - generic [ref=e257]: de 1.331 cadastrados
+          - generic [ref=e258]:
+            - generic [ref=e259]:
+              - heading "Operação dos últimos 30 dias" [level=3] [ref=e260]
+              - link "Indicadores de viabilidade" [ref=e261] [cursor=pointer]:
+                - /url: /gestao/relatorios/indicadores
+            - generic [ref=e264]:
+              - generic [ref=e269]:
+                - generic [ref=e270]: Solicitações protocoladas
+                - heading "0" [level=4] [ref=e271]
+                - paragraph [ref=e272]:
+                  - generic [ref=e273]: nos últimos 30 dias
+              - generic [ref=e278]:
+                - generic [ref=e279]: Taxa de deferimento
+                - heading "—" [level=4] [ref=e280]
+                - paragraph [ref=e281]:
+                  - generic [ref=e282]: sem decisões no período
+              - generic [ref=e287]:
+                - generic [ref=e288]: Taxa de indeferimento
+                - heading "—" [level=4] [ref=e289]
+                - paragraph [ref=e290]:
+                  - generic [ref=e291]: sem decisões no período
+              - generic [ref=e296]:
+                - generic [ref=e297]: Tempo médio de análise
+                - heading "—" [level=4] [ref=e298]
+                - paragraph [ref=e299]:
+                  - generic [ref=e300]: sem amostras no período
+              - generic [ref=e305]:
+                - generic [ref=e306]: Resposta expressa
+                - heading "—" [level=4] [ref=e307]
+                - paragraph [ref=e308]:
+                  - generic [ref=e309]: meta não definida
+            - generic [ref=e310]:
+              - generic [ref=e311]:
+                - generic [ref=e313]:
+                  - heading "Volume de solicitações" [level=3] [ref=e314]
+                  - paragraph [ref=e315]: Protocoladas por dia nos últimos 30 dias.
+                - generic [ref=e316]: Sem dados no período.
+              - generic [ref=e318]:
+                - generic [ref=e320]:
+                  - heading "Distribuição por risco" [level=3] [ref=e321]
+                  - paragraph [ref=e322]: Por nível do Decreto nº 32.636/2020 (real) ou categoria derivada.
+                - generic [ref=e323]: Sem dados no período.
+          - link [ref=e327] [cursor=pointer]:
+            - /url: /gestao/cnaes
+            - generic [ref=e332]:
+              - text: Cadastro de atividades
+              - heading "CNAEs" [level=4] [ref=e333]
+          - generic [ref=e337]:
+            - generic [ref=e339]:
+              - heading "Sessão atual" [level=3] [ref=e340]
+              - paragraph [ref=e341]: Conta conectada ao ambiente de gestão da SEDUR.
+            - generic [ref=e343]:
+              - generic [ref=e344]:
+                - term [ref=e345]: Nome
+                - definition [ref=e346]: Validação SEDUR
+              - generic [ref=e347]:
+                - term [ref=e348]: E-mail
+                - definition [ref=e349]: validacao@sedur.salvador.ba.gov.br
+              - generic [ref=e350]:
+                - term [ref=e351]: Papéis
+                - definition [ref=e352]:
+                  - generic [ref=e353]: validacao-fase-completa
+  - button "Abrir busca" [ref=e354] [cursor=pointer]:
+    - generic [ref=e357]: Buscar
+    - generic [ref=e358]: ⌘K

@@ -1,0 +1,54 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - img [ref=e8]
+        - generic [ref=e10]:
+          - generic [ref=e11]: SILE
+          - generic [ref=e12]: Gestão SEDUR
+      - generic [ref=e13]:
+        - img [ref=e14]
+        - text: Ambiente interno
+  - main [ref=e17]:
+    - img [ref=e18]
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - paragraph [ref=e23]: Console interno
+        - heading "Licenciamento eletrônico de Salvador" [level=1] [ref=e24]
+        - paragraph [ref=e25]: Análise e administração da viabilidade locacional de atividades econômicas, com fundamentação legal registrada em cada decisão.
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - term [ref=e28]: Auditoria
+            - definition [ref=e29]: 100% rastreável
+          - generic [ref=e30]:
+            - term [ref=e31]: Protocolo
+            - definition [ref=e32]: Digital seguro
+      - generic [ref=e34]:
+        - heading "Acesso restrito" [level=2] [ref=e35]
+        - paragraph [ref=e36]: Console de análise e administração do licenciamento.
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - generic [ref=e40]: E-mail institucional
+            - textbox "E-mail institucional" [active] [ref=e41]:
+              - /placeholder: nome@salvador.ba.gov.br
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - generic [ref=e44]: Senha
+              - link "Esqueceu?" [ref=e45] [cursor=pointer]:
+                - /url: /portal/forgot-password
+            - generic [ref=e46]:
+              - textbox "Senha" [ref=e47]
+              - button "Mostrar senha" [ref=e48] [cursor=pointer]:
+                - img [ref=e49]
+          - generic [ref=e52] [cursor=pointer]:
+            - checkbox "Manter conectado" [ref=e54]
+            - generic [ref=e55]: Manter conectado
+          - button "Entrar no console" [ref=e56] [cursor=pointer]:
+            - text: Entrar no console
+            - img [ref=e57]
+  - contentinfo [ref=e59]:
+    - generic [ref=e60]:
+      - paragraph [ref=e61]:
+        - img [ref=e62]
+        - text: Acesso exclusivo de servidores autorizados pela SEDUR. Todas as tentativas de acesso são registradas para auditoria.
+      - paragraph [ref=e65]: Prefeitura de Salvador — SEDUR

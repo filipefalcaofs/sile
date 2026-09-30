@@ -1,0 +1,105 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - link "SILE Gestão SEDUR" [ref=e6] [cursor=pointer]:
+      - /url: /gestao
+      - generic [ref=e7]:
+        - img [ref=e9]
+        - generic [ref=e11]:
+          - generic [ref=e12]: SILE
+          - generic [ref=e13]: Gestão SEDUR
+    - navigation [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - heading "Visão geral" [level=2] [ref=e18]
+          - list [ref=e19]:
+            - listitem [ref=e20]:
+              - link "Painel" [ref=e21] [cursor=pointer]:
+                - /url: /gestao
+                - img [ref=e23]
+                - generic [ref=e25]: Painel
+        - generic [ref=e26]:
+          - heading "Cadastros" [level=2] [ref=e27]
+          - list [ref=e28]:
+            - listitem [ref=e29]:
+              - link "CNAEs" [ref=e30] [cursor=pointer]:
+                - /url: /gestao/cnaes
+                - img [ref=e32]
+                - generic [ref=e34]: CNAEs
+            - listitem [ref=e35]:
+              - link "Usuários" [ref=e36] [cursor=pointer]:
+                - /url: /gestao/usuarios
+                - img [ref=e38]
+                - generic [ref=e40]: Usuários
+            - listitem [ref=e41]:
+              - link "Perfis" [ref=e42] [cursor=pointer]:
+                - /url: /gestao/perfis
+                - img [ref=e44]
+                - generic [ref=e47]: Perfis
+        - generic [ref=e48]:
+          - heading "Sistema" [level=2] [ref=e49]
+          - list [ref=e50]:
+            - listitem [ref=e51]:
+              - link "Parâmetros" [ref=e52] [cursor=pointer]:
+                - /url: /gestao/parametros
+                - img [ref=e54]
+                - generic [ref=e56]: Parâmetros
+  - generic [ref=e57]:
+    - banner [ref=e58]:
+      - generic [ref=e59]:
+        - button "Alternar menu lateral" [ref=e61] [cursor=pointer]:
+          - img [ref=e62]
+        - generic [ref=e64]:
+          - button "Alternar tema" [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+          - button "AS Administrador SILE" [ref=e70] [cursor=pointer]:
+            - generic [ref=e71]: AS
+            - generic [ref=e72]: Administrador SILE
+            - img [ref=e73]
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - heading "Usuários" [level=2] [ref=e78]
+        - navigation "Trilha de navegação" [ref=e79]:
+          - list [ref=e80]:
+            - listitem [ref=e81]:
+              - link "Painel" [ref=e82] [cursor=pointer]:
+                - /url: /gestao
+                - text: Painel
+                - img [ref=e83]
+            - listitem [ref=e85]: Usuários
+      - generic [ref=e86]:
+        - generic [ref=e88]:
+          - heading "Contas cadastradas" [level=3] [ref=e89]
+          - paragraph [ref=e90]: "Contas do sistema: situação, papel e histórico de acessos"
+        - generic [ref=e92]:
+          - generic [ref=e94]:
+            - generic [ref=e95]: Buscar usuários
+            - generic:
+              - img
+            - searchbox "Buscar usuários" [ref=e96]
+          - table [ref=e99]:
+            - rowgroup [ref=e100]:
+              - row "Nome E-mail CPF Papel Situação Ações" [ref=e101]:
+                - columnheader "Nome" [ref=e102]
+                - columnheader "E-mail" [ref=e103]
+                - columnheader "CPF" [ref=e104]
+                - columnheader "Papel" [ref=e105]
+                - columnheader "Situação" [ref=e106]
+                - columnheader "Ações" [ref=e107]
+            - rowgroup [ref=e108]:
+              - row "Administrador SILE admin@sile.dev ***.***.***-35 administrador Ativa Acessos Alterar papel Inativar" [ref=e109]:
+                - cell "Administrador SILE" [ref=e110]:
+                  - generic [ref=e111]:
+                    - generic [ref=e112]: AS
+                    - generic [ref=e113]: Administrador SILE
+                - cell "admin@sile.dev" [ref=e114]
+                - cell "***.***.***-35" [ref=e115]
+                - cell "administrador" [ref=e116]:
+                  - generic [ref=e118]: administrador
+                - cell "Ativa" [ref=e119]:
+                  - generic [ref=e120]: Ativa
+                - cell "Acessos Alterar papel Inativar" [ref=e121]:
+                  - generic [ref=e122]:
+                    - link "Acessos" [ref=e123] [cursor=pointer]:
+                      - /url: /gestao/acessos/1
+                    - button "Alterar papel" [ref=e124] [cursor=pointer]
+                    - button "Inativar" [ref=e125] [cursor=pointer]

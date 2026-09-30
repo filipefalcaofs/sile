@@ -1,0 +1,18 @@
+[     165ms] [LOG] 🔍 Browser logger active (MCP server detected). Posting to: http://localhost:8000/_boost/browser-logs @ http://localhost:8000/gestao/cnaes:19
+[     184ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:8000/gestao/cnaes:78
+[  277887ms] ReferenceError: PencilIcon is not defined
+    at Object.cell (http://[::1]:5173/Users/filipefalcao/Downloads/fabrica/sile/resources/js/pages/gestao/cnaes/index.tsx?t=1781182180721:602:37)
+    at http://[::1]:5173/resources/js/components/ui/data-table/data-table.tsx?t=1781182149110:108:25
+    at Array.map (<anonymous>)
+    at http://[::1]:5173/resources/js/components/ui/data-table/data-table.tsx?t=1781182149110:106:25
+    at Array.map (<anonymous>)
+    at DataTable (http://[::1]:5173/resources/js/components/ui/data-table/data-table.tsx?t=1781182149110:104:23)
+    at Object.react_stack_bottom_frame (http://[::1]:5173/node_modules/.vite/deps/@inertiajs_react.js?v=b3b9c9b7:19395:12)
+    at renderWithHooks (http://[::1]:5173/node_modules/.vite/deps/@inertiajs_react.js?v=b3b9c9b7:10740:19)
+    at updateFunctionComponent (http://[::1]:5173/node_modules/.vite/deps/@inertiajs_react.js?v=b3b9c9b7:12096:16)
+    at beginWork (http://[::1]:5173/node_modules/.vite/deps/@inertiajs_react.js?v=b3b9c9b7:12667:20)
+[  277850ms] [WARNING] %s
+
+%s
+ An error occurred in the <DataTable> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:8000/gestao/cnaes:78

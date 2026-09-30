@@ -1,0 +1,136 @@
+- generic [ref=e77]:
+  - complementary [ref=e78]:
+    - link "SIMPLIFICA Portal do Cidadão" [ref=e80] [cursor=pointer]:
+      - /url: /portal
+      - generic [ref=e81]:
+        - img [ref=e83]
+        - generic [ref=e85]:
+          - generic [ref=e86]: SIMPLIFICA
+          - generic [ref=e87]: Portal do Cidadão
+    - navigation [ref=e89]:
+      - generic [ref=e90]:
+        - generic [ref=e91]:
+          - heading "Início" [level=2] [ref=e92]
+          - list [ref=e93]:
+            - listitem [ref=e94]:
+              - link "Meu painel" [ref=e95] [cursor=pointer]:
+                - /url: /portal/painel
+                - img [ref=e97]
+                - generic [ref=e99]: Meu painel
+        - generic [ref=e100]:
+          - heading "Serviços" [level=2] [ref=e101]
+          - list [ref=e102]:
+            - listitem [ref=e103]:
+              - link "Minhas empresas" [active] [ref=e104] [cursor=pointer]:
+                - /url: /portal/empresas
+                - img [ref=e106]
+                - generic [ref=e108]: Minhas empresas
+            - listitem [ref=e109]:
+              - link "Procurações" [ref=e110] [cursor=pointer]:
+                - /url: /portal/procuracoes
+                - img [ref=e112]
+                - generic [ref=e114]: Procurações
+        - generic [ref=e115]:
+          - heading "Minha conta" [level=2] [ref=e116]
+          - list [ref=e117]:
+            - listitem [ref=e118]:
+              - link "Meus acessos" [ref=e119] [cursor=pointer]:
+                - /url: /portal/acessos
+                - img [ref=e121]
+                - generic [ref=e123]: Meus acessos
+  - generic [ref=e124]:
+    - banner [ref=e125]:
+      - generic [ref=e126]:
+        - button "Alternar menu lateral" [ref=e128] [cursor=pointer]:
+          - img [ref=e129]
+        - generic [ref=e131]:
+          - button "Alternar tema" [ref=e133] [cursor=pointer]:
+            - img [ref=e134]
+          - button "CS Cidadão SILE" [ref=e137] [cursor=pointer]:
+            - generic [ref=e138]: CS
+            - generic [ref=e139]: Cidadão SILE
+            - img [ref=e140]
+    - generic [ref=e142]:
+      - generic [ref=e186]:
+        - heading "Minhas empresas" [level=2] [ref=e188]
+        - navigation "Trilha de navegação" [ref=e189]:
+          - list [ref=e190]:
+            - listitem [ref=e191]:
+              - link "Meu painel" [ref=e192] [cursor=pointer]:
+                - /url: /portal/painel
+                - text: Meu painel
+                - img [ref=e193]
+            - listitem [ref=e195]: Minhas empresas
+      - generic [ref=e196]:
+        - generic [ref=e197]:
+          - generic [ref=e198]:
+            - heading "Empresas vinculadas" [level=3] [ref=e199]
+            - paragraph [ref=e200]: Empresas em que você é responsável ou procurador — base para suas solicitações de viabilidade.
+          - link "Cadastrar empresa" [ref=e202] [cursor=pointer]:
+            - /url: /portal/empresas/cadastrar
+            - button "Cadastrar empresa" [ref=e203]
+        - generic [ref=e205]:
+          - generic [ref=e206]:
+            - generic [ref=e207]:
+              - generic [ref=e208]: Buscar empresas
+              - generic:
+                - img
+              - searchbox "Buscar empresas" [ref=e209]
+            - generic [ref=e211]:
+              - text: Exibir
+              - combobox "Exibir por página" [ref=e212]:
+                - option "10"
+                - option "15" [selected]
+                - option "25"
+                - option "50"
+              - text: por página
+          - table [ref=e215]:
+            - rowgroup [ref=e216]:
+              - row "Empresa CNAE principal Origem Vínculo Ações" [ref=e217]:
+                - columnheader "Empresa" [ref=e218]:
+                  - button "Empresa" [ref=e219] [cursor=pointer]:
+                    - text: Empresa
+                    - img [ref=e220]
+                - columnheader "CNAE principal" [ref=e222]
+                - columnheader "Origem" [ref=e223]
+                - columnheader "Vínculo" [ref=e224]
+                - columnheader "Ações" [ref=e225]
+            - rowgroup [ref=e226]:
+              - row "BANCO DO BRASIL SA 00.000.000/0001-91 · DIRECAO GERAL 6422-1/00 Bancos múltiplos, com carteira comercial REDESIM Ativo Responsável Ver detalhes" [ref=e227]:
+                - cell "BANCO DO BRASIL SA 00.000.000/0001-91 · DIRECAO GERAL" [ref=e228]:
+                  - generic [ref=e229]:
+                    - generic [ref=e230]: BANCO DO BRASIL SA
+                    - generic [ref=e231]: 00.000.000/0001-91 · DIRECAO GERAL
+                - cell "6422-1/00 Bancos múltiplos, com carteira comercial" [ref=e232]:
+                  - generic [ref=e233]:
+                    - generic [ref=e234]: 6422-1/00
+                    - generic "Bancos múltiplos, com carteira comercial" [ref=e235]
+                - cell "REDESIM" [ref=e236]:
+                  - generic [ref=e237]: REDESIM
+                - cell "Ativo Responsável" [ref=e238]:
+                  - generic [ref=e239]:
+                    - generic [ref=e240]: Ativo
+                    - generic [ref=e241]: Responsável
+                - cell "Ver detalhes" [ref=e242]:
+                  - link "Ver detalhes" [ref=e244] [cursor=pointer]:
+                    - /url: /portal/empresas/2
+                    - img [ref=e245]
+              - row "MAGAZINE LUIZA S/A 47.960.950/0001-21 · MAGALU 4713-0/04 Lojas de departamentos ou magazines, exceto lojas francas (Duty free) Cadastro manual Ativo Responsável Ver detalhes" [ref=e247]:
+                - cell "MAGAZINE LUIZA S/A 47.960.950/0001-21 · MAGALU" [ref=e248]:
+                  - generic [ref=e249]:
+                    - generic [ref=e250]: MAGAZINE LUIZA S/A
+                    - generic [ref=e251]: 47.960.950/0001-21 · MAGALU
+                - cell "4713-0/04 Lojas de departamentos ou magazines, exceto lojas francas (Duty free)" [ref=e252]:
+                  - generic [ref=e253]:
+                    - generic [ref=e254]: 4713-0/04
+                    - generic "Lojas de departamentos ou magazines, exceto lojas francas (Duty free)" [ref=e255]
+                - cell "Cadastro manual" [ref=e256]:
+                  - generic [ref=e257]: Cadastro manual
+                - cell "Ativo Responsável" [ref=e258]:
+                  - generic [ref=e259]:
+                    - generic [ref=e260]: Ativo
+                    - generic [ref=e261]: Responsável
+                - cell "Ver detalhes" [ref=e262]:
+                  - link "Ver detalhes" [ref=e264] [cursor=pointer]:
+                    - /url: /portal/empresas/1
+                    - img [ref=e265]

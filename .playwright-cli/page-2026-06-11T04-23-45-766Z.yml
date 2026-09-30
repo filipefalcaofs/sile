@@ -1,0 +1,307 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - link "SILE Gestão SEDUR" [ref=e6] [cursor=pointer]:
+      - /url: /gestao
+      - generic [ref=e7]:
+        - img [ref=e9]
+        - generic [ref=e11]:
+          - generic [ref=e12]: SILE
+          - generic [ref=e13]: Gestão SEDUR
+    - navigation [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - heading "Visão geral" [level=2] [ref=e18]
+          - list [ref=e19]:
+            - listitem [ref=e20]:
+              - link "Painel" [ref=e21] [cursor=pointer]:
+                - /url: /gestao
+                - img [ref=e23]
+                - generic [ref=e25]: Painel
+        - generic [ref=e26]:
+          - heading "Cadastros" [level=2] [ref=e27]
+          - list [ref=e28]:
+            - listitem [ref=e29]:
+              - link "CNAEs" [ref=e30] [cursor=pointer]:
+                - /url: /gestao/cnaes
+                - img [ref=e32]
+                - generic [ref=e34]: CNAEs
+            - listitem [ref=e35]:
+              - link "Usuários" [ref=e36] [cursor=pointer]:
+                - /url: /gestao/usuarios
+                - img [ref=e38]
+                - generic [ref=e40]: Usuários
+            - listitem [ref=e41]:
+              - link "Perfis" [ref=e42] [cursor=pointer]:
+                - /url: /gestao/perfis
+                - img [ref=e44]
+                - generic [ref=e47]: Perfis
+        - generic [ref=e48]:
+          - heading "Sistema" [level=2] [ref=e49]
+          - list [ref=e50]:
+            - listitem [ref=e51]:
+              - link "Parâmetros" [ref=e52] [cursor=pointer]:
+                - /url: /gestao/parametros
+                - img [ref=e54]
+                - generic [ref=e56]: Parâmetros
+  - generic [ref=e57]:
+    - banner [ref=e58]:
+      - generic [ref=e59]:
+        - button "Alternar menu lateral" [ref=e61] [cursor=pointer]:
+          - img [ref=e62]
+        - generic [ref=e64]:
+          - button "Alternar tema" [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+          - button "AS Administrador SILE" [ref=e70] [cursor=pointer]:
+            - generic [ref=e71]: AS
+            - generic [ref=e72]: Administrador SILE
+            - img [ref=e73]
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - heading "CNAEs" [level=2] [ref=e78]
+        - navigation "Trilha de navegação" [ref=e79]:
+          - list [ref=e80]:
+            - listitem [ref=e81]:
+              - link "Painel" [ref=e82] [cursor=pointer]:
+                - /url: /gestao
+                - text: Painel
+                - img [ref=e83]
+            - listitem [ref=e85]: CNAEs
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - heading "CNAEs cadastrados" [level=3] [ref=e89]
+            - paragraph [ref=e90]: Estrutura oficial CNAE-Subclasses 2.3 (IBGE/CONCLA)
+          - button "Cadastrar CNAE" [ref=e92] [cursor=pointer]
+        - generic [ref=e94]:
+          - generic [ref=e95]:
+            - generic [ref=e96]:
+              - generic [ref=e97]: Buscar CNAEs
+              - generic:
+                - img
+              - searchbox "Buscar CNAEs" [ref=e98]
+            - generic [ref=e99]:
+              - generic [ref=e100]:
+                - generic [ref=e101]: Filtrar por situação
+                - combobox "Filtrar por situação" [ref=e102]:
+                  - option "Situação" [disabled] [selected]
+                  - option "Ativos"
+                  - option "Inativos"
+              - generic [ref=e103]:
+                - text: Exibir
+                - combobox "Exibir por página" [ref=e104]:
+                  - option "10"
+                  - option "15" [selected]
+                  - option "25"
+                  - option "50"
+                - text: por página
+          - table [ref=e107]:
+            - rowgroup [ref=e108]:
+              - row "Código Denominação Classe Situação Ações" [ref=e109]:
+                - columnheader "Código" [ref=e110]:
+                  - button "Código" [ref=e111] [cursor=pointer]:
+                    - text: Código
+                    - img [ref=e306]
+                - columnheader "Denominação" [ref=e114]:
+                  - button "Denominação" [active] [ref=e115] [cursor=pointer]:
+                    - text: Denominação
+                    - img [ref=e309]
+                - columnheader "Classe" [ref=e119]
+                - columnheader "Situação" [ref=e120]
+                - columnheader "Ações" [ref=e121]
+            - rowgroup [ref=e122]:
+              - row "1012-1/01 Abate de aves 10.12-1 Ativo Editar Desativar Excluir" [ref=e311]:
+                - cell "1012-1/01" [ref=e312]
+                - cell "Abate de aves" [ref=e313]
+                - cell "10.12-1" [ref=e314]
+                - cell "Ativo" [ref=e315]:
+                  - generic [ref=e316]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e317]:
+                  - generic [ref=e318]:
+                    - button "Editar" [ref=e319] [cursor=pointer]
+                    - button "Desativar" [ref=e320] [cursor=pointer]
+                    - button "Excluir" [ref=e321] [cursor=pointer]
+              - row "1012-1/02 Abate de pequenos animais 10.12-1 Ativo Editar Desativar Excluir" [ref=e322]:
+                - cell "1012-1/02" [ref=e323]
+                - cell "Abate de pequenos animais" [ref=e324]
+                - cell "10.12-1" [ref=e325]
+                - cell "Ativo" [ref=e326]:
+                  - generic [ref=e327]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e328]:
+                  - generic [ref=e329]:
+                    - button "Editar" [ref=e330] [cursor=pointer]
+                    - button "Desativar" [ref=e331] [cursor=pointer]
+                    - button "Excluir" [ref=e332] [cursor=pointer]
+              - row "1531-9/02 Acabamento de calçados de couro sob contrato 15.31-9 Ativo Editar Desativar Excluir" [ref=e333]:
+                - cell "1531-9/02" [ref=e334]
+                - cell "Acabamento de calçados de couro sob contrato" [ref=e335]
+                - cell "15.31-9" [ref=e336]
+                - cell "Ativo" [ref=e337]:
+                  - generic [ref=e338]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e339]:
+                  - generic [ref=e340]:
+                    - button "Editar" [ref=e341] [cursor=pointer]
+                    - button "Desativar" [ref=e342] [cursor=pointer]
+                    - button "Excluir" [ref=e343] [cursor=pointer]
+              - row "5231-1/01 Administração da infraestrutura portuária 52.31-1 Ativo Editar Desativar Excluir" [ref=e344]:
+                - cell "5231-1/01" [ref=e345]
+                - cell "Administração da infraestrutura portuária" [ref=e346]
+                - cell "52.31-1" [ref=e347]
+                - cell "Ativo" [ref=e348]:
+                  - generic [ref=e349]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e350]:
+                  - generic [ref=e351]:
+                    - button "Editar" [ref=e352] [cursor=pointer]
+                    - button "Desativar" [ref=e353] [cursor=pointer]
+                    - button "Excluir" [ref=e354] [cursor=pointer]
+              - row "8550-3/01 Administração de caixas escolares 85.50-3 Ativo Editar Desativar Excluir" [ref=e355]:
+                - cell "8550-3/01" [ref=e356]
+                - cell "Administração de caixas escolares" [ref=e357]
+                - cell "85.50-3" [ref=e358]
+                - cell "Ativo" [ref=e359]:
+                  - generic [ref=e360]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e361]:
+                  - generic [ref=e362]:
+                    - button "Editar" [ref=e363] [cursor=pointer]
+                    - button "Desativar" [ref=e364] [cursor=pointer]
+                    - button "Excluir" [ref=e365] [cursor=pointer]
+              - row "6613-4/00 Administração de cartões de crédito 66.13-4 Ativo Editar Desativar Excluir" [ref=e366]:
+                - cell "6613-4/00" [ref=e367]
+                - cell "Administração de cartões de crédito" [ref=e368]
+                - cell "66.13-4" [ref=e369]
+                - cell "Ativo" [ref=e370]:
+                  - generic [ref=e371]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e372]:
+                  - generic [ref=e373]:
+                    - button "Editar" [ref=e374] [cursor=pointer]
+                    - button "Desativar" [ref=e375] [cursor=pointer]
+                    - button "Excluir" [ref=e376] [cursor=pointer]
+              - row "6493-0/00 Administração de consórcios para aquisição de bens e direitos 64.93-0 Ativo Editar Desativar Excluir" [ref=e377]:
+                - cell "6493-0/00" [ref=e378]
+                - cell "Administração de consórcios para aquisição de bens e direitos" [ref=e379]
+                - cell "64.93-0" [ref=e380]
+                - cell "Ativo" [ref=e381]:
+                  - generic [ref=e382]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e383]:
+                  - generic [ref=e384]:
+                    - button "Editar" [ref=e385] [cursor=pointer]
+                    - button "Desativar" [ref=e386] [cursor=pointer]
+                    - button "Excluir" [ref=e387] [cursor=pointer]
+              - row "6611-8/04 Administração de mercados de balcão organizados 66.11-8 Ativo Editar Desativar Excluir" [ref=e388]:
+                - cell "6611-8/04" [ref=e389]
+                - cell "Administração de mercados de balcão organizados" [ref=e390]
+                - cell "66.11-8" [ref=e391]
+                - cell "Ativo" [ref=e392]:
+                  - generic [ref=e393]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e394]:
+                  - generic [ref=e395]:
+                    - button "Editar" [ref=e396] [cursor=pointer]
+                    - button "Desativar" [ref=e397] [cursor=pointer]
+                    - button "Excluir" [ref=e398] [cursor=pointer]
+              - row "4399-1/01 Administração de obras 43.99-1 Ativo Editar Desativar Excluir" [ref=e399]:
+                - cell "4399-1/01" [ref=e400]
+                - cell "Administração de obras" [ref=e401]
+                - cell "43.99-1" [ref=e402]
+                - cell "Ativo" [ref=e403]:
+                  - generic [ref=e404]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e405]:
+                  - generic [ref=e406]:
+                    - button "Editar" [ref=e407] [cursor=pointer]
+                    - button "Desativar" [ref=e408] [cursor=pointer]
+                    - button "Excluir" [ref=e409] [cursor=pointer]
+              - row "8411-6/00 Administração pública em geral 84.11-6 Ativo Editar Desativar Excluir" [ref=e410]:
+                - cell "8411-6/00" [ref=e411]
+                - cell "Administração pública em geral" [ref=e412]
+                - cell "84.11-6" [ref=e413]
+                - cell "Ativo" [ref=e414]:
+                  - generic [ref=e415]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e416]:
+                  - generic [ref=e417]:
+                    - button "Editar" [ref=e418] [cursor=pointer]
+                    - button "Desativar" [ref=e419] [cursor=pointer]
+                    - button "Excluir" [ref=e420] [cursor=pointer]
+              - row "5250-8/03 Agenciamento de cargas, exceto para o transporte marítimo 52.50-8 Ativo Editar Desativar Excluir" [ref=e421]:
+                - cell "5250-8/03" [ref=e422]
+                - cell "Agenciamento de cargas, exceto para o transporte marítimo" [ref=e423]
+                - cell "52.50-8" [ref=e424]
+                - cell "Ativo" [ref=e425]:
+                  - generic [ref=e426]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e427]:
+                  - generic [ref=e428]:
+                    - button "Editar" [ref=e429] [cursor=pointer]
+                    - button "Desativar" [ref=e430] [cursor=pointer]
+                    - button "Excluir" [ref=e431] [cursor=pointer]
+              - row "7312-2/00 Agenciamento de espaços para publicidade, exceto em veículos de comunicação 73.12-2 Ativo Editar Desativar Excluir" [ref=e432]:
+                - cell "7312-2/00" [ref=e433]
+                - cell "Agenciamento de espaços para publicidade, exceto em veículos de comunicação" [ref=e434]
+                - cell "73.12-2" [ref=e435]
+                - cell "Ativo" [ref=e436]:
+                  - generic [ref=e437]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e438]:
+                  - generic [ref=e439]:
+                    - button "Editar" [ref=e440] [cursor=pointer]
+                    - button "Desativar" [ref=e441] [cursor=pointer]
+                    - button "Excluir" [ref=e442] [cursor=pointer]
+              - row "7490-1/05 Agenciamento de profissionais para atividades esportivas, culturais e artísticas 74.90-1 Ativo Editar Desativar Excluir" [ref=e443]:
+                - cell "7490-1/05" [ref=e444]
+                - cell "Agenciamento de profissionais para atividades esportivas, culturais e artísticas" [ref=e445]
+                - cell "74.90-1" [ref=e446]
+                - cell "Ativo" [ref=e447]:
+                  - generic [ref=e448]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e449]:
+                  - generic [ref=e450]:
+                    - button "Editar" [ref=e451] [cursor=pointer]
+                    - button "Desativar" [ref=e452] [cursor=pointer]
+                    - button "Excluir" [ref=e453] [cursor=pointer]
+              - row "6434-4/00 Agências de fomento 64.34-4 Ativo Editar Desativar Excluir" [ref=e454]:
+                - cell "6434-4/00" [ref=e455]
+                - cell "Agências de fomento" [ref=e456]
+                - cell "64.34-4" [ref=e457]
+                - cell "Ativo" [ref=e458]:
+                  - generic [ref=e459]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e460]:
+                  - generic [ref=e461]:
+                    - button "Editar" [ref=e462] [cursor=pointer]
+                    - button "Desativar" [ref=e463] [cursor=pointer]
+                    - button "Excluir" [ref=e464] [cursor=pointer]
+              - row "6391-7/00 Agências de notícias 63.91-7 Ativo Editar Desativar Excluir" [ref=e465]:
+                - cell "6391-7/00" [ref=e466]
+                - cell "Agências de notícias" [ref=e467]
+                - cell "63.91-7" [ref=e468]
+                - cell "Ativo" [ref=e469]:
+                  - generic [ref=e470]: Ativo
+                - cell "Editar Desativar Excluir" [ref=e471]:
+                  - generic [ref=e472]:
+                    - button "Editar" [ref=e473] [cursor=pointer]
+                    - button "Desativar" [ref=e474] [cursor=pointer]
+                    - button "Excluir" [ref=e475] [cursor=pointer]
+          - generic [ref=e288]:
+            - paragraph [ref=e289]: Mostrando 1–15 de 1331
+            - navigation "Paginação" [ref=e290]:
+              - generic [ref=e291]: « Anterior
+              - link "1" [ref=e292] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=1
+              - link "2" [ref=e293] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=2
+              - link "3" [ref=e294] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=3
+              - link "4" [ref=e295] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=4
+              - link "5" [ref=e296] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=5
+              - link "6" [ref=e297] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=6
+              - link "7" [ref=e298] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=7
+              - link "8" [ref=e299] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=8
+              - link "9" [ref=e300] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=9
+              - link "10" [ref=e301] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=10
+              - generic [ref=e302]: ...
+              - link "88" [ref=e303] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=88
+              - link "89" [ref=e304] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=89
+              - link "Próximo »" [ref=e305] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=2

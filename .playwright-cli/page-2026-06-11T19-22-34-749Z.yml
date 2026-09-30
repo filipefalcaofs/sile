@@ -1,0 +1,70 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - link "Ir para a página inicial do SILE" [ref=e7] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e8]:
+        - img [ref=e10]
+        - generic [ref=e12]:
+          - generic [ref=e13]: SILE
+          - generic [ref=e14]: SEDUR
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - heading "Crie sua conta gratuita" [level=1] [ref=e18]
+        - paragraph [ref=e19]: Em poucos minutos você consulta a viabilidade do seu negócio e acompanha tudo pelo portal
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e24]: Nome completo
+            - textbox "Nome completo" [ref=e26]
+          - generic [ref=e27]:
+            - generic [ref=e28]: CPF
+            - textbox "CPF" [ref=e30]:
+              - /placeholder: 000.000.000-00
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic [ref=e33]: E-mail
+            - textbox "E-mail" [ref=e35]
+          - generic [ref=e36]:
+            - generic [ref=e37]: Telefone (opcional)
+            - textbox "Telefone (opcional)" [ref=e39]:
+              - /placeholder: (71) 90000-0000
+        - generic [ref=e40]:
+          - generic [ref=e41]: Senha
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - textbox "Senha" [ref=e44]
+              - paragraph [ref=e45]: "Requisitos da senha: minlength: 8; required: lower; required: upper; required: digit;"
+            - button "Mostrar senha" [ref=e46] [cursor=pointer]:
+              - img [ref=e47]
+        - generic [ref=e49]:
+          - generic [ref=e50]: Confirmar senha
+          - generic [ref=e51]:
+            - textbox "Confirmar senha" [ref=e53]
+            - button "Mostrar senha" [ref=e54] [cursor=pointer]:
+              - img [ref=e55]
+        - button "Criar conta" [ref=e57] [cursor=pointer]
+        - paragraph [ref=e58]:
+          - text: Já tem conta?
+          - link "Entrar" [ref=e59] [cursor=pointer]:
+            - /url: /portal/login
+  - generic [ref=e60]:
+    - img [ref=e61]
+    - img [ref=e63]
+    - generic [ref=e65]:
+      - generic [ref=e67]:
+        - generic [ref=e68]:
+          - img [ref=e70]
+          - generic [ref=e72]: SILE
+        - paragraph [ref=e73]: Sistema de Licenciamento Eletrônico
+        - paragraph [ref=e74]: Viabilidade locacional e licenciamento de atividades econômicas no município de Salvador.
+        - list [ref=e75]:
+          - listitem [ref=e76]:
+            - img [ref=e77]
+            - generic [ref=e79]: Consulta de viabilidade locacional pela LOUOS (Lei nº 9.148/2016)
+          - listitem [ref=e80]:
+            - img [ref=e81]
+            - generic [ref=e83]: Classificação de risco conforme o Decreto nº 32.636/2020
+          - listitem [ref=e84]:
+            - img [ref=e85]
+            - generic [ref=e87]: Acompanhamento do processo com transparência e auditoria
+      - paragraph [ref=e88]: Prefeitura de Salvador — SEDUR

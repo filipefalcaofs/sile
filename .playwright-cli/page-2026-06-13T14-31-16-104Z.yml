@@ -1,0 +1,143 @@
+- generic [ref=e77]:
+  - complementary [ref=e78]:
+    - link "SIMPLIFICA Portal do Cidadão" [ref=e80] [cursor=pointer]:
+      - /url: /portal
+      - generic [ref=e81]:
+        - img [ref=e83]
+        - generic [ref=e85]:
+          - generic [ref=e86]: SIMPLIFICA
+          - generic [ref=e87]: Portal do Cidadão
+    - navigation [ref=e89]:
+      - generic [ref=e90]:
+        - generic [ref=e91]:
+          - heading "Início" [level=2] [ref=e92]
+          - list [ref=e93]:
+            - listitem [ref=e94]:
+              - link "Meu painel" [ref=e95] [cursor=pointer]:
+                - /url: /portal/painel
+                - img [ref=e97]
+                - generic [ref=e99]: Meu painel
+        - generic [ref=e100]:
+          - heading "Serviços" [level=2] [ref=e101]
+          - list [ref=e102]:
+            - listitem [ref=e103]:
+              - link "Minhas empresas" [ref=e104] [cursor=pointer]:
+                - /url: /portal/empresas
+                - img [ref=e106]
+                - generic [ref=e108]: Minhas empresas
+            - listitem [ref=e109]:
+              - link "Procurações" [ref=e110] [cursor=pointer]:
+                - /url: /portal/procuracoes
+                - img [ref=e112]
+                - generic [ref=e114]: Procurações
+        - generic [ref=e115]:
+          - heading "Minha conta" [level=2] [ref=e116]
+          - list [ref=e117]:
+            - listitem [ref=e118]:
+              - link "Meus acessos" [ref=e119] [cursor=pointer]:
+                - /url: /portal/acessos
+                - img [ref=e121]
+                - generic [ref=e123]: Meus acessos
+  - generic [ref=e124]:
+    - banner [ref=e125]:
+      - generic [ref=e126]:
+        - button "Alternar menu lateral" [ref=e128] [cursor=pointer]:
+          - img [ref=e129]
+        - generic [ref=e131]:
+          - button "Alternar tema" [ref=e133] [cursor=pointer]:
+            - img [ref=e134]
+          - button "CS Cidadão SILE" [ref=e137] [cursor=pointer]:
+            - generic [ref=e138]: CS
+            - generic [ref=e139]: Cidadão SILE
+            - img [ref=e140]
+    - generic [ref=e142]:
+      - generic [ref=e267]:
+        - heading "Cadastrar empresa" [level=2] [ref=e269]
+        - navigation "Trilha de navegação" [ref=e270]:
+          - list [ref=e271]:
+            - listitem [ref=e272]:
+              - link "Meu painel" [ref=e273] [cursor=pointer]:
+                - /url: /portal/painel
+                - text: Meu painel
+                - img [ref=e274]
+            - listitem [ref=e276]:
+              - link "Minhas empresas" [ref=e277] [cursor=pointer]:
+                - /url: /portal/empresas
+                - text: Minhas empresas
+                - img [ref=e278]
+            - listitem [ref=e280]: Cadastrar empresa
+      - generic [ref=e281]:
+        - generic [ref=e282]:
+          - generic [ref=e284]:
+            - heading "Identificação" [level=3] [ref=e285]
+            - paragraph [ref=e286]: Informe o CNPJ e busque os dados automaticamente, ou preencha manualmente.
+          - generic [ref=e288]:
+            - generic [ref=e289]:
+              - generic [ref=e290]:
+                - generic [ref=e291]: CNPJ*
+                - textbox "CNPJ" [ref=e293]:
+                  - /placeholder: 00.000.000/0000-00
+              - button "Buscar CNPJ" [ref=e295] [cursor=pointer]
+            - generic [ref=e296]:
+              - generic [ref=e297]:
+                - generic [ref=e298]: Razão social*
+                - textbox "Razão social" [ref=e300]
+              - generic [ref=e301]:
+                - generic [ref=e302]: Nome fantasia
+                - textbox "Nome fantasia" [ref=e304]
+              - generic [ref=e305]:
+                - generic [ref=e306]: Natureza jurídica (código)
+                - textbox "Natureza jurídica (código)" [ref=e308]
+              - generic [ref=e309]:
+                - generic [ref=e310]: Natureza jurídica
+                - textbox "Natureza jurídica" [ref=e312]
+              - generic [ref=e313]:
+                - generic [ref=e314]: Porte (código)
+                - textbox "Porte (código)" [ref=e316]
+              - generic [ref=e317]:
+                - generic [ref=e318]: Porte
+                - textbox "Porte" [ref=e320]
+        - generic [ref=e321]:
+          - generic [ref=e323]:
+            - heading "Endereço" [level=3] [ref=e324]
+            - paragraph [ref=e325]: Endereço do estabelecimento (texto nesta fase).
+          - generic [ref=e327]:
+            - generic [ref=e328]:
+              - generic [ref=e329]: Logradouro
+              - textbox "Logradouro" [ref=e331]
+            - generic [ref=e332]:
+              - generic [ref=e333]: Número
+              - textbox "Número" [ref=e335]
+            - generic [ref=e336]:
+              - generic [ref=e337]: Complemento
+              - textbox "Complemento" [ref=e339]
+            - generic [ref=e340]:
+              - generic [ref=e341]: Bairro
+              - textbox "Bairro" [ref=e343]
+            - generic [ref=e344]:
+              - generic [ref=e345]: Município
+              - textbox "Município" [ref=e347]
+            - generic [ref=e348]:
+              - generic [ref=e349]: UF
+              - textbox "UF" [ref=e351]:
+                - /placeholder: BA
+            - generic [ref=e352]:
+              - generic [ref=e353]: CEP
+              - textbox "CEP" [ref=e355]:
+                - /placeholder: "00000000"
+        - generic [ref=e356]:
+          - generic [ref=e358]:
+            - heading "Contato" [level=3] [ref=e359]
+            - paragraph [ref=e360]: Canais de contato da empresa.
+          - generic [ref=e362]:
+            - generic [ref=e363]:
+              - generic [ref=e364]: E-mail
+              - textbox "E-mail" [ref=e366]
+            - generic [ref=e367]:
+              - generic [ref=e368]: Telefone
+              - textbox "Telefone" [ref=e370]
+        - generic [ref=e371]:
+          - link "Cancelar" [ref=e372] [cursor=pointer]:
+            - /url: /portal/empresas
+            - button "Cancelar" [ref=e373]
+          - button "Salvar empresa" [ref=e374] [cursor=pointer]

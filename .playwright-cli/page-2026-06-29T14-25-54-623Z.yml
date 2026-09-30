@@ -1,0 +1,115 @@
+- generic [ref=e77]:
+  - complementary [ref=e78]:
+    - link "SIMPLIFICA Portal do Cidadão" [ref=e80] [cursor=pointer]:
+      - /url: /portal
+      - generic [ref=e81]:
+        - img [ref=e83]
+        - generic [ref=e85]:
+          - generic [ref=e86]: SIMPLIFICA
+          - generic [ref=e87]: Portal do Cidadão
+    - navigation [ref=e89]:
+      - generic [ref=e90]:
+        - generic [ref=e91]:
+          - heading "Início" [level=2] [ref=e92]
+          - list [ref=e93]:
+            - listitem [ref=e94]:
+              - link "Meu painel" [ref=e95] [cursor=pointer]:
+                - /url: /portal/painel
+                - img [ref=e97]
+                - generic [ref=e99]: Meu painel
+        - generic [ref=e100]:
+          - heading "Serviços" [level=2] [ref=e101]
+          - list [ref=e102]:
+            - listitem [ref=e103]:
+              - link "Minhas empresas" [active] [ref=e104] [cursor=pointer]:
+                - /url: /portal/empresas
+                - img [ref=e106]
+                - generic [ref=e108]: Minhas empresas
+            - listitem [ref=e109]:
+              - link "Consultas de viabilidade" [ref=e110] [cursor=pointer]:
+                - /url: /portal/viabilidade/historico
+                - img [ref=e112]
+                - generic [ref=e114]: Consultas de viabilidade
+            - listitem [ref=e115]:
+              - link "Procurações" [ref=e116] [cursor=pointer]:
+                - /url: /portal/procuracoes
+                - img [ref=e118]
+                - generic [ref=e120]: Procurações
+        - generic [ref=e121]:
+          - heading "Minha conta" [level=2] [ref=e122]
+          - list [ref=e123]:
+            - listitem [ref=e124]:
+              - link "Meus acessos" [ref=e125] [cursor=pointer]:
+                - /url: /portal/acessos
+                - img [ref=e127]
+                - generic [ref=e129]: Meus acessos
+  - generic [ref=e130]:
+    - banner [ref=e131]:
+      - generic [ref=e132]:
+        - button "Alternar menu lateral" [ref=e134] [cursor=pointer]:
+          - img [ref=e135]
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - button "Alternar tema" [ref=e139] [cursor=pointer]:
+              - img [ref=e140]
+            - link "Notificações" [ref=e142] [cursor=pointer]:
+              - /url: /portal/notificacoes
+              - img [ref=e143]
+          - button "RD Requerente Demo SEDUR" [ref=e146] [cursor=pointer]:
+            - generic [ref=e147]: RD
+            - generic [ref=e148]: Requerente Demo SEDUR
+            - img [ref=e149]
+    - generic [ref=e151]:
+      - generic [ref=e195]:
+        - heading "Minhas empresas" [level=2] [ref=e197]
+        - navigation "Trilha de navegação" [ref=e198]:
+          - list [ref=e199]:
+            - listitem [ref=e200]:
+              - link "Meu painel" [ref=e201] [cursor=pointer]:
+                - /url: /portal/painel
+                - text: Meu painel
+                - img [ref=e202]
+            - listitem [ref=e204]: Minhas empresas
+      - generic [ref=e205]:
+        - generic [ref=e206]:
+          - generic [ref=e207]:
+            - heading "Empresas vinculadas" [level=3] [ref=e208]
+            - paragraph [ref=e209]: Empresas em que você é responsável ou procurador — base para suas solicitações de viabilidade.
+          - link "Cadastrar empresa" [ref=e211] [cursor=pointer]:
+            - /url: /portal/empresas/cadastrar
+            - button "Cadastrar empresa" [ref=e212]
+        - generic [ref=e214]:
+          - generic [ref=e215]:
+            - generic [ref=e216]:
+              - generic [ref=e217]: Buscar empresas
+              - generic:
+                - img
+              - searchbox "Buscar empresas" [ref=e218]
+            - generic [ref=e220]:
+              - text: Exibir
+              - combobox "Exibir por página" [ref=e221]:
+                - option "10"
+                - option "15" [selected]
+                - option "25"
+                - option "50"
+              - text: por página
+          - table [ref=e224]:
+            - rowgroup [ref=e225]:
+              - row "Empresa CNAE principal Origem Vínculo Ações" [ref=e226]:
+                - columnheader "Empresa" [ref=e227]:
+                  - button "Empresa" [ref=e228] [cursor=pointer]:
+                    - text: Empresa
+                    - img [ref=e229]
+                - columnheader "CNAE principal" [ref=e231]
+                - columnheader "Origem" [ref=e232]
+                - columnheader "Vínculo" [ref=e233]
+                - columnheader "Ações" [ref=e234]
+            - rowgroup [ref=e235]:
+              - row "Nenhuma empresa cadastrada Cadastre sua primeira empresa para iniciar solicitações de viabilidade. Cadastrar empresa" [ref=e236]:
+                - cell "Nenhuma empresa cadastrada Cadastre sua primeira empresa para iniciar solicitações de viabilidade. Cadastrar empresa" [ref=e237]:
+                  - generic [ref=e238]:
+                    - paragraph [ref=e239]: Nenhuma empresa cadastrada
+                    - paragraph [ref=e240]: Cadastre sua primeira empresa para iniciar solicitações de viabilidade.
+                    - link "Cadastrar empresa" [ref=e242] [cursor=pointer]:
+                      - /url: /portal/empresas/cadastrar
+                      - button "Cadastrar empresa" [ref=e243]

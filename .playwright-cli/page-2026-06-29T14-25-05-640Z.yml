@@ -1,0 +1,101 @@
+- generic [ref=e77]:
+  - complementary [ref=e78]:
+    - link "SIMPLIFICA Portal do Cidadão" [ref=e80] [cursor=pointer]:
+      - /url: /portal
+      - generic [ref=e81]:
+        - img [ref=e83]
+        - generic [ref=e85]:
+          - generic [ref=e86]: SIMPLIFICA
+          - generic [ref=e87]: Portal do Cidadão
+    - navigation [ref=e89]:
+      - generic [ref=e90]:
+        - generic [ref=e91]:
+          - heading "Início" [level=2] [ref=e92]
+          - list [ref=e93]:
+            - listitem [ref=e94]:
+              - link "Meu painel" [ref=e95] [cursor=pointer]:
+                - /url: /portal/painel
+                - img [ref=e97]
+                - generic [ref=e99]: Meu painel
+        - generic [ref=e100]:
+          - heading "Serviços" [level=2] [ref=e101]
+          - list [ref=e102]:
+            - listitem [ref=e103]:
+              - link "Minhas empresas" [ref=e104] [cursor=pointer]:
+                - /url: /portal/empresas
+                - img [ref=e106]
+                - generic [ref=e108]: Minhas empresas
+            - listitem [ref=e109]:
+              - link "Consultas de viabilidade" [ref=e110] [cursor=pointer]:
+                - /url: /portal/viabilidade/historico
+                - img [ref=e112]
+                - generic [ref=e114]: Consultas de viabilidade
+            - listitem [ref=e115]:
+              - link "Procurações" [ref=e116] [cursor=pointer]:
+                - /url: /portal/procuracoes
+                - img [ref=e118]
+                - generic [ref=e120]: Procurações
+        - generic [ref=e121]:
+          - heading "Minha conta" [level=2] [ref=e122]
+          - list [ref=e123]:
+            - listitem [ref=e124]:
+              - link "Meus acessos" [ref=e125] [cursor=pointer]:
+                - /url: /portal/acessos
+                - img [ref=e127]
+                - generic [ref=e129]: Meus acessos
+  - generic [ref=e130]:
+    - banner [ref=e131]:
+      - generic [ref=e132]:
+        - button "Alternar menu lateral" [ref=e134] [cursor=pointer]:
+          - img [ref=e135]
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - button "Alternar tema" [ref=e139] [cursor=pointer]:
+              - img [ref=e140]
+            - link "Notificações" [ref=e142] [cursor=pointer]:
+              - /url: /portal/notificacoes
+              - img [ref=e143]
+          - button "RD Requerente Demo SEDUR" [ref=e146] [cursor=pointer]:
+            - generic [ref=e147]: RD
+            - generic [ref=e148]: Requerente Demo SEDUR
+            - img [ref=e149]
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - heading "Meu painel" [level=2] [ref=e153]
+        - navigation "Trilha de navegação" [ref=e154]:
+          - list [ref=e155]:
+            - listitem [ref=e156]:
+              - link "Portal" [ref=e157] [cursor=pointer]:
+                - /url: /portal
+                - text: Portal
+                - img [ref=e158]
+            - listitem [ref=e160]: Painel
+      - generic [ref=e161]:
+        - generic [ref=e163]:
+          - link "Vínculos de representação Procurações" [ref=e164] [cursor=pointer]:
+            - /url: /portal/procuracoes
+            - img [ref=e166]
+            - generic [ref=e168]:
+              - generic [ref=e169]:
+                - text: Vínculos de representação
+                - heading "Procurações" [level=4] [ref=e170]
+              - img [ref=e171]
+          - link "Histórico da sua conta Meus acessos" [ref=e173] [cursor=pointer]:
+            - /url: /portal/acessos
+            - img [ref=e175]
+            - generic [ref=e177]:
+              - generic [ref=e178]:
+                - text: Histórico da sua conta
+                - heading "Meus acessos" [level=4] [ref=e179]
+              - img [ref=e180]
+        - generic [ref=e183]:
+          - generic [ref=e184]:
+            - heading "Minha conta" [level=3] [ref=e185]
+            - paragraph [ref=e186]: Bem-vindo(a) ao Simplifica.
+          - generic [ref=e188]:
+            - generic [ref=e189]:
+              - term [ref=e190]: Nome
+              - definition [ref=e191]: Requerente Demo SEDUR
+            - generic [ref=e192]:
+              - term [ref=e193]: E-mail
+              - definition [ref=e194]: requerente@sedur.salvador.ba.gov.br

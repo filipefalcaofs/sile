@@ -1,0 +1,51 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - link "Ir para a página inicial do SILE" [ref=e7] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e8]:
+        - img [ref=e10]
+        - generic [ref=e12]:
+          - generic [ref=e13]: SILE
+          - generic [ref=e14]: SEDUR
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - heading "Gestão SEDUR" [level=1] [ref=e18]
+        - paragraph [ref=e19]: Ambiente interno de análise e administração do SILE
+      - generic [ref=e20]:
+        - img [ref=e22]
+        - paragraph [ref=e25]: Acesso restrito a servidores autorizados. Toda tentativa de acesso é registrada.
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - generic [ref=e29]: E-mail institucional
+          - textbox "E-mail institucional" [active] [ref=e31]:
+            - /placeholder: nome@salvador.ba.gov.br
+        - generic [ref=e32]:
+          - generic [ref=e33]: Senha
+          - generic [ref=e34]:
+            - textbox "Senha" [ref=e36]
+            - button "Mostrar senha" [ref=e37] [cursor=pointer]:
+              - img [ref=e38]
+        - generic [ref=e40] [cursor=pointer]:
+          - checkbox "Manter conectado" [ref=e42]
+          - generic [ref=e43]: Manter conectado
+        - button "Entrar na gestão" [ref=e44] [cursor=pointer]
+  - generic [ref=e45]:
+    - img [ref=e46]
+    - generic [ref=e50]:
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - img [ref=e55]
+          - generic [ref=e57]: SILE
+        - paragraph [ref=e58]: Sistema de Licenciamento Eletrônico
+        - paragraph [ref=e59]: Viabilidade locacional e licenciamento de atividades econômicas no município de Salvador.
+        - list [ref=e60]:
+          - listitem [ref=e61]:
+            - img [ref=e62]
+            - generic [ref=e64]: Consulta de viabilidade locacional pela LOUOS (Lei nº 9.148/2016)
+          - listitem [ref=e65]:
+            - img [ref=e66]
+            - generic [ref=e68]: Classificação de risco conforme o Decreto nº 32.636/2020
+          - listitem [ref=e69]:
+            - img [ref=e70]
+            - generic [ref=e72]: Acompanhamento do processo com transparência e auditoria
+      - paragraph [ref=e73]: Prefeitura de Salvador — SEDUR

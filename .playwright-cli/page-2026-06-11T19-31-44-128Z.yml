@@ -1,0 +1,40 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - img [ref=e5]
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - img [ref=e11]
+        - generic [ref=e13]:
+          - generic [ref=e14]: SILE
+          - generic [ref=e15]: Gestão SEDUR
+      - generic [ref=e16]:
+        - paragraph [ref=e17]: Console interno
+        - heading "Licenciamento eletrônico de Salvador" [level=2] [ref=e18]
+        - paragraph [ref=e19]: Análise e administração da viabilidade locacional de atividades econômicas, com fundamentação legal registrada em cada decisão.
+        - list [ref=e20]:
+          - listitem [ref=e21]: Cadastros estruturantes
+          - listitem [ref=e22]: Parâmetros do sistema
+          - listitem [ref=e23]: Trilha de auditoria
+  - generic [ref=e25]:
+    - generic [ref=e27]:
+      - img [ref=e28]
+      - text: Ambiente interno
+    - generic [ref=e31]:
+      - heading "Acesso restrito" [level=1] [ref=e32]
+      - paragraph [ref=e33]: Console de análise e administração do licenciamento.
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - generic [ref=e37]: E-mail institucional
+          - textbox "E-mail institucional" [active] [ref=e38]:
+            - /placeholder: nome@salvador.ba.gov.br
+        - generic [ref=e39]:
+          - generic [ref=e40]: Senha
+          - generic [ref=e41]:
+            - textbox "Senha" [ref=e42]
+            - button "Mostrar senha" [ref=e43] [cursor=pointer]:
+              - img [ref=e44]
+        - generic [ref=e47] [cursor=pointer]:
+          - checkbox "Manter conectado" [ref=e49]
+          - generic [ref=e50]: Manter conectado
+        - button "Entrar no console" [ref=e51] [cursor=pointer]
+    - paragraph [ref=e52]: Acesso exclusivo de servidores autorizados pela SEDUR. Todas as tentativas de acesso são registradas para auditoria.

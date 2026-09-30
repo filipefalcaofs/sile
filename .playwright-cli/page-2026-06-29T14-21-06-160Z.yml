@@ -1,0 +1,59 @@
+- generic [ref=e170]:
+  - generic [ref=e171]:
+    - link "Ir para a página inicial do Simplifica" [ref=e173] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e174]:
+        - img [ref=e176]
+        - generic [ref=e178]:
+          - generic [ref=e179]: SIMPLIFICA
+          - generic [ref=e180]: SEDUR
+    - generic [ref=e182]:
+      - generic [ref=e183]:
+        - heading "Bem-vindo de volta" [level=1] [ref=e184]
+        - paragraph [ref=e185]: Acesse sua conta para consultar a viabilidade do seu negócio e acompanhar seus processos
+      - generic [ref=e187]:
+        - generic [ref=e188]:
+          - generic [ref=e189]: CPF*
+          - textbox "CPF" [ref=e191]:
+            - /placeholder: 000.000.000-00
+            - text: 453.178.287-91
+        - generic [ref=e192]:
+          - generic [ref=e193]: Senha*
+          - generic [ref=e194]:
+            - textbox "Senha" [ref=e196]: SileDemo2026!
+            - button "Mostrar senha" [ref=e197] [cursor=pointer]:
+              - img [ref=e198]
+        - generic [ref=e200]:
+          - generic [ref=e201] [cursor=pointer]:
+            - checkbox "Manter conectado" [ref=e203]
+            - generic [ref=e204]: Manter conectado
+          - link "Esqueceu a senha?" [ref=e205] [cursor=pointer]:
+            - /url: /portal/forgot-password
+        - button "Entrar" [ref=e206] [cursor=pointer]
+        - paragraph [ref=e207]:
+          - text: Ainda não tem conta?
+          - link "Criar conta" [ref=e208] [cursor=pointer]:
+            - /url: /portal/register
+  - generic [ref=e209]:
+    - img [ref=e210]
+    - img [ref=e212]
+    - generic [ref=e214]:
+      - generic [ref=e216]:
+        - generic [ref=e217]:
+          - img [ref=e219]
+          - generic [ref=e221]: SIMPLIFICA
+        - paragraph [ref=e222]: Sistema de Licenciamento Eletrônico
+        - paragraph [ref=e223]: Viabilidade locacional e licenciamento de atividades econômicas no município de Salvador.
+        - list [ref=e224]:
+          - listitem [ref=e225]:
+            - img [ref=e226]
+            - generic [ref=e228]: Consulta de viabilidade locacional pela LOUOS (Lei nº 9.148/2016)
+          - listitem [ref=e229]:
+            - img [ref=e230]
+            - generic [ref=e232]: Classificação de risco conforme o Decreto nº 32.636/2020
+          - listitem [ref=e233]:
+            - img [ref=e234]
+            - generic [ref=e236]: Acompanhamento do processo com transparência e auditoria
+      - generic [ref=e237]:
+        - img "Prefeitura de Salvador" [ref=e238]
+        - img "SEDUR — Secretaria de Desenvolvimento Urbano" [ref=e240]

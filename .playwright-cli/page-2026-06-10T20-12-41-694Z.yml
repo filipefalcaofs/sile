@@ -1,0 +1,50 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - link "Ir para a página inicial do SILE" [ref=e7] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e8]: SILE
+      - generic [ref=e9]: SEDUR
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - heading "Acessar o SILE" [level=1] [ref=e13]
+        - paragraph [ref=e14]: Entre com seu e-mail e senha para acompanhar seus processos
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: E-mail
+          - textbox "E-mail" [active] [ref=e20]:
+            - /placeholder: nome@exemplo.com
+        - generic [ref=e21]:
+          - generic [ref=e22]: Senha
+          - generic [ref=e23]:
+            - textbox "Senha" [ref=e25]
+            - button "Mostrar senha" [ref=e26] [cursor=pointer]:
+              - img [ref=e27]
+        - generic [ref=e29]:
+          - generic [ref=e30] [cursor=pointer]:
+            - checkbox "Manter conectado" [ref=e32]
+            - generic [ref=e33]: Manter conectado
+          - link "Esqueceu a senha?" [ref=e34] [cursor=pointer]:
+            - /url: /forgot-password
+        - button "Entrar" [ref=e35] [cursor=pointer]
+        - paragraph [ref=e36]:
+          - text: Ainda não tem conta?
+          - link "Criar conta" [ref=e37] [cursor=pointer]:
+            - /url: /register
+  - generic [ref=e38]:
+    - img [ref=e39]
+    - generic [ref=e43]:
+      - generic [ref=e45]:
+        - generic [ref=e46]: SILE
+        - paragraph [ref=e47]: Sistema de Licenciamento Eletrônico
+        - paragraph [ref=e48]: Viabilidade locacional e licenciamento de atividades econômicas no município de Salvador.
+        - list [ref=e49]:
+          - listitem [ref=e50]:
+            - img [ref=e51]
+            - generic [ref=e53]: Consulta de viabilidade locacional pela LOUOS (Lei nº 9.148/2016)
+          - listitem [ref=e54]:
+            - img [ref=e55]
+            - generic [ref=e57]: Classificação de risco conforme o Decreto nº 32.636/2020
+          - listitem [ref=e58]:
+            - img [ref=e59]
+            - generic [ref=e61]: Acompanhamento do processo com transparência e auditoria
+      - paragraph [ref=e62]: Prefeitura de Salvador — SEDUR

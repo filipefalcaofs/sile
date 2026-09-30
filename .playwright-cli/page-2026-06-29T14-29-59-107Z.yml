@@ -1,0 +1,247 @@
+- generic [ref=e2]:
+  - generic [ref=e61]:
+    - complementary [ref=e62]:
+      - link "SIMPLIFICA Gestão SEDUR" [ref=e64] [cursor=pointer]:
+        - /url: /gestao
+        - generic [ref=e65]:
+          - img [ref=e67]
+          - generic [ref=e69]:
+            - generic [ref=e70]: SIMPLIFICA
+            - generic [ref=e71]: Gestão SEDUR
+      - navigation [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - button "Início" [expanded] [ref=e76] [cursor=pointer]:
+              - generic [ref=e77]: Início
+              - img [ref=e78]
+            - list [ref=e80]:
+              - listitem [ref=e81]:
+                - link "Painel" [ref=e82] [cursor=pointer]:
+                  - /url: /gestao
+                  - img [ref=e84]
+                  - generic [ref=e86]: Painel
+          - generic [ref=e87]:
+            - button "Atendimento e operação" [expanded] [ref=e88] [cursor=pointer]:
+              - generic [ref=e89]: Atendimento e operação
+              - img [ref=e90]
+            - list [ref=e92]:
+              - listitem [ref=e93]:
+                - link "Consulta territorial" [ref=e94] [cursor=pointer]:
+                  - /url: /gestao/territorio
+                  - img [ref=e96]
+                  - generic [ref=e98]: Consulta territorial
+              - listitem [ref=e99]:
+                - link "Resultados do fluxo expresso" [ref=e100] [cursor=pointer]:
+                  - /url: /gestao/resultados-expresso
+                  - img [ref=e102]
+                  - generic [ref=e104]: Resultados do fluxo expresso
+          - generic [ref=e105]:
+            - button "Análise técnica" [expanded] [ref=e106] [cursor=pointer]:
+              - generic [ref=e107]: Análise técnica
+              - img [ref=e108]
+            - list [ref=e110]:
+              - listitem [ref=e111]:
+                - link "Fila de trabalho" [ref=e112] [cursor=pointer]:
+                  - /url: /gestao/processos/fila
+                  - img [ref=e114]
+                  - generic [ref=e116]: Fila de trabalho
+              - listitem [ref=e117]:
+                - link "Processos" [ref=e118] [cursor=pointer]:
+                  - /url: /gestao/processos
+                  - img [ref=e120]
+                  - generic [ref=e122]: Processos
+          - generic [ref=e123]:
+            - button "Regras do licenciamento" [expanded] [ref=e124] [cursor=pointer]:
+              - generic [ref=e125]: Regras do licenciamento
+              - img [ref=e126]
+            - list [ref=e128]:
+              - listitem [ref=e129]:
+                - link "CNAEs" [ref=e130] [cursor=pointer]:
+                  - /url: /gestao/cnaes
+                  - img [ref=e132]
+                  - generic [ref=e134]: CNAEs
+              - listitem [ref=e135]:
+                - link "Classificação de risco" [ref=e136] [cursor=pointer]:
+                  - /url: /gestao/risco
+                  - img [ref=e138]
+                  - generic [ref=e140]: Classificação de risco
+              - listitem [ref=e141]:
+                - link "Quadros LOUOS" [ref=e142] [cursor=pointer]:
+                  - /url: /gestao/louos
+                  - img [ref=e144]
+                  - generic [ref=e146]: Quadros LOUOS
+          - generic [ref=e147]:
+            - button "Auditoria e compliance" [expanded] [ref=e148] [cursor=pointer]:
+              - generic [ref=e149]: Auditoria e compliance
+              - img [ref=e150]
+            - list [ref=e152]:
+              - listitem [ref=e153]:
+                - link "Trilha de auditoria" [ref=e154] [cursor=pointer]:
+                  - /url: /gestao/auditoria
+                  - img [ref=e156]
+                  - generic [ref=e158]: Trilha de auditoria
+              - listitem [ref=e159]:
+                - link "Conformidade LGPD" [ref=e160] [cursor=pointer]:
+                  - /url: /gestao/lgpd
+                  - img [ref=e162]
+                  - generic [ref=e165]: Conformidade LGPD
+              - listitem [ref=e166]:
+                - link "Alertas de abuso" [ref=e167] [cursor=pointer]:
+                  - /url: /gestao/abuso
+                  - img [ref=e169]
+                  - generic [ref=e171]: Alertas de abuso
+              - listitem [ref=e172]:
+                - link "Auditoria preditiva" [ref=e173] [cursor=pointer]:
+                  - /url: /gestao/auditoria-preditiva
+                  - img [ref=e175]
+                  - generic [ref=e177]: Auditoria preditiva
+          - generic [ref=e178]:
+            - button "Relatórios" [expanded] [ref=e179] [cursor=pointer]:
+              - generic [ref=e180]: Relatórios
+              - img [ref=e181]
+            - list [ref=e183]:
+              - listitem [ref=e184]:
+                - link "Indicadores de viabilidade" [ref=e185] [cursor=pointer]:
+                  - /url: /gestao/relatorios/indicadores
+                  - img [ref=e187]
+                  - generic [ref=e189]: Indicadores de viabilidade
+              - listitem [ref=e190]:
+                - link "Tempo de análise" [ref=e191] [cursor=pointer]:
+                  - /url: /gestao/relatorios/tempo
+                  - img [ref=e193]
+                  - generic [ref=e195]: Tempo de análise
+              - listitem [ref=e196]:
+                - link "Produtividade" [ref=e197] [cursor=pointer]:
+                  - /url: /gestao/relatorios/produtividade
+                  - img [ref=e199]
+                  - generic [ref=e201]: Produtividade
+              - listitem [ref=e202]:
+                - link "Quedas do expresso" [ref=e203] [cursor=pointer]:
+                  - /url: /gestao/relatorios/quedas
+                  - img [ref=e205]
+                  - generic [ref=e207]: Quedas do expresso
+              - listitem [ref=e208]:
+                - link "Painel por bairro" [ref=e209] [cursor=pointer]:
+                  - /url: /gestao/relatorios/geo-bairro
+                  - img [ref=e211]
+                  - generic [ref=e213]: Painel por bairro
+              - listitem [ref=e214]:
+                - link "Saturação locacional" [ref=e215] [cursor=pointer]:
+                  - /url: /gestao/relatorios/saturacao
+                  - img [ref=e217]
+                  - generic [ref=e219]: Saturação locacional
+    - generic [ref=e220]:
+      - banner [ref=e221]:
+        - generic [ref=e222]:
+          - button "Alternar menu lateral" [ref=e224] [cursor=pointer]:
+            - img [ref=e225]
+          - generic [ref=e227]:
+            - generic [ref=e228]:
+              - button "Alternar tema" [ref=e229] [cursor=pointer]:
+                - img [ref=e230]
+              - link "Notificações" [ref=e232] [cursor=pointer]:
+                - /url: /gestao/notificacoes
+                - img [ref=e233]
+            - button "VS Validação SEDUR" [ref=e236] [cursor=pointer]:
+              - generic [ref=e237]: VS
+              - generic [ref=e238]: Validação SEDUR
+              - img [ref=e239]
+      - generic [ref=e241]:
+        - generic [ref=e242]:
+          - heading "Painel de gestão" [level=2] [ref=e244]
+          - navigation "Trilha de navegação" [ref=e245]:
+            - list [ref=e246]:
+              - listitem [ref=e247]:
+                - generic [ref=e248]:
+                  - text: Gestão
+                  - img [ref=e249]
+              - listitem [ref=e251]: Painel de gestão
+        - generic [ref=e252]:
+          - generic [ref=e255]:
+            - img [ref=e257]
+            - generic [ref=e259]:
+              - generic [ref=e260]: CNAEs ativos
+              - heading "1.331" [level=4] [ref=e261]
+              - paragraph [ref=e262]:
+                - generic [ref=e263]: de 1.331 cadastrados
+          - generic [ref=e264]:
+            - generic [ref=e265]:
+              - heading "Operação dos últimos 30 dias" [level=3] [ref=e266]
+              - link "Indicadores de viabilidade" [ref=e267] [cursor=pointer]:
+                - /url: /gestao/relatorios/indicadores
+                - text: Indicadores de viabilidade
+                - img [ref=e268]
+            - generic [ref=e270]:
+              - generic [ref=e271]:
+                - img [ref=e273]
+                - generic [ref=e275]:
+                  - generic [ref=e276]: Solicitações protocoladas
+                  - heading "0" [level=4] [ref=e277]
+                  - paragraph [ref=e278]:
+                    - generic [ref=e279]: nos últimos 30 dias
+              - generic [ref=e280]:
+                - img [ref=e282]
+                - generic [ref=e284]:
+                  - generic [ref=e285]: Taxa de deferimento
+                  - heading "—" [level=4] [ref=e286]
+                  - paragraph [ref=e287]:
+                    - generic [ref=e288]: sem decisões no período
+              - generic [ref=e289]:
+                - img [ref=e291]
+                - generic [ref=e293]:
+                  - generic [ref=e294]: Taxa de indeferimento
+                  - heading "—" [level=4] [ref=e295]
+                  - paragraph [ref=e296]:
+                    - generic [ref=e297]: sem decisões no período
+              - generic [ref=e298]:
+                - img [ref=e300]
+                - generic [ref=e302]:
+                  - generic [ref=e303]: Tempo médio de análise
+                  - heading "—" [level=4] [ref=e304]
+                  - paragraph [ref=e305]:
+                    - generic [ref=e306]: sem amostras no período
+              - generic [ref=e307]:
+                - img [ref=e309]
+                - generic [ref=e311]:
+                  - generic [ref=e312]: Resposta expressa
+                  - heading "—" [level=4] [ref=e313]
+                  - paragraph [ref=e314]:
+                    - generic [ref=e315]: meta não definida
+            - generic [ref=e316]:
+              - generic [ref=e317]:
+                - generic [ref=e319]:
+                  - heading "Volume de solicitações" [level=3] [ref=e320]
+                  - paragraph [ref=e321]: Protocoladas por dia nos últimos 30 dias.
+                - generic [ref=e323]: Sem dados no período.
+              - generic [ref=e324]:
+                - generic [ref=e326]:
+                  - heading "Distribuição por risco" [level=3] [ref=e327]
+                  - paragraph [ref=e328]: Por nível do Decreto nº 32.636/2020 (real) ou categoria derivada.
+                - generic [ref=e330]: Sem dados no período.
+          - link "Cadastro de atividades CNAEs" [ref=e333] [cursor=pointer]:
+            - /url: /gestao/cnaes
+            - img [ref=e335]
+            - generic [ref=e337]:
+              - generic [ref=e338]:
+                - text: Cadastro de atividades
+                - heading "CNAEs" [level=4] [ref=e339]
+              - img [ref=e340]
+          - generic [ref=e343]:
+            - generic [ref=e345]:
+              - heading "Sessão atual" [level=3] [ref=e346]
+              - paragraph [ref=e347]: Conta conectada ao ambiente de gestão da SEDUR.
+            - generic [ref=e349]:
+              - generic [ref=e350]:
+                - term [ref=e351]: Nome
+                - definition [ref=e352]: Validação SEDUR
+              - generic [ref=e353]:
+                - term [ref=e354]: E-mail
+                - definition [ref=e355]: validacao@sedur.salvador.ba.gov.br
+              - generic [ref=e356]:
+                - term [ref=e357]: Papéis
+                - definition [ref=e358]:
+                  - generic [ref=e359]: validacao-fase-completa
+  - button "Abrir busca" [ref=e360] [cursor=pointer]:
+    - img [ref=e361]
+    - generic [ref=e363]: Buscar
+    - generic [ref=e364]: ⌘K

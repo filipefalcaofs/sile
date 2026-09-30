@@ -1,0 +1,206 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - link "SILE Gestão SEDUR" [ref=e6] [cursor=pointer]:
+      - /url: /gestao
+      - generic [ref=e7]:
+        - img [ref=e9]
+        - generic [ref=e11]:
+          - generic [ref=e12]: SILE
+          - generic [ref=e13]: Gestão SEDUR
+    - navigation [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - heading "Visão geral" [level=2] [ref=e18]
+          - list [ref=e19]:
+            - listitem [ref=e20]:
+              - link "Painel" [ref=e21] [cursor=pointer]:
+                - /url: /gestao
+                - img [ref=e23]
+                - generic [ref=e25]: Painel
+        - generic [ref=e26]:
+          - heading "Cadastros" [level=2] [ref=e27]
+          - list [ref=e28]:
+            - listitem [ref=e29]:
+              - link "CNAEs" [ref=e30] [cursor=pointer]:
+                - /url: /gestao/cnaes
+                - img [ref=e32]
+                - generic [ref=e34]: CNAEs
+            - listitem [ref=e35]:
+              - link "Usuários" [ref=e36] [cursor=pointer]:
+                - /url: /gestao/usuarios
+                - img [ref=e38]
+                - generic [ref=e40]: Usuários
+            - listitem [ref=e41]:
+              - link "Perfis" [ref=e42] [cursor=pointer]:
+                - /url: /gestao/perfis
+                - img [ref=e44]
+                - generic [ref=e47]: Perfis
+        - generic [ref=e48]:
+          - heading "Sistema" [level=2] [ref=e49]
+          - list [ref=e50]:
+            - listitem [ref=e51]:
+              - link "Parâmetros" [ref=e52] [cursor=pointer]:
+                - /url: /gestao/parametros
+                - img [ref=e54]
+                - generic [ref=e56]: Parâmetros
+  - generic [ref=e57]:
+    - banner [ref=e58]:
+      - generic [ref=e59]:
+        - button "Alternar menu lateral" [ref=e61] [cursor=pointer]:
+          - img [ref=e62]
+        - generic [ref=e64]:
+          - button "Alternar tema" [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+          - button "AS Administrador SILE" [ref=e70] [cursor=pointer]:
+            - generic [ref=e71]: AS
+            - generic [ref=e72]: Administrador SILE
+            - img [ref=e73]
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - heading "Parâmetros do sistema" [level=2] [ref=e78]
+        - navigation "Trilha de navegação" [ref=e79]:
+          - list [ref=e80]:
+            - listitem [ref=e81]:
+              - link "Painel" [ref=e82] [cursor=pointer]:
+                - /url: /gestao
+                - text: Painel
+                - img [ref=e83]
+            - listitem [ref=e85]: Parâmetros do sistema
+      - generic [ref=e86]:
+        - paragraph [ref=e87]: Alterações valem imediatamente, sem novo deploy, e ficam registradas no histórico auditado
+        - generic [ref=e88]:
+          - heading "Funcionalidades" [level=3] [ref=e90]
+          - generic [ref=e92]:
+            - generic [ref=e93]:
+              - generic [ref=e94]:
+                - heading "Habilita o módulo de procurações no portal" [level=4] [ref=e96]
+                - paragraph [ref=e97]: features.procuracoes
+                - paragraph [ref=e98]: "Padrão: 1"
+              - link "Histórico" [ref=e99] [cursor=pointer]:
+                - /url: /gestao/parametros/features.procuracoes/historico
+            - generic [ref=e101]:
+              - generic [ref=e102]:
+                - generic [ref=e103]: Valor
+                - generic [ref=e104] [cursor=pointer]: Ativado
+              - button "Salvar" [ref=e109] [cursor=pointer]
+        - generic [ref=e110]:
+          - heading "Segurança" [level=3] [ref=e112]
+          - generic [ref=e114]:
+            - generic [ref=e115]:
+              - generic [ref=e116]:
+                - heading "Tentativas de login antes do bloqueio temporário" [level=4] [ref=e118]
+                - paragraph [ref=e119]: security.login.max_attempts
+                - paragraph [ref=e120]: "Padrão: 5"
+              - link "Histórico" [ref=e121] [cursor=pointer]:
+                - /url: /gestao/parametros/security.login.max_attempts/historico
+            - generic [ref=e123]:
+              - generic [ref=e124]:
+                - generic [ref=e125]: Valor
+                - spinbutton "Valor" [ref=e128]: "5"
+              - button "Salvar" [ref=e130] [cursor=pointer]
+          - generic [ref=e132]:
+            - generic [ref=e133]:
+              - generic [ref=e134]:
+                - heading "Tamanho mínimo da senha dos usuários" [level=4] [ref=e136]
+                - paragraph [ref=e137]: security.password.min_length
+                - paragraph [ref=e138]: "Padrão: 8"
+              - link "Histórico" [ref=e139] [cursor=pointer]:
+                - /url: /gestao/parametros/security.password.min_length/historico
+            - generic [ref=e141]:
+              - generic [ref=e142]:
+                - generic [ref=e143]: Valor
+                - spinbutton "Valor" [ref=e146]: "8"
+              - button "Salvar" [ref=e148] [cursor=pointer]
+          - generic [ref=e150]:
+            - generic [ref=e151]:
+              - generic [ref=e152]:
+                - heading "Exigir letras maiúsculas e minúsculas na senha" [level=4] [ref=e154]
+                - paragraph [ref=e155]: security.password.require_mixed_case
+                - paragraph [ref=e156]: "Padrão: 1"
+              - link "Histórico" [ref=e157] [cursor=pointer]:
+                - /url: /gestao/parametros/security.password.require_mixed_case/historico
+            - generic [ref=e159]:
+              - generic [ref=e160]:
+                - generic [ref=e161]: Valor
+                - generic [ref=e162] [cursor=pointer]: Ativado
+              - button "Salvar" [ref=e167] [cursor=pointer]
+          - generic [ref=e169]:
+            - generic [ref=e170]:
+              - generic [ref=e171]:
+                - heading "Exigir números na senha" [level=4] [ref=e173]
+                - paragraph [ref=e174]: security.password.require_numbers
+                - paragraph [ref=e175]: "Padrão: 1"
+              - link "Histórico" [ref=e176] [cursor=pointer]:
+                - /url: /gestao/parametros/security.password.require_numbers/historico
+            - generic [ref=e178]:
+              - generic [ref=e179]:
+                - generic [ref=e180]: Valor
+                - generic [ref=e181] [cursor=pointer]: Ativado
+              - button "Salvar" [ref=e186] [cursor=pointer]
+          - generic [ref=e188]:
+            - generic [ref=e189]:
+              - generic [ref=e190]:
+                - heading "Exigir símbolos na senha" [level=4] [ref=e192]
+                - paragraph [ref=e193]: security.password.require_symbols
+                - paragraph [ref=e194]: "Padrão: 0"
+              - link "Histórico" [ref=e195] [cursor=pointer]:
+                - /url: /gestao/parametros/security.password.require_symbols/historico
+            - generic [ref=e197]:
+              - generic [ref=e198]:
+                - generic [ref=e199]: Valor
+                - generic [ref=e200] [cursor=pointer]: Desativado
+              - button "Salvar" [ref=e205] [cursor=pointer]
+          - generic [ref=e207]:
+            - generic [ref=e208]:
+              - generic [ref=e209]:
+                - heading "Validade em minutos do link de recuperação de senha" [level=4] [ref=e211]
+                - paragraph [ref=e212]: security.password_reset_expire
+                - paragraph [ref=e213]: "Padrão: 60"
+              - link "Histórico" [ref=e214] [cursor=pointer]:
+                - /url: /gestao/parametros/security.password_reset_expire/historico
+            - generic [ref=e216]:
+              - generic [ref=e217]:
+                - generic [ref=e218]: Valor
+                - spinbutton "Valor" [ref=e221]: "60"
+              - button "Salvar" [ref=e223] [cursor=pointer]
+        - generic [ref=e224]:
+          - heading "Interface" [level=3] [ref=e226]
+          - generic [ref=e228]:
+            - generic [ref=e229]:
+              - generic [ref=e230]:
+                - heading "Itens por página no histórico de acessos" [level=4] [ref=e232]
+                - paragraph [ref=e233]: ui.access_history.per_page
+                - paragraph [ref=e234]: "Padrão: 15"
+              - link "Histórico" [ref=e235] [cursor=pointer]:
+                - /url: /gestao/parametros/ui.access_history.per_page/historico
+            - generic [ref=e237]:
+              - generic [ref=e238]:
+                - generic [ref=e239]: Valor
+                - spinbutton "Valor" [ref=e242]: "15"
+              - button "Salvar" [ref=e244] [cursor=pointer]
+          - generic [ref=e246]:
+            - generic [ref=e247]:
+              - generic [ref=e248]:
+                - heading "Itens por página na listagem de CNAEs" [level=4] [ref=e250]
+                - paragraph [ref=e251]: ui.cnaes.per_page
+                - paragraph [ref=e252]: "Padrão: 15"
+              - link "Histórico" [ref=e253] [cursor=pointer]:
+                - /url: /gestao/parametros/ui.cnaes.per_page/historico
+            - generic [ref=e255]:
+              - generic [ref=e256]:
+                - generic [ref=e257]: Valor
+                - spinbutton "Valor" [ref=e260]: "15"
+              - button "Salvar" [ref=e262] [cursor=pointer]
+          - generic [ref=e264]:
+            - generic [ref=e265]:
+              - generic [ref=e266]:
+                - heading "Itens por página na listagem de usuários" [level=4] [ref=e268]
+                - paragraph [ref=e269]: ui.users.per_page
+                - paragraph [ref=e270]: "Padrão: 15"
+              - link "Histórico" [ref=e271] [cursor=pointer]:
+                - /url: /gestao/parametros/ui.users.per_page/historico
+            - generic [ref=e273]:
+              - generic [ref=e274]:
+                - generic [ref=e275]: Valor
+                - spinbutton "Valor" [ref=e278]: "15"
+              - button "Salvar" [ref=e280] [cursor=pointer]

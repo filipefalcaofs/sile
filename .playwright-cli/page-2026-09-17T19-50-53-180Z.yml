@@ -1,0 +1,58 @@
+- main [ref=e3]:
+  - region "Apresentação do console" [ref=e4]:
+    - img [aria-hidden]:
+      - generic: ZUS-04 · VIÁVEL
+      - generic: ZPR-12
+      - generic: ZCM-07
+      - generic: ZEIS-03
+    - generic [ref=e5]:
+      - generic [ref=e10]:
+        - generic [ref=e11]: VIABILIZA
+        - generic [ref=e12]: A viabilidade certa, no lugar certo
+      - generic [ref=e13]: Ambiente interno
+    - generic [ref=e15]:
+      - paragraph [ref=e16]: Gestão de licenciamento eletrônico
+      - heading "A cidade, zona a zona" [level=1] [ref=e17]: A cidade,zona a zona
+      - paragraph [ref=e18]: Análise de viabilidade locacional com fundamentação legal registrada em cada decisão — LOUOS e PDDU citadas, protocolo assinado, trilha completa.
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - term [ref=e22]: Auditoria
+          - definition [ref=e23]: 100% rastreável
+        - generic [ref=e24]:
+          - term [ref=e25]: Protocolo
+          - definition [ref=e26]: Digital e assinado
+        - generic [ref=e27]:
+          - term [ref=e28]: Base legal
+          - definition [ref=e29]: Lei nº 9.184/2016
+      - generic [ref=e30]:
+        - img "Prefeitura de Salvador" [ref=e31]
+        - img "SEDUR — Secretaria de Desenvolvimento Urbano" [ref=e32]
+  - region [ref=e33]:
+    - generic [ref=e34]:
+      - paragraph [ref=e35]: Acesso restrito
+      - heading "Entre no console" [level=2] [ref=e36]
+      - paragraph [ref=e37]: Use seu e-mail institucional para acessar o ambiente de gestão.
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: E-mail institucional
+          - textbox "E-mail institucional" [invalid] [ref=e41]:
+            - /placeholder: nome@salvador.ba.gov.br
+            - text: admin@sile.dev
+          - paragraph [ref=e61]: As credenciais indicadas não coincidem com as registradas no sistema.
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - generic [ref=e44]: Senha
+            - link "Esqueceu?" [ref=e45] [cursor=pointer]:
+              - /url: /gestao/forgot-password
+          - generic [ref=e46]:
+            - textbox "Senha" [ref=e47]: password
+            - button "Mostrar senha" [ref=e48] [cursor=pointer]
+        - generic [ref=e51] [cursor=pointer]:
+          - checkbox "Manter conectado neste dispositivo" [checked] [ref=e52]
+          - text: Manter conectado neste dispositivo
+        - button "Entrar no console" [ref=e53] [cursor=pointer]
+      - paragraph [ref=e57]: Acesso exclusivo para servidores autorizados pela SEDUR. Atividades nesta sessão são registradas para fins de auditoria.
+    - generic [ref=e58]:
+      - generic [ref=e59]: SEDUR · VIABILIZA
+      - generic "Versão desta instância" [ref=e60]: v0.1.0

@@ -1,0 +1,141 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "SILE SEDUR — Salvador" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]:
+          - img [ref=e9]
+          - generic [ref=e13]:
+            - generic [ref=e14]: SILE
+            - generic [ref=e15]: SEDUR — Salvador
+      - navigation "Navegação principal" [ref=e16]:
+        - list [ref=e17]:
+          - listitem [ref=e18]:
+            - link "Serviços" [ref=e19] [cursor=pointer]:
+              - /url: "#servicos"
+          - listitem [ref=e20]:
+            - link "Como funciona" [ref=e21] [cursor=pointer]:
+              - /url: "#como-funciona"
+          - listitem [ref=e22]:
+            - link "Base legal" [ref=e23] [cursor=pointer]:
+              - /url: "#base-legal"
+      - generic [ref=e24]:
+        - button "Alternar tema" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+        - link "Entrar" [ref=e28] [cursor=pointer]:
+          - /url: /login
+        - link "Criar conta" [ref=e29] [cursor=pointer]:
+          - /url: /register
+  - main [ref=e30]:
+    - generic [ref=e31]:
+      - img [ref=e32]
+      - generic [ref=e36]:
+        - generic [ref=e37]: Secretaria Municipal de Desenvolvimento Urbano — SEDUR
+        - heading "Licenciamento de atividades econômicas em Salvador" [level=1] [ref=e38]
+        - paragraph [ref=e39]: O SILE é o Sistema de Licenciamento Eletrônico da SEDUR. Ele responde à viabilidade locacional de forma automatizada, aplicando as regras da LOUOS e a classificação de risco municipal, com fundamentação legal registrada em cada decisão.
+        - generic [ref=e40]:
+          - link "Criar conta" [ref=e41] [cursor=pointer]:
+            - /url: /register
+            - text: Criar conta
+            - img [ref=e42]
+          - link "Entrar" [ref=e44] [cursor=pointer]:
+            - /url: /login
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - heading "Serviços do portal" [level=2] [ref=e48]
+        - paragraph [ref=e49]: Recursos do SILE para requerentes, procuradores e responsáveis por atividades econômicas no Município de Salvador.
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - img [ref=e53]
+          - heading "Consulta de viabilidade" [level=3] [ref=e55]
+          - paragraph [ref=e56]: Verificação de que uma atividade econômica pode funcionar no endereço pretendido, aplicando as regras de uso e ocupação do solo da LOUOS.
+        - generic [ref=e57]:
+          - img [ref=e59]
+          - heading "Solicitação de viabilidade" [level=3] [ref=e61]
+          - paragraph [ref=e62]: Protocolo do pedido de viabilidade locacional e acompanhamento do andamento do processo diretamente pelo portal.
+        - generic [ref=e63]:
+          - img [ref=e65]
+          - heading "Fluxo expresso" [level=3] [ref=e67]
+          - paragraph [ref=e68]: Resposta automática para atividades de baixo risco, conforme a classificação de risco do Decreto nº 32.636/2020.
+        - generic [ref=e69]:
+          - img [ref=e71]
+          - heading "Procurações" [level=3] [ref=e73]
+          - paragraph [ref=e74]: Vínculo de procurador para atuar em nome do interessado, com prazo de validade opcional e revogação a qualquer momento.
+    - generic [ref=e76]:
+      - generic [ref=e77]:
+        - heading "Como funciona" [level=2] [ref=e78]
+        - paragraph [ref=e79]: Da criação da conta ao resultado da análise, o processo acontece no portal.
+      - list [ref=e80]:
+        - listitem [ref=e81]:
+          - generic [ref=e82]: "1"
+          - heading "Crie sua conta" [level=3] [ref=e83]
+          - paragraph [ref=e84]: Cadastre-se no portal e acesse o ambiente do requerente.
+        - listitem [ref=e85]:
+          - generic [ref=e86]: "2"
+          - heading "Informe a atividade e o endereço" [level=3] [ref=e87]
+          - paragraph [ref=e88]: Indique o CNAE da atividade econômica e o endereço onde ela vai funcionar.
+        - listitem [ref=e89]:
+          - generic [ref=e90]: "3"
+          - heading "O sistema aplica as regras" [level=3] [ref=e91]
+          - paragraph [ref=e92]: As regras da LOUOS e a classificação de risco municipal são aplicadas automaticamente, com fundamentação legal registrada.
+        - listitem [ref=e93]:
+          - generic [ref=e94]: "4"
+          - heading "Acompanhe o resultado" [level=3] [ref=e95]
+          - paragraph [ref=e96]: Acompanhe o andamento do processo e o resultado da análise pelo portal.
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - heading "Base legal" [level=2] [ref=e100]
+        - paragraph [ref=e101]: As verificações do SILE são fundamentadas na legislação municipal e nas classificações oficiais.
+      - generic [ref=e102]:
+        - generic [ref=e103]:
+          - heading "LOUOS — Lei nº 9.148/2016" [level=3] [ref=e104]
+          - paragraph [ref=e105]: Lei de Ordenamento do Uso e da Ocupação do Solo do Município de Salvador.
+        - generic [ref=e106]:
+          - heading "Decreto nº 32.636/2020" [level=3] [ref=e107]
+          - paragraph [ref=e108]: Classificação de risco das atividades econômicas para fins de licenciamento.
+        - generic [ref=e109]:
+          - heading "CNAE-Subclasses 2.3" [level=3] [ref=e110]
+          - paragraph [ref=e111]: Classificação Nacional de Atividades Econômicas, mantida pelo IBGE/CONCLA.
+    - generic [ref=e114]:
+      - heading "Comece pelo portal" [level=2] [ref=e116]
+      - paragraph [ref=e117]: Crie sua conta para acessar os serviços do SILE ou entre com seu cadastro existente.
+      - generic [ref=e118]:
+        - link "Criar conta" [ref=e119] [cursor=pointer]:
+          - /url: /register
+          - text: Criar conta
+          - img [ref=e120]
+        - link "Entrar" [ref=e122] [cursor=pointer]:
+          - /url: /login
+  - contentinfo [ref=e123]:
+    - generic [ref=e124]:
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - img [ref=e128]
+          - generic [ref=e133]: SILE
+        - paragraph [ref=e134]:
+          - text: Sistema de Licenciamento Eletrônico
+          - text: SEDUR — Secretaria Municipal de Desenvolvimento Urbano
+          - text: Prefeitura de Salvador
+      - generic [ref=e135]:
+        - generic [ref=e136]:
+          - paragraph [ref=e137]: Portal
+          - list [ref=e138]:
+            - listitem [ref=e139]:
+              - link "Serviços" [ref=e140] [cursor=pointer]:
+                - /url: "#servicos"
+            - listitem [ref=e141]:
+              - link "Como funciona" [ref=e142] [cursor=pointer]:
+                - /url: "#como-funciona"
+            - listitem [ref=e143]:
+              - link "Base legal" [ref=e144] [cursor=pointer]:
+                - /url: "#base-legal"
+        - generic [ref=e145]:
+          - paragraph [ref=e146]: Acesso
+          - list [ref=e147]:
+            - listitem [ref=e148]:
+              - link "Entrar" [ref=e149] [cursor=pointer]:
+                - /url: /login
+            - listitem [ref=e150]:
+              - link "Criar conta" [ref=e151] [cursor=pointer]:
+                - /url: /register
+    - paragraph [ref=e153]: © 2026 SILE — Sistema de Licenciamento Eletrônico · SEDUR · Prefeitura de Salvador

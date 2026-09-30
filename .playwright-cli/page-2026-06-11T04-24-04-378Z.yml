@@ -1,0 +1,193 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - link "SILE Gestão SEDUR" [ref=e6] [cursor=pointer]:
+      - /url: /gestao
+      - generic [ref=e7]:
+        - img [ref=e9]
+        - generic [ref=e11]:
+          - generic [ref=e12]: SILE
+          - generic [ref=e13]: Gestão SEDUR
+    - navigation [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - heading "Visão geral" [level=2] [ref=e18]
+          - list [ref=e19]:
+            - listitem [ref=e20]:
+              - link "Painel" [ref=e21] [cursor=pointer]:
+                - /url: /gestao
+                - img [ref=e23]
+                - generic [ref=e25]: Painel
+        - generic [ref=e26]:
+          - heading "Cadastros" [level=2] [ref=e27]
+          - list [ref=e28]:
+            - listitem [ref=e29]:
+              - link "CNAEs" [ref=e30] [cursor=pointer]:
+                - /url: /gestao/cnaes
+                - img [ref=e32]
+                - generic [ref=e34]: CNAEs
+            - listitem [ref=e35]:
+              - link "Usuários" [ref=e36] [cursor=pointer]:
+                - /url: /gestao/usuarios
+                - img [ref=e38]
+                - generic [ref=e40]: Usuários
+            - listitem [ref=e41]:
+              - link "Perfis" [ref=e42] [cursor=pointer]:
+                - /url: /gestao/perfis
+                - img [ref=e44]
+                - generic [ref=e47]: Perfis
+        - generic [ref=e48]:
+          - heading "Sistema" [level=2] [ref=e49]
+          - list [ref=e50]:
+            - listitem [ref=e51]:
+              - link "Parâmetros" [ref=e52] [cursor=pointer]:
+                - /url: /gestao/parametros
+                - img [ref=e54]
+                - generic [ref=e56]: Parâmetros
+  - generic [ref=e57]:
+    - banner [ref=e58]:
+      - generic [ref=e59]:
+        - button "Alternar menu lateral" [ref=e61] [cursor=pointer]:
+          - img [ref=e62]
+        - generic [ref=e64]:
+          - button "Alternar tema" [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+          - button "AS Administrador SILE" [ref=e70] [cursor=pointer]:
+            - generic [ref=e71]: AS
+            - generic [ref=e72]: Administrador SILE
+            - img [ref=e73]
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - heading "CNAEs" [level=2] [ref=e78]
+        - navigation "Trilha de navegação" [ref=e79]:
+          - list [ref=e80]:
+            - listitem [ref=e81]:
+              - link "Painel" [ref=e82] [cursor=pointer]:
+                - /url: /gestao
+                - text: Painel
+                - img [ref=e83]
+            - listitem [ref=e85]: CNAEs
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - heading "CNAEs cadastrados" [level=3] [ref=e89]
+            - paragraph [ref=e90]: Estrutura oficial CNAE-Subclasses 2.3 (IBGE/CONCLA)
+          - button "Cadastrar CNAE" [ref=e92] [cursor=pointer]
+        - generic [ref=e94]:
+          - generic [ref=e95]:
+            - generic [ref=e96]:
+              - generic [ref=e97]: Buscar CNAEs
+              - generic:
+                - img
+              - searchbox "Buscar CNAEs" [ref=e98]
+            - generic [ref=e99]:
+              - generic [ref=e100]:
+                - generic [ref=e101]: Filtrar por situação
+                - combobox "Filtrar por situação" [ref=e102]:
+                  - option "Situação" [disabled]
+                  - option "Ativos"
+                  - option "Inativos" [selected]
+              - generic [ref=e103]:
+                - text: Exibir
+                - combobox "Exibir por página" [ref=e104]:
+                  - option "10"
+                  - option "15" [selected]
+                  - option "25"
+                  - option "50"
+                - text: por página
+          - generic [ref=e476]:
+            - generic [ref=e477]: "Situação: Inativos"
+            - button "Limpar filtro" [ref=e478] [cursor=pointer]
+          - table [ref=e107]:
+            - rowgroup [ref=e108]:
+              - row "Código Denominação Classe Situação Ações" [ref=e109]:
+                - columnheader "Código" [ref=e110]:
+                  - button "Código" [ref=e111] [cursor=pointer]:
+                    - text: Código
+                    - img [ref=e306]
+                - columnheader "Denominação" [ref=e114]:
+                  - button "Denominação" [active] [ref=e115] [cursor=pointer]:
+                    - text: Denominação
+                    - img [ref=e309]
+                - columnheader "Classe" [ref=e119]
+                - columnheader "Situação" [ref=e120]
+                - columnheader "Ações" [ref=e121]
+            - rowgroup [ref=e122]:
+              - row [ref=e479]:
+                - cell [ref=e480]
+                - cell [ref=e482]
+                - cell [ref=e484]
+                - cell [ref=e486]
+                - cell [ref=e488]
+              - row [ref=e490]:
+                - cell [ref=e491]
+                - cell [ref=e493]
+                - cell [ref=e495]
+                - cell [ref=e497]
+                - cell [ref=e499]
+              - row [ref=e501]:
+                - cell [ref=e502]
+                - cell [ref=e504]
+                - cell [ref=e506]
+                - cell [ref=e508]
+                - cell [ref=e510]
+              - row [ref=e512]:
+                - cell [ref=e513]
+                - cell [ref=e515]
+                - cell [ref=e517]
+                - cell [ref=e519]
+                - cell [ref=e521]
+              - row [ref=e523]:
+                - cell [ref=e524]
+                - cell [ref=e526]
+                - cell [ref=e528]
+                - cell [ref=e530]
+                - cell [ref=e532]
+              - row [ref=e534]:
+                - cell [ref=e535]
+                - cell [ref=e537]
+                - cell [ref=e539]
+                - cell [ref=e541]
+                - cell [ref=e543]
+              - row [ref=e545]:
+                - cell [ref=e546]
+                - cell [ref=e548]
+                - cell [ref=e550]
+                - cell [ref=e552]
+                - cell [ref=e554]
+              - row [ref=e556]:
+                - cell [ref=e557]
+                - cell [ref=e559]
+                - cell [ref=e561]
+                - cell [ref=e563]
+                - cell [ref=e565]
+          - generic [ref=e288]:
+            - paragraph [ref=e289]: Mostrando 1–15 de 1331
+            - navigation "Paginação" [ref=e290]:
+              - generic [ref=e291]: « Anterior
+              - link "1" [ref=e292] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=1
+              - link "2" [ref=e293] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=2
+              - link "3" [ref=e294] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=3
+              - link "4" [ref=e295] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=4
+              - link "5" [ref=e296] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=5
+              - link "6" [ref=e297] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=6
+              - link "7" [ref=e298] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=7
+              - link "8" [ref=e299] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=8
+              - link "9" [ref=e300] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=9
+              - link "10" [ref=e301] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=10
+              - generic [ref=e302]: ...
+              - link "88" [ref=e303] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=88
+              - link "89" [ref=e304] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=89
+              - link "Próximo »" [ref=e305] [cursor=pointer]:
+                - /url: http://localhost:8000/gestao/cnaes?sort=description&direction=asc&per_page=15&page=2

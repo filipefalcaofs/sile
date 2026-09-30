@@ -1,0 +1,4 @@
+[   14594ms] [ERROR] Access to XMLHttpRequest at 'http://144.22.212.3/portal/painel' (redirected from 'http://144.22.212.3:8082/portal/login') from origin 'http://144.22.212.3:8082' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://144.22.212.3:8082/portal/login:0
+[   14596ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://144.22.212.3/portal/painel:0
+[   14598ms] HttpNetworkError: Network error (http://144.22.212.3:8082/portal/login)
+    at r.onerror (http://144.22.212.3:8082/build/assets/app-CSEaOXEo.js:3:1578)
