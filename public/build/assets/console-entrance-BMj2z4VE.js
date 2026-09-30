@@ -1,0 +1,1 @@
+var e=`viabiliza:entrada-console`;function t(){try{sessionStorage.setItem(e,`1`)}catch{}}function n(){try{let t=sessionStorage.getItem(e)!==null;return sessionStorage.removeItem(e),t}catch{return!1}}export{t as n,n as t};
