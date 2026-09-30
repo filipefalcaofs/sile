@@ -66,6 +66,7 @@ export interface ProcessoItem {
     escritorio_virtual: ProcessoEscritorioVirtual | null;
     sem_decisao_automatica?: boolean;
     motivo_encaminhamento?: string | null;
+    motivo_da_analise?: string | null;
 }
 
 /** Encaminhamento por risco do CNAE — não é deferido/indeferido. */

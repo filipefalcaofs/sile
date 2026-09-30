@@ -28,6 +28,8 @@ class AnalysisStatusRequest extends FormRequest
             'status' => ['required', Rule::enum(AnalysisStatus::class)],
             'motivo' => ['nullable', 'string', 'max:2000'],
             'force' => ['sometimes', 'boolean'],
+            'sector_id' => ['required_if:status,encaminhado', 'nullable', 'integer', 'exists:sectors,id'],
+            'user_id' => ['required_if:status,encaminhado', 'nullable', 'integer', 'exists:users,id'],
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Analise;
 
 use App\Enums\AnalysisStatus;
+use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -33,6 +34,38 @@ class AnalysisStatusEndpointTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame(AnalysisStatus::EmAnalise, $request->refresh()->analysis_status);
+    }
+
+    public function test_encaminhar_exige_setor_e_usuario_do_setor(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $analista = User::factory()->analista()->create();
+        $destino = User::factory()->analista()->create();
+        $setor = Sector::factory()->create(['name' => 'Análise Locacional', 'active' => true]);
+        $destino->sectors()->attach($setor->id);
+
+        $request = ViabilityRequest::factory()->create();
+        $request->forceFill(['analysis_status' => AnalysisStatus::ParaDistribuir])->save();
+
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$request->id}/status-analise", ['status' => 'encaminhado'])
+            ->assertSessionHasErrors(['sector_id', 'user_id']);
+
+        $this->assertSame(AnalysisStatus::ParaDistribuir, $request->refresh()->analysis_status);
+
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$request->id}/status-analise", [
+                'status' => 'encaminhado',
+                'sector_id' => $setor->id,
+                'user_id' => $destino->id,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $request->refresh();
+        $this->assertSame(AnalysisStatus::Encaminhado, $request->analysis_status);
+        $this->assertSame($setor->id, $request->sector_id);
+        $this->assertSame($destino->id, $request->assigned_user_id);
     }
 
     public function test_transicao_invalida_sem_override_falha(): void

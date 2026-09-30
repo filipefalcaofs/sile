@@ -9,6 +9,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\AnalysisStatusRequest;
 use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ProcessoResource;
+use App\Models\Sector;
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Analise\AnalysisStatusStateMachine;
@@ -197,14 +199,29 @@ class ProcessoController extends Controller
             'explicacao' => $viabilityRequest->decision === null
                 ? null
                 : (new DecisionExplanationResource($this->explanations->explain($viabilityRequest->decision)))->resolve(),
-            'timeline' => $viabilityRequest->transitions->map(fn ($transicao): array => [
+            'timeline' => $viabilityRequest->transitions->load('actor')->map(fn ($transicao): array => [
                 'from' => $transicao->from_status?->value,
                 'from_label' => $transicao->from_status?->label(),
                 'to' => $transicao->to_status->value,
                 'to_label' => $transicao->to_status->label(),
                 'reason' => $transicao->reason,
                 'em' => $transicao->created_at?->toIso8601String(),
+                'ator' => $transicao->actor?->name,
+                'atribuido' => $transicao->to_status === ViabilityRequestStatus::EmAnalise
+                    ? $viabilityRequest->assignedTo?->name
+                    : null,
             ])->all(),
+            'setoresEncaminhamento' => Sector::query()->where('active', true)->orderBy('name')->get(['id', 'name']),
+            'analistasEncaminhamento' => User::query()
+                ->with('sectors:id')
+                ->orderBy('name')
+                ->get()
+                ->map(fn (User $usuario): array => [
+                    'id' => $usuario->id,
+                    'name' => $usuario->name,
+                    'setores' => $usuario->sectors->pluck('id')->all(),
+                ])
+                ->all(),
             // Geometria do imóvel para o mini-mapa Leaflet (RN-006): o polígono
             // real do processo, exposto SÓ no detalhe (não infla a lista/fila). A
             // zona/via oficiais (Quadro 10) seguem pendentes na SEDUR — o mapa
@@ -256,6 +273,21 @@ class ProcessoController extends Controller
 
         if (! $force && ($from === null || ! in_array($to, $from->proximas(), true))) {
             return back()->with('error', 'Transição de situação da análise não permitida.');
+        }
+
+        if ($to === AnalysisStatus::Encaminhado) {
+            $analista = User::query()->findOrFail($request->integer('user_id'));
+            $pertence = $analista->sectors()->where('sectors.id', $request->integer('sector_id'))->exists();
+
+            if (! $pertence) {
+                return back()->with('error', 'O usuário escolhido não pertence ao setor informado.');
+            }
+
+            $viabilityRequest->forceFill([
+                'sector_id' => $request->integer('sector_id'),
+                'assigned_user_id' => $analista->id,
+                'assigned_at' => now(),
+            ])->save();
         }
 
         try {
