@@ -579,7 +579,7 @@ class AnalysisRecordController extends Controller
         foreach ($cnaes as $cnae) {
             $mascarado = substr($cnae, 0, 4).'-'.substr($cnae, 4, 1).'/'.substr($cnae, 5, 2);
 
-            $opcoes[$cnae] = $linhas
+            $lista = $linhas
                 ->where('cnae', $mascarado)
                 ->unique(fn (TratamentoEnquadramento $linha): string => $linha->codigo_louos.'|'.(string) $linha->codigo_tll)
                 ->map(fn (TratamentoEnquadramento $linha): array => [
@@ -591,6 +591,9 @@ class AnalysisRecordController extends Controller
                 ])
                 ->values()
                 ->all();
+
+            $opcoes[$cnae] = $lista;
+            $opcoes[$mascarado] = $lista;
         }
 
         return $opcoes;

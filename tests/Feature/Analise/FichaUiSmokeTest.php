@@ -145,6 +145,9 @@ class FichaUiSmokeTest extends TestCase
                     fn ($opcao): bool => $opcao['codigo_louos'] === '07.01.05'
                         && $opcao['codigo_tll'] === '2.02'
                         && $opcao['valor_tll'] === '123.45',
+                ))
+                ->where('enquadramentoOpcoes.4712-1/00', fn ($opcoes): bool => collect($opcoes)->contains(
+                    fn ($opcao): bool => $opcao['codigo_louos'] === '07.01.05',
                 )));
     }
 
