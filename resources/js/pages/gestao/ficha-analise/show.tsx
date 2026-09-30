@@ -1591,6 +1591,7 @@ export default function FichaAnaliseShow({
                     <ResumoProcessoCard
                         sugestoes={sugestoesIa ?? []}
                         iaFicha={iaFicha}
+                        restricoes={analysisReasons}
                         status={resumoStatus}
                         mensagem={resumoMensagem}
                         gerando={resumoHttp.processing || resumoStatus === 'aguardando'}
@@ -3053,6 +3054,7 @@ function SugestoesIaSkeleton() {
 function ResumoProcessoCard({
     sugestoes,
     iaFicha,
+    restricoes,
     status,
     mensagem,
     gerando,
@@ -3060,6 +3062,7 @@ function ResumoProcessoCard({
 }: {
     sugestoes: SugestaoIa[];
     iaFicha: IaFicha;
+    restricoes: string[];
     status: 'idle' | 'solicitando' | 'aguardando' | 'pronta' | 'indisponivel' | 'timeout';
     mensagem: string | null;
     gerando: boolean;
@@ -3088,6 +3091,18 @@ function ResumoProcessoCard({
                 }
             />
             <CardContent>
+                {restricoes.length > 0 && (
+                    <ul className="mb-4 space-y-2" aria-label="Restrições do processo">
+                        {restricoes.map((restricao) => (
+                            <li
+                                key={restricao}
+                                className="rounded-lg border border-gray-200 p-3 text-theme-sm text-gray-700 dark:border-gray-800 dark:text-gray-300"
+                            >
+                                {restricao}
+                            </li>
+                        ))}
+                    </ul>
+                )}
                 {resumos.length === 0 ? (
                     <div className="space-y-2">
                         {status === 'aguardando' || status === 'solicitando' ? (
