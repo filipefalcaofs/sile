@@ -2484,8 +2484,7 @@ export default function FichaAnaliseShow({
                 </div>
             </div>
 
-            {showSemFichaVistoria && (
-                <Modal isOpen onClose={() => setShowSemFichaVistoria(false)} className="m-4 max-w-[480px] p-6 lg:p-8">
+            <Modal isOpen={showSemFichaVistoria} onClose={() => setShowSemFichaVistoria(false)} className="m-4 max-w-[480px] p-6 lg:p-8">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Sem ficha de vistoria</h4>
                     <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                         Este processo não possui ficha de vistoria.
@@ -2496,7 +2495,6 @@ export default function FichaAnaliseShow({
                         </Button>
                     </div>
                 </Modal>
-            )}
 
             {/* Picker de textos-padrão */}
             {(pickerParaParecer || pickerParaCondicao) && (
@@ -2592,8 +2590,7 @@ export default function FichaAnaliseShow({
                 }}
             />
 
-            {showConclusao && (
-                <Modal isOpen onClose={() => setShowConclusao(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
+            <Modal isOpen={showConclusao} onClose={() => setShowConclusao(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de Análise</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Deferido e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o
@@ -2640,10 +2637,8 @@ export default function FichaAnaliseShow({
                         </Button>
                     </div>
                 </Modal>
-            )}
 
-            {showPendencia && (
-                <Modal isOpen onClose={() => setShowPendencia(false)} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
+            <Modal isOpen={showPendencia} onClose={() => setShowPendencia(false)} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Colocar em convite</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         O processo vai para “em convite” e o requerente é notificado para complementar.
@@ -2679,10 +2674,8 @@ export default function FichaAnaliseShow({
                         </Button>
                     </div>
                 </Modal>
-            )}
 
-            {showCancelarConvite && (
-                <Modal isOpen onClose={() => setShowCancelarConvite(false)} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
+            <Modal isOpen={showCancelarConvite} onClose={() => setShowCancelarConvite(false)} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Cancelar convite</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         O convite é cancelado e a análise reaberta. Registre o parecer com o motivo do cancelamento.
@@ -2713,11 +2706,9 @@ export default function FichaAnaliseShow({
                         </Button>
                     </div>
                 </Modal>
-            )}
 
-            {showVistoria && (
-                <Modal
-                    isOpen
+            <Modal
+                    isOpen={showVistoria}
                     onClose={() => {
                         setShowVistoria(false);
                         setErroEncaminhar(null);
@@ -2788,11 +2779,9 @@ export default function FichaAnaliseShow({
                         </Button>
                     </div>
                 </Modal>
-            )}
 
-            {showMalhaFina && (
-                <Modal
-                    isOpen
+            <Modal
+                    isOpen={showMalhaFina}
                     onClose={() => {
                         setShowMalhaFina(false);
                         setErroMalhaFina(null);
@@ -2862,10 +2851,8 @@ export default function FichaAnaliseShow({
                         </Button>
                     </div>
                 </Modal>
-            )}
 
-            {showDiff && (
-                <Modal isOpen onClose={() => setShowDiff(false)} className="m-4 max-h-[90vh] max-w-[640px] overflow-y-auto p-6 lg:p-8">
+            <Modal isOpen={showDiff} onClose={() => setShowDiff(false)} className="m-4 max-h-[90vh] max-w-[640px] overflow-y-auto p-6 lg:p-8">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Comparar revisões</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Mostra apenas o que mudou entre as revisões (RN-007).
@@ -2902,7 +2889,6 @@ export default function FichaAnaliseShow({
 
                     {diffData && <DiffView diff={diffData.diff} />}
                 </Modal>
-            )}
         </>
     );
 }

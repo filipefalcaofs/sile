@@ -1,6 +1,5 @@
-import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
-import { fadeInUp } from '@/lib/motion';
+import { Surface } from '@/components/motion';
 
 interface CardProps {
     children: ReactNode;
@@ -27,13 +26,9 @@ interface CardContentProps {
  */
 export function Card({ children, className = '' }: CardProps) {
     return (
-        <motion.div
-            initial={fadeInUp.initial}
-            animate={fadeInUp.animate}
-            className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}
-        >
+        <Surface className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
             {children}
-        </motion.div>
+        </Surface>
     );
 }
 

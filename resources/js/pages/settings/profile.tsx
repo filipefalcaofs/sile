@@ -1,6 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import Input from '@/components/form/input';
+import { Surface } from '@/components/motion';
 import Label from '@/components/form/label';
 import Button from '@/components/ui/button';
 import SettingsLayout from '@/layouts/settings-layout';
@@ -23,7 +24,7 @@ export default function Profile({ user }: ProfileProps) {
     return (
         <>
             <Head title="Meu perfil" />
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+            <Surface className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
                 <div className="mb-6">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
                         Meu perfil
@@ -107,7 +108,7 @@ export default function Profile({ user }: ProfileProps) {
                         </div>
                     )}
                 </Form>
-            </div>
+            </Surface>
         </>
     );
 }

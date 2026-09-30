@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { LockIcon, UserCircleIcon } from '@/components/icons';
+import { MotionProvider, RevealScope, Surface } from '@/components/motion';
 import Alert from '@/components/ui/alert';
 import { ThemeProvider } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
@@ -22,6 +23,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
     const currentPath = url.split('?')[0] ?? '';
 
     return (
+        <MotionProvider>
         <ThemeProvider>
             <div className="min-h-screen">
                 <header className="sticky top-0 z-99 border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
@@ -46,9 +48,10 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                             <Alert variant="success" title="Sucesso" message={flash.status} />
                         </div>
                     )}
+                    <RevealScope key={currentPath}>
                     <div className="flex flex-col gap-6 sm:flex-row">
                         <nav className="shrink-0 sm:w-56">
-                            <div className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-white/[0.03]">
+                            <Surface className="rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-white/[0.03]">
                                 <ul className="flex flex-row gap-1 sm:flex-col">
                                     {navItems.map((item) => (
                                         <li key={item.href} className="flex-1 sm:flex-none">
@@ -74,12 +77,14 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                                         </li>
                                     ))}
                                 </ul>
-                            </div>
+                            </Surface>
                         </nav>
                         <main className="flex-1">{children}</main>
                     </div>
+                    </RevealScope>
                 </div>
             </div>
         </ThemeProvider>
+        </MotionProvider>
     );
 }
