@@ -391,13 +391,6 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
                     style={{ background: 'rgba(255,255,255,0.7)', boxShadow: '0 0 8px 2px rgba(255,255,255,0.25)' }}
                 />
             ))}
-            <div
-                ref={focoLuz}
-                className="absolute inset-0 opacity-0"
-                style={{
-                    background: 'radial-gradient(circle at 70% 47%, oklch(64% 0.155 250 / 0.35) 0%, transparent 55%)',
-                }}
-            />
 
             <svg className="absolute inset-0 size-full overflow-visible">
                 <path ref={linha} d="M0 0" fill="none" stroke="oklch(64% 0.155 250 / 0.85)" strokeWidth="1" style={{ opacity: 0 }} />
@@ -406,6 +399,13 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
             </svg>
 
             <div ref={scene} className="absolute top-0 left-0 size-0">
+                {/* Foco de luz na cidade, centrado no ponto da cena */}
+                <div
+                    ref={focoLuz}
+                    className="absolute -top-[400px] -left-[400px] size-[800px] rounded-full opacity-0"
+                    style={{ background: 'radial-gradient(circle, oklch(64% 0.155 250 / 0.35) 0%, transparent 60%)' }}
+                />
+
                 {/* Linha de estado e linha do operador, acima da cena */}
                 <div className="absolute -top-[268px] -left-[220px] grid w-[440px] justify-items-center gap-2.5">
                     <div

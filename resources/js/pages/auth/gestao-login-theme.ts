@@ -36,7 +36,7 @@ export const gestaoLoginStageVeilClasses = [
 ].join(' ');
 
 export const gestaoLoginShellClasses = [
-    'flex h-dvh overflow-hidden overscroll-none bg-gray-50',
+    'relative flex h-dvh overflow-hidden overscroll-none bg-gray-50',
     "font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text','Segoe_UI',system-ui,sans-serif]",
     'text-gray-900 antialiased',
     'dark:bg-[oklch(15%_0.034_255)] dark:text-[oklch(96%_0.008_250)]',
