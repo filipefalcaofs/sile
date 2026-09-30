@@ -44,7 +44,7 @@ class MalhaFinaConcluirTest extends TestCase
             'protocoled_at' => now(),
         ]);
 
-        app(MalhaFinaService::class)->encaminhar($processo, $ator, 'Revisão de enquadramento.');
+        app(MalhaFinaService::class)->encaminharSistema($processo, 'Revisão de enquadramento.');
 
         return $processo->fresh();
     }

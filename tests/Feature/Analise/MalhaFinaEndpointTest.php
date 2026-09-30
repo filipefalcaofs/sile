@@ -5,6 +5,7 @@ namespace Tests\Feature\Analise;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Sector;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -49,9 +50,15 @@ class MalhaFinaEndpointTest extends TestCase
         $protocolo = 'VIA-'.now()->year.'-'.str_pad((string) ++$this->seq, 6, '0', STR_PAD_LEFT);
 
         $request = ViabilityRequest::factory()->create([
-            'status' => $status,
+            'status' => ViabilityRequestStatus::Deferida,
             'protocol_number' => $protocolo,
             'protocoled_at' => now(),
+        ]);
+
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $request->id,
+            'flow' => 'expresso',
+            'tvl_product_number' => 'TVL-'.$protocolo,
         ]);
 
         return $request->fresh();

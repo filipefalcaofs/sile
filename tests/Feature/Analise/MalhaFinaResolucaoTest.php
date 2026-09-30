@@ -51,7 +51,7 @@ class MalhaFinaResolucaoTest extends TestCase
     {
         $ator = $this->ator();
         $processo = $this->processo();
-        $referral = app(MalhaFinaService::class)->encaminhar($processo, $ator, 'Divergência de metragem.');
+        $referral = app(MalhaFinaService::class)->encaminharSistema($processo, 'Divergência de metragem.');
 
         app(MalhaFinaService::class)->resolver($referral, $ator, 'Conferido em campo: metragem correta.');
 
@@ -73,7 +73,7 @@ class MalhaFinaResolucaoTest extends TestCase
     {
         $ator = $this->ator();
         $processo = $this->processo();
-        $referral = app(MalhaFinaService::class)->encaminhar($processo, $ator, 'Revisão de rotina.');
+        $referral = app(MalhaFinaService::class)->encaminharSistema($processo, 'Revisão de rotina.');
 
         app(MalhaFinaService::class)->resolver($referral, $ator);
 
@@ -88,8 +88,8 @@ class MalhaFinaResolucaoTest extends TestCase
         $ator = $this->ator();
         $processo = $this->processo(ViabilityRequestStatus::Deferida);
         $service = app(MalhaFinaService::class);
-        $service->encaminhar($processo, $ator, 'Primeiro motivo.');
-        $service->encaminhar($processo, $ator, 'Segundo motivo.');
+        $service->encaminharSistema($processo, 'Primeiro motivo.');
+        $service->encaminharSistema($processo, 'Segundo motivo.');
 
         $baixados = $service->resolverAbertos($processo->fresh(), $ator, 'Baixa em conjunto.');
 

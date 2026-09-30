@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Analise;
 
+use App\Enums\DecisionOutcome;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Activity;
 use App\Models\FineMeshReferral;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\MalhaFinaException;
 use App\Services\Analise\MalhaFinaService;
@@ -39,12 +41,26 @@ class MalhaFinaServiceTest extends TestCase
         return $request;
     }
 
+    private function processoExpresso(): ViabilityRequest
+    {
+        $request = $this->processo(ViabilityRequestStatus::Deferida);
+
+        ViabilityDecision::factory()->create([
+            'viability_request_id' => $request->id,
+            'flow' => 'expresso',
+            'outcome' => DecisionOutcome::Deferida,
+            'tvl_product_number' => 'TVL-'.now()->year.'-'.str_pad((string) $request->id, 6, '0', STR_PAD_LEFT),
+        ]);
+
+        return $request->fresh();
+    }
+
     public function test_encaminhar_liga_a_flag_e_cria_referral_sem_mexer_no_status(): void
     {
         // RN-002/RN-003: cria o fine_mesh_referrals (motivo + ator) e liga a flag
         // in_fine_mesh, mas NÃO altera o status (flag, não estado).
         $ator = User::factory()->create();
-        $request = $this->processo(ViabilityRequestStatus::EmAnalise);
+        $request = $this->processoExpresso();
 
         $referral = $this->service()->encaminhar($request, $ator, 'Revisão de área construída divergente');
 
@@ -55,7 +71,7 @@ class MalhaFinaServiceTest extends TestCase
 
         $fresh = $request->fresh();
         $this->assertTrue($fresh->in_fine_mesh);
-        $this->assertSame(ViabilityRequestStatus::EmAnalise, $fresh->status);
+        $this->assertSame(ViabilityRequestStatus::Deferida, $fresh->status);
 
         // RN-002: auditoria SÍNCRONA por processo, com o motivo e o status atual.
         $activity = Activity::query()
@@ -67,7 +83,7 @@ class MalhaFinaServiceTest extends TestCase
 
         $this->assertNotNull($activity);
         $this->assertSame('Revisão de área construída divergente', $activity->properties['motivo']);
-        $this->assertSame('em_analise', $activity->properties['status']);
+        $this->assertSame('deferida', $activity->properties['status']);
         $this->assertSame($ator->id, $activity->properties['ator_id']);
     }
 
@@ -76,7 +92,7 @@ class MalhaFinaServiceTest extends TestCase
         // RN-001: malha fina atinge QUALQUER status, inclusive deferida (corrige o
         // bug legado). É flag + tabela, não transição — o desfecho não muda.
         $ator = User::factory()->create();
-        $request = $this->processo(ViabilityRequestStatus::Deferida);
+        $request = $this->processoExpresso();
 
         $referral = $this->service()->encaminhar($request, $ator, 'Auditoria interna de processo deferido');
 
@@ -95,6 +111,17 @@ class MalhaFinaServiceTest extends TestCase
 
         $this->assertNotNull($activity);
         $this->assertSame('deferida', $activity->properties['status']);
+    }
+
+    public function test_recusa_malha_fina_de_processo_em_analise_humana(): void
+    {
+        $ator = User::factory()->create();
+        $request = $this->processo(ViabilityRequestStatus::EmAnalise);
+        $request->forceFill(['analysis_status' => 'em_analise'])->save();
+
+        $this->expectException(MalhaFinaException::class);
+
+        $this->service()->encaminhar($request, $ator, 'Rever');
     }
 
     public function test_motivo_vazio_lanca_erro_de_dominio_e_nao_cria_referral(): void
@@ -123,7 +150,7 @@ class MalhaFinaServiceTest extends TestCase
     {
         // RN-003: repetível — cada encaminhamento é uma linha em fine_mesh_referrals.
         $ator = User::factory()->create();
-        $request = $this->processo();
+        $request = $this->processoExpresso();
 
         $this->service()->encaminhar($request, $ator, 'Primeira revisão');
         $this->service()->encaminhar($request, $ator, 'Segunda revisão');
@@ -136,7 +163,7 @@ class MalhaFinaServiceTest extends TestCase
     {
         // RN-004: lote aplica o mesmo motivo a vários processos, auditando cada um.
         $ator = User::factory()->create();
-        $requests = collect(range(1, 3))->map(fn () => $this->processo());
+        $requests = collect(range(1, 3))->map(fn () => $this->processoExpresso());
 
         $resumo = $this->service()->encaminharLote($requests, $ator, 'Encaminhamento em lote para auditoria');
 
@@ -159,13 +186,13 @@ class MalhaFinaServiceTest extends TestCase
         // Resolver dá baixa (resolved_at) sem transicionar o status; como era o
         // único encaminhamento aberto, a flag in_fine_mesh cai.
         $ator = User::factory()->create();
-        $request = $this->processo(ViabilityRequestStatus::EmAnalise);
+        $request = $this->processoExpresso();
         $referral = $this->service()->encaminhar($request, $ator, 'Revisão pontual');
 
         $this->service()->resolver($referral, $ator);
 
         $this->assertNotNull($referral->fresh()->resolved_at);
-        $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);
+        $this->assertSame(ViabilityRequestStatus::Deferida, $request->fresh()->status);
         $this->assertFalse($request->fresh()->in_fine_mesh);
 
         $this->assertDatabaseHas('activity_log', [
@@ -180,7 +207,7 @@ class MalhaFinaServiceTest extends TestCase
         // Invariante: in_fine_mesh = existe encaminhamento aberto. Resolver um de
         // dois mantém a flag; resolver o último a baixa.
         $ator = User::factory()->create();
-        $request = $this->processo();
+        $request = $this->processoExpresso();
 
         $primeiro = $this->service()->encaminhar($request, $ator, 'Revisão A');
         $segundo = $this->service()->encaminhar($request, $ator, 'Revisão B');
