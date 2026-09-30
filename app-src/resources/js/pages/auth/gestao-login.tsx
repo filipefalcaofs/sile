@@ -112,7 +112,7 @@ function BrandStage({
                 </span>
             </header>
 
-            <div className={`relative z-1 flex min-h-0 max-w-[720px] flex-1 flex-col justify-center py-[clamp(16px,4vh,48px)] motion-safe:animate-[sile-rise_0.6s_0.12s_cubic-bezier(0.2,0.7,0.2,1)_both] ${saidaDoPalco}`}>
+            <div className={`relative z-1 flex min-h-0 max-w-[720px] flex-1 flex-col justify-center overflow-hidden py-[clamp(16px,4vh,48px)] motion-safe:animate-[sile-rise_0.6s_0.12s_cubic-bezier(0.2,0.7,0.2,1)_both] ${saidaDoPalco}`}>
                 <p
                     className={`${monoFont} mb-[30px] flex items-center gap-3 text-[11px] leading-none font-medium tracking-[0.1em] text-[oklch(67%_0.025_250)] uppercase before:h-px before:w-8 before:bg-[oklch(64%_0.155_250)] before:content-['']`}
                 >
@@ -131,7 +131,7 @@ function BrandStage({
                 </p>
             </div>
 
-            <dl className={`relative z-1 flex shrink-0 items-end justify-between gap-6 border-t border-white/8 pt-[clamp(16px,2.5vh,24px)] motion-safe:animate-[sile-rise_0.6s_0.22s_cubic-bezier(0.2,0.7,0.2,1)_both] ${saidaDoPalco}`}>
+            <dl className={`relative z-1 flex shrink-0 items-end justify-between gap-6 overflow-hidden border-t border-white/8 pt-[clamp(16px,2.5vh,24px)] motion-safe:animate-[sile-rise_0.6s_0.22s_cubic-bezier(0.2,0.7,0.2,1)_both] ${saidaDoPalco}`}>
                 <div className="flex gap-[clamp(28px,3.5vw,64px)]">
                     {footStats.map((stat) => (
                         <div key={stat.label}>
