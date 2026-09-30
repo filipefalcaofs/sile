@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
 import { FileIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -415,18 +416,16 @@ export default function AuditoriaIndex({
                         {/* Filtros (disparam visita Inertia — server-driven) */}
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             <FiltroCampo label="Período de">
-                                <Input
-                                    type="date"
+                                <IsoDateInput
                                     value={form.data_de}
-                                    onChange={(event) => setData('data_de', event.target.value)}
+                                    onChange={(valor) => setData('data_de', valor)}
                                     aria-label="Período de"
                                 />
                             </FiltroCampo>
                             <FiltroCampo label="Período até">
-                                <Input
-                                    type="date"
+                                <IsoDateInput
                                     value={form.data_ate}
-                                    onChange={(event) => setData('data_ate', event.target.value)}
+                                    onChange={(valor) => setData('data_ate', valor)}
                                     aria-label="Período até"
                                 />
                             </FiltroCampo>

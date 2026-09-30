@@ -1,8 +1,8 @@
-import { Form, Head, router } from '@inertiajs/react';
+import { Form, Head, router, useHttp } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
-import Input from '@/components/form/input';
+import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import { AlertIcon } from '@/components/icons';
@@ -10,6 +10,7 @@ import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import GestaoLayout from '@/layouts/gestao-layout';
+import { mensagemDaConsultaSedur, resumoConsultaCpfSedur } from '@/lib/sedur-consulta';
 
 interface AttendingCitizen {
     citizen: { id: number; name: string; cpf_masked: string };
@@ -34,11 +35,46 @@ interface AtendimentoIndexProps {
 }
 
 function StartCard() {
+    const [cpf, setCpf] = useState('');
+    const consultaCpf = useHttp({ cpf: '' });
+    const [cpfErro, setCpfErro] = useState<string | null>(null);
+    const [cpfResumo, setCpfResumo] = useState<string | null>(null);
+
+    function buscarCpf() {
+        const cpfInformado = cpf.trim();
+
+        if (cpfInformado === '') {
+            setCpfErro('Informe o CPF do cidadão.');
+            setCpfResumo(null);
+
+            return;
+        }
+
+        setCpfErro(null);
+        setCpfResumo(null);
+        consultaCpf.setData('cpf', cpfInformado);
+        consultaCpf.post('/gestao/atendimento/consultar-cpf', {
+            onSuccess: (response: unknown) => {
+                const payload = response as { nome: string | null; cadastrado: boolean };
+                setCpfResumo(resumoConsultaCpfSedur(payload.nome, payload.cadastrado));
+            },
+            onError: (erros: { cpf?: string }) => {
+                setCpfErro(erros.cpf ?? 'Não foi possível consultar o CPF na SEDUR.');
+            },
+            onHttpException: (response: { data?: unknown }) => {
+                setCpfErro(mensagemDaConsultaSedur(response.data, 'Não foi possível consultar o CPF na SEDUR.'));
+            },
+            onNetworkError: () => {
+                setCpfErro('Não foi possível consultar o CPF na SEDUR.');
+            },
+        });
+    }
+
     return (
         <Card>
             <CardHeader
                 title="Iniciar atendimento"
-                description="Informe o CPF do cidadão presente no balcão para operar o sistema em nome dele, com trilha completa."
+                description="Informe o CPF do cidadão presente no balcão. Busque na SEDUR para conferir o nome antes de iniciar o vínculo."
             />
             <CardContent>
                 <Form action="/gestao/atendimento" method="post" resetOnSuccess className="max-w-md">
@@ -46,15 +82,40 @@ function StartCard() {
                         <div className="flex flex-col gap-5">
                             <div>
                                 <Label htmlFor="cpf">CPF do cidadão</Label>
-                                <Input
-                                    id="cpf"
-                                    type="text"
-                                    name="cpf"
-                                    required
-                                    placeholder="000.000.000-00"
-                                    error={!!errors.cpf}
-                                    hint={errors.cpf}
-                                />
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                    <div className="flex-1">
+                                        <MaskedInput
+                                            id="cpf"
+                                            mask="cpf"
+                                            name="cpf"
+                                            value={cpf}
+                                            onChange={(valor) => {
+                                                setCpf(valor);
+                                                setCpfErro(null);
+                                                setCpfResumo(null);
+                                            }}
+                                            required
+                                            autoComplete="off"
+                                            placeholder="000.000.000-00"
+                                            error={!!errors.cpf || !!cpfErro}
+                                            hint={errors.cpf}
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={buscarCpf}
+                                        disabled={consultaCpf.processing}
+                                        loading={consultaCpf.processing}
+                                    >
+                                        {consultaCpf.processing ? 'Buscando...' : 'Buscar CPF'}
+                                    </Button>
+                                </div>
+                                {cpfErro && <p className="mt-1.5 text-theme-xs text-error-500">{cpfErro}</p>}
+                                {cpfResumo && !cpfErro && (
+                                    <p className="mt-1.5 text-theme-xs text-gray-500 dark:text-gray-400">{cpfResumo}</p>
+                                )}
                             </div>
                             <div>
                                 <Button size="sm" type="submit" disabled={processing}>

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import { CloseIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
@@ -241,7 +242,20 @@ function CompanyDataCard({ company, abilities }: { company: CompanyDetail; abili
                                 hint={errors.state}
                             />
                         </div>
-                        {textField('zip_code', 'CEP', { maxLength: 9 })}
+                        <div>
+                            <Label htmlFor="zip_code">CEP</Label>
+                            <MaskedInput
+                                id="zip_code"
+                                mask="cep"
+                                name="zip_code"
+                                value={data.zip_code}
+                                onChange={(valor) => setData('zip_code', valor)}
+                                placeholder="00000-000"
+                                disabled={readOnly}
+                                error={!!errors.zip_code}
+                                hint={errors.zip_code}
+                            />
+                        </div>
                     </div>
 
                     <h4 className="border-t border-gray-100 pt-5 text-sm font-semibold text-gray-800 dark:border-gray-800 dark:text-white/90">
@@ -249,7 +263,19 @@ function CompanyDataCard({ company, abilities }: { company: CompanyDetail; abili
                     </h4>
                     <div className="grid gap-5 sm:grid-cols-2">
                         {textField('email', 'E-mail', { type: 'email' })}
-                        {textField('phone', 'Telefone', { maxLength: 11 })}
+                        <div>
+                            <Label htmlFor="phone">Telefone</Label>
+                            <MaskedInput
+                                id="phone"
+                                mask="phone"
+                                name="phone"
+                                value={data.phone}
+                                onChange={(valor) => setData('phone', valor)}
+                                disabled={readOnly}
+                                error={!!errors.phone}
+                                hint={errors.phone}
+                            />
+                        </div>
                     </div>
 
                     <div className="flex justify-end border-t border-gray-100 pt-5 dark:border-gray-800">

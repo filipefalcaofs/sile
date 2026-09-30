@@ -3,6 +3,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
 import { AlertIcon, CheckCircleIcon, ListIcon } from '@/components/icons';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import Chart from '@/components/ui/chart/chart';
@@ -249,18 +250,16 @@ export default function TempoAnalise({ tempoPorEtapa, tempoEmissaoTvl, filtros }
                     <CardContent>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                             <FiltroCampo label="Período de">
-                                <Input
-                                    type="date"
+                                <IsoDateInput
                                     value={form.data_de}
-                                    onChange={(e) => setData('data_de', e.target.value)}
+                                    onChange={(valor) => setData('data_de', valor)}
                                     aria-label="Período de"
                                 />
                             </FiltroCampo>
                             <FiltroCampo label="Período até">
-                                <Input
-                                    type="date"
+                                <IsoDateInput
                                     value={form.data_ate}
-                                    onChange={(e) => setData('data_ate', e.target.value)}
+                                    onChange={(valor) => setData('data_ate', valor)}
                                     aria-label="Período até"
                                 />
                             </FiltroCampo>

@@ -12,6 +12,7 @@ use App\Http\Controllers\Gestao\AuditoriaPreditivaController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\ConclusaoAnaliseController;
+use App\Http\Controllers\Gestao\ConsultarCpfSedurController;
 use App\Http\Controllers\Gestao\ConsultarDocumentoContingenciaController;
 use App\Http\Controllers\Gestao\ConsultarInscricaoContingenciaController;
 use App\Http\Controllers\Gestao\Conta\PasswordController as ContaPasswordController;
@@ -600,7 +601,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::post('consultar-inscricao', ConsultarInscricaoContingenciaController::class)
                 ->middleware('throttle:inscricao-lookup')
                 ->name('consultar-inscricao');
-            Route::post('consultar-cpf', [ConsultarDocumentoContingenciaController::class, 'cpf'])
+            Route::post('consultar-cpf', [ConsultarCpfSedurController::class, 'contingencia'])
                 ->middleware('throttle:sedur-contato')
                 ->name('consultar-cpf');
             Route::post('consultar-cnpj', [ConsultarDocumentoContingenciaController::class, 'cnpj'])
@@ -820,6 +821,9 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             ->name('atendimento.')
             ->group(function () {
                 Route::get('/', [AssistedAttendanceController::class, 'index'])->name('index');
+                Route::post('consultar-cpf', [ConsultarCpfSedurController::class, 'atendimento'])
+                    ->middleware('throttle:sedur-contato')
+                    ->name('consultar-cpf');
                 Route::post('/', [AssistedAttendanceController::class, 'store'])->name('store');
                 Route::delete('/', [AssistedAttendanceController::class, 'destroy'])->name('destroy');
                 Route::post('solicitacoes', [AssistedAttendanceController::class, 'storeSolicitacao'])->name('solicitacoes.store');

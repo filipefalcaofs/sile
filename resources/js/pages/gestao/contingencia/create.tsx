@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import Switch from '@/components/form/switch';
@@ -13,6 +14,7 @@ import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import GestaoLayout from '@/layouts/gestao-layout';
+import { mensagemDaConsultaSedur, resumoConsultaCpfSedur } from '@/lib/sedur-consulta';
 
 interface ServiceType {
     id: number;
@@ -142,9 +144,13 @@ function mensagemDaConsulta(data: unknown, fallback = 'Não foi possível consul
 }
 
 function resumoSedur(nome: string | null, cadastrado: boolean, documento: 'CPF' | 'CNPJ'): string {
+    if (documento === 'CPF') {
+        return resumoConsultaCpfSedur(nome, cadastrado, 'contingencia');
+    }
+
     const situacao = cadastrado
         ? 'Já cadastrado no Viabiliza.'
-        : `Encontrado na SEDUR, mas este ${documento} ainda não está cadastrado no Viabiliza.`;
+        : 'Encontrado na SEDUR, mas este CNPJ ainda não está cadastrado no Viabiliza.';
 
     return nome ? `${nome}. ${situacao}` : situacao;
 }
@@ -291,41 +297,6 @@ function CnaeSearch({
  * protocola pelo MESMO motor do canal normal — muda só a origem (`contingencia`,
  * auditada) e o ator. O processo nasce com origem "contingência" (aviso visível).
  */
-function formatCpf(raw: string): string {
-    const digitos = raw.replace(/\D/g, '').slice(0, 11);
-    if (digitos.length <= 3) {
-        return digitos;
-    }
-    if (digitos.length <= 6) {
-        return `${digitos.slice(0, 3)}.${digitos.slice(3)}`;
-    }
-    if (digitos.length <= 9) {
-        return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6)}`;
-    }
-
-    return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9)}`;
-}
-
-function formatCnpj(raw: string): string {
-    const digitos = raw.replace(/\D/g, '').slice(0, 14);
-    const partes = [digitos.slice(0, 2), digitos.slice(2, 5), digitos.slice(5, 8), digitos.slice(8, 12), digitos.slice(12, 14)];
-    let resultado = partes[0];
-    if (partes[1]) {
-        resultado += `.${partes[1]}`;
-    }
-    if (partes[2]) {
-        resultado += `.${partes[2]}`;
-    }
-    if (partes[3]) {
-        resultado += `/${partes[3]}`;
-    }
-    if (partes[4]) {
-        resultado += `-${partes[4]}`;
-    }
-
-    return resultado;
-}
-
 export default function RegistrarContingencia({ serviceTypes, documentRequirements, tiposImovel, mapa }: ContingenciaProps) {
     const { data, setData, post, processing, errors } = useForm<ContingenciaForm>(EMPTY_FORM);
     const consultaInscricao = useHttp({ inscricao: '' });
@@ -418,7 +389,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                 setCpfErro(erros.cpf ?? 'Não foi possível consultar o CPF na SEDUR.');
             },
             onHttpException: (response: { data?: unknown }) => {
-                setCpfErro(mensagemDaConsulta(response.data, 'Não foi possível consultar o CPF na SEDUR.'));
+                setCpfErro(mensagemDaConsultaSedur(response.data, 'Não foi possível consultar o CPF na SEDUR.'));
             },
             onNetworkError: () => {
                 setCpfErro('Não foi possível consultar o CPF na SEDUR.');
@@ -449,7 +420,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                 setCnpjErro(erros.cnpj ?? 'Não foi possível consultar o CNPJ na SEDUR.');
             },
             onHttpException: (response: { data?: unknown }) => {
-                setCnpjErro(mensagemDaConsulta(response.data, 'Não foi possível consultar o CNPJ na SEDUR.'));
+                setCnpjErro(mensagemDaConsultaSedur(response.data, 'Não foi possível consultar o CNPJ na SEDUR.'));
             },
             onNetworkError: () => {
                 setCnpjErro('Não foi possível consultar o CNPJ na SEDUR.');
@@ -526,14 +497,13 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                 </Label>
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                                     <div className="flex-1">
-                                        <Input
+                                        <MaskedInput
                                             id="beneficiary_cpf"
-                                            type="text"
+                                            mask="cpf"
                                             name="beneficiary_cpf"
                                             value={data.beneficiary_cpf}
-                                            onChange={(event) => setData('beneficiary_cpf', formatCpf(event.target.value))}
+                                            onChange={(valor) => setData('beneficiary_cpf', valor)}
                                             placeholder="000.000.000-00"
-                                            maxLength={14}
                                             error={!!errors.beneficiary_cpf || !!cpfErro}
                                             hint={errors.beneficiary_cpf}
                                         />
@@ -558,13 +528,12 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                 </Label>
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                                     <div className="flex-1">
-                                        <Input
+                                        <MaskedInput
                                             id="company_cnpj"
-                                            type="text"
+                                            mask="cnpj"
                                             name="company_cnpj"
                                             value={data.company_cnpj}
-                                            onChange={(event) => setData('company_cnpj', formatCnpj(event.target.value))}
-                                            maxLength={18}
+                                            onChange={(valor) => setData('company_cnpj', valor)}
                                             placeholder="00.000.000/0000-00"
                                             error={!!errors.company_cnpj || !!cnpjErro}
                                             hint={errors.company_cnpj}
@@ -663,12 +632,12 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                     <Label htmlFor="property_registration">Inscrição imobiliária</Label>
                                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                                         <div className="flex-1">
-                                            <Input
+                                            <MaskedInput
                                                 id="property_registration"
-                                                type="text"
+                                                mask="inscricao"
                                                 name="property_registration"
                                                 value={data.property_registration}
-                                                onChange={(event) => setData('property_registration', event.target.value)}
+                                                onChange={(valor) => setData('property_registration', valor)}
                                                 placeholder="0010010010"
                                                 error={!!errors.property_registration || !!consultaErro}
                                                 hint={errors.property_registration}
@@ -773,13 +742,13 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                 </div>
                                 <div>
                                     <Label htmlFor="address_zip">CEP</Label>
-                                    <Input
+                                    <MaskedInput
                                         id="address_zip"
-                                        type="text"
+                                        mask="cep"
                                         name="address_zip"
                                         value={data.address_zip}
-                                        onChange={(event) => setData('address_zip', event.target.value)}
-                                        placeholder="00000000"
+                                        onChange={(valor) => setData('address_zip', valor)}
+                                        placeholder="00000-000"
                                     />
                                 </div>
                             </div>

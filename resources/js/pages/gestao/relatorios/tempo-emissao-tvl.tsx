@@ -5,6 +5,7 @@ import BaixarTvl from '@/components/analise/baixar-tvl';
 import PageHeader from '@/components/app/page-header';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import { InfoIcon, SearchIcon, TableIcon } from '@/components/icons';
@@ -356,20 +357,18 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
                                 </div>
                                 <div>
                                     <Label htmlFor="filtro-data-de">Data inicial</Label>
-                                    <Input
+                                    <IsoDateInput
                                         id="filtro-data-de"
-                                        type="date"
                                         value={form.data_de}
-                                        onChange={(e) => setForm((atual) => ({ ...atual, data_de: e.target.value }))}
+                                        onChange={(valor) => setForm((atual) => ({ ...atual, data_de: valor }))}
                                     />
                                 </div>
                                 <div>
                                     <Label htmlFor="filtro-data-ate">Data final</Label>
-                                    <Input
+                                    <IsoDateInput
                                         id="filtro-data-ate"
-                                        type="date"
                                         value={form.data_ate}
-                                        onChange={(e) => setForm((atual) => ({ ...atual, data_ate: e.target.value }))}
+                                        onChange={(valor) => setForm((atual) => ({ ...atual, data_ate: valor }))}
                                     />
                                 </div>
                                 <div>

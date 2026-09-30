@@ -4,6 +4,7 @@ import { useState } from 'react';
 import AccessibilityBar from '@/components/app/accessibility-bar';
 import Logo from '@/components/app/logo';
 import Input from '@/components/form/input';
+import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import { MapaSection } from '@/components/geo/mapa-section';
 import { ArrowRightIcon, FileIcon, MapPinIcon, MoonIcon, SearchIcon, SunIcon } from '@/components/icons';
@@ -333,12 +334,12 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                                     <Label htmlFor="inscricao" required>
                                                         Inscrição imobiliária
                                                     </Label>
-                                                    <Input
+                                                    <MaskedInput
                                                         id="inscricao"
-                                                        type="text"
+                                                        mask="inscricao"
                                                         name="inscricao"
                                                         value={inscricao}
-                                                        onChange={(event) => setInscricao(event.target.value)}
+                                                        onChange={setInscricao}
                                                         placeholder="Número da inscrição"
                                                         disabled={!consultaEnabled}
                                                     />

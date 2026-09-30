@@ -6,6 +6,8 @@ import { rotuloSemSla, type ProcessoItem } from '@/components/analise/processo-u
 import PageHeader from '@/components/app/page-header';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
+import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import { CloseIcon, FileIcon, SearchIcon } from '@/components/icons';
@@ -849,13 +851,13 @@ function PainelFiltros({
                     </GrupoFiltro>
                     <GrupoFiltro titulo="Requerente">
                         <CampoTexto id="filtro-nome" label="Empresa / requerente" value={form.nome} onChange={(valor) => definir('nome', valor)} />
-                        <CampoTexto id="filtro-cnpj" label="CNPJ" value={form.cnpj} onChange={(valor) => definir('cnpj', valor)} />
+                        <CampoMascara id="filtro-cnpj" label="CNPJ" mask="cnpj" value={form.cnpj} onChange={(valor) => definir('cnpj', valor)} />
                     </GrupoFiltro>
                     <GrupoFiltro titulo="Imóvel">
-                        <CampoTexto id="filtro-inscricao" label="Inscrição imobiliária" value={form.inscricao} onChange={(valor) => definir('inscricao', valor)} />
+                        <CampoMascara id="filtro-inscricao" label="Inscrição imobiliária" mask="inscricao" value={form.inscricao} onChange={(valor) => definir('inscricao', valor)} />
                         <CampoTexto id="filtro-logradouro" label="Logradouro" value={form.logradouro} onChange={(valor) => definir('logradouro', valor)} />
                         <CampoTexto id="filtro-bairro" label="Bairro" value={form.bairro} onChange={(valor) => definir('bairro', valor)} />
-                        <CampoTexto id="filtro-cep" label="CEP" value={form.cep} onChange={(valor) => definir('cep', valor)} />
+                        <CampoMascara id="filtro-cep" label="CEP" mask="cep" value={form.cep} onChange={(valor) => definir('cep', valor)} />
                     </GrupoFiltro>
                     <GrupoFiltro titulo="Classificação e responsáveis">
                         <div>
@@ -883,8 +885,8 @@ function PainelFiltros({
                         <CampoTexto id="filtro-analista" label="Analista (ID)" type="number" value={form.analista} onChange={(valor) => definir('analista', valor)} />
                     </GrupoFiltro>
                     <GrupoFiltro titulo="Período">
-                        <CampoTexto id="filtro-data-de" label="Protocolado de" type="date" value={form.data_de} onChange={(valor) => definir('data_de', valor)} />
-                        <CampoTexto id="filtro-data-ate" label="Protocolado até" type="date" value={form.data_ate} onChange={(valor) => definir('data_ate', valor)} />
+                        <CampoData id="filtro-data-de" label="Protocolado de" value={form.data_de} onChange={(valor) => definir('data_de', valor)} />
+                        <CampoData id="filtro-data-ate" label="Protocolado até" value={form.data_ate} onChange={(valor) => definir('data_ate', valor)} />
                     </GrupoFiltro>
                 </div>
 
@@ -928,6 +930,46 @@ function CampoTexto({
         <div>
             <Label htmlFor={id}>{label}</Label>
             <Input id={id} type={type} value={value} onChange={(evento) => onChange(evento.target.value)} />
+        </div>
+    );
+}
+
+function CampoMascara({
+    id,
+    label,
+    mask,
+    value,
+    onChange,
+}: {
+    id: string;
+    label: string;
+    mask: 'cpf' | 'cnpj' | 'cep' | 'phone' | 'date' | 'inscricao';
+    value: string;
+    onChange: (value: string) => void;
+}) {
+    return (
+        <div>
+            <Label htmlFor={id}>{label}</Label>
+            <MaskedInput id={id} mask={mask} value={value} onChange={onChange} />
+        </div>
+    );
+}
+
+function CampoData({
+    id,
+    label,
+    value,
+    onChange,
+}: {
+    id: string;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+}) {
+    return (
+        <div>
+            <Label htmlFor={id}>{label}</Label>
+            <IsoDateInput id={id} value={value} onChange={onChange} />
         </div>
     );
 }

@@ -1,5 +1,7 @@
 import { type FormEvent, useState } from 'react';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
+import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import Button from '@/components/ui/button';
@@ -84,11 +86,11 @@ export default function ProcessoFiltros({
                 </div>
                 <div>
                     <Label htmlFor="filtro-data-de">Data início</Label>
-                    <Input id="filtro-data-de" type="date" value={form.data_de} onChange={(e) => definir('data_de', e.target.value)} />
+                    <IsoDateInput id="filtro-data-de" value={form.data_de} onChange={(valor) => definir('data_de', valor)} />
                 </div>
                 <div>
                     <Label htmlFor="filtro-data-ate">Data fim</Label>
-                    <Input id="filtro-data-ate" type="date" value={form.data_ate} onChange={(e) => definir('data_ate', e.target.value)} />
+                    <IsoDateInput id="filtro-data-ate" value={form.data_ate} onChange={(valor) => definir('data_ate', valor)} />
                 </div>
                 <div>
                     <Label htmlFor="filtro-analysis-status">Status tramitação</Label>
@@ -112,7 +114,7 @@ export default function ProcessoFiltros({
                     </div>
                     <div>
                         <Label htmlFor="filtro-cnpj">CNPJ</Label>
-                        <Input id="filtro-cnpj" value={form.cnpj} onChange={(e) => definir('cnpj', e.target.value)} />
+                        <MaskedInput id="filtro-cnpj" mask="cnpj" value={form.cnpj} onChange={(valor) => definir('cnpj', valor)} />
                     </div>
                     <div>
                         <Label htmlFor="filtro-bairro">Bairro</Label>

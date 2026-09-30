@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import MaskedInput from '@/components/form/masked-input';
+import { applyAlphanumericCnpjMask } from '@/lib/masks';
 import Label from '@/components/form/label';
 import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
@@ -70,45 +72,13 @@ const LOOKUP_FIELDS: (keyof CompanyForm)[] = [
     'phone',
 ];
 
-/**
- * Aplica a máscara XX.XXX.XXX/XXXX-XX sobre o conteúdo alfanumérico em
- * maiúsculas. O CNPJ alfanumérico (RFB, julho/2026) tem letras na raiz, por
- * isso NÃO restringimos a dígitos — só os 2 DV finais são numéricos.
- */
-function formatCnpj(raw: string): string {
-    const value = raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 14);
-    const parts = [
-        value.slice(0, 2),
-        value.slice(2, 5),
-        value.slice(5, 8),
-        value.slice(8, 12),
-        value.slice(12, 14),
-    ];
-
-    let result = parts[0];
-    if (parts[1]) {
-        result += `.${parts[1]}`;
-    }
-    if (parts[2]) {
-        result += `.${parts[2]}`;
-    }
-    if (parts[3]) {
-        result += `/${parts[3]}`;
-    }
-    if (parts[4]) {
-        result += `-${parts[4]}`;
-    }
-
-    return result;
-}
-
 export default function CadastrarEmpresa({ cnpjLookupEnabled }: CadastrarEmpresaProps) {
     const { data, setData, post, processing, errors } = useForm<CompanyForm>(EMPTY_FORM);
     const lookup = useHttp({ cnpj: '' });
     const [lookupError, setLookupError] = useState<string | null>(null);
 
     function handleCnpjChange(value: string) {
-        setData('cnpj', formatCnpj(value));
+        setData('cnpj', applyAlphanumericCnpjMask(value));
     }
 
     function buscarCnpj() {
@@ -362,13 +332,13 @@ export default function CadastrarEmpresa({ cnpjLookupEnabled }: CadastrarEmpresa
                             </div>
                             <div>
                                 <Label htmlFor="zip_code">CEP</Label>
-                                <Input
+                                <MaskedInput
                                     id="zip_code"
-                                    type="text"
+                                    mask="cep"
                                     name="zip_code"
                                     value={data.zip_code}
-                                    onChange={(event) => setData('zip_code', event.target.value)}
-                                    placeholder="00000000"
+                                    onChange={(valor) => setData('zip_code', valor)}
+                                    placeholder="00000-000"
                                     error={!!errors.zip_code}
                                     hint={errors.zip_code}
                                 />
@@ -395,12 +365,12 @@ export default function CadastrarEmpresa({ cnpjLookupEnabled }: CadastrarEmpresa
                             </div>
                             <div>
                                 <Label htmlFor="phone">Telefone</Label>
-                                <Input
+                                <MaskedInput
                                     id="phone"
-                                    type="text"
+                                    mask="phone"
                                     name="phone"
                                     value={data.phone}
-                                    onChange={(event) => setData('phone', event.target.value)}
+                                    onChange={(valor) => setData('phone', valor)}
                                     error={!!errors.phone}
                                     hint={errors.phone}
                                 />

@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
 import Select from '@/components/form/select';
 import { ArrowRightIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
@@ -208,11 +209,10 @@ export default function ResultadosExpressoIndex({
                                         <label htmlFor="filter-data-de" className="sr-only">
                                             Decidido a partir de
                                         </label>
-                                        <Input
+                                        <IsoDateInput
                                             id="filter-data-de"
-                                            type="date"
                                             value={table.filters.data_de}
-                                            onChange={(event) => table.setFilter('data_de', event.target.value)}
+                                            onChange={(valor) => table.setFilter('data_de', valor)}
                                             aria-label="Decidido a partir de"
                                         />
                                     </div>
@@ -220,11 +220,10 @@ export default function ResultadosExpressoIndex({
                                         <label htmlFor="filter-data-ate" className="sr-only">
                                             Decidido até
                                         </label>
-                                        <Input
+                                        <IsoDateInput
                                             id="filter-data-ate"
-                                            type="date"
                                             value={table.filters.data_ate}
-                                            onChange={(event) => table.setFilter('data_ate', event.target.value)}
+                                            onChange={(valor) => table.setFilter('data_ate', valor)}
                                             aria-label="Decidido até"
                                         />
                                     </div>

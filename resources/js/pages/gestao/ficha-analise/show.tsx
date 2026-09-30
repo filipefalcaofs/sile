@@ -8,6 +8,7 @@ import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas
 import { MapaSection } from '@/components/geo/mapa-section';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
 import Label from '@/components/form/label';
 import OptionSelect from '@/components/form/option-select';
 import Select from '@/components/form/select';
@@ -2566,11 +2567,9 @@ export default function FichaAnaliseShow({
                                 </label>
                                 <label className="flex flex-col gap-1 text-sm">
                                     Nova data de validade
-                                    <input
-                                        type="date"
-                                        className="min-h-11 rounded-lg border border-gray-300 px-3 dark:border-gray-700 dark:bg-gray-900"
+                                    <IsoDateInput
                                         value={tvlValidUntil}
-                                        onChange={(event) => setTvlValidUntil(event.target.value)}
+                                        onChange={(valor) => setTvlValidUntil(valor)}
                                     />
                                 </label>
                             </span>

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
 import Select from '@/components/form/select';
 import { GridIcon, ListIcon, MapPinIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
@@ -303,10 +304,10 @@ export default function GeoBairroPainel({ resumo, porBairro, porZona, filtros }:
                     <CardContent>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                             <FiltroCampo label="Período de">
-                                <Input type="date" value={form.data_de} onChange={(e) => setImediato('data_de', e.target.value)} aria-label="Período de" />
+                                <IsoDateInput value={form.data_de} onChange={(valor) => setImediato('data_de', valor)} aria-label="Período de" />
                             </FiltroCampo>
                             <FiltroCampo label="Período até">
-                                <Input type="date" value={form.data_ate} onChange={(e) => setImediato('data_ate', e.target.value)} aria-label="Período até" />
+                                <IsoDateInput value={form.data_ate} onChange={(valor) => setImediato('data_ate', valor)} aria-label="Período até" />
                             </FiltroCampo>
                             <FiltroCampo label="Bairro">
                                 <Input type="text" value={form.bairro} onChange={(e) => setTexto('bairro', e.target.value)} placeholder="ex.: Pituba" aria-label="Bairro" />

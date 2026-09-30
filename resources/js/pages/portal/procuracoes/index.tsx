@@ -2,6 +2,7 @@ import { Form, Head, Link, router } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
 import Label from '@/components/form/label';
 import { FileIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
@@ -131,9 +132,8 @@ function GrantProcurationCard() {
                             </div>
                             <div>
                                 <Label htmlFor="expires_at">Validade (opcional)</Label>
-                                <Input
+                                <IsoDateInput
                                     id="expires_at"
-                                    type="date"
                                     name="expires_at"
                                     error={!!errors.expires_at}
                                     hint={errors.expires_at}

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
+import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import { StepTransition } from '@/components/motion';
 import Alert from '@/components/ui/alert';
@@ -154,27 +155,25 @@ export default function RenovacaoWizard({
                             </div>
                             <div>
                                 <Label htmlFor="phone">Telefone</Label>
-                                <Input
+                                <MaskedInput
                                     id="phone"
-                                    type="tel"
-                                    inputMode="tel"
+                                    mask="phone"
                                     autoComplete="tel"
                                     required
                                     value={form.data.phone}
                                     error={Boolean(form.errors.phone)}
                                     hint={form.errors.phone}
-                                    onChange={(event) => form.setData('phone', event.target.value)}
+                                    onChange={(valor) => form.setData('phone', valor)}
                                 />
                             </div>
                             <div>
                                 <Label htmlFor="mobile">Celular</Label>
-                                <Input
+                                <MaskedInput
                                     id="mobile"
-                                    type="tel"
-                                    inputMode="tel"
+                                    mask="phone"
                                     autoComplete="tel"
                                     value={form.data.mobile}
-                                    onChange={(event) => form.setData('mobile', event.target.value)}
+                                    onChange={(valor) => form.setData('mobile', valor)}
                                 />
                             </div>
                         </div>

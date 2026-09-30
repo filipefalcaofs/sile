@@ -1,7 +1,7 @@
 import { Head, Link, useHttp } from '@inertiajs/react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
-import Input from '@/components/form/input';
+import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
@@ -42,26 +42,6 @@ function formatDate(value: string | null): string {
     }
 
     return `${match[3]}/${match[2]}/${match[1]}`;
-}
-
-function formatCnpj(raw: string): string {
-    const value = raw.replace(/\D/g, '').slice(0, 14);
-    const parts = [value.slice(0, 2), value.slice(2, 5), value.slice(5, 8), value.slice(8, 12), value.slice(12, 14)];
-    let result = parts[0];
-    if (parts[1]) {
-        result += `.${parts[1]}`;
-    }
-    if (parts[2]) {
-        result += `.${parts[2]}`;
-    }
-    if (parts[3]) {
-        result += `/${parts[3]}`;
-    }
-    if (parts[4]) {
-        result += `-${parts[4]}`;
-    }
-
-    return result;
 }
 
 function mensagemHttp(data: unknown): string | null {
@@ -119,14 +99,13 @@ export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                         <div className="w-full sm:max-w-xs">
                             <Label htmlFor="cnpj-renovacao">CNPJ</Label>
-                            <Input
+                            <MaskedInput
                                 id="cnpj-renovacao"
-                                inputMode="numeric"
+                                mask="cnpj"
                                 autoComplete="off"
                                 value={cnpj}
                                 placeholder="00.000.000/0000-00"
-                                maxLength={18}
-                                onChange={(event) => setCnpj(formatCnpj(event.target.value))}
+                                onChange={setCnpj}
                             />
                         </div>
                         <Button className="min-h-11" onClick={buscarCnpj} loading={consulta.processing} disabled={cnpj.trim() === ''}>
