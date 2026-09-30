@@ -4,6 +4,7 @@ import PageHeader from '@/components/app/page-header';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
+import { StepTransition } from '@/components/motion';
 import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -99,6 +100,7 @@ export default function RenovacaoWizard({
             <Card>
                 <CardHeader title={passos[passo]} description={origem.numero ? `TVL ${origem.numero}` : undefined} />
                 <CardContent className="flex flex-col gap-6">
+                    <StepTransition stepKey={String(passo)}>
                     {passo === 0 && (
                         <div className="flex flex-col gap-4 text-sm">
                             <p className="text-gray-600 dark:text-gray-300">
@@ -210,6 +212,7 @@ export default function RenovacaoWizard({
                             {form.errors.declaration_ids && <Alert variant="error" title="Não foi possível protocolar" message={form.errors.declaration_ids} />}
                         </div>
                     )}
+                    </StepTransition>
 
                     <div className="sticky bottom-0 -mx-1 flex flex-col-reverse gap-3 bg-white py-2 sm:flex-row sm:justify-between dark:bg-gray-900">
                         {passo > 0 ? (

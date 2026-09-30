@@ -1,5 +1,7 @@
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
+import { dropdownPop } from '@/lib/motion';
 
 interface DropdownProps {
     isOpen: boolean;
@@ -32,16 +34,21 @@ export function Dropdown({ isOpen, onClose, children, className = '' }: Dropdown
         };
     }, [onClose]);
 
-    if (!isOpen) {
-        return null;
-    }
-
+    // Sem early return quando fechado: o AnimatePresence precisa continuar
+    // montado para executar a animação de saída do painel.
     return (
-        <div
-            ref={dropdownRef}
-            className={`absolute z-40 right-0 mt-2 rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark ${className}`}
-        >
-            {children}
-        </div>
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    ref={dropdownRef}
+                    className={`absolute z-40 right-0 mt-2 origin-top-right rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark ${className}`}
+                    initial={dropdownPop.initial}
+                    animate={dropdownPop.animate}
+                    exit={dropdownPop.exit}
+                >
+                    {children}
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 }

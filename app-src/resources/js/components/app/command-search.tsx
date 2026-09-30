@@ -113,13 +113,12 @@ export default function CommandSearch() {
                 </kbd>
             </button>
 
-            {open && (
-                <Modal
-                    isOpen
-                    onClose={() => setOpen(false)}
-                    showCloseButton={false}
-                    className="m-4 mt-[10vh] max-h-[80vh] max-w-[640px] self-start overflow-hidden p-0"
-                >
+            <Modal
+                isOpen={open}
+                onClose={() => setOpen(false)}
+                showCloseButton={false}
+                className="m-4 mt-[10vh] max-h-[80vh] max-w-[640px] self-start overflow-hidden p-0"
+            >
                     <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-3 dark:border-gray-800">
                         <SearchIcon className="size-5 shrink-0 text-gray-400" />
                         <input
@@ -210,7 +209,6 @@ export default function CommandSearch() {
                         )}
                     </div>
                 </Modal>
-            )}
         </>
     );
 }

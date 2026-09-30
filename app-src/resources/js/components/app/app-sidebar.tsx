@@ -4,6 +4,7 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { filtrarGruposMenu } from '@/components/app/filtrar-menu';
 import Logo, { LogoMark } from '@/components/app/logo';
 import { ChevronDownIcon, CloseIcon, HorizontalDotsIcon, SearchIcon } from '@/components/icons';
+import { Collapse } from '@/components/motion';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { resolveActiveHref } from '@/components/app/sidebar-active';
 import {
@@ -266,21 +267,23 @@ export default function AppSidebar({
                                             {showText ? group.label : <HorizontalDotsIcon className="size-6" />}
                                         </h2>
                                     )}
-                                    <ul id={listId} hidden={!open} className="flex flex-col gap-4">
-                                        {group.items.map((item) => (
-                                            <li key={item.href}>
-                                                <Link
-                                                    href={item.href}
-                                                    className={`menu-item group ${itemStyles(isActive(item.href))}`}
-                                                >
-                                                    <span className={`menu-item-icon-size ${iconStyles(isActive(item.href))}`}>
-                                                        {item.icon}
-                                                    </span>
-                                                    {showText && <span className="menu-item-text">{item.name}</span>}
-                                                </Link>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <Collapse open={open}>
+                                        <ul id={listId} className="flex flex-col gap-4">
+                                            {group.items.map((item) => (
+                                                <li key={item.href}>
+                                                    <Link
+                                                        href={item.href}
+                                                        className={`menu-item group ${itemStyles(isActive(item.href))}`}
+                                                    >
+                                                        <span className={`menu-item-icon-size ${iconStyles(isActive(item.href))}`}>
+                                                            {item.icon}
+                                                        </span>
+                                                        {showText && <span className="menu-item-text">{item.name}</span>}
+                                                    </Link>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </Collapse>
                                 </div>
                             );
                         })}

@@ -3,6 +3,7 @@ import AppHeader from '@/components/app/app-header';
 import AppSidebar from '@/components/app/app-sidebar';
 import type { SidebarGroup, SidebarVariant } from '@/components/app/app-sidebar';
 import Backdrop from '@/components/app/backdrop';
+import { MotionProvider, PageTransition } from '@/components/motion';
 import { SidebarProvider, useSidebar } from '@/contexts/sidebar-context';
 
 interface AppShellProps {
@@ -51,7 +52,9 @@ function ShellContent({
                     accountHref={accountHref ?? '/portal/conta/perfil'}
                     toolbar={headerToolbar}
                 />
-                <div id="conteudo" className="w-full min-w-0 p-4 md:p-6">{children}</div>
+                <div id="conteudo" className="w-full min-w-0 p-4 md:p-6">
+                    <PageTransition>{children}</PageTransition>
+                </div>
             </div>
         </div>
     );
@@ -64,9 +67,11 @@ function ShellContent({
  */
 export default function AppShell(props: AppShellProps) {
     return (
-        <SidebarProvider>
-            <ShellContent {...props} />
-        </SidebarProvider>
+        <MotionProvider>
+            <SidebarProvider>
+                <ShellContent {...props} />
+            </SidebarProvider>
+        </MotionProvider>
     );
 }
 

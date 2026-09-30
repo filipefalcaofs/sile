@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { AppVersion } from '@/components/app/app-version';
 import Logo, { LogoMark } from '@/components/app/logo';
 import { CheckCircleIcon, MoonIcon, SunIcon } from '@/components/icons';
+import { FadeIn, MotionProvider } from '@/components/motion';
 import { ThemeProvider, useTheme } from '@/contexts/theme-context';
 
 interface AuthLayoutProps {
@@ -117,6 +118,7 @@ function ThemeToggleButton() {
 export default function AuthLayout({ title, subtitle, icon, children }: AuthLayoutProps) {
     return (
         <ThemeProvider>
+            <MotionProvider>
             <div className="relative z-1 flex h-dvh flex-col overflow-hidden overscroll-none bg-gray-50 dark:bg-gray-900">
                 <div className="relative flex h-full min-h-0 w-full flex-col lg:flex-row">
                     <div className="flex w-full min-h-0 flex-1 flex-col lg:w-1/2">
@@ -135,7 +137,7 @@ export default function AuthLayout({ title, subtitle, icon, children }: AuthLayo
                             <ThemeToggleButton />
                         </div>
                         <div className="mx-auto flex w-full max-w-lg min-h-0 flex-1 flex-col justify-center px-4 py-4 sm:px-0 sm:py-8">
-                            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm sm:p-8 dark:border-gray-800 dark:bg-white/[0.03]">
+                            <FadeIn className="rounded-xl border border-gray-200 bg-white p-6 shadow-theme-sm sm:p-8 dark:border-gray-800 dark:bg-white/[0.03]">
                                 <div className="mb-5 sm:mb-6">
                                     {icon && (
                                         <div className="mb-5 flex size-12 items-center justify-center rounded-xl border border-brand-100 bg-brand-50 text-brand-600 dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-400">
@@ -150,7 +152,7 @@ export default function AuthLayout({ title, subtitle, icon, children }: AuthLayo
                                     </p>
                                 </div>
                                 {children}
-                            </div>
+                            </FadeIn>
                             <p className="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
                                 <AppVersion />
                             </p>
@@ -159,6 +161,7 @@ export default function AuthLayout({ title, subtitle, icon, children }: AuthLayo
                     <BrandPanel />
                 </div>
             </div>
+            </MotionProvider>
         </ThemeProvider>
     );
 }
