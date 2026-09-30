@@ -2,6 +2,7 @@ import { useForm, usePage } from '@inertiajs/react';
 import type { Polygon } from 'geojson';
 import { useMemo, useState } from 'react';
 import Input from '@/components/form/input';
+import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import { MapaSection } from '@/components/geo/mapa-section';
 import Alert from '@/components/ui/alert';
@@ -328,13 +329,13 @@ export default function EtapaImovel({
                         </div>
                         <div>
                             <Label htmlFor="address_zip">CEP</Label>
-                            <Input
+                            <MaskedInput
                                 id="address_zip"
-                                type="text"
+                                mask="cep"
                                 name="address_zip"
                                 value={data.address_zip}
-                                onChange={(event) => setData('address_zip', event.target.value)}
-                                placeholder="40000000"
+                                onChange={(valor) => setData('address_zip', valor)}
+                                placeholder="00000-000"
                                 error={!!errors.address_zip}
                                 hint={errors.address_zip}
                             />

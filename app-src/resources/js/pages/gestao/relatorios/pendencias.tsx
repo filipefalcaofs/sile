@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import { AlertIcon, CheckCircleIcon, ListIcon, SearchIcon } from '@/components/icons';
@@ -293,20 +294,18 @@ export default function Pendencias({ resumo, relatorio, filtros, perPageOptions 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 <div>
                                     <Label htmlFor="filtro-data-de">Abertas de</Label>
-                                    <Input
+                                    <IsoDateInput
                                         id="filtro-data-de"
-                                        type="date"
                                         value={form.data_de}
-                                        onChange={(e) => setForm((atual) => ({ ...atual, data_de: e.target.value }))}
+                                        onChange={(valor) => setForm((atual) => ({ ...atual, data_de: valor }))}
                                     />
                                 </div>
                                 <div>
                                     <Label htmlFor="filtro-data-ate">Abertas até</Label>
-                                    <Input
+                                    <IsoDateInput
                                         id="filtro-data-ate"
-                                        type="date"
                                         value={form.data_ate}
-                                        onChange={(e) => setForm((atual) => ({ ...atual, data_ate: e.target.value }))}
+                                        onChange={(valor) => setForm((atual) => ({ ...atual, data_ate: valor }))}
                                     />
                                 </div>
                                 <div>

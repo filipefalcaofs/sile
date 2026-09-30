@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import { AlertIcon, CheckCircleIcon, CloseIcon, ShieldIcon } from '@/components/icons';
@@ -587,18 +588,16 @@ export default function AbusoIndex({
                                     />
                                 </FiltroCampo>
                                 <FiltroCampo label="Detectado de">
-                                    <Input
-                                        type="date"
+                                    <IsoDateInput
                                         value={form.data_de}
-                                        onChange={(evento) => setFiltro('data_de', evento.target.value)}
+                                        onChange={(valor) => setFiltro('data_de', valor)}
                                         aria-label="Detectado de"
                                     />
                                 </FiltroCampo>
                                 <FiltroCampo label="Detectado até">
-                                    <Input
-                                        type="date"
+                                    <IsoDateInput
                                         value={form.data_ate}
-                                        onChange={(evento) => setFiltro('data_ate', evento.target.value)}
+                                        onChange={(valor) => setFiltro('data_ate', valor)}
                                         aria-label="Detectado até"
                                     />
                                 </FiltroCampo>

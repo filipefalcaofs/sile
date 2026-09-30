@@ -1,7 +1,8 @@
 import { Form, Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import Input from '@/components/form/input';
-import { Surface } from '@/components/motion';
+import MaskedInput from '@/components/form/masked-input';
+import { applyMask, MASK_PATTERNS } from '@/lib/masks';
 import Label from '@/components/form/label';
 import Button from '@/components/ui/button';
 import GestaoLayout from '@/layouts/gestao-layout';
@@ -16,15 +17,11 @@ interface PerfilProps {
     };
 }
 
-function formatCpf(cpf: string): string {
-    return cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
-}
-
 export default function Perfil({ user }: PerfilProps) {
     return (
         <>
             <Head title="Meu perfil — Gestão SEDUR" />
-            <Surface className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
                 <div className="mb-6">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
                         Meu perfil
@@ -71,9 +68,9 @@ export default function Perfil({ user }: PerfilProps) {
 
                                 <div>
                                     <Label htmlFor="phone">Telefone</Label>
-                                    <Input
+                                    <MaskedInput
                                         id="phone"
-                                        type="text"
+                                        mask="phone"
                                         name="phone"
                                         defaultValue={user.phone ?? ''}
                                         autoComplete="tel"
@@ -87,7 +84,7 @@ export default function Perfil({ user }: PerfilProps) {
                                     <Input
                                         id="cpf"
                                         type="text"
-                                        value={formatCpf(user.cpf)}
+                                        value={applyMask(user.cpf, MASK_PATTERNS.cpf)}
                                         readOnly
                                         disabled
                                         hint="O CPF não pode ser alterado."
@@ -108,7 +105,7 @@ export default function Perfil({ user }: PerfilProps) {
                         </div>
                     )}
                 </Form>
-            </Surface>
+            </div>
         </>
     );
 }

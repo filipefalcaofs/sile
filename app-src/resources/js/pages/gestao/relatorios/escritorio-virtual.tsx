@@ -4,6 +4,7 @@ import type { FormEvent, ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
+import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import { InfoIcon, SearchIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
@@ -239,11 +240,11 @@ export default function EscritorioVirtual({ relatorio, filtros, perPageOptions }
                                 </div>
                                 <div>
                                     <Label htmlFor="filtro-inscricao">Inscrição Imobiliária</Label>
-                                    <Input
+                                    <MaskedInput
                                         id="filtro-inscricao"
-                                        type="text"
+                                        mask="inscricao"
                                         value={form.inscricao}
-                                        onChange={(e) => setForm((atual) => ({ ...atual, inscricao: e.target.value }))}
+                                        onChange={(valor) => setForm((atual) => ({ ...atual, inscricao: valor }))}
                                         placeholder="Inscrição imobiliária"
                                     />
                                 </div>

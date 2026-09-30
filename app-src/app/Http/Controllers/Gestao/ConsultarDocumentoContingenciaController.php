@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\ConsultarCnpjContingenciaRequest;
-use App\Http\Requests\Gestao\ConsultarCpfContingenciaRequest;
 use App\Models\Company;
-use App\Models\User;
 use App\Services\Sedur\SedurContatoClient;
 use App\Services\Sedur\SedurContatoIndisponivelException;
 use App\Services\Sedur\SedurContatoNaoEncontradoException;
@@ -25,55 +23,6 @@ class ConsultarDocumentoContingenciaController extends Controller
         private SedurContatoClient $contato,
         private AuditService $audit,
     ) {}
-
-    public function cpf(ConsultarCpfContingenciaRequest $request): JsonResponse
-    {
-        $cpf = $request->validated('cpf');
-
-        try {
-            $pessoa = $this->contato->consultarCpf($cpf);
-        } catch (SedurContatoNaoEncontradoException) {
-            $this->audit->log(
-                'contingencia',
-                'consulta-cpf',
-                'Consulta de CPF: não encontrado',
-                ['cpf' => $cpf, 'motivo' => 'nao-encontrado'],
-                result: 'falha',
-                personalData: true,
-            );
-
-            return response()->json([
-                'message' => 'CPF não encontrado na base da SEDUR.',
-            ], 404);
-        } catch (SedurContatoIndisponivelException) {
-            $this->audit->log(
-                'contingencia',
-                'consulta-cpf',
-                'Consulta de CPF: serviço indisponível',
-                ['cpf' => $cpf, 'motivo' => 'indisponibilidade'],
-                result: 'falha',
-                personalData: true,
-            );
-
-            return response()->json([
-                'message' => 'A consulta cadastral da SEDUR está indisponível. Confira o CPF e siga com o cadastro local.',
-            ], 503);
-        }
-
-        $this->audit->log(
-            'contingencia',
-            'consulta-cpf',
-            'Consulta de CPF realizada',
-            ['cpf' => $cpf],
-            result: 'sucesso',
-            personalData: true,
-        );
-
-        return response()->json([
-            'nome' => $pessoa->nome !== '' ? $pessoa->nome : null,
-            'cadastrado' => User::query()->where('cpf', $cpf)->exists(),
-        ]);
-    }
 
     public function cnpj(ConsultarCnpjContingenciaRequest $request): JsonResponse
     {

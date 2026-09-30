@@ -1,30 +1,6 @@
 import { useState, type InputHTMLAttributes } from 'react';
+import { applyDigitsOnly, applyMask, MASK_PATTERNS, type MaskPattern } from '@/lib/masks';
 import Input from './input';
-
-type MaskPattern = 'cpf' | 'phone' | 'cnpj' | 'cep';
-
-const MASKS: Record<MaskPattern, string> = {
-    cpf: '999.999.999-99',
-    phone: '(99) 99999-9999',
-    cnpj: '99.999.999/9999-99',
-    cep: '99999-999',
-};
-
-function applyMask(value: string, pattern: string): string {
-    const digits = value.replace(/\D/g, '');
-    let result = '';
-    let digitIndex = 0;
-
-    for (let i = 0; i < pattern.length && digitIndex < digits.length; i++) {
-        if (pattern[i] === '9') {
-            result += digits[digitIndex++];
-        } else {
-            result += pattern[i];
-        }
-    }
-
-    return result;
-}
 
 interface MaskedInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
     mask: MaskPattern;
@@ -41,17 +17,23 @@ export default function MaskedInput({
     onChange,
     ...rest
 }: MaskedInputProps) {
-    const pattern = MASKS[mask];
+    const pattern = mask === 'inscricao' ? '' : MASK_PATTERNS[mask];
 
     const [internalValue, setInternalValue] = useState(() => {
         const initial = (externalValue ?? defaultValue ?? '') as string;
-        return applyMask(initial, pattern);
+        return mask === 'inscricao' ? applyDigitsOnly(initial) : applyMask(initial, pattern);
     });
 
-    const displayValue = externalValue !== undefined ? applyMask(externalValue as string, pattern) : internalValue;
+    const displayValue =
+        externalValue !== undefined
+            ? mask === 'inscricao'
+                ? applyDigitsOnly(externalValue as string)
+                : applyMask(externalValue as string, pattern)
+            : internalValue;
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const masked = applyMask(e.target.value, pattern);
+        const masked =
+            mask === 'inscricao' ? applyDigitsOnly(e.target.value) : applyMask(e.target.value, pattern);
         setInternalValue(masked);
         e.target.value = masked;
         onChange?.(masked);

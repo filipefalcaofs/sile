@@ -12,6 +12,7 @@ import {
 } from '@/components/geo/poligono';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
 import Label from '@/components/form/label';
 import MaskedInput from '@/components/form/masked-input';
 import Select from '@/components/form/select';
@@ -1575,12 +1576,11 @@ function VistoriaConteudo({
                         <div className="grid grid-cols-1 gap-4 border-t border-gray-100 pt-6 sm:grid-cols-3 dark:border-gray-800">
                             <div>
                                 <Label htmlFor="data_vistoria">Data Vistoria</Label>
-                                <Input
+                                <IsoDateInput
                                     id="data_vistoria"
-                                    type="date"
                                     value={dados.data_vistoria}
                                     disabled={!editavel}
-                                    onChange={(e) => set('data_vistoria', e.target.value)}
+                                    onChange={(valor) => set('data_vistoria', valor)}
                                 />
                             </div>
                             <div>

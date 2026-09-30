@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import IsoDateInput from '@/components/form/iso-date-input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import { AlertIcon, PencilIcon, PowerIcon } from '@/components/icons';
@@ -94,7 +95,7 @@ function CreateHolidayModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
                     <div className="flex flex-col gap-5">
                         <div>
                             <Label required htmlFor="create-holiday-date">Data</Label>
-                            <Input id="create-holiday-date" type="date" name="date" required error={!!errors.date} hint={errors.date} />
+                            <IsoDateInput id="create-holiday-date" name="date" required error={!!errors.date} hint={errors.date} />
                         </div>
                         <div>
                             <Label required htmlFor="create-holiday-name">Nome</Label>
@@ -150,9 +151,8 @@ function EditHolidayModal({ holiday, onClose }: { holiday: HolidayItem; onClose:
                     <div className="flex flex-col gap-5">
                         <div>
                             <Label required htmlFor={`edit-holiday-date-${holiday.id}`}>Data</Label>
-                            <Input
+                            <IsoDateInput
                                 id={`edit-holiday-date-${holiday.id}`}
-                                type="date"
                                 name="date"
                                 defaultValue={holiday.date ?? ''}
                                 required
