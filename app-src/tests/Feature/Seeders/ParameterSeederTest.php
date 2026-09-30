@@ -200,6 +200,13 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('boolean', $geoToggle->type);
         $this->assertSame('1', $geoToggle->default_value);
 
+        $viaClasse = Parameter::query()->where('key', 'features.geoserver_via_classe')->first();
+
+        $this->assertNotNull($viaClasse);
+        $this->assertSame('features', $viaClasse->group);
+        $this->assertSame('boolean', $viaClasse->type);
+        $this->assertSame('1', $viaClasse->default_value);
+
         $geoUrl = Parameter::query()->where('key', 'integrations.geoserver.base_url')->first();
 
         $this->assertNotNull($geoUrl);
