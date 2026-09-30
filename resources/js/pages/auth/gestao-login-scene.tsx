@@ -56,6 +56,7 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
     const atual = useRef<AlvosCena | null>(null);
     const rotacaoBase = useRef(0);
     const mouse = useRef({ x: 0, y: 0 });
+    const mouseSuave = useRef({ x: 0, y: 0 });
     const blurAnterior = useRef<number[]>([-1, -1, -1]);
     const fotoAnterior = useRef('');
 
@@ -159,8 +160,14 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
             }
 
             const noShell = ESTADOS_SHELL.includes(faseRef.current);
-            const mx = noShell || reduzido ? 0 : mouse.current.x;
-            const my = noShell || reduzido ? 0 : mouse.current.y;
+
+            // O mouse entra suavizado: sem isso, entrar ou sair do palco salta
+            // a paralaxe de 0 para o valor atual e os anéis dão um tranco.
+            mouseSuave.current.x += (mouse.current.x - mouseSuave.current.x) * (1 - Math.exp(-6 * dt));
+            mouseSuave.current.y += (mouse.current.y - mouseSuave.current.y) * (1 - Math.exp(-6 * dt));
+
+            const mx = noShell || reduzido ? 0 : mouseSuave.current.x;
+            const my = noShell || reduzido ? 0 : mouseSuave.current.y;
 
             if (scene.current) {
                 scene.current.style.transform = `translate(${base.x.toFixed(1)}px, ${base.y.toFixed(1)}px)`;
@@ -270,6 +277,9 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
 
     const fundido = ESTADOS_FUNDIDOS.includes(estado);
     const noShell = ESTADOS_SHELL.includes(fase);
+    // O disco fica visível do authorized ao docking: fundo do tile até o
+    // docking, quando vira transparente para o logo da sidebar aparecer.
+    const discoVisivel = fase === 'authorized' || fase === 'preparing' || fase === 'docking';
     const { numero, texto } = TEXTOS_ESTADO[estado];
     const cor = corDoEstado(estado);
     const mostraOperador = tipoConta !== null && ['session', 'secure', 'ready', 'validating', 'authorized'].includes(estado);
