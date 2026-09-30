@@ -371,6 +371,10 @@ return [
             'senha' => '',
             'cnpj_prefeitura' => '13927801000149',
             'timeout' => 8,
+            // Resiliência do job que abre o processo a partir do envelope
+            // recebido, espelhando sile.expresso.job. Constante TÉCNICA fora do
+            // catálogo HU-014 (precedente [02-02]) — não é valor de negócio.
+            'job' => ['tries' => 3, 'timeout' => 120, 'backoff' => [30, 60, 120], 'fila' => 'default'],
         ],
     ],
     // Espelha os parâmetros HU-014 relatorios.* (EP15). Settings::get lê
