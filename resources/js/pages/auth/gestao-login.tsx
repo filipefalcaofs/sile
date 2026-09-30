@@ -31,7 +31,7 @@ import {
  * (2026-06-12): split em duas colunas. Palco de marca à esquerda com foto de
  * Salvador sob gradientes navy, mapa de zoneamento estilizado em hairlines
  * (referência à viabilidade locacional), headline display em Archivo 900 caps
- * com o diferencial do console — o motor decide, o analista confirma — e logos
+ * com mensagem institucional — decisões que constroem a cidade — e logos
  * oficiais (PMS + SEDUR) no rodapé. Coluna de acesso à direita em
  * superfície elevada separada por hairline. Abaixo de 1100px o palco some e
  * só o formulário é exibido. Sem cadastro: contas internas são administradas
@@ -46,9 +46,9 @@ const displayFont = gestaoLoginDisplayFont;
 const monoFont = gestaoLoginMonoFont;
 
 const footStats = [
-    { label: 'Expresso', value: 'Sem analista', mono: false },
-    { label: 'Análise', value: 'Confirma a decisão', mono: false },
-    { label: 'LOUOS', value: 'Lei nº 9.148/2016', mono: true },
+    { label: 'Em tempo real', value: 'Viabilidade com análise imediata', mono: false },
+    { label: '100% auditável', value: 'Rastreabilidade e histórico de cada decisão', mono: false },
+    { label: 'Segurança jurídica', value: 'Conformidade com a LOUOS — Lei nº 9.148/2016', mono: false },
 ];
 
 function BrandStage({
@@ -94,19 +94,18 @@ function BrandStage({
                 <p
                     className={`${monoFont} mb-[30px] flex items-center gap-3 text-[11px] leading-none font-medium tracking-[0.1em] text-[oklch(67%_0.025_250)] uppercase before:h-px before:w-8 before:bg-[oklch(64%_0.155_250)] before:content-['']`}
                 >
-                    Decisão de viabilidade locacional
+                    Sistema de viabilidade locacional
                 </p>
                 <h1
                     className={`${displayFont} ${gestaoLoginBrandForeground} text-[clamp(34px,3.2vw,54px)] leading-[1.04] font-extrabold tracking-[-0.02em] text-balance uppercase`}
                 >
-                    O motor decide.
+                    Decisões que
                     <br />
-                    O analista confirma.
+                    constroem a cidade.
                 </h1>
                 <p className="mt-[22px] max-w-[52ch] text-[clamp(15px,1.05vw,17px)] leading-[1.65] font-normal text-[oklch(67%_0.025_250)]">
-                    Aplica a LOUOS e a classificação de risco e já entrega a decisão. Quando a
-                    lei permite, encerra sem analista. Quando a análise humana é obrigatória, o
-                    processo chega com essa decisão para o analista confirmar.
+                    Uma plataforma inteligente para transformar regras urbanísticas em decisões mais
+                    claras, seguras e fundamentadas.
                 </p>
             </div>
 
@@ -121,7 +120,7 @@ function BrandStage({
                                 className={
                                     stat.mono
                                         ? `${monoFont} ${gestaoLoginBrandForeground} text-sm leading-[1.3] font-semibold tabular-nums`
-                                        : `${gestaoLoginBrandForeground} text-[14.5px] leading-[1.3] font-semibold`
+                                        : `${gestaoLoginBrandForeground} max-w-[18ch] text-[13px] leading-[1.35] font-semibold text-pretty`
                                 }
                             >
                                 {stat.value}
