@@ -7,11 +7,15 @@ use App\Models\Activity;
 use App\Models\ReginRecebimento;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Regin\ReginProcessoProtocolador;
 use Database\Seeders\RiscoMunicipalSeeder;
 use Database\Seeders\RiscoSanitarioSeeder;
 use Database\Seeders\RiskTriggerSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Mockery\MockInterface;
+use RuntimeException;
 use Tests\TestCase;
 
 class ReginRecebeEndpointTest extends TestCase
@@ -79,6 +83,73 @@ class ReginRecebeEndpointTest extends TestCase
         $this->assertSame('43747', $activity->properties['protocolo'] ?? null);
         $this->assertSame('3', $activity->properties['codigo'] ?? null);
         $this->assertStringNotContainsString('Não deve ir ao log', json_encode($activity->properties, JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * A protocolação faz escritas e chamadas externas (Cadastro Imobiliário,
+     * GeoServer). Dentro da transação do envelope, uma query que falhe aborta
+     * a transação inteira no PostgreSQL: a auditoria seguinte estoura e o
+     * endpoint devolve 500 sem gravar nada — contrato REGIN quebrado.
+     */
+    public function test_protocolacao_roda_fora_da_transacao_do_envelope(): void
+    {
+        $nivel = -1;
+
+        $this->mock(
+            ReginProcessoProtocolador::class,
+            function (MockInterface $mock) use (&$nivel): void {
+                $mock->shouldReceive('protocolar')
+                    ->once()
+                    ->andReturnUsing(function () use (&$nivel) {
+                        $nivel = DB::transactionLevel();
+
+                        return null;
+                    });
+            },
+        );
+
+        // A suíte roda dentro de uma transação (RefreshDatabase), aberta de
+        // forma preguiçosa na primeira query. O que importa é a protocolação
+        // NÃO acrescentar um nível sobre o envelope.
+        ReginRecebimento::query()->count();
+        $nivelBase = DB::transactionLevel();
+
+        $response = $this->postJson('/api_integracao/recebe', $this->envioDto('43747'));
+
+        $response->assertOk();
+        $this->assertSame('3', $response->getContent());
+        $this->assertSame($nivelBase, $nivel);
+    }
+
+    public function test_falha_ao_protocolar_preserva_o_envelope_e_registra_a_pendencia(): void
+    {
+        $this->mock(
+            ReginProcessoProtocolador::class,
+            function (MockInterface $mock): void {
+                $mock->shouldReceive('protocolar')
+                    ->once()
+                    ->andThrow(new RuntimeException('motor de regras indisponível'));
+            },
+        );
+
+        $response = $this->postJson('/api_integracao/recebe', $this->envioDto('43747'));
+
+        $response->assertOk();
+        $this->assertSame('3', $response->getContent());
+        $this->assertDatabaseHas('regin_recebimentos', [
+            'protocolo' => '43747',
+            'viability_request_id' => null,
+        ]);
+
+        $falha = Activity::query()->where('result', 'falha')->first();
+
+        $this->assertNotNull($falha);
+        $this->assertSame('43747', $falha->properties['protocolo'] ?? null);
+        $this->assertSame(RuntimeException::class, $falha->properties['excecao'] ?? null);
+        $this->assertStringNotContainsString(
+            'motor de regras indisponível',
+            json_encode($falha->properties, JSON_THROW_ON_ERROR),
+        );
     }
 
     public function test_post_de_protocolo_conhecido_cria_processo_pelo_motor(): void
