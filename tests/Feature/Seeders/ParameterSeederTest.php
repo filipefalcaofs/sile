@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(104, Parameter::query()->count());
+        $this->assertSame(105, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'tll'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -199,6 +199,13 @@ class ParameterSeederTest extends TestCase
         $this->assertSame('features', $geoToggle->group);
         $this->assertSame('boolean', $geoToggle->type);
         $this->assertSame('1', $geoToggle->default_value);
+
+        $viaClasse = Parameter::query()->where('key', 'features.geoserver_via_classe')->first();
+
+        $this->assertNotNull($viaClasse);
+        $this->assertSame('features', $viaClasse->group);
+        $this->assertSame('boolean', $viaClasse->type);
+        $this->assertSame('1', $viaClasse->default_value);
 
         $geoUrl = Parameter::query()->where('key', 'integrations.geoserver.base_url')->first();
 
@@ -828,6 +835,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(104, Parameter::query()->count());
+        $this->assertSame(105, Parameter::query()->count());
     }
 }
