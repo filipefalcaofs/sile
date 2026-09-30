@@ -185,7 +185,7 @@ export default function Produtividade({ produtividade, nominal, filtros }: Produ
                 title="Produtividade por analista"
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
-                    { label: 'Relatórios' },
+                    { label: 'Indicadores' },
                     { label: 'Produtividade por analista' },
                 ]}
             />
@@ -196,7 +196,7 @@ export default function Produtividade({ produtividade, nominal, filtros }: Produ
                 <Card>
                     <CardHeader
                         title="Filtros"
-                        description="Recorte por período da decisão. Os números são reais sobre as decisões de análise técnica — sem decisões no recorte, a tabela fica vazia (nunca um número inventado)."
+                        description="Recorte por período da decisão. Os números vêm das decisões de análise técnica. Sem decisões no recorte, a tabela fica vazia."
                         actions={<ExportMenu url={URL_PRODUTIVIDADE} params={currentParams} label="Exportar produtividade" />}
                     />
                     <CardContent>

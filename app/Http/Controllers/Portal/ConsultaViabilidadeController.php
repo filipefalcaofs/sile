@@ -60,6 +60,7 @@ class ConsultaViabilidadeController extends Controller
         } catch (ForaDeSalvadorException $exception) {
             return response()->json([
                 'message' => $exception->getMessage(),
+                'errors' => ['endereco' => [$exception->getMessage()]],
             ], 422);
         } catch (AddressNotFoundException) {
             return response()->json([

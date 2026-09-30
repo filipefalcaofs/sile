@@ -203,6 +203,24 @@ class AiConfigurationControllerTest extends TestCase
         $this->assertDatabaseMissing('ai_configurations', ['id' => $config->id]);
     }
 
+    public function test_nao_grava_configuracao_ativa_sem_chave(): void
+    {
+        $this->actingAs($this->administrador(), 'gestao')
+            ->post('/gestao/config-ia', $this->payload(['api_key' => '']))
+            ->assertSessionHasErrors('api_key');
+    }
+
+    public function test_nao_ativa_configuracao_sem_chave_de_api(): void
+    {
+        $config = AiConfiguration::factory()->create(['active' => false, 'api_key' => null]);
+
+        $this->actingAs($this->administrador(), 'gestao')
+            ->put("/gestao/config-ia/{$config->id}/ativacao")
+            ->assertSessionHasErrors('api_key');
+
+        $this->assertFalse($config->fresh()->active);
+    }
+
     public function test_alterna_a_ativacao_da_configuracao(): void
     {
         $config = AiConfiguration::factory()->create(['active' => true]);

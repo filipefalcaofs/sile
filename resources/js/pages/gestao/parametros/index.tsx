@@ -36,9 +36,22 @@ interface ParametersIndexProps {
 }
 
 const GROUP_LABELS: Record<string, string> = {
-    seguranca: 'Segurança',
+    abuso: 'Abuso',
+    analise: 'Análise',
+    expresso: 'Expresso',
     features: 'Funcionalidades',
+    geo: 'GEO',
+    ia: 'IA',
     integracoes: 'Integrações',
+    louos: 'LOUOS',
+    notificacoes: 'Notificações',
+    relatorios: 'Relatórios',
+    retencao: 'Retenção',
+    risco: 'Risco',
+    seguranca: 'Segurança',
+    solicitacao: 'Solicitação',
+    tll: 'TLL',
+    ui: 'UI',
 };
 
 function groupLabel(group: string): string {

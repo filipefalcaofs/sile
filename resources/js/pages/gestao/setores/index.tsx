@@ -78,7 +78,7 @@ function CreateSectorModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 {({ errors, processing }) => (
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor="create-sector-name">Nome</Label>
+                            <Label required htmlFor="create-sector-name">Nome</Label>
                             <Input
                                 id="create-sector-name"
                                 type="text"
@@ -128,7 +128,7 @@ function EditSectorModal({ sector, onClose }: { sector: SectorItem; onClose: () 
                 {({ errors, processing }) => (
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor={`edit-sector-name-${sector.id}`}>Nome</Label>
+                            <Label required htmlFor={`edit-sector-name-${sector.id}`}>Nome</Label>
                             <Input
                                 id={`edit-sector-name-${sector.id}`}
                                 type="text"

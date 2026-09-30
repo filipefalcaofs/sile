@@ -48,6 +48,7 @@ interface StandardTextsIndexProps {
         active: string;
     };
     perPageOptions: number[];
+    categorias: string[];
 }
 
 const CONTENT_STYLES =
@@ -75,7 +76,7 @@ function CreateStandardTextModal({ isOpen, onClose }: { isOpen: boolean; onClose
                 {({ errors, processing }) => (
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor="create-text-category">Categoria</Label>
+                            <Label required htmlFor="create-text-category">Categoria</Label>
                             <Input
                                 id="create-text-category"
                                 type="text"
@@ -87,7 +88,7 @@ function CreateStandardTextModal({ isOpen, onClose }: { isOpen: boolean; onClose
                             />
                         </div>
                         <div>
-                            <Label htmlFor="create-text-content">Conteúdo</Label>
+                            <Label required htmlFor="create-text-content">Conteúdo</Label>
                             <textarea
                                 id="create-text-content"
                                 name="content"
@@ -145,7 +146,7 @@ function EditStandardTextModal({ text, onClose }: { text: StandardTextItem; onCl
                 {({ errors, processing }) => (
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor={`edit-text-category-${text.id}`}>Categoria</Label>
+                            <Label required htmlFor={`edit-text-category-${text.id}`}>Categoria</Label>
                             <Input
                                 id={`edit-text-category-${text.id}`}
                                 type="text"
@@ -157,7 +158,7 @@ function EditStandardTextModal({ text, onClose }: { text: StandardTextItem; onCl
                             />
                         </div>
                         <div>
-                            <Label htmlFor={`edit-text-content-${text.id}`}>Conteúdo</Label>
+                            <Label required htmlFor={`edit-text-content-${text.id}`}>Conteúdo</Label>
                             <textarea
                                 id={`edit-text-content-${text.id}`}
                                 name="content"
@@ -197,7 +198,7 @@ function EditStandardTextModal({ text, onClose }: { text: StandardTextItem; onCl
     );
 }
 
-export default function StandardTextsIndex({ standardTexts, filters, perPageOptions }: StandardTextsIndexProps) {
+export default function StandardTextsIndex({ standardTexts, filters, perPageOptions, categorias: categoriasDisponiveis }: StandardTextsIndexProps) {
     const { auth } = usePage<SharedProps>().props;
     const canMaintain = auth.permissions.includes('manter-parametros');
 
@@ -216,10 +217,13 @@ export default function StandardTextsIndex({ standardTexts, filters, perPageOpti
 
     const filtering = table.search.trim() !== '' || table.filters.category !== '' || table.filters.active !== '';
 
-    const categorias = useMemo(
-        () => Array.from(new Set(standardTexts.data.map((item) => item.category))).sort(),
-        [standardTexts.data],
-    );
+    const categorias = useMemo(() => {
+        const base = categoriasDisponiveis.length > 0
+            ? categoriasDisponiveis
+            : standardTexts.data.map((item) => item.category);
+
+        return Array.from(new Set(base)).sort();
+    }, [categoriasDisponiveis, standardTexts.data]);
 
     const columns: ColumnDef<StandardTextItem>[] = [
         {
@@ -328,7 +332,7 @@ export default function StandardTextsIndex({ standardTexts, filters, perPageOpti
             <Card>
                 <CardHeader
                     title="Biblioteca de minutas"
-                    description="Textos-padrão versionados. Use {{cnae}}, {{veredito}} e {{zona}} — a IA costura estes blocos com o motor, sem inventar fundamento."
+                    description="Textos-padrão versionados. Use {{cnae}}, {{veredito}} e {{zona}}. O parecer usa estes blocos junto com o resultado do motor."
                     actions={
                         canMaintain ? (
                             <Button size="sm" onClick={() => setShowCreate(true)}>

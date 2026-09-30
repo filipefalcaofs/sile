@@ -160,7 +160,7 @@ function DimensaoItem({ rotulo, dimensao }: { rotulo: string; dimensao: Dimensao
                     <div className="flex flex-col items-end gap-1">
                         <Badge color="warning">Indisponível</Badge>
                         <span className="max-w-xs text-xs text-gray-500 dark:text-gray-400">
-                            {dimensao.motivo ?? 'Base pendente SEDUR.'}
+                            {dimensao.motivo ?? 'Base pendente de disponibilização pela SEDUR.'}
                         </span>
                     </div>
                 )}
@@ -347,7 +347,7 @@ export default function ConsultaTerritorial({ camadas, sobreposicaoMinima, geoco
                     <Card>
                         <CardHeader
                             title="Identificação"
-                            description="Bairro, via e restrições vêm das camadas oficiais carregadas. Zona e lote ficam indisponíveis enquanto a base estiver pendente SEDUR."
+                            description="Bairro, via e restrições vêm das camadas oficiais carregadas. Zona e lote ficam indisponíveis enquanto a base estiver pendente de disponibilização pela SEDUR."
                         />
                         <CardContent>
                             {identify.processing && (
@@ -395,7 +395,7 @@ export default function ConsultaTerritorial({ camadas, sobreposicaoMinima, geoco
                                                 <div className="flex flex-col items-end gap-1">
                                                     <Badge color="warning">Indisponível</Badge>
                                                     <span className="max-w-xs text-xs text-gray-500 dark:text-gray-400">
-                                                        {identificacao.restricoes.motivo ?? 'Base pendente SEDUR.'}
+                                                        {identificacao.restricoes.motivo ?? 'Base pendente de disponibilização pela SEDUR.'}
                                                     </span>
                                                 </div>
                                             ) : (
@@ -458,7 +458,7 @@ export default function ConsultaTerritorial({ camadas, sobreposicaoMinima, geoco
                                 <Alert
                                     variant="info"
                                     title="Validação indisponível"
-                                    message={validacao.motivo ?? 'Base de lotes pendente SEDUR — validação de sobreposição indisponível.'}
+                                    message={validacao.motivo ?? 'A base de lotes está pendente de disponibilização pela SEDUR. A validação de sobreposição fica indisponível.'}
                                 />
                             )}
                         </CardContent>
@@ -489,11 +489,11 @@ export default function ConsultaTerritorial({ camadas, sobreposicaoMinima, geoco
                                                     <p className="text-xs text-gray-500 dark:text-gray-400">
                                                         {pendente
                                                             ? 'Sem base pública — aguardando a SEDUR.'
-                                                            : `${camada.feature_count} feição(ões)${camada.version ? ` · ${camada.version}` : ''}`}
+                                                            : `${camada.feature_count === 1 ? '1 feição' : `${camada.feature_count} feições`}${camada.version ? ` · ${camada.version}` : ''}`}
                                                     </p>
                                                 </div>
                                                 {pendente ? (
-                                                    <Badge color="warning">Pendente SEDUR</Badge>
+                                                    <Badge color="warning">Pendente de disponibilização pela SEDUR</Badge>
                                                 ) : (
                                                     <Badge color="success">{camada.status_label}</Badge>
                                                 )}

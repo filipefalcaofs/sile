@@ -234,7 +234,7 @@ export default function TempoAnalise({ tempoPorEtapa, tempoEmissaoTvl, filtros }
             <Head title="Tempo de análise" />
             <PageHeader
                 title="Tempo de análise"
-                breadcrumbs={[{ label: 'Painel', href: '/gestao' }, { label: 'Relatórios' }, { label: 'Tempo de análise' }]}
+                breadcrumbs={[{ label: 'Painel', href: '/gestao' }, { label: 'Indicadores' }, { label: 'Tempo de análise' }]}
             />
 
             <div className="space-y-4 md:space-y-6">

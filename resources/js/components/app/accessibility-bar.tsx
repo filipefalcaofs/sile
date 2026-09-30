@@ -49,15 +49,11 @@ export default function AccessibilityBar() {
     }, [fontStep]);
 
     useEffect(() => {
-        const aoEscurecer = (evento: Event) => {
-            if ((evento as CustomEvent<string>).detail === 'dark') {
-                setContrast(false);
-            }
-        };
+        const aoTrocarTema = () => setContrast(false);
 
-        window.addEventListener('sile:theme', aoEscurecer);
+        window.addEventListener('sile:theme-usuario', aoTrocarTema);
 
-        return () => window.removeEventListener('sile:theme', aoEscurecer);
+        return () => window.removeEventListener('sile:theme-usuario', aoTrocarTema);
     }, []);
 
     useEffect(() => {
@@ -66,8 +62,12 @@ export default function AccessibilityBar() {
 
         if (contrast) {
             document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-            window.dispatchEvent(new CustomEvent('sile:acc-contrast', { detail: true }));
+
+            return;
+        }
+
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
         }
     }, [contrast]);
 

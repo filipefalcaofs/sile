@@ -34,10 +34,10 @@ class ReginConnectionTester
                     'username' => $this->settings->username(),
                     'password' => $this->settings->password(),
                 ]);
-        } catch (ConnectionException $exception) {
+        } catch (ConnectionException) {
             return new ReginConnectionResult(
                 false,
-                $this->semSegredo("Ambiente de {$ambiente} indisponível. ".$exception->getMessage()),
+                "Não foi possível conectar ao ambiente de {$ambiente}. O serviço não respondeu a tempo. Tente novamente em instantes.",
             );
         }
 

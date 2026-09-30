@@ -110,4 +110,13 @@ class ComprovanteProtocoloTest extends TestCase
         $outra = $this->protocoladaDoUsuario($user);
         $this->assertNotSame($codigo, $service->codigoVerificacao($outra));
     }
+
+    public function test_cep_do_comprovante_sai_no_formato_brasileiro(): void
+    {
+        $user = $this->portalUser();
+        $solicitacao = $this->protocoladaDoUsuario($user);
+        $solicitacao->forceFill(['address_zip' => '40200000'])->save();
+
+        $this->assertSame('40200-000', ComprovanteProtocoloService::cepFormatado($solicitacao->address_zip));
+    }
 }

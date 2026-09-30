@@ -306,7 +306,7 @@ export default function SlaVencimentos({ resumo, relatorio, setores, analistas, 
             <Head title="SLA e vencimentos" />
             <PageHeader
                 title="SLA e vencimentos da análise"
-                breadcrumbs={[{ label: 'Painel', href: '/gestao' }, { label: 'Relatórios' }, { label: 'SLA e vencimentos' }]}
+                breadcrumbs={[{ label: 'Painel', href: '/gestao' }, { label: 'Indicadores' }, { label: 'SLA e vencimentos' }]}
             />
 
             <div className="space-y-4 md:space-y-6">

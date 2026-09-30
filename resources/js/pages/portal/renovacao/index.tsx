@@ -44,20 +44,62 @@ function formatDate(value: string | null): string {
     return `${match[3]}/${match[2]}/${match[1]}`;
 }
 
+function formatCnpj(raw: string): string {
+    const value = raw.replace(/\D/g, '').slice(0, 14);
+    const parts = [value.slice(0, 2), value.slice(2, 5), value.slice(5, 8), value.slice(8, 12), value.slice(12, 14)];
+    let result = parts[0];
+    if (parts[1]) {
+        result += `.${parts[1]}`;
+    }
+    if (parts[2]) {
+        result += `.${parts[2]}`;
+    }
+    if (parts[3]) {
+        result += `/${parts[3]}`;
+    }
+    if (parts[4]) {
+        result += `-${parts[4]}`;
+    }
+
+    return result;
+}
+
+function mensagemHttp(data: unknown): string | null {
+    if (typeof data === 'string') {
+        try {
+            data = JSON.parse(data);
+        } catch {
+            return null;
+        }
+    }
+    if (data && typeof data === 'object' && typeof (data as { message?: unknown }).message === 'string') {
+        return (data as { message: string }).message;
+    }
+
+    return null;
+}
+
 export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
     const consulta = useHttp<{ cnpj: string }, ConsultaCnpj>({ cnpj: '' });
     const [cnpj, setCnpj] = useState('');
     const [resultado, setResultado] = useState<ConsultaCnpj | null>(null);
     const [erro, setErro] = useState<string | null>(null);
+    const [consultou, setConsultou] = useState(false);
 
     function buscarCnpj() {
+        setConsultou(true);
         setErro(null);
         setResultado(null);
-        consulta.setData('cnpj', cnpj);
+        consulta.setData('cnpj', cnpj.replace(/\D/g, ''));
         consulta.post('/portal/renovacao/consultar-cnpj', {
             onSuccess: (resposta: unknown) => setResultado(resposta as ConsultaCnpj),
             onError: (payload: { message?: string }) => {
+                setResultado(null);
                 setErro(payload?.message ?? 'Não foi possível consultar o CNPJ na SEDUR.');
+            },
+            onHttpException: (response) => {
+                setResultado(null);
+                setErro(mensagemHttp(response.data) ?? 'Não foi possível consultar o CNPJ na SEDUR.');
             },
         });
     }
@@ -83,7 +125,8 @@ export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
                                 autoComplete="off"
                                 value={cnpj}
                                 placeholder="00.000.000/0000-00"
-                                onChange={(event) => setCnpj(event.target.value)}
+                                maxLength={18}
+                                onChange={(event) => setCnpj(formatCnpj(event.target.value))}
                             />
                         </div>
                         <Button className="min-h-11" onClick={buscarCnpj} loading={consulta.processing} disabled={cnpj.trim() === ''}>
@@ -133,7 +176,7 @@ export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
                 </CardContent>
             </Card>
 
-            {tvls.length === 0 ? (
+            {!consultou && tvls.length === 0 ? (
                 <Card>
                     <CardContent>
                         <EmptyState
@@ -142,7 +185,7 @@ export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
                         />
                     </CardContent>
                 </Card>
-            ) : (
+            ) : !consultou ? (
                 <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {tvls.map((tvl) => (
                         <li key={tvl.id}>

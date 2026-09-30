@@ -140,6 +140,17 @@ class ComunicacaoHistoricoTest extends TestCase
         ]);
     }
 
+    public function test_processo_inexistente_em_json_nao_expoe_o_model(): void
+    {
+        $resposta = $this->actingAs($this->analista(), 'gestao')
+            ->getJson('/gestao/processos/999999/comunicacoes')
+            ->assertNotFound()
+            ->assertJsonPath('message', 'Recurso não encontrado.');
+
+        $this->assertStringNotContainsString('ViabilityRequest', $resposta->getContent());
+        $this->assertStringNotContainsString('App\\Models', $resposta->getContent());
+    }
+
     public function test_gestao_sem_consultar_solicitacoes_recebe_403_auditado(): void
     {
         $processo = $this->processo();

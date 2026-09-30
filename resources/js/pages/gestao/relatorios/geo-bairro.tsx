@@ -297,7 +297,7 @@ export default function GeoBairroPainel({ resumo, porBairro, porZona, filtros }:
                 <Card>
                     <CardHeader
                         title="Filtros"
-                        description="Distribuição das solicitações protocoladas por bairro, com decisões e taxa de deferimento. Números reais — sem dados no recorte, o painel fica vazio (nunca um número inventado)."
+                        description="Distribuição das solicitações protocoladas por bairro, com decisões e taxa de deferimento. Sem dados no recorte, o painel fica vazio."
                         actions={<ExportMenu url={URL_GEO_BAIRRO} params={currentParams} label="Exportar solicitações" />}
                     />
                     <CardContent>

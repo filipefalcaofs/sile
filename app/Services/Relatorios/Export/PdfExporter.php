@@ -18,7 +18,7 @@ class PdfExporter implements ReportFormatExporter
 {
     public function stream(ReportDefinition $definition): Response
     {
-        return $this->render($definition)->stream($definition->fileName('pdf'));
+        return $this->render($definition)->download($definition->fileName('pdf'));
     }
 
     public function write(ReportDefinition $definition, string $absolutePath): void
@@ -28,10 +28,14 @@ class PdfExporter implements ReportFormatExporter
 
     private function render(ReportDefinition $definition): DomPdf
     {
+        $orientacao = count($definition->colunas) > 7
+            ? 'landscape'
+            : (string) config('sile.relatorios.export.pdf.orientation', 'portrait');
+
         return Pdf::loadView('relatorios.relatorio', $this->dados($definition))
             ->setPaper(
                 (string) config('sile.relatorios.export.pdf.paper', 'a4'),
-                (string) config('sile.relatorios.export.pdf.orientation', 'portrait'),
+                $orientacao,
             );
     }
 

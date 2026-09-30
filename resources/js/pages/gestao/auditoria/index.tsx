@@ -211,6 +211,7 @@ export default function AuditoriaIndex({
     fonteOptions,
     perPageOptions,
 }: AuditoriaIndexProps) {
+    const [avisoExportacao, setAvisoExportacao] = useState<string | null>(null);
     const [fonte, setFonte] = useState(fonteInicial);
     const [perPage, setPerPage] = useState(filtros.per_page);
     const [form, setForm] = useState<FiltrosForm>({
@@ -319,6 +320,38 @@ export default function AuditoriaIndex({
     const filtrando = FILTER_KEYS.some((key) => (form[key] ?? '').trim() !== '');
     const exportHref = useMemo(() => buildExportHref(fonte, form), [fonte, form]);
 
+    async function exportarCsv() {
+        setAvisoExportacao(null);
+
+        try {
+            const resposta = await fetch(exportHref, { credentials: 'same-origin', headers: { Accept: 'text/csv' } });
+
+            if (resposta.status === 202) {
+                setAvisoExportacao('A exportação entrou na fila. O aviso aparece quando o arquivo estiver pronto.');
+
+                return;
+            }
+
+            if (!resposta.ok) {
+                setAvisoExportacao('Não foi possível exportar a trilha.');
+
+                return;
+            }
+
+            const blob = await resposta.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const disposicao = resposta.headers.get('content-disposition') ?? '';
+            const nome = disposicao.match(/filename="?([^"]+)"?/)?.[1] ?? 'trilha.csv';
+            link.href = url;
+            link.download = nome;
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch {
+            setAvisoExportacao('Não foi possível exportar a trilha.');
+        }
+    }
+
     // O backend garante o shape por fonte; o cast é seguro e as células ainda
     // renderizam defensivamente.
     const linhas = Array.isArray(registros.data) ? registros.data : [];
@@ -332,17 +365,23 @@ export default function AuditoriaIndex({
             <Card>
                 <CardHeader
                     title="Consulta da trilha de auditoria"
-                    description="Registros imutáveis de quem fez o quê, quando, de onde e com qual resultado. Consulta somente leitura, server-driven — a própria consulta é auditada."
+                    description="Registros imutáveis de quem fez o quê, quando, de onde e com qual resultado. A consulta é somente leitura e também fica registrada na trilha."
                     actions={
-                        <a
-                            href={exportHref}
+                        <button
+                            type="button"
+                            onClick={() => void exportarCsv()}
                             className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-theme-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 focus:outline-hidden"
                         >
                             <FileIcon className="size-4.5" />
                             Exportar CSV
-                        </a>
+                        </button>
                     }
                 />
+                {avisoExportacao && (
+                    <p role="status" className="px-5 pt-4 text-sm text-gray-700 dark:text-gray-200">
+                        {avisoExportacao}
+                    </p>
+                )}
                 <CardContent>
                     <div className="space-y-5">
                         {/* Seletor de fonte da trilha unificada */}

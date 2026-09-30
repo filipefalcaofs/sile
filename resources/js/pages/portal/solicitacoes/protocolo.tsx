@@ -162,7 +162,7 @@ function TimelineView({ timeline }: { timeline: Timeline }) {
                                 {formatDateTime(etapa.data)}
                             </p>
                             {etapa.motivo && (
-                                <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">{etapa.motivo}</p>
+                                <p className="mt-1 text-theme-xs break-all text-gray-500 dark:text-gray-400">{etapa.motivo}</p>
                             )}
                         </div>
                     </li>
@@ -190,14 +190,35 @@ function TimelineView({ timeline }: { timeline: Timeline }) {
 
 function PublicLinkCard({ link }: { link: string }) {
     const [copied, setCopied] = useState(false);
+    const [erroCopia, setErroCopia] = useState<string | null>(null);
 
     async function copy() {
+        setErroCopia(null);
+
         try {
-            await navigator.clipboard.writeText(link);
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(link);
+            } else {
+                const campo = document.createElement('textarea');
+                campo.value = link;
+                campo.setAttribute('readonly', '');
+                campo.style.position = 'fixed';
+                campo.style.left = '-9999px';
+                document.body.appendChild(campo);
+                campo.select();
+                const copiou = document.execCommand('copy');
+                document.body.removeChild(campo);
+
+                if (!copiou) {
+                    throw new Error('copia');
+                }
+            }
+
             setCopied(true);
             window.setTimeout(() => setCopied(false), 2500);
         } catch {
             setCopied(false);
+            setErroCopia('Não foi possível copiar o link. Selecione o endereço e copie manualmente.');
         }
     }
 
@@ -221,6 +242,11 @@ function PublicLinkCard({ link }: { link: string }) {
                         {copied ? 'Link copiado' : 'Copiar link'}
                     </Button>
                 </div>
+                {erroCopia && (
+                    <p role="alert" className="mt-2 text-sm text-error-600 dark:text-error-400">
+                        {erroCopia}
+                    </p>
+                )}
             </CardContent>
         </Card>
     );

@@ -84,23 +84,23 @@ function ConfigFormModal({ config, isOpen, onClose }: { config?: AiConfiguration
                             <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Provedor</h5>
                             <div className="grid gap-5 sm:grid-cols-2">
                                 <div>
-                                    <Label htmlFor="name">Nome</Label>
+                                    <Label required htmlFor="name">Nome</Label>
                                     <Input id="name" name="name" type="text" required defaultValue={config?.name} placeholder="OpenAI Texto" error={!!errors.name} hint={errors.name} />
                                 </div>
                                 <div>
-                                    <Label htmlFor="provider">Provedor</Label>
+                                    <Label required htmlFor="provider">Provedor</Label>
                                     <Select id="provider" name="provider" value={provider} onChange={setProvider} options={PROVIDER_OPTIONS} />
                                 </div>
                                 <div>
-                                    <Label htmlFor="capability">Capacidade</Label>
+                                    <Label required htmlFor="capability">Capacidade</Label>
                                     <Select id="capability" name="capability" value={capability} onChange={setCapability} options={CAPABILITY_OPTIONS} />
                                 </div>
                                 <div>
-                                    <Label htmlFor="model">Modelo</Label>
+                                    <Label required htmlFor="model">Modelo</Label>
                                     <Input id="model" name="model" type="text" required defaultValue={config?.model} placeholder="gpt-5.4-mini" error={!!errors.model} hint={errors.model} />
                                 </div>
                                 <div className="sm:col-span-2">
-                                    <Label htmlFor="base_url">URL base</Label>
+                                    <Label required htmlFor="base_url">URL base</Label>
                                     <Input id="base_url" name="base_url" type="url" required defaultValue={config?.base_url ?? 'https://api.openai.com/v1'} placeholder="https://api.openai.com/v1" error={!!errors.base_url} hint={errors.base_url} />
                                 </div>
                                 <div className="sm:col-span-2">
@@ -122,15 +122,15 @@ function ConfigFormModal({ config, isOpen, onClose }: { config?: AiConfiguration
                             <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Parâmetros</h5>
                             <div className="grid gap-5 sm:grid-cols-3">
                                 <div>
-                                    <Label htmlFor="temperature">Temperatura</Label>
+                                    <Label required htmlFor="temperature">Temperatura</Label>
                                     <Input id="temperature" name="temperature" type="number" step="0.01" min="0" max="2" required defaultValue={config?.temperature ?? 0.1} error={!!errors.temperature} hint={errors.temperature} />
                                 </div>
                                 <div>
-                                    <Label htmlFor="max_tokens">Máximo de tokens</Label>
+                                    <Label required htmlFor="max_tokens">Máximo de tokens</Label>
                                     <Input id="max_tokens" name="max_tokens" type="number" required defaultValue={config?.max_tokens ?? 4096} error={!!errors.max_tokens} hint={errors.max_tokens} />
                                 </div>
                                 <div>
-                                    <Label htmlFor="timeout_ms">Tempo limite (ms)</Label>
+                                    <Label required htmlFor="timeout_ms">Tempo limite (ms)</Label>
                                     <Input id="timeout_ms" name="timeout_ms" type="number" required defaultValue={config?.timeout_ms ?? 60000} error={!!errors.timeout_ms} hint={errors.timeout_ms} />
                                 </div>
                             </div>

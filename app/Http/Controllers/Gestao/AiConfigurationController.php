@@ -113,6 +113,12 @@ class AiConfigurationController extends Controller
 
     public function toggleActivation(AiConfiguration $aiConfiguration): RedirectResponse
     {
+        if (! $aiConfiguration->active && blank($aiConfiguration->api_key)) {
+            return back()->withErrors([
+                'api_key' => 'Informe a chave de API para ativar a configuração.',
+            ]);
+        }
+
         $aiConfiguration->update(['active' => ! $aiConfiguration->active]);
 
         $this->audit->log(

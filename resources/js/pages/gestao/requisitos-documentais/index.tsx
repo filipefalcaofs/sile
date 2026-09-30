@@ -230,7 +230,7 @@ function CreateRequirementModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                     <div className="flex flex-col gap-5">
                         <div className="grid gap-5 sm:grid-cols-2">
                             <div>
-                                <Label htmlFor="create-code">Código</Label>
+                                <Label required htmlFor="create-code">Código</Label>
                                 <Input
                                     id="create-code"
                                     type="text"
@@ -242,7 +242,7 @@ function CreateRequirementModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="create-name">Nome</Label>
+                                <Label required htmlFor="create-name">Nome</Label>
                                 <Input
                                     id="create-name"
                                     type="text"
@@ -321,7 +321,7 @@ function EditRequirementModal({ requirement, onClose }: { requirement: Requireme
                 {({ errors, processing }) => (
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor={`edit-name-${requirement.id}`}>Nome</Label>
+                            <Label required htmlFor={`edit-name-${requirement.id}`}>Nome</Label>
                             <Input
                                 id={`edit-name-${requirement.id}`}
                                 type="text"

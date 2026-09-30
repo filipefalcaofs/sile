@@ -131,8 +131,8 @@ function ThemeToggleButton() {
 function SiteHeader() {
     return (
         <header className="sticky top-0 z-50 border-b border-gray-200/70 bg-white/80 backdrop-blur-md dark:border-gray-800/70 dark:bg-gray-900/80">
-            <div className="mx-auto flex w-full max-w-(--breakpoint-xl) items-center justify-between gap-4 px-4 py-4 sm:px-6">
-                <Link href="/" className="flex items-center">
+            <div className="mx-auto flex w-full max-w-(--breakpoint-xl) min-w-0 flex-wrap items-center justify-between gap-2 px-4 py-4 sm:gap-4 sm:px-6">
+                <Link href="/" className="flex min-w-0 flex-1 items-center">
                     <Logo
                         markClassName="size-8"
                         textClassName="text-lg font-semibold tracking-tight text-gray-800 dark:text-white/90"
@@ -155,7 +155,7 @@ function SiteHeader() {
                     </ul>
                 </nav>
 
-                <div className="flex items-center gap-3">
+                <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                     <ThemeToggleButton />
                     <Link
                         href="/portal/login"
@@ -163,7 +163,7 @@ function SiteHeader() {
                     >
                         Entrar
                     </Link>
-                    <Link href="/portal/register" className={`${primaryCtaStyles} px-4 py-2.5`}>
+                    <Link href="/portal/register" className={`${primaryCtaStyles} px-3 py-2 text-sm sm:px-4 sm:py-2.5 sm:text-base`}>
                         Criar conta
                     </Link>
                 </div>

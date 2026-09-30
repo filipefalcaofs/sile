@@ -7,6 +7,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectGestaoIfAuthenticated;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\Audit\AuditService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,7 @@ use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -83,6 +85,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // O Handler converte AuthorizationException em AccessDeniedHttpException
         // (prepareException) ANTES dos render callbacks — por isso o tipo aqui
         // é a exceção preparada, com a original em getPrevious().
+        $exceptions->render(function (NotFoundHttpException $exception, Request $request) {
+            if (! $request->expectsJson() || ! $exception->getPrevious() instanceof ModelNotFoundException) {
+                return null;
+            }
+
+            return response()->json(['message' => 'Recurso não encontrado.'], 404);
+        });
+
         $exceptions->render(function (AccessDeniedHttpException $e, Request $request) {
             app(AuditService::class)->logBlocked('seguranca', 'Tentativa de acesso sem permissão', [
                 'rota' => $request->path(),

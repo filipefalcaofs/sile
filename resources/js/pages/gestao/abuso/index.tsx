@@ -504,7 +504,7 @@ export default function AbusoIndex({
                 <Card>
                     <CardHeader
                         title="Efetividade da detecção"
-                        description="Confirmados ÷ gerados sobre todos os alertas reais — calibração das regras. Indicador global: independe dos filtros da lista. Sem alertas, a taxa não é exibida (nunca um número inventado)."
+                        description="Confirmados divididos pelos alertas gerados. O indicador é geral e não segue os filtros da lista. Sem alertas, a taxa não é exibida."
                     />
                     <CardContent>
                         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -557,7 +557,7 @@ export default function AbusoIndex({
                 <Card>
                     <CardHeader
                         title="Alertas para triagem"
-                        description="Ocorrências sinalizadas pelos detectores para revisão humana. Consulta somente leitura, server-driven — a própria consulta é auditada."
+                        description="Ocorrências sinalizadas para revisão humana. A consulta é somente leitura e também fica registrada na trilha."
                     />
                     <CardContent>
                         <div className="space-y-5">

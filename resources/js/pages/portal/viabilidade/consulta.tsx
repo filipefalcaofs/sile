@@ -327,7 +327,7 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                                 <Alert
                                                     variant="info"
                                                     title="Inscrição imobiliária"
-                                                    message="A resolução por inscrição pode estar indisponível (base de lotes pendente SEDUR). Se ocorrer, a resposta indicará e sugerimos a consulta por endereço."
+                                                    message="A resolução por inscrição pode estar indisponível enquanto a base de lotes estiver pendente de disponibilização pela SEDUR. Nesse caso, a resposta informa a pendência e a consulta por endereço continua disponível."
                                                 />
                                                 <div>
                                                     <Label htmlFor="inscricao" required>

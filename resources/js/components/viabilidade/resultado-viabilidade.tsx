@@ -199,7 +199,7 @@ function DimensaoItem({ rotulo, dimensao }: { rotulo: string; dimensao: Dimensao
                     <div className="flex flex-col items-end gap-1">
                         <Badge color="warning">Indisponível</Badge>
                         <span className="max-w-xs text-xs text-gray-500 dark:text-gray-400">
-                            {dimensao.motivo ?? 'Base pendente SEDUR.'}
+                            {dimensao.motivo ?? 'Base pendente de disponibilização pela SEDUR.'}
                         </span>
                     </div>
                 )}
@@ -245,7 +245,7 @@ export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) 
 
             <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
                 <Card>
-                    <CardHeader title="Classificação de risco" description="Risco municipal e sanitário e o encaminhamento da atividade." />
+                    <CardHeader title="Classificação de risco" description="Riscos municipal e sanitário, além do encaminhamento da atividade." />
                     <CardContent>
                         <div className="flex flex-col gap-4">
                             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -327,7 +327,7 @@ export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) 
                 <Card>
                     <CardHeader
                         title="Território"
-                        description="Bairro e via vêm das camadas oficiais. Zona e lote ficam indisponíveis enquanto a base estiver pendente SEDUR."
+                        description="Bairro e via vêm das camadas oficiais. Zona e lote ficam indisponíveis enquanto a base estiver pendente de disponibilização pela SEDUR."
                     />
                     <CardContent>
                         <div className="flex flex-col">
@@ -352,7 +352,7 @@ export function ResultadoViabilidade({ result }: { result: ResultadoConsulta }) 
                                         <div className="flex flex-col items-end gap-1">
                                             <Badge color="warning">Indisponível</Badge>
                                             <span className="max-w-xs text-xs text-gray-500 dark:text-gray-400">
-                                                {result.territorio.restricoes.motivo ?? 'Base pendente SEDUR.'}
+                                                {result.territorio.restricoes.motivo ?? 'Base pendente de disponibilização pela SEDUR.'}
                                             </span>
                                         </div>
                                     ) : (

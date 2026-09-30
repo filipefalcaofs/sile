@@ -70,7 +70,7 @@ function CreateServiceTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                 {({ errors, processing }) => (
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor="create-code">Código</Label>
+                            <Label required htmlFor="create-code">Código</Label>
                             <Input
                                 id="create-code"
                                 type="text"
@@ -82,7 +82,7 @@ function CreateServiceTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                             />
                         </div>
                         <div>
-                            <Label htmlFor="create-name">Nome</Label>
+                            <Label required htmlFor="create-name">Nome</Label>
                             <Input
                                 id="create-name"
                                 type="text"
@@ -147,7 +147,7 @@ function EditServiceTypeModal({ serviceType, onClose }: { serviceType: ServiceTy
                 {({ errors, processing }) => (
                     <div className="flex flex-col gap-5">
                         <div>
-                            <Label htmlFor={`edit-name-${serviceType.id}`}>Nome</Label>
+                            <Label required htmlFor={`edit-name-${serviceType.id}`}>Nome</Label>
                             <Input
                                 id={`edit-name-${serviceType.id}`}
                                 type="text"
