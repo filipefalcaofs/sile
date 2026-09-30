@@ -1,6 +1,6 @@
 import { Head, Link, router, useHttp, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { FormEvent, KeyboardEvent, ReactNode, RefObject } from 'react';
+import type { FormEvent, KeyboardEvent, RefObject } from 'react';
 import { AppVersion } from '@/components/app/app-version';
 import { LogoMark } from '@/components/app/logo';
 import { ArrowRightIcon, CheckCircleIcon, EyeCloseIcon, EyeIcon, MoonIcon, SunIcon } from '@/components/icons';
@@ -61,14 +61,12 @@ function BrandStage({
     photoRef,
     selo,
     emRepouso,
-    children,
 }: {
     docking: boolean;
     stageRef: RefObject<HTMLElement | null>;
     photoRef: RefObject<HTMLDivElement | null>;
     selo: TipoConta | null;
     emRepouso: boolean;
-    children: ReactNode;
 }) {
     const marca = docking ? 'true' : 'false';
     const saidaDoPalco = docking
@@ -164,8 +162,6 @@ function BrandStage({
                     />
                 </div>
             </dl>
-
-            {children}
         </section>
     );
 }
@@ -355,16 +351,7 @@ function GestaoLoginContent({ status }: { status?: string }) {
                 photoRef={photoRef}
                 selo={tipoConta}
                 emRepouso={estado === 'idle'}
-            >
-                <GestaoLoginScene
-                    estado={estado}
-                    fase={fase}
-                    tipoConta={tipoConta}
-                    photoRef={photoRef}
-                    alvoLinhaRef={alvoLinhaRef}
-                    stageRef={stageRef}
-                />
-            </BrandStage>
+            />
 
             <section className={gestaoLoginPanelClasses} data-docking={noDocking ? 'true' : 'false'} aria-labelledby="panel-title">
                 <div
@@ -526,6 +513,18 @@ function GestaoLoginContent({ status }: { status?: string }) {
                 </div>
                 </div>
             </section>
+
+            {/* Cena em coordenadas de viewport, irmã das colunas: o disco
+                precisa viajar até a sidebar sem ser cortado pelo overflow do
+                palco (mesma estrutura do protótipo, z-index 6 sobre o main). */}
+            <GestaoLoginScene
+                estado={estado}
+                fase={fase}
+                tipoConta={tipoConta}
+                photoRef={photoRef}
+                alvoLinhaRef={alvoLinhaRef}
+                stageRef={stageRef}
+            />
         </main>
     );
 }
