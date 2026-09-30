@@ -28,7 +28,8 @@ import {
  * (2026-06-12): split em duas colunas. Palco de marca à esquerda com foto de
  * Salvador sob gradientes navy, mapa de zoneamento estilizado em hairlines
  * (referência à viabilidade locacional), headline display em Archivo 900 caps
- * e logos oficiais (PMS + SEDUR) no rodapé. Coluna de acesso à direita em
+ * com o diferencial do console — o motor decide, o analista confirma — e logos
+ * oficiais (PMS + SEDUR) no rodapé. Coluna de acesso à direita em
  * superfície elevada separada por hairline. Abaixo de 1100px o palco some e
  * só o formulário é exibido. Sem cadastro: contas internas são administradas
  * pela SEDUR (HU-012). Toda tentativa é registrada (RN-002).
@@ -42,9 +43,9 @@ const displayFont = gestaoLoginDisplayFont;
 const monoFont = gestaoLoginMonoFont;
 
 const footStats = [
-    { label: 'Auditoria', value: '100% rastreável', mono: false },
-    { label: 'Protocolo', value: 'Digital e assinado', mono: false },
-    { label: 'Base legal', value: 'Lei nº 9.184/2016', mono: true },
+    { label: 'Expresso', value: 'Sem analista', mono: false },
+    { label: 'Análise', value: 'Confirma a decisão', mono: false },
+    { label: 'LOUOS', value: 'Lei nº 9.148/2016', mono: true },
 ];
 
 function ZoneMap() {
@@ -129,18 +130,19 @@ function BrandStage() {
                 <p
                     className={`${monoFont} mb-[30px] flex items-center gap-3 text-[11px] leading-none font-medium tracking-[0.1em] text-[oklch(67%_0.025_250)] uppercase before:h-px before:w-8 before:bg-[oklch(64%_0.155_250)] before:content-['']`}
                 >
-                    Gestão de licenciamento eletrônico
+                    Decisão de viabilidade locacional
                 </p>
                 <h1
                     className={`${displayFont} ${gestaoLoginBrandForeground} text-[clamp(34px,3.2vw,54px)] leading-[1.04] font-extrabold tracking-[-0.02em] text-balance uppercase`}
                 >
-                    A cidade,
+                    O motor decide.
                     <br />
-                    zona a zona
+                    O analista confirma.
                 </h1>
                 <p className="mt-[22px] max-w-[52ch] text-[clamp(15px,1.05vw,17px)] leading-[1.65] font-normal text-[oklch(67%_0.025_250)]">
-                    Análise de viabilidade locacional com fundamentação legal registrada em cada
-                    decisão — LOUOS e PDDU citadas, protocolo assinado, trilha completa.
+                    Aplica a LOUOS e a classificação de risco e já entrega a decisão. Quando a
+                    lei permite, encerra sem analista. Quando a análise humana é obrigatória, o
+                    processo chega com essa decisão para o analista confirmar.
                 </p>
             </div>
 
