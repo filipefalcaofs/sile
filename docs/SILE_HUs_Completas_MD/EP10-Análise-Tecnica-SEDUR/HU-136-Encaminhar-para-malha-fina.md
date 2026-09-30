@@ -1,23 +1,24 @@
 # HU-136 — Encaminhar para malha fina
 
-> **Status: Confirmada (2026-06-11)** — malha fina é **provocação humana** (ação do analista), distinta da caixa de entrada. Qualquer processo, inclusive finalizado, pode ser encaminhado.
+> **Status: Atualizada (2026-09-30)** — malha fina é **provocação humana** (ação do analista), distinta da caixa de entrada. Vale só para o fluxo expresso: encaminhar à malha fina significa que o processo precisa de análise humana. Processo que já está em análise humana não oferece a ação.
 
 ## Épica
 **EP10 — Análise Técnica SEDUR**
 
 ## Objetivo
-Permitir encaminhamento manual de qualquer processo para revisão em malha fina, com motivo e rastreabilidade.
+Permitir encaminhar à malha fina um processo do fluxo expresso, para que passe por análise humana, com motivo e rastreabilidade.
 
 ## História de Usuário
 **Como** analista ou gestor SEDUR,  
-**quero** encaminhar processo para malha fina,  
-**para** revisão humana adicional ou auditoria interna.
+**quero** encaminhar um processo do fluxo expresso para malha fina,  
+**para** submetê-lo à análise humana.
 
 ## Regras de Negócio
-- RN-001: Disponível para processos em qualquer status, inclusive deferidos/indeferidos (corrigir bug legado que recusava deferidos).
+- RN-001: A ação existe apenas para processo do fluxo expresso. Malha fina é o encaminhamento à análise humana de um processo que o sistema decidiu sem analista. Inclui o deferido e o indeferido pelo expresso.
 - RN-002: Motivo obrigatório; operação auditada.
 - RN-003: Malha fina distinta de semi-expresso (gatilho automático) e de caixa de entrada (chegada automática).
-- RN-004: Encaminhamento **em lote** suportado (seleção múltipla na consulta), com motivo único aplicado e auditoria por processo.
+- RN-004: Encaminhamento **em lote** suportado (seleção múltipla na consulta), somente entre processos do fluxo expresso, com motivo único aplicado e auditoria por processo.
+- RN-005: Processo que já está em análise humana não exibe "Encaminhar para a malha fina". A análise humana já está em curso; a ação seria redundante.
 
 ## Dependências
 - HU-135, HU-082.
