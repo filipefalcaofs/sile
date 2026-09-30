@@ -2,7 +2,9 @@
 
 namespace App\Services\Analise;
 
+use App\Enums\AnalysisStatus;
 use App\Models\AnalysisRecord;
+use App\Models\ViabilityRequest;
 use App\Support\Settings;
 use Illuminate\Support\Carbon;
 
@@ -45,7 +47,23 @@ class PrecedentService
         return [
             'imovel' => $imovel,
             'cnae_zona' => $this->cnaeZoneSection($record, $janelaMeses),
+            'em_analise' => $this->emAnaliseNoImovel($request),
         ];
+    }
+
+    private function emAnaliseNoImovel(?ViabilityRequest $request): int
+    {
+        $inscricao = $request?->property_registration;
+
+        if (! is_string($inscricao) || trim($inscricao) === '') {
+            return 0;
+        }
+
+        return ViabilityRequest::query()
+            ->where('property_registration', $inscricao)
+            ->where('analysis_status', AnalysisStatus::EmAnalise)
+            ->when($request !== null, fn ($query) => $query->whereKeyNot($request->id))
+            ->count();
     }
 
     /**

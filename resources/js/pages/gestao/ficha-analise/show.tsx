@@ -166,6 +166,7 @@ interface CnaeZona {
 interface PrecedentesResponse {
     imovel: PrecedenteImovel[];
     cnae_zona: CnaeZona;
+    em_analise?: number;
 }
 
 type DiffValor = { de: unknown; para: unknown };
@@ -3557,6 +3558,9 @@ function PrecedentesPanel({
                         <div>
                             <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
                                 Processos do imóvel
+                            </p>
+                            <p className="mt-1 text-theme-sm text-gray-700 dark:text-gray-300">
+                                Em análise neste imóvel: {dados.em_analise ?? 0}
                             </p>
                             {dados.imovel.length === 0 ? (
                                 <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
