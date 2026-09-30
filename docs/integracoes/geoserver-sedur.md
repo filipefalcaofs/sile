@@ -4,7 +4,7 @@ Inventário medido em **16/09/2026** contra o serviço ao vivo.
 `updateSequence` do GetCapabilities: **15525**.
 
 Fonte da verdade: Oracle Spatial da SEDUR, exposto por GeoServer via padrões OGC.
-O Viabiliza **não** conecta no Oracle. Consome HTTP (WFS/WMS) ou, para ponto → território, o `ws-sigs`.
+O consumo é HTTP (WFS/WMS). Não há conexão direta no Oracle. Para ponto → território, o caminho é o `ws-sigs`.
 
 ---
 
@@ -46,7 +46,7 @@ O GeoServer completo tem as 656 camadas — o portal não é o inventário.
 
 Operações anunciadas: GetCapabilities, DescribeFeatureType, GetFeature, GetPropertyValue, List/Describe/Create/Drop StoredQuery, LockFeature, GetFeatureWithLock, **Transaction**.
 
-O capabilities declara `ImplementsTransactionalWFS = TRUE`. O Viabiliza **não deve** usar Transaction — só leitura.
+O capabilities declara `ImplementsTransactionalWFS = TRUE`. O uso previsto é só leitura — Transaction não entra no consumo.
 
 Formatos de GetFeature: `application/json` / `json`, GML 2/3.1/3.2, KML, CSV, SHAPE-ZIP.
 
@@ -80,7 +80,7 @@ https://geoserver.sedur.salvador.ba.gov.br/geoserver/wms
 4. **A mesma feição é publicada duas ou três vezes** — workspace temático (`louos_zpr1:…`), workspace curto (`l_zpr:…`) e workspace `sedur:L_Z_USO_ZPR_1`. São aliases da mesma view Oracle.
 5. **REST admin está fechado** (401). Não há listagem JSON oficial; o inventário sai do GetCapabilities.
 6. **WMTS quebrado**; WMS GetMap é o caminho de tile.
-7. Acesso externo já foi barrado pelo firewall “Salvador Digital” (jun/2026). Em set/2026 o GetCapabilities e GetFeature **responderam da rede de desenvolvimento**. Em produção do Viabiliza, confirmar allowlist do IP com o NTI.
+7. Acesso externo já foi barrado pelo firewall “Salvador Digital” (jun/2026). Em set/2026 o GetCapabilities e GetFeature **responderam da rede de desenvolvimento**. Em produção, confirmar allowlist do IP com o NTI.
 
 ---
 
@@ -94,11 +94,11 @@ O `POST /fiscalizacao/dados-localizacao` encapsula o ponto-em-polígono nestas v
 | Overlay no mapa Leaflet | WMS deste GeoServer |
 | Importar camada versionada para `geo_layers` (HU-107) | WFS 1.1 → GeoJSON (`srsName=EPSG:4326`) |
 | Consulta espacial fina (polígono × logradouro) | WFS `Intersects` / `Contains` |
-| Oracle / `pdo_oci` | Proibido no Viabiliza |
+| Oracle / `pdo_oci` | Fora de uso — a origem é o GeoServer |
 
 ---
 
-## 5. Camadas que o Viabiliza precisa — contrato de atributos
+## 5. Camadas de consumo — contrato de atributos
 
 Schemas obtidos por `DescribeFeatureType` (WFS 1.1) em 16/09/2026.
 Geometria: campo `GEOMETRY` (ou `GEOM` no CLE), tipo GML.
@@ -162,7 +162,13 @@ Eixo viário cadastral (geometria + hierarquia, não necessariamente Mapa 04):
 
 `logradouro:VM_LOGRADOURO` e `logradouros:VM_LOGRADOURO` — `CODLOG`, `NOME_LOGRADOURO`, `HIERARQUIA`.
 
-Pendência restante: confirmar com a SEDUR se `CLASSIFICACAO_VIARIA` é o Mapa 04 da LOUOS ou se `HIERARQUIA` do logradouro é que entra nos Quadros 11/11A.
+**Em uso pelo motor.** `CLASSIFICACAO_VIARIA` alimenta o Quadro 11A: o `GeoServerClassificacaoViariaClient` consulta por `CQL_FILTER=CODLOG=<n>` (casamento por código, não espacial — a camada é de linhas) e `Quadro11aClasseVia` normaliza a grafia (`VC-I` para `VC I`). Interruptor: `features.geoserver_via_classe`. Fonte configurável em `sile.integrations.geoserver.classificacao_viaria`.
+
+Verificação: `php artisan louos:classe-via 822` devolve `VC I`.
+
+O simulador REGIN continua preenchendo `CLASSE_VIA_LOUOS` a partir do catálogo de protocolos (`protocolos-sedur.json`), sem consultar o GeoServer. Processo real (portal, contingência, `/recebe`) passa pelo `TerritoryService`, que agora consulta esta camada.
+
+Pendência restante: confirmar com a SEDUR se a classe do Quadro 11A é o `CLASSIFICACAO_VIARIA` desta camada ou o `HIERARQUIA` do logradouro. Trocar a fonte é mudança de config.
 
 ### 5.4 Lote e matrícula — HU-033 / HU-037
 
@@ -193,7 +199,7 @@ Não há inscrição imobiliária neste schema. A inscrição vem do `ws-sigs` (
 | Mata Atlântica | `louos_mata_atlantica:…` / `sedur:L_SAVAM_CLASSIF_MATA_ATLANT` | — |
 | Áreas da União, militar, pública | `areas_da_uniao`, `sedur:AREA_*` | — |
 
-O CLE-IA consulta tombados no Oracle direto (`SDO_WITHIN_DISTANCE`). No Viabiliza usar esta FeatureType ou o `ws-sigs`.
+O CLE-IA consulta tombados no Oracle direto (`SDO_WITHIN_DISTANCE`). O consumo desta base usa esta FeatureType ou o `ws-sigs`.
 
 ### 5.6 Área de eventos (CLE, fora do TVL)
 

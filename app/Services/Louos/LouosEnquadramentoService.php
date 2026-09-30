@@ -1030,8 +1030,13 @@ class LouosEnquadramentoService
         $classeVia = $this->classeViaLouos($via);
 
         if ($classeVia === null) {
+            // A causa exata vem do TerritoryService (toggle desligado, CODLOG
+            // ausente, GeoServer fora, classe fora do Quadro 11A). Sem causa
+            // registrada, cai no motivo genérico do catálogo.
+            $motivo = $via['classe_via_motivo'] ?? null;
+
             return $this->dimIndisponivel(
-                $this->textos->get('louos.motivo.via_sem_atributo'),
+                is_string($motivo) && $motivo !== '' ? $motivo : $this->textos->get('louos.motivo.via_sem_atributo'),
                 null,
                 ['classe_via' => null, 'condicoes' => [], 'base_legal' => null],
             );

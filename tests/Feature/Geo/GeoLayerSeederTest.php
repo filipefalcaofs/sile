@@ -33,6 +33,11 @@ class GeoLayerSeederTest extends TestCase
             $this->assertSame('pendente-sedur', $layer->source);
         }
 
+        $via = GeoLayer::query()->where('type', 'via')->where('status', 'pendente_fonte')->first();
+        $this->assertNotNull($via);
+        $this->assertSame(0, $via->feature_count);
+        $this->assertSame('geoserver-sedur:logradouro:VM_LOGRADOURO', $via->source);
+
         // SQLite não executa PostGIS: nenhuma feição é carregada aqui.
         $this->assertSame(0, GeoFeature::query()->count());
     }
@@ -44,5 +49,6 @@ class GeoLayerSeederTest extends TestCase
 
         $this->assertSame(1, GeoLayer::query()->where('type', 'zona')->count());
         $this->assertSame(1, GeoLayer::query()->where('type', 'lote')->count());
+        $this->assertSame(1, GeoLayer::query()->where('type', 'via')->count());
     }
 }

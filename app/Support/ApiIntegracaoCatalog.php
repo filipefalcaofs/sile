@@ -214,6 +214,7 @@ class ApiIntegracaoCatalog
             'campos' => [
                 self::interruptor('zona', 'features.geoserver_zona', 'Consulta de zona habilitada'),
                 self::interruptor('territorio', 'features.geoserver_territorio', 'Regras territoriais habilitadas'),
+                self::interruptor('via_classe', 'features.geoserver_via_classe', 'Classificação viária habilitada'),
                 self::interruptor('em_producao', 'integrations.geoserver.em_producao', 'Usar produção'),
                 self::url('url_homologacao', 'integrations.geoserver.url_homologacao', 'URL de homologação'),
                 self::url('url_producao', 'integrations.geoserver.url_producao', 'URL de produção'),
