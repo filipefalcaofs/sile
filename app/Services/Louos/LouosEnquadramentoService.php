@@ -665,16 +665,23 @@ class LouosEnquadramentoService
             );
         }
 
+        $subgrupo = is_string($enquadramento['subgrupo'] ?? null) ? trim($enquadramento['subgrupo']) : '';
         $permissao = $this->buscarPermissaoQuadro10(
             $version,
             $this->zonaNome($zona),
             $enquadramento['grupo'] ?? null,
-            $enquadramento['subgrupo'] ?? null,
+            $subgrupo !== '' ? $subgrupo : null,
         );
 
         if ($permissao === null) {
+            $motivo = $subgrupo !== ''
+                ? 'O subgrupo '.$subgrupo.' não tem regra própria no Quadro 10 desta zona e os subgrupos do grupo não têm a mesma permissão — o Quadro 10 não foi aplicado.'
+                : 'O subgrupo do CNAE não foi identificado e os subgrupos do grupo têm permissões diferentes nesta zona — o Quadro 10 não foi aplicado.';
+
             return $this->dimNaoEncontrado(
-                $this->textos->get('louos.motivo.zona_sem_regra'),
+                $this->subgruposImpedemRegraDoGrupo($version, $this->zonaNome($zona), $enquadramento['grupo'] ?? null, $subgrupo !== '' ? $subgrupo : null)
+                    ? $motivo
+                    : $this->textos->get('louos.motivo.zona_sem_regra'),
                 $version->version,
                 ['permissao' => null, 'condicionante_ref' => null, 'base_legal' => null],
             );
@@ -830,6 +837,10 @@ class LouosEnquadramentoService
     {
         $cnae = $this->formatarCnae((string) preg_replace('/\D/', '', $input->cnaePrincipal));
         $grupo = is_string($enquadramento['grupo'] ?? null) ? (string) $enquadramento['grupo'] : 'o grupo enquadrado';
+        $subgrupo = is_string($enquadramento['subgrupo'] ?? null) ? trim($enquadramento['subgrupo']) : '';
+        if ($subgrupo !== '') {
+            $grupo .= ' ('.$subgrupo.')';
+        }
         $zona = $this->zonaNome($input->territory?->zona ?? []) ?? 'a zona identificada';
 
         return $this->textos->render('louos.template.nao_permitido', [
@@ -988,13 +999,65 @@ class LouosEnquadramentoService
             if ($especifica !== null) {
                 return $especifica;
             }
+
+            if ($this->temLinhaDeSubgrupo($base)) {
+                return null;
+            }
         }
 
-        return $base()
+        $regraDoGrupo = $base()
             ->where(function (Builder $query): void {
                 $query->whereNull('subgrupo')->orWhere('subgrupo', '');
             })
             ->first();
+
+        if ($regraDoGrupo !== null && $this->subgruposDivergem($base)) {
+            return null;
+        }
+
+        return $regraDoGrupo;
+    }
+
+    private function temLinhaDeSubgrupo(\Closure $base): bool
+    {
+        return $base()
+            ->whereNotNull('subgrupo')
+            ->where('subgrupo', '!=', '')
+            ->exists();
+    }
+
+    private function subgruposDivergem(\Closure $base): bool
+    {
+        $permissoes = $base()
+            ->whereNotNull('subgrupo')
+            ->where('subgrupo', '!=', '')
+            ->pluck('permissao')
+            ->unique()
+            ->values();
+
+        return $permissoes->count() > 1;
+    }
+
+    private function subgruposImpedemRegraDoGrupo(
+        RuleVersion $version,
+        ?string $zona,
+        ?string $grupo,
+        ?string $subgrupo,
+    ): bool {
+        if ($zona === null || $grupo === null) {
+            return false;
+        }
+
+        $base = fn (): Builder => LouosQuadro10Permissao::query()
+            ->where('rule_version_id', $version->getKey())
+            ->where('zona', $zona)
+            ->where('grupo_uso', $grupo);
+
+        if ($subgrupo !== null && $subgrupo !== '') {
+            return $this->temLinhaDeSubgrupo($base);
+        }
+
+        return $this->subgruposDivergem($base);
     }
 
     /**

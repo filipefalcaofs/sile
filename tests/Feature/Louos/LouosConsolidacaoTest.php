@@ -494,6 +494,59 @@ class LouosConsolidacaoTest extends TestCase
         ]);
     }
 
+    public function test_nao_indefere_pelo_grupo_quando_os_subgrupos_divergem(): void
+    {
+        $this->seedTratamento();
+        $this->seedQuadro10('ZPAM', 'nR1', Quadro10Permissao::Proibido);
+        $version = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first();
+        LouosQuadro10Permissao::factory()->create([
+            'rule_version_id' => $version->id,
+            'zona' => 'ZPAM',
+            'grupo_uso' => 'nR1',
+            'subgrupo' => 'nR1-04',
+            'permissao' => Quadro10Permissao::Proibido,
+        ]);
+        LouosQuadro10Permissao::factory()->create([
+            'rule_version_id' => $version->id,
+            'zona' => 'ZPAM',
+            'grupo_uso' => 'nR1',
+            'subgrupo' => 'nR1-02',
+            'permissao' => Quadro10Permissao::Permitido,
+        ]);
+
+        $result = $this->service()->enquadrar($this->inputMinimercado(
+            $this->territorio($this->zonaIdentificada('ZPAM')),
+        ));
+
+        $this->assertNotSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
+        $this->assertStringContainsString('subgrupo', (string) $result->consolidado['motivo']);
+    }
+
+    public function test_indeferimento_cita_o_subgrupo_quando_a_regra_e_dele(): void
+    {
+        $this->seedTratamento();
+        $version = RuleVersion::vigente(RuleDomain::LouosQuadro10)->first()
+            ?? RuleVersion::factory()->create([
+                'domain' => RuleDomain::LouosQuadro10,
+                'version' => 'lei-9148-2016-quadro10',
+                'rules_version' => 'lei-9148-2016-quadro10',
+            ]);
+        LouosQuadro10Permissao::factory()->create([
+            'rule_version_id' => $version->id,
+            'zona' => 'ZPAM',
+            'grupo_uso' => 'nR1',
+            'subgrupo' => 'nR1-01',
+            'permissao' => Quadro10Permissao::Proibido,
+        ]);
+
+        $result = $this->service()->enquadrar($this->inputMinimercado(
+            $this->territorio($this->zonaIdentificada('ZPAM')),
+        ));
+
+        $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
+        $this->assertStringContainsString('nR1-01', (string) $result->consolidado['motivo']);
+    }
+
     /**
      * Restrições territoriais com uma ZEIS incidente (camada ambiental da Fase 4,
      * shape de TerritoryResult::restricoes).

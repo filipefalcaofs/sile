@@ -246,7 +246,7 @@ class LouosTextosByteIdenticosTest extends TestCase
             $result->quadro10['motivo'],
         );
         $this->assertSame(
-            'Não permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR1 pelo enquadramento da planilha vigente e esse grupo é proibido na zona ZPAM pelo Quadro 10. Atividade proibida na zona pelo Quadro 10.',
+            'Não permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR1 (nR1-01) pelo enquadramento da planilha vigente e esse grupo é proibido na zona ZPAM pelo Quadro 10. Atividade proibida na zona pelo Quadro 10.',
             $result->consolidado['motivo'],
         );
         $this->assertSame(
