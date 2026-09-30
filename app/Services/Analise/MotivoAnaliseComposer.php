@@ -7,11 +7,12 @@ use App\Models\AnalysisRecord;
 use App\Models\ExpressoQueda;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\ResolvedViability;
-use App\Services\Viabilidade\ConsultaViabilidadeResult;
 
 /**
- * Motivo de Análise que o sistema grava na ficha: queda do expresso + fatos
- * do motor (CNAE, tipo de imóvel, zona, Quadro 10). O analista não edita.
+ * Motivo de Análise que o sistema grava na ficha: só a frase operacional da
+ * queda (loteamento, CNAE sem enquadramento, área). O analista não edita.
+ * Diagnóstico técnico (camada, gatilho, dimensão, tipo de imóvel, Quadro 10)
+ * fica nos blocos próprios da ficha.
  */
 class MotivoAnaliseComposer
 {
@@ -21,102 +22,98 @@ class MotivoAnaliseComposer
     public function para(ViabilityRequest $request, ?ResolvedViability $resolved): array
     {
         $linhas = [];
+        $incluirArea = false;
 
         foreach ($request->expressoQuedas()->orderBy('id')->get() as $queda) {
-            $linhas[] = $this->queda($queda);
+            $linha = $this->queda($queda);
+
+            if ($linha !== null) {
+                $linhas[] = $linha;
+            }
+
+            if ($this->semEnquadramento($queda)) {
+                $incluirArea = true;
+            }
         }
 
-        if ($resolved !== null) {
-            $linhas = [...$linhas, ...$this->contexto($request, $resolved)];
+        if ($incluirArea && $request->used_area_m2 !== null) {
+            $linhas[] = $this->formatarArea($request->used_area_m2);
         }
 
         return AnalysisRecord::normalizarMotivos($linhas);
     }
 
-    private function queda(ExpressoQueda $queda): string
+    private function queda(ExpressoQueda $queda): ?string
     {
-        $partes = [];
+        $motivo = trim((string) $queda->motivo);
+        $territorial = $this->fraseTerritorial($motivo);
+
+        if ($territorial !== null) {
+            return $territorial;
+        }
+
+        if ($this->semEnquadramento($queda)) {
+            if (! is_string($queda->cnae) || $queda->cnae === '') {
+                return null;
+            }
+
+            return 'CNAE '.$this->formatarCnae($queda->cnae).' — não enquadrado — para enquadramento do analista';
+        }
+
+        if ($motivo === '') {
+            return null;
+        }
 
         if (is_string($queda->cnae) && $queda->cnae !== '') {
-            $partes[] = 'CNAE '.$this->formatarCnae($queda->cnae);
+            return 'CNAE '.$this->formatarCnae($queda->cnae).' — '.$motivo;
         }
 
-        $motivo = trim((string) $queda->motivo);
-
-        if ($motivo !== '') {
-            $partes[] = $motivo;
-        }
-
-        $gatilho = TipoGatilho::tryFrom((string) $queda->tipo_gatilho)?->label();
-
-        if ($gatilho !== null) {
-            $partes[] = 'gatilho '.$gatilho;
-        }
-
-        if (is_string($queda->dimensao) && $queda->dimensao !== '') {
-            $partes[] = 'dimensão decisiva '.$queda->dimensao;
-        }
-
-        return implode(' — ', $partes);
+        return $motivo;
     }
 
-    /**
-     * @return list<string>
-     */
-    private function contexto(ViabilityRequest $request, ResolvedViability $resolved): array
+    private function semEnquadramento(ExpressoQueda $queda): bool
     {
-        $linhas = [];
+        $gatilho = $queda->tipo_gatilho instanceof TipoGatilho
+            ? $queda->tipo_gatilho
+            : TipoGatilho::tryFrom((string) $queda->tipo_gatilho);
 
-        if (is_string($request->tipo_imovel) && trim($request->tipo_imovel) !== '') {
-            $linhas[] = 'Tipo de imóvel informado no REGIN: '.$request->tipo_imovel.'.';
+        if ($gatilho === TipoGatilho::EnquadramentoAusente) {
+            return true;
         }
 
-        if ($request->used_area_m2 !== null) {
-            $linhas[] = 'Área utilizada declarada: '.$request->used_area_m2.' m².';
+        $motivo = mb_strtolower(trim((string) $queda->motivo));
+
+        return str_contains($motivo, 'sem enquadramento')
+            || str_contains($motivo, 'não enquadrad')
+            || str_contains($motivo, 'nao enquadrad')
+            || str_contains($motivo, 'não parametrizada');
+    }
+
+    private function fraseTerritorial(string $motivo): ?string
+    {
+        $frases = [
+            'Loteamento Itaigara' => 'Solicitação cadastrada no Loteamento Itaigara',
+            'Loteamento Vela Branca' => 'Solicitação cadastrada no Loteamento Vela Branca',
+            'Zona de Exploração Mineral' => 'Solicitação cadastrada na Zona de Exploração Mineral',
+            'Zona de Proteção Ambiental' => 'Solicitação cadastrada na Zona de Proteção Ambiental',
+            'Trechos 5 e 6' => 'Solicitação cadastrada nos Trechos 5 e 6 da AMB – Área de Borda Marítima, em conformidade com as disposições estabelecidas pelo Decreto Municipal nº 31.168/2019',
+            'Zona de Uso Especial' => 'Solicitação cadastrada em Zona de Uso Especial',
+        ];
+
+        foreach ($frases as $marca => $frase) {
+            if (str_contains($motivo, $marca)) {
+                return $frase;
+            }
         }
 
-        $item = collect($resolved->por_cnae)->firstWhere('is_primary', true)
-            ?? collect($resolved->por_cnae)->first();
+        return null;
+    }
 
-        if (! is_array($item)) {
-            return $linhas;
-        }
+    private function formatarArea(mixed $area): string
+    {
+        $texto = rtrim(rtrim(number_format((float) $area, 2, '.', ''), '0'), '.');
 
-        $consulta = $item['consulta'] ?? null;
-
-        if (! $consulta instanceof ConsultaViabilidadeResult) {
-            return $linhas;
-        }
-
-        $zona = $consulta->territory?->zona ?? [];
-        $nomeZona = is_string($zona['nome'] ?? null) ? $zona['nome'] : null;
-        $statusZona = is_string($zona['status'] ?? null) ? $zona['status'] : null;
-
-        if ($statusZona === 'identificado' && $nomeZona !== null) {
-            $linhas[] = 'Zona urbanística identificada: '.$nomeZona.'.';
-        } elseif (is_string($zona['motivo'] ?? null) && $zona['motivo'] !== '') {
-            $linhas[] = 'Zona urbanística: '.$zona['motivo'].'.';
-        }
-
-        $quadro10 = $consulta->enquadramento->quadro10;
-        $permissao = is_string($quadro10['permissao'] ?? null) ? $quadro10['permissao'] : null;
-
-        if (($quadro10['status'] ?? null) === 'identificado' && $permissao !== null) {
-            $linhas[] = 'Quadro 10 da LOUOS: permissão '.$permissao
-                .($nomeZona !== null ? ' na zona '.$nomeZona : '').'.';
-        } elseif (is_string($quadro10['motivo'] ?? null) && $quadro10['motivo'] !== '') {
-            $linhas[] = 'Quadro 10 da LOUOS: '.$quadro10['motivo'].'.';
-        }
-
-        $tendencia = is_string($item['tendencia_label'] ?? null)
-            ? $item['tendencia_label']
-            : (is_string($item['tendencia'] ?? null) ? $item['tendencia'] : null);
-
-        if ($tendencia !== null && $tendencia !== '') {
-            $linhas[] = 'Tendência locacional do motor: '.$tendencia.'.';
-        }
-
-        return $linhas;
+        return 'Área utilizada declarada: '.$texto.' m².';
     }
 
     private function formatarCnae(string $cnae): string
