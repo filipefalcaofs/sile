@@ -226,7 +226,13 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
             }
 
             if (disco.current) {
-                disco.current.style.transform = `translate3d(${cur.disc_x.toFixed(2)}px, ${cur.disc_y.toFixed(2)}px, 0) scale(${Math.max(0, cur.disc_s * cur.disc_k).toFixed(4)})`;
+                // O disco está fora do palco, em coordenadas de viewport. O
+                // alvo `disc_x`/`disc_y` é relativo ao centro da cena; aqui
+                // vira posição absoluta na tela.
+                const discoX = base.x + cur.disc_x - 125;
+                const discoY = base.y + cur.disc_y - 125;
+
+                disco.current.style.transform = `translate3d(${discoX.toFixed(2)}px, ${discoY.toFixed(2)}px, 0) scale(${Math.max(0, cur.disc_s * cur.disc_k).toFixed(4)})`;
                 disco.current.style.opacity = Math.max(0, Math.min(1, cur.disc_o)).toFixed(3);
             }
 
@@ -347,6 +353,25 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
 
     return (
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-6">
+            {/* Abertura: o disco que vira o logo da sidebar. Fica fora do
+                palco para viajar até (38, 50) enquanto o palco contrai. */}
+            <div
+                ref={disco}
+                className="absolute grid size-[250px] scale-0 place-items-center rounded-full transition-[background-color,box-shadow] duration-600"
+                style={{
+                    background: noShell ? 'transparent' : TILE,
+                    boxShadow:
+                        estado === 'authorized' || estado === 'preparing'
+                            ? '0 0 0 1px rgba(255,255,255,0.18), 0 0 90px oklch(64% 0.155 250 / 0.5)'
+                            : '0 0 0 0 transparent',
+                }}
+            >
+                {/* LogoMark só aceita className: a cor vai no wrapper, por currentColor. */}
+                <span className="flex transition-colors duration-600" style={{ color: noShell ? '#5992ed' : '#ffffff' }}>
+                    <LogoMark className="size-[120px]" />
+                </span>
+            </div>
+
             {/* Varredura territorial e pontos de análise, sobre a cidade */}
             <div
                 ref={varredura}
@@ -458,24 +483,6 @@ export default function GestaoLoginScene({ estado, fase, tipoConta, photoRef, al
                         <span className="text-white/72">Regras urbanísticas · LOUOS</span>
                         <span className="text-white/42">Lei nº 9.148/2016</span>
                     </div>
-                </div>
-
-                {/* Abertura: o disco que vira o logo da sidebar */}
-                <div
-                    ref={disco}
-                    className="absolute -top-[125px] -left-[125px] grid size-[250px] scale-0 place-items-center rounded-full transition-[background-color,box-shadow] duration-600"
-                    style={{
-                        background: noShell ? 'transparent' : TILE,
-                        boxShadow:
-                            estado === 'authorized' || estado === 'preparing'
-                                ? '0 0 0 1px rgba(255,255,255,0.18), 0 0 90px oklch(64% 0.155 250 / 0.5)'
-                                : '0 0 0 0 transparent',
-                    }}
-                >
-                    {/* LogoMark só aceita className: a cor vai no wrapper, por currentColor. */}
-                    <span className="flex transition-colors duration-600" style={{ color: noShell ? '#5992ed' : '#ffffff' }}>
-                        <LogoMark className="size-[120px]" />
-                    </span>
                 </div>
 
                 {/* Fórmula do produto */}
