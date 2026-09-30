@@ -3,6 +3,7 @@
 namespace Tests\Feature\Regin;
 
 use App\Enums\ViabilityRequestOrigin;
+use App\Jobs\ProtocolarRecebimentoReginJob;
 use App\Models\Activity;
 use App\Models\ReginRecebimento;
 use App\Models\User;
@@ -14,6 +15,7 @@ use Database\Seeders\RiskTriggerSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Mockery\MockInterface;
 use RuntimeException;
 use Tests\TestCase;
@@ -119,6 +121,74 @@ class ReginRecebeEndpointTest extends TestCase
         $response->assertOk();
         $this->assertSame('3', $response->getContent());
         $this->assertSame($nivelBase, $nivel);
+    }
+
+    /**
+     * O ack 3 é do ENVELOPE (guia: "recebimento do processo na prefeitura").
+     * A abertura do processo consulta o Cadastro Imobiliário e o GeoServer —
+     * medido em ~10s no ambiente real — e não pode ficar no caminho da
+     * resposta. Vai para a fila, como já faz o protocolo do portal.
+     */
+    public function test_ack_nao_espera_a_abertura_do_processo(): void
+    {
+        Queue::fake([ProtocolarRecebimentoReginJob::class]);
+
+        $response = $this->postJson('/api_integracao/recebe', $this->envioDto('43747'));
+
+        $response->assertOk();
+        $this->assertSame('3', $response->getContent());
+
+        $recebimento = ReginRecebimento::query()->where('protocolo', '43747')->firstOrFail();
+
+        Queue::assertPushed(
+            ProtocolarRecebimentoReginJob::class,
+            fn (ProtocolarRecebimentoReginJob $job) => $job->reginRecebimentoId === $recebimento->id,
+        );
+    }
+
+    public function test_duplicado_nao_enfileira_protocolacao(): void
+    {
+        $this->postJson('/api_integracao/recebe', $this->envioDto('43747'));
+
+        Queue::fake([ProtocolarRecebimentoReginJob::class]);
+
+        $segunda = $this->postJson('/api_integracao/recebe', $this->envioDto('43747'));
+
+        $this->assertSame('5', $segunda->getContent());
+        Queue::assertNothingPushed();
+    }
+
+    /**
+     * Corrida real entre dois envios do mesmo protocolo: o SELECT prévio não
+     * trava linha inexistente, então os dois passam pela verificação e os dois
+     * tentam gravar. Quem decide é o índice único — a violação significa
+     * duplicado (5), nunca 500. A corrida é reproduzida de forma determinística
+     * inserindo a linha concorrente imediatamente antes do INSERT do model.
+     */
+    public function test_corrida_no_mesmo_protocolo_devolve_5_sem_segunda_linha(): void
+    {
+        ReginRecebimento::creating(function (ReginRecebimento $model): void {
+            static $jaCorreu = false;
+
+            if ($jaCorreu) {
+                return;
+            }
+
+            $jaCorreu = true;
+
+            DB::table('regin_recebimentos')->insert([
+                'protocolo' => $model->protocolo,
+                'envelope' => '{}',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        $response = $this->postJson('/api_integracao/recebe', $this->envioDto('43747'));
+
+        $response->assertOk();
+        $this->assertSame('5', $response->getContent());
+        $this->assertSame(1, ReginRecebimento::query()->where('protocolo', '43747')->count());
     }
 
     public function test_falha_ao_protocolar_preserva_o_envelope_e_registra_a_pendencia(): void

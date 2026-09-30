@@ -2,23 +2,31 @@
 
 namespace App\Services\Regin;
 
+use App\Jobs\ProtocolarRecebimentoReginJob;
 use App\Models\ReginRecebimento;
 use App\Support\Audit\AuditService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Throwable;
 
 class ReginRecebeService
 {
-    public function __construct(
-        private AuditService $audit,
-        private ReginProcessoProtocolador $protocolador,
-    ) {}
+    public function __construct(private AuditService $audit) {}
 
     /**
      * Persiste o envelope e devolve o código do guia (3 recebido, 5 duplicado).
-     * O ack só sai depois do commit — sem persistência, não há 3.
+     * O ack só sai depois de gravar — sem persistência, não há 3.
+     *
+     * Quem arbitra a duplicidade é o índice único de `protocolo`, não o SELECT:
+     * `lockForUpdate` não trava linha inexistente, então dois envios simultâneos
+     * do mesmo protocolo passam os dois pela verificação. A consulta prévia
+     * resolve o caso comum; a violação do índice resolve a corrida — e também
+     * significa duplicado (5), nunca erro.
+     *
+     * Sem transação envolvendo o conjunto: o INSERT já é atômico e a auditoria
+     * que vem depois não pode desfazer um recebimento que o REGIN considera
+     * entregue.
      *
      * @param  array<string, mixed>  $envelope
      */
@@ -30,18 +38,15 @@ class ReginRecebeService
             throw new InvalidArgumentException('Protocolo obrigatório.');
         }
 
-        $recebimento = DB::transaction(function () use ($envelope, $protocolo): ?ReginRecebimento {
-            $existente = ReginRecebimento::query()
-                ->where('protocolo', $protocolo)
-                ->lockForUpdate()
-                ->first();
+        $existente = ReginRecebimento::query()->where('protocolo', $protocolo)->first();
 
-            if ($existente !== null) {
-                $this->auditar($existente, $protocolo, '5', 'duplicado');
+        if ($existente !== null) {
+            $this->auditar($existente, $protocolo, '5', 'duplicado');
 
-                return null;
-            }
+            return '5';
+        }
 
+        try {
             $recebimento = ReginRecebimento::query()->create([
                 'protocolo' => $protocolo,
                 'cnpj_destino' => $this->texto($envelope['cnpjDestino'] ?? null),
@@ -54,44 +59,45 @@ class ReginRecebeService
                 'corpo' => is_array($envelope['json'] ?? null) ? $envelope['json'] : null,
                 'envelope' => $envelope,
             ]);
+        } catch (UniqueConstraintViolationException) {
+            $concorrente = ReginRecebimento::query()->where('protocolo', $protocolo)->first();
 
-            $this->auditar($recebimento, $protocolo, '3', 'sucesso');
+            if ($concorrente === null) {
+                throw new InvalidArgumentException('Protocolo obrigatório.');
+            }
 
-            return $recebimento;
-        });
+            $this->auditar($concorrente, $protocolo, '5', 'duplicado');
 
-        if ($recebimento === null) {
             return '5';
         }
 
-        $this->protocolar($recebimento);
+        $this->auditar($recebimento, $protocolo, '3', 'sucesso');
+        $this->enfileirarProtocolacao($recebimento);
 
         return '3';
     }
 
     /**
-     * Abre o processo DEPOIS do commit do envelope. Fora da transação por
-     * necessidade, não por estilo: a protocolação consulta o Cadastro
-     * Imobiliário e o GeoServer e escreve em várias tabelas — no PostgreSQL,
-     * uma query que falhe aborta a transação inteira, e a auditoria seguinte
-     * derrubaria o ack com 500, desfazendo o recebimento já reconhecido.
+     * A abertura do processo consulta o Cadastro Imobiliário e percorre as
+     * camadas do GeoServer — ~10s medidos no ambiente real. O ack do guia é do
+     * ENVELOPE, então esse trabalho vai para a fila, como já faz o protocolo do
+     * portal.
      *
-     * A falha fica REGISTRADA (log da exceção + auditoria com resultado
-     * `falha`): o recebimento sem processo é pendência visível, nunca silêncio.
+     * O envelope já está gravado quando chegamos aqui, então o 3 é verdadeiro
+     * mesmo que o enfileiramento falhe (fila indisponível, ou conexão `sync`
+     * propagando a exceção do próprio job). Nesse caso o recebimento fica sem
+     * processo — pendência REGISTRADA, nunca silêncio, e nunca um 500 para o
+     * REGIN por algo que não é do recebimento.
      */
-    private function protocolar(ReginRecebimento $recebimento): void
+    private function enfileirarProtocolacao(ReginRecebimento $recebimento): void
     {
         try {
-            $processo = $this->protocolador->protocolar($recebimento);
-
-            if ($processo !== null) {
-                $recebimento->update(['viability_request_id' => $processo->id]);
-            }
+            ProtocolarRecebimentoReginJob::dispatch($recebimento->id);
         } catch (Throwable $exception) {
             report($exception);
 
-            // Só a classe da exceção nas propriedades: a mensagem pode carregar
-            // valores do envelope (dado pessoal). O detalhe fica no log.
+            // Só a classe da exceção: a mensagem pode carregar valores do
+            // envelope (dado pessoal). O detalhe fica no log.
             $this->audit->log(
                 'regin',
                 'protocolar',
@@ -102,7 +108,6 @@ class ReginRecebeService
                 ],
                 $recebimento,
                 'falha',
-                personalData: false,
             );
         }
     }
