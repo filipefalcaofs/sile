@@ -178,11 +178,16 @@ class FichaUiSmokeTest extends TestCase
             'protocol_number' => 'VIA-'.now()->year.'-000125',
             'protocoled_at' => now(),
         ]);
-        $processo->forceFill(['camadas_incidentes' => [
-            'logradouro_tributario' => ['cod_log' => '212', 'nome' => 'Avenida Lafayete Coutinho'],
-            'logradouros_proximos' => [['cod_log' => '212', 'nome' => 'Avenida Lafayete Coutinho', 'distancia_m' => 26.6]],
-            'camadas' => [['regra' => 'RT-03-ABM', 'titulo' => 'ABM', 'status' => 'dentro', 'elemento' => 'Trecho 5', 'incide' => true]],
-        ]])->save();
+        $processo->forceFill([
+            'zona_codigo' => 'ZPR 3',
+            'simulation_snapshot' => ['via' => 'Avenida Luís Viana Filho'],
+            'camadas_incidentes' => [
+                'logradouro_tributario' => ['cod_log' => '212', 'nome' => 'Avenida Lafayete Coutinho'],
+                'logradouros_proximos' => [['cod_log' => '212', 'nome' => 'Avenida Lafayete Coutinho', 'distancia_m' => 26.6]],
+                'zona' => ['status' => 'indisponivel', 'nome' => null],
+                'camadas' => [['regra' => 'RT-03-ABM', 'titulo' => 'ABM', 'status' => 'dentro', 'elemento' => 'Trecho 5', 'incide' => true]],
+            ],
+        ])->save();
 
         AnalysisRecord::factory()->create([
             'viability_request_id' => $processo->id,
@@ -195,7 +200,11 @@ class FichaUiSmokeTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('localizacao.camadas.logradouro_tributario.cod_log', '212')
-                ->where('localizacao.camadas.camadas.0.elemento', 'Trecho 5'));
+                ->where('localizacao.camadas.camadas.0.elemento', 'Trecho 5')
+                ->where('localizacao.camadas.zona.nome', 'ZPR 3')
+                ->where('localizacao.camadas.via', 'Avenida Luís Viana Filho')
+                ->where('localizacao.zona', 'ZPR 3')
+                ->where('localizacao.via', 'Avenida Luís Viana Filho'));
     }
 
     public function test_ficha_expoe_o_checklist_dos_quadros_lido_do_snapshot(): void

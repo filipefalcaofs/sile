@@ -471,8 +471,39 @@ class AnalysisRecordController extends Controller
             'zona' => $zona,
             'via' => $via,
             'is_public_area' => $request->is_public_area,
-            'camadas' => $request->camadas_incidentes,
+            'camadas' => $this->camadasComZonaEVia($request->camadas_incidentes, $zona, $via),
         ];
+    }
+
+    /**
+     * A lista de camadas usa a zona e a via já conhecidas do processo quando a
+     * camada geográfica não identificou o nome. Logradouros próximos permanecem
+     * no payload; a ficha não os exibe.
+     *
+     * @param  array<string, mixed>|null  $camadas
+     * @return array<string, mixed>|null
+     */
+    private function camadasComZonaEVia(?array $camadas, ?string $zona, ?string $via): ?array
+    {
+        if ($camadas === null) {
+            return null;
+        }
+
+        $zonaCamada = is_array($camadas['zona'] ?? null) ? $camadas['zona'] : [];
+        $nomeZona = $this->textoOuNulo($zonaCamada['nome'] ?? null);
+
+        if ($nomeZona === null && $zona !== null) {
+            $camadas['zona'] = [
+                'status' => 'identificado',
+                'nome' => $zona,
+            ];
+        }
+
+        if ($this->textoOuNulo($camadas['via'] ?? null) === null && $via !== null) {
+            $camadas['via'] = $via;
+        }
+
+        return $camadas;
     }
 
     /**
