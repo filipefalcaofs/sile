@@ -316,3 +316,62 @@ html.acc-contrast {
     background: var(--color-gray-50);
     color-scheme: dark;
 }
+
+/*
+ * Entrada no console vinda da cena de alinhamento do login. O logo da
+ * sidebar não entra nesta cascata de propósito: o disco do login parou
+ * exatamente sobre ele, no mesmo tamanho e cor, e animá-lo criaria a
+ * piscada que a transição existe para evitar. Os blocos de conteúdo
+ * também ficam de fora — quem escalona o conteúdo é o RevealScope.
+ */
+@keyframes sile-console-surge {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes sile-console-header {
+    from {
+        transform: translateY(-100%);
+    }
+    to {
+        transform: none;
+    }
+}
+
+[data-entrada-console='true'] aside > div:not(:first-child) {
+    animation: sile-console-surge 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+[data-entrada-console='true'] aside nav > div > div {
+    animation: sile-console-surge 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+[data-entrada-console='true'] aside nav > div > div:nth-child(1) {
+    animation-delay: 0.12s;
+}
+
+[data-entrada-console='true'] aside nav > div > div:nth-child(2) {
+    animation-delay: 0.22s;
+}
+
+[data-entrada-console='true'] aside nav > div > div:nth-child(3) {
+    animation-delay: 0.32s;
+}
+
+[data-entrada-console='true'] header {
+    animation: sile-console-header 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-entrada-console='true'] aside > div:not(:first-child),
+    [data-entrada-console='true'] aside nav > div > div,
+    [data-entrada-console='true'] header {
+        animation: none;
+    }
+}
