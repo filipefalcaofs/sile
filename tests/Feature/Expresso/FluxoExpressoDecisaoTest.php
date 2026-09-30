@@ -194,6 +194,8 @@ class FluxoExpressoDecisaoTest extends TestCase
         $this->assertNull($decision->tvl_product_number);
         $this->assertSame(ViabilityRequestStatus::Indeferida, $request->fresh()->status);
         $this->assertStringContainsString('CNAE 4712-1/00', (string) $decision->reason);
+        $this->assertStringContainsString('Enquadramento:', (string) $decision->reason);
+        $this->assertStringContainsString('nR1-01', (string) $decision->reason);
         $this->assertStringContainsString(
             'manifesta-se pelo indeferimento desta atividade, por ser o uso proibido na zona ZR-1 segundo o Quadro 10 da LOUOS',
             (string) $decision->reason,

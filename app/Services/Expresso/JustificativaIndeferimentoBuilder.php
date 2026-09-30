@@ -33,10 +33,27 @@ class JustificativaIndeferimentoBuilder
                 continue;
             }
 
-            $paragrafos[] = 'CNAE '.$item['cnae_formatado'].': '.$this->justificativaDoCnae($consulta);
+            $paragrafos[] = 'CNAE '.$item['cnae_formatado'].":\n".$this->linhaDeEnquadramento($consulta)."\n".$this->justificativaDoCnae($consulta);
         }
 
         return implode("\n\n", $paragrafos);
+    }
+
+    private function linhaDeEnquadramento(ConsultaViabilidadeResult $consulta): string
+    {
+        $uso = $consulta->enquadramento->enquadramento;
+        $grupo = is_string($uso['grupo'] ?? null) ? trim($uso['grupo']) : '';
+        $subgrupo = is_string($uso['subgrupo'] ?? null) ? trim($uso['subgrupo']) : '';
+        $codigo = is_string($uso['codigo_louos'] ?? null) ? trim($uso['codigo_louos']) : '';
+
+        $partes = array_values(array_filter([
+            $grupo !== '' ? 'grupo '.$grupo : null,
+            $subgrupo !== '' ? 'subgrupo '.$subgrupo : 'subgrupo não identificado',
+            $codigo !== '' ? 'código LOUOS '.$codigo : null,
+            'Quadro 10',
+        ]));
+
+        return 'Enquadramento: '.implode(', ', $partes).'.';
     }
 
     private function justificativaDoCnae(ConsultaViabilidadeResult $consulta): string
