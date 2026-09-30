@@ -225,7 +225,7 @@ export default function RenovacaoIndex({ tvls }: { tvls: TvlItem[] }) {
                         </li>
                     ))}
                 </ul>
-            )}
+            ) : null}
         </PortalLayout>
     );
 }
