@@ -34,8 +34,13 @@ class GeoLayerSeederPostgisTest extends PostgisTestCase
         $vigente = GeoLayer::vigente(GeoLayerType::Bairro)->sole();
         $this->assertGreaterThan(0, $vigente->feature_count);
 
-        // Via e restrição também carregam do snapshot real commitado.
-        $this->assertGreaterThan(0, GeoFeature::whereHas('layer', fn ($q) => $q->where('type', 'via'))->count());
+        // Via não vem do extrato do ArcGIS. Fica pendente até
+        // geo:importar-wfs via logradouro:VM_LOGRADOURO.
+        $via = GeoLayer::query()->where('type', 'via')->where('status', 'pendente_fonte')->first();
+        $this->assertNotNull($via);
+        $this->assertSame('geoserver-sedur:logradouro:VM_LOGRADOURO', $via->source);
+        $this->assertSame(0, GeoFeature::whereHas('layer', fn ($q) => $q->where('type', 'via'))->count());
+
         $this->assertGreaterThan(0, GeoFeature::whereHas('layer', fn ($q) => $q->where('type', 'restricao'))->count());
 
         // Zona e lote NÃO têm fonte pública: ficam pendente_fonte, sem geometria.

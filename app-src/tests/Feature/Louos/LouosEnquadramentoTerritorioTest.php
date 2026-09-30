@@ -3,6 +3,7 @@
 namespace Tests\Feature\Louos;
 
 use App\Enums\Quadro10Permissao;
+use App\Enums\ResultadoViabilidade;
 use App\Enums\RuleDomain;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\LouosQuadro11CondicaoVia;
@@ -387,5 +388,63 @@ class LouosEnquadramentoTerritorioTest extends TestCase
         $this->assertSame(3, $result->quadro11a['condicoes']['recuo_frontal_m']);
         $this->assertStringContainsString('Quadro 11-A', (string) $result->quadro11a['motivo']);
         $this->assertArrayNotHasKey('quadro11', $result->versoes());
+    }
+
+    public function test_via_sem_classe_usa_o_motivo_da_causa(): void
+    {
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
+
+        $via = $this->viaIdentificada(['NOME_LOGRADOURO' => 'Rua Sem Classe', 'CODLOG' => 999]);
+        $via['classe_via_motivo'] = 'GeoServer SEDUR indisponível.';
+
+        $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $this->territorioComVia($via), []);
+
+        $result = $this->service()->enquadrar($input);
+
+        $this->assertSame('indisponivel', $result->quadro11a['status']);
+        $this->assertSame('GeoServer SEDUR indisponível.', $result->quadro11a['motivo']);
+        $this->assertNull($result->quadro11a['classe_via']);
+    }
+
+    public function test_classe_com_nao_no_quadro_veda_o_uso(): void
+    {
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
+        $this->quadro10Permissao('ZPR 1', 'nR1', Quadro10Permissao::Permitido);
+        $this->quadro11Condicao(RuleDomain::LouosQuadro11a, 'lei-9148-2016-quadro11a', 'VC I', 'nR1', ['Não']);
+
+        $territorio = new TerritoryResult(
+            bairro: $this->dimVazia(),
+            via: $this->viaIdentificada(['CODLOG' => 822, 'CLASSE_VIA_LOUOS' => 'VC I']),
+            zona: $this->zonaIdentificada('ZPR 1'),
+            lote: $this->dimVazia(),
+            restricoes: ['status' => 'nao_encontrado', 'itens' => [], 'motivo' => null, 'versao_camada' => null],
+        );
+        $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $territorio, [11 => true]);
+
+        $result = $this->service()->enquadrar($input);
+
+        $this->assertSame('identificado', $result->quadro11a['status']);
+        $this->assertSame('VC I', $result->quadro11a['classe_via']);
+        $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->consolidado['resultado']);
+    }
+
+    public function test_classe_com_analise_da_cnlu_deixa_pendente(): void
+    {
+        $this->enquadramentoFaixa('4712100', 'nR1', 'nR1-01');
+        $this->quadro10Permissao('ZPR 1', 'nR1', Quadro10Permissao::Permitido);
+        $this->quadro11Condicao(RuleDomain::LouosQuadro11a, 'lei-9148-2016-quadro11a', 'VA II', 'nR1', ['R']);
+
+        $territorio = new TerritoryResult(
+            bairro: $this->dimVazia(),
+            via: $this->viaIdentificada(['CODLOG' => 5502, 'CLASSE_VIA_LOUOS' => 'VA II']),
+            zona: $this->zonaIdentificada('ZPR 1'),
+            lote: $this->dimVazia(),
+            restricoes: ['status' => 'nao_encontrado', 'itens' => [], 'motivo' => null, 'versao_camada' => null],
+        );
+        $input = EnquadramentoInput::paraConsulta(100, '4712-1/00', $territorio, [11 => true]);
+
+        $result = $this->service()->enquadrar($input);
+
+        $this->assertSame(ResultadoViabilidade::Pendente->value, $result->consolidado['resultado']);
     }
 }

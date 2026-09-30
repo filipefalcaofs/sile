@@ -9,6 +9,7 @@ import { MapaSection } from '@/components/geo/mapa-section';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
+import OptionSelect from '@/components/form/option-select';
 import Select from '@/components/form/select';
 import { AlertIcon, ArrowRightIcon, CheckCircleIcon, ChevronDownIcon, CloseIcon, InfoIcon, MapPinIcon, TrashIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
@@ -584,6 +585,13 @@ function riscoRank(valor: string | null | undefined): number {
     }
 
     return 0;
+}
+
+function rotuloEnquadramento(opcao: EnquadramentoOpcao): string {
+    const denominacao = opcao.denominacao_louos ? ` — ${opcao.denominacao_louos}` : '';
+    const tll = opcao.codigo_tll ? ` · TLL ${opcao.codigo_tll}` : '';
+
+    return `${opcao.codigo_louos}${denominacao}${tll}`;
 }
 
 function rotuloRiscoSanitario(valor: string | null | undefined): string | null {
@@ -2040,47 +2048,48 @@ export default function FichaAnaliseShow({
                                                                 <Label htmlFor={`enquadramento-${indice}`} className="mb-1.5">
                                                                     Enquadramento (LOUOS × TLL)
                                                                 </Label>
-                                                                <select
+                                                                <OptionSelect
                                                                     id={`enquadramento-${indice}`}
-                                                                    className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
-                                                                    value={enquadramentoAtual}
-                                                                    onChange={(e) => {
+                                                                    placeholder="Selecione o enquadramento…"
+                                                                    value={
+                                                                        enquadramentoAtual === '|' ? '' : enquadramentoAtual
+                                                                    }
+                                                                    onChange={(valor) => {
                                                                         const opcao = opcoesCnae.find(
                                                                             (o) =>
                                                                                 `${o.codigo_louos}|${o.codigo_tll ?? ''}` ===
-                                                                                e.target.value,
+                                                                                valor,
                                                                         );
 
+                                                                        if (!opcao) {
+                                                                            return;
+                                                                        }
+
                                                                         atualizarCnae(indice, {
-                                                                            codigo_louos: opcao?.codigo_louos ?? null,
-                                                                            codigo_tll: opcao?.codigo_tll ?? null,
-                                                                            valor_tll: opcao?.valor_tll ?? null,
+                                                                            codigo_louos: opcao.codigo_louos,
+                                                                            codigo_tll: opcao.codigo_tll,
+                                                                            valor_tll: opcao.valor_tll,
                                                                         });
                                                                     }}
-                                                                >
-                                                                    <option value="|">Selecione o enquadramento…</option>
-                                                                    {opcoesCnae.map((opcao) => (
-                                                                        <option
-                                                                            key={`${opcao.codigo_louos}|${opcao.codigo_tll ?? ''}`}
-                                                                            value={`${opcao.codigo_louos}|${opcao.codigo_tll ?? ''}`}
-                                                                        >
-                                                                            {opcao.codigo_louos}
-                                                                            {opcao.denominacao_louos
-                                                                                ? ` — ${opcao.denominacao_louos}`
-                                                                                : ''}
-                                                                            {opcao.codigo_tll
-                                                                                ? ` · TLL ${opcao.codigo_tll}`
-                                                                                : ''}
-                                                                        </option>
-                                                                    ))}
-                                                                    {atualForaDaPlanilha && (
-                                                                        <option value={enquadramentoAtual}>
-                                                                            {item.codigo_louos}
-                                                                            {item.codigo_tll ? ` · TLL ${item.codigo_tll}` : ''}{' '}
-                                                                            (atual — fora da planilha vigente)
-                                                                        </option>
-                                                                    )}
-                                                                </select>
+                                                                    options={[
+                                                                        ...opcoesCnae.map((opcao) => ({
+                                                                            value: `${opcao.codigo_louos}|${opcao.codigo_tll ?? ''}`,
+                                                                            label: rotuloEnquadramento(opcao),
+                                                                        })),
+                                                                        ...(atualForaDaPlanilha
+                                                                            ? [
+                                                                                  {
+                                                                                      value: enquadramentoAtual,
+                                                                                      label: `${item.codigo_louos ?? ''}${
+                                                                                          item.codigo_tll
+                                                                                              ? ` · TLL ${item.codigo_tll}`
+                                                                                              : ''
+                                                                                      } (atual — fora da planilha vigente)`,
+                                                                                  },
+                                                                              ]
+                                                                            : []),
+                                                                    ]}
+                                                                />
                                                             </div>
                                                         ) : (
                                                             <>

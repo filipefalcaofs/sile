@@ -29,6 +29,7 @@ class TerritoryService
         private SpatialRepository $spatial,
         private AuditService $audit,
         private ?GeoServerWfsZonaClient $geoserver = null,
+        private ?GeoServerClassificacaoViariaClient $classificacaoViaria = null,
     ) {}
 
     /**
@@ -104,9 +105,46 @@ class TerritoryService
 
         $feature = $this->spatial->nearestFeature($layer, $lng, $lat, $maxMeters);
 
-        return $feature === null
-            ? $this->dimNaoEncontrado($layer->version) + ['distancia_m' => null]
-            : $this->dimIdentificado($layer->version, $feature['properties'], ['distancia_m' => $feature['distancia_m']]);
+        if ($feature === null) {
+            return $this->dimNaoEncontrado($layer->version) + ['distancia_m' => null];
+        }
+
+        $dim = $this->dimIdentificado($layer->version, $feature['properties'], ['distancia_m' => $feature['distancia_m']]);
+
+        return $type === GeoLayerType::Via ? $this->comClasseViaria($dim) : $dim;
+    }
+
+    /**
+     * Acrescenta a classe viária da LOUOS (Quadro 11A) às propriedades da via,
+     * consultada por CODLOG na camada oficial. Sem classe, a via carrega o
+     * motivo e o atributo não é criado — o enquadramento degrada em vez de
+     * receber uma classe inventada.
+     *
+     * @param  array<string, mixed>  $dim
+     * @return array<string, mixed>
+     */
+    private function comClasseViaria(array $dim): array
+    {
+        if ($this->classificacaoViaria === null) {
+            return $dim + ['classe_via_motivo' => 'Consulta da classificação viária não configurada.'];
+        }
+
+        $codLog = $dim['propriedades']['CODLOG'] ?? null;
+        $codLog = is_string($codLog) || is_numeric($codLog) ? trim((string) $codLog) : '';
+
+        if ($codLog === '') {
+            return $dim + ['classe_via_motivo' => 'Via identificada sem CODLOG.'];
+        }
+
+        $hit = $this->classificacaoViaria->consultar($codLog);
+
+        if ($hit->classe === null) {
+            return $dim + ['classe_via_motivo' => $hit->motivo ?? 'Classificação viária não encontrada.'];
+        }
+
+        $dim['propriedades']['CLASSE_VIA_LOUOS'] = $hit->classe;
+
+        return $dim + ['classe_via_motivo' => null];
     }
 
     /**
@@ -164,6 +202,7 @@ class TerritoryService
         return match ($type) {
             GeoLayerType::Zona => 'Base de zoneamento pendente SEDUR',
             GeoLayerType::Lote => 'Base de lotes pendente SEDUR',
+            GeoLayerType::Via => 'Base de logradouros pendente: GeoServer SEDUR (logradouro:VM_LOGRADOURO)',
             default => 'Camada de '.$type->label().' indisponível',
         };
     }

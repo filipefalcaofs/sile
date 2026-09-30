@@ -12,10 +12,14 @@ use JsonException;
 
 /**
  * Carga de desenvolvimento das camadas geográficas (HU-034/HU-035/HU-032 +
- * HU-036). Driver-aware: em PostgreSQL carrega os snapshots OFICIAIS REAIS do
- * GeoSalvador commitados em database/data/geo/ (bairro/via/restrição); em
- * SQLite (suíte) só registra as camadas pendentes (PostGIS não existe — a
- * carga real é exercida pelos testes @group postgis).
+ * HU-036). Driver-aware: em PostgreSQL carrega os snapshots commitados em
+ * database/data/geo/ (bairro e restrição, GeoSalvador); em SQLite (suíte) só
+ * registra as camadas pendentes (PostGIS não existe — a carga real é
+ * exercida pelos testes @group postgis).
+ *
+ * Via não entra por esse snapshot. A base é o GeoServer SEDUR
+ * (logradouro:VM_LOGRADOURO), gravada com geo:importar-wfs. Até essa carga,
+ * a camada fica pendente — o extrato do Centro no ArcGIS não é a fonte.
  *
  * Zona urbanística (Quadro 10 LOUOS) e lote cadastral por inscrição NÃO têm
  * fonte vetorial pública confirmada: ficam pendente_fonte (feature_count 0),
@@ -42,19 +46,19 @@ class GeoLayerSeeder extends Seeder
             'version' => 'geosalvador-pddu2016-zeis',
             'source' => 'https://geo.salvador.ba.gov.br/arcgis/rest/services/PDDU_2016/MapServer/76',
         ],
-        [
-            'type' => GeoLayerType::Via,
-            'file' => 'vias.geojson',
-            'version' => 'geosalvador-logradouros-centro',
-            'source' => 'https://geo.salvador.ba.gov.br/arcgis/rest/services/Logradouros/MapServer/0',
-        ],
     ];
+
+    /**
+     * FeatureType do GeoServer SEDUR que alimenta a camada local de vias.
+     */
+    public const FONTE_VIA = 'geoserver-sedur:logradouro:VM_LOGRADOURO';
 
     public function run(): void
     {
         // Zona/lote (sem fonte pública) são sempre comunicadas como pendentes —
         // não dependem de PostGIS (sem geometria), valem em qualquer driver.
         $this->seedPendingBlockedLayers();
+        $this->seedPendingLayer(GeoLayerType::Via, 'pendente-geoserver', self::FONTE_VIA);
 
         if (DB::getDriverName() !== 'pgsql') {
             // SQLite: PostGIS não existe; a carga real roda nos testes @group postgis.
@@ -100,7 +104,7 @@ class GeoLayerSeeder extends Seeder
         }
     }
 
-    private function seedPendingLayer(GeoLayerType $type, string $version): void
+    private function seedPendingLayer(GeoLayerType $type, string $version, string $source = 'pendente-sedur'): void
     {
         GeoLayer::query()->firstOrCreate(
             ['type' => $type, 'version' => $version],
@@ -108,7 +112,7 @@ class GeoLayerSeeder extends Seeder
                 'status' => GeoLayerStatus::PendenteFonte,
                 'valid_from' => null,
                 'valid_to' => null,
-                'source' => 'pendente-sedur',
+                'source' => $source,
                 'rules_version' => $version,
                 'feature_count' => 0,
             ],

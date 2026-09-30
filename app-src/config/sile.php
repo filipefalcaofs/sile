@@ -39,6 +39,7 @@ return [
         // GeoServer SEDUR (WFS). Desligado, a regra de poligonal degrada para
         // análise técnica com o motivo registrado — nunca falha silenciosa.
         'geoserver_territorio' => true,
+        'geoserver_via_classe' => true,
         'cadastro_imobiliario' => env('SILE_CADASTRO_IMOBILIARIO', true),
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
@@ -348,6 +349,14 @@ return [
                 'louos_zcme_retiro_acesso_norte:VM_L_Z_USO_ZCME_RET_ACESS_NOR',
                 'louos_zcmu_municipal_1:VM_L_Z_USO_ZCMU_1',
                 'louos_zcmu_municipal_2:VM_L_Z_USO_ZCMU_2',
+            ],
+            // Classificação viária da LOUOS (Quadro 11A). Constante técnica:
+            // a SEDUR ainda confirma se a classe é o CLASSIFICACAO_VIARIA
+            // desta camada ou o HIERARQUIA do logradouro — trocar a fonte é
+            // config, não deploy de código.
+            'classificacao_viaria' => [
+                'type_name' => 'louos_classificacao_viaria:VM_L_CLASSIF_VIARIA',
+                'atributo' => 'CLASSIFICACAO_VIARIA',
             ],
         ],
         // WhatsApp (HU-095): base_url/token são parametrizáveis (catálogo

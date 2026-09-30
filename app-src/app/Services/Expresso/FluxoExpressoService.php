@@ -10,6 +10,7 @@ use App\Enums\IntencaoAtividade;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\SefazNotificationEvent;
 use App\Enums\TipoGatilho;
+use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Events\EncaminhadoParaAnalise;
 use App\Events\ResultadoEmitido;
@@ -282,7 +283,13 @@ class FluxoExpressoService
         // Sem a zona (Quadro 10), o veredito é pendente — encaminha à análise SEM
         // decidir nem emitir. Anti-fachada: jamais um deferimento/indeferimento
         // inventado (a base oficial liga o caminho de decisão).
-        if ($resolved->consolidado === ResultadoViabilidade::Pendente->value) {
+        //
+        // Exceção da homologação do motor de risco, só com a flag de protocolo ligada:
+        // o conjunto já foi classificado pelo Decreto; a zona oficial ainda
+        // não está neste ambiente. Baixo/Médio segue o expresso (TVL) sem
+        // fingir zoneamento. Processo REGIN de verdade continua bloqueado aqui.
+        if ($resolved->consolidado === ResultadoViabilidade::Pendente->value
+            && ! $this->bypassSimulacaoHomologacao($request)) {
             return $this->encaminharAnalise(
                 $request,
                 'veredito locacional pendente — zona urbanística pendente SEDUR',
@@ -304,6 +311,21 @@ class FluxoExpressoService
             return $this->encaminharAnalise($request, $flag, $actor, $resolved);
         }
 
+        if ($resolved->consolidado === ResultadoViabilidade::Pendente->value
+            && $this->bypassSimulacaoHomologacao($request)) {
+            return $this->emitir(
+                $request,
+                new ResolvedViability(
+                    por_cnae: $resolved->por_cnae,
+                    consolidado: ResultadoViabilidade::Permitido->value,
+                    rules_versions: $resolved->rules_versions,
+                    ponto: $resolved->ponto,
+                    area_m2: $resolved->area_m2,
+                ),
+                $actor,
+            );
+        }
+
         return $this->emitir($request, $resolved, $actor);
     }
 
@@ -321,6 +343,17 @@ class FluxoExpressoService
         }
 
         return new DecisionResult($request->status, null, null, emitted: false);
+    }
+
+    /**
+     * Bypass de homologação do motor de risco. Desligado por padrão, o processo
+     * segue o fluxo normal — pendente vai à análise, sem exceção.
+     */
+    private function bypassSimulacaoHomologacao(ViabilityRequest $request): bool
+    {
+        return $request->origin === ViabilityRequestOrigin::Regin
+            && $request->contingency_reason === 'simulacao_protocolo'
+            && Settings::enabled('simulacao_protocolo');
     }
 
     /**
