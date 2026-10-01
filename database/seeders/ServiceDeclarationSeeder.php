@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\ServiceDeclaration;
 use App\Models\ViabilityServiceType;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Declarações obrigatórias da renovação de TVL. Idempotente por tipo+versão.
@@ -14,6 +15,13 @@ class ServiceDeclarationSeeder extends Seeder
 {
     public function run(): void
     {
+        // Em instalação fresh, o CatalogoOficialSeeder roda dentro de uma
+        // migração anterior à criação desta tabela; o seeder volta a rodar
+        // depois, quando o schema completo existir.
+        if (! Schema::hasTable('service_declarations')) {
+            return;
+        }
+
         $tipo = ViabilityServiceType::query()->where('code', 'renovacao-tvl')->first();
 
         if ($tipo === null) {

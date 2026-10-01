@@ -1,16 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import {
     ESTADOS_SHELL,
+    ORDEM_ZONAS,
     TEMPOS,
+    ZONAS,
     alvosPorEstado,
     classificarIdentificador,
+    coordenadas,
     corDoEstado,
     deriva,
     estadoLogico,
+    geometriaZonas,
+    intersecta,
+    pontoNaPolilinha,
+    raioOnda,
+    retanguloEtiqueta,
 } from './gestao-login-scene-state';
 import type { TipoConta } from './gestao-login-scene-state';
 
-const contaLocal: TipoConta = { rotulo: 'Conta local', selo: 'Conta local' };
+const contaLocal: TipoConta = { rotulo: 'Conta local', selo: 'Conta local', badge: 'Conta local' };
 
 function entrada(parcial: Partial<Parameters<typeof estadoLogico>[0]> = {}) {
     return {
@@ -28,6 +36,7 @@ describe('Classificação do identificador', () => {
         expect(classificarIdentificador('maria.souza@salvador.ba.gov.br')).toEqual({
             rotulo: 'E-mail institucional',
             selo: 'E-mail institucional',
+            badge: 'Institucional',
         });
     });
 
@@ -35,6 +44,7 @@ describe('Classificação do identificador', () => {
         expect(classificarIdentificador('maria@exemplo.com')).toEqual({
             rotulo: 'Conta local',
             selo: 'Conta local',
+            badge: 'Conta local',
         });
     });
 
@@ -42,6 +52,7 @@ describe('Classificação do identificador', () => {
         expect(classificarIdentificador('msouza')).toEqual({
             rotulo: 'Rede corporativa (AD)',
             selo: 'Rede corporativa · AD',
+            badge: 'Rede AD',
         });
     });
 
@@ -148,6 +159,142 @@ describe('Alvos por estado', () => {
         expect(alvos.rs).toBe(3.4);
         expect(alvos.a_o).toBe(0);
         expect(alvos.drift).toBe(0);
+    });
+
+    it('em idle as camadas vivas usam os valores padrão de FX', () => {
+        const alvos = alvosPorEstado('idle', base, 0, 500);
+
+        expect(alvos.fx_o).toBe(1);
+        expect(alvos.grid_o).toBe(0.5);
+        expect(alvos.sweep_o).toBe(0.45);
+        expect(alvos.light_o).toBe(0.42);
+        expect(alvos.spin).toBe(1);
+        expect(alvos.radar_o).toBe(0);
+        expect(alvos.wind).toBe(1);
+        expect(alvos.attract).toBe(0);
+    });
+
+    it('em validating o radar liga a 320 graus por segundo e a convergência ativa', () => {
+        const alvos = alvosPorEstado('validating', base, 0, 500);
+
+        expect(alvos.radar_o).toBe(1);
+        expect(alvos.radar_v).toBe(320);
+        expect(alvos.conv).toBe(1);
+        expect(alvos.sweep_o).toBe(0);
+        expect(alvos.spin).toBe(3);
+    });
+
+    it('em preparing a malha acelera e as partículas são atraídas', () => {
+        const alvos = alvosPorEstado('preparing', base, 0, 500);
+
+        expect(alvos.grid_v).toBe(6);
+        expect(alvos.attract).toBe(1);
+        expect(alvos.zmap).toBe(0.75);
+        expect(alvos.light_k).toBe(1.45);
+        expect(alvos.wind).toBe(0);
+    });
+
+    it('em docking as camadas vivas apagam', () => {
+        const alvos = alvosPorEstado('docking', base, 0, 500);
+
+        expect(alvos.fx_o).toBe(0);
+        expect(alvos.grid_o).toBe(0);
+        expect(alvos.light_o).toBe(0);
+        expect(alvos.light_k).toBe(2);
+        expect(alvos.attract).toBe(0.6);
+    });
+});
+
+describe('Geometria das zonas', () => {
+    it('mantém as nove zonas fora da faixa da manchete (y entre 0.30 e 0.66)', () => {
+        expect(ZONAS).toHaveLength(9);
+
+        ZONAS.forEach((zona) => {
+            zona.p.forEach(([, fy]) => {
+                expect(fy <= 0.3 || fy >= 0.66).toBe(true);
+            });
+        });
+    });
+
+    it('a ordem de ativação percorre as nove zonas sem repetir', () => {
+        expect([...ORDEM_ZONAS].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    });
+
+    it('calcula vértices em px, centroide e perímetro com a paralaxe aplicada', () => {
+        const zonas = geometriaZonas(1000, 500, -14, 10);
+        const primeira = zonas[0];
+
+        expect(zonas).toHaveLength(9);
+        expect(primeira.pontos[0]).toEqual([0.31 * 1000 - 14, 0.15 * 500 + 10]);
+        expect(primeira.cx).toBeCloseTo((310 + 470 + 500 + 330) / 4 - 14, 6);
+        expect(primeira.cy).toBeCloseTo((75 + 65 + 135 + 145) / 4 + 10, 6);
+
+        const esperado = primeira.pontos.reduce((soma, ponto, indice) => {
+            const proximo = primeira.pontos[(indice + 1) % primeira.pontos.length];
+
+            return soma + Math.hypot(proximo[0] - ponto[0], proximo[1] - ponto[1]);
+        }, 0);
+
+        expect(primeira.perimetro).toBeCloseTo(esperado, 6);
+    });
+});
+
+describe('Ondas e pulsos', () => {
+    it('o raio da onda segue o ease-out cúbico', () => {
+        expect(raioOnda(0, 400)).toBe(0);
+        expect(raioOnda(1, 400)).toBe(400);
+        expect(raioOnda(0.5, 400)).toBeCloseTo((1 - 0.125) * 400, 10);
+    });
+
+    it('o pulso percorre a polilinha segmento a segmento', () => {
+        const pontos: Array<[number, number]> = [
+            [0, 0],
+            [10, 0],
+            [10, 20],
+        ];
+
+        expect(pontoNaPolilinha(pontos, 0)).toEqual([0, 0]);
+        expect(pontoNaPolilinha(pontos, 5)).toEqual([5, 0]);
+        expect(pontoNaPolilinha(pontos, 15)).toEqual([10, 5]);
+        expect(pontoNaPolilinha(pontos, 999)).toEqual([10, 20]);
+    });
+});
+
+describe('Etiqueta de zona', () => {
+    it('estima a largura pelo texto e cresce para a esquerda após 74% do palco', () => {
+        const esquerda = retanguloEtiqueta({ cx: 300, cy: 200 }, 0, 1000);
+        const zona = ZONAS[0];
+        const larguraEsperada = Math.max(zona.id.length + zona.nome.length + 3, zona.leitura.length) * 7.4 + 24;
+
+        expect(esquerda.direita).toBe(false);
+        expect(esquerda.x).toBe(312);
+        expect(esquerda.y).toBe(186);
+        expect(esquerda.w).toBeCloseTo(larguraEsperada, 6);
+        expect(esquerda.h).toBe(36);
+
+        const direita = retanguloEtiqueta({ cx: 900, cy: 200 }, 0, 1000);
+
+        expect(direita.direita).toBe(true);
+        expect(direita.x).toBeCloseTo(900 - 12 - larguraEsperada, 6);
+    });
+
+    it('detecta interseção considerando a margem de segurança', () => {
+        const etiqueta = { x: 100, y: 100, w: 50, h: 36 };
+        const caixa = { left: 180, right: 260, top: 100, bottom: 130 };
+
+        expect(intersecta(etiqueta, caixa, 34)).toBe(true);
+        expect(intersecta(etiqueta, caixa, 10)).toBe(false);
+    });
+});
+
+describe('Coordenadas vivas', () => {
+    it('trava no alvo quando o anel B está centralizado', () => {
+        expect(coordenadas(0, 0)).toBe('12°58′14.0″S · 38°30′07.0″W');
+    });
+
+    it('deriva com a posição do anel B e normaliza em 60 segundos', () => {
+        expect(coordenadas(20, -40)).toBe('12°58′12.0″S · 38°30′08.0″W');
+        expect(coordenadas(-1200, 0)).toBe('12°58′14.0″S · 38°30′07.0″W');
     });
 });
 
