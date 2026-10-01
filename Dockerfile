@@ -61,4 +61,4 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/fra
 RUN npm install
 RUN npm run build
 
-CMD /usr/libexec/s2i/run
+CMD php artisan migrate --force --no-interaction && /usr/libexec/s2i/run

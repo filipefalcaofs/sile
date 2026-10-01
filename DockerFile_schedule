@@ -47,4 +47,4 @@ RUN /usr/libexec/s2i/assemble
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
  && chmod -R ug+rwX storage bootstrap/cache
 
-CMD php artisan schedule:work --no-interaction
+CMD php artisan migrate --force --no-interaction && php artisan schedule:work --no-interaction
