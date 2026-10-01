@@ -292,6 +292,10 @@ export const GESTAO_NAV_ICON_MARKS: Record<GestaoNavIcon, readonly Mark[]> = {
         { k: 'p', d: 'M6 19 L9 16 L12 19 L15 16 L18 19' },
     ],
     spark: [{ k: 'p', d: 'M12 2.5 L13.6 9 L20.5 12 L13.6 15 L12 21.5 L10.4 15 L3.5 12 L10.4 9 Z' }],
+    exchange: [
+        { k: 'p', d: 'M7 7 H18 L15 4' },
+        { k: 'p', d: 'M17 17 H6 L9 20' },
+    ],
 };
 
 function Marca({ marks }: { marks: readonly Mark[] }) {

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Regin\ReginDocumentacaoController;
 use App\Http\Controllers\Regin\ReginRecebeController;
 use App\Http\Controllers\VerificacaoDocumentoController;
+use App\Http\Middleware\LogInboundIntegration;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -23,9 +24,11 @@ Route::get('/api_integracao/docs/openapi.yaml', [ReginDocumentacaoController::cl
 
 // Contrato JUCEB/REGIN (Guia Técnico v2.10): GET=3, POST=3 recebido / 5 duplicado.
 // Público de propósito — a JUCEB chama a URL municipal, sem sessão Laravel.
-Route::middleware('throttle:regin-recebe')->group(function (): void {
-    Route::get('/api_integracao/recebe', [ReginRecebeController::class, 'ping'])->name('regin.recebe.ping');
-    Route::post('/api_integracao/recebe', [ReginRecebeController::class, 'store'])->name('regin.recebe.store');
+Route::middleware(LogInboundIntegration::class)->group(function (): void {
+    Route::middleware('throttle:regin-recebe')->group(function (): void {
+        Route::get('/api_integracao/recebe', [ReginRecebeController::class, 'ping'])->name('regin.recebe.ping');
+        Route::post('/api_integracao/recebe', [ReginRecebeController::class, 'store'])->name('regin.recebe.store');
+    });
 });
 
 // Landing pública do portal (rota nomeada "home" — usada pelos redirects de guest do framework).

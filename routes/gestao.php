@@ -35,6 +35,7 @@ use App\Http\Controllers\Gestao\HolidayController;
 use App\Http\Controllers\Gestao\IndeferimentoDocumentController;
 use App\Http\Controllers\Gestao\InscricaoImobiliariaIntegrationController;
 use App\Http\Controllers\Gestao\InspectionController;
+use App\Http\Controllers\Gestao\IntegrationCallController;
 use App\Http\Controllers\Gestao\LegalTermController;
 use App\Http\Controllers\Gestao\LgpdMonitorController;
 use App\Http\Controllers\Gestao\LoginController;
@@ -146,6 +147,10 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // grupo. ÚNICO editor de routes/gestao.php na Wave 2; telas em 12-10.
         Route::middleware('permission:consultar-auditoria')->prefix('auditoria')->name('auditoria.')->group(function () {
             Route::get('export', [AuditoriaController::class, 'export'])->name('export');
+            Route::get('integracoes', [IntegrationCallController::class, 'index'])->name('integracoes.index');
+            Route::get('integracoes/{integrationCall}', [IntegrationCallController::class, 'show'])
+                ->whereNumber('integrationCall')
+                ->name('integracoes.show');
             Route::get('/', [AuditoriaController::class, 'index'])->name('index');
         });
 
