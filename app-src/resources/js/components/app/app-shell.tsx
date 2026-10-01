@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import AppHeader from '@/components/app/app-header';
 import AppSidebar from '@/components/app/app-sidebar';
@@ -18,6 +18,32 @@ interface AppShellProps {
     collapsibleGroups?: boolean;
     headerToolbar?: ReactNode;
     children: ReactNode;
+}
+
+/**
+ * Nota de sessão registrada na chegada vinda do login (protótipo v4:
+ * "06 / 06 · Central de viabilidade aberta · sessão registrada"). Entra
+ * na cascata do console e esmaece 3,05 s depois (opacity 0,8 s), mantendo
+ * o espaço para o conteúdo não saltar.
+ */
+function NotaEntradaConsole() {
+    const [visivel, setVisivel] = useState(true);
+
+    useEffect(() => {
+        const temporizador = setTimeout(() => setVisivel(false), 3050);
+
+        return () => clearTimeout(temporizador);
+    }, []);
+
+    return (
+        <p
+            aria-hidden={!visivel}
+            className="mb-1.5 font-[ui-monospace,'SF_Mono',Menlo,monospace] text-[10.5px] font-medium tracking-[0.1em] text-brand-500 uppercase motion-safe:animate-[sile-console-surge_0.45s_cubic-bezier(0.2,0.7,0.2,1)_0.2s_both] dark:text-brand-400"
+            style={{ opacity: visivel ? undefined : 0, transition: 'opacity 0.8s ease' }}
+        >
+            06 / 06 · Central de viabilidade aberta · sessão registrada
+        </p>
+    );
 }
 
 function ShellContent({
@@ -58,6 +84,7 @@ function ShellContent({
                     toolbar={headerToolbar}
                 />
                 <div id="conteudo" className="w-full min-w-0 p-4 md:p-6">
+                    {entradaDoLogin && <NotaEntradaConsole />}
                     <PageTransition>{children}</PageTransition>
                 </div>
             </div>

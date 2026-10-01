@@ -324,10 +324,11 @@ describe('Deriva dos anéis', () => {
 });
 
 describe('Tempos e cores', () => {
-    it('a sequência de sucesso soma 2900 ms até a navegação', () => {
+    it('a sequência de sucesso navega 1150 ms após o docking, com o palco já encolhido', () => {
         expect(TEMPOS.preparing).toBe(900);
         expect(TEMPOS.docking).toBe(2000);
-        expect(TEMPOS.navegacao).toBe(2900);
+        expect(TEMPOS.navegacao).toBe(3150);
+        expect(TEMPOS.desvanecerCena + 600).toBeLessThanOrEqual(TEMPOS.navegacao - TEMPOS.docking);
     });
 
     it('a recusa dura 1100 ms e o reconhecimento espera 520 ms', () => {

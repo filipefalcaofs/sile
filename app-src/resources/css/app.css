@@ -352,16 +352,38 @@ html.acc-contrast {
     animation: sile-console-surge 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
+/* Delays do protótipo v4 (§13): grupos em .15/.25/.35, seguindo +0.1 s
+   por grupo nos demais (o console real tem até oito). */
 [data-entrada-console='true'] aside nav > div > div:nth-child(1) {
-    animation-delay: 0.12s;
+    animation-delay: 0.15s;
 }
 
 [data-entrada-console='true'] aside nav > div > div:nth-child(2) {
-    animation-delay: 0.22s;
+    animation-delay: 0.25s;
 }
 
 [data-entrada-console='true'] aside nav > div > div:nth-child(3) {
-    animation-delay: 0.32s;
+    animation-delay: 0.35s;
+}
+
+[data-entrada-console='true'] aside nav > div > div:nth-child(4) {
+    animation-delay: 0.45s;
+}
+
+[data-entrada-console='true'] aside nav > div > div:nth-child(5) {
+    animation-delay: 0.55s;
+}
+
+[data-entrada-console='true'] aside nav > div > div:nth-child(6) {
+    animation-delay: 0.65s;
+}
+
+[data-entrada-console='true'] aside nav > div > div:nth-child(7) {
+    animation-delay: 0.75s;
+}
+
+[data-entrada-console='true'] aside nav > div > div:nth-child(n + 8) {
+    animation-delay: 0.85s;
 }
 
 [data-entrada-console='true'] header {

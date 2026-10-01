@@ -49,7 +49,14 @@ export const TEMPOS = {
     pisoValidacao: 1450,
     preparing: 900,
     docking: 2000,
-    navegacao: 2900,
+    /**
+     * Navegação em docking + 1150 ms (protótipo: open em T0+3150): a
+     * transição de largura do palco (1.05 s) termina em 3050 e a cena já
+     * esmaeceu — o swap de página acontece com a tela idêntica ao console.
+     */
+    navegacao: 3150,
+    /** Início do fade da cena dentro do docking (termina na navegação). */
+    desvanecerCena: 550,
     denied: 1100,
     debounceIdentificador: 520,
 } as const;
