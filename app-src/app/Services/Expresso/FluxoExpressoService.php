@@ -284,11 +284,11 @@ class FluxoExpressoService
         // decidir nem emitir. Anti-fachada: jamais um deferimento/indeferimento
         // inventado (a base oficial liga o caminho de decisão).
         //
-        // Exceção honesta da homologação do motor de risco ,
-        // disponível apenas com a flag de simulação de protocolo ligada:
-        // o conjunto já foi classificado pelo Decreto; a zona oficial ainda
-        // não está neste ambiente. Baixo/Médio segue o expresso (TVL) sem
-        // fingir zoneamento. Processo REGIN de verdade continua bloqueado aqui.
+        // Exceção honesta da homologação do motor de risco, disponível apenas
+        // com o toggle de homologação LIGADO: o conjunto já foi classificado
+        // pelo Decreto; a zona oficial ainda não está neste ambiente.
+        // Baixo/Médio segue o expresso (TVL) sem fingir zoneamento. Processo
+        // REGIN de verdade continua bloqueado aqui.
         if ($resolved->consolidado === ResultadoViabilidade::Pendente->value
             && ! $this->bypassSimulacaoHomologacao($request)) {
             return $this->encaminharAnalise(
@@ -347,9 +347,9 @@ class FluxoExpressoService
     }
 
     /**
-     * Bypass de homologação do motor de risco : só vale com a flag de
-     * simulação de protocolo ligada. Desligada (default), o processo de
-     * simulação segue o fluxo normal — pendente vai à análise, sem exceção.
+     * Bypass de homologação do motor de risco: só vale com o toggle de
+     * homologação LIGADO. Desligado (default), o processo segue o fluxo
+     * normal — pendente vai à análise, sem exceção.
      */
     private function bypassSimulacaoHomologacao(ViabilityRequest $request): bool
     {

@@ -8,12 +8,15 @@ import { ThemeProvider, useTheme } from '@/contexts/theme-context';
 import type { SharedProps } from '@/types';
 import { sequenciaDeEntrada } from './gestao-login-docking';
 import GestaoLoginScene from './gestao-login-scene';
+import type { PulsoDigitacao } from './gestao-login-scene';
 import { TEMPOS, classificarIdentificador, estadoLogico } from './gestao-login-scene-state';
 import type { FaseLogin, TipoConta } from './gestao-login-scene-state';
 import {
+    gestaoLoginBadgeClasses,
     gestaoLoginBrandForeground,
     gestaoLoginBrandStageClasses,
     gestaoLoginDisplayFont,
+    gestaoLoginLabelFocoClasses,
     gestaoLoginStageGradientClasses,
     gestaoLoginStagePhotoClasses,
     gestaoLoginStageVeilClasses,
@@ -59,12 +62,22 @@ function BrandStage({
     docking,
     stageRef,
     photoRef,
+    luzRef,
+    malhaWrapRef,
+    malhaRef,
+    fxRef,
+    etiquetaRef,
     selo,
     emRepouso,
 }: {
     docking: boolean;
     stageRef: RefObject<HTMLElement | null>;
     photoRef: RefObject<HTMLDivElement | null>;
+    luzRef: RefObject<HTMLDivElement | null>;
+    malhaWrapRef: RefObject<HTMLDivElement | null>;
+    malhaRef: RefObject<HTMLDivElement | null>;
+    fxRef: RefObject<HTMLCanvasElement | null>;
+    etiquetaRef: RefObject<HTMLDivElement | null>;
     selo: TipoConta | null;
     emRepouso: boolean;
 }) {
@@ -75,8 +88,63 @@ function BrandStage({
 
     return (
         <section ref={stageRef} className={gestaoLoginBrandStageClasses} data-docking={marca} aria-label="Apresentação do console">
-            <div ref={photoRef} className={gestaoLoginStagePhotoClasses} aria-hidden="true" />
+            <div
+                ref={photoRef}
+                className={gestaoLoginStagePhotoClasses}
+                style={{ filter: 'blur(5px) brightness(0.74)', transform: 'scale(1.02)' }}
+                aria-hidden="true"
+            />
             <div className={gestaoLoginStageGradientClasses} aria-hidden="true" />
+
+            {/* Luz dinâmica da central: o translate posiciona o centro do círculo (§5.3) */}
+            <div
+                ref={luzRef}
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-[450px] -left-[450px] size-[900px] rounded-full opacity-0 mix-blend-screen will-change-[transform,opacity]"
+                style={{ background: 'radial-gradient(circle, oklch(64% 0.155 250 / 0.2) 0%, oklch(64% 0.155 250 / 0.07) 34%, transparent 64%)' }}
+            />
+
+            {/* Malha cadastral em perspectiva (§5.4) */}
+            <div
+                ref={malhaWrapRef}
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-[15%] bottom-0 -left-[15%] h-[46%] opacity-0"
+                style={{
+                    perspective: '620px',
+                    perspectiveOrigin: '50% 0%',
+                    WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, #000 42%, #000 74%, transparent 100%)',
+                    maskImage: 'linear-gradient(180deg, transparent 0%, #000 42%, #000 74%, transparent 100%)',
+                }}
+            >
+                <div
+                    ref={malhaRef}
+                    className="absolute top-0 right-0 left-0 h-[260%] origin-[50%_0%]"
+                    style={{
+                        transform: 'rotateX(66deg)',
+                        backgroundImage:
+                            'linear-gradient(oklch(72% 0.12 250 / 0.2) 1px, transparent 1px), linear-gradient(90deg, oklch(72% 0.12 250 / 0.2) 1px, transparent 1px)',
+                        backgroundSize: '64px 64px',
+                    }}
+                />
+            </div>
+
+            {/* Canvas de efeitos: varredura, zonas, ondas, convergência e partículas (§5.5) */}
+            <canvas ref={fxRef} aria-hidden="true" className="pointer-events-none absolute top-0 left-0 size-full opacity-0" />
+
+            {/* Etiqueta da zona em análise (§5.6) — o loop escreve texto, posição e opacidade */}
+            <div
+                ref={etiquetaRef}
+                aria-hidden="true"
+                className={`${monoFont} pointer-events-none absolute top-0 left-0 z-1 grid gap-1.5 border-l py-2 pr-3 pl-2.5 text-[10px] leading-none font-medium tracking-[0.1em] whitespace-nowrap uppercase opacity-0 transition-opacity duration-600`}
+                style={{
+                    borderLeftColor: 'oklch(64% 0.155 250 / 0.8)',
+                    background: 'linear-gradient(90deg, oklch(12.5% 0.03 255 / 0.6), oklch(12.5% 0.03 255 / 0))',
+                }}
+            >
+                <span className="text-white/86" />
+                <span className="text-[oklch(80%_0.09_250)]" />
+            </div>
+
             <div className={gestaoLoginStageVeilClasses} data-docking={marca} aria-hidden="true" />
 
             <header
@@ -110,26 +178,31 @@ function BrandStage({
                 </span>
             </header>
 
-            <div className={`relative z-1 flex min-h-0 max-w-[720px] flex-1 flex-col justify-center overflow-hidden py-[clamp(16px,4vh,48px)] motion-safe:animate-[sile-rise_0.6s_0.12s_cubic-bezier(0.2,0.7,0.2,1)_both] ${saidaDoPalco}`}>
-                <p
-                    className={`${monoFont} mb-[30px] flex items-center gap-3 text-[11px] leading-none font-medium tracking-[0.1em] text-[oklch(67%_0.025_250)] uppercase before:h-px before:w-8 before:bg-[oklch(64%_0.155_250)] before:content-['']`}
-                >
-                    Sistema de viabilidade locacional
-                </p>
-                <h1
-                    className={`${displayFont} ${gestaoLoginBrandForeground} text-[clamp(34px,3.2vw,54px)] leading-[1.04] font-extrabold tracking-[-0.02em] text-balance uppercase`}
-                >
-                    Decisões que
-                    <br />
-                    constroem a cidade.
-                </h1>
-                <p className="mt-[22px] max-w-[42ch] text-[clamp(15px,1.05vw,17px)] leading-[1.65] font-normal text-[oklch(67%_0.025_250)]">
-                    Uma plataforma inteligente para transformar regras urbanísticas em decisões mais
-                    claras, seguras e fundamentadas.
-                </p>
+            {/* A animação de entrada (sile-rise, fill both) fica num filho
+                interno: no wrapper ela travaria a opacity e a transição de
+                saída do docking nunca apareceria. */}
+            <div className={`relative z-1 flex min-h-0 max-w-[720px] flex-1 flex-col justify-center overflow-hidden py-[clamp(16px,4vh,48px)] ${saidaDoPalco}`}>
+                <div className="motion-safe:animate-[sile-rise_0.6s_0.12s_cubic-bezier(0.2,0.7,0.2,1)_both]">
+                    <p
+                        className={`${monoFont} mb-[30px] flex items-center gap-3 text-[11px] leading-none font-medium tracking-[0.1em] text-[oklch(67%_0.025_250)] uppercase before:h-px before:w-8 before:bg-[oklch(64%_0.155_250)] before:content-['']`}
+                    >
+                        Sistema de viabilidade locacional
+                    </p>
+                    <h1
+                        className={`${displayFont} ${gestaoLoginBrandForeground} text-[clamp(34px,3.2vw,54px)] leading-[1.04] font-extrabold tracking-[-0.02em] text-balance uppercase`}
+                    >
+                        Decisões que
+                        <br />
+                        constroem a cidade.
+                    </h1>
+                    <p className="mt-[22px] max-w-[42ch] text-[clamp(15px,1.05vw,17px)] leading-[1.65] font-normal text-[oklch(67%_0.025_250)]">
+                        Uma plataforma inteligente para transformar regras urbanísticas em decisões mais
+                        claras, seguras e fundamentadas.
+                    </p>
+                </div>
             </div>
 
-            <dl className={`relative z-1 flex shrink-0 items-end justify-between gap-6 overflow-hidden border-t border-white/8 pt-[clamp(16px,2.5vh,24px)] motion-safe:animate-[sile-rise_0.6s_0.22s_cubic-bezier(0.2,0.7,0.2,1)_both] ${saidaDoPalco}`}>
+            <dl className={`relative z-1 flex shrink-0 items-end justify-between gap-6 overflow-hidden border-t border-white/8 pt-[clamp(16px,2.5vh,24px)] ${saidaDoPalco}`}>
                 <div className="flex gap-[clamp(28px,3.5vw,64px)]">
                     {footStats.map((stat) => (
                         <div key={stat.label}>
@@ -190,15 +263,24 @@ function GestaoLoginContent({ status }: { status?: string }) {
     const [tipoConta, setTipoConta] = useState<TipoConta | null>(null);
     const [campoComFoco, setCampoComFoco] = useState<'ident' | 'senha' | null>(null);
     const [erroLogin, setErroLogin] = useState<string | null>(null);
+    const [erroIdentVazio, setErroIdentVazio] = useState(false);
+    const [erroSenhaVazia, setErroSenhaVazia] = useState(false);
     const [shakeX, setShakeX] = useState(0);
 
     const stageRef = useRef<HTMLElement>(null);
     const photoRef = useRef<HTMLDivElement>(null);
+    const luzRef = useRef<HTMLDivElement>(null);
+    const malhaWrapRef = useRef<HTMLDivElement>(null);
+    const malhaRef = useRef<HTMLDivElement>(null);
+    const fxRef = useRef<HTMLCanvasElement>(null);
+    const etiquetaRef = useRef<HTMLDivElement>(null);
     const identRef = useRef<HTMLInputElement>(null);
     const senhaRef = useRef<HTMLInputElement>(null);
     const botaoRef = useRef<HTMLButtonElement>(null);
     const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
     const cancelarSequencia = useRef<() => void>(() => {});
+    const pulsosRef = useRef<PulsoDigitacao[]>([]);
+    const ultimoPulso = useRef(0);
 
     const form = useHttp<{ identifier: string; password: string; remember: boolean }, { destino: string }>({
         identifier: '',
@@ -240,9 +322,21 @@ function GestaoLoginContent({ status }: { status?: string }) {
         });
     };
 
+    // Cada tecla empurra um pulso para a cena (throttle de 80 ms, §12.2).
+    const registrarPulso = () => {
+        const agora = performance.now();
+
+        if (agora - ultimoPulso.current > 80) {
+            pulsosRef.current.push({ t0: agora });
+            ultimoPulso.current = agora;
+        }
+    };
+
     const aoDigitarIdentificador = (valor: string) => {
         form.setData('identifier', valor);
         setErroLogin(null);
+        setErroIdentVazio(false);
+        registrarPulso();
         clearTimeout(debounce.current);
         debounce.current = setTimeout(
             () => setTipoConta(classificarIdentificador(valor)),
@@ -257,10 +351,20 @@ function GestaoLoginContent({ status }: { status?: string }) {
             return;
         }
 
+        if (!form.data.identifier.trim() || !form.data.password) {
+            setErroIdentVazio(!form.data.identifier.trim());
+            setErroSenhaVazia(!form.data.password);
+            sacudir();
+
+            return;
+        }
+
         clearTimeout(debounce.current);
         setErroLogin(null);
         setFase('validating');
-        setTipoConta(classificarIdentificador(form.data.identifier) ?? { rotulo: 'Conta local', selo: 'Conta local' });
+        setTipoConta(
+            classificarIdentificador(form.data.identifier) ?? { rotulo: 'Conta local', selo: 'Conta local', badge: 'Conta local' },
+        );
 
         const inicio = performance.now();
         const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -337,11 +441,13 @@ function GestaoLoginContent({ status }: { status?: string }) {
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link
-                    href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&display=swap"
+                    href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Outfit:wght@400;500;600&display=swap"
                     rel="stylesheet"
                 />
                 <style>{`
                     @keyframes sile-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+                    @keyframes sile-sheen { from { transform: translateX(-110%); } to { transform: translateX(110%); } }
+                    @keyframes sile-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
                 `}</style>
             </Head>
 
@@ -349,6 +455,11 @@ function GestaoLoginContent({ status }: { status?: string }) {
                 docking={noDocking}
                 stageRef={stageRef}
                 photoRef={photoRef}
+                luzRef={luzRef}
+                malhaWrapRef={malhaWrapRef}
+                malhaRef={malhaRef}
+                fxRef={fxRef}
+                etiquetaRef={etiquetaRef}
                 selo={tipoConta}
                 emRepouso={estado === 'idle'}
             />
@@ -383,45 +494,72 @@ function GestaoLoginContent({ status }: { status?: string }) {
                     )}
 
                     {(erroLogin ?? flash.error) && (
-                        <p className="mt-6 rounded-xl border border-error-500/35 bg-error-50 px-4 py-3 text-sm text-error-600 dark:border-[oklch(64%_0.19_25_/_0.35)] dark:bg-[oklch(64%_0.19_25_/_0.1)] dark:text-[oklch(80%_0.12_25)]">
+                        <p className="mt-6 rounded-xl border border-error-500/35 bg-error-50 px-4 py-3 text-sm text-error-600 motion-safe:animate-[sile-rise_0.35s_ease_both] dark:border-[oklch(64%_0.19_25_/_0.35)] dark:bg-[oklch(64%_0.19_25_/_0.1)] dark:text-[oklch(80%_0.12_25)]">
                             {erroLogin ?? flash.error}
                         </p>
                     )}
 
                     <form onSubmit={enviar} noValidate style={{ transform: `translateX(${shakeX}px)`, transition: 'transform 0.07s ease' }}>
                                 <div className="mt-5 grid gap-2 max-[740px]:mt-4 max-[740px]:gap-1.5">
-                                    <label htmlFor="identifier" className={gestaoLoginLabelClasses}>
+                                    <label
+                                        htmlFor="identifier"
+                                        className={`${gestaoLoginLabelClasses} transition-colors duration-250 ${campoComFoco === 'ident' ? gestaoLoginLabelFocoClasses : ''}`}
+                                    >
                                         E-mail institucional ou usuário AD
                                     </label>
-                                    <input
-                                        ref={identRef}
-                                        id="identifier"
-                                        type="text"
-                                        name="identifier"
-                                        autoComplete="username"
-                                        autoFocus
-                                        required
-                                        placeholder="nome@salvador.ba.gov.br ou seuusuarioad"
-                                        aria-describedby="identifier-help"
-                                        aria-invalid={erroLogin ? 'true' : undefined}
-                                        className={gestaoLoginInputClasses}
-                                        value={form.data.identifier}
-                                        onChange={(evento) => aoDigitarIdentificador(evento.target.value)}
-                                        onFocus={() => setCampoComFoco('ident')}
-                                        onBlur={() => {
-                                            setCampoComFoco(null);
-                                            clearTimeout(debounce.current);
-                                            setTipoConta(classificarIdentificador(form.data.identifier));
-                                        }}
-                                    />
+                                    <div className="relative">
+                                        {/* Selo do tipo de conta reconhecido (§6.3) */}
+                                        <span
+                                            aria-hidden="true"
+                                            className={gestaoLoginBadgeClasses}
+                                            style={{
+                                                opacity: tipoConta && !noDocking ? 1 : 0,
+                                                transform: `translateY(-50%) translateX(${tipoConta ? 0 : 6}px)`,
+                                                transition: 'opacity 0.35s ease, transform 0.5s cubic-bezier(0.2,0.7,0.2,1)',
+                                            }}
+                                        >
+                                            <span className="size-[5px] rounded-full bg-current" />
+                                            <span>{tipoConta?.badge ?? ''}</span>
+                                        </span>
+                                        <input
+                                            ref={identRef}
+                                            id="identifier"
+                                            type="text"
+                                            name="identifier"
+                                            autoComplete="username"
+                                            autoFocus
+                                            required
+                                            placeholder="nome@salvador.ba.gov.br ou seuusuarioad"
+                                            aria-describedby="identifier-help"
+                                            aria-invalid={erroLogin || erroIdentVazio ? 'true' : undefined}
+                                            className={gestaoLoginInputClasses}
+                                            style={{ paddingRight: tipoConta ? '128px' : undefined }}
+                                            value={form.data.identifier}
+                                            onChange={(evento) => aoDigitarIdentificador(evento.target.value)}
+                                            onFocus={() => setCampoComFoco('ident')}
+                                            onBlur={() => {
+                                                setCampoComFoco(null);
+                                                clearTimeout(debounce.current);
+                                                setTipoConta(classificarIdentificador(form.data.identifier));
+                                            }}
+                                        />
+                                    </div>
                                     <p id="identifier-help" className={`text-[12.5px] max-[740px]:text-xs ${gestaoLoginMutedClasses}`}>
                                         Use o usuário da rede corporativa (ex.: seuusuarioad) ou o e-mail da conta local.
                                     </p>
+                                    {erroIdentVazio && (
+                                        <p className="text-[12.5px] text-error-600 dark:text-[oklch(80%_0.12_25)]">
+                                            Informe o e-mail institucional ou o usuário AD.
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="mt-5 grid gap-2 max-[740px]:mt-4 max-[740px]:gap-1.5">
                                     <div className="flex items-baseline justify-between">
-                                        <label htmlFor="password" className={gestaoLoginLabelClasses}>
+                                        <label
+                                            htmlFor="password"
+                                            className={`${gestaoLoginLabelClasses} transition-colors duration-250 ${campoComFoco === 'senha' ? gestaoLoginLabelFocoClasses : ''}`}
+                                        >
                                             Senha da rede corporativa ou da conta local
                                         </label>
                                         <Link href="/gestao/forgot-password" className={gestaoLoginLinkClasses}>
@@ -437,12 +575,14 @@ function GestaoLoginContent({ status }: { status?: string }) {
                                             autoComplete="current-password"
                                             required
                                             onKeyUp={handlePasswordKeyUp}
-                                            aria-invalid={erroLogin ? 'true' : undefined}
+                                            aria-invalid={erroLogin || erroSenhaVazia ? 'true' : undefined}
                                             className={`${gestaoLoginInputClasses} pr-14`}
                                             value={form.data.password}
                                             onChange={(evento) => {
                                                 form.setData('password', evento.target.value);
                                                 setErroLogin(null);
+                                                setErroSenhaVazia(false);
+                                                registrarPulso();
                                             }}
                                             onFocus={() => setCampoComFoco('senha')}
                                             onBlur={() => {
@@ -467,6 +607,9 @@ function GestaoLoginContent({ status }: { status?: string }) {
                                     {capsLockOn && (
                                         <p className="text-xs text-[oklch(78%_0.14_85)]">Caps Lock está ativado.</p>
                                     )}
+                                    {erroSenhaVazia && (
+                                        <p className="text-[12.5px] text-error-600 dark:text-[oklch(80%_0.12_25)]">Informe a senha.</p>
+                                    )}
                                 </div>
 
                                 <label className={`mt-4 flex cursor-pointer items-center gap-2.5 max-[740px]:mt-3 max-[740px]:text-[13px] ${gestaoLoginMutedClasses} select-none`}>
@@ -487,6 +630,23 @@ function GestaoLoginContent({ status }: { status?: string }) {
                                     disabled={fase !== 'idle'}
                                     className={gestaoLoginSubmitClasses}
                                 >
+                                    {/* Brilho único quando tudo está pronto (§14.3) */}
+                                    {estado === 'ready' && (
+                                        <span
+                                            key="brilho"
+                                            aria-hidden="true"
+                                            className="pointer-events-none absolute inset-0 motion-safe:animate-[sile-sheen_1.2s_0.15s_cubic-bezier(0.2,0.7,0.2,1)_both]"
+                                            style={{ background: 'linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.26) 50%, transparent 70%)' }}
+                                        />
+                                    )}
+                                    {/* Barra de progresso do piso de validação (§14.3) */}
+                                    {fase === 'validating' && (
+                                        <span
+                                            key="barra"
+                                            aria-hidden="true"
+                                            className="absolute right-0 bottom-0 left-0 h-0.5 origin-[0_50%] bg-white/70 motion-safe:animate-[sile-fill_1.45s_cubic-bezier(0.4,0,0.2,1)_both]"
+                                        />
+                                    )}
                                     {rotuloBotao}
                                     {fase === 'idle' && (
                                         <span className="transition-transform duration-150 group-hover:translate-x-[3px]" aria-hidden="true">
@@ -524,6 +684,12 @@ function GestaoLoginContent({ status }: { status?: string }) {
                 photoRef={photoRef}
                 alvoLinhaRef={alvoLinhaRef}
                 stageRef={stageRef}
+                luzRef={luzRef}
+                malhaWrapRef={malhaWrapRef}
+                malhaRef={malhaRef}
+                fxRef={fxRef}
+                etiquetaRef={etiquetaRef}
+                pulsosRef={pulsosRef}
             />
         </main>
     );

@@ -6,7 +6,7 @@ export const gestaoLoginBrandForeground = 'text-[oklch(96%_0.008_250)]';
 export const gestaoLoginBrandStageClasses = [
     'relative hidden min-h-0 shrink-0 flex-col overflow-hidden',
     gestaoLoginBrandForeground,
-    'bg-[oklch(12.5%_0.03_255)]',
+    'bg-[#0b1222]',
     'px-[clamp(28px,5vw,96px)] py-[clamp(28px,3.5vw,56px)]',
     'min-[1101px]:flex min-[1101px]:h-full',
     'min-[1101px]:w-[calc(100%-clamp(440px,34vw,580px))]',
@@ -73,6 +73,19 @@ export const gestaoLoginInputClasses = [
 
 export const gestaoLoginMutedClasses = 'text-sm text-gray-500 dark:text-[oklch(67%_0.025_250)]';
 
+/** Selo de tipo de conta dentro do campo identificador (§6.3 do handoff v4). */
+export const gestaoLoginBadgeClasses = [
+    gestaoLoginMonoFont,
+    'pointer-events-none absolute top-1/2 right-3 z-1 inline-flex items-center gap-1.5',
+    'rounded-[7px] border px-[9px] py-1.5',
+    'text-[10px] leading-none font-medium tracking-[0.08em] whitespace-nowrap uppercase',
+    'border-[rgba(19,81,180,0.2)] bg-[rgba(19,81,180,0.06)] text-brand-500',
+    'dark:border-[oklch(64%_0.155_250_/_0.3)] dark:bg-[oklch(64%_0.155_250_/_0.1)] dark:text-[oklch(64%_0.155_250)]',
+].join(' ');
+
+/** Cor do label quando o campo correspondente tem foco (§14.1). */
+export const gestaoLoginLabelFocoClasses = 'text-brand-500 dark:text-[oklch(64%_0.155_250)]';
+
 export const gestaoLoginFaintClasses = 'text-gray-400 dark:text-[oklch(50%_0.02_250)]';
 
 export const gestaoLoginLinkClasses =
@@ -81,7 +94,7 @@ export const gestaoLoginLinkClasses =
 export const gestaoLoginDividerClasses = 'border-gray-200 dark:border-white/8';
 
 export const gestaoLoginSubmitClasses = [
-    'group mt-5 inline-flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl max-[740px]:mt-4',
+    'group relative mt-5 inline-flex w-full cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-xl max-[740px]:mt-4',
     'bg-brand-500 p-[17px] text-[15px] leading-none font-bold tracking-[0.01em] text-white max-[740px]:p-4 max-[740px]:text-sm',
     'transition-all duration-150 hover:bg-brand-600',
     'focus-visible:shadow-[0_0_0_4px_oklch(64%_0.155_250_/_0.3)] focus-visible:outline-none',
