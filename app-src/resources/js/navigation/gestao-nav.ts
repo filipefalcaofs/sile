@@ -1,5 +1,6 @@
 /**
  * Catálogo único da sidebar de Gestão. Fonte de verdade do menu e do Cmd+K.
+ *
  */
 
 export type GestaoNavIcon =
@@ -53,7 +54,8 @@ export type GestaoNavIcon =
     | 'link'
     | 'server'
     | 'mail-pulse'
-    | 'spark';
+    | 'spark'
+    | 'exchange';
 
 export interface GestaoNavItem {
     name: string;
@@ -247,6 +249,7 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
         label: 'Auditoria',
         items: [
             { name: 'Trilha de auditoria', href: '/gestao/auditoria', icon: 'scroll', permission: 'consultar-auditoria' },
+            { name: 'Log de integrações', href: '/gestao/auditoria/integracoes', icon: 'exchange', permission: 'consultar-auditoria' },
             { name: 'Alertas de abuso', href: '/gestao/abuso', icon: 'bell', permission: 'gerenciar-alertas-abuso' },
             {
                 name: 'Auditoria preditiva',

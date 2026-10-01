@@ -372,6 +372,11 @@ return [
             'tries' => 3,
             'backoff_ms' => 1000,
         ],
+        // Teto técnico do corpo gravado no log de integrações. Acima disso o
+        // registro marca truncated — o pedido não é descartado em silêncio.
+        'log' => [
+            'limite_corpo' => 500_000,
+        ],
         'regin' => [
             'em_producao' => false,
             'url_homologacao' => 'http://10.57.247.9:8080/api_integracao',
