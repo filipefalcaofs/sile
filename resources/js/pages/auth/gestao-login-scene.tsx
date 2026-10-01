@@ -10,6 +10,7 @@ import {
     TAXA_PADRAO,
     TAXAS,
     TEMPO_LEITURA,
+    TEMPOS,
     TEXTOS_ESTADO,
     ZONAS,
     alvosPorEstado,
@@ -174,6 +175,21 @@ export default function GestaoLoginScene({
     }, [fase]);
 
     useEffect(() => () => clearTimeout(temporizadorEtiqueta.current), []);
+
+    // No fim do docking, a linha de estado esmaece (0,6 s) e termina
+    // invisível exatamente na navegação — o disco fica: ele é o logo da
+    // sidebar que o console assume sem piscar.
+    const [cenaSumindo, setCenaSumindo] = useState(false);
+
+    useEffect(() => {
+        if (fase !== 'docking') {
+            return;
+        }
+
+        const temporizador = setTimeout(() => setCenaSumindo(true), TEMPOS.desvanecerCena);
+
+        return () => clearTimeout(temporizador);
+    }, [fase]);
 
     useEffect(() => {
         if (!amplo) {
@@ -867,7 +883,10 @@ export default function GestaoLoginScene({
 
             <div ref={scene} className="absolute top-0 left-0 size-0">
                 {/* Linha de estado e linha do operador, acima da cena */}
-                <div ref={caixaStatus} className="absolute -top-[268px] -left-[220px] grid w-[440px] justify-items-center gap-2.5">
+                <div
+                    ref={caixaStatus}
+                    className={`absolute -top-[268px] -left-[220px] grid w-[440px] justify-items-center gap-2.5 transition-opacity duration-600 ${cenaSumindo ? 'opacity-0' : 'opacity-100'}`}
+                >
                     <div
                         key={estado + textoExibido}
                         className={`${gestaoLoginMonoFont} flex items-center gap-2.5 text-[10.5px] font-medium tracking-[0.1em] whitespace-nowrap uppercase motion-safe:animate-[sile-rise_0.55s_cubic-bezier(0.2,0.7,0.2,1)_both]`}

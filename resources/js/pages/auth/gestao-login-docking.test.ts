@@ -25,7 +25,9 @@ describe('Sequência de entrada no console', () => {
         expect(fases).toEqual(['authorized', 'preparing', 'docking']);
         expect(navegar).not.toHaveBeenCalled();
 
-        vi.advanceTimersByTime(900);
+        // 1150 ms de docking antes do swap: o palco (1,05 s) termina de
+        // encolher e a cena esmaece antes de a página trocar.
+        vi.advanceTimersByTime(1150);
         expect(navegar).toHaveBeenCalledWith('/gestao');
     });
 
