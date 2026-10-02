@@ -312,6 +312,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Consulta a classificação viária da LOUOS no GeoServer SEDUR (insumo do Quadro 11A). Desligado, as condições pela via ficam indisponíveis',
             ],
+            'features.geoserver_enderecamento' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Consulta o polígono do endereçamento no GeoServer SEDUR e decide a zona pela maior porção do lote (art. 18, § 2º, da Lei 9.148/2016). Desligado, a zona segue pelo ponto da inscrição',
+            ],
             'features.geoserver_territorio' => [
                 'group' => 'features',
                 'type' => 'boolean',
