@@ -430,6 +430,7 @@ class AnalysisRecordController extends Controller
      * }  $cadastro
      * @return array{
      *   poligono: array<string, mixed>|null,
+     *   poligono_enderecamento: array<string, mixed>|null,
      *   endereco: string|null,
      *   cod_log: string|null,
      *   logradouro: string|null,
@@ -461,6 +462,7 @@ class AnalysisRecordController extends Controller
 
         return [
             'poligono' => $request->property_polygon_geojson,
+            'poligono_enderecamento' => $request->address_polygon_geojson,
             'endereco' => $partes === [] ? null : implode(', ', $partes),
             'cod_log' => $this->textoOuNulo($request->cod_log),
             'logradouro' => $logradouro,
@@ -471,7 +473,7 @@ class AnalysisRecordController extends Controller
             'zona' => $zona,
             'via' => $via,
             'is_public_area' => $request->is_public_area,
-            'camadas' => $this->camadasComZonaEVia($request->camadas_incidentes, $zona, $via),
+            'camadas' => $this->camadasComZonaEVia($request->camadas_incidentes, $zona, $via, $request->zona_fonte?->value),
         ];
     }
 
@@ -483,7 +485,7 @@ class AnalysisRecordController extends Controller
      * @param  array<string, mixed>|null  $camadas
      * @return array<string, mixed>|null
      */
-    private function camadasComZonaEVia(?array $camadas, ?string $zona, ?string $via): ?array
+    private function camadasComZonaEVia(?array $camadas, ?string $zona, ?string $via, ?string $fonteZona): ?array
     {
         if ($camadas === null) {
             return null;
@@ -496,6 +498,7 @@ class AnalysisRecordController extends Controller
             $camadas['zona'] = [
                 'status' => 'identificado',
                 'nome' => $zona,
+                'fonte' => $fonteZona,
             ];
         }
 

@@ -183,4 +183,15 @@ class ProcessoUiSmokeTest extends TestCase
                 ->where('geo.camadas.logradouro_tributario.nome', 'Avenida Lafayete Coutinho')
                 ->where('geo.camadas.camadas.0.elemento', 'Trecho 5'));
     }
+
+    public function test_ca_fc_02_detalhe_expoe_o_poligono_do_enderecamento(): void
+    {
+        $processo = $this->processo();
+        $processo->forceFill(['address_polygon_geojson' => ['type' => 'Polygon', 'coordinates' => [[[-38.5, -12.98], [-38.499, -12.98], [-38.499, -12.979], [-38.5, -12.98]]]]])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('geo.poligono_enderecamento.type', 'Polygon'));
+    }
 }
