@@ -1,3 +1,5 @@
+import { textoZona, type ZonaCamada } from './camadas-imovel-zona';
+
 export interface CamadaPoligonal {
     regra: string;
     titulo?: string;
@@ -12,7 +14,7 @@ export interface CamadasImovel {
     logradouro_tributario?: { cod_log: string; nome: string | null } | null;
     logradouros_proximos?: { cod_log: string | null; nome: string | null; distancia_m: number }[];
     bairro?: { status: string; nome: string | null } | null;
-    zona?: { status: string; nome: string | null } | null;
+    zona?: ZonaCamada | null;
     via?: string | null;
     camadas?: CamadaPoligonal[];
 }
@@ -56,7 +58,7 @@ export default function CamadasImovelLista({ camadas }: { camadas: CamadasImovel
                 : '—',
         },
         { camada: 'Bairro', elemento: textoDimensao(camadas.bairro) },
-        { camada: 'Zona', elemento: textoDimensao(camadas.zona) },
+        { camada: 'Zona', elemento: textoZona(camadas.zona) },
         { camada: 'Via', elemento: camadas.via?.trim() ? camadas.via : '—' },
         ...(camadas.camadas ?? []).map((camada) => ({
             camada: camada.titulo ?? camada.regra,

@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { rotuloFluxoRisco } from '@/components/analise/processo-ui';
 import PageHeader from '@/components/app/page-header';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
+import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
 import { MapaSection } from '@/components/geo/mapa-section';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
@@ -102,6 +103,7 @@ interface TextoPadrao {
 
 interface Localizacao {
     poligono: GeoJsonObject | null;
+    poligono_enderecamento?: GeoJsonObject | null;
     endereco: string | null;
     cod_log: string | null;
     logradouro: string | null;
@@ -1501,8 +1503,8 @@ export default function FichaAnaliseShow({
         return Array.from(conjunto);
     }, [perCnae]);
 
-    const centro = centroideDoPoligono(localizacao?.poligono);
-    const temPoligono = centro !== null && localizacao?.poligono != null;
+    const centro = centroideDoPoligono(localizacao?.poligono) ?? centroDaGeometria(localizacao?.poligono_enderecamento);
+    const temPoligono = centro !== null && (localizacao?.poligono != null || localizacao?.poligono_enderecamento != null);
 
     const vagasRequeridas = parking.vagas_requeridas;
     const vagasExigidas = parking.vagas_exigidas;
@@ -1627,7 +1629,7 @@ export default function FichaAnaliseShow({
                     </Card>
 
                     <Card>
-                        <CardHeader title="Polígono" description="Polígono cadastrado do imóvel." />
+                        <CardHeader title="Polígono" description="Polígono cadastrado do imóvel e polígono do endereçamento SEDUR." />
                         <CardContent>
                             {temPoligono && centro ? (
                                 <>
@@ -1637,13 +1639,26 @@ export default function FichaAnaliseShow({
                                         zoom={17}
                                         draggable={false}
                                         camadas={[
-                                            {
-                                                id: 'imovel',
-                                                type: 'imovel',
-                                                geojson: localizacao!.poligono as GeoJsonObject,
-                                            },
+                                            ...(localizacao?.poligono
+                                                ? [{ id: 'imovel', type: 'imovel', geojson: localizacao.poligono }]
+                                                : []),
+                                            ...(localizacao?.poligono_enderecamento
+                                                ? [
+                                                      {
+                                                          id: 'enderecamento',
+                                                          type: 'enderecamento',
+                                                          geojson: localizacao.poligono_enderecamento,
+                                                          estilo: ESTILO_ENDERECAMENTO,
+                                                      },
+                                                  ]
+                                                : []),
                                         ]}
                                     />
+                                    {localizacao?.poligono_enderecamento ? (
+                                        <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
+                                            Contorno tracejado: polígono do endereçamento SEDUR.
+                                        </p>
+                                    ) : null}
                                     <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
                                         Mapa &copy; OpenStreetMap (ODbL).
                                     </p>

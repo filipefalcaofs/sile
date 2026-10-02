@@ -5,6 +5,7 @@ import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 import type { GeoJsonObject } from 'geojson';
+import type { PathOptions } from 'leaflet';
 import { useEffect } from 'react';
 import { GeoJSON, MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } from 'react-leaflet';
 
@@ -16,6 +17,8 @@ export interface MapLayer {
     id: string | number;
     type: string;
     geojson: GeoJsonObject;
+    /** Estilo do contorno; sem ele, o padrão do Leaflet. */
+    estilo?: PathOptions;
 }
 
 export interface MapImovelProps {
@@ -105,7 +108,7 @@ export function MapImovel({ lat, lng, zoom = 17, draggable = true, camadas, onMo
                 <Popup>Localização do imóvel</Popup>
             </Marker>
             {camadas?.map((camada) => (
-                <GeoJSON key={camada.id} data={camada.geojson} />
+                <GeoJSON key={camada.id} data={camada.geojson} style={camada.estilo} />
             ))}
         </MapContainer>
     );
