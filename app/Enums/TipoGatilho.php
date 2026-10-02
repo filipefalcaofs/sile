@@ -24,6 +24,10 @@ enum TipoGatilho: string
     // ponto da inscrição no Cadastro Imobiliário.
     case LocalizacaoDivergente = 'localizacao_divergente';
 
+    // Art. 18, § 2º, da Lei 9.148/2016: o polígono do endereçamento tem porções
+    // iguais em duas zonas e a lei não diz qual prevalece.
+    case ZonaEmpate = 'zona_empate';
+
     public function label(): string
     {
         return match ($this) {
@@ -32,6 +36,7 @@ enum TipoGatilho: string
             self::DadosDoProcesso => 'Dados do processo',
             self::RegraTerritorial => 'Regra territorial',
             self::LocalizacaoDivergente => 'Localização divergente',
+            self::ZonaEmpate => 'Zona com porções iguais',
         };
     }
 }

@@ -75,6 +75,7 @@ class DecisionTextSeeder extends Seeder
         'territorial.motivo.cadastro_indisponivel' => 'Motivo do encaminhamento à análise quando o Cadastro Imobiliário está indisponível para conferir o logradouro tributário de uma regra de logradouro × CNAE. Placeholder: :regra.',
         'zona.motivo.empate_maior_porcao' => 'Motivo do encaminhamento à análise quando o polígono do endereçamento tem porções iguais em duas zonas (art. 18, § 2º, da LOUOS). Placeholders: :zona_a, :zona_b.',
         'localizacao.motivo.divergencia_zona' => 'Motivo do encaminhamento à análise quando o polígono desenhado e a inscrição imobiliária caem em zonas diferentes (HU-037 RN-005). Placeholders: :zona_poligono, :zona_inscricao.',
+        'localizacao.motivo.divergencia_zona_enderecamento' => 'Motivo do encaminhamento à análise quando o polígono desenhado e o polígono do endereçamento SEDUR caem em zonas diferentes pela maior porção. Placeholders: :zona_desenho, :zona_enderecamento.',
         'louos.motivo.quadro10_observacao_fora_da_lista' => 'Motivo do Quadro 10 quando o uso sujeito à observação (a)/(b) está fora das localizações permitidas. Placeholder: :observacao.',
         'louos.motivo.quadro10_observacao_sem_verificacao' => 'Motivo do Quadro 10 quando não há CODLOG/bairro para verificar a allow-list da observação (a)/(b). Placeholder: :observacao.',
     ];

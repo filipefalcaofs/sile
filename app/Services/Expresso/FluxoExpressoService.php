@@ -27,6 +27,8 @@ use App\Services\EscritorioVirtual\AbrigadoResolver;
 use App\Services\EscritorioVirtual\DesvincularInscricaoService;
 use App\Services\Geo\CamadasIncidentesService;
 use App\Services\Geo\LocalizacaoDivergenciaService;
+use App\Services\Geo\ZonaMaiorPorcao;
+use App\Services\Geo\ZonaProcessoService;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
@@ -82,6 +84,7 @@ class FluxoExpressoService
         private LocalizacaoDivergenciaService $localizacaoDivergencia,
         private JustificativaIndeferimentoBuilder $justificativa,
         private CamadasIncidentesService $camadasIncidentes,
+        private ZonaProcessoService $zonaProcesso,
     ) {}
 
     /**
@@ -212,6 +215,10 @@ class FluxoExpressoService
             }
         }
 
+        // Zona pela maior porção do endereçamento (art. 18, § 2º) gravada antes
+        // do motor, que enquadra com a zona do processo.
+        $zonaPorArea = $this->zonaProcesso->materializar($request);
+
         // Reexecução FRESCA dos motores — a decisão é autoritativa, não o snapshot.
         $resolved = $this->resolver->resolve($request);
 
@@ -230,6 +237,30 @@ class FluxoExpressoService
 
         if ($territorial->status === TerritorialRuleVerdict::INDEFERIR) {
             return $this->indeferirTerritorial($request, $resolved, $territorial, $actor);
+        }
+
+        // Empate de porções: a lei não diz qual zona prevalece.
+        if ($zonaPorArea?->status === ZonaMaiorPorcao::EMPATE) {
+            return $this->encaminharAnalise(
+                $request,
+                $this->zonaProcesso->motivoEmpate($zonaPorArea),
+                $actor,
+                $resolved,
+                gatilho: TipoGatilho::ZonaEmpate,
+            );
+        }
+
+        // Desenho do requerente em zona diferente do endereçamento SEDUR.
+        $divergenciaEnderecamento = $this->localizacaoDivergencia->avaliarEnderecamento($request, $zonaPorArea);
+
+        if ($divergenciaEnderecamento !== null) {
+            return $this->encaminharAnalise(
+                $request,
+                $divergenciaEnderecamento,
+                $actor,
+                $resolved,
+                gatilho: TipoGatilho::LocalizacaoDivergente,
+            );
         }
 
         // HU-037 RN-005: polígono desenhado em zona diferente da zona da
@@ -477,7 +508,7 @@ class FluxoExpressoService
         ?TerritorialRuleVerdict $territorial = null,
         ?TipoGatilho $gatilho = null,
     ): void {
-        if ($gatilho === TipoGatilho::LocalizacaoDivergente) {
+        if ($gatilho === TipoGatilho::LocalizacaoDivergente || $gatilho === TipoGatilho::ZonaEmpate) {
             ExpressoQueda::create([
                 'viability_request_id' => $request->id,
                 'cnae' => null,

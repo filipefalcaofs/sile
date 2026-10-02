@@ -182,6 +182,7 @@ final class DecisionTextCatalog
             'territorial.motivo.cadastro_indisponivel' => 'Não foi possível verificar a restrição territorial ":regra" (Cadastro Imobiliário indisponível para conferir o logradouro tributário) — segue para análise técnica.',
             'zona.motivo.empate_maior_porcao' => 'Zona urbanística indefinida (art. 18, § 2º, da Lei nº 9.148/2016): o terreno tem porções iguais nas zonas :zona_a e :zona_b — segue para análise técnica.',
             'localizacao.motivo.divergencia_zona' => 'Localização divergente (HU-037 RN-005): o polígono informado está na zona :zona_poligono e a inscrição imobiliária, na zona :zona_inscricao — segue para análise técnica.',
+            'localizacao.motivo.divergencia_zona_enderecamento' => 'Localização divergente: o polígono desenhado está na zona :zona_desenho e o polígono do endereçamento SEDUR, na zona :zona_enderecamento — segue para análise técnica.',
             'louos.motivo.quadro10_observacao_fora_da_lista' => 'Uso sujeito à observação :observacao do Quadro 10 permitido somente nas localizações listadas — endereço fora da allow-list',
             'louos.motivo.quadro10_observacao_sem_verificacao' => 'Uso sujeito à observação :observacao do Quadro 10, mas sem CODLOG/bairro para verificar a allow-list de localizações',
         ];

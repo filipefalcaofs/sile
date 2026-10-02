@@ -9,7 +9,8 @@ use App\Support\Audit\AuditService;
 
 /**
  * HU-037 RN-005: o polígono desenhado e o ponto da inscrição no Cadastro
- * Imobiliário precisam cair na mesma zona. Zona diferente bloqueia a decisão
+ * Imobiliário precisam cair na mesma zona. Com o polígono do endereçamento
+ * SEDUR, o desenho também precisa cair na mesma zona dele, pela maior porção. Zona diferente bloqueia a decisão
  * automática. Sem ponto ou sem zona identificada, a verificação não bloqueia
  * e fica registrada como não realizada.
  */
@@ -20,6 +21,7 @@ class LocalizacaoDivergenciaService
         private TerritoryService $territorio,
         private DecisionTextCatalog $textos,
         private AuditService $audit,
+        private ZonaMaiorPorcaoResolver $maiorPorcao,
     ) {}
 
     public function avaliar(ViabilityRequest $request): ?string
@@ -60,6 +62,59 @@ class LocalizacaoDivergenciaService
         $this->auditar($request, 'diverge', $motivo, $zonaPoligono, $zonaInscricao);
 
         return $motivo;
+    }
+
+    /**
+     * Com o polígono desenhado e o do endereçamento, a zona de cada um pela
+     * maior porção precisa coincidir. Diferente, a decisão automática é
+     * bloqueada; a zona gravada continua a do endereçamento.
+     */
+    public function avaliarEnderecamento(ViabilityRequest $request, ?ZonaMaiorPorcao $zonaEnderecamento): ?string
+    {
+        if (blank($request->property_polygon_geojson) || $zonaEnderecamento === null || ! $zonaEnderecamento->identificado()) {
+            return null;
+        }
+
+        $zonaDesenho = $this->maiorPorcao->resolver($request->property_polygon_geojson);
+
+        if (! $zonaDesenho->identificado()) {
+            $this->auditarEnderecamento($request, 'nao_verificada', $zonaDesenho->motivo, null, $zonaEnderecamento->codigo);
+
+            return null;
+        }
+
+        if ($zonaDesenho->codigo === $zonaEnderecamento->codigo) {
+            $this->auditarEnderecamento($request, 'coincide', null, $zonaDesenho->codigo, $zonaEnderecamento->codigo);
+
+            return null;
+        }
+
+        $motivo = $this->textos->render('localizacao.motivo.divergencia_zona_enderecamento', [
+            ':zona_desenho' => (string) $zonaDesenho->codigo,
+            ':zona_enderecamento' => (string) $zonaEnderecamento->codigo,
+        ]);
+
+        $this->auditarEnderecamento($request, 'diverge', $motivo, $zonaDesenho->codigo, $zonaEnderecamento->codigo);
+
+        return $motivo;
+    }
+
+    private function auditarEnderecamento(ViabilityRequest $request, string $resultado, ?string $motivo, ?string $zonaDesenho, ?string $zonaEnderecamento): void
+    {
+        $this->audit->log(
+            logName: 'geo',
+            event: 'zona-divergencia-enderecamento',
+            description: "Zona do desenho × endereçamento na solicitação #{$request->id}: {$resultado}",
+            properties: [
+                'viability_request_id' => $request->id,
+                'resultado' => $resultado,
+                'motivo' => $motivo,
+                'zona_desenho' => $zonaDesenho,
+                'zona_enderecamento' => $zonaEnderecamento,
+            ],
+            subject: $request,
+            result: $resultado,
+        );
     }
 
     private function zona(float $lat, float $lng): ?string
