@@ -4,12 +4,14 @@ namespace Tests\Feature\Geo;
 
 use App\Enums\GeoLayerType;
 use App\Enums\ViabilityRequestOrigin;
+use App\Enums\ZonaFonte;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\Parameter;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Geo\ZonaMaiorPorcaoResolver;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
 use App\Services\Realty\PropertyRegistryUnavailableException;
@@ -20,6 +22,7 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Spatie\Activitylog\Models\Activity;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\Geo\FakeZonaMaiorPorcaoResolver;
 use Tests\TestCase;
 
 class PoligonoEnderecamentoProtocoloTest extends TestCase
@@ -230,6 +233,7 @@ class PoligonoEnderecamentoProtocoloTest extends TestCase
         Http::assertNotSent(fn (Request $r): bool => str_contains($r->url(), 'VM_ENDERECAMENTO'));
         $this->assertNull($request->address_polygon_geojson);
         $this->assertSame('ZCN-1', $request->zona_codigo);
+        $this->assertSame(ZonaFonte::Ponto, $request->zona_fonte);
         $this->assertSame('desligado', $this->auditoria($request)?->properties['status']);
     }
 
@@ -243,5 +247,19 @@ class PoligonoEnderecamentoProtocoloTest extends TestCase
 
         Http::assertNotSent(fn (Request $r): bool => str_contains($r->url(), 'VM_ENDERECAMENTO'));
         $this->assertSame('sem_chave', $this->auditoria($request)?->properties['status']);
+    }
+
+    public function test_protocolo_com_poligono_decide_a_zona_pela_maior_porcao(): void
+    {
+        $this->fakeCadastro('212');
+        $this->ligarEnderecamento();
+        $this->enderecamento([['complemento' => null, 'geometria' => $this->quadrado(-38.5)]]);
+        $this->app->instance(ZonaMaiorPorcaoResolver::class, (new FakeZonaMaiorPorcaoResolver)
+            ->para($this->quadrado(-38.5), FakeZonaMaiorPorcaoResolver::identificado('ZPR 3')));
+
+        $request = $this->protocolar();
+
+        $this->assertSame('ZPR 3', $request->zona_codigo);
+        $this->assertSame(ZonaFonte::EnderecamentoMaiorPorcao, $request->zona_fonte);
     }
 }
