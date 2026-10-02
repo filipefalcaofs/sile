@@ -173,7 +173,7 @@ class GeoServerWfsZonaClient
             ? $features[0]['properties']
             : [];
 
-        $codigo = $this->codigoZona($properties, $typeName);
+        $codigo = self::codigoZona($properties, $typeName);
 
         if ($codigo === null) {
             return null;
@@ -191,13 +191,13 @@ class GeoServerWfsZonaClient
     /**
      * @param  array<string, mixed>  $properties
      */
-    private function codigoZona(array $properties, string $typeName): ?string
+    public static function codigoZona(array $properties, string $typeName): ?string
     {
         foreach (['SUBZONA', 'ZONA', 'SIGLA_ZONA', 'IDENTIFICACAO', 'TIPO_ZEIS', 'NOME_ZEIS'] as $chave) {
             $valor = $properties[$chave] ?? null;
 
             if (is_string($valor) && trim($valor) !== '') {
-                return $this->normalizarCodigo($valor);
+                return self::normalizarCodigo($valor);
             }
         }
 
