@@ -8,6 +8,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Events\SolicitacaoProtocolada;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Geo\TerritorioProcessoService;
 use Illuminate\Support\Facades\DB;
 
@@ -40,6 +41,7 @@ class ProtocolarSolicitacaoService
         private ViabilityRequestStateMachine $stateMachine,
         private DocumentRequirementResolver $documents,
         private TerritorioProcessoService $territorioProcesso,
+        private PoligonoEnderecamentoService $poligonoEnderecamento,
     ) {}
 
     public function protocol(ViabilityRequest $request, User $actor, bool $proceedDespite = false): ViabilityRequest
@@ -79,6 +81,10 @@ class ProtocolarSolicitacaoService
         }
 
         $this->territorioProcesso->aplicarLogradouroTributario($request);
+
+        // Com o CODLOG tributário aplicado, o polígono do endereçamento SEDUR é
+        // consultado por CODLOG + número + complemento.
+        $this->poligonoEnderecamento->aplicar($request);
 
         // Disparo APÓS o commit: a transação já fechou aqui. O evento implementa
         // ShouldDispatchAfterCommit como defesa adicional contra disparo precoce.
