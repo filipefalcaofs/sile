@@ -6,6 +6,7 @@ use App\Enums\GeoLayerStatus;
 use App\Enums\GeoLayerType;
 use App\Enums\RuleDomain;
 use App\Enums\TerritorialRuleType;
+use App\Enums\ZonaFonte;
 use App\Models\GeoLayer;
 use App\Models\RuleVersion;
 use App\Models\TerritorialRule;
@@ -17,6 +18,8 @@ use App\Services\Realty\LocalizacaoInscricaoService;
  * contém ou margeia o ponto do imóvel. Logradouro tributário (SEFAZ), todos os
  * logradouros num raio curto, bairro, zona e as poligonais das regras
  * territoriais ativas (ABM com o trecho, ZEM, ZPAM, ZUE, loteamentos TAC).
+ * Com polígono do endereçamento, a zona é a da maior porção do lote, com as
+ * porções por zona.
  * Camada que não respondeu fica como indisponível, nunca omitida.
  */
 class CamadasIncidentesService
@@ -38,6 +41,7 @@ class CamadasIncidentesService
         private SpatialRepository $espacial,
         private GeoServerWfsCamadaClient $wfs,
         private LocalizacaoInscricaoService $localizacao,
+        private ZonaProcessoService $zonaProcesso,
     ) {}
 
     /**
@@ -80,6 +84,8 @@ class CamadasIncidentesService
         ];
 
         if ($ponto === null) {
+            $inventario['zona'] = $this->zona($request, null);
+
             return $inventario;
         }
 
@@ -87,7 +93,7 @@ class CamadasIncidentesService
 
         $inventario['logradouros_proximos'] = $this->logradourosProximos($ponto['lat'], $ponto['lng']);
         $inventario['bairro'] = $this->dimensao($territorio->bairro);
-        $inventario['zona'] = $this->dimensao($territorio->zona);
+        $inventario['zona'] = $this->zona($request, $territorio->zona);
         $inventario['camadas'] = $this->camadasPoligonais($ponto['lat'], $ponto['lng']);
 
         return $inventario;
@@ -199,6 +205,45 @@ class CamadasIncidentesService
     private function atributosEscalares(array $propriedades): array
     {
         return array_slice(array_filter($propriedades, 'is_scalar'), 0, 15, true);
+    }
+
+    /**
+     * Zona do inventário: a da maior porção do endereçamento quando identificada,
+     * senão a do ponto, com as porções e o motivo da maior porção quando houve
+     * polígono para calcular.
+     *
+     * @param  array<string, mixed>|null  $zonaPonto
+     * @return array{status: string, nome: ?string, fonte: ?string, porcoes: list<array{zona: string, area_m2: float, percentual: float}>, maior_porcao: array{status: string, motivo: ?string, empate: list<string>}|null}|null
+     */
+    private function zona(ViabilityRequest $request, ?array $zonaPonto): ?array
+    {
+        $porArea = $this->zonaProcesso->resolver($request);
+
+        if ($porArea?->identificado()) {
+            return [
+                'status' => 'identificado',
+                'nome' => $porArea->codigo,
+                'fonte' => ZonaFonte::EnderecamentoMaiorPorcao->value,
+                'porcoes' => $porArea->porcoes,
+                'maior_porcao' => ['status' => $porArea->status, 'motivo' => null, 'empate' => []],
+            ];
+        }
+
+        if ($zonaPonto === null && $porArea === null) {
+            return null;
+        }
+
+        $ponto = $zonaPonto === null ? ['status' => 'indisponivel', 'nome' => null] : $this->dimensao($zonaPonto);
+
+        return $ponto + [
+            'fonte' => $ponto['status'] === 'identificado' ? ZonaFonte::Ponto->value : null,
+            'porcoes' => $porArea === null ? [] : $porArea->porcoes,
+            'maior_porcao' => $porArea === null ? null : [
+                'status' => $porArea->status,
+                'motivo' => $porArea->motivo,
+                'empate' => $porArea->empate,
+            ],
+        ];
     }
 
     /**
