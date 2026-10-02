@@ -4,8 +4,11 @@ namespace App\Services\Solicitacao;
 
 use App\Enums\Fluxo;
 use App\Enums\ResultadoViabilidade;
+use App\Enums\ZonaFonte;
 use App\Models\Cnae;
 use App\Models\ViabilityRequest;
+use App\Services\Geo\TerritoryResult;
+use App\Services\Geo\TerritoryService;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
@@ -26,7 +29,9 @@ use Illuminate\Database\Eloquent\Collection;
  * SEM auditar. É insumo puro de DOIS consumidores: a simulação orientativa
  * (SimulacaoSolicitacaoService, que persiste o snapshot e audita — Fase 8) e a
  * decisão autoritativa (09-05), que o reexecuta fresco e nunca confia no
- * snapshot pré-protocolo. Sem zona oficial, o veredito por CNAE é "pendente"
+ * snapshot pré-protocolo. Com a zona decidida pela maior porção do polígono
+ * do endereçamento (zona_fonte), o enquadramento usa essa zona no lugar da do
+ * ponto. Sem zona oficial, o veredito por CNAE é "pendente"
  * (propagado) — nunca permitido/não permitido inventado.
  */
 class SolicitacaoViabilityResolver
@@ -46,6 +51,7 @@ class SolicitacaoViabilityResolver
 
     public function __construct(
         private ConsultaViabilidadeService $consulta,
+        private TerritoryService $territory,
     ) {}
 
     /**
@@ -62,12 +68,13 @@ class SolicitacaoViabilityResolver
 
         $porCnae = [];
         $rulesVersions = [];
+        $territorioPorArea = $ponto !== null ? $this->territorioComZonaDoLote($request, $ponto) : null;
 
         foreach ($this->orderedCnaes($request) as $cnae) {
             $respostas = $request->respostasDaPlanilha($cnae->code);
             $territorio = ReginProtocoloSimulacaoService::territorioDoSnapshot(
                 is_array($request->simulation_snapshot) ? $request->simulation_snapshot : [],
-            );
+            ) ?? $territorioPorArea;
 
             $result = $territorio !== null
                 ? $this->consulta->consultarComTerritorio($territorio, $cnae->code, $area, $tipoImovel, $respostas)
@@ -101,6 +108,36 @@ class SolicitacaoViabilityResolver
             rules_versions: $rulesVersions,
             ponto: $ponto,
             area_m2: $area,
+        );
+    }
+
+    /**
+     * Com a zona decidida pela maior porção do endereçamento (art. 18, § 2º),
+     * o enquadramento recebe essa zona; bairro, via e restrições continuam do
+     * ponto do imóvel.
+     *
+     * @param  array{lat: float, lng: float}  $ponto
+     */
+    private function territorioComZonaDoLote(ViabilityRequest $request, array $ponto): ?TerritoryResult
+    {
+        if ($request->zona_fonte !== ZonaFonte::EnderecamentoMaiorPorcao || blank($request->zona_codigo)) {
+            return null;
+        }
+
+        $base = $this->territory->identify($ponto['lat'], $ponto['lng']);
+
+        return new TerritoryResult(
+            bairro: $base->bairro,
+            via: $base->via,
+            zona: [
+                'status' => 'identificado',
+                'nome' => $request->zona_codigo,
+                'propriedades' => ['ZONA' => $request->zona_codigo, 'fonte' => ZonaFonte::EnderecamentoMaiorPorcao->value],
+                'motivo' => null,
+                'versao_camada' => 'geoserver-wfs-maior-porcao',
+            ],
+            lote: $base->lote,
+            restricoes: $base->restricoes,
         );
     }
 
