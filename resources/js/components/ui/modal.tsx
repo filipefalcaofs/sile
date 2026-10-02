@@ -101,14 +101,19 @@ export function Modal({
         };
     }, [isOpen]);
 
-    const contentClasses = isFullscreen ? 'w-full h-full' : 'relative w-full rounded-3xl bg-white dark:bg-gray-900';
+    const contentClasses = isFullscreen
+        ? 'pointer-events-auto h-full w-full'
+        : 'pointer-events-auto relative w-full rounded-3xl bg-white dark:bg-gray-900';
 
     // Sem early return quando fechado: o AnimatePresence precisa continuar
     // montado para executar a animação de saída do painel e do backdrop.
+    // A centralização fica num wrapper com min-h-full. Colocar items-center
+    // no mesmo elemento que rola corta o topo quando o diálogo passa da tela
+    // e impede de voltar até o título e o fechar.
     return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
+                <div className="modal fixed inset-0 z-99999 overflow-y-auto">
                     {!isFullscreen && (
                         <motion.div
                             className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
@@ -119,29 +124,37 @@ export function Modal({
                             exit={backdropFade.exit}
                         />
                     )}
-                    <motion.div
-                        ref={modalRef}
-                        role="dialog"
-                        aria-modal="true"
-                        tabIndex={-1}
-                        className={`${contentClasses} ${className ?? ''} focus:outline-hidden`}
-                        onClick={(e) => e.stopPropagation()}
-                        initial={modalPop.initial}
-                        animate={modalPop.animate}
-                        exit={modalPop.exit}
+                    <div
+                        className={
+                            isFullscreen
+                                ? 'h-full'
+                                : 'pointer-events-none flex min-h-full items-center justify-center'
+                        }
                     >
-                        {showCloseButton && (
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                aria-label="Fechar"
-                                className="absolute right-3 top-3 z-999 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white sm:right-6 sm:top-6 sm:h-11 sm:w-11"
-                            >
-                                <CloseIcon />
-                            </button>
-                        )}
-                        <div>{children}</div>
-                    </motion.div>
+                        <motion.div
+                            ref={modalRef}
+                            role="dialog"
+                            aria-modal="true"
+                            tabIndex={-1}
+                            className={`${contentClasses} ${className ?? ''} focus:outline-hidden`}
+                            onClick={(e) => e.stopPropagation()}
+                            initial={modalPop.initial}
+                            animate={modalPop.animate}
+                            exit={modalPop.exit}
+                        >
+                            {showCloseButton && (
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    aria-label="Fechar"
+                                    className="absolute right-3 top-3 z-999 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white sm:right-6 sm:top-6 sm:h-11 sm:w-11"
+                                >
+                                    <CloseIcon />
+                                </button>
+                            )}
+                            <div>{children}</div>
+                        </motion.div>
+                    </div>
                 </div>
             )}
         </AnimatePresence>,

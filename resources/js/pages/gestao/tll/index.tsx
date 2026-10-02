@@ -231,7 +231,7 @@ function GerarExercicioModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
     const ano = new Date().getFullYear();
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-w-[520px] overflow-y-auto p-6 lg:p-8">
+        <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-h-[90vh] max-w-[520px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Gerar exercício</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Clona os valores ativos da origem, aplica o fator do decreto e grava um rascunho. A publicação exige um
