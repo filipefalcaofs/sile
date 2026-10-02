@@ -2589,7 +2589,7 @@ export default function FichaAnaliseShow({
                 }}
             />
 
-            <Modal isOpen={showConclusao} onClose={() => setShowConclusao(false)} className="m-4 max-w-[560px] p-6 lg:p-8">
+            <Modal isOpen={showConclusao} onClose={() => setShowConclusao(false)} className="m-4 max-h-[90vh] max-w-[560px] overflow-y-auto p-6 lg:p-8">
                     <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Conclusão de Análise</h4>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Deferido e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o
