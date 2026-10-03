@@ -38,6 +38,7 @@ class CamadasIncidentesService
         private SpatialRepository $espacial,
         private GeoServerWfsCamadaClient $wfs,
         private LocalizacaoInscricaoService $localizacao,
+        private ZonaLimitrofeService $zonaLimitrofe,
     ) {}
 
     /**
@@ -62,12 +63,15 @@ class CamadasIncidentesService
         $ponto = $request->pontoDoImovel();
         $localizacao = $this->localizacao->localizar($request->property_registration);
 
+        $lei = $this->zonaLimitrofe->avaliar($request->poligonoDoLote());
+
         $inventario = [
             'identificado_em' => now()->toIso8601String(),
             'ponto' => $ponto === null ? null : [
                 'lat' => $ponto['lat'],
                 'lng' => $ponto['lng'],
-                'origem' => $request->property_polygon_geojson ? 'poligono' : $request->property_location_source?->value,
+                'origem' => $request->lote_poligono_fonte?->value
+                    ?? ($request->property_polygon_geojson ? 'poligono' : $request->property_location_source?->value),
             ],
             'logradouro_tributario' => $localizacao->codLogTributario === null ? null : [
                 'cod_log' => $localizacao->codLogTributario,
@@ -76,6 +80,7 @@ class CamadasIncidentesService
             'logradouros_proximos' => [],
             'bairro' => null,
             'zona' => null,
+            'zona_limitrofe' => $lei->toArray(),
             'camadas' => [],
         ];
 
@@ -87,7 +92,7 @@ class CamadasIncidentesService
 
         $inventario['logradouros_proximos'] = $this->logradourosProximos($ponto['lat'], $ponto['lng']);
         $inventario['bairro'] = $this->dimensao($territorio->bairro);
-        $inventario['zona'] = $this->dimensao($territorio->zona);
+        $inventario['zona'] = $this->dimensao($lei->aplicar($territorio)->zona);
         $inventario['camadas'] = $this->camadasPoligonais($ponto['lat'], $ponto['lng']);
 
         return $inventario;

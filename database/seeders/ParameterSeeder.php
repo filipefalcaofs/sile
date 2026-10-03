@@ -305,6 +305,20 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Consulta zona urbanística no GeoServer SEDUR (WFS) quando a camada local está pendente',
             ],
+            'features.arcgis_semap' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Consulta o lote por inscrição imobiliária no cadastro municipal (ArcGIS, camada SEMAP — Inscrições Geo), fallback do endereçamento da SEDUR',
+            ],
+            'integrations.arcgis_semap.query_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://geo.salvador.ba.gov.br/arcgis/rest/services/MAPA_BASE/MAPA_BASE_SEFAZ/MapServer/18/query',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'URL de consulta da camada SEMAP (Inscrições Geo) do ArcGIS municipal',
+            ],
             'features.geoserver_via_classe' => [
                 'group' => 'features',
                 'type' => 'boolean',

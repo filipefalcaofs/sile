@@ -1240,3 +1240,56 @@ Comparar `updateSequence` (hoje 15525). Se mudar, regenerar a seção 9 a partir
 
 Não versionar o XML bruto no git — é ~470 KB (WFS) + ~1,2 MB (WMS).
 
+---
+
+## 11. Poligonais do requisito territorial — nome não é título de camada
+
+Medido em **01/10/2026** por `DescribeFeatureType` e `GetFeature` (WFS 1.1, `outputFormat=application/json`) no serviço da seção 1. Os rótulos do requisito (Loteamento Vela Branca, Loteamento Itaigara, Trecho 5 e Trecho 6 da ABM) não aparecem no `GetCapabilities`. O nome está num atributo da feição. A mesma view Oracle sai em mais de um workspace (armadilha 4 da seção 3); abaixo fica o typeName cujo título descreve a poligonal.
+
+### 11.1 Loteamentos — `parcelamento_poligonal:VM_PARCELAMENTO`
+
+Geometria `Polygon`. Atributo do nome: `PARCELAMENTO` (string, minúsculas, sem o prefixo "Loteamento"). `TIPO` distingue loteamento, desdobro e remembramento. Alias da mesma view: `parcelamento:VM_PARCELAMENTO`.
+
+| Rótulo | CQL | Feição |
+|---|---|---|
+| Loteamento Vela Branca | `PARCELAMENTO ILIKE 'vela branca'` | 1 polígono: `COD_PARCEL=lot195`, `TIPO=loteamento`, `ESTAGIO=produção` |
+| Loteamento Itaigara | `PARCELAMENTO ILIKE 'itaigara' AND TIPO ILIKE 'loteamento'` | 1 polígono: `COD_PARCEL=lot193`, loteante Empisa, `ESTAGIO=produção` |
+
+`PARCELAMENTO ILIKE 'itaigara'` sem `TIPO` devolve quatro polígonos do mesmo nome:
+
+| COD_PARCEL | TIPO |
+|---|---|
+| lot193 | loteamento |
+| lot193.5 | remembramento |
+| doc177 | desdobro |
+| doc179 | desdobro |
+
+Não usar `ILIKE '%itaigara%'`. O curinga também casa `jardim alto do itaigara` (`COD_PARCEL=lot192`, `TIPO=loteamento`), que é outro loteamento.
+
+A carga territorial vigente (RT-02) filtra só o nome (`PARCELAMENTO ILIKE 'itaigara'` e `PARCELAMENTO ILIKE 'vela branca'`). Em Itaigara isso inclui o remembramento e os desdobros.
+
+### 11.2 ABM, trechos 5 e 6 — `borda_maritima:VM_BORDA_MARITIMA_TRECHOS`
+
+Geometria `Polygon`. Atributo do número do trecho: `TRECHOS` (string, não inteiro). Alias: `borda_maritima_trecho_cnlu:VM_BORDA_MARITIMA_TRECHOS`.
+
+```text
+TRECHOS IN ('5','6')
+```
+
+| TRECHOS | DENOMINACAO | DESCRICAO |
+|---|---|---|
+| 5 | Borda da Baía de Todos os Santos | Encosta da Ladeira da Barra até o Farol da Barra |
+| 6 | Borda Atlântica | Praia do Farol da Barra até o Morro da Aeronáutica (Ondina) |
+
+Cada número existe duas vezes na camada: a feição instituída pela ata CNLU nº 11/2020 (`ALTERADO_POR` aponta a ata nº 12/2021) e a feição instituída pela ata nº 12/2021 (observação do processo E-Salvador nº 93479/2021). O CQL acima casa as quatro. A carga territorial vigente (RT-03-ABM) usa esse filtro.
+
+Não isola o trecho:
+
+| typeName | Por que não |
+|---|---|
+| `borda_maritima:VM_BORDA_MARITIMA_POLIGONAL` | Também tem `TRECHOS`, mas o valor é faixa (`1 ao 5`, `6 ao 12`, `5 e parte do 4`), não o número do trecho |
+| `l_savam:VM_L_SAVAM_TRECHOS_ABM_2016` | Atributo `TRECHOS`, geometria `LineString` |
+| `louos_gabarito_trechos_abm:VM_L_GAB_TRECHO_ABM_2016` | Atributo `TRECHOS`, geometria `LineString` |
+
+Linha não serve para ponto-em-polígono.
+

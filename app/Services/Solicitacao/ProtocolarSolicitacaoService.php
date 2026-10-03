@@ -8,6 +8,7 @@ use App\Enums\ViabilityRequestStatus;
 use App\Events\SolicitacaoProtocolada;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Geo\PoligonoLoteResolver;
 use App\Services\Geo\TerritorioProcessoService;
 use Illuminate\Support\Facades\DB;
 
@@ -40,6 +41,7 @@ class ProtocolarSolicitacaoService
         private ViabilityRequestStateMachine $stateMachine,
         private DocumentRequirementResolver $documents,
         private TerritorioProcessoService $territorioProcesso,
+        private PoligonoLoteResolver $poligonoLote,
     ) {}
 
     public function protocol(ViabilityRequest $request, User $actor, bool $proceedDespite = false): ViabilityRequest
@@ -79,6 +81,12 @@ class ProtocolarSolicitacaoService
         }
 
         $this->territorioProcesso->aplicarLogradouroTributario($request);
+
+        // Geometria oficial do lote (endereçamento SEDUR, depois cadastro
+        // municipal) para o zoneamento pela maior porção — art. 18, § 2º da
+        // Lei 9.148/2016. Fora da transação: indisponibilidade da fonte não
+        // desfaz o protocolo nem consome outro número.
+        $this->poligonoLote->resolver($request);
 
         // Disparo APÓS o commit: a transação já fechou aqui. O evento implementa
         // ShouldDispatchAfterCommit como defesa adicional contra disparo precoce.

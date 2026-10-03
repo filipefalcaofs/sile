@@ -27,6 +27,8 @@ use App\Services\EscritorioVirtual\AbrigadoResolver;
 use App\Services\EscritorioVirtual\DesvincularInscricaoService;
 use App\Services\Geo\CamadasIncidentesService;
 use App\Services\Geo\LocalizacaoDivergenciaService;
+use App\Services\Geo\ZonaLimitrofeAvaliacao;
+use App\Services\Geo\ZonaLimitrofeService;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
@@ -82,6 +84,7 @@ class FluxoExpressoService
         private LocalizacaoDivergenciaService $localizacaoDivergencia,
         private JustificativaIndeferimentoBuilder $justificativa,
         private CamadasIncidentesService $camadasIncidentes,
+        private ZonaLimitrofeService $zonaLimitrofe,
     ) {}
 
     /**
@@ -292,9 +295,17 @@ class FluxoExpressoService
         // fingir zoneamento. Processo REGIN de verdade continua bloqueado aqui.
         if ($resolved->consolidado === ResultadoViabilidade::Pendente->value
             && ! $this->bypassSimulacaoHomologacao($request)) {
+            $lei = $this->zonaLimitrofe->avaliar($request->poligonoDoLote());
+            // Só o empate troca o motivo: é a lei que não escolhe, não a base
+            // que falta. Os demais casos seguem com a pendência da zona, e o
+            // porquê da medição por área não ter rodado fica no inventário.
+            $motivo = $lei->status === ZonaLimitrofeAvaliacao::EMPATE
+                ? (string) $lei->motivo
+                : 'veredito locacional pendente — zona urbanística pendente SEDUR';
+
             return $this->encaminharAnalise(
                 $request,
-                'veredito locacional pendente — zona urbanística pendente SEDUR',
+                $motivo,
                 $actor,
                 $resolved,
             );

@@ -30,7 +30,10 @@ class PropertyGeometryWriter
             return;
         }
 
-        $geojson = $request->property_polygon_geojson;
+        // A geometria derivada acompanha a que GOVERNA o processo (lote
+        // oficial quando houver; senão o desenho), para os precedentes
+        // espaciais casarem com a zona decidida.
+        $geojson = $request->poligonoDoLote();
 
         if (! is_array($geojson) || $geojson === []) {
             return;

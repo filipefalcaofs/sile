@@ -2,12 +2,14 @@
 
 namespace Tests\Feature\Gestao;
 
+use App\Models\Activity;
 use App\Models\Parameter;
 use App\Models\User;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ApiIntegracaoControllerTest extends TestCase
@@ -108,6 +110,88 @@ class ApiIntegracaoControllerTest extends TestCase
         $this->actingAs(User::factory()->analista()->withAcceptedLgpdTerm()->create(), 'gestao')
             ->get('/gestao/config-apis')
             ->assertForbidden();
+    }
+
+    /**
+     * @param  array<string, string>  $campos
+     */
+    #[DataProvider('abasComAlteracao')]
+    public function test_cada_aba_grava_seus_parametros_e_audita(string $aba, array $campos, string $chave, string $esperado): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->put("/gestao/config-apis/{$aba}", ['campos' => $campos])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('gestao.config-apis.edit', ['aba' => $aba]));
+
+        $this->assertSame($esperado, Parameter::query()->where('key', $chave)->first()->value);
+        $this->assertTrue(
+            Activity::query()
+                ->where('log_name', 'parametros')
+                ->where('event', 'parametro-alterado')
+                ->get()
+                ->contains(fn (Activity $activity): bool => $activity->properties['key'] === $chave),
+        );
+    }
+
+    /**
+     * @return array<string, array{string, array<string, string>, string, string}>
+     */
+    public static function abasComAlteracao(): array
+    {
+        $hml = 'https://hml.exemplo.salvador.ba.gov.br/api';
+        $prd = 'https://prd.exemplo.salvador.ba.gov.br/api';
+
+        return [
+            'REGIN' => ['regin', [
+                'em_producao' => '0',
+                'url_homologacao' => $hml,
+                'url_producao' => $prd,
+                'usuario' => 'usuario_novo',
+                'senha' => '',
+                'cnpj_prefeitura' => '13927801000149',
+            ], 'integrations.regin.usuario', 'usuario_novo'],
+            'Inscrição imobiliária' => ['inscricao', [
+                'habilitada' => '1',
+                'em_producao' => '0',
+                'url_homologacao' => $hml,
+                'url_producao' => $prd,
+            ], 'integrations.inscricao_imobiliaria.base_url', $hml],
+            'CPF e CNPJ' => ['sedur_contato', [
+                'habilitada' => '1',
+                'em_producao' => '1',
+                'url_homologacao' => $hml,
+                'url_producao' => $prd,
+            ], 'integrations.sedur_contato.base_url', $prd],
+            'Autenticação SEDUR' => ['sedur_auth', [
+                'habilitada' => '1',
+                'em_producao' => '0',
+                'url_homologacao' => $hml,
+                'url_producao' => $prd,
+            ], 'integrations.sedur_auth.url_homologacao', $hml],
+            'GOV.BR' => ['govbr', [
+                'habilitada' => '0',
+                'em_producao' => '0',
+                'url_homologacao' => $hml,
+                'url_producao' => $prd,
+                'client_id' => '',
+                'client_secret' => '',
+                'nivel' => 'prata',
+            ], 'security.govbr.minimum_level', 'prata'],
+            'Geocodificação' => ['geocoding', [
+                'habilitada' => '1',
+                'em_producao' => '0',
+                'url_homologacao' => $hml,
+                'url_producao' => $prd,
+            ], 'integrations.geocoding.url_homologacao', $hml],
+            'GeoServer' => ['geoserver', [
+                'zona' => '1',
+                'territorio' => '1',
+                'via_classe' => '0',
+                'em_producao' => '0',
+                'url_homologacao' => $hml,
+                'url_producao' => $prd,
+            ], 'features.geoserver_via_classe', '0'],
+        ];
     }
 
     private function admin(): User

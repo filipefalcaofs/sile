@@ -15,6 +15,8 @@ use App\Models\RiskClassification;
 use App\Models\RuleVersion;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Geo\ZonaLimitrofeAvaliacao;
+use App\Services\Geo\ZonaLimitrofeService;
 use App\Services\Solicitacao\ResolvedViability;
 use App\Services\Solicitacao\SolicitacaoViabilityResolver;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
@@ -263,6 +265,92 @@ class SolicitacaoViabilityResolverTest extends TestCase
         $resolved = $this->resolver()->resolve($this->draftComCnaes(['4712100']));
 
         $this->assertSame(ResultadoViabilidade::Permitido->value, $resolved->consolidado);
+    }
+
+    public function test_quadro_10_usa_a_zona_da_maior_porcao_e_nao_a_do_ponto(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZPR 3', 'nR1', Quadro10Permissao::Permitido);
+
+        $avaliacao = new ZonaLimitrofeAvaliacao(
+            status: ZonaLimitrofeAvaliacao::IDENTIFICADO,
+            zonaVencedora: 'ZPR 3',
+            porcoes: [
+                ['zona' => 'ZPR 3', 'area_m2' => 50.5, 'percentual' => 50.5],
+                ['zona' => 'ZR-1', 'area_m2' => 49.5, 'percentual' => 49.5],
+            ],
+            empatadas: [],
+            motivo: null,
+            fonte: ZonaLimitrofeAvaliacao::FONTE,
+        );
+        $servico = $this->createMock(ZonaLimitrofeService::class);
+        $servico->method('avaliar')->willReturn($avaliacao);
+        $this->app->instance(ZonaLimitrofeService::class, $servico);
+
+        $resolved = $this->resolver()->resolve($this->draftComCnaes(['4712100']));
+
+        $zona = $resolved->por_cnae[0]['consulta_array']['territorio']['zona'];
+
+        $this->assertSame(ResultadoViabilidade::Permitido->value, $resolved->consolidado);
+        $this->assertSame('ZPR 3', $zona['nome']);
+        $this->assertSame('maior_porcao_do_poligono', $zona['propriedades']['fonte']);
+        $this->assertSame(50.5, $zona['propriedades']['porcoes'][0]['percentual']);
+    }
+
+    /**
+     * Sem polígono a maior porção não roda, mas isso NÃO apaga a zona que o
+     * ponto identificou: a degradação da regra do art. 18, § 2º não pode
+     * derrubar processo que o zoneamento por ponto já resolvia.
+     */
+    public function test_sem_poligono_o_enquadramento_segue_pela_zona_do_ponto(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $solicitacao = $this->draftComCnaes(['4712100']);
+        $solicitacao->forceFill([
+            'property_polygon_geojson' => null,
+            'property_point_lat' => -12.977769,
+            'property_point_lng' => -38.516331,
+        ])->save();
+
+        $resolved = $this->resolver()->resolve($solicitacao);
+        $zona = $resolved->por_cnae[0]['consulta_array']['territorio']['zona'];
+
+        $this->assertSame(ResultadoViabilidade::Permitido->value, $resolved->consolidado);
+        $this->assertSame('ZR-1', $zona['nome']);
+    }
+
+    public function test_empate_de_area_nao_enquadra_pela_zona_do_ponto(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $avaliacao = new ZonaLimitrofeAvaliacao(
+            status: ZonaLimitrofeAvaliacao::EMPATE,
+            zonaVencedora: null,
+            porcoes: [
+                ['zona' => 'ZPR 3', 'area_m2' => 50.0, 'percentual' => 50.0],
+                ['zona' => 'ZPL 3', 'area_m2' => 50.0, 'percentual' => 50.0],
+            ],
+            empatadas: ['ZPR 3', 'ZPL 3'],
+            motivo: 'Empate de área entre as zonas ZPR 3 e ZPL 3. A lei não escolhe; encaminhado à análise.',
+            fonte: ZonaLimitrofeAvaliacao::FONTE,
+        );
+        $servico = $this->createMock(ZonaLimitrofeService::class);
+        $servico->method('avaliar')->willReturn($avaliacao);
+        $this->app->instance(ZonaLimitrofeService::class, $servico);
+
+        $resolved = $this->resolver()->resolve($this->draftComCnaes(['4712100']));
+        $zona = $resolved->por_cnae[0]['consulta_array']['territorio']['zona'];
+
+        $this->assertSame(ResultadoViabilidade::Pendente->value, $resolved->consolidado);
+        $this->assertNull($zona['nome']);
+        $this->assertSame('indisponivel', $zona['status']);
+        $this->assertStringContainsString('ZPR 3', (string) $zona['motivo']);
     }
 
     public function test_sem_poligono_usa_via_cnae_sem_geocodificar(): void

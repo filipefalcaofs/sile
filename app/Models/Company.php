@@ -91,14 +91,27 @@ class Company extends Model
 
     /**
      * CNPJ no formato 00.000.000/0000-00 (posicional — funciona com
-     * o CNPJ alfanumérico de julho/2026).
+     * o CNPJ alfanumérico de julho/2026). Null quando a viabilidade chegou
+     * sem CNPJ da empresa.
      *
-     * @return Attribute<string, never>
+     * @return Attribute<?string, never>
      */
     protected function formattedCnpj(): Attribute
     {
         return Attribute::make(
-            get: fn () => preg_replace('/^(.{2})(.{3})(.{3})(.{4})(.{2})$/', '$1.$2.$3/$4-$5', $this->cnpj),
+            get: function (): ?string {
+                if (! is_string($this->cnpj) || $this->cnpj === '') {
+                    return null;
+                }
+
+                $formatado = preg_replace(
+                    '/^(.{2})(.{3})(.{3})(.{4})(.{2})$/',
+                    '$1.$2.$3/$4-$5',
+                    $this->cnpj,
+                );
+
+                return is_string($formatado) ? $formatado : $this->cnpj;
+            },
         );
     }
 }

@@ -7,6 +7,7 @@ use App\Enums\AnalysisCategory;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\IntencaoAtividade;
+use App\Enums\LotePoligonoFonte;
 use App\Enums\PropertyLocationSource;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
@@ -50,6 +51,7 @@ use Illuminate\Support\Collection;
     'is_virtual_office', 'wants_virtual_office_hq', 'wants_virtual_office_tenant', 'confirma_perda_condicao_sede', 'is_public_area', 'has_independent_access',
     'simulation_snapshot', 'simulation_rules_versions', 'simulation_resultado', 'simulated_at',
     'applicant_proceeded_despite', 'contingency_reason', 'external_reference',
+    'origem_declarada',
 ])]
 class ViabilityRequest extends Model
 {
@@ -109,7 +111,10 @@ class ViabilityRequest extends Model
             'property_point_lng' => 'float',
             'property_location_source' => PropertyLocationSource::class,
             'camadas_incidentes' => 'array',
+            'lote_poligonos' => 'array',
+            'lote_poligono_fonte' => LotePoligonoFonte::class,
             'simulation_snapshot' => 'array',
+            'origem_declarada' => 'array',
             'simulation_rules_versions' => 'array',
             'used_area_m2' => 'decimal:2',
             'is_virtual_office' => 'boolean',
@@ -137,9 +142,37 @@ class ViabilityRequest extends Model
     }
 
     /**
-     * Ponto (lat, lng) usado pelos motores. O polígono desenhado manda: o
-     * centroide do anel exterior. Sem polígono, vale o ponto gravado (Cadastro
-     * Imobiliário ou catálogo da simulação). Sem os dois, não há ponto.
+     * Geometria do lote que vale para o zoneamento por área (art. 18, § 2º da
+     * Lei 9.148/2016). Vence a fonte mais forte já consultada: endereçamento
+     * SEDUR, depois SEMAP, depois o declarado no REGIN. Sem nenhuma delas,
+     * cai no polígono desenhado no portal — e, sem ele, não há geometria.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function poligonoDoLote(): ?array
+    {
+        $poligonos = is_array($this->lote_poligonos) ? $this->lote_poligonos : [];
+
+        foreach (LotePoligonoFonte::precedencia() as $fonte) {
+            $geojson = $poligonos[$fonte->value]['geojson'] ?? null;
+
+            if (is_array($geojson) && $geojson !== []) {
+                return $geojson;
+            }
+        }
+
+        return is_array($this->property_polygon_geojson) && $this->property_polygon_geojson !== []
+            ? $this->property_polygon_geojson
+            : null;
+    }
+
+    /**
+     * Ponto (lat, lng) usado pelos motores. Sai do centroide da MESMA
+     * geometria que zoneia ({@see poligonoDoLote()}) — senão o processo teria
+     * a zona decidida pelo lote oficial e as poligonais territoriais
+     * avaliadas pelo centroide do desenho do cidadão. Sem geometria, vale o
+     * ponto gravado (Cadastro Imobiliário ou catálogo da simulação). Sem os
+     * dois, não há ponto.
      *
      * @return array{lat: float, lng: float}|null
      */
@@ -163,14 +196,22 @@ class ViabilityRequest extends Model
 
     /**
      * Centroide pela média dos vértices do anel exterior, sem o vértice de
-     * fechamento. Mesmo cálculo que o resolver de viabilidade usava.
+     * fechamento. Em MultiPolygon, o anel externo do primeiro polígono.
      *
      * @return array{lat: float, lng: float}|null
      */
     private function centroideDoPoligono(): ?array
     {
-        $geojson = $this->property_polygon_geojson;
-        $ring = is_array($geojson) ? ($geojson['coordinates'][0] ?? null) : null;
+        $geojson = $this->poligonoDoLote();
+        $coordenadas = is_array($geojson) ? ($geojson['coordinates'] ?? null) : null;
+
+        if (! is_array($coordenadas) || $coordenadas === []) {
+            return null;
+        }
+
+        $ring = ($geojson['type'] ?? null) === 'MultiPolygon'
+            ? ($coordenadas[0][0] ?? null)
+            : ($coordenadas[0] ?? null);
 
         if (! is_array($ring) || $ring === []) {
             return null;

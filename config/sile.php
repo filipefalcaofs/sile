@@ -35,6 +35,10 @@ return [
         'ad_login' => true,
         'geocoding' => true,
         'geoserver_zona' => true,
+        // Lote por inscrição no ArcGIS municipal (camada SEMAP — Inscrições
+        // Geo), fallback do endereçamento da SEDUR. Desligado, a geometria
+        // segue pelas demais fontes, com o motivo registrado.
+        'arcgis_semap' => true,
         // Regras territoriais por poligonal (RT-02/03/04) consultando o
         // GeoServer SEDUR (WFS). Desligado, a regra de poligonal degrada para
         // análise técnica com o motivo registrado — nunca falha silenciosa.
@@ -321,6 +325,12 @@ return [
             'timeout' => 12,
             'retries' => 3,
             'backoff_ms' => 500,
+        ],
+        'arcgis_semap' => [
+            'query_url' => 'https://geo.salvador.ba.gov.br/arcgis/rest/services/MAPA_BASE/MAPA_BASE_SEFAZ/MapServer/18/query',
+            'user_agent' => 'Viabiliza-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',
+            // Partida a frio medida em ~15 s no serviço real; em regime, ~0,2 s.
+            'timeout' => 20,
         ],
         'geoserver' => [
             'base_url' => 'https://geoserver.sedur.salvador.ba.gov.br/geoserver',

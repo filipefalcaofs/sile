@@ -1,0 +1,3505 @@
+{
+  "identificacao": {
+    "empresa": "Sudoeste Informática",
+    "aplicacao": "Viabiliza — Sistema de Licenciamento Eletrônico da SEDUR",
+    "projeto": "Contagem IFPUG - Projeto de Desenvolvimento",
+    "dv_numero": "DV-SILE-003",
+    "responsavel": "Equipe de Análise — Sudoeste Informática",
+    "versao": "2.0",
+    "tipo_contagem": "desenvolvimento",
+    "rs_por_pf": 700,
+    "proposito": "Medir o tamanho funcional do Viabiliza entregue, como projeto de desenvolvimento, seguindo o Manual de Práticas de Contagem IFPUG 4.3.1. As funções estão descritas em linguagem de negócio para conferência pelo fiscal do contrato.",
+    "data_contagem": "01/10/2026"
+  },
+  "termo": {
+    "sistema": "Viabiliza — SISTEMA DE LICENCIAMENTO ELETRÔNICO",
+    "nome_curto": "Viabiliza",
+    "total_pf": 1273,
+    "data": "Salvador-BA, 1 de outubro de 2026",
+    "cliente": "Prefeitura Municipal de Salvador",
+    "cliente_linha2": "Secretaria Municipal de Desenvolvimento Urbano e Sustentabilidade — SEDUR",
+    "cliente_contratante": "Prefeitura Municipal de Salvador",
+    "processo_licitatorio": "A definir",
+    "contrato": "A definir",
+    "processo_administrativo": "A definir",
+    "planilha_anexa": "contagem-viabiliza-completa.xlsx",
+    "elaborado_por": "Equipe de Análise — Sudoeste Informática",
+    "elaborado_cargo": "Analista de Pontos de Função"
+  },
+  "grupos": [
+    {
+      "id": "F1",
+      "nome": "Dados externos e de referência",
+      "itens": [
+        {
+          "nome": "Dados externos - Regras de enquadramento da LOUOS",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: regras de enquadramento da LOUOS. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Manutenção dos quadros da LOUOS",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: manutenção dos quadros da LOUOS. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Carga oficial do Quadro 10",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: carga oficial do Quadro 10. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Rascunho dos quadros da LOUOS",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: rascunho dos quadros da LOUOS. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Carga oficial do Quadro 7",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: carga oficial do Quadro 7. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Carga oficial do Quadro 11",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: carga oficial do Quadro 11. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Simulação de regras da LOUOS",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: simulação de regras da LOUOS. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Camadas geográficas de referência",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: camadas geográficas de referência. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Zonas urbanísticas do GeoServer da SEDUR",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: zonas urbanísticas do GeoServer da SEDUR. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Dados de solicitação enviados pelo REGIN",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: dados de solicitação enviados pelo REGIN. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Protocolo de simulação do REGIN",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: protocolo de simulação do REGIN. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Versões de regras vigentes",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: versões de regras vigentes. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Dados externos - Bairros oficiais do GeoServer",
+          "tipo": "AIE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 1,
+          "observacoes": "Arquivo de Interface Externa. Grupo de dados de referência usado pelo Viabiliza: bairros oficiais do GeoServer. TD=10, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 5
+        }
+      ]
+    },
+    {
+      "id": "F2",
+      "nome": "Verificação pública de documentos",
+      "itens": [
+        {
+          "nome": "Documentos oficiais - verificar autenticidade",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: verificar autenticidade. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F3",
+      "nome": "Central de notificações",
+      "itens": [
+        {
+          "nome": "Notificações - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Notificações - marcar como lida",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: marcar como lida. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Notificações - marcar todas como lidas",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: marcar todas como lidas. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F4",
+      "nome": "Histórico de comunicações do processo",
+      "itens": [
+        {
+          "nome": "Comunicações - consultar histórico no portal",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar histórico no portal. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Comunicações - consultar histórico na gestão",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar histórico na gestão. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F5",
+      "nome": "Perfil do usuário",
+      "itens": [
+        {
+          "nome": "Perfil do usuário - alterar dados pessoais",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar dados pessoais. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F6",
+      "nome": "Senha do usuário",
+      "itens": [
+        {
+          "nome": "Senha - abrir alteração de senha",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: abrir alteração de senha. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Senha - alterar senha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar senha. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F7",
+      "nome": "Solicitação - dados do imóvel",
+      "itens": [
+        {
+          "nome": "Solicitação - informar dados do imóvel",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: informar dados do imóvel. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F8",
+      "nome": "Empresas - atividades econômicas",
+      "itens": [
+        {
+          "nome": "Empresas - definir CNAE principal",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: definir CNAE principal. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Empresas - definir CNAEs secundários",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: definir CNAEs secundários. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F9",
+      "nome": "Consulta prévia de viabilidade",
+      "itens": [
+        {
+          "nome": "Consulta de viabilidade - abrir consulta",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: abrir consulta. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Consulta de viabilidade - consultar por endereço",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar por endereço. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Consulta de viabilidade - consultar por CNAE",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar por CNAE. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Consulta de viabilidade - consultar por inscrição imobiliária",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar por inscrição imobiliária. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F10",
+      "nome": "Acompanhamento da solicitação no portal",
+      "itens": [
+        {
+          "nome": "Solicitações - consultar andamento no portal",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar andamento no portal. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F11",
+      "nome": "Empresas",
+      "itens": [
+        {
+          "nome": "Dados - Empresa",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: empresa. TD=25, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Empresas - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Empresas - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Empresas - consultar detalhe",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar detalhe. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Empresas - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F12",
+      "nome": "Histórico de acessos",
+      "itens": [
+        {
+          "nome": "Histórico de acessos - consultar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F13",
+      "nome": "Histórico de consultas de viabilidade",
+      "itens": [
+        {
+          "nome": "Consultas de viabilidade - consultar histórico",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar histórico. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F14",
+      "nome": "Painel inicial",
+      "itens": [
+        {
+          "nome": "Painel - consultar indicadores iniciais",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar indicadores iniciais. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F15",
+      "nome": "Simulação da solicitação",
+      "itens": [
+        {
+          "nome": "Solicitação - simular viabilidade",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: simular viabilidade. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F16",
+      "nome": "Protocolo da solicitação",
+      "itens": [
+        {
+          "nome": "Solicitação - protocolar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: protocolar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F17",
+      "nome": "Pesquisa de CNAE",
+      "itens": [
+        {
+          "nome": "CNAEs - pesquisar atividade",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: pesquisar atividade. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F18",
+      "nome": "Cancelamento da solicitação",
+      "itens": [
+        {
+          "nome": "Solicitação - cancelar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: cancelar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F19",
+      "nome": "Vínculo do usuário com a empresa",
+      "itens": [
+        {
+          "nome": "Empresas - encerrar vínculo do usuário",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: encerrar vínculo do usuário. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F20",
+      "nome": "Solicitação - atividades",
+      "itens": [
+        {
+          "nome": "Solicitação - informar atividades",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: informar atividades. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F21",
+      "nome": "Termo de consentimento LGPD no portal",
+      "itens": [
+        {
+          "nome": "Termo LGPD - consultar no portal",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar no portal. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Termo LGPD - aceitar no portal",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: aceitar no portal. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F22",
+      "nome": "Consulta pública de protocolo",
+      "itens": [
+        {
+          "nome": "Protocolo - consultar publicamente",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar publicamente. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F23",
+      "nome": "Procurações",
+      "itens": [
+        {
+          "nome": "Dados - Procuração",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: procuração. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Procurações - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Procurações - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Procurações - revogar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: revogar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F24",
+      "nome": "Solicitação - documentos anexos",
+      "itens": [
+        {
+          "nome": "Solicitação - anexar documento",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: anexar documento. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitação - baixar documento anexo",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Saída Externa. Entrega informação ou documento ao usuário: baixar documento anexo. TD=8, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 5
+        },
+        {
+          "nome": "Solicitação - remover documento anexo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: remover documento anexo. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F25",
+      "nome": "Representação de terceiros",
+      "itens": [
+        {
+          "nome": "Representação - iniciar atuação em nome de terceiro",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: iniciar atuação em nome de terceiro. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Representação - encerrar atuação em nome de terceiro",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: encerrar atuação em nome de terceiro. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F26",
+      "nome": "Solicitações de viabilidade no portal",
+      "itens": [
+        {
+          "nome": "Solicitações - consultar minhas solicitações",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar minhas solicitações. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Solicitações - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F27",
+      "nome": "Consulta de CNPJ na Receita Federal",
+      "itens": [
+        {
+          "nome": "Empresas - consultar CNPJ na Receita Federal",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar CNPJ na Receita Federal. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F28",
+      "nome": "Comprovante de protocolo",
+      "itens": [
+        {
+          "nome": "Protocolo - emitir comprovante",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: emitir comprovante. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F29",
+      "nome": "Acesso pelo gov.br",
+      "itens": [
+        {
+          "nome": "Acesso gov.br - iniciar autenticação",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: iniciar autenticação. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Acesso gov.br - concluir autenticação",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: concluir autenticação. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F30",
+      "nome": "Resposta a pendências no portal",
+      "itens": [
+        {
+          "nome": "Pendências - consultar no portal",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar no portal. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Pendências - responder",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: responder. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F31",
+      "nome": "Recebimento de solicitações do REGIN",
+      "itens": [
+        {
+          "nome": "REGIN - verificar disponibilidade do serviço",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: verificar disponibilidade do serviço. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "REGIN - receber solicitação",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: receber solicitação. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F32",
+      "nome": "Exportação de relatórios",
+      "itens": [
+        {
+          "nome": "Relatórios - baixar exportação",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Saída Externa. Entrega informação ou documento ao usuário: baixar exportação. TD=8, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 5
+        }
+      ]
+    },
+    {
+      "id": "F33",
+      "nome": "Requisitos documentais",
+      "itens": [
+        {
+          "nome": "Dados - Requisito documental",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: requisito documental. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Requisitos documentais - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Requisitos documentais - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Requisitos documentais - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Requisitos documentais - ativar ou inativar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar ou inativar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Requisitos documentais - vincular CNAEs",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: vincular CNAEs. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F34",
+      "nome": "Pendências do processo",
+      "itens": [
+        {
+          "nome": "Pendências - abrir pendência no processo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: abrir pendência no processo. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Pendências - cancelar pendência",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: cancelar pendência. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F35",
+      "nome": "Precedentes de análise",
+      "itens": [
+        {
+          "nome": "Análise - consultar precedentes",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar precedentes. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F36",
+      "nome": "Feriados",
+      "itens": [
+        {
+          "nome": "Dados - Feriado",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: feriado. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Feriados - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Feriados - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Feriados - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Feriados - ativar ou inativar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar ou inativar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F37",
+      "nome": "Recuperação de senha",
+      "itens": [
+        {
+          "nome": "Recuperação de senha - abrir solicitação",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: abrir solicitação. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Recuperação de senha - solicitar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: solicitar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F38",
+      "nome": "Consulta de processos",
+      "itens": [
+        {
+          "nome": "Processos - consultar lista",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar lista. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Processos - consultar caixa de entrada do analista",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar caixa de entrada do analista. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Processos - consultar detalhe",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar detalhe. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Processos - alterar situação da análise",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar situação da análise. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F39",
+      "nome": "Camadas do GeoServer",
+      "itens": [
+        {
+          "nome": "Dados - Camada do GeoServer",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: camada do GeoServer. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Camadas do GeoServer - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Camadas do GeoServer - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Camadas do GeoServer - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Camadas do GeoServer - ativar ou inativar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar ou inativar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F40",
+      "nome": "Pesquisa de condicionantes",
+      "itens": [
+        {
+          "nome": "Condicionantes - pesquisar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: pesquisar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F41",
+      "nome": "CNAEs",
+      "itens": [
+        {
+          "nome": "Dados - CNAE",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: cNAE. TD=25, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "CNAEs - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "CNAEs - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "CNAEs - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "CNAEs - alterar situação",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar situação. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "CNAEs - excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: excluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "CNAEs - incluir condicionante",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir condicionante. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "CNAEs - alterar condicionante",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar condicionante. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "CNAEs - excluir condicionante",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: excluir condicionante. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F42",
+      "nome": "Setores",
+      "itens": [
+        {
+          "nome": "Dados - Setor",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: setor. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Setores - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Setores - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Setores - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Setores - ativar ou inativar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar ou inativar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Setores - vincular analistas",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: vincular analistas. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F43",
+      "nome": "Acesso à gestão",
+      "itens": [
+        {
+          "nome": "Gestão - entrar no sistema",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: entrar no sistema. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Gestão - sair do sistema",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: sair do sistema. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F44",
+      "nome": "Registro em contingência",
+      "itens": [
+        {
+          "nome": "Contingência - registrar solicitação",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: registrar solicitação. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F45",
+      "nome": "Simulação de regras da LOUOS",
+      "itens": [
+        {
+          "nome": "Simulação de regras - abrir simulação",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: abrir simulação. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Simulação de regras - simular aplicação",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: simular aplicação. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Simulação de regras - publicar versão simulada",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: publicar versão simulada. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F46",
+      "nome": "Configuração da integração REGIN",
+      "itens": [
+        {
+          "nome": "Integração REGIN - alterar configuração",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar configuração. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Integração REGIN - testar conexão",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: testar conexão. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F47",
+      "nome": "Caixa do setor",
+      "itens": [
+        {
+          "nome": "Caixa do setor - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Caixa do setor - distribuir processo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: distribuir processo. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Caixa do setor - assumir processo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: assumir processo. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F48",
+      "nome": "Alertas de abuso",
+      "itens": [
+        {
+          "nome": "Alertas de abuso - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Alertas de abuso - confirmar alerta",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: confirmar alerta. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Alertas de abuso - descartar alerta",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: descartar alerta. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F49",
+      "nome": "Perfis de acesso",
+      "itens": [
+        {
+          "nome": "Perfis de acesso - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Perfis de acesso - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Perfis de acesso - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Perfis de acesso - excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: excluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F50",
+      "nome": "Decisão técnica do processo",
+      "itens": [
+        {
+          "nome": "Análise - registrar decisão técnica",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: registrar decisão técnica. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F51",
+      "nome": "Usuários",
+      "itens": [
+        {
+          "nome": "Usuários - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Usuários - ativar ou inativar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar ou inativar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Usuários - alterar perfil de acesso",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar perfil de acesso. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F52",
+      "nome": "Rascunho dos quadros da LOUOS",
+      "itens": [
+        {
+          "nome": "Quadros LOUOS - consultar rascunho",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar rascunho. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Quadros LOUOS - consultar manual de preenchimento",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar manual de preenchimento. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Quadros LOUOS - abrir rascunho",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: abrir rascunho. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Quadros LOUOS - incluir linha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir linha. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Quadros LOUOS - alterar linha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar linha. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Quadros LOUOS - excluir linha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: excluir linha. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Quadros LOUOS - importar planilha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: importar planilha. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Quadros LOUOS - publicar rascunho",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: publicar rascunho. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Quadros LOUOS - descartar rascunho",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: descartar rascunho. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Quadros LOUOS - baixar modelo de planilha",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: baixar modelo de planilha. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F53",
+      "nome": "Parâmetros do sistema",
+      "itens": [
+        {
+          "nome": "Dados - Parâmetro",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: parâmetro. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Parâmetros - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Parâmetros - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Parâmetros - consultar histórico",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar histórico. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F54",
+      "nome": "Desvinculação de escritório virtual",
+      "itens": [
+        {
+          "nome": "Escritório virtual - desvincular inscrição",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: desvincular inscrição. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F55",
+      "nome": "Resultados do fluxo expresso",
+      "itens": [
+        {
+          "nome": "Resultados do expresso - consultar lista",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar lista. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Resultados do expresso - consultar detalhe",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar detalhe. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F56",
+      "nome": "Tipos de imóvel",
+      "itens": [
+        {
+          "nome": "Dados - Tipo de imóvel",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: tipo de imóvel. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Tipos de imóvel - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Tipos de imóvel - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Tipos de imóvel - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Tipos de imóvel - ativar ou inativar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar ou inativar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F57",
+      "nome": "Redefinição de senha",
+      "itens": [
+        {
+          "nome": "Redefinição de senha - abrir redefinição",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: abrir redefinição. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Redefinição de senha - redefinir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: redefinir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F58",
+      "nome": "Localização de endereço no mapa",
+      "itens": [
+        {
+          "nome": "Território - localizar endereço no mapa",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: localizar endereço no mapa. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F59",
+      "nome": "Encaminhamento à malha fina",
+      "itens": [
+        {
+          "nome": "Malha fina - encaminhar processos",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: encaminhar processos. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F60",
+      "nome": "Monitoramento de e-mails",
+      "itens": [
+        {
+          "nome": "E-mails - consultar envios",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar envios. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F61",
+      "nome": "Camadas geográficas",
+      "itens": [
+        {
+          "nome": "Dados - Camada geográfica",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: camada geográfica. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Camadas geográficas - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Camadas geográficas - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F62",
+      "nome": "Termo de Viabilidade de Localização (TVL)",
+      "itens": [
+        {
+          "nome": "Dados - Termo de Viabilidade de Localização emitido",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: termo de Viabilidade de Localização emitido. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "TVL - emitir termo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: emitir termo. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "TVL - baixar termo emitido",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Saída Externa. Entrega informação ou documento ao usuário: baixar termo emitido. TD=8, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 5
+        }
+      ]
+    },
+    {
+      "id": "F63",
+      "nome": "Motor de regras da LOUOS",
+      "itens": [
+        {
+          "nome": "Motor de regras - consultar quadros",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar quadros. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Motor de regras - publicar nova versão",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: publicar nova versão. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Motor de regras - ativar versão",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar versão. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F64",
+      "nome": "Anexos de escritório virtual",
+      "itens": [
+        {
+          "nome": "Anexos de escritório virtual - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Anexos de escritório virtual - carregar rascunho",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: carregar rascunho. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Anexos de escritório virtual - publicar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: publicar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F65",
+      "nome": "Atendimento presencial",
+      "itens": [
+        {
+          "nome": "Dados - Atendimento presencial",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: atendimento presencial. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Atendimento presencial - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Atendimento presencial - abrir atendimento",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: abrir atendimento. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Atendimento presencial - abrir solicitação para o cidadão",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: abrir solicitação para o cidadão. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Atendimento presencial - encerrar atendimento",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: encerrar atendimento. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F66",
+      "nome": "Busca rápida de processos",
+      "itens": [
+        {
+          "nome": "Processos - busca rápida",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: busca rápida. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F67",
+      "nome": "Gatilhos de risco",
+      "itens": [
+        {
+          "nome": "Dados - Gatilho de risco",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: gatilho de risco. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Gatilhos de risco - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Gatilhos de risco - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Gatilhos de risco - ativar ou inativar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar ou inativar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F68",
+      "nome": "Auditoria preditiva",
+      "itens": [
+        {
+          "nome": "Auditoria preditiva - consultar anomalias",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar anomalias. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Auditoria preditiva - confirmar anomalia",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: confirmar anomalia. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Auditoria preditiva - descartar anomalia",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: descartar anomalia. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F69",
+      "nome": "Configuração da integração de inscrição imobiliária",
+      "itens": [
+        {
+          "nome": "Integração de inscrição imobiliária - alterar configuração",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar configuração. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Integração de inscrição imobiliária - testar conexão",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: testar conexão. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F70",
+      "nome": "Relatórios gerenciais",
+      "itens": [
+        {
+          "nome": "Relatórios - consultar indicadores de viabilidade",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar indicadores de viabilidade. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar tempo de análise",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar tempo de análise. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar produtividade",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar produtividade. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar quedas do expresso",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar quedas do expresso. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar painel por bairro",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar painel por bairro. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar saturação locacional",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar saturação locacional. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar escritório virtual (sede e abrigados)",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar escritório virtual (sede e abrigados). TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar tempo de emissão de TVL",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar tempo de emissão de TVL. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar SLA e vencimentos",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar SLA e vencimentos. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar pendências e exigências",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar pendências e exigências. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar atendimentos em contingência",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar atendimentos em contingência. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar falhas de comunicação",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar falhas de comunicação. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - consultar trilha por processo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: consultar trilha por processo. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Relatórios - imprimir trilha por processo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: imprimir trilha por processo. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F71",
+      "nome": "Ficha de análise técnica",
+      "itens": [
+        {
+          "nome": "Dados - Ficha de análise técnica",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: ficha de análise técnica. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Ficha de análise - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Ficha de análise - salvar rascunho",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: salvar rascunho. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Ficha de análise - finalizar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: finalizar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Ficha de análise - concluir processo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: concluir processo. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Ficha de análise - abrir nova revisão",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: abrir nova revisão. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Ficha de análise - sugerir minuta de parecer",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: sugerir minuta de parecer. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Ficha de análise - obter resumo do processo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: obter resumo do processo. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Ficha de análise - comparar revisões",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: comparar revisões. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F72",
+      "nome": "Configuração de inteligência artificial",
+      "itens": [
+        {
+          "nome": "Dados - Provedor de inteligência artificial",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: provedor de inteligência artificial. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Provedores de IA - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Provedores de IA - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Provedores de IA - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Provedores de IA - excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: excluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Provedores de IA - testar conexão",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: testar conexão. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Provedores de IA - ativar ou inativar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar ou inativar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F73",
+      "nome": "Documento de indeferimento",
+      "itens": [
+        {
+          "nome": "Dados - Documento de indeferimento emitido",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: documento de indeferimento emitido. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Indeferimento - emitir documento",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: emitir documento. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Indeferimento - baixar documento emitido",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Saída Externa. Entrega informação ou documento ao usuário: baixar documento emitido. TD=8, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 5
+        }
+      ]
+    },
+    {
+      "id": "F74",
+      "nome": "Simulação de protocolo REGIN",
+      "itens": [
+        {
+          "nome": "Simulação REGIN - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Simulação REGIN - simular protocolo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: simular protocolo. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Simulação REGIN - excluir simulação",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: excluir simulação. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F75",
+      "nome": "Tipos de serviço",
+      "itens": [
+        {
+          "nome": "Dados - Tipo de serviço",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: tipo de serviço. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Tipos de serviço - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Tipos de serviço - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Tipos de serviço - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Tipos de serviço - ativar ou inativar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar ou inativar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F76",
+      "nome": "Envio de processo para análise",
+      "itens": [
+        {
+          "nome": "Envio para análise - abrir",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: abrir. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Envio para análise - pesquisar processo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: pesquisar processo. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Envio para análise - enviar processo",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: enviar processo. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F77",
+      "nome": "Termos legais",
+      "itens": [
+        {
+          "nome": "Dados - Termo legal",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: termo legal. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Termos legais - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Termos legais - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Termos legais - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Termos legais - publicar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: publicar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Termos legais - excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: excluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F78",
+      "nome": "Consulta territorial",
+      "itens": [
+        {
+          "nome": "Território - consultar mapa",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar mapa. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Território - identificar imóvel",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: identificar imóvel. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        },
+        {
+          "nome": "Território - validar localização",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: validar localização. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F79",
+      "nome": "Minutas e textos-padrão",
+      "itens": [
+        {
+          "nome": "Dados - Texto-padrão",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: texto-padrão. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Textos-padrão - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Textos-padrão - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Textos-padrão - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Textos-padrão - ativar ou inativar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar ou inativar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F80",
+      "nome": "Zonas urbanísticas",
+      "itens": [
+        {
+          "nome": "Dados - Zona urbanística",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: zona urbanística. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Zonas urbanísticas - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Zonas urbanísticas - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Zonas urbanísticas - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Zonas urbanísticas - ativar ou inativar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: ativar ou inativar. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F81",
+      "nome": "Trilha de auditoria",
+      "itens": [
+        {
+          "nome": "Auditoria - consultar trilha",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar trilha. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Auditoria - exportar trilha",
+          "tipo": "SE",
+          "complexidade": "media",
+          "td": 8,
+          "ar": 2,
+          "observacoes": "Saída Externa. Entrega informação ou documento ao usuário: exportar trilha. TD=8, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 5
+        }
+      ]
+    },
+    {
+      "id": "F82",
+      "nome": "Monitoramento LGPD",
+      "itens": [
+        {
+          "nome": "LGPD - consultar painel de monitoramento",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar painel de monitoramento. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        }
+      ]
+    },
+    {
+      "id": "F83",
+      "nome": "Termo de consentimento LGPD na gestão",
+      "itens": [
+        {
+          "nome": "Termo LGPD - consultar na gestão",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar na gestão. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Termo LGPD - aceitar na gestão",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: aceitar na gestão. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F84",
+      "nome": "Servidores de e-mail",
+      "itens": [
+        {
+          "nome": "Dados - Servidor de e-mail",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: servidor de e-mail. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Servidores de e-mail - consultar",
+          "tipo": "CE",
+          "complexidade": "baixa",
+          "td": 6,
+          "ar": 2,
+          "observacoes": "Consulta Externa. Recupera e apresenta informação ao usuário: consultar. TD=6, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Servidores de e-mail - incluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: incluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Servidores de e-mail - alterar",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: alterar. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Servidores de e-mail - excluir",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 10,
+          "ar": 2,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: excluir. TD=10, AR=2. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 4
+        },
+        {
+          "nome": "Servidores de e-mail - testar conexão",
+          "tipo": "EE",
+          "complexidade": "baixa",
+          "td": 5,
+          "ar": 1,
+          "observacoes": "Entrada Externa. Ação do usuário que altera dados ou o andamento do negócio: testar conexão. TD=5, AR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 7.",
+          "citacao_cpm": "Parte 2 Cap 7.",
+          "pf_local": 3
+        }
+      ]
+    },
+    {
+      "id": "F85",
+      "nome": "Dados de negócio complementares",
+      "itens": [
+        {
+          "nome": "Dados - Conta gov.br do usuário",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: conta gov.br do usuário. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Encaminhamento à malha fina",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: encaminhamento à malha fina. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Classificação de risco municipal",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: classificação de risco municipal. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Permissão de uso por zona (Quadro 10)",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: permissão de uso por zona (Quadro 10). TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Faixa de área por atividade (Quadro 7)",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: faixa de área por atividade (Quadro 7). TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Divergência entre analista e motor de regras",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: divergência entre analista e motor de regras. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Execução de simulação REGIN",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: execução de simulação REGIN. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Vínculo de usuário com empresa",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: vínculo de usuário com empresa. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Arquivo de exportação",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: arquivo de exportação. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Anomalia preditiva",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: anomalia preditiva. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Histórico de situação da análise",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: histórico de situação da análise. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Aceite de termo legal",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: aceite de termo legal. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Condição de instalação por via (Quadro 11A)",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: condição de instalação por via (Quadro 11A). TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Índice de precedentes",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: índice de precedentes. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Alerta de abuso",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: alerta de abuso. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Condicionante de risco",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: condicionante de risco. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Usuário",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: usuário. TD=25, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Classificação de risco sanitário",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: classificação de risco sanitário. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Solicitação de viabilidade",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: solicitação de viabilidade. TD=25, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Documento anexado à solicitação",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: documento anexado à solicitação. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Denominação alternativa de tipo de imóvel",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: denominação alternativa de tipo de imóvel. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Consulta prévia de viabilidade realizada",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: consulta prévia de viabilidade realizada. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Numeração de TVL",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: numeração de TVL. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Comunicação ao requerente",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: comunicação ao requerente. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Comunicação à SEFAZ",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: comunicação à SEFAZ. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Histórico de tramitação da solicitação",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: histórico de tramitação da solicitação. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Versão de regras",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: versão de regras. TD=25, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Trilha de auditoria",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: trilha de auditoria. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Decisão de viabilidade",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: decisão de viabilidade. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Feição geográfica",
+          "tipo": "ALI",
+          "complexidade": "media",
+          "td": 25,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: feição geográfica. TD=25, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Queda do fluxo expresso",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: queda do fluxo expresso. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Numeração de protocolo",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: numeração de protocolo. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Bloqueio de inscrição de escritório virtual",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: bloqueio de inscrição de escritório virtual. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Pendência da análise",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: pendência da análise. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Sugestão de texto por IA",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: sugestão de texto por IA. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Recebimento do REGIN",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: recebimento do REGIN. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        },
+        {
+          "nome": "Dados - Atividade permitida em escritório virtual",
+          "tipo": "ALI",
+          "complexidade": "baixa",
+          "td": 15,
+          "ar": 1,
+          "observacoes": "Arquivo Lógico Interno. Grupo de dados de negócio mantido pelo Viabiliza: atividade permitida em escritório virtual. TD=15, TR=1. CPM IFPUG 4.3.1, Parte 2 Cap. 6.",
+          "citacao_cpm": "Parte 2 Cap 6.",
+          "pf_local": 7
+        }
+      ]
+    }
+  ],
+  "escopo_macro": [
+    "1. Portal do requerente: acesso, empresas, procurações, consulta prévia, solicitação, protocolo, pendências e termo LGPD.",
+    "2. Gestão SEDUR: caixa do setor, processos, ficha de análise, decisão, malha fina, contingência e atendimento presencial.",
+    "3. Regras: CNAEs, zonas, quadros da LOUOS, gatilhos de risco, requisitos documentais e simulações.",
+    "4. Território: mapa, camadas geográficas, GeoServer e localização de endereço.",
+    "5. Documentos: TVL, indeferimento, comprovante de protocolo e verificação pública.",
+    "6. Indicadores, relatórios, auditoria, LGPD, usuários, perfis, setores, parâmetros e integrações."
+  ],
+  "proposta": {
+    "objeto": "Contagem de pontos de função do Viabiliza, organizada por funcionalidade de negócio.",
+    "validade_dias": 30,
+    "prazo_execucao_dias": 10,
+    "condicoes_pagamento": "Pagamento único após entrega."
+  }
+}

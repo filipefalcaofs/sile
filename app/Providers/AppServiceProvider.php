@@ -25,8 +25,14 @@ use App\Services\Expresso\HolidayProvider;
 use App\Services\Geo\Geocoder;
 use App\Services\Geo\GeoServerWfsCamadaClient;
 use App\Services\Geo\NominatimGeocoder;
+use App\Services\Geo\PoligonoLoteResolver;
+use App\Services\Geo\PoligonoLoteService;
 use App\Services\Geo\PostgisSpatialRepository;
+use App\Services\Geo\PostgisZonaIntersecaoMedidor;
+use App\Services\Geo\SemapPoligonoLoteFonte;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Geo\ZonaIntersecaoMedidor;
+use App\Services\Geo\ZonaLimitrofeService;
 use App\Services\GovBr\GovBrIdTokenValidator;
 use App\Services\GovBr\GovBrProvider;
 use App\Services\Realty\LocalizacaoInscricaoService;
@@ -78,6 +84,17 @@ class AppServiceProvider extends ServiceProvider
         // TerritoryService e o motor da Fase 5 dependem da interface, não do
         // SQL — os testes dos consumidores usam um fake em memória.
         $this->app->bind(SpatialRepository::class, PostgisSpatialRepository::class);
+        $this->app->bind(ZonaIntersecaoMedidor::class, PostgisZonaIntersecaoMedidor::class);
+        $this->app->scoped(ZonaLimitrofeService::class);
+
+        // Fontes do polígono do lote, na ordem de precedência do art. 18, § 2º
+        // da Lei 9.148/2016. O cliente do Endereçamento SEDUR entra ANTES do
+        // SEMAP quando for implementado — sem tocar no resolvedor.
+        $this->app->scoped(SemapPoligonoLoteFonte::class);
+        $this->app->scoped(PoligonoLoteResolver::class, fn ($app): PoligonoLoteResolver => new PoligonoLoteResolver(
+            [$app->make(SemapPoligonoLoteFonte::class)],
+            $app->make(PoligonoLoteService::class),
+        ));
 
         // Precedentes da análise técnica (HU-142) atrás de contrato, espelhando
         // o SpatialRepository: o PrecedentService depende da interface, não do
