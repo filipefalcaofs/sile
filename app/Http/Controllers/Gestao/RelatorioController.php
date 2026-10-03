@@ -26,6 +26,7 @@ use App\Services\Relatorios\Export\Sources\SlaVencimentosReportSource;
 use App\Services\Relatorios\Export\Sources\SolicitacoesReportSource;
 use App\Services\Relatorios\Export\Sources\TempoAnaliseReportSource;
 use App\Services\Relatorios\ExpressoQuedaService;
+use App\Services\Relatorios\GargalosService;
 use App\Services\Relatorios\GeoBairroIndicadorService;
 use App\Services\Relatorios\IndicadoresViabilidadeService;
 use App\Services\Relatorios\PendenciasRelatorioService;
@@ -36,6 +37,7 @@ use App\Services\Relatorios\ReportFilters;
 use App\Services\Relatorios\SaturacaoService;
 use App\Services\Relatorios\SlaVencimentosService;
 use App\Services\Relatorios\TempoAnaliseService;
+use App\Services\Relatorios\TempoViabilidadeService;
 use App\Services\Relatorios\TrilhaProcessoService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
@@ -79,6 +81,8 @@ class RelatorioController extends Controller
         private TrilhaProcessoService $trilhaProcesso,
         private ContingenciaRelatorioService $contingenciaRelatorio,
         private ComunicacoesFalhaService $comunicacoesFalha,
+        private TempoViabilidadeService $tempoViabilidade,
+        private GargalosService $gargalos,
         private AuditService $audit,
     ) {}
 
@@ -127,6 +131,9 @@ class RelatorioController extends Controller
         return Inertia::render('gestao/relatorios/tempo', [
             'tempoPorEtapa' => $this->tempos->tempoPorEtapa($filtros),
             'tempoEmissaoTvl' => $this->tempos->tempoEmissaoTvl($filtros),
+            'percentisViabilidade' => $this->tempoViabilidade->porPeriodo($filtros),
+            'percentisPorCategoria' => $this->tempoViabilidade->porCategoria($filtros),
+            'gargalos' => $this->gargalos->porPeriodo($filtros),
             'filtros' => $filtros->aplicados(),
         ]);
     }

@@ -42,7 +42,7 @@ A/C: Área responsável pela integração REGIN</p>
 
 <p>A Sudoeste Informática e Consultoria, responsável técnica do sistema Viabiliza da Secretaria Municipal de Desenvolvimento Urbano — SEDUR, solicita o registro das URLs abaixo como endereço da instituição para recebimento dos processos de viabilidade locacional enviados pelo REGIN.</p>
 
-<p>O contrato desta comunicação é a versão <strong>2.0.0</strong> da API de recebimento. O REGIN continua chamando a URL da Prefeitura, serviço <code>WsProSol098</code>. Não há token nem header <code>JWT</code> nesta chamada. O <code>JWT</code> permanece apenas nas chamadas que o Viabiliza faz à API da JUCEB.</p>
+<p>O contrato desta comunicação é a versão <strong>2.0.0</strong> da API de recebimento. O REGIN chama a URL da Prefeitura. Não há token nem header <code>JWT</code> nesta chamada. O <code>JWT</code> permanece apenas nas chamadas que o Viabiliza faz à API da JUCEB.</p>
 
 <p>O teste de conectividade é um <code>GET</code> na URL de recebimento. A resposta é texto puro <code>3</code>. O <code>POST</code> do processo usa a mesma URL e responde também em texto puro:</p>
 
@@ -53,13 +53,13 @@ A/C: Área responsável pela integração REGIN</p>
   <tr><td><code>0</code></td><td>Protocolo ausente ou vazio. Nada é gravado.</td><td>400</td></tr>
 </table>
 
-<p>A duplicidade é pelo número do protocolo, não pelo CNPJ. O CNPJ da Prefeitura Municipal de Salvador, usado no envelope, é <strong>13.927.801/0001-49</strong>.</p>
+<p>A duplicidade é pelo número do protocolo, não pelo CNPJ. O CNPJ da Prefeitura Municipal de Salvador é <strong>13.927.801/0001-49</strong>.</p>
 
-<h2>1. Dois corpos aceitos</h2>
+<h2>1. Corpo do POST</h2>
 
-<p>O <code>POST</code> aceita dois JSON. O envelope <code>EnvioDto</code> já publicado pela JUCEB (Guia Técnico PSCS e OpenAPI de produção) continua válido. A declaração <code>ProcessoDeclaracao</code>, versão 2.0.0, é o contrato para abrir a viabilidade com os dados do solicitante, do imóvel, dos CNAEs e das respostas.</p>
+<p>O <code>POST</code> recebe um único JSON, a declaração <code>ProcessoDeclaracao</code>, versão 2.0.0. Campos, tipos e exemplos estão na especificação anexa e na página de documentação de cada ambiente.</p>
 
-<p>Campos, tipos, exemplos e os dois corpos aceitos estão na especificação anexa e na página de documentação de cada ambiente. O processo é criado quando, além do <code>protocolo</code>, vêm razão social, CNAE principal, área utilizada maior que zero, logradouro, bairro e CEP. Sem algum desses, a resposta continua <code>3</code> e o processo não é criado.</p>
+<p>O processo é criado quando, além do <code>protocolo</code>, vêm razão social, CNAE principal, área utilizada maior que zero, logradouro, bairro e CEP. Sem algum desses, a resposta continua <code>3</code> e o processo não é criado.</p>
 
 <h2>2. URLs</h2>
 

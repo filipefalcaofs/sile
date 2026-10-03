@@ -9,10 +9,7 @@ info:
 
     O `GET /api_integracao/recebe` testa a conectividade e devolve o texto `3`.
 
-    O `POST` na mesma URL aceita `application/json` em um destes corpos:
-
-    - `ProcessoDeclaracao` — declaração do processo.
-    - `EnvioDto` — envelope da JUCEB, serviço `WsProSol098`.
+    O `POST` na mesma URL recebe `application/json` no formato `ProcessoDeclaracao`.
 
     ## Resposta do POST
 
@@ -30,9 +27,6 @@ info:
   contact:
     name: SEDUR — Viabiliza
     url: https://www.sedur.salvador.ba.gov.br
-  externalDocs:
-    description: OpenAPI de produção da API REGIN/JUCEB (PSCS), fonte do EnvioDto
-    url: http://regin.prefeitura.juceb.ba.gov.br:8080/api_integracao/v3/api-docs
 
 servers:
   - url: https://viabiliza-hml.salvador.ba.gov.br
@@ -73,16 +67,12 @@ paths:
         - `3` — protocolo gravado agora (HTTP 200).
         - `5` — o mesmo `protocolo` já existe (HTTP 200).
         - `0` — `protocolo` ausente ou vazio (HTTP 400). Nada é gravado.
-
-        No `EnvioDto`, o processo é criado quando o `Ruc` traz CNAE principal, área utilizada maior que zero, logradouro, bairro e CEP.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: "#/components/schemas/ProcessoDeclaracao"
-                - $ref: "#/components/schemas/EnvioDto"
+              $ref: "#/components/schemas/ProcessoDeclaracao"
             examples:
               declaracao:
                 summary: Declaração do processo
@@ -152,37 +142,6 @@ paths:
                     crc: BA-012345/O
                   servico: Consulta de viabilidade
                   dataAbertura: "2026-10-03"
-              envelope:
-                summary: Envelope EnvioDto da JUCEB
-                value:
-                  cnpjDestino: "13927801000149"
-                  cnpjEmpresa: "13927801000149"
-                  cnpjOrigem: "13927801000149"
-                  codFuncao: 103
-                  dataGeracao: "2026-09-16T16:00:00.000Z"
-                  nire: "00000000000"
-                  protocolo: "43747"
-                  servico: WsProSol098
-                  json:
-                    rowset:
-                      RUC_GENERAL:
-                        RGE_CGC_CPF: "13927801000149"
-                        RGE_NOMB: Empresa exemplo
-                      RUC_ESTAB:
-                        RES_AREA: "834"
-                        RES_DIRECCION: Rua das Flores
-                        RES_NUME: "100"
-                        RES_IDENT_COMP: Sala 2
-                        RES_URBANIZACION: Centro
-                        RES_ZONA_POSTAL: "40000000"
-                      GROUPRUC_ACTV_ECON:
-                        RUC_ACTV_ECON:
-                          - RAE_TAE_COD_ACTVD: "4712100"
-                            RAE_CALIF_ACTV: "1"
-                      GROUPRUC_GEN_PROTOCOLO:
-                        RUC_GEN_PROTOCOLO:
-                          - RGP_TGE_COD_TIP_TAB: "5"
-                            RGP_VALOR: "123456"
       responses:
         "200":
           description: Recebido (`3`) ou protocolo já existente (`5`)
@@ -491,130 +450,3 @@ components:
           type: string
           format: date
           description: Data de abertura do processo (AAAA-MM-DD ou data/hora ISO 8601).
-
-    EnvioDto:
-      type: object
-      description: |
-        Espelho do schema `EnvioDto` da OpenAPI de produção da JUCEB
-        (`/api_integracao/v3/api-docs`). Na Junta, `dataGeracao`, `json` e
-        `protocolo` são obrigatórios. No Viabiliza, a única rejeição explícita
-        é `protocolo` vazio (HTTP 400, corpo `0`).
-      required: [protocolo]
-      properties:
-        protocolo:
-          type: string
-          description: Número do processo na Junta. Chave de duplicidade.
-          example: "43747"
-        dataGeracao:
-          type: string
-          format: date-time
-          description: Data e hora de geração do envelope (ISO 8601, como na OpenAPI da JUCEB).
-          example: "2026-09-16T16:00:00.000Z"
-        json:
-          $ref: "#/components/schemas/Ruc"
-        cnpjDestino:
-          type: string
-          description: CNPJ da instituição que recebe. Na OpenAPI da JUCEB, 14 dígitos com pontuação opcional.
-          example: "13927801000149"
-        cnpjEmpresa:
-          type: string
-          description: CNPJ da empresa, quando a Junta envia.
-          example: "13927801000149"
-        cnpjOrigem:
-          type: string
-          description: CNPJ de origem dos dados. Na OpenAPI da JUCEB, 14 dígitos com pontuação opcional.
-          example: "13927801000149"
-        codFuncao:
-          type: integer
-          format: int32
-          description: |
-            Código de função do envelope, conforme a JUCEB. O Viabiliza grava
-            o inteiro recebido e não restringe a lista. Exemplo da OpenAPI da
-            Junta: `3`.
-          example: 3
-        nire:
-          type: string
-          description: NIRE ou matrícula, quando a Junta envia.
-        servico:
-          type: string
-          description: Serviço REGIN. No guia e na OpenAPI da JUCEB, `WsProSol098`.
-          example: WsProSol098
-        xml:
-          type: string
-          description: Payload legado em XML. A integração atual usa `json`.
-
-    Ruc:
-      type: object
-      description: |
-        Conteúdo do envelope. Os grupos abaixo são os usados para criar o processo. Os demais podem ser enviados; o código de retorno não muda.
-      properties:
-        rowset:
-          $ref: "#/components/schemas/RowsetViabiliza"
-
-    RowsetViabiliza:
-      type: object
-      description: Grupos do `rowset` usados para criar o processo.
-      properties:
-        RUC_GENERAL:
-          type: object
-          description: Empresa. Schema `RUCGENERAL` na OpenAPI da JUCEB.
-          properties:
-            RGE_CGC_CPF:
-              type: string
-              description: CNPJ ou CPF da empresa.
-            RGE_NOMB:
-              type: string
-              description: Nome empresarial.
-        RUC_ESTAB:
-          type: object
-          description: |
-            Estabelecimento. Sem área, logradouro, bairro ou CEP, o processo não é criado.
-          properties:
-            RES_AREA:
-              type: string
-              description: Área utilizada, em m². Maior que zero para o processo ser criado.
-            RES_DIRECCION:
-              type: string
-              description: Logradouro.
-            RES_NUME:
-              type: string
-              description: Número. Vazio vira `s/n`.
-            RES_IDENT_COMP:
-              type: string
-              description: Complemento.
-            RES_URBANIZACION:
-              type: string
-              description: Bairro.
-            RES_ZONA_POSTAL:
-              type: string
-              description: CEP.
-        GROUPRUC_ACTV_ECON:
-          type: object
-          description: Atividades. Schema `GROUPRUCACTVECON` na OpenAPI da JUCEB.
-          properties:
-            RUC_ACTV_ECON:
-              type: array
-              items:
-                type: object
-                properties:
-                  RAE_TAE_COD_ACTVD:
-                    type: string
-                    description: Código da atividade (CNAE).
-                  RAE_CALIF_ACTV:
-                    type: string
-                    description: "`1` marca a atividade principal. Sem principal, o processo não é criado."
-        GROUPRUC_GEN_PROTOCOLO:
-          type: object
-          description: Dados genéricos do protocolo. Schema `GROUPRUCGENPROTOCOLO` na OpenAPI da JUCEB.
-          properties:
-            RUC_GEN_PROTOCOLO:
-              type: array
-              items:
-                type: object
-                properties:
-                  RGP_TGE_COD_TIP_TAB:
-                    type: string
-                    description: "`5` identifica a inscrição imobiliária."
-                  RGP_VALOR:
-                    type: string
-                    description: Valor do item. Na tabulação 5, a inscrição imobiliária.
