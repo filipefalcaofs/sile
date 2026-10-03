@@ -2961,9 +2961,19 @@ function marcaLeitura(estado: EstadoLeitura): { Icone: typeof CheckCircleIcon; c
 function SinteseLeitura({ sintese }: { sintese: ReturnType<typeof sinteseDaFicha> }) {
     return (
         <Card>
-            <CardHeader title="Leitura" description={sintese.contexto} />
+            <CardHeader title="Decisão" description={sintese.contexto} />
             <CardContent>
-                <p className="text-2xl font-semibold tracking-tight text-gray-800 dark:text-white/90">{sintese.titulo}</p>
+                <p
+                    className={`text-2xl font-semibold tracking-tight ${
+                        sintese.tom === 'deferida'
+                            ? 'text-success-600 dark:text-success-500'
+                            : sintese.tom === 'indeferida'
+                              ? 'text-error-600 dark:text-error-500'
+                              : 'text-gray-800 dark:text-white/90'
+                    }`}
+                >
+                    {sintese.titulo}
+                </p>
 
                 {sintese.linhas.length > 0 && (
                     <ul className="mt-4 space-y-2" aria-label="Por que o processo está neste estado">

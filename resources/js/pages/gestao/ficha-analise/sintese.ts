@@ -12,6 +12,8 @@ export interface AtividadeSintese {
     is_primary?: boolean;
     codigo_louos?: string | null;
     fundamentacao?: string[] | null;
+    status_escolhido?: string | null;
+    tendencia?: string | null;
     quadros?: Array<{ key: string; label: string; estado: string; detalhe: string }> | null;
 }
 
@@ -27,6 +29,7 @@ export interface EntradaSintese {
 
 export interface SinteseFicha {
     titulo: string;
+    tom: 'deferida' | 'indeferida' | 'neutro';
     contexto: string;
     linhas: LinhaSintese[];
     base: string[];
@@ -35,23 +38,31 @@ export interface SinteseFicha {
 const DESFECHOS = new Set(['deferida', 'indeferida', 'desativado', 'cassado', 'revogado', 'cancelada']);
 
 /**
- * Síntese do topo da ficha. Só repete o que o processo e o motor já gravaram.
- * Não transforma uma leitura de quadro em sugestão de deferir ou indeferir.
+ * Síntese do topo da ficha. A decisão de cada CNAE é a que o motor já marcou
+ * pela lei (Deferida / Indeferida), mesmo com o processo ainda em análise.
+ * "Em análise" é a fila humana, não a ausência de veredito.
  */
 export function sinteseDaFicha(entrada: EntradaSintese): SinteseFicha {
-    const desfecho = DESFECHOS.has(entrada.statusProcesso);
-    const linhas: LinhaSintese[] = entrada.motivosAnalise
-        .filter((motivo) => motivo.trim() !== '')
-        .map((motivo, indice) => ({
-            id: `motivo-${indice}`,
-            texto: motivo.trim(),
-            estado: 'impedimento' as const,
-        }));
+    const atividades = entrada.atividades;
+    const decisoes = atividades.map((atividade) => ({
+        atividade,
+        decisao: decisaoDaAtividade(atividade),
+    }));
+    const titulo = tituloDaDecisao(decisoes.map((item) => item.decisao), entrada);
+    const linhas: LinhaSintese[] = [];
 
-    const atividades = atividadesDaLeitura(entrada.atividades);
+    if (decisoes.length > 1) {
+        for (const { atividade, decisao } of decisoes) {
+            linhas.push({
+                id: `${atividade.cnae}-decisao`,
+                texto: `${atividade.cnae_formatado ?? atividade.cnae}: ${rotuloDecisao(decisao)}`,
+                estado: estadoDaDecisao(decisao),
+            });
+        }
+    }
 
-    for (const atividade of atividades) {
-        const prefixo = atividades.length > 1 ? `${atividade.cnae_formatado ?? atividade.cnae}: ` : '';
+    for (const { atividade } of decisoes) {
+        const prefixo = decisoes.length > 1 ? `${atividade.cnae_formatado ?? atividade.cnae}: ` : '';
 
         for (const quadro of atividade.quadros ?? []) {
             linhas.push({
@@ -60,6 +71,18 @@ export function sinteseDaFicha(entrada: EntradaSintese): SinteseFicha {
                 estado: estadoDoQuadro(quadro.estado),
             });
         }
+    }
+
+    for (const [indice, motivo] of entrada.motivosAnalise.entries()) {
+        if (motivo.trim() === '') {
+            continue;
+        }
+
+        linhas.push({
+            id: `motivo-${indice}`,
+            texto: motivo.trim(),
+            estado: 'impedimento',
+        });
     }
 
     if (linhas.length === 0 && !entrada.motorDisponivel) {
@@ -71,17 +94,74 @@ export function sinteseDaFicha(entrada: EntradaSintese): SinteseFicha {
     }
 
     return {
-        titulo: entrada.rotuloProcesso,
-        contexto: contexto(desfecho, entrada.motivosAnalise.length > 0, entrada.motorDisponivel),
+        titulo: titulo.texto,
+        tom: titulo.tom,
+        contexto: contexto(titulo.tom, entrada.motivosAnalise.some((motivo) => motivo.trim() !== ''), entrada.motorDisponivel),
         linhas,
         base: base(entrada, atividades),
     };
 }
 
-function atividadesDaLeitura(atividades: AtividadeSintese[]): AtividadeSintese[] {
-    const principais = atividades.filter((atividade) => atividade.is_primary);
+function decisaoDaAtividade(atividade: AtividadeSintese): 'deferida' | 'indeferida' | null {
+    if (atividade.status_escolhido === 'deferida' || atividade.status_escolhido === 'indeferida') {
+        return atividade.status_escolhido;
+    }
 
-    return principais.length > 0 ? principais : atividades;
+    if (atividade.tendencia === 'permitido' || atividade.tendencia === 'permitido_com_condicoes') {
+        return 'deferida';
+    }
+
+    if (atividade.tendencia === 'nao_permitido') {
+        return 'indeferida';
+    }
+
+    return null;
+}
+
+function tituloDaDecisao(
+    decisoes: Array<'deferida' | 'indeferida' | null>,
+    entrada: EntradaSintese,
+): { texto: string; tom: SinteseFicha['tom'] } {
+    if (decisoes.some((decisao) => decisao === 'indeferida')) {
+        return { texto: 'Indeferida', tom: 'indeferida' };
+    }
+
+    if (decisoes.some((decisao) => decisao === 'deferida')) {
+        return { texto: 'Deferida', tom: 'deferida' };
+    }
+
+    if (DESFECHOS.has(entrada.statusProcesso) && (entrada.statusProcesso === 'deferida' || entrada.statusProcesso === 'indeferida')) {
+        return {
+            texto: entrada.rotuloProcesso,
+            tom: entrada.statusProcesso,
+        };
+    }
+
+    return { texto: entrada.rotuloProcesso, tom: 'neutro' };
+}
+
+function rotuloDecisao(decisao: 'deferida' | 'indeferida' | null): string {
+    if (decisao === 'deferida') {
+        return 'Deferida';
+    }
+
+    if (decisao === 'indeferida') {
+        return 'Indeferida';
+    }
+
+    return 'Pendente';
+}
+
+function estadoDaDecisao(decisao: 'deferida' | 'indeferida' | null): EstadoLeitura {
+    if (decisao === 'deferida') {
+        return 'permitido';
+    }
+
+    if (decisao === 'indeferida') {
+        return 'nao_permitido';
+    }
+
+    return 'pendente';
 }
 
 function estadoDoQuadro(estado: string): EstadoLeitura {
@@ -92,20 +172,18 @@ function estadoDoQuadro(estado: string): EstadoLeitura {
     return 'pendente';
 }
 
-function contexto(desfecho: boolean, temMotivo: boolean, motorDisponivel: boolean): string {
-    if (desfecho) {
-        return 'Desfecho já registrado. Os pontos abaixo são o que ficou gravado, não uma nova sugestão.';
-    }
+function contexto(tom: SinteseFicha['tom'], temMotivo: boolean, motorDisponivel: boolean): string {
+    if (tom === 'deferida' || tom === 'indeferida') {
+        const fila = temMotivo ? ' O processo segue na fila humana pelos motivos ao final.' : '';
 
-    if (temMotivo) {
-        return 'Ainda sem desfecho. O sistema encaminhou à análise pelos motivos abaixo.';
+        return `Decisão do motor pela lei, já marcada em cada atividade. O analista confirma ou altera.${fila}`;
     }
 
     if (!motorDisponivel) {
-        return 'Ainda sem desfecho. O motor não pré-analisou este processo.';
+        return 'O motor não pré-analisou este processo. A análise é humana.';
     }
 
-    return 'Ainda sem desfecho. A leitura abaixo é o que o motor gravou. Não é uma sugestão de deferir ou indeferir.';
+    return 'O motor não marcou deferida ou indeferida nesta atividade.';
 }
 
 function base(entrada: EntradaSintese, atividades: AtividadeSintese[]): string[] {

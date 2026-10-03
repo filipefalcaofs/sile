@@ -15,13 +15,15 @@ function entrada(parcial: Partial<EntradaSintese> = {}): EntradaSintese {
 }
 
 describe('síntese da ficha de análise', () => {
-    it('não transforma a leitura do motor em sugestão de deferir', () => {
+    it('em análise mostra a decisão que o motor já marcou no CNAE', () => {
         const sintese = sinteseDaFicha(
             entrada({
                 atividades: [
                     {
                         cnae: '6202300',
                         is_primary: true,
+                        status_escolhido: 'deferida',
+                        tendencia: 'permitido',
                         quadros: [
                             {
                                 key: 'quadro10',
@@ -35,8 +37,9 @@ describe('síntese da ficha de análise', () => {
             }),
         );
 
-        expect(sintese.titulo).toBe('Em análise');
-        expect(sintese.contexto).toContain('Não é uma sugestão de deferir');
+        expect(sintese.titulo).toBe('Deferida');
+        expect(sintese.tom).toBe('deferida');
+        expect(sintese.contexto).toContain('já marcada em cada atividade');
         expect(sintese.linhas).toEqual([
             {
                 id: '6202300-quadro10',
@@ -46,7 +49,7 @@ describe('síntese da ficha de análise', () => {
         ]);
     });
 
-    it('coloca o motivo da análise antes dos quadros e marca como impedimento', () => {
+    it('o CNAE indeferido prevalece e o motivo da fila vem depois da lei', () => {
         const sintese = sinteseDaFicha(
             entrada({
                 motivosAnalise: ['Tipo de imóvel não reconhecido.'],
@@ -54,6 +57,7 @@ describe('síntese da ficha de análise', () => {
                     {
                         cnae: '1413401',
                         cnae_formatado: '1413-4/01',
+                        status_escolhido: 'indeferida',
                         quadros: [
                             {
                                 key: 'quadro11a',
@@ -67,9 +71,10 @@ describe('síntese da ficha de análise', () => {
             }),
         );
 
-        expect(sintese.contexto).toContain('encaminhou à análise');
-        expect(sintese.linhas.map((linha) => linha.estado)).toEqual(['impedimento', 'nao_permitido']);
-        expect(sintese.linhas[1]?.texto).toBe('Uso vedado para o grupo na classe viária VC II.');
+        expect(sintese.titulo).toBe('Indeferida');
+        expect(sintese.linhas.map((linha) => linha.estado)).toEqual(['nao_permitido', 'impedimento']);
+        expect(sintese.linhas[0]?.texto).toBe('Uso vedado para o grupo na classe viária VC II.');
+        expect(sintese.linhas[1]?.texto).toBe('Tipo de imóvel não reconhecido.');
     });
 
     it('num desfecho já registrado não fala em sugestão e reúne a base gravada', () => {
@@ -83,6 +88,7 @@ describe('síntese da ficha de análise', () => {
                     {
                         cnae: '6202300',
                         is_primary: true,
+                        status_escolhido: 'deferida',
                         codigo_louos: 'nR1-01',
                         fundamentacao: ['Lei nº 9.148/2016, art. 18'],
                     },
@@ -91,8 +97,22 @@ describe('síntese da ficha de análise', () => {
         );
 
         expect(sintese.titulo).toBe('Deferida');
-        expect(sintese.contexto).toContain('Desfecho já registrado');
+        expect(sintese.contexto).toContain('já marcada em cada atividade');
         expect(sintese.base).toEqual(['Lei nº 9.148/2016, art. 18', 'Enquadramento nR1-01', 'Zona ZUE 04', 'Via VL']);
+    });
+
+    it('com CNAEs divergentes o indeferido prevalece e cada um aparece', () => {
+        const sintese = sinteseDaFicha(
+            entrada({
+                atividades: [
+                    { cnae: '6202300', cnae_formatado: '6202-3/00', status_escolhido: 'deferida' },
+                    { cnae: '1413401', cnae_formatado: '1413-4/01', status_escolhido: 'indeferida' },
+                ],
+            }),
+        );
+
+        expect(sintese.titulo).toBe('Indeferida');
+        expect(sintese.linhas.map((linha) => linha.texto)).toEqual(['6202-3/00: Deferida', '1413-4/01: Indeferida']);
     });
 
     it('sem motor e sem leitura diz que a análise é humana', () => {
