@@ -141,6 +141,7 @@ class ViabilityRequest extends Model
             'assigned_at' => 'datetime',
             'analysis_stage_started_at' => 'datetime',
             'analysis_due_at' => 'datetime',
+            'viabilidade_horas_uteis' => 'float',
         ];
     }
 
