@@ -46,10 +46,10 @@ Junta Comercial do Estado da Bahia — JUCEB<br>
 <ul>
   <li><code>3</code> — protocolo gravado (HTTP 200);</li>
   <li><code>5</code> — esse <code>protocolo</code> já foi recebido (HTTP 200);</li>
-  <li><code>0</code> — <code>protocolo</code> ausente ou vazio (HTTP 400). Nada é gravado.</li>
+  <li><code>0</code> — recusado: <code>protocolo</code> ausente ou vazio, ou falta dado que abre o processo (HTTP 400). Nada é gravado.</li>
 </ul>
 
-<p>A duplicidade é o número do <code>protocolo</code>. Para o processo ser criado, o JSON também precisa de <code>razaoSocial</code>, <code>cnaePrincipal</code>, <code>areaUtilizada</code> maior que zero, <code>logradouro</code>, <code>bairro</code> e <code>cep</code>. Se faltar algum desses, a resposta continua <code>3</code> e o processo não é criado.</p>
+<p>A duplicidade é o número do <code>protocolo</code>. Para o processo ser criado, o JSON também precisa de <code>razaoSocial</code>, <code>cnaePrincipal</code>, <code>areaUtilizada</code> maior que zero, <code>logradouro</code>, <code>bairro</code> e <code>cep</code>. Sem algum desses a resposta é <code>0</code> (HTTP 400) e nada é gravado.</p>
 
 <table>
   <tr>
