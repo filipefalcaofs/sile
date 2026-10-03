@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Comunicação — API de recebimento REGIN — Viabiliza</title>
+<style>
+  @page { size: A4; margin: 16mm 18mm 16mm 18mm; }
+  body { font-family: "Times New Roman", Times, serif; font-size: 12pt; line-height: 1.35; color: #1a1a1a; }
+  header { border-bottom: 2px solid #0b3a53; padding-bottom: 10px; margin-bottom: 16px; }
+  header img { height: 48px; }
+  .empresa { margin: 6px 0 0; font-size: 10pt; color: #333; }
+  p { margin: 0 0 10px; text-align: justify; }
+  .meta { text-align: left; margin: 0 0 2px; }
+  h1 { font-size: 12pt; font-weight: bold; margin: 14px 0 10px; text-align: left; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 10.5pt; }
+  th, td { border: 1px solid #222; padding: 6px 8px; vertical-align: top; text-align: left; }
+  th { width: 28%; background: #f4f7f8; }
+  code { font-family: "Courier New", Courier, monospace; font-size: 10pt; }
+  ul { margin: 4px 0 12px 18px; padding: 0; }
+  li { margin: 0 0 3px; }
+  .assinatura { margin-top: 22px; }
+  .assinatura p { text-align: left; margin: 0; }
+  .rodape { margin-top: 28px; font-size: 9pt; color: #444; border-top: 1px solid #ccc; padding-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <img src="logo_sudoeste.png" alt="Sudoeste Informática">
+  <p class="empresa">Sudoeste Informática · fornecedora do Viabiliza para a SEDUR / Prefeitura de Salvador</p>
+</header>
+
+<p class="meta"><strong>Salvador,</strong> 3 de outubro de 2026.</p>
+
+<p class="meta" style="margin-top:14px;"><strong>À</strong><br>
+Junta Comercial do Estado da Bahia — JUCEB<br>
+Área responsável pela integração REGIN</p>
+
+<h1>Assunto: API de recebimento do processo de viabilidade — Viabiliza, contrato 2.0.0</h1>
+
+<p>Esta comunicação substitui a de 19 de agosto de 2026. O sistema da Prefeitura é o <strong>Viabiliza</strong> (<code>viabiliza</code>).</p>
+
+<p>O REGIN chama a URL da Prefeitura para entregar o processo. Nesta chamada não há token nem header <code>JWT</code>. O <code>JWT</code> permanece apenas quando o Viabiliza devolve o parecer à API da JUCEB.</p>
+
+<p>O <code>GET</code> na URL de recebimento testa a conectividade e devolve o texto <code>3</code>. O <code>POST</code> na mesma URL envia um único JSON, o schema <code>ProcessoDeclaracao</code>, e também responde em texto puro:</p>
+
+<ul>
+  <li><code>3</code> — protocolo gravado (HTTP 200);</li>
+  <li><code>5</code> — esse <code>protocolo</code> já foi recebido (HTTP 200);</li>
+  <li><code>0</code> — <code>protocolo</code> ausente ou vazio (HTTP 400). Nada é gravado.</li>
+</ul>
+
+<p>A duplicidade é o número do <code>protocolo</code>. Para o processo ser criado, o JSON também precisa de <code>razaoSocial</code>, <code>cnaePrincipal</code>, <code>areaUtilizada</code> maior que zero, <code>logradouro</code>, <code>bairro</code> e <code>cep</code>. Se faltar algum desses, a resposta continua <code>3</code> e o processo não é criado.</p>
+
+<table>
+  <tr>
+    <th>Ambiente</th>
+    <th>Recebimento</th>
+    <th>Documentação</th>
+  </tr>
+  <tr>
+    <td>Homologação</td>
+    <td><code>https://viabiliza-hml.salvador.ba.gov.br/api_integracao/recebe</code></td>
+    <td><code>https://viabiliza-hml.salvador.ba.gov.br/api_integracao/docs</code></td>
+  </tr>
+  <tr>
+    <td>Produção</td>
+    <td><code>https://viabiliza.salvador.ba.gov.br/api_integracao/recebe</code></td>
+    <td><code>https://viabiliza.salvador.ba.gov.br/api_integracao/docs</code></td>
+  </tr>
+</table>
+
+<p>A homologação do REGIN deve apontar somente para a URL de homologação, e a produção somente para a URL de produção. O CNPJ da Prefeitura Municipal de Salvador é <strong>13.927.801/0001-49</strong>.</p>
+
+<p>A declaração inclui, com os mesmos nomes, os dados de identificação do envio: <code>cnpjDestino</code>, <code>cnpjEmpresa</code>, <code>cnpjOrigem</code>, <code>codFuncao</code> (inteiro; exemplo <code>103</code>), <code>dataGeracao</code> (data e hora ISO 8601), <code>nire</code>, <code>RAE_CALIF_ACTV</code>, <code>RGP_TGE_COD_TIP_TAB</code> e <code>RGP_VALOR</code>. O contrato completo, com tipos e exemplo, está no Swagger publicado e no PDF anexo.</p>
+
+<p>Certos da atenção, colocamo-nos à disposição para o teste de envio assim que as URLs estiverem registradas.</p>
+
+<p>Atenciosamente,</p>
+
+<div class="assinatura">
+  <p><strong>Filipe Falcão</strong><br>
+  Líder técnico — Sudoeste Informática<br>
+  fillipe.falcao@sudoesteinformatica.com.br<br>
+  +55 75 99157-2090</p>
+</div>
+
+<p class="rodape">Anexo: especificação Swagger da API de recebimento, contrato <code>ProcessoDeclaracao</code> 2.0.0.</p>
+</body>
+</html>
