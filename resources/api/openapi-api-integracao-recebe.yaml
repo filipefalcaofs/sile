@@ -17,13 +17,13 @@ info:
     | --- | --- | --- |
     | `3` | 200 | Protocolo gravado. |
     | `5` | 200 | Esse `protocolo` já foi recebido. |
-    | `0` | 400 | `protocolo` ausente ou vazio. Nada é gravado. |
+    | `0` | 400 | Recusado: `protocolo` ausente ou vazio, ou falta dado que abre o processo (`razaoSocial`, `cnaePrincipal`, `areaUtilizada` maior que zero, `logradouro`, `bairro` ou `cep`). Nada é gravado. |
 
     A duplicidade é o número do `protocolo`.
 
     ## Para o processo ser criado
 
-    Envie também `razaoSocial`, `cnaePrincipal`, `areaUtilizada` maior que zero, `logradouro`, `bairro` e `cep`. Sem algum desses, a resposta continua `3` e o processo não é criado.
+    Envie também `razaoSocial`, `cnaePrincipal`, `areaUtilizada` maior que zero, `logradouro`, `bairro` e `cep`. Sem algum desses a resposta é `0` (HTTP 400) e nada é gravado.
   contact:
     name: SEDUR — Viabiliza
     url: https://www.sedur.salvador.ba.gov.br
@@ -66,7 +66,7 @@ paths:
 
         - `3` — protocolo gravado agora (HTTP 200).
         - `5` — o mesmo `protocolo` já existe (HTTP 200).
-        - `0` — `protocolo` ausente ou vazio (HTTP 400). Nada é gravado.
+        - `0` — recusado: `protocolo` ausente, ou falta razão social, CNAE principal, área, logradouro, bairro ou CEP (HTTP 400). Nada é gravado.
       requestBody:
         required: true
         content:
@@ -168,7 +168,7 @@ paths:
                   summary: Protocolo já gravado
                   value: "5"
         "400":
-          description: Protocolo ausente. Corpo em texto puro `0`. Nenhum registro é criado.
+          description: Recusado. Protocolo ausente, ou falta razão social, CNAE principal, área, logradouro, bairro ou CEP. Corpo em texto puro `0`. Nenhum registro é criado.
           content:
             text/plain:
               schema:
@@ -203,7 +203,7 @@ components:
     CodigoInvalido:
       type: string
       enum: ["0"]
-      description: Requisição recusada pelo Viabiliza por falta de protocolo.
+      description: Recusado. Falta o protocolo ou dado que abre o processo (razão social, CNAE principal, área, logradouro, bairro ou CEP).
 
     ProcessoDeclaracao:
       type: object

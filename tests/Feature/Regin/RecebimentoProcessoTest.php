@@ -268,17 +268,41 @@ class RecebimentoProcessoTest extends TestCase
         $this->assertSame('12345678', $tela['recepcao']['RGP_VALOR']);
     }
 
-    public function test_declaracao_sem_cnae_principal_nao_abre_processo(): void
+    public function test_declaracao_sem_cnae_principal_e_recusada_sem_gravar(): void
     {
         $payload = $this->declaracao($this->cnpjValido());
         unset($payload['cnaePrincipal']);
 
         $response = $this->postJson('/api_integracao/recebe', $payload);
 
-        $response->assertOk();
-        $this->assertSame('3', $response->getContent());
-        $this->assertSame(1, ReginRecebimento::query()->count());
+        $response->assertStatus(400);
+        $this->assertSame('0', $response->getContent());
+        $this->assertSame(0, ReginRecebimento::query()->count());
         $this->assertSame(0, ViabilityRequest::query()->count());
+    }
+
+    public function test_declaracao_sem_endereco_e_recusada_sem_gravar(): void
+    {
+        $payload = $this->declaracao($this->cnpjValido());
+        unset($payload['logradouro'], $payload['bairro'], $payload['cep']);
+
+        $response = $this->postJson('/api_integracao/recebe', $payload);
+
+        $response->assertStatus(400);
+        $this->assertSame('0', $response->getContent());
+        $this->assertSame(0, ReginRecebimento::query()->count());
+    }
+
+    public function test_declaracao_sem_area_e_recusada_sem_gravar(): void
+    {
+        $payload = $this->declaracao($this->cnpjValido());
+        unset($payload['area']);
+
+        $response = $this->postJson('/api_integracao/recebe', $payload);
+
+        $response->assertStatus(400);
+        $this->assertSame('0', $response->getContent());
+        $this->assertSame(0, ReginRecebimento::query()->count());
     }
 
     public function test_mesmo_protocolo_nao_abre_segundo_processo(): void
