@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use Illuminate\Support\Str;
+
 /**
  * As 27 capitais, por UF e nome normalizado.
  *
@@ -76,14 +78,12 @@ final class Capitais
      */
     public static function nomeNormalizado(string $valor): string
     {
-        $semAcento = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $valor);
+        // Str::ascii em vez de iconv//TRANSLIT, que depende da libc: no macOS
+        // o TRANSLIT transforma "Í" em "'I" e corromperia o nome.
+        $semAcento = Str::ascii($valor);
 
-        if ($semAcento === false) {
-            $semAcento = $valor;
-        }
-
-        $semAcento = preg_replace('/[^A-Za-z0-9 ]/', '', $semAcento) ?? $semAcento;
-        $colapsado = preg_replace('/\s+/', ' ', $semAcento) ?? $semAcento;
+        $limpo = preg_replace('/[^A-Za-z0-9 ]/', ' ', $semAcento) ?? $semAcento;
+        $colapsado = preg_replace('/\s+/', ' ', $limpo) ?? $limpo;
 
         return strtoupper(trim($colapsado));
     }
