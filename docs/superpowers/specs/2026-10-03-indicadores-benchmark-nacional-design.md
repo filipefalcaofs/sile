@@ -98,7 +98,7 @@ Traz a tabela de capitais com viabilidade, registro e total (Salvador no 2º qua
 
 10. **A Sala de Controle exibe o comparativo direto em destaque, com a ressalva metodológica visível no mesmo bloco.** O cartão de distância traz o tempo do VIABILIZA, o tempo de referência, a diferença, e, na mesma moldura, a competência de referência e a frase que identifica as duas réguas. A ressalva não é nota de rodapé nem tooltip.
 
-11. **Gargalos são derivados, não digitados.** O tempo em cada faixa sai das transições: análise manual (`em_analise`), pendência documental (`em_pendencia`), vistoria, aguardando BAP, e queda do expresso por `expresso_quedas.tipo_gatilho`. Nenhum campo novo para o analista preencher.
+11. **Gargalos são derivados, não digitados.** O tempo em cada faixa sai dos intervalos entre transições de `viability_request_transitions`, rotulados pelo status em que o processo esteve: análise manual (`em_analise`), pendência documental (`em_pendencia`), aguardando BAP e fila. Nenhum campo novo para o analista preencher. Duas exclusões deliberadas: a vistoria ocorre **dentro** da análise e por isso não é faixa paralela, e a queda do expresso é evento instantâneo, não consumo de tempo — ela já tem relatório próprio (HU-145) e entraria aqui quebrando a identidade de que as faixas somam o tempo total.
 
 12. **Parametrização mínima.** Entram no catálogo existente apenas `features.benchmark_redesim` (booleano, default ligado) e a URL base da integração — exatamente os dois casos que a regra de parametrização prevê. Lista de capitais, nomes de coluna e percentis apurados ficam no código.
 
