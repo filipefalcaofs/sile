@@ -227,12 +227,44 @@ final class RecebimentoProcesso
 
     public function podeProtocolar(): bool
     {
-        return $this->razaoSocial !== null
-            && $this->cnaePrincipal !== null
-            && $this->area !== null
-            && $this->logradouro !== null
-            && $this->bairro !== null
-            && $this->cep !== null;
+        return $this->faltamParaProtocolar() === [];
+    }
+
+    /**
+     * Campos sem os quais a declaração não vira processo. A recusa (`0`) usa
+     * os nomes do contrato, não os da tabela.
+     *
+     * @return list<string>
+     */
+    public function faltamParaProtocolar(): array
+    {
+        $faltam = [];
+
+        if ($this->razaoSocial === null) {
+            $faltam[] = 'razaoSocial';
+        }
+
+        if ($this->cnaePrincipal === null) {
+            $faltam[] = 'cnaePrincipal';
+        }
+
+        if ($this->area === null) {
+            $faltam[] = 'areaUtilizada';
+        }
+
+        if ($this->logradouro === null) {
+            $faltam[] = 'logradouro';
+        }
+
+        if ($this->bairro === null) {
+            $faltam[] = 'bairro';
+        }
+
+        if ($this->cep === null) {
+            $faltam[] = 'cep';
+        }
+
+        return $faltam;
     }
 
     public function complemento(): ?string

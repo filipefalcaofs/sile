@@ -44,6 +44,28 @@ class ReginDocumentacaoTest extends TestCase
 
         $this->assertSame('2.0.0', $spec['info']['version']);
 
+        $texto = (string) $this->get('/api_integracao/docs/openapi.yaml')->getContent();
+        foreach ([
+            'análise técnica',
+            'decisão automática',
+            'GeoServer',
+            'art. 18',
+            'Decreto',
+            'maior porção',
+            'enquadramento',
+            'Cadastro Imobiliário',
+            'EnvioDto',
+            'WsProSol098',
+        ] as $interno) {
+            $this->assertStringNotContainsString($interno, $texto);
+        }
+
+        $this->assertArrayNotHasKey('EnvioDto', $spec['components']['schemas']);
+        $this->assertSame(
+            ['$ref' => '#/components/schemas/ProcessoDeclaracao'],
+            $spec['paths']['/api_integracao/recebe']['post']['requestBody']['content']['application/json']['schema'],
+        );
+
         foreach ([
             'cnpjDestino',
             'cnpjEmpresa',

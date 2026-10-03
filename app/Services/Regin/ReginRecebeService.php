@@ -50,6 +50,16 @@ class ReginRecebeService
             ? RecebimentoProcesso::fromEnvelope($envelope)
             : null;
 
+        if ($declaracao !== null) {
+            $faltam = $declaracao->faltamParaProtocolar();
+
+            if ($faltam !== []) {
+                throw new InvalidArgumentException(
+                    'Declaração sem os dados que abrem o processo: '.implode(', ', $faltam).'.',
+                );
+            }
+        }
+
         try {
             $recebimento = ReginRecebimento::query()->create([
                 'protocolo' => $protocolo,
