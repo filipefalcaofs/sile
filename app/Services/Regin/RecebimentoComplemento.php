@@ -29,6 +29,15 @@ final readonly class RecebimentoComplemento
         public ?bool $meiDesenquadrado,
         public ?array $contador,
         public array $atividadesExercidasNoLocal,
+        public ?string $cnpjDestino,
+        public ?string $cnpjEmpresa,
+        public ?string $cnpjOrigem,
+        public ?int $codFuncao,
+        public ?string $dataGeracao,
+        public ?string $nire,
+        public ?string $raeCalifActv,
+        public ?string $rgpTgeCodTipTab,
+        public ?string $rgpValor,
     ) {}
 
     /**
@@ -51,6 +60,15 @@ final readonly class RecebimentoComplemento
             meiDesenquadrado: RecebimentoProcesso::booleano($envelope['meiDesenquadrado'] ?? null),
             contador: self::contador($envelope['contador'] ?? null),
             atividadesExercidasNoLocal: self::atividadesNoLocal($envelope['atividadesExercidasNoLocal'] ?? null),
+            cnpjDestino: RecebimentoProcesso::texto($envelope['cnpjDestino'] ?? null, 18),
+            cnpjEmpresa: RecebimentoProcesso::texto($envelope['cnpjEmpresa'] ?? null, 18),
+            cnpjOrigem: RecebimentoProcesso::texto($envelope['cnpjOrigem'] ?? null, 18),
+            codFuncao: self::inteiro($envelope['codFuncao'] ?? null),
+            dataGeracao: RecebimentoProcesso::texto($envelope['dataGeracao'] ?? null, 40),
+            nire: RecebimentoProcesso::texto($envelope['nire'] ?? null, 40),
+            raeCalifActv: RecebimentoProcesso::texto($envelope['RAE_CALIF_ACTV'] ?? null, 10),
+            rgpTgeCodTipTab: RecebimentoProcesso::texto($envelope['RGP_TGE_COD_TIP_TAB'] ?? null, 10),
+            rgpValor: RecebimentoProcesso::texto($envelope['RGP_VALOR'] ?? null, 60),
         );
     }
 
@@ -74,6 +92,15 @@ final readonly class RecebimentoComplemento
             meiDesenquadrado: RecebimentoProcesso::booleano($dados['mei_desenquadrado'] ?? null),
             contador: self::contador($dados['contador'] ?? null),
             atividadesExercidasNoLocal: self::atividadesNoLocal($dados['atividades_exercidas_no_local'] ?? null),
+            cnpjDestino: RecebimentoProcesso::texto($dados['cnpj_destino'] ?? null, 18),
+            cnpjEmpresa: RecebimentoProcesso::texto($dados['cnpj_empresa'] ?? null, 18),
+            cnpjOrigem: RecebimentoProcesso::texto($dados['cnpj_origem'] ?? null, 18),
+            codFuncao: self::inteiro($dados['cod_funcao'] ?? null),
+            dataGeracao: RecebimentoProcesso::texto($dados['data_geracao'] ?? null, 40),
+            nire: RecebimentoProcesso::texto($dados['nire'] ?? null, 40),
+            raeCalifActv: RecebimentoProcesso::texto($dados['RAE_CALIF_ACTV'] ?? null, 10),
+            rgpTgeCodTipTab: RecebimentoProcesso::texto($dados['RGP_TGE_COD_TIP_TAB'] ?? null, 10),
+            rgpValor: RecebimentoProcesso::texto($dados['RGP_VALOR'] ?? null, 60),
         );
     }
 
@@ -97,6 +124,15 @@ final readonly class RecebimentoComplemento
             'mei_desenquadrado' => RecebimentoProcesso::simNao($this->meiDesenquadrado),
             'contador' => $this->contador,
             'atividades_exercidas_no_local' => $this->atividadesExercidasNoLocal,
+            'cnpj_destino' => $this->cnpjDestino,
+            'cnpj_empresa' => $this->cnpjEmpresa,
+            'cnpj_origem' => $this->cnpjOrigem,
+            'cod_funcao' => $this->codFuncao,
+            'data_geracao' => $this->dataGeracao,
+            'nire' => $this->nire,
+            'RAE_CALIF_ACTV' => $this->raeCalifActv,
+            'RGP_TGE_COD_TIP_TAB' => $this->rgpTgeCodTipTab,
+            'RGP_VALOR' => $this->rgpValor,
         ];
     }
 
@@ -164,5 +200,18 @@ final readonly class RecebimentoComplemento
         }
 
         return $lista;
+    }
+
+    private static function inteiro(mixed $valor): ?int
+    {
+        if (is_int($valor)) {
+            return $valor;
+        }
+
+        if (is_string($valor) && preg_match('/^-?\d+$/', trim($valor)) === 1) {
+            return (int) trim($valor);
+        }
+
+        return null;
     }
 }

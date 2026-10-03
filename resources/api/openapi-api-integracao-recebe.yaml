@@ -192,6 +192,15 @@ paths:
                     crc: BA-012345/O
                   servico: Consulta de viabilidade
                   dataAbertura: "2026-10-03"
+                  cnpjDestino: "13927801000149"
+                  cnpjEmpresa: "13927801000149"
+                  cnpjOrigem: "13927801000149"
+                  codFuncao: 103
+                  dataGeracao: "2026-09-16T16:00:00.000Z"
+                  nire: "00000000000"
+                  RAE_CALIF_ACTV: "1"
+                  RGP_TGE_COD_TIP_TAB: "5"
+                  RGP_VALOR: "12345678"
               envelope:
                 summary: Envelope EnvioDto da JUCEB
                 value:
@@ -547,6 +556,44 @@ components:
           type: string
           format: date
           description: Data de abertura do processo (AAAA-MM-DD ou data/hora ISO 8601).
+        cnpjDestino:
+          type: string
+          description: CNPJ da instituição que recebe. 14 dígitos, com pontuação opcional.
+          example: "13927801000149"
+        cnpjEmpresa:
+          type: string
+          description: CNPJ da empresa.
+          example: "13927801000149"
+        cnpjOrigem:
+          type: string
+          description: CNPJ de origem dos dados. 14 dígitos, com pontuação opcional.
+          example: "13927801000149"
+        codFuncao:
+          type: integer
+          format: int32
+          description: Código de função do envio. O inteiro recebido é gravado como veio.
+          example: 103
+        dataGeracao:
+          type: string
+          format: date-time
+          description: Data e hora de geração do envio, em ISO 8601.
+          example: "2026-09-16T16:00:00.000Z"
+        nire:
+          type: string
+          description: NIRE ou matrícula.
+          example: "00000000000"
+        RAE_CALIF_ACTV:
+          type: string
+          description: Qualificação da atividade. `1` indica a atividade principal.
+          example: "1"
+        RGP_TGE_COD_TIP_TAB:
+          type: string
+          description: Código do tipo do item genérico do protocolo. `5` identifica a inscrição imobiliária.
+          example: "5"
+        RGP_VALOR:
+          type: string
+          description: Valor do item genérico do protocolo. Quando o tipo é `5`, a inscrição imobiliária.
+          example: "12345678"
 
     EnvioDto:
       type: object

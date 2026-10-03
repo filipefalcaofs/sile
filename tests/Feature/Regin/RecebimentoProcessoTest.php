@@ -231,6 +231,43 @@ class RecebimentoProcessoTest extends TestCase
         $this->assertNull($processo->origem_declarada['cnpj_escritorio_virtual'] ?? null);
     }
 
+    public function test_declaracao_guarda_os_campos_que_vieram_do_envio(): void
+    {
+        $payload = $this->declaracao($this->cnpjValido());
+        $payload['cnpjDestino'] = '13.927.801/0001-49';
+        $payload['cnpjEmpresa'] = '13927801000149';
+        $payload['cnpjOrigem'] = '13927801000149';
+        $payload['codFuncao'] = 103;
+        $payload['dataGeracao'] = '2026-09-16T16:00:00.000Z';
+        $payload['nire'] = '00000000000';
+        $payload['RAE_CALIF_ACTV'] = '1';
+        $payload['RGP_TGE_COD_TIP_TAB'] = '5';
+        $payload['RGP_VALOR'] = '12345678';
+
+        $this->postJson('/api_integracao/recebe', $payload)->assertOk();
+
+        $processo = ViabilityRequest::query()->firstOrFail();
+        $declaracao = $processo->origem_declarada;
+
+        $this->assertSame('13.927.801/0001-49', $declaracao['cnpj_destino']);
+        $this->assertSame('13927801000149', $declaracao['cnpj_empresa']);
+        $this->assertSame('13927801000149', $declaracao['cnpj_origem']);
+        $this->assertSame(103, $declaracao['cod_funcao']);
+        $this->assertSame('2026-09-16T16:00:00.000Z', $declaracao['data_geracao']);
+        $this->assertSame('00000000000', $declaracao['nire']);
+        $this->assertSame('1', $declaracao['RAE_CALIF_ACTV']);
+        $this->assertSame('5', $declaracao['RGP_TGE_COD_TIP_TAB']);
+        $this->assertSame('12345678', $declaracao['RGP_VALOR']);
+        $this->assertSame('Padaria do Porto Ltda', $declaracao['razao_social']);
+        $this->assertSame('2026-10-03', $declaracao['data_abertura']);
+
+        $tela = (new ProcessoResource($processo->fresh()))->resolve(request());
+        $this->assertSame(103, $tela['recepcao']['cod_funcao']);
+        $this->assertSame('1', $tela['recepcao']['RAE_CALIF_ACTV']);
+        $this->assertSame('5', $tela['recepcao']['RGP_TGE_COD_TIP_TAB']);
+        $this->assertSame('12345678', $tela['recepcao']['RGP_VALOR']);
+    }
+
     public function test_declaracao_sem_cnae_principal_nao_abre_processo(): void
     {
         $payload = $this->declaracao($this->cnpjValido());
