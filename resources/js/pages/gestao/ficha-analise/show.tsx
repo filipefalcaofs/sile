@@ -3,6 +3,7 @@ import type { GeoJsonObject } from 'geojson';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { RecepcaoRecebida, rotuloFluxoRisco, type ProcessoRecepcao } from '@/components/analise/processo-ui';
+import { sinteseDaFicha, type EstadoLeitura } from '@/pages/gestao/ficha-analise/sintese';
 import PageHeader from '@/components/app/page-header';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
 import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
@@ -825,6 +826,19 @@ export default function FichaAnaliseShow({
     const [sedeEscritorioVirtual, setSedeEscritorioVirtual] = useState<boolean>(() => ficha.is_virtual_office_hq ?? false);
     const [novaCondicao, setNovaCondicao] = useState('');
     const analysisReasons = ficha.analysis_reasons ?? [];
+    const sintese = useMemo(
+        () =>
+            sinteseDaFicha({
+                statusProcesso: processo.status,
+                rotuloProcesso: processo.status_label,
+                motorDisponivel: ficha.engine_available,
+                motivosAnalise: analysisReasons,
+                atividades: perCnae,
+                zona: localizacao?.zona ?? null,
+                via: localizacao?.via ?? null,
+            }),
+        [analysisReasons, ficha.engine_available, localizacao?.via, localizacao?.zona, perCnae, processo.status, processo.status_label],
+    );
     const [addressConfirmed, setAddressConfirmed] = useState<boolean | null>(() => ficha.address_confirmed ?? null);
     const [saveState, setSaveState] = useState<'idle' | 'salvando' | 'salvo' | 'erro'>('idle');
 
@@ -1592,20 +1606,7 @@ export default function FichaAnaliseShow({
                     </div>
                 )}
 
-                {/* Resumo no topo da ficha: o analista lê a síntese antes de
-                    endereço, mapa e atividades. Prop deferida — entra em tela
-                    assim que a página abre. */}
-                <WhenVisible data="sugestoesIa" buffer={200} fallback={<SugestoesIaSkeleton />}>
-                    <ResumoProcessoCard
-                        sugestoes={sugestoesIa ?? []}
-                        iaFicha={iaFicha}
-                        restricoes={analysisReasons}
-                        status={resumoStatus}
-                        mensagem={resumoMensagem}
-                        gerando={resumoHttp.processing || resumoStatus === 'aguardando'}
-                        onGerar={gerarResumo}
-                    />
-                </WhenVisible>
+                <SinteseLeitura sintese={sintese} />
 
                 {/* Topo no padrão legado SAPS (design 2026-07-22): Localização + Cadastro
                     Imobiliário à esquerda, Polígono à direita, e a faixa Dados
@@ -1789,10 +1790,17 @@ export default function FichaAnaliseShow({
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="space-y-6 lg:col-span-2">
-                        {/* Minutas e alertas de IA — o resumo já está no topo
-                            da ficha. A prop deferida sugestoesIa é a mesma. */}
                         <WhenVisible data="sugestoesIa" buffer={200} fallback={<SugestoesIaSkeleton />}>
                             <div className="space-y-6">
+                                <ResumoProcessoCard
+                                    sugestoes={sugestoesIa ?? []}
+                                    iaFicha={iaFicha}
+                                    restricoes={[]}
+                                    status={resumoStatus}
+                                    mensagem={resumoMensagem}
+                                    gerando={resumoHttp.processing || resumoStatus === 'aguardando'}
+                                    onGerar={gerarResumo}
+                                />
                                 <MinutaParecerCard
                                     sugestoes={sugestoesIa ?? []}
                                     editavel={editavel}
@@ -2934,6 +2942,69 @@ export default function FichaAnaliseShow({
 }
 
 /** Skeleton da prop deferida de sugestões de IA (resumo HU-117 + alertas HU-115) enquanto carrega sob demanda. */
+function marcaLeitura(estado: EstadoLeitura): { Icone: typeof CheckCircleIcon; classe: string } {
+    if (estado === 'permitido') {
+        return { Icone: CheckCircleIcon, classe: 'text-success-500' };
+    }
+
+    if (estado === 'nao_permitido') {
+        return { Icone: CloseIcon, classe: 'text-error-500' };
+    }
+
+    if (estado === 'impedimento' || estado === 'condicionado') {
+        return { Icone: AlertIcon, classe: 'text-warning-500' };
+    }
+
+    return { Icone: InfoIcon, classe: 'text-gray-400' };
+}
+
+function SinteseLeitura({ sintese }: { sintese: ReturnType<typeof sinteseDaFicha> }) {
+    return (
+        <Card>
+            <CardHeader title="Leitura" description={sintese.contexto} />
+            <CardContent>
+                <p className="text-2xl font-semibold tracking-tight text-gray-800 dark:text-white/90">{sintese.titulo}</p>
+
+                {sintese.linhas.length > 0 && (
+                    <ul className="mt-4 space-y-2" aria-label="Por que o processo está neste estado">
+                        {sintese.linhas.map((linha) => {
+                            const marca = marcaLeitura(linha.estado);
+
+                            return (
+                                <li key={linha.id} className="flex items-start gap-2 text-theme-sm text-gray-800 dark:text-white/90">
+                                    <marca.Icone className={`mt-0.5 size-4 shrink-0 fill-current ${marca.classe}`} />
+                                    <span>{linha.texto}</span>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
+
+                <div className="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
+                    <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">Base</p>
+                    {sintese.base.length === 0 ? (
+                        <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">Não registrada nesta leitura.</p>
+                    ) : (
+                        <ul className="mt-1 space-y-1 text-theme-sm text-gray-700 dark:text-gray-300">
+                            {sintese.base.map((item) => (
+                                <li key={item}>{item}</li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+                <button
+                    type="button"
+                    className="mt-4 text-theme-sm text-brand-500 underline-offset-2 hover:underline"
+                    onClick={() => document.getElementById('parecer-editor')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                >
+                    Ver o parecer completo
+                </button>
+            </CardContent>
+        </Card>
+    );
+}
+
 function SugestoesIaSkeleton() {
     return (
         <div className="space-y-6">
@@ -2992,8 +3063,8 @@ function ResumoProcessoCard({
     return (
         <Card>
             <CardHeader
-                title="Resumo"
-                description="Síntese do processo (sistema, enquadramento, inconsistências e pendências) gerada pela IA para apoiar a leitura. Não decide nem antecipa o desfecho."
+                title="Apoio de leitura"
+                description="Texto da IA para apoiar a leitura do parecer. Não decide nem antecipa o desfecho."
                 actions={
                     resumos.length === 0 ? (
                         <Button
