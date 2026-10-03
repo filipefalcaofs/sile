@@ -36,7 +36,8 @@ use Illuminate\Support\Collection;
  * são escritas pelos serviços de distribuição (HU-080/081) e de SLA (HU-144),
  * nunca pelo cidadão. O território materializado (zona_codigo, zona_fonte,
  * bairro_oficial, cod_log, property_point_lat/lng, property_location_source,
- * address_polygon_geojson) idem: é escrito
+ * address_polygon_geojson, semap_use_category, semap_construction_standard)
+ * idem: é escrito
  * pelos serviços de localização a partir da identificação espacial ou do
  * Cadastro Imobiliário, nunca pelo cidadão. cod_log é o CODLOG oficial do
  * logradouro — casamento das regras territoriais por endereço (RT-01,

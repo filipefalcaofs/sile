@@ -2,7 +2,7 @@ import { Head, Link, router, useHttp, usePage, WhenVisible } from '@inertiajs/re
 import type { GeoJsonObject } from 'geojson';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { rotuloFluxoRisco } from '@/components/analise/processo-ui';
+import { RecepcaoRecebida, rotuloFluxoRisco, type ProcessoRecepcao } from '@/components/analise/processo-ui';
 import PageHeader from '@/components/app/page-header';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
 import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
@@ -114,6 +114,8 @@ interface Localizacao {
     zona: string | null;
     via: string | null;
     is_public_area: boolean | null;
+    categoria_uso_lote: string | null;
+    padrao_construtivo_lote: string | null;
     camadas?: CamadasImovel | null;
 }
 
@@ -246,6 +248,7 @@ interface FichaAnaliseShowProps {
     conclusaoOpcoes: { value: string; label: string }[];
     localizacao?: Localizacao;
     dadosTvl: DadosTvl;
+    recepcao?: ProcessoRecepcao | null;
     cadastroImobiliario: CadastroImobiliario;
     tramitacao: TramitacaoItem[];
     /** Opções da planilha vigente por CNAE (dígitos) — seleção do enquadramento. */
@@ -784,6 +787,7 @@ export default function FichaAnaliseShow({
     conclusaoOpcoes,
     localizacao,
     dadosTvl,
+    recepcao,
     cadastroImobiliario,
     tramitacao,
     enquadramentoOpcoes,
@@ -1622,7 +1626,14 @@ export default function FichaAnaliseShow({
                                 <DescItem label="Ponto de Referência">
                                     {valorOuTraco(localizacao?.ponto_referencia)}
                                 </DescItem>
+                                <DescItem label="Categoria de uso do lote">{valorOuTraco(localizacao?.categoria_uso_lote)}</DescItem>
+                                <DescItem label="Padrão construtivo do lote">
+                                    {valorOuTraco(localizacao?.padrao_construtivo_lote)}
+                                </DescItem>
                             </dl>
+                            <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
+                                Categoria e padrão vêm do lote no cadastro municipal e não decidem o fluxo.
+                            </p>
 
                             <CadastroImobiliarioPanel cadastro={cadastroImobiliario} />
                         </CardContent>
@@ -1756,10 +1767,25 @@ export default function FichaAnaliseShow({
                             <DescItem label="Complemento">{valorOuTraco(dadosTvl.complemento)}</DescItem>
                         </dl>
                         <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
-                            A marcação de sede de escritório virtual é editada no card da atividade CNAE gatilho, abaixo.
+                            O tipo de imóvel é o declarado no recebimento. A marcação de sede de escritório virtual é editada no
+                            card da atividade CNAE gatilho, abaixo.
                         </p>
                     </CardContent>
                 </Card>
+
+                {recepcao && (
+                    <Card>
+                        <CardHeader
+                            title="Declaração recebida"
+                            description="Dados enviados no recebimento do processo. Não substituem a categoria de uso do lote."
+                        />
+                        <CardContent>
+                            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                                <RecepcaoRecebida recepcao={recepcao} />
+                            </dl>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="space-y-6 lg:col-span-2">

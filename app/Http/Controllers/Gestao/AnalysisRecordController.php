@@ -111,6 +111,7 @@ class AnalysisRecordController extends Controller
             ],
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
+            'recepcao' => $this->recepcao($viabilityRequest),
             'cadastroImobiliario' => $cadastro,
             'tramitacao' => $this->tramitacao($viabilityRequest),
             'conclusaoOpcoes' => ConclusionOutcome::options(),
@@ -441,6 +442,8 @@ class AnalysisRecordController extends Controller
      *   zona: string|null,
      *   via: string|null,
      *   is_public_area: bool|null,
+     *   categoria_uso_lote: string|null,
+     *   padrao_construtivo_lote: string|null,
      *   camadas: array<string, mixed>|null
      * }
      */
@@ -473,6 +476,8 @@ class AnalysisRecordController extends Controller
             'zona' => $zona,
             'via' => $via,
             'is_public_area' => $request->is_public_area,
+            'categoria_uso_lote' => $this->textoOuNulo($request->semap_use_category),
+            'padrao_construtivo_lote' => $this->textoOuNulo($request->semap_construction_standard),
             'camadas' => $this->camadasComZonaEVia($request->camadas_incidentes, $zona, $via, $request->zona_fonte?->value),
         ];
     }
@@ -645,13 +650,25 @@ class AnalysisRecordController extends Controller
     }
 
     /**
+     * Declaração recebida no POST. Null quando o processo não entrou por ela.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function recepcao(ViabilityRequest $request): ?array
+    {
+        $dados = $request->origem_declarada;
+
+        return is_array($dados) && $dados !== [] ? $dados : null;
+    }
+
+    /**
      * Dados cadastrais do TVL exibidos na ficha — leitura do processo e da empresa.
      *
      * @return array{
      *   razao_social: string|null,
      *   sede_escritorio_virtual: bool,
      *   porte: string|null,
-     *   tipo_imovel: null,
+     *   tipo_imovel: string|null,
      *   categoria_empresa: string|null,
      *   torre_bloco_ala: null,
      *   complemento: string|null
@@ -668,7 +685,7 @@ class AnalysisRecordController extends Controller
             'razao_social' => $company?->legal_name,
             'sede_escritorio_virtual' => (bool) $record->is_virtual_office_hq,
             'porte' => $company?->size,
-            'tipo_imovel' => null,
+            'tipo_imovel' => $this->textoOuNulo($request->tipo_imovel),
             'categoria_empresa' => $company?->legal_nature,
             'torre_bloco_ala' => null,
             'complemento' => $complemento !== '' ? $complemento : null,

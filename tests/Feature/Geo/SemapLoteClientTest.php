@@ -49,7 +49,13 @@ class SemapLoteClientTest extends TestCase
                     [-38.516331 + $deslocamento, -12.977852],
                 ]],
             ],
-            'properties' => ['INSCRICAO' => '344672', 'CODLOG' => '212', 'PORTA' => '06'],
+            'properties' => [
+                'INSCRICAO' => '344672',
+                'CODLOG' => '212',
+                'PORTA' => '06',
+                'CAT_DE_USO' => 'COMERCIAL',
+                'PADRAOCONS' => 'MÉDIO',
+            ],
         ];
     }
 
@@ -62,6 +68,10 @@ class SemapLoteClientTest extends TestCase
         $this->assertTrue($hit->encontrado());
         $this->assertSame('Polygon', $hit->geometria['type']);
         $this->assertSame('212', $hit->propriedades['CODLOG']);
+        $this->assertSame('COMERCIAL', $hit->propriedades['CAT_DE_USO']);
+        $this->assertSame('MÉDIO', $hit->propriedades['PADRAOCONS']);
+        Http::assertSent(fn ($request): bool => str_contains(urldecode($request->url()), 'CAT_DE_USO')
+            && str_contains(urldecode($request->url()), 'PADRAOCONS'));
     }
 
     public function test_inscricao_sem_feicao_nao_encontra(): void

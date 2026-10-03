@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Badge from '@/components/ui/badge';
 
 /** Semáforo do SLA da fila (HU-144) — espelha o enum SlaStatus do backend. */
@@ -225,5 +226,93 @@ export function CategoriaBadges({ categorias }: { categorias: ProcessoCategoria[
                 </Badge>
             ))}
         </div>
+    );
+}
+
+function textoOuTraco(valor: string | number | null | undefined): string {
+    if (valor === null || valor === undefined || valor === '') {
+        return '—';
+    }
+
+    return String(valor);
+}
+
+function ItemDeclaracao({ label, children }: { label: string; children: ReactNode }) {
+    return (
+        <div>
+            <dt className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
+                {label}
+            </dt>
+            <dd className="mt-1 text-theme-sm text-gray-800 dark:text-white/90">{children}</dd>
+        </div>
+    );
+}
+
+/** Declaração recebida no POST, a mesma lista do detalhe do processo e da ficha. */
+export function RecepcaoRecebida({ recepcao }: { recepcao: ProcessoRecepcao }) {
+    const secundarios = (recepcao.cnaes_secundarios ?? []).join(', ');
+    const cidade = [recepcao.municipio, recepcao.uf].filter(Boolean).join('/');
+
+    return (
+        <>
+            <ItemDeclaracao label="Solicitante">{textoOuTraco(recepcao.nome_solicitante)}</ItemDeclaracao>
+            <ItemDeclaracao label="CPF do solicitante">{textoOuTraco(recepcao.cpf_solicitante)}</ItemDeclaracao>
+            <ItemDeclaracao label="E-mail do solicitante">{textoOuTraco(recepcao.email_solicitante)}</ItemDeclaracao>
+            <ItemDeclaracao label="Porte da empresa">{textoOuTraco(recepcao.porte_empresa)}</ItemDeclaracao>
+            <ItemDeclaracao label="CODLOG">{textoOuTraco(recepcao.codlog)}</ItemDeclaracao>
+            <ItemDeclaracao label="Município">{cidade || '—'}</ItemDeclaracao>
+            <ItemDeclaracao label="Ponto de referência">{textoOuTraco(recepcao.ponto_referencia)}</ItemDeclaracao>
+            <ItemDeclaracao label="Área utilizada">
+                {recepcao.area_utilizada === null || recepcao.area_utilizada === undefined
+                    ? '—'
+                    : `${recepcao.area_utilizada} m²`}
+            </ItemDeclaracao>
+            <ItemDeclaracao label="Área construída / terreno">
+                {[recepcao.area_construida, recepcao.area_terreno].every((valor) => valor === null || valor === undefined)
+                    ? '—'
+                    : `${recepcao.area_construida ?? '—'} / ${recepcao.area_terreno ?? '—'} m²`}
+            </ItemDeclaracao>
+            <ItemDeclaracao label="Acessos independentes">{textoOuTraco(recepcao.acessos_independentes)}</ItemDeclaracao>
+            <ItemDeclaracao label="Imóvel em condomínio">{textoOuTraco(recepcao.imovel_em_condominio)}</ItemDeclaracao>
+            <ItemDeclaracao label="Embarque/desembarque">{textoOuTraco(recepcao.area_embarque_desembarque)}</ItemDeclaracao>
+            <ItemDeclaracao label="Concessão de uso">{textoOuTraco(recepcao.possui_concessao_de_uso)}</ItemDeclaracao>
+            <ItemDeclaracao label="Evento">{textoOuTraco(recepcao.evento)}</ItemDeclaracao>
+            <ItemDeclaracao label="Natureza jurídica">{textoOuTraco(recepcao.natureza_juridica)}</ItemDeclaracao>
+            <ItemDeclaracao label="Termo de dispensa de viabilidade">
+                {textoOuTraco(recepcao.termo_dispensa_viabilidade_locacional)}
+            </ItemDeclaracao>
+            <ItemDeclaracao label="BAP anterior indeferido">{textoOuTraco(recepcao.bap_anterior_indeferido)}</ItemDeclaracao>
+            <ItemDeclaracao label="MEI desenquadrado">{textoOuTraco(recepcao.mei_desenquadrado)}</ItemDeclaracao>
+            <ItemDeclaracao label="Contador">
+                {recepcao.contador
+                    ? [recepcao.contador.nome, recepcao.contador.crc].filter(Boolean).join(' · ') || '—'
+                    : '—'}
+            </ItemDeclaracao>
+            <ItemDeclaracao label="Polígono declarado">{recepcao.poligono_declarado ? 'Sim' : '—'}</ItemDeclaracao>
+            <ItemDeclaracao label="Categoria do imóvel">{textoOuTraco(recepcao.categoria_imovel)}</ItemDeclaracao>
+            <ItemDeclaracao label="CNAE principal">{textoOuTraco(recepcao.cnae_principal)}</ItemDeclaracao>
+            <ItemDeclaracao label="CNAEs secundários">{secundarios || '—'}</ItemDeclaracao>
+            <ItemDeclaracao label="Área pública">{textoOuTraco(recepcao.atividade_em_area_publica)}</ItemDeclaracao>
+            <ItemDeclaracao label="Escritório virtual">{textoOuTraco(recepcao.escritorio_virtual)}</ItemDeclaracao>
+            <ItemDeclaracao label="Abrigada em escritório virtual">
+                {textoOuTraco(recepcao.atividade_abrigada_em_escritorio_virtual)}
+            </ItemDeclaracao>
+            <ItemDeclaracao label="Presta serviço de escritório virtual (sede)">
+                {textoOuTraco(recepcao.presta_servico_de_escritorio_virtual)}
+            </ItemDeclaracao>
+            <ItemDeclaracao label="CNPJ do escritório virtual">{textoOuTraco(recepcao.cnpj_escritorio_virtual)}</ItemDeclaracao>
+            <ItemDeclaracao label="Serviço">{textoOuTraco(recepcao.servico)}</ItemDeclaracao>
+            <ItemDeclaracao label="Data de abertura">{textoOuTraco(recepcao.data_abertura)}</ItemDeclaracao>
+            {(recepcao.atividades_exercidas_no_local ?? []).map((item) => (
+                <ItemDeclaracao key={`local-${item.cnae}`} label={`CNAE ${item.cnae} exercido no local`}>
+                    {item.exercida}
+                </ItemDeclaracao>
+            ))}
+            {(recepcao.perguntas ?? []).map((item) => (
+                <ItemDeclaracao key={`${item.cnae}-${item.pergunta}`} label={`Pergunta do CNAE ${item.cnae}`}>
+                    {item.pergunta}: {item.resposta}
+                </ItemDeclaracao>
+            ))}
+        </>
     );
 }

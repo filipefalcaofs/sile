@@ -52,17 +52,36 @@ class PoligonoEnderecamentoService
             return false;
         }
 
-        $this->gravar($request, $semap);
+        $this->gravar($request, $semap, atributosDoLote: true);
 
         return true;
     }
 
-    private function gravar(ViabilityRequest $request, EnderecamentoHit $hit): void
+    private function gravar(ViabilityRequest $request, EnderecamentoHit $hit, bool $atributosDoLote = false): void
     {
-        $request->forceFill([
+        $dados = [
             'address_polygon_geojson' => $hit->geometria,
             'address_polygon_consulted_at' => now(),
-        ])->save();
+        ];
+
+        if ($atributosDoLote) {
+            $propriedades = $hit->propriedades ?? [];
+            $dados['semap_use_category'] = $this->texto($propriedades['CAT_DE_USO'] ?? null);
+            $dados['semap_construction_standard'] = $this->texto($propriedades['PADRAOCONS'] ?? null);
+        }
+
+        $request->forceFill($dados)->save();
+    }
+
+    private function texto(mixed $valor): ?string
+    {
+        if (! is_string($valor) && ! is_numeric($valor)) {
+            return null;
+        }
+
+        $texto = trim((string) $valor);
+
+        return $texto === '' ? null : $texto;
     }
 
     private function auditar(ViabilityRequest $request, string $fonte, string $status, string $codLog, string $numero, ?string $complemento, EnderecamentoHit $hit): void

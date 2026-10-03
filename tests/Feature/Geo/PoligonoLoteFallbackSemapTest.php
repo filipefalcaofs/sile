@@ -47,7 +47,12 @@ class PoligonoLoteFallbackSemapTest extends TestCase
                         [-38.516331, -12.977852],
                     ]],
                 ],
-                'properties' => ['INSCRICAO' => '344672', 'CODLOG' => '212'],
+                'properties' => [
+                    'INSCRICAO' => '344672',
+                    'CODLOG' => '212',
+                    'CAT_DE_USO' => 'COMERCIAL',
+                    'PADRAOCONS' => 'MÉDIO',
+                ],
             ]] : [],
         ];
     }
@@ -74,6 +79,8 @@ class PoligonoLoteFallbackSemapTest extends TestCase
         $request->refresh();
 
         $this->assertSame('Polygon', $request->address_polygon_geojson['type']);
+        $this->assertSame('COMERCIAL', $request->semap_use_category);
+        $this->assertSame('MÉDIO', $request->semap_construction_standard);
         $this->assertNotNull($request->address_polygon_consulted_at);
         $this->assertTrue(
             Activity::query()->where('event', 'enderecamento-poligono')
@@ -89,9 +96,13 @@ class PoligonoLoteFallbackSemapTest extends TestCase
             '*geo.salvador*' => Http::response($this->colecao(true)),
         ]);
 
-        $this->assertTrue(app(PoligonoEnderecamentoService::class)->aplicar($this->processo()));
+        $request = $this->processo();
 
-        Http::assertNotSent(fn ($request): bool => str_contains($request->url(), 'geo.salvador'));
+        $this->assertTrue(app(PoligonoEnderecamentoService::class)->aplicar($request));
+
+        Http::assertNotSent(fn ($enviado): bool => str_contains($enviado->url(), 'geo.salvador'));
+        $this->assertNull($request->fresh()->semap_use_category);
+        $this->assertNull($request->fresh()->semap_construction_standard);
     }
 
     public function test_nenhuma_fonte_com_poligono_nao_grava_geometria(): void

@@ -17,7 +17,8 @@ use Throwable;
  * conhecer a diferença entre as fontes.
  *
  * `AREA_M2` NÃO é lido (voltou 0 em feição com área real): a área sai da
- * interseção medida no PostGIS. A camada não tem campo pessoal.
+ * interseção medida no PostGIS. `CAT_DE_USO` e `PADRAOCONS` viajam nas
+ * propriedades para a ficha; não decidem o fluxo. A camada não tem campo pessoal.
  */
 class SemapLoteClient
 {
@@ -59,7 +60,7 @@ class SemapLoteClient
                     'where' => "INSCRICAO='{$inscricao}'",
                     'returnGeometry' => 'true',
                     'outSR' => '4326',
-                    'outFields' => 'INSCRICAO,CODLOG,PORTA',
+                    'outFields' => 'INSCRICAO,CODLOG,PORTA,CAT_DE_USO,PADRAOCONS',
                     'f' => 'geojson',
                 ]);
         } catch (Throwable $e) {
