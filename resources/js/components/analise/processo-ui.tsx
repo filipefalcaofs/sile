@@ -84,6 +84,15 @@ export interface ProcessoRecepcao {
     cnpj_escritorio_virtual: string | null;
     servico: string | null;
     data_abertura: string | null;
+    cnpj_destino?: string | null;
+    cnpj_empresa?: string | null;
+    cnpj_origem?: string | null;
+    cod_funcao?: number | null;
+    data_geracao?: string | null;
+    nire?: string | null;
+    RAE_CALIF_ACTV?: string | null;
+    RGP_TGE_COD_TIP_TAB?: string | null;
+    RGP_VALOR?: string | null;
     acessos_independentes: string | null;
     imovel_em_condominio: string | null;
     area_embarque_desembarque: string | null;
@@ -303,6 +312,15 @@ export function RecepcaoRecebida({ recepcao }: { recepcao: ProcessoRecepcao }) {
             <ItemDeclaracao label="CNPJ do escritório virtual">{textoOuTraco(recepcao.cnpj_escritorio_virtual)}</ItemDeclaracao>
             <ItemDeclaracao label="Serviço">{textoOuTraco(recepcao.servico)}</ItemDeclaracao>
             <ItemDeclaracao label="Data de abertura">{textoOuTraco(recepcao.data_abertura)}</ItemDeclaracao>
+            <ItemDeclaracao label="CNPJ de destino">{textoOuTraco(recepcao.cnpj_destino)}</ItemDeclaracao>
+            <ItemDeclaracao label="CNPJ da empresa">{textoOuTraco(recepcao.cnpj_empresa)}</ItemDeclaracao>
+            <ItemDeclaracao label="CNPJ de origem">{textoOuTraco(recepcao.cnpj_origem)}</ItemDeclaracao>
+            <ItemDeclaracao label="Código da função">{textoOuTraco(recepcao.cod_funcao)}</ItemDeclaracao>
+            <ItemDeclaracao label="Data de geração">{textoOuTraco(recepcao.data_geracao)}</ItemDeclaracao>
+            <ItemDeclaracao label="NIRE">{textoOuTraco(recepcao.nire)}</ItemDeclaracao>
+            <ItemDeclaracao label="RAE_CALIF_ACTV">{textoOuTraco(recepcao.RAE_CALIF_ACTV)}</ItemDeclaracao>
+            <ItemDeclaracao label="RGP_TGE_COD_TIP_TAB">{textoOuTraco(recepcao.RGP_TGE_COD_TIP_TAB)}</ItemDeclaracao>
+            <ItemDeclaracao label="RGP_VALOR">{textoOuTraco(recepcao.RGP_VALOR)}</ItemDeclaracao>
             {(recepcao.atividades_exercidas_no_local ?? []).map((item) => (
                 <ItemDeclaracao key={`local-${item.cnae}`} label={`CNAE ${item.cnae} exercido no local`}>
                     {item.exercida}

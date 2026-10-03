@@ -59,7 +59,7 @@ class ReginRecebeService
                 'cod_funcao' => $this->inteiro($envelope['codFuncao'] ?? null),
                 'nire' => $this->texto($envelope['nire'] ?? null),
                 'servico' => $declaracao?->servico ?? $this->texto($envelope['servico'] ?? null),
-                'data_geracao' => $declaracao?->dataAbertura ?? $this->data($envelope['dataGeracao'] ?? null),
+                'data_geracao' => $this->data($envelope['dataGeracao'] ?? null) ?? $declaracao?->dataAbertura,
                 'corpo' => $declaracao !== null
                     ? ['formato' => 'processo', 'dados' => $declaracao->toArray()]
                     : (is_array($envelope['json'] ?? null) ? $envelope['json'] : null),

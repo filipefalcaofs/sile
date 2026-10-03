@@ -66,6 +66,20 @@ class ReginDocumentacaoTest extends TestCase
             $spec['paths']['/api_integracao/recebe']['post']['requestBody']['content']['application/json']['schema'],
         );
 
+        foreach ([
+            'cnpjDestino',
+            'cnpjEmpresa',
+            'cnpjOrigem',
+            'codFuncao',
+            'dataGeracao',
+            'nire',
+            'RAE_CALIF_ACTV',
+            'RGP_TGE_COD_TIP_TAB',
+            'RGP_VALOR',
+        ] as $campo) {
+            $this->assertArrayHasKey($campo, $propriedades, "O campo '{$campo}' não está na declaração.");
+        }
+
         foreach (array_keys((new RecebimentoProcesso(
             protocolo: '1',
             razaoSocial: null,
@@ -102,8 +116,13 @@ class ReginDocumentacaoTest extends TestCase
             poligonoDeclarado: null,
             complemento: RecebimentoComplemento::fromEnvelope([]),
         ))->toArray()) as $campoGravado) {
+            $nomeNoContrato = match ($campoGravado) {
+                'RAE_CALIF_ACTV', 'RGP_TGE_COD_TIP_TAB', 'RGP_VALOR' => $campoGravado,
+                default => Str::camel($campoGravado),
+            };
+
             $this->assertArrayHasKey(
-                Str::camel($campoGravado),
+                $nomeNoContrato,
                 $propriedades,
                 "O campo gravado '{$campoGravado}' não está documentado na OpenAPI.",
             );
