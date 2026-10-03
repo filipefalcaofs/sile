@@ -45,9 +45,36 @@ interface FiltrosAplicados {
     analista?: number;
 }
 
+/**
+ * Distribuição do tempo de viabilidade em horas úteis, na mesma régua que o
+ * governo federal usa no ranking nacional. Sem processos no recorte, n = 0 e
+ * as medidas vêm nulas — nunca zero.
+ */
+interface PercentisViabilidade {
+    n: number;
+    media: number | null;
+    p50: number | null;
+    p75: number | null;
+    p90: number | null;
+    p95: number | null;
+    p99: number | null;
+    maximo: number | null;
+}
+
+/** Faixa de consumo de tempo derivada das transições de status. */
+interface Gargalo {
+    faixa: string;
+    rotulo: string;
+    horas: number;
+    percentual: number;
+}
+
 interface TempoProps {
     tempoPorEtapa: TempoPorEtapa;
     tempoEmissaoTvl: TempoEmissaoTvl;
+    percentisViabilidade: PercentisViabilidade;
+    percentisPorCategoria: Record<string, PercentisViabilidade>;
+    gargalos: Gargalo[];
     filtros: FiltrosAplicados;
 }
 
@@ -136,6 +163,31 @@ function etapasChartOption(etapas: EtapaTempo[]): EChartsOption {
     };
 }
 
+/** Horas úteis numa duração legível; nulo vira travessão, jamais zero. */
+function formatarHoras(horas: number | null): string {
+    return horas === null ? '—' : formatarDuracao(Math.round(horas * 60));
+}
+
+/** Barras horizontais da participação de cada faixa no tempo total. */
+function gargalosChartOption(gargalos: Gargalo[]): EChartsOption {
+    const ordenado = [...gargalos].reverse();
+
+    return {
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        grid: { left: 16, right: 32, top: 16, bottom: 16, containLabel: true },
+        xAxis: { type: 'value', name: '% do tempo' },
+        yAxis: { type: 'category', data: ordenado.map((item) => item.rotulo) },
+        series: [
+            {
+                type: 'bar',
+                name: 'Participação no tempo total',
+                data: ordenado.map((item) => item.percentual),
+                itemStyle: { borderRadius: [0, 6, 6, 0] },
+            },
+        ],
+    };
+}
+
 /** Estado vazio honesto de um gráfico. */
 function GraficoSemDados() {
     return (
@@ -168,7 +220,14 @@ const colunasEtapas: ColumnDef<EtapaTempo>[] = [
     },
 ];
 
-export default function TempoAnalise({ tempoPorEtapa, tempoEmissaoTvl, filtros }: TempoProps) {
+export default function TempoAnalise({
+    tempoPorEtapa,
+    tempoEmissaoTvl,
+    percentisViabilidade,
+    percentisPorCategoria,
+    gargalos,
+    filtros,
+}: TempoProps) {
     const [form, setForm] = useState<FiltrosForm>({
         data_de: filtros.data_de ?? '',
         data_ate: filtros.data_ate ?? '',
@@ -297,6 +356,87 @@ export default function TempoAnalise({ tempoPorEtapa, tempoEmissaoTvl, filtros }
                         tone="brand"
                     />
                 </div>
+
+                <Card>
+                    <CardHeader
+                        title="Distribuição do tempo de viabilidade"
+                        description="Horas úteis entre o protocolo e a decisão, descontando fins de semana, feriados e o tempo em que o processo fica com o cidadão — a mesma régua que o governo federal usa para publicar o tempo de viabilidade dos municípios. A média sozinha esconde a cauda: compare-a com o P90 e o P95."
+                    />
+                    <CardContent>
+                        {percentisViabilidade.n > 0 ? (
+                            <>
+                                <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+                                    {(
+                                        [
+                                            ['Média', percentisViabilidade.media],
+                                            ['Mediana (P50)', percentisViabilidade.p50],
+                                            ['P75', percentisViabilidade.p75],
+                                            ['P90', percentisViabilidade.p90],
+                                            ['P95', percentisViabilidade.p95],
+                                            ['P99', percentisViabilidade.p99],
+                                            ['Máximo', percentisViabilidade.maximo],
+                                        ] as const
+                                    ).map(([rotulo, valor]) => (
+                                        <div
+                                            key={rotulo}
+                                            className="rounded-xl border border-gray-200 p-3 dark:border-gray-800"
+                                        >
+                                            <dt className="text-theme-xs font-medium text-gray-500 dark:text-gray-400">{rotulo}</dt>
+                                            <dd className="mt-1 text-theme-sm font-semibold text-gray-800 dark:text-white/90">
+                                                {formatarHoras(valor)}
+                                            </dd>
+                                        </div>
+                                    ))}
+                                </dl>
+                                <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
+                                    {numberFormat.format(percentisViabilidade.n)}{' '}
+                                    {percentisViabilidade.n === 1 ? 'processo decidido' : 'processos decididos'} no período.
+                                    {Object.entries(percentisPorCategoria)
+                                        .filter(([, dados]) => dados.n > 0)
+                                        .map(([categoria, dados]) => ` ${categoria}: ${formatarHoras(dados.media)} em média.`)
+                                        .join('')}
+                                </p>
+                            </>
+                        ) : (
+                            <EmptyState
+                                title="Sem processos decididos no período"
+                                description="A distribuição só aparece quando há decisão no recorte — nenhum valor é estimado."
+                            />
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader
+                        title="Onde o tempo é gasto"
+                        description="Participação de cada etapa no tempo total, derivada das transições de status do processo. A vistoria acontece dentro da análise; a queda do fluxo expresso é evento, não consumo de tempo, e tem relatório próprio."
+                    />
+                    <CardContent>
+                        {gargalos.length > 0 ? (
+                            <>
+                                <Chart option={gargalosChartOption(gargalos)} className="h-72 w-full" />
+                                <ul className="mt-3 space-y-1">
+                                    {gargalos.map((item) => (
+                                        <li
+                                            key={item.faixa}
+                                            className="flex items-center justify-between text-theme-sm text-gray-600 dark:text-gray-300"
+                                        >
+                                            <span>{item.rotulo}</span>
+                                            <span className="tabular-nums">
+                                                {horasFormat.format(item.percentual)}% · {formatarHoras(item.horas)}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        ) : (
+                            <EmptyState
+                                title="Sem tempo apurado no período"
+                                description="As faixas só aparecem quando há processos decididos com trilha de transições no recorte."
+                            />
+                        )}
+                    </CardContent>
+                </Card>
 
                 <Card>
                     <CardHeader
