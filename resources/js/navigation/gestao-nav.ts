@@ -34,6 +34,7 @@ export type GestaoNavIcon =
     | 'seal'
     | 'trending-down'
     | 'podium'
+    | 'control-room'
     | 'warning-list'
     | 'route'
     | 'pin'
@@ -171,6 +172,12 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
         id: 'indicadores',
         label: 'Indicadores',
         items: [
+            {
+                name: 'Sala de Controle',
+                href: '/gestao/sala-de-controle',
+                icon: 'control-room',
+                permission: 'consultar-relatorios',
+            },
             {
                 name: 'Indicadores de viabilidade',
                 href: '/gestao/relatorios/indicadores',

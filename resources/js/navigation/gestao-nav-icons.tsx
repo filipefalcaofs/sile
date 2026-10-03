@@ -147,6 +147,13 @@ export const GESTAO_NAV_ICON_MARKS: Record<GestaoNavIcon, readonly Mark[]> = {
         { k: 'l', x1: 2.5, y1: 12, x2: 5, y2: 12 },
         { k: 'l', x1: 19, y1: 12, x2: 21.5, y2: 12 },
     ],
+    // Sala de controle: painel central com leituras em volta.
+    'control-room': [
+        { k: 'r', x: 3, y: 4, w: 18, h: 12, rx: 2 },
+        { k: 'l', x1: 7, y1: 20, x2: 17, y2: 20 },
+        { k: 'l', x1: 12, y1: 16, x2: 12, y2: 20 },
+        { k: 'c', cx: 12, cy: 10, r: 3 },
+    ],
     // Pódio: as três posições do ranking entre capitais.
     podium: [
         { k: 'r', x: 9, y: 5, w: 6, h: 14, rx: 1 },

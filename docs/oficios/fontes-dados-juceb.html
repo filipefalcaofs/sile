@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fontes dos dados do recebimento REGIN/JUCEB</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm 16mm 16mm; }
+  body { font-family: "Times New Roman", Times, serif; font-size: 10.5pt; line-height: 1.3; color: #1a1a1a; }
+  h1 { font-size: 13pt; text-align: center; margin: 0 0 4px; }
+  .sub { text-align: center; font-size: 9.5pt; color: #444; margin: 0 0 12px; }
+  p { margin: 0 0 8px; text-align: justify; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.6pt; }
+  th, td { border: 1px solid #333; padding: 3px 5px; vertical-align: top; text-align: left; }
+  th { background: #eef2f5; }
+  td.n { width: 4%; text-align: right; }
+  .url { font-family: "Courier New", Courier, monospace; font-size: 7.6pt; word-break: break-all; }
+  .sem { background: #fdf3f3; }
+  h2 { font-size: 10.5pt; margin: 10px 0 4px; }
+</style>
+</head>
+<body>
+<h1>Fontes dos dados que a JUCEB pode enviar</h1>
+<p class="sub">Solicitação de Encaminhamento de Dados — Viabiliza / SEDUR · verificado em 3 de outubro de 2026</p>
+
+<p>Cada item da Solicitação de Encaminhamento de Dados com a fonte pública que confirma que o REGIN coleta o dado. Siglas: <strong>T</strong> — tutorial INTEGRAÇÃO SEDUR-REDESIM (SEDUR/CRC-BA); <strong>F</strong> — tela do formulário da Prefeitura (ps001_Regin.aspx, pelo índice público; acesso direto bloqueado); <strong>A</strong> — telas de ajuda do REGIN (regin.juceb.ba.gov.br); <strong>O</strong> — OpenAPI pública da JUCEB (regin.prefeitura.juceb.ba.gov.br:8080/api_integracao/v3/api-docs); <strong>R</strong> — campo padrão REDESIM; <strong>G</strong> — tutorial Regularização de Viabilidade Locacional (SEDUR).</p>
+
+<table>
+<tr><th class="n">Item</th><th>Dado</th><th>Fonte</th></tr>
+<tr><td class="n">1</td><td>Nº do Protocolo (BAP)</td><td>A — apresentação.html ("um protocolo será gerado"); O — EnvioDto.protocolo (obrigatório)</td></tr>
+<tr><td class="n">2</td><td>Razão Social</td><td>A — nome_cnae (3 nomes empresariais); O — RUCGENERAL.RGE_NOMB</td></tr>
+<tr><td class="n">3</td><td>CPF do solicitante</td><td>A — solicitante_matriz.html ("assinale e digite o CPF")</td></tr>
+<tr><td class="n">4</td><td>Nome do solicitante</td><td>A — solicitante_matriz.html ("informe o nome do solicitante")</td></tr>
+<tr><td class="n">5</td><td>E-mail do solicitante</td><td>A — solicitante_matriz.html ("Email do solicitante")</td></tr>
+<tr><td class="n">6</td><td>Nº da Inscrição Imobiliária (IPTU)</td><td>A — solicitante_matriz.html ("0 se for Zona Rural"); O — RGP tipo 5</td></tr>
+<tr><td class="n">7</td><td>CODLOG</td><td>O — RUCESTAB (código do logradouro no rowset)</td></tr>
+<tr><td class="n">8</td><td>Tipo de Logradouro</td><td>A — solicitante_matriz.html (busca de endereço); O — RUCESTAB.RES_TTL_TIP_LOGRADORO</td></tr>
+<tr><td class="n">9</td><td>Logradouro</td><td>A — solicitante_matriz.html; O — RUCESTAB.RES_DIRECCION</td></tr>
+<tr><td class="n">10</td><td>Número</td><td>A — solicitante_matriz.html; O — RUCESTAB.RES_NUME</td></tr>
+<tr><td class="n">11</td><td>Bairro/Loteamento</td><td>A — solicitante_matriz.html; O — RUCESTAB.RES_URBANIZACION</td></tr>
+<tr><td class="n">12</td><td>CEP</td><td>A — solicitante_matriz.html (BUSCAR CEP); O — RUCESTAB.RES_ZONA_POSTAL</td></tr>
+<tr><td class="n">13</td><td>Ponto de Referência/Perímetro</td><td>A — solicitante_matriz.html; T — "campo obrigatório"; O — RUCESTAB.RES_REFER</td></tr>
+<tr><td class="n">14</td><td>Cidade/Município</td><td>A — viabilidade_alter_end.html (município); O — RUCESTAB.RES_TMU_DESC_MUN</td></tr>
+<tr><td class="n">15</td><td>Estado/UF</td><td>A — viabilidade_alter_end.html; O — RUCGENERAL.RGE_TUF_COD_UF</td></tr>
+<tr><td class="n">16</td><td>Área utilizada pela atividade, em m²</td><td>O — RUCESTAB.RES_AREA</td></tr>
+<tr><td class="n">17</td><td>Área construída do imóvel, em m²</td><td>A — solicitante_matriz.html ("Área construída (M²): área total construída")</td></tr>
+<tr><td class="n">18</td><td>Área do terreno, em m²</td><td>O — rowset do estabelecimento</td></tr>
+<tr><td class="n">19</td><td>Tipo de Complemento</td><td>A — solicitante_matriz.html (TIPO DE COMPLEMENTO)</td></tr>
+<tr><td class="n">20</td><td>Descrição do Complemento</td><td>A — solicitante_matriz.html; T — "Sala 102"; O — RUCESTAB.RES_IDENT_COMP</td></tr>
+<tr><td class="n">21</td><td>Categoria do Imóvel</td><td>O — rowset do estabelecimento</td></tr>
+<tr><td class="n">22</td><td>CNAE Principal</td><td>A — nome_cnae; O — RAE_CALIF_ACTV "1 - principal"</td></tr>
+<tr><td class="n">23</td><td>Todos os CNAEs Secundários</td><td>T — "até 100 CNAES (1 principal e mais 99 secundárias)"; O — RAE_CALIF_ACTV "2 - secundária"</td></tr>
+<tr><td class="n">24</td><td>Pergunta associada ao respectivo CNAE</td><td>T — "Responda as perguntas referente a cada CNAE"; A — infcomp (perguntas por entidade)</td></tr>
+<tr><td class="n">25</td><td>Resposta associada à pergunta do respectivo CNAE</td><td>T — idem</td></tr>
+<tr><td class="n">26</td><td>Por CNAE, se a atividade é exercida no local</td><td>R — JUCE-GO ("responda se a atividade será exercida no local"); O — RAE_IND_EXERCIDA "1 - Exercida"</td></tr>
+<tr><td class="n">27</td><td>Tipo de Imóvel</td><td>O — rowset do estabelecimento</td></tr>
+<tr><td class="n">28</td><td>Porte da Empresa</td><td>A — solicitante_matriz.html (tipo de empresa)</td></tr>
+<tr><td class="n">29</td><td>"A atividade está estabelecida em área pública?"</td><td>F — "Atividade está estabelecida em área pública? Sim/Não"</td></tr>
+<tr><td class="n">30</td><td>"Possui concessão de uso?"</td><td>F — "Possui Concessão de Uso? Sim/Não", com o termo em PDF</td></tr>
+<tr><td class="n">31</td><td>"Trata-se de escritório virtual?"</td><td>F — formulário do escritório virtual</td></tr>
+<tr><td class="n">32</td><td>"Sua atividade será abrigada em um escritório virtual?"</td><td>F — "Sua atividade será abrigada em um escritório virtual? Sim/Não"; T — CNPJ da sede</td></tr>
+<tr><td class="n">33</td><td>CNPJ do escritório virtual, quando "Sim"</td><td>F — "Selecione o CGA da empresa onde sua empresa será sediada"; T — "necessário que seja informado o CNPJ do escritório sede"</td></tr>
+<tr><td class="n">34</td><td>"Irá prestar serviço de escritório virtual, centro de negócios ou coworking?"</td><td class="sem">Sem fonte pública — a tela pergunta só "será abrigada?". Sede é o CNAE 8211-3/00 (Decreto 35.062/2021).</td></tr>
+<tr><td class="n">35</td><td>"O imóvel possui acessos independentes?"</td><td>F — "É necessário que o imóvel possua acessos independentes… Seu imóvel atende este requisito? Sim/Não"</td></tr>
+<tr><td class="n">36</td><td>"Imóvel em condomínio?"</td><td>F — "Imóvel em condomínio? Sim/Não", com a convenção ou anuência em PDF</td></tr>
+<tr><td class="n">37</td><td>"Possui área de embarque/desembarque?"</td><td>F — "Possui área de embarque/desembarque? Sim/Não"</td></tr>
+<tr><td class="n">38</td><td>Evento do pedido</td><td>A — viabilidade_alter_end.html (alteração); T — abertura e alterações pelo REDESIM</td></tr>
+<tr><td class="n">39</td><td>Objeto social declarado</td><td>A — nome_cnae ("Informe o objeto social"); T — idem</td></tr>
+<tr><td class="n">40</td><td>Natureza jurídica da empresa</td><td class="sem">Sem campo no formulário de viabilidade — vem do ato na Junta.</td></tr>
+<tr><td class="n">41</td><td>Aceite do Termo de Dispensa de Viabilidade Locacional</td><td>T — "A empresa nascerá com CNPJ e CGA. Marque aceito o termo"</td></tr>
+<tr><td class="n">42</td><td>BAP, BAN ou BAB indeferido que originou o pedido</td><td>G — "BAP cujo TVL deu indeferido, faça o evento de alteração"</td></tr>
+<tr><td class="n">43</td><td>Indicação de pedido originado de MEI desenquadrado</td><td>G — "Se for MEI desenquadrado…, faça o evento de alteração"</td></tr>
+<tr><td class="n">44</td><td>Contador: nome, documento, CRC</td><td>A — solicitante_matriz.html ("cadastrar os dados do contador: nome, CRC e endereço")</td></tr>
+<tr><td class="n">45</td><td>Latitude e longitude do estabelecimento</td><td>A — solicitante_matriz.html ("Visualizar Mapa… Coordenada Geográfica"); O — schema Coordenada</td></tr>
+<tr><td class="n">46</td><td>Polígono do imóvel desenhado pelo requerente</td><td>T — "marque o polígono no mapa e clique em Validar polígono"</td></tr>
+<tr><td class="n">47</td><td>Serviço</td><td>O — EnvioDto.servico ("Servico a ser enviado")</td></tr>
+<tr><td class="n">48</td><td>Data de abertura do processo</td><td>O — EnvioDto.dataGeracao (obrigatório)</td></tr>
+<tr><td class="n">49</td><td>CNPJ da instituição de destino</td><td>O — EnvioDto.cnpjDestino</td></tr>
+<tr><td class="n">50</td><td>CNPJ da empresa</td><td>O — EnvioDto.cnpjEmpresa</td></tr>
+<tr><td class="n">51</td><td>CNPJ de origem dos dados</td><td>O — EnvioDto.cnpjOrigem</td></tr>
+<tr><td class="n">52</td><td>Código da função do envio</td><td>O — EnvioDto.codFuncao ("Codigo de funcao")</td></tr>
+<tr><td class="n">53</td><td>Data e hora de geração do envio</td><td>O — EnvioDto.dataGeracao</td></tr>
+<tr><td class="n">54</td><td>NIRE ou matrícula</td><td>A — viabilidade_alter_end.html ("NIRE e o CNPJ são obrigatórios"); O — EnvioDto.nire</td></tr>
+<tr><td class="n">55</td><td>Qualificação da atividade (RAE_CALIF_ACTV)</td><td>O — "Classificação da atividade: 1 - principal, 2 - secundária"</td></tr>
+<tr><td class="n">56</td><td>Código do tipo do item genérico (RGP_TGE_COD_TIP_TAB)</td><td>O — "5 - Inscrição no Cadastro Imobiliário (IPTU)"</td></tr>
+<tr><td class="n">57</td><td>Valor do item genérico (RGP_VALOR)</td><td>O — "Valor da informação adicional informada na viabilidade"</td></tr>
+</table>
+
+<h2>Endereços das fontes</h2>
+<p class="url">
+T — servicos.sedur.salvador.ba.gov.br/storage/portal-servicos/fique-por-dentro/01JZWWS6WS8B9FMDREB9WXDBHY.pdf (também em crcba.org.br/wp-content/uploads/2021/07/Passo-a-passo-REDESIM-13072021.pdf)<br>
+F — simplifica.salvador.ba.gov.br/integracao/sedur/TVL/ps001_Regin.aspx (conteúdo pelo índice público; acesso direto bloqueado pela política de segurança da PMS)<br>
+A — regin.juceb.ba.gov.br/regin.externo/help/viab/apresentacao.html · /regin.externo/help/viab/solicitante_matriz.html · /regin.ba/help/viab/solicitante_imunicipal.html · /regin.ba/help/viab/nome_cnae_alter_nome.html · /regin.ba/help/viab/infcomp_matriz.html · /regin.ba/help/viab/viabilidade_alter_end.html<br>
+O — regin.prefeitura.juceb.ba.gov.br:8080/api_integracao/v3/api-docs (HTTP 200 em 3/10/2026)<br>
+R — crcgo.org.br/wp-content/uploads/2022/12/Apresentacao-redesim2.pdf<br>
+G — servicos.sedur.salvador.ba.gov.br/storage/portal-servicos/fique-por-dentro/01JZWX4YQAV8Z507WT8C2D99JB.pdf
+</p>
+
+<p>Os itens 34 e 40, em destaque, não têm fonte pública que confirme a coleta no formulário. Os demais 55 itens têm ao menos uma fonte.</p>
+</body>
+</html>

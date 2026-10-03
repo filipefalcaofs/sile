@@ -60,6 +60,7 @@ use App\Http\Controllers\Gestao\ResetPasswordController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RiskTriggerController;
 use App\Http\Controllers\Gestao\RoleController;
+use App\Http\Controllers\Gestao\SalaDeControleController;
 use App\Http\Controllers\Gestao\SectorController;
 use App\Http\Controllers\Gestao\StandardTextController;
 use App\Http\Controllers\Gestao\TermoLgpdController;
@@ -211,6 +212,13 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // assíncronas (exportacoes/{exportFile}/download) é estático e vem ANTES dos
         // relatórios. Telas React em 15-13/15-14; RelatorioController é o ÚNICO
         // editor de routes/gestao.php nesta fase.
+        // Visão executiva: reúne, num carregamento só, o que está espalhado
+        // pelos relatórios. Fica fora do prefixo relatorios por ser destino de
+        // gestão, não um relatório; o gate de permissão é o mesmo.
+        Route::middleware('permission:consultar-relatorios')
+            ->get('sala-de-controle', SalaDeControleController::class)
+            ->name('sala-de-controle');
+
         Route::middleware('permission:consultar-relatorios')->prefix('relatorios')->name('relatorios.')->group(function () {
             // Download do arquivo da exportação assíncrona (15-02): URL TEMPORÁRIA
             // ASSINADA (signed) servindo o disco NÃO público por streaming, alvo do
