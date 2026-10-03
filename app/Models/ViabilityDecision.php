@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\DecisionOutcome;
 use App\Enums\TvlKind;
+use App\Services\Relatorios\TempoViabilidadeRegistrar;
 use Database\Factories\ViabilityDecisionFactory;
 use DomainException;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -59,6 +60,15 @@ class ViabilityDecision extends Model
             if ($decision->outcome === DecisionOutcome::Indeferida && trim((string) $decision->reason) === '') {
                 throw new DomainException('Indeferimento sem justificativa: informe o motivo (reason) da decisão.');
             }
+        });
+
+        // O tempo de viabilidade é materializado aqui, e não em cada serviço
+        // que decide, porque seis caminhos distintos registram decisão
+        // (expresso, análise técnica, conclusão, prazo de convite, ausência de
+        // BAP e resultado do expresso). O gancho no model é o único ponto que
+        // cobre todos sem repetir a regra.
+        static::created(function (ViabilityDecision $decision): void {
+            app(TempoViabilidadeRegistrar::class)->registrar($decision);
         });
     }
 
