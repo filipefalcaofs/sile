@@ -195,6 +195,48 @@
           "perguntas": []
         }
       ]
+    },
+    {
+      "codigo": "lote-2026-p8",
+      "rotulo": "Processo 8 — inscrição 7726732",
+      "processo": "5921000030-00990038/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": null,
+      "area_utilizada": 39.0,
+      "zona": "ZPAM",
+      "via": "VC II",
+      "inscricao_imobiliaria": "7726732",
+      "ponto": {
+        "lat": -12.874119,
+        "lng": -38.436724
+      },
+      "atividades": [
+        {
+          "cnae": "1413-4/01",
+          "perguntas": []
+        }
+      ]
+    },
+    {
+      "codigo": "lote-2026-p9",
+      "rotulo": "Processo 9 — inscrição 9561994",
+      "processo": "5921000030-00990039/2026",
+      "servico": "Termo de Viabilidade de Localização",
+      "tipo_imovel": null,
+      "area_utilizada": 278.0,
+      "zona": "ZUE 04",
+      "via": null,
+      "inscricao_imobiliaria": "9561994",
+      "ponto": {
+        "lat": -12.914562,
+        "lng": -38.335328
+      },
+      "atividades": [
+        {
+          "cnae": "6202-3/00",
+          "perguntas": []
+        }
+      ]
     }
   ]
 }
