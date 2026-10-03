@@ -364,6 +364,14 @@ return [
                 'type_name' => 'louos_classificacao_viaria:VM_L_CLASSIF_VIARIA',
                 'atributo' => 'CLASSIFICACAO_VIARIA',
             ],
+            // Hierarquia do logradouro — fonte da VIA LOCAL, que a camada da
+            // LOUOS não publica. Workspace no PLURAL: `logradouro` (singular)
+            // existe no GetCapabilities mas o schema está quebrado no servidor
+            // ("Schema does not exist"), medido em 2026-10-03.
+            'logradouro' => [
+                'type_name' => 'logradouros:VM_LOGRADOURO',
+                'atributo_hierarquia' => 'HIERARQUIA',
+            ],
             'enderecamento' => [
                 'type_name' => 'enderecamento:VM_ENDERECAMENTO',
             ],

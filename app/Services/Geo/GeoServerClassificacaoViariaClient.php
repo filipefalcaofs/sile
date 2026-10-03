@@ -93,12 +93,7 @@ class GeoServerClassificacaoViariaClient
         $features = $payload['features'] ?? [];
 
         if (! is_array($features) || $features === []) {
-            return $this->auditar($codLog, new ClassificacaoViariaHit(
-                status: ClassificacaoViariaHit::NAO_ENCONTRADO,
-                classe: null,
-                classeBruta: null,
-                motivo: null,
-            ));
+            return $this->auditar($codLog, $this->hierarquiaDoLogradouro($codLog));
         }
 
         $atributo = (string) config('sile.integrations.geoserver.classificacao_viaria.atributo', 'CLASSIFICACAO_VIARIA');
@@ -142,14 +137,91 @@ class GeoServerClassificacaoViariaClient
         return $hit;
     }
 
-    private function url(string $codLog): string
+    /**
+     * VIA LOCAL. A camada da LOUOS publica só as vias classificadas — 1.168
+     * logradouros, medidos em 2026-10-03 — e a via local não está lá. A
+     * hierarquia dela vem da camada de logradouros, atributo HIERARQUIA
+     * (decisão 2 da ata SEDUR de 2026-10-02).
+     *
+     * Falha nessa segunda camada NÃO derruba a consulta: devolve
+     * `nao_encontrado`, como antes de existir o fallback.
+     */
+    private function hierarquiaDoLogradouro(string $codLog): ClassificacaoViariaHit
+    {
+        $semClasse = new ClassificacaoViariaHit(
+            status: ClassificacaoViariaHit::NAO_ENCONTRADO,
+            classe: null,
+            classeBruta: null,
+            motivo: null,
+        );
+
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => (string) config('sile.integrations.geoserver.user_agent', 'Viabiliza-SEDUR-Salvador/1.0'),
+            ])
+                ->timeout((int) config('sile.integrations.geoserver.timeout', 8))
+                ->connectTimeout(3)
+                ->acceptJson()
+                ->get($this->url($codLog, $this->typeNameLogradouro()));
+        } catch (Throwable) {
+            return $semClasse;
+        }
+
+        if (! $response->successful()) {
+            return $semClasse;
+        }
+
+        $payload = $response->json();
+        $features = is_array($payload) ? ($payload['features'] ?? []) : [];
+
+        if (! is_array($features) || $features === []) {
+            return $semClasse;
+        }
+
+        $atributo = (string) config('sile.integrations.geoserver.logradouro.atributo_hierarquia', 'HIERARQUIA');
+        $properties = is_array($features[0]['properties'] ?? null) ? $features[0]['properties'] : [];
+        $bruta = $properties[$atributo] ?? null;
+        $bruta = is_string($bruta) && trim($bruta) !== '' ? trim($bruta) : null;
+
+        if ($bruta === null) {
+            return $semClasse;
+        }
+
+        $classe = Quadro11aClasseVia::oficializar($bruta);
+
+        if ($classe === null) {
+            return new ClassificacaoViariaHit(
+                status: ClassificacaoViariaHit::INDISPONIVEL,
+                classe: null,
+                classeBruta: $bruta,
+                motivo: 'Hierarquia do logradouro fora das classes do Quadro 11A.',
+            );
+        }
+
+        return new ClassificacaoViariaHit(
+            status: ClassificacaoViariaHit::IDENTIFICADO,
+            classe: $classe,
+            classeBruta: $bruta,
+            motivo: null,
+        );
+    }
+
+    private function typeNameLogradouro(): string
+    {
+        return (string) config(
+            'sile.integrations.geoserver.logradouro.type_name',
+            'logradouros:VM_LOGRADOURO',
+        );
+    }
+
+    private function url(string $codLog, ?string $typeName = null): string
     {
         $base = rtrim((string) Settings::get(
             'integrations.geoserver.base_url',
             config('sile.integrations.geoserver.base_url'),
         ), '/');
 
-        $typeName = (string) config(
+        $typeName ??= (string) config(
             'sile.integrations.geoserver.classificacao_viaria.type_name',
             'louos_classificacao_viaria:VM_L_CLASSIF_VIARIA',
         );
