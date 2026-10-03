@@ -326,6 +326,20 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Consulta o lote por inscrição imobiliária no cadastro municipal (ArcGIS, camada SEMAP — Inscrições Geo) quando o endereçamento não tem polígono para o endereço',
             ],
+            'features.benchmark_redesim' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Importa o benchmark nacional de tempo de viabilidade a partir dos microdados da REDESIM. Desligado, as telas de benchmark mostram a lacuna da competência — nenhum valor é estimado',
+            ],
+            'integrations.redesim_estatistica.base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://estatistica.redesim.gov.br/tempos-abertura-redesim',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'URL base da API de estatísticas da REDESIM, de onde vêm os microdados de tempo de viabilidade por UF e competência',
+            ],
             'integrations.arcgis_semap.query_url' => [
                 'group' => 'integracoes',
                 'type' => 'string',

@@ -46,6 +46,10 @@ return [
         // Lote por inscrição no ArcGIS municipal (camada SEMAP — Inscrições
         // Geo), fallback do endereçamento. Desligado, a zona segue pelo ponto.
         'arcgis_semap' => true,
+        // Ingestão do benchmark federal de tempo de viabilidade (microdados da
+        // REDESIM). Desligada, as telas de benchmark mostram a lacuna com o
+        // motivo — nenhum número é estimado no lugar.
+        'benchmark_redesim' => true,
         'cadastro_imobiliario' => env('SILE_CADASTRO_IMOBILIARIO', true),
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
@@ -381,6 +385,17 @@ return [
             'user_agent' => 'Viabiliza-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',
             // Partida a frio medida em ~15 s no serviço real; em regime, ~0,2 s.
             'timeout' => 20,
+        ],
+        // Estatísticas da REDESIM: microdados de tempo de abertura por UF e
+        // competência, série de 2019 em diante. É a fonte do benchmark
+        // nacional de viabilidade. A API foi identificada a partir do painel
+        // público e NÃO é publicada como contrato estável — por isso o
+        // interruptor e a falha visível.
+        'redesim_estatistica' => [
+            'base_url' => 'https://estatistica.redesim.gov.br/tempos-abertura-redesim',
+            'user_agent' => 'Viabiliza-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',
+            // São Paulo baixa cerca de 16 MB por competência.
+            'timeout' => 180,
         ],
         // WhatsApp (HU-095): base_url/token são parametrizáveis (catálogo
         // HU-014; token sensível/criptografado). As constantes TÉCNICAS
