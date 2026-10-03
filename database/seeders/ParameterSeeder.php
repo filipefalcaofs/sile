@@ -319,6 +319,20 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Consulta o polígono do endereçamento no GeoServer SEDUR e decide a zona pela maior porção do lote (art. 18, § 2º, da Lei 9.148/2016). Desligado, a zona segue pelo ponto da inscrição',
             ],
+            'features.arcgis_semap' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Consulta o lote por inscrição imobiliária no cadastro municipal (ArcGIS, camada SEMAP — Inscrições Geo) quando o endereçamento não tem polígono para o endereço',
+            ],
+            'integrations.arcgis_semap.query_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://geo.salvador.ba.gov.br/arcgis/rest/services/MAPA_BASE/MAPA_BASE_SEFAZ/MapServer/18/query',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'URL de consulta da camada SEMAP (Inscrições Geo) do ArcGIS municipal',
+            ],
             'features.geoserver_territorio' => [
                 'group' => 'features',
                 'type' => 'boolean',

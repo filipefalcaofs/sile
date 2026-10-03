@@ -31,6 +31,74 @@ export interface ProcessoEscritorioVirtual {
  * Os três identificadores do processo (RN-007) são protocol_number, bap e
  * tvl_product_number.
  */
+export interface ProcessoPerguntaRecebida {
+    cnae: string;
+    pergunta: string;
+    resposta: string;
+}
+
+export interface ProcessoAtividadeNoLocal {
+    cnae: string;
+    exercida: string;
+}
+
+export interface ProcessoContadorRecebido {
+    nome: string | null;
+    documento: string | null;
+    crc: string | null;
+}
+
+/** Declaração plana recebida no POST e gravada no processo. */
+export interface ProcessoRecepcao {
+    protocolo: string | null;
+    razao_social: string | null;
+    cpf_solicitante: string | null;
+    nome_solicitante: string | null;
+    email_solicitante: string | null;
+    inscricao_imobiliaria: string | null;
+    codlog: string | null;
+    tipo_logradouro: string | null;
+    logradouro: string | null;
+    numero: string | null;
+    bairro: string | null;
+    cep: string | null;
+    ponto_referencia: string | null;
+    municipio: string | null;
+    uf: string | null;
+    area_utilizada: number | null;
+    area_construida: number | null;
+    area_terreno: number | null;
+    tipo_complemento: string | null;
+    descricao_complemento: string | null;
+    categoria_imovel: string | null;
+    cnae_principal: string | null;
+    cnaes_secundarios: string[];
+    perguntas: ProcessoPerguntaRecebida[];
+    tipo_imovel: string | null;
+    porte_empresa: string | null;
+    atividade_em_area_publica: string | null;
+    escritorio_virtual: string | null;
+    atividade_abrigada_em_escritorio_virtual: string | null;
+    presta_servico_de_escritorio_virtual: string | null;
+    cnpj_escritorio_virtual: string | null;
+    servico: string | null;
+    data_abertura: string | null;
+    acessos_independentes: string | null;
+    imovel_em_condominio: string | null;
+    area_embarque_desembarque: string | null;
+    possui_concessao_de_uso: string | null;
+    termo_dispensa_viabilidade_locacional: string | null;
+    bap_anterior_indeferido: string | null;
+    mei_desenquadrado: string | null;
+    evento: string | null;
+    objeto_social: string | null;
+    natureza_juridica: string | null;
+    coordenada_geografica: { latitude: number; longitude: number } | null;
+    contador: ProcessoContadorRecebido | null;
+    atividades_exercidas_no_local: ProcessoAtividadeNoLocal[];
+    poligono_declarado: { type: string } | null;
+}
+
 export interface ProcessoItem {
     id: number;
     protocol_number: string | null;
@@ -64,6 +132,7 @@ export interface ProcessoItem {
     sla: ProcessoSla | null;
     protocoled_at: string | null;
     escritorio_virtual: ProcessoEscritorioVirtual | null;
+    recepcao?: ProcessoRecepcao | null;
     sem_decisao_automatica?: boolean;
     motivo_encaminhamento?: string | null;
     motivo_da_analise?: string | null;

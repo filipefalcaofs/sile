@@ -2,16 +2,26 @@
 
 namespace App\Services\Regin;
 
+use App\Enums\AuthType;
 use App\Enums\CompanySource;
+use App\Enums\RuleDomain;
 use App\Enums\ViabilityRequestOrigin;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\ReginRecebimento;
+use App\Models\RuleVersion;
+use App\Models\TratamentoPergunta;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
+use App\Rules\ValidCpf;
 use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use RuntimeException;
 
 /**
  * Protocola o processo a partir do RUC do envelope REGIN — sem o catálogo do
@@ -23,11 +33,19 @@ class ReginProcessoProtocolador
     public function __construct(
         private ProtocolarSolicitacaoService $protocolar,
         private FluxoExpressoService $expresso,
+        private ReginTipoImovelApplier $tipoImovel,
+        private PoligonoEnderecamentoService $poligonoLote,
     ) {}
 
     public function protocolar(ReginRecebimento $recebimento): ?ViabilityRequest
     {
-        $ruc = $recebimento->corpo ?? [];
+        $corpo = $recebimento->corpo ?? [];
+
+        if (($corpo['formato'] ?? null) === 'processo' && is_array($corpo['dados'] ?? null)) {
+            return $this->protocolarDeclaracao($recebimento, RecebimentoProcesso::fromStored($corpo['dados']));
+        }
+
+        $ruc = $corpo;
         $rowset = is_array($ruc['rowset'] ?? null) ? $ruc['rowset'] : [];
 
         $cnaes = $this->cnaes($rowset);
@@ -65,6 +83,232 @@ class ReginProcessoProtocolador
         $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $ator);
 
         return $solicitacao->fresh() ?? $solicitacao;
+    }
+
+    private function protocolarDeclaracao(ReginRecebimento $recebimento, RecebimentoProcesso $dados): ?ViabilityRequest
+    {
+        if (! $dados->podeProtocolar()) {
+            return null;
+        }
+
+        $ator = $this->atorDaDeclaracao($dados);
+        $cnaePrincipal = $this->cnae((string) $dados->cnaePrincipal);
+        $secundarios = [];
+
+        foreach ($dados->cnaesSecundarios as $codigo) {
+            if ($codigo === $cnaePrincipal->code) {
+                continue;
+            }
+
+            $secundarios[] = $this->cnae($codigo);
+        }
+
+        $solicitacao = ViabilityRequest::query()->create([
+            'origin' => ViabilityRequestOrigin::Regin,
+            'service_type_id' => $this->tipoServicoDeclarado($dados->servico)->id,
+            'company_id' => $this->empresaDaDeclaracao($dados, $recebimento->protocolo)->id,
+            'requester_user_id' => $ator->id,
+            'created_by_user_id' => $ator->id,
+            'used_area_m2' => $dados->area,
+            'address_street' => $dados->logradouro,
+            'address_number' => $dados->numero ?? 's/n',
+            'address_complement' => $dados->complemento(),
+            'address_neighborhood' => $dados->bairro,
+            'address_zip' => $dados->cep,
+            'address_reference' => $dados->pontoReferencia,
+            'property_registration' => $dados->inscricaoImobiliaria,
+            'property_polygon_geojson' => $dados->poligonoDeclarado,
+            'has_independent_access' => $dados->acessosIndependentes === true,
+            'is_virtual_office' => $dados->escritorioVirtual === true,
+            'wants_virtual_office_tenant' => $dados->atividadeAbrigadaEmEscritorioVirtual,
+            'wants_virtual_office_hq' => $dados->prestaServicoDeEscritorioVirtual === true,
+            'is_public_area' => $dados->atividadeEmAreaPublica === true,
+            'simulation_snapshot' => [
+                'respostas_tratamento_por_cnae' => $this->respostasPorCnae($dados),
+                'perguntas_cnae' => $dados->perguntas,
+            ],
+            'contingency_reason' => ReginProtocoloSimulacaoService::CONTINGENCIA_RECEBE,
+            'external_reference' => $recebimento->protocolo,
+            'origem_declarada' => $dados->toArray(),
+        ]);
+
+        $solicitacao->cnaes()->attach($cnaePrincipal->id, ['is_primary' => true]);
+
+        foreach ($secundarios as $cnae) {
+            $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => false]);
+        }
+
+        $this->tipoImovel->apply($solicitacao, $dados->tipoImovel);
+
+        $this->protocolar->protocol($solicitacao->fresh() ?? $solicitacao, $ator);
+
+        $ajuste = [];
+
+        if ($dados->codlog !== null) {
+            $ajuste['cod_log'] = $dados->codlog;
+        }
+
+        if ($dados->dataAbertura !== null) {
+            $ajuste['protocoled_at'] = $dados->dataAbertura;
+        }
+
+        if ($ajuste !== []) {
+            $solicitacao->forceFill($ajuste)->save();
+        }
+
+        // Geometria oficial do lote ANTES da decisão: é ela que zoneia pela
+        // maior porção. Já fora da transação — fonte indisponível não desfaz
+        // o processo. O polígono declarado no REGIN fica em
+        // property_polygon_geojson e só vale se a cadeia oficial não achar.
+        $this->poligonoLote->aplicar($solicitacao->fresh() ?? $solicitacao);
+
+        $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $ator);
+
+        return $solicitacao->fresh() ?? $solicitacao;
+    }
+
+    private function empresaDaDeclaracao(RecebimentoProcesso $dados, string $protocolo): Company
+    {
+        return Company::query()->create([
+            'cnpj' => null,
+            'legal_name' => (string) $dados->razaoSocial,
+            'size' => $dados->porteEmpresa,
+            'street' => $dados->logradouro,
+            'number' => $dados->numero,
+            'complement' => $dados->complemento(),
+            'neighborhood' => $dados->bairro,
+            'city' => $dados->municipio,
+            'state' => $dados->uf,
+            'zip_code' => $dados->cep,
+            'source' => CompanySource::Redesim,
+            'redesim_protocol' => $protocolo,
+        ]);
+    }
+
+    private function atorDaDeclaracao(RecebimentoProcesso $dados): User
+    {
+        $solicitante = $this->solicitante($dados);
+
+        if ($solicitante !== null) {
+            return $solicitante;
+        }
+
+        $existente = User::query()->orderBy('id')->first();
+
+        if ($existente !== null) {
+            return $existente;
+        }
+
+        throw new RuntimeException('Solicitante ausente e não há usuário para protocolar.');
+    }
+
+    private function solicitante(RecebimentoProcesso $dados): ?User
+    {
+        $cpf = $dados->cpfSolicitante;
+        $email = $dados->emailSolicitante;
+        $nome = $dados->nomeSolicitante;
+
+        if ($cpf === null || $email === null || $nome === null) {
+            return null;
+        }
+
+        $cpfValido = Validator::make(
+            ['cpf' => $cpf],
+            ['cpf' => [new ValidCpf]],
+        )->passes();
+
+        if (! $cpfValido) {
+            return null;
+        }
+
+        $porCpf = User::query()->where('cpf', $cpf)->first();
+
+        if ($porCpf !== null) {
+            return $porCpf;
+        }
+
+        $emailEmUso = User::query()->where('email', $email)->exists();
+
+        return User::query()->create([
+            'name' => $nome,
+            'email' => $emailEmUso ? $cpf.'@solicitante.viabiliza.local' : $email,
+            'cpf' => $cpf,
+            'password' => Hash::make(Str::random(40)),
+            'auth_type' => AuthType::Local,
+        ]);
+    }
+
+    private function tipoServicoDeclarado(?string $servico): ViabilityServiceType
+    {
+        if ($servico === null) {
+            return $this->tipoServico();
+        }
+
+        $porNome = ViabilityServiceType::query()
+            ->whereRaw('lower(name) = ?', [mb_strtolower($servico)])
+            ->first();
+
+        if ($porNome !== null) {
+            return $porNome;
+        }
+
+        $code = Str::slug($servico);
+
+        if ($code === '') {
+            return $this->tipoServico();
+        }
+
+        return ViabilityServiceType::query()->firstOrCreate(
+            ['code' => $code],
+            [
+                'name' => $servico,
+                'flow_hint' => 'expresso',
+                'active' => true,
+            ],
+        );
+    }
+
+    /**
+     * @return array<string, array<int, bool>>
+     */
+    private function respostasPorCnae(RecebimentoProcesso $dados): array
+    {
+        $mapa = [];
+
+        foreach ($dados->perguntas as $item) {
+            $numero = $this->numeroDaPergunta($item['pergunta']);
+            $resposta = RecebimentoProcesso::booleano($item['resposta']);
+
+            if ($numero === null || $resposta === null) {
+                continue;
+            }
+
+            $mapa[$item['cnae']][$numero] = $resposta;
+        }
+
+        return $mapa;
+    }
+
+    private function numeroDaPergunta(string $pergunta): ?int
+    {
+        $texto = trim($pergunta);
+
+        if (preg_match('/^\d+$/', $texto) === 1) {
+            return (int) $texto;
+        }
+
+        $versao = RuleVersion::vigente(RuleDomain::RiscoTratamento)->first();
+
+        if ($versao === null) {
+            return null;
+        }
+
+        $numero = TratamentoPergunta::query()
+            ->where('rule_version_id', $versao->getKey())
+            ->whereRaw('lower(texto) = ?', [mb_strtolower($texto)])
+            ->value('numero');
+
+        return $numero === null ? null : (int) $numero;
     }
 
     /**

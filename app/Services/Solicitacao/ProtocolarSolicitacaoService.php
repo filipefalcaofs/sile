@@ -84,8 +84,9 @@ class ProtocolarSolicitacaoService
 
         $this->territorioProcesso->aplicarLogradouroTributario($request);
 
-        // Com o CODLOG tributário aplicado, o polígono do endereçamento SEDUR é
-        // consultado por CODLOG + número + complemento.
+        // Com o CODLOG tributário aplicado, a cadeia de geometria do lote roda:
+        // endereçamento SEDUR por CODLOG + número + complemento e, sem polígono
+        // lá, o cadastro municipal (SEMAP) pela inscrição imobiliária.
         $this->poligonoEnderecamento->aplicar($request);
         $this->zonaProcesso->materializar($request);
 

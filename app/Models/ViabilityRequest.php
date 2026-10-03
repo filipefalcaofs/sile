@@ -52,6 +52,7 @@ use Illuminate\Support\Collection;
     'is_virtual_office', 'wants_virtual_office_hq', 'wants_virtual_office_tenant', 'confirma_perda_condicao_sede', 'is_public_area', 'has_independent_access',
     'simulation_snapshot', 'simulation_rules_versions', 'simulation_resultado', 'simulated_at',
     'applicant_proceeded_despite', 'contingency_reason', 'external_reference',
+    'origem_declarada',
 ])]
 class ViabilityRequest extends Model
 {
@@ -108,6 +109,7 @@ class ViabilityRequest extends Model
             'origin' => ViabilityRequestOrigin::class,
             'property_polygon_geojson' => 'array',
             'address_polygon_geojson' => 'array',
+            'origem_declarada' => 'array',
             'address_polygon_consulted_at' => 'datetime',
             'zona_fonte' => ZonaFonte::class,
             'property_point_lat' => 'float',

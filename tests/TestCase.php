@@ -48,6 +48,10 @@ abstract class TestCase extends BaseTestCase
         config(['sile.features.geoserver_zona' => false]);
         config(['sile.features.geoserver_enderecamento' => false]);
 
+        // ArcGIS municipal (SEMAP) é integração HTTP real: desligada por
+        // padrão na suíte; o teste do cliente liga e usa Http::fake.
+        config(['sile.features.arcgis_semap' => false]);
+
         // A suíte exercita o catálogo histórico. O arquivo publicado no
         // simulador traz só o lote de sete inscrições.
         config([

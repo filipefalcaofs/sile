@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Viabiliza — recebimento REGIN (api_integracao/recebe)
-  version: "1.0.0"
+  version: "2.0.0"
   description: |
     Endpoint municipal que a JUCEB/REGIN chama para entregar o processo de
     viabilidade à SEDUR.
@@ -18,10 +18,42 @@ info:
     header `JWT` pertencem à API da JUCEB, quando o Viabiliza devolve o
     parecer. Neste recebimento não há token: a JUCEB chama a URL publicada.
 
-    O layout completo do objeto `json` (schema `Ruc`) está na OpenAPI da
-    JUCEB. O anexo «Dados do Processo v2_08» não integra este documento.
-    Sem CNAE principal, área ou endereço no `Ruc`, o envelope é aceito
-    (`3`) e fica gravado, sem abrir processo.
+    O POST aceita dois corpos. A declaração do processo (schema
+    `ProcessoDeclaracao`) é o contrato para abrir a viabilidade com os
+    dados do solicitante, do imóvel, dos CNAEs e das respostas. O envelope
+    `EnvioDto`/`Ruc` da JUCEB continua aceito.
+
+    ## O mínimo para abrir o processo
+
+    `protocolo`, `razaoSocial`, `cnaePrincipal`, `areaUtilizada` maior que
+    zero, `logradouro`, `bairro` e `cep`. Faltando qualquer um, a
+    declaração é aceita (`3`) e fica gravada, sem abrir processo — a
+    pendência fica visível na SEDUR, nunca em silêncio.
+
+    ## O que decide a viabilidade
+
+    - `cnaePrincipal` e `cnaesSecundarios` — até 100 atividades. Basta uma
+      indeferida para a viabilidade ser indeferida.
+    - `areaUtilizada` — a área da ATIVIDADE, não a do imóvel. É ela que cai
+      nas faixas da planilha de enquadramento.
+    - `perguntas` — a resposta de CADA pergunta vinculada ao CNAE. Faltando
+      uma, o ramo não resolve e o processo vai à análise técnica.
+    - `tipoImovel` — valor fora do catálogo da SEDUR bloqueia a decisão
+      automática, de propósito.
+    - `prestaServicoDeEscritorioVirtual` — com o CNAE 8211-3/00, leva o
+      processo à análise (Decreto 35.062/2021).
+    - `inscricaoImobiliaria` — chave pela qual o Viabiliza busca endereço,
+      CODLOG, coordenada e o polígono oficial do lote.
+
+    ## O que a JUCEB não precisa enviar
+
+    Endereço, CODLOG, bairro, CEP, coordenada, áreas do cadastro,
+    classificação viária e zona. Tudo isso o Viabiliza obtém pela inscrição
+    imobiliária, no Cadastro Imobiliário e no GeoServer da SEDUR. Se vierem,
+    servem para conferência e ficam registrados — não decidem.
+
+    A zona urbanística sai da MAIOR PORÇÃO do polígono do lote (art. 18,
+    § 2º, da Lei 9.148/2016), não do ponto.
   contact:
     name: SEDUR — Viabiliza
     url: https://www.sedur.salvador.ba.gov.br
@@ -77,44 +109,120 @@ paths:
         O ack sai só depois da gravação. Duplicidade é pelo número do protocolo
         na Junta, não pelo CNPJ.
 
-        Quando o `json` (`Ruc`) traz CNAE principal, área utilizada e endereço
-        (logradouro, bairro e CEP), o Viabiliza abre o processo com origem
-        REDESIM/Regin e a referência externa igual a `protocolo`.
+        A declaração `ProcessoDeclaracao` abre o processo quando traz razão
+        social, CNAE principal, área e endereço (logradouro, bairro e CEP).
+        O `Ruc` abre o processo nas mesmas condições de CNAE, área e endereço.
+        Nos dois casos a origem é REDESIM/Regin e a referência externa é
+        `protocolo`. O CNPJ informado só é gravado quando a atividade está
+        abrigada em escritório virtual.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EnvioDto"
-            example:
-              cnpjDestino: "13927801000149"
-              cnpjEmpresa: "13927801000149"
-              cnpjOrigem: "13927801000149"
-              codFuncao: 103
-              dataGeracao: "2026-09-16T16:00:00.000Z"
-              nire: "00000000000"
-              protocolo: "43747"
-              servico: WsProSol098
-              json:
-                rowset:
-                  RUC_GENERAL:
-                    RGE_CGC_CPF: "13927801000149"
-                    RGE_NOMB: Empresa exemplo
-                  RUC_ESTAB:
-                    RES_AREA: "834"
-                    RES_DIRECCION: Rua das Flores
-                    RES_NUME: "100"
-                    RES_IDENT_COMP: Sala 2
-                    RES_URBANIZACION: Centro
-                    RES_ZONA_POSTAL: "40000000"
-                  GROUPRUC_ACTV_ECON:
-                    RUC_ACTV_ECON:
-                      - RAE_TAE_COD_ACTVD: "4712100"
-                        RAE_CALIF_ACTV: "1"
-                  GROUPRUC_GEN_PROTOCOLO:
-                    RUC_GEN_PROTOCOLO:
-                      - RGP_TGE_COD_TIP_TAB: "5"
-                        RGP_VALOR: "123456"
+              oneOf:
+                - $ref: "#/components/schemas/ProcessoDeclaracao"
+                - $ref: "#/components/schemas/EnvioDto"
+            examples:
+              declaracao:
+                summary: Declaração do processo
+                value:
+                  protocolo: BAP-2026-0001
+                  razaoSocial: Padaria do Porto Ltda
+                  cpfSolicitante: "52998224725"
+                  nomeSolicitante: Maria Souza
+                  emailSolicitante: maria.souza@exemplo.com
+                  inscricaoImobiliaria: "12345678"
+                  codlog: "212"
+                  tipoLogradouro: Rua
+                  logradouro: das Flores
+                  numero: "100"
+                  bairro: Comércio
+                  cep: "40020000"
+                  pontoReferencia: Em frente à praça
+                  municipio: Salvador
+                  uf: BA
+                  areaUtilizada: 45.75
+                  areaConstruida: 216
+                  areaTerreno: 300
+                  tipoComplemento: Sala
+                  descricaoComplemento: "2"
+                  categoriaImovel: Comercial
+                  cnaePrincipal: "4712100"
+                  cnaesSecundarios:
+                    - "5611201"
+                    - "5620104"
+                  perguntas:
+                    - cnae: "4712100"
+                      pergunta: "12"
+                      resposta: Não
+                  tipoImovel: Loja
+                  porteEmpresa: Microempresa
+                  atividadeEmAreaPublica: Sim
+                  escritorioVirtual: Sim
+                  atividadeAbrigadaEmEscritorioVirtual: Sim
+                  prestaServicoDeEscritorioVirtual: Não
+                  cnpjEscritorioVirtual: "11222333000181"
+                  acessosIndependentes: Sim
+                  imovelEmCondominio: Não
+                  areaEmbarqueDesembarque: Não
+                  possuiConcessaoDeUso: Não
+                  atividadesExercidasNoLocal:
+                    - cnae: "4712100"
+                      exercida: Sim
+                  poligonoDeclarado:
+                    type: Polygon
+                    coordinates:
+                      - - [-38.516331, -12.977852]
+                        - [-38.516291, -12.977746]
+                        - [-38.516453, -12.977688]
+                        - [-38.516492, -12.977795]
+                        - [-38.516331, -12.977852]
+                  coordenadaGeografica:
+                    latitude: -12.977852
+                    longitude: -38.516331
+                  evento: Inscrição de primeiro estabelecimento (Matriz)
+                  objetoSocial: Comércio varejista de produtos de padaria
+                  naturezaJuridica: Sociedade Empresária Limitada
+                  termoDispensaViabilidadeLocacional: Não
+                  meiDesenquadrado: Não
+                  contador:
+                    nome: Contabilidade Souza
+                    documento: "52998224725"
+                    crc: BA-012345/O
+                  servico: Consulta de viabilidade
+                  dataAbertura: "2026-10-03"
+              envelope:
+                summary: Envelope EnvioDto da JUCEB
+                value:
+                  cnpjDestino: "13927801000149"
+                  cnpjEmpresa: "13927801000149"
+                  cnpjOrigem: "13927801000149"
+                  codFuncao: 103
+                  dataGeracao: "2026-09-16T16:00:00.000Z"
+                  nire: "00000000000"
+                  protocolo: "43747"
+                  servico: WsProSol098
+                  json:
+                    rowset:
+                      RUC_GENERAL:
+                        RGE_CGC_CPF: "13927801000149"
+                        RGE_NOMB: Empresa exemplo
+                      RUC_ESTAB:
+                        RES_AREA: "834"
+                        RES_DIRECCION: Rua das Flores
+                        RES_NUME: "100"
+                        RES_IDENT_COMP: Sala 2
+                        RES_URBANIZACION: Centro
+                        RES_ZONA_POSTAL: "40000000"
+                      GROUPRUC_ACTV_ECON:
+                        RUC_ACTV_ECON:
+                          - RAE_TAE_COD_ACTVD: "4712100"
+                            RAE_CALIF_ACTV: "1"
+                      GROUPRUC_GEN_PROTOCOLO:
+                        RUC_GEN_PROTOCOLO:
+                          - RGP_TGE_COD_TIP_TAB: "5"
+                            RGP_VALOR: "123456"
       responses:
         "200":
           description: Recebido (`3`) ou protocolo já existente (`5`)
@@ -169,6 +277,276 @@ components:
       type: string
       enum: ["0"]
       description: Requisição recusada pelo Viabiliza por falta de protocolo.
+
+    ProcessoDeclaracao:
+      type: object
+      description: |
+        Dados do processo enviados no POST. `protocolo` é a chave de
+        duplicidade (número BAP). O CNPJ do escritório virtual só é
+        considerado quando `atividadeAbrigadaEmEscritorioVirtual` é sim.
+      required: [protocolo]
+      properties:
+        protocolo:
+          type: string
+          description: Número do protocolo (BAP).
+          example: BAP-2026-0001
+        razaoSocial:
+          type: string
+          description: Razão social.
+        cpfSolicitante:
+          type: string
+          description: CPF do solicitante, com ou sem máscara.
+        nomeSolicitante:
+          type: string
+          description: Nome do solicitante.
+        emailSolicitante:
+          type: string
+          format: email
+          description: E-mail do solicitante.
+        inscricaoImobiliaria:
+          type: string
+          description: Número da inscrição imobiliária (IPTU).
+        codlog:
+          type: string
+          description: CODLOG do logradouro.
+        tipoLogradouro:
+          type: string
+          description: Tipo de logradouro (Rua, Avenida, Travessa).
+        logradouro:
+          type: string
+          description: Nome do logradouro.
+        numero:
+          type: string
+          description: Número do imóvel. Vazio vira `s/n`.
+        bairro:
+          type: string
+          description: Bairro ou loteamento.
+        cep:
+          type: string
+          description: CEP, com ou sem máscara.
+        pontoReferencia:
+          type: string
+          description: Ponto de referência ou perímetro.
+        municipio:
+          type: string
+          description: Cidade ou município.
+        uf:
+          type: string
+          description: Estado, sigla de duas letras.
+          example: BA
+        areaUtilizada:
+          description: |
+            Área que a atividade ocupa, em m². É ela que o motor usa nas faixas
+            da planilha de enquadramento — **não** a área do imóvel. Número ou
+            texto com vírgula decimal. Precisa ser maior que zero para abrir o
+            processo. O campo `area` é aceito como sinônimo histórico.
+          oneOf:
+            - type: number
+            - type: string
+        area:
+          deprecated: true
+          description: Sinônimo histórico de `areaUtilizada`. Prefira `areaUtilizada`.
+          oneOf:
+            - type: number
+            - type: string
+        areaConstruida:
+          description: Área construída do imóvel, em m². Registrada no processo; não substitui `areaUtilizada`.
+          oneOf:
+            - type: number
+            - type: string
+        areaTerreno:
+          description: Área do terreno, em m². Registrada no processo; não substitui `areaUtilizada`.
+          oneOf:
+            - type: number
+            - type: string
+        tipoComplemento:
+          type: string
+          description: Tipo de complemento (Sala, Loja, Andar).
+        descricaoComplemento:
+          type: string
+          description: Descrição do complemento.
+        categoriaImovel:
+          type: string
+          description: Categoria do imóvel.
+        cnaePrincipal:
+          type: string
+          description: CNAE principal, com ou sem máscara. Sem ele o processo não abre.
+        cnaesSecundarios:
+          type: array
+          description: Todos os CNAEs secundários.
+          items:
+            type: string
+        perguntas:
+          type: array
+          description: Pergunta e resposta associadas a cada CNAE.
+          items:
+            type: object
+            required: [cnae, pergunta, resposta]
+            properties:
+              cnae:
+                type: string
+              pergunta:
+                type: string
+                description: Número da pergunta da planilha ou o texto da pergunta.
+              resposta:
+                type: string
+                description: Resposta. Sim e Não alimentam o motor quando a pergunta é numérica.
+        tipoImovel:
+          type: string
+          description: Tipo de imóvel.
+        porteEmpresa:
+          type: string
+          description: Porte da empresa.
+        atividadeEmAreaPublica:
+          description: Resposta a "A atividade está estabelecida em área pública?".
+          oneOf:
+            - type: boolean
+            - type: string
+        escritorioVirtual:
+          description: Resposta a "Trata-se de escritório virtual?".
+          oneOf:
+            - type: boolean
+            - type: string
+        atividadeAbrigadaEmEscritorioVirtual:
+          description: Resposta a "Sua atividade será abrigada em um escritório virtual?".
+          oneOf:
+            - type: boolean
+            - type: string
+        prestaServicoDeEscritorioVirtual:
+          description: |
+            Resposta a "Irá prestar serviço de escritório virtual, centro de
+            negócios ou coworking?" — ou seja, a atividade é a SEDE do
+            escritório virtual, não a abrigada. Com o CNAE gatilho da sede
+            (8211-3/00, Decreto 35.062/2021), "Sim" leva o processo à análise
+            técnica. Ausente equivale a "Não".
+          oneOf:
+            - type: boolean
+            - type: string
+        cnpjEscritorioVirtual:
+          type: string
+          description: CNPJ do escritório virtual. Gravado só quando a atividade está abrigada.
+        acessosIndependentes:
+          description: |
+            Resposta a "O imóvel possui acessos independentes?" — a atividade
+            comercial não pode ter acesso por dentro da área residencial.
+          oneOf:
+            - type: boolean
+            - type: string
+        poligonoDeclarado:
+          type: object
+          description: |
+            Polígono do imóvel desenhado pelo requerente, em GeoJSON
+            **EPSG:4326, ordem [longitude, latitude]**. Aceita `Polygon`,
+            `MultiPolygon` ou um `Feature` que os contenha. Geometria de linha
+            ou ponto é ignorada: não delimita lote.
+
+            É a geometria DECLARADA. Quando o Viabiliza obtém o polígono
+            oficial (Endereçamento SEDUR ou cadastro municipal), o oficial
+            prevalece e a divergência de zona entre os dois encaminha o
+            processo à análise técnica.
+          properties:
+            type:
+              type: string
+              enum: [Polygon, MultiPolygon, Feature]
+            coordinates:
+              type: array
+              items: {}
+          example:
+            type: Polygon
+            coordinates:
+              - - [-38.516331, -12.977852]
+                - [-38.516291, -12.977746]
+                - [-38.516453, -12.977688]
+                - [-38.516492, -12.977795]
+                - [-38.516331, -12.977852]
+        coordenadaGeografica:
+          type: object
+          description: |
+            Coordenada do estabelecimento capturada no REGIN. Fica registrada
+            para conferência; a localização oficial do processo vem do
+            Cadastro Imobiliário pela inscrição.
+          properties:
+            latitude:
+              type: number
+              example: -12.977852
+            longitude:
+              type: number
+              example: -38.516331
+        atividadesExercidasNoLocal:
+          type: array
+          description: Por CNAE, se a atividade é exercida no local (campo padrão REDESIM).
+          items:
+            type: object
+            required: [cnae, exercida]
+            properties:
+              cnae:
+                type: string
+              exercida:
+                description: Sim ou Não.
+                oneOf:
+                  - type: boolean
+                  - type: string
+        evento:
+          type: string
+          description: Evento do pedido (abertura de matriz, alteração de endereço, alteração de atividade).
+          example: Inscrição de primeiro estabelecimento (Matriz)
+        objetoSocial:
+          type: string
+          description: Descrição do objeto social declarado.
+        naturezaJuridica:
+          type: string
+          description: Natureza jurídica da empresa.
+        imovelEmCondominio:
+          description: Resposta a "Imóvel em condomínio?".
+          oneOf:
+            - type: boolean
+            - type: string
+        areaEmbarqueDesembarque:
+          description: Resposta a "Possui área de embarque/desembarque?".
+          oneOf:
+            - type: boolean
+            - type: string
+        possuiConcessaoDeUso:
+          description: Resposta a "Possui concessão de uso?" — par obrigatório de `atividadeEmAreaPublica`.
+          oneOf:
+            - type: boolean
+            - type: string
+        termoDispensaViabilidadeLocacional:
+          description: |
+            Aceite do Termo de Dispensa de Viabilidade Locacional. Aceito, a
+            empresa nasce com CNPJ e CGA sem a viabilidade aprovada — por isso
+            o dado fica registrado no processo.
+          oneOf:
+            - type: boolean
+            - type: string
+        bapAnteriorIndeferido:
+          type: string
+          description: BAP, BAN ou BAB indeferido que originou este novo pedido.
+          example: BAP-2025-0777
+        meiDesenquadrado:
+          description: Pedido originado de MEI desenquadrado.
+          oneOf:
+            - type: boolean
+            - type: string
+        contador:
+          type: object
+          description: Contador que preencheu o pedido, quando o solicitante é contador.
+          properties:
+            nome:
+              type: string
+            documento:
+              type: string
+              description: CPF ou CNPJ, só dígitos.
+            crc:
+              type: string
+              example: BA-012345/O
+        servico:
+          type: string
+          description: Serviço solicitado.
+        dataAbertura:
+          type: string
+          format: date
+          description: Data de abertura do processo (AAAA-MM-DD ou data/hora ISO 8601).
 
     EnvioDto:
       type: object

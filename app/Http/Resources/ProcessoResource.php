@@ -72,6 +72,7 @@ class ProcessoResource extends JsonResource
             'analysis_due_at' => $this->analysis_due_at?->toIso8601String(),
             'sla' => $this->slaResumo(),
             'protocoled_at' => $this->protocoled_at?->toIso8601String(),
+            'recepcao' => $this->recepcao(),
             // Bloco de escritório virtual (T03) — só presente quando o produto é
             // sede ou abrigado; null para o processo comum (a UI não renderiza o
             // card). Fonte única: a decisão imutável (RN-EV-02/05).
@@ -229,8 +230,12 @@ class ProcessoResource extends JsonResource
      */
     private function enderecoCompleto(): string
     {
+        $declarado = is_array($this->origem_declarada) ? $this->origem_declarada : [];
+        $tipo = is_string($declarado['tipo_logradouro'] ?? null) ? $declarado['tipo_logradouro'] : null;
+        $rua = trim(implode(' ', array_filter([$tipo, $this->address_street])));
+
         $logradouro = trim(implode(', ', array_filter([
-            $this->address_street,
+            $rua !== '' ? $rua : null,
             $this->address_number,
             $this->address_complement,
         ])));
@@ -240,9 +245,28 @@ class ProcessoResource extends JsonResource
             $this->address_neighborhood,
         ]));
 
+        $cidade = trim(implode('/', array_filter([
+            is_string($declarado['municipio'] ?? null) ? $declarado['municipio'] : null,
+            is_string($declarado['uf'] ?? null) ? $declarado['uf'] : null,
+        ])));
+
         return trim(implode(' · ', array_filter([
             $partes !== '' ? $partes : null,
+            $cidade !== '' ? $cidade : null,
             $this->address_zip !== null && $this->address_zip !== '' ? "CEP {$this->address_zip}" : null,
         ])));
+    }
+
+    /**
+     * Declaração recebida no POST, já normalizada. Null no processo que não
+     * entrou por essa declaração.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function recepcao(): ?array
+    {
+        $dados = $this->origem_declarada;
+
+        return is_array($dados) && $dados !== [] ? $dados : null;
     }
 }

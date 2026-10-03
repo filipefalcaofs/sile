@@ -147,9 +147,17 @@ class PoligonoEnderecamentoProtocoloTest extends TestCase
         return $solicitacao->fresh();
     }
 
-    private function auditoria(ViabilityRequest $request): ?Activity
+    /**
+     * A cadeia audita uma linha por FONTE tentada (endereçamento e, quando
+     * ele não acha, cadastro municipal). Estes casos são do endereçamento.
+     */
+    private function auditoria(ViabilityRequest $request, string $fonte = 'enderecamento'): ?Activity
     {
-        return Activity::query()->where('event', 'enderecamento-poligono')->where('subject_id', $request->id)->latest('id')->first();
+        return Activity::query()
+            ->where('event', 'enderecamento-poligono')
+            ->where('subject_id', $request->id)
+            ->get()
+            ->last(fn (Activity $activity): bool => ($activity->properties['fonte'] ?? 'enderecamento') === $fonte);
     }
 
     public function test_ca_pe_01_um_poligono_e_gravado_com_a_data_da_consulta(): void

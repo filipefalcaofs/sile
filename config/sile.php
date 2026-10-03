@@ -43,6 +43,9 @@ return [
         // Polígono do endereçamento SEDUR (enderecamento:VM_ENDERECAMENTO) e zona
         // pela maior porção do lote. Desligado, a zona segue pelo ponto.
         'geoserver_enderecamento' => true,
+        // Lote por inscrição no ArcGIS municipal (camada SEMAP — Inscrições
+        // Geo), fallback do endereçamento. Desligado, a zona segue pelo ponto.
+        'arcgis_semap' => true,
         'cadastro_imobiliario' => env('SILE_CADASTRO_IMOBILIARIO', true),
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
@@ -364,6 +367,12 @@ return [
             'enderecamento' => [
                 'type_name' => 'enderecamento:VM_ENDERECAMENTO',
             ],
+        ],
+        'arcgis_semap' => [
+            'query_url' => 'https://geo.salvador.ba.gov.br/arcgis/rest/services/MAPA_BASE/MAPA_BASE_SEFAZ/MapServer/18/query',
+            'user_agent' => 'Viabiliza-SEDUR-Salvador/1.0 (contato@sedur.salvador.ba.gov.br)',
+            // Partida a frio medida em ~15 s no serviço real; em regime, ~0,2 s.
+            'timeout' => 20,
         ],
         // WhatsApp (HU-095): base_url/token são parametrizáveis (catálogo
         // HU-014; token sensível/criptografado). As constantes TÉCNICAS

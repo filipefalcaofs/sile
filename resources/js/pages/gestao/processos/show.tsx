@@ -7,6 +7,7 @@ import {
     CategoriaBadges,
     formatarDataHora,
     type ProcessoItem,
+    type ProcessoRecepcao,
     SemaforoBadge,
 } from '@/components/analise/processo-ui';
 import DecisionExplanation, { type DecisionExplanationData } from '@/components/auditoria/decision-explanation';
@@ -117,6 +118,80 @@ function formatarDuracao(inicioIso: string | null, fimIso: string | null): strin
     }
 
     return `${Math.round(horas / 24)} dias`;
+}
+
+function textoOuTraco(valor: string | number | null | undefined): string {
+    if (valor === null || valor === undefined || valor === '') {
+        return '—';
+    }
+
+    return String(valor);
+}
+
+function RecepcaoRecebida({ recepcao }: { recepcao: ProcessoRecepcao }) {
+    const secundarios = (recepcao.cnaes_secundarios ?? []).join(', ');
+    const cidade = [recepcao.municipio, recepcao.uf].filter(Boolean).join('/');
+
+    return (
+        <>
+            <DescItem label="Solicitante">{textoOuTraco(recepcao.nome_solicitante)}</DescItem>
+            <DescItem label="CPF do solicitante">{textoOuTraco(recepcao.cpf_solicitante)}</DescItem>
+            <DescItem label="E-mail do solicitante">{textoOuTraco(recepcao.email_solicitante)}</DescItem>
+            <DescItem label="Porte da empresa">{textoOuTraco(recepcao.porte_empresa)}</DescItem>
+            <DescItem label="CODLOG">{textoOuTraco(recepcao.codlog)}</DescItem>
+            <DescItem label="Município">{cidade || '—'}</DescItem>
+            <DescItem label="Ponto de referência">{textoOuTraco(recepcao.ponto_referencia)}</DescItem>
+            <DescItem label="Área utilizada">
+                {recepcao.area_utilizada === null ? '—' : `${recepcao.area_utilizada} m²`}
+            </DescItem>
+            <DescItem label="Área construída / terreno">
+                {[recepcao.area_construida, recepcao.area_terreno].every((v) => v === null)
+                    ? '—'
+                    : `${recepcao.area_construida ?? '—'} / ${recepcao.area_terreno ?? '—'} m²`}
+            </DescItem>
+            <DescItem label="Acessos independentes">{textoOuTraco(recepcao.acessos_independentes)}</DescItem>
+            <DescItem label="Imóvel em condomínio">{textoOuTraco(recepcao.imovel_em_condominio)}</DescItem>
+            <DescItem label="Embarque/desembarque">{textoOuTraco(recepcao.area_embarque_desembarque)}</DescItem>
+            <DescItem label="Concessão de uso">{textoOuTraco(recepcao.possui_concessao_de_uso)}</DescItem>
+            <DescItem label="Evento">{textoOuTraco(recepcao.evento)}</DescItem>
+            <DescItem label="Natureza jurídica">{textoOuTraco(recepcao.natureza_juridica)}</DescItem>
+            <DescItem label="Termo de dispensa de viabilidade">
+                {textoOuTraco(recepcao.termo_dispensa_viabilidade_locacional)}
+            </DescItem>
+            <DescItem label="BAP anterior indeferido">{textoOuTraco(recepcao.bap_anterior_indeferido)}</DescItem>
+            <DescItem label="MEI desenquadrado">{textoOuTraco(recepcao.mei_desenquadrado)}</DescItem>
+            <DescItem label="Contador">
+                {recepcao.contador
+                    ? [recepcao.contador.nome, recepcao.contador.crc].filter(Boolean).join(' · ') || '—'
+                    : '—'}
+            </DescItem>
+            <DescItem label="Polígono declarado">{recepcao.poligono_declarado ? 'Sim' : '—'}</DescItem>
+            <DescItem label="Categoria do imóvel">{textoOuTraco(recepcao.categoria_imovel)}</DescItem>
+            <DescItem label="CNAE principal">{textoOuTraco(recepcao.cnae_principal)}</DescItem>
+            <DescItem label="CNAEs secundários">{secundarios || '—'}</DescItem>
+            <DescItem label="Área pública">{textoOuTraco(recepcao.atividade_em_area_publica)}</DescItem>
+            <DescItem label="Escritório virtual">{textoOuTraco(recepcao.escritorio_virtual)}</DescItem>
+            <DescItem label="Abrigada em escritório virtual">
+                {textoOuTraco(recepcao.atividade_abrigada_em_escritorio_virtual)}
+            </DescItem>
+            <DescItem label="Presta serviço de escritório virtual (sede)">
+                {textoOuTraco(recepcao.presta_servico_de_escritorio_virtual)}
+            </DescItem>
+            <DescItem label="CNPJ do escritório virtual">{textoOuTraco(recepcao.cnpj_escritorio_virtual)}</DescItem>
+            <DescItem label="Serviço">{textoOuTraco(recepcao.servico)}</DescItem>
+            <DescItem label="Data de abertura">{textoOuTraco(recepcao.data_abertura)}</DescItem>
+            {(recepcao.atividades_exercidas_no_local ?? []).map((item) => (
+                <DescItem key={`local-${item.cnae}`} label={`CNAE ${item.cnae} exercido no local`}>
+                    {item.exercida}
+                </DescItem>
+            ))}
+            {(recepcao.perguntas ?? []).map((item) => (
+                <DescItem key={`${item.cnae}-${item.pergunta}`} label={`Pergunta do CNAE ${item.cnae}`}>
+                    {item.pergunta}: {item.resposta}
+                </DescItem>
+            ))}
+        </>
+    );
 }
 
 function DescItem({ label, children }: { label: string; children: ReactNode }) {
@@ -337,6 +412,7 @@ export default function Show({
                                         <DescItem label="Imóvel">{processo.endereco_completo || processo.imovel || '—'}</DescItem>
                                         <DescItem label="Inscrição imobiliária">{processo.inscricao ?? '—'}</DescItem>
                                         <DescItem label="Tipo de imóvel">{processo.tipo_imovel ?? '—'}</DescItem>
+                                        {processo.recepcao && <RecepcaoRecebida recepcao={processo.recepcao} />}
                                         <DescItem label="Origem">{processo.origin_label}</DescItem>
                                         {processo.motivo_da_analise ? (
                                             <DescItem label="Motivo do encaminhamento">{processo.motivo_da_analise}</DescItem>
