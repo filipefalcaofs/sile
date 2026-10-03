@@ -54,9 +54,17 @@ class ReginDocumentacaoTest extends TestCase
             'maior porção',
             'enquadramento',
             'Cadastro Imobiliário',
+            'EnvioDto',
+            'WsProSol098',
         ] as $interno) {
             $this->assertStringNotContainsString($interno, $texto);
         }
+
+        $this->assertArrayNotHasKey('EnvioDto', $spec['components']['schemas']);
+        $this->assertSame(
+            ['$ref' => '#/components/schemas/ProcessoDeclaracao'],
+            $spec['paths']['/api_integracao/recebe']['post']['requestBody']['content']['application/json']['schema'],
+        );
 
         foreach (array_keys((new RecebimentoProcesso(
             protocolo: '1',
