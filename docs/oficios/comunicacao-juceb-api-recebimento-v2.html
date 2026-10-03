@@ -59,29 +59,9 @@ A/C: Área responsável pela integração REGIN</p>
 
 <p>O <code>POST</code> aceita dois JSON. O envelope <code>EnvioDto</code> já publicado pela JUCEB (Guia Técnico PSCS e OpenAPI de produção) continua válido. A declaração <code>ProcessoDeclaracao</code>, versão 2.0.0, é o contrato para abrir a viabilidade com os dados do solicitante, do imóvel, dos CNAEs e das respostas.</p>
 
-<h2>2. O que abre o processo</h2>
+<p>Campos, tipos, exemplos e os dois corpos aceitos estão na especificação anexa e na página de documentação de cada ambiente. O processo é criado quando, além do <code>protocolo</code>, vêm razão social, CNAE principal, área utilizada maior que zero, logradouro, bairro e CEP. Sem algum desses, a resposta continua <code>3</code> e o processo não é criado.</p>
 
-<p>O código <code>3</code> confirma a gravação. O processo só é aberto quando o corpo traz, juntos, <code>protocolo</code>, <code>razaoSocial</code>, <code>cnaePrincipal</code>, <code>areaUtilizada</code> maior que zero, <code>logradouro</code>, <code>bairro</code> e <code>cep</code>. Faltando qualquer um, o envio permanece gravado e a pendência fica visível para a SEDUR. Não há falha silenciosa.</p>
-
-<p><code>areaUtilizada</code> é a área da atividade, em metros quadrados, não a área do imóvel. É ela que entra nas faixas de enquadramento. <code>areaConstruida</code> e <code>areaTerreno</code>, se enviados, ficam no processo e não substituem a área utilizada.</p>
-
-<h2>3. O que o motor usa para decidir</h2>
-
-<ul>
-  <li><code>cnaePrincipal</code> e <code>cnaesSecundarios</code> — até 100 atividades. Uma indeferida indefere a viabilidade.</li>
-  <li><code>perguntas</code> — resposta de cada pergunta vinculada ao CNAE. Faltando uma, o processo vai à análise técnica.</li>
-  <li><code>tipoImovel</code> — valor fora do catálogo da SEDUR impede a decisão automática.</li>
-  <li><code>prestaServicoDeEscritorioVirtual</code> — campo novo. Responde se a atividade será sede de escritório virtual, centro de negócios ou coworking. Com o CNAE 8211-3/00, “Sim” leva o processo à análise (Decreto nº 35.062/2021). Ausente equivale a “Não”.</li>
-  <li><code>inscricaoImobiliaria</code> — chave pela qual o Viabiliza busca o cadastro, a coordenada, a via e o polígono oficial do lote.</li>
-</ul>
-
-<p>A zona urbanística sai da maior porção do polígono do lote, nos termos do art. 18, § 2º, da Lei nº 9.148/2016. Não sai de um ponto.</p>
-
-<p>Endereço, CODLOG, coordenada, áreas do cadastro, classificação viária e zona não precisam ser enviados: o Viabiliza os obtém pela inscrição. Se vierem, ficam registrados para conferência e não decidem no lugar do cadastro oficial. O polígono declarado pelo requerente (<code>poligonoDeclarado</code>, GeoJSON, EPSG:4326, ordem longitude e latitude) também não substitui o polígono oficial. Divergência de zona entre os dois encaminha o processo à análise.</p>
-
-<p>O CNPJ do escritório virtual só é gravado quando <code>atividadeAbrigadaEmEscritorioVirtual</code> indica que a atividade está abrigada.</p>
-
-<h2>4. URLs</h2>
+<h2>2. URLs</h2>
 
 <table>
   <tr><th>Ambiente</th><th>Recebimento</th><th>Documentação (Swagger, v2.0.0)</th></tr>
@@ -99,7 +79,7 @@ A/C: Área responsável pela integração REGIN</p>
 
 <p>A homologação do REGIN deve apontar somente para a URL de homologação, e a produção do REGIN somente para a URL de produção. Este endereço substitui o informado no ofício de 19 de agosto de 2026. O sistema é o Viabiliza, e não viabilidade.</p>
 
-<h2>5. Contato técnico</h2>
+<h2>3. Contato técnico</h2>
 
 <ul>
   <li>Filipe Falcão — Líder técnico, Sudoeste Informática e Consultoria</li>

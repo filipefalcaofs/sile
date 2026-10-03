@@ -3,57 +3,30 @@ info:
   title: Viabiliza — recebimento REGIN (api_integracao/recebe)
   version: "2.0.0"
   description: |
-    Endpoint municipal que a JUCEB/REGIN chama para entregar o processo de
-    viabilidade à SEDUR.
+    API chamada pelo REGIN para enviar o processo de viabilidade.
 
-    O contrato foi montado a partir da documentação da API da JUCEB (PSCS),
-    não o contrário:
+    Não envie token nem header `JWT`.
 
-    - OpenAPI de produção da Junta: `EnvioDto` e a operação `testeEnvio`,
-      que exige retorno em texto `3` (recebido) e `5` (duplicado).
-    - Guia Técnico REGIN/PSCS v2.10: GET de conectividade e POST do processo
-      no caminho `/api_integracao/recebe`, serviço `WsProSol098`.
+    O `GET /api_integracao/recebe` testa a conectividade e devolve o texto `3`.
 
-    Esta URL é o lado da Prefeitura. Autenticação (`POST /acesso/auth`) e o
-    header `JWT` pertencem à API da JUCEB, quando o Viabiliza devolve o
-    parecer. Neste recebimento não há token: a JUCEB chama a URL publicada.
+    O `POST` na mesma URL aceita `application/json` em um destes corpos:
 
-    O POST aceita dois corpos. A declaração do processo (schema
-    `ProcessoDeclaracao`) é o contrato para abrir a viabilidade com os
-    dados do solicitante, do imóvel, dos CNAEs e das respostas. O envelope
-    `EnvioDto`/`Ruc` da JUCEB continua aceito.
+    - `ProcessoDeclaracao` — declaração do processo.
+    - `EnvioDto` — envelope da JUCEB, serviço `WsProSol098`.
 
-    ## O mínimo para abrir o processo
+    ## Resposta do POST
 
-    `protocolo`, `razaoSocial`, `cnaePrincipal`, `areaUtilizada` maior que
-    zero, `logradouro`, `bairro` e `cep`. Faltando qualquer um, a
-    declaração é aceita (`3`) e fica gravada, sem abrir processo — a
-    pendência fica visível na SEDUR, nunca em silêncio.
+    | Código | HTTP | Significado |
+    | --- | --- | --- |
+    | `3` | 200 | Protocolo gravado. |
+    | `5` | 200 | Esse `protocolo` já foi recebido. |
+    | `0` | 400 | `protocolo` ausente ou vazio. Nada é gravado. |
 
-    ## O que decide a viabilidade
+    A duplicidade é o número do `protocolo`.
 
-    - `cnaePrincipal` e `cnaesSecundarios` — até 100 atividades. Basta uma
-      indeferida para a viabilidade ser indeferida.
-    - `areaUtilizada` — a área da ATIVIDADE, não a do imóvel. É ela que cai
-      nas faixas da planilha de enquadramento.
-    - `perguntas` — a resposta de CADA pergunta vinculada ao CNAE. Faltando
-      uma, o ramo não resolve e o processo vai à análise técnica.
-    - `tipoImovel` — valor fora do catálogo da SEDUR bloqueia a decisão
-      automática, de propósito.
-    - `prestaServicoDeEscritorioVirtual` — com o CNAE 8211-3/00, leva o
-      processo à análise (Decreto 35.062/2021).
-    - `inscricaoImobiliaria` — chave pela qual o Viabiliza busca endereço,
-      CODLOG, coordenada e o polígono oficial do lote.
+    ## Para o processo ser criado
 
-    ## O que a JUCEB não precisa enviar
-
-    Endereço, CODLOG, bairro, CEP, coordenada, áreas do cadastro,
-    classificação viária e zona. Tudo isso o Viabiliza obtém pela inscrição
-    imobiliária, no Cadastro Imobiliário e no GeoServer da SEDUR. Se vierem,
-    servem para conferência e ficam registrados — não decidem.
-
-    A zona urbanística sai da MAIOR PORÇÃO do polígono do lote (art. 18,
-    § 2º, da Lei 9.148/2016), não do ponto.
+    Envie também `razaoSocial`, `cnaePrincipal`, `areaUtilizada` maior que zero, `logradouro`, `bairro` e `cep`. Sem algum desses, a resposta continua `3` e o processo não é criado.
   contact:
     name: SEDUR — Viabiliza
     url: https://www.sedur.salvador.ba.gov.br
@@ -78,12 +51,7 @@ paths:
       operationId: pingRecebe
       summary: Teste de conectividade
       description: |
-        A JUCEB envia este GET antes do POST (`testeEnvio` na OpenAPI da Junta).
-        Corpo da resposta, em texto puro: `3`.
-
-        A descrição geral da OpenAPI da JUCEB menciona retorno `OK` no GET do
-        servidor REGIN. No teste de envio para a instituição, e no Guia Técnico
-        v2.10, o valor conferido é `3`. Este endpoint devolve `3`.
+        Teste de conectividade, antes do POST. Corpo da resposta, em texto puro: `3`.
       responses:
         "200":
           description: Conectividade confirmada
@@ -100,21 +68,13 @@ paths:
       operationId: recebeProcesso
       summary: Recebe o processo enviado pelo REGIN
       description: |
-        Persiste o envelope `EnvioDto` e responde em texto puro.
+        Recebe o processo e responde em texto puro.
 
         - `3` — protocolo gravado agora (HTTP 200).
-        - `5` — o mesmo `protocolo` já existe (HTTP 200). Não cria segunda linha.
+        - `5` — o mesmo `protocolo` já existe (HTTP 200).
         - `0` — `protocolo` ausente ou vazio (HTTP 400). Nada é gravado.
 
-        O ack sai só depois da gravação. Duplicidade é pelo número do protocolo
-        na Junta, não pelo CNPJ.
-
-        A declaração `ProcessoDeclaracao` abre o processo quando traz razão
-        social, CNAE principal, área e endereço (logradouro, bairro e CEP).
-        O `Ruc` abre o processo nas mesmas condições de CNAE, área e endereço.
-        Nos dois casos a origem é REDESIM/Regin e a referência externa é
-        `protocolo`. O CNPJ informado só é gravado quando a atividade está
-        abrigada em escritório virtual.
+        No `EnvioDto`, o processo é criado quando o `Ruc` traz CNAE principal, área utilizada maior que zero, logradouro, bairro e CEP.
       requestBody:
         required: true
         content:
@@ -254,7 +214,6 @@ components:
     LimiteExcedido:
       description: |
         Mais de 60 chamadas por minuto a partir do mesmo IP.
-        O limite é o do Viabiliza (`regin_recebe`), não o da API da JUCEB.
       content:
         application/json:
           schema:
@@ -336,10 +295,9 @@ components:
           example: BA
         areaUtilizada:
           description: |
-            Área que a atividade ocupa, em m². É ela que o motor usa nas faixas
-            da planilha de enquadramento — **não** a área do imóvel. Número ou
-            texto com vírgula decimal. Precisa ser maior que zero para abrir o
-            processo. O campo `area` é aceito como sinônimo histórico.
+            Área da atividade, em m². Número ou texto com vírgula decimal.
+            Maior que zero para o processo ser criado. Não é a área do imóvel.
+            O campo `area` é sinônimo antigo.
           oneOf:
             - type: number
             - type: string
@@ -370,7 +328,7 @@ components:
           description: Categoria do imóvel.
         cnaePrincipal:
           type: string
-          description: CNAE principal, com ou sem máscara. Sem ele o processo não abre.
+          description: CNAE principal, com ou sem máscara. Obrigatório para o processo ser criado.
         cnaesSecundarios:
           type: array
           description: Todos os CNAEs secundários.
@@ -387,10 +345,10 @@ components:
                 type: string
               pergunta:
                 type: string
-                description: Número da pergunta da planilha ou o texto da pergunta.
+                description: Número ou texto da pergunta.
               resposta:
                 type: string
-                description: Resposta. Sim e Não alimentam o motor quando a pergunta é numérica.
+                description: Resposta informada. Use Sim ou Não.
         tipoImovel:
           type: string
           description: Tipo de imóvel.
@@ -415,10 +373,7 @@ components:
         prestaServicoDeEscritorioVirtual:
           description: |
             Resposta a "Irá prestar serviço de escritório virtual, centro de
-            negócios ou coworking?" — ou seja, a atividade é a SEDE do
-            escritório virtual, não a abrigada. Com o CNAE gatilho da sede
-            (8211-3/00, Decreto 35.062/2021), "Sim" leva o processo à análise
-            técnica. Ausente equivale a "Não".
+            negócios ou coworking?". Sim, Não ou boolean. Se omitido, vale Não.
           oneOf:
             - type: boolean
             - type: string
@@ -427,23 +382,16 @@ components:
           description: CNPJ do escritório virtual. Gravado só quando a atividade está abrigada.
         acessosIndependentes:
           description: |
-            Resposta a "O imóvel possui acessos independentes?" — a atividade
-            comercial não pode ter acesso por dentro da área residencial.
+            Resposta a "O imóvel possui acessos independentes?". Sim, Não ou boolean.
           oneOf:
             - type: boolean
             - type: string
         poligonoDeclarado:
           type: object
           description: |
-            Polígono do imóvel desenhado pelo requerente, em GeoJSON
-            **EPSG:4326, ordem [longitude, latitude]**. Aceita `Polygon`,
-            `MultiPolygon` ou um `Feature` que os contenha. Geometria de linha
-            ou ponto é ignorada: não delimita lote.
-
-            É a geometria DECLARADA. Quando o Viabiliza obtém o polígono
-            oficial (Endereçamento SEDUR ou cadastro municipal), o oficial
-            prevalece e a divergência de zona entre os dois encaminha o
-            processo à análise técnica.
+            Polígono do imóvel em GeoJSON, EPSG:4326, ordem [longitude, latitude].
+            Aceita `Polygon`, `MultiPolygon` ou um `Feature` que os contenha.
+            Linha e ponto são ignorados.
           properties:
             type:
               type: string
@@ -462,9 +410,7 @@ components:
         coordenadaGeografica:
           type: object
           description: |
-            Coordenada do estabelecimento capturada no REGIN. Fica registrada
-            para conferência; a localização oficial do processo vem do
-            Cadastro Imobiliário pela inscrição.
+            Latitude e longitude do estabelecimento.
           properties:
             latitude:
               type: number
@@ -507,15 +453,13 @@ components:
             - type: boolean
             - type: string
         possuiConcessaoDeUso:
-          description: Resposta a "Possui concessão de uso?" — par obrigatório de `atividadeEmAreaPublica`.
+          description: Resposta a "Possui concessão de uso?". Sim, Não ou boolean.
           oneOf:
             - type: boolean
             - type: string
         termoDispensaViabilidadeLocacional:
           description: |
-            Aceite do Termo de Dispensa de Viabilidade Locacional. Aceito, a
-            empresa nasce com CNPJ e CGA sem a viabilidade aprovada — por isso
-            o dado fica registrado no processo.
+            Aceite do termo de dispensa de viabilidade locacional. Sim, Não ou boolean.
           oneOf:
             - type: boolean
             - type: string
@@ -602,17 +546,14 @@ components:
     Ruc:
       type: object
       description: |
-        Schema `Ruc` da OpenAPI da JUCEB. O objeto completo (todos os grupos
-        `rowset`) está naquela documentação. Abaixo, só os campos que o
-        Viabiliza lê para abrir o processo. Os demais são armazenados no
-        envelope e não alteram o código de retorno.
+        Conteúdo do envelope. Os grupos abaixo são os usados para criar o processo. Os demais podem ser enviados; o código de retorno não muda.
       properties:
         rowset:
           $ref: "#/components/schemas/RowsetViabiliza"
 
     RowsetViabiliza:
       type: object
-      description: Recorte do `ROWSET` da JUCEB usado na protocolação.
+      description: Grupos do `rowset` usados para criar o processo.
       properties:
         RUC_GENERAL:
           type: object
@@ -627,12 +568,11 @@ components:
         RUC_ESTAB:
           type: object
           description: |
-            Estabelecimento. Schema `RUCESTAB` na OpenAPI da JUCEB.
-            Sem área, logradouro, bairro ou CEP, o processo não é aberto.
+            Estabelecimento. Sem área, logradouro, bairro ou CEP, o processo não é criado.
           properties:
             RES_AREA:
               type: string
-              description: Área utilizada. Precisa ser maior que zero para protocolar.
+              description: Área utilizada, em m². Maior que zero para o processo ser criado.
             RES_DIRECCION:
               type: string
               description: Logradouro.
@@ -662,7 +602,7 @@ components:
                     description: Código da atividade (CNAE).
                   RAE_CALIF_ACTV:
                     type: string
-                    description: "`1` marca a atividade principal. Sem principal, o processo não é aberto."
+                    description: "`1` marca a atividade principal. Sem principal, o processo não é criado."
         GROUPRUC_GEN_PROTOCOLO:
           type: object
           description: Dados genéricos do protocolo. Schema `GROUPRUCGENPROTOCOLO` na OpenAPI da JUCEB.
