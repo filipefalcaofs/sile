@@ -44,6 +44,20 @@ class ReginDocumentacaoTest extends TestCase
 
         $this->assertSame('2.0.0', $spec['info']['version']);
 
+        $texto = (string) $this->get('/api_integracao/docs/openapi.yaml')->getContent();
+        foreach ([
+            'análise técnica',
+            'decisão automática',
+            'GeoServer',
+            'art. 18',
+            'Decreto',
+            'maior porção',
+            'enquadramento',
+            'Cadastro Imobiliário',
+        ] as $interno) {
+            $this->assertStringNotContainsString($interno, $texto);
+        }
+
         foreach (array_keys((new RecebimentoProcesso(
             protocolo: '1',
             razaoSocial: null,

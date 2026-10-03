@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Comunicação técnica — API de recebimento REGIN v2.0.0</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm 18mm 16mm; }
+  body { font-family: "Times New Roman", Times, serif; font-size: 11pt; line-height: 1.28; color: #111; margin: 0; }
+  header { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 3px solid #1f4e79; padding-bottom: 8px; margin-bottom: 14px; }
+  header img { height: 52px; width: auto; }
+  .doc { font-size: 9pt; letter-spacing: 0.08em; color: #1f4e79; font-weight: bold; text-align: right; }
+  p { margin: 0 0 8px; text-align: justify; }
+  .meta { text-align: left; margin: 0 0 2px; }
+  h2 { font-size: 11pt; margin: 12px 0 4px; color: #1f4e79; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 10pt; }
+  th, td { border: 1px solid #222; padding: 5px 7px; vertical-align: top; text-align: left; }
+  th { background: #e8eef5; font-weight: bold; }
+  code { font-family: "Courier New", Courier, monospace; font-size: 9.5pt; }
+  ul { margin: 2px 0 8px 18px; padding: 0; }
+  li { margin: 0 0 3px; }
+  .assinatura { margin-top: 16px; }
+  .assinatura p { text-align: left; margin: 0; }
+  .linha { margin: 18px 0 4px; width: 260px; border-top: 1px solid #111; }
+  footer { margin-top: 16px; border-top: 8px solid #1f4e79; padding-top: 4px; font-size: 8.5pt; color: #333; }
+</style>
+</head>
+<body>
+<header>
+  <img src="logo_sudoeste.png" alt="Sudoeste Informática e Consultoria">
+  <div class="doc">COMUNICAÇÃO TÉCNICA<br>VIABILIZA — SEDUR</div>
+</header>
+
+<p class="meta"><strong>Salvador,</strong> 3 de outubro de 2026.</p>
+
+<p class="meta" style="margin-top:12px;"><strong>À</strong><br>
+Junta Comercial do Estado da Bahia — JUCEB<br>
+A/C: Área responsável pela integração REGIN</p>
+
+<p class="meta" style="margin-top:10px;"><strong>Assunto:</strong> Registro das URLs do Viabiliza e contrato de recebimento versão 2.0.0 (homologação e produção).</p>
+
+<p>Prezados Senhores,</p>
+
+<p>A Sudoeste Informática e Consultoria, responsável técnica do sistema Viabiliza da Secretaria Municipal de Desenvolvimento Urbano — SEDUR, solicita o registro das URLs abaixo como endereço da instituição para recebimento dos processos de viabilidade locacional enviados pelo REGIN.</p>
+
+<p>O contrato desta comunicação é a versão <strong>2.0.0</strong> da API de recebimento. O REGIN continua chamando a URL da Prefeitura, serviço <code>WsProSol098</code>. Não há token nem header <code>JWT</code> nesta chamada. O <code>JWT</code> permanece apenas nas chamadas que o Viabiliza faz à API da JUCEB.</p>
+
+<p>O teste de conectividade é um <code>GET</code> na URL de recebimento. A resposta é texto puro <code>3</code>. O <code>POST</code> do processo usa a mesma URL e responde também em texto puro:</p>
+
+<table>
+  <tr><th>Código</th><th>Significado</th><th>HTTP</th></tr>
+  <tr><td><code>3</code></td><td>Protocolo gravado agora.</td><td>200</td></tr>
+  <tr><td><code>5</code></td><td>O mesmo protocolo já havia sido recebido. Não abre segunda via.</td><td>200</td></tr>
+  <tr><td><code>0</code></td><td>Protocolo ausente ou vazio. Nada é gravado.</td><td>400</td></tr>
+</table>
+
+<p>A duplicidade é pelo número do protocolo, não pelo CNPJ. O CNPJ da Prefeitura Municipal de Salvador, usado no envelope, é <strong>13.927.801/0001-49</strong>.</p>
+
+<h2>1. Dois corpos aceitos</h2>
+
+<p>O <code>POST</code> aceita dois JSON. O envelope <code>EnvioDto</code> já publicado pela JUCEB (Guia Técnico PSCS e OpenAPI de produção) continua válido. A declaração <code>ProcessoDeclaracao</code>, versão 2.0.0, é o contrato para abrir a viabilidade com os dados do solicitante, do imóvel, dos CNAEs e das respostas.</p>
+
+<p>Campos, tipos, exemplos e os dois corpos aceitos estão na especificação anexa e na página de documentação de cada ambiente. O processo é criado quando, além do <code>protocolo</code>, vêm razão social, CNAE principal, área utilizada maior que zero, logradouro, bairro e CEP. Sem algum desses, a resposta continua <code>3</code> e o processo não é criado.</p>
+
+<h2>2. URLs</h2>
+
+<table>
+  <tr><th>Ambiente</th><th>Recebimento</th><th>Documentação (Swagger, v2.0.0)</th></tr>
+  <tr>
+    <td>Homologação</td>
+    <td><code>https://viabiliza-hml.salvador.ba.gov.br/api_integracao/recebe</code></td>
+    <td><code>https://viabiliza-hml.salvador.ba.gov.br/api_integracao/docs</code></td>
+  </tr>
+  <tr>
+    <td>Produção</td>
+    <td><code>https://viabiliza.salvador.ba.gov.br/api_integracao/recebe</code></td>
+    <td><code>https://viabiliza.salvador.ba.gov.br/api_integracao/docs</code></td>
+  </tr>
+</table>
+
+<p>A homologação do REGIN deve apontar somente para a URL de homologação, e a produção do REGIN somente para a URL de produção. Este endereço substitui o informado no ofício de 19 de agosto de 2026. O sistema é o Viabiliza, e não viabilidade.</p>
+
+<h2>3. Contato técnico</h2>
+
+<ul>
+  <li>Filipe Falcão — Líder técnico, Sudoeste Informática e Consultoria</li>
+  <li>E-mail: fillipe.falcao@sudoesteinformatica.com.br</li>
+  <li>Telefone: +55 75 99157-2090</li>
+</ul>
+
+<p>Certos da atenção, colocamo-nos à disposição para o teste de envio assim que as URLs estiverem registradas.</p>
+
+<p>Atenciosamente,</p>
+
+<div class="assinatura">
+  <div class="linha"></div>
+  <p><strong>Filipe Falcão</strong><br>
+  Líder técnico<br>
+  Sudoeste Informática e Consultoria<br>
+  Viabiliza — SEDUR</p>
+</div>
+
+<footer>
+  Sudoeste Informática e Consultoria · Comunicação técnica · API de recebimento REGIN versão 2.0.0 · 3 de outubro de 2026
+</footer>
+</body>
+</html>
