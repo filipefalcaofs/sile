@@ -9,6 +9,7 @@ use App\Http\Controllers\Gestao\ApiIntegracaoController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
 use App\Http\Controllers\Gestao\AuditoriaController;
 use App\Http\Controllers\Gestao\AuditoriaPreditivaController;
+use App\Http\Controllers\Gestao\BenchmarkController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\ConclusaoAnaliseController;
@@ -220,6 +221,11 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
                 ->name('exportacoes.download');
 
             Route::get('indicadores', [RelatorioController::class, 'indicadores'])->name('indicadores');
+
+            // Referência externa: como a REDESIM mede Salvador e onde isso a
+            // coloca entre as capitais. Não se mistura com a telemetria do
+            // VIABILIZA, que mede outra grandeza.
+            Route::get('benchmark', BenchmarkController::class)->name('benchmark');
             Route::get('tempo', [RelatorioController::class, 'tempo'])->name('tempo');
             Route::get('produtividade', [RelatorioController::class, 'produtividade'])->name('produtividade');
             Route::get('quedas', [RelatorioController::class, 'quedas'])->name('quedas');

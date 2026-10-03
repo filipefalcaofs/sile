@@ -33,6 +33,7 @@ export type GestaoNavIcon =
     | 'trending-up'
     | 'seal'
     | 'trending-down'
+    | 'podium'
     | 'warning-list'
     | 'route'
     | 'pin'
@@ -194,6 +195,12 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 name: 'Quedas do expresso',
                 href: '/gestao/relatorios/quedas',
                 icon: 'trending-down',
+                permission: 'consultar-relatorios',
+            },
+            {
+                name: 'Benchmark nacional',
+                href: '/gestao/relatorios/benchmark',
+                icon: 'podium',
                 permission: 'consultar-relatorios',
             },
         ],
