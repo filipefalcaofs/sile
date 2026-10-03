@@ -46,6 +46,7 @@ abstract class TestCase extends BaseTestCase
         // GeoServer SEDUR é integração HTTP real. A suíte desliga o toggle por
         // padrão — testes do cliente WFS ligam e usam Http::fake.
         config(['sile.features.geoserver_zona' => false]);
+        config(['sile.features.geoserver_enderecamento' => false]);
 
         // A suíte exercita o catálogo histórico. O arquivo publicado no
         // simulador traz só o lote de sete inscrições.

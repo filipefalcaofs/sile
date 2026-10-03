@@ -7,6 +7,8 @@ use App\Models\GeoLayer;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\CamadasIncidentesService;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Geo\ZonaMaiorPorcao;
+use App\Services\Geo\ZonaMaiorPorcaoResolver;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
 use Database\Seeders\DecisionTextSeeder;
@@ -15,6 +17,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\Support\Geo\FakeSpatialRepository;
+use Tests\Support\Geo\FakeZonaMaiorPorcaoResolver;
 use Tests\TestCase;
 
 class CamadasIncidentesServiceTest extends TestCase
@@ -174,5 +177,52 @@ class CamadasIncidentesServiceTest extends TestCase
         $this->assertNull($inventario['ponto']);
         $this->assertSame([], $inventario['camadas']);
         $this->assertSame([], $inventario['logradouros_proximos']);
+    }
+
+    private const LOTE = ['type' => 'Polygon', 'coordinates' => [[[-38.5165, -12.9778], [-38.5160, -12.9778], [-38.5160, -12.9773], [-38.5165, -12.9773], [-38.5165, -12.9778]]]];
+
+    public function test_ca_zn_02_porcoes_ficam_no_inventario_da_maior_para_a_menor(): void
+    {
+        $this->wfsComTrecho(null);
+        $this->app->instance(ZonaMaiorPorcaoResolver::class, (new FakeZonaMaiorPorcaoResolver)->para(self::LOTE, FakeZonaMaiorPorcaoResolver::identificado('ZPR 3', [
+            ['zona' => 'ZPR 3', 'area_m2' => 780.0, 'percentual' => 78.0],
+            ['zona' => 'ZEIS', 'area_m2' => 220.0, 'percentual' => 22.0],
+        ])));
+        $request = $this->processo();
+        $request->forceFill(['address_polygon_geojson' => self::LOTE])->save();
+
+        $zona = app(CamadasIncidentesService::class)->materializar($request->fresh())['zona'];
+
+        $this->assertSame('ZPR 3', $zona['nome']);
+        $this->assertSame('enderecamento_maior_porcao', $zona['fonte']);
+        $this->assertSame(['ZPR 3', 'ZEIS'], array_column($zona['porcoes'], 'zona'));
+        $this->assertSame(78.0, $zona['porcoes'][0]['percentual']);
+    }
+
+    public function test_sem_poligono_do_enderecamento_a_zona_e_do_ponto(): void
+    {
+        $this->wfsComTrecho(null);
+
+        $zona = app(CamadasIncidentesService::class)->materializar($this->processo())['zona'];
+
+        $this->assertSame('ZCMe 1/01', $zona['nome']);
+        $this->assertSame('ponto', $zona['fonte']);
+        $this->assertSame([], $zona['porcoes']);
+        $this->assertNull($zona['maior_porcao']);
+    }
+
+    public function test_maior_porcao_indisponivel_mostra_a_zona_do_ponto_com_o_motivo(): void
+    {
+        $this->wfsComTrecho(null);
+        $this->app->instance(ZonaMaiorPorcaoResolver::class, (new FakeZonaMaiorPorcaoResolver)->para(self::LOTE, ZonaMaiorPorcao::indisponivel('GeoServer fora.')));
+        $request = $this->processo();
+        $request->forceFill(['address_polygon_geojson' => self::LOTE])->save();
+
+        $zona = app(CamadasIncidentesService::class)->materializar($request->fresh())['zona'];
+
+        $this->assertSame('ZCMe 1/01', $zona['nome']);
+        $this->assertSame('ponto', $zona['fonte']);
+        $this->assertSame('indisponivel', $zona['maior_porcao']['status']);
+        $this->assertSame('GeoServer fora.', $zona['maior_porcao']['motivo']);
     }
 }

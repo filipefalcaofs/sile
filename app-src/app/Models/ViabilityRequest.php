@@ -11,6 +11,7 @@ use App\Enums\PropertyLocationSource;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Enums\VirtualOfficeIntent;
+use App\Enums\ZonaFonte;
 use Database\Factories\ViabilityRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,8 +34,9 @@ use Illuminate\Support\Collection;
  * assigned_at, analysis_category, in_fine_mesh, analysis_stage,
  * analysis_stage_started_at, analysis_due_at) também ficam FORA do fillable:
  * são escritas pelos serviços de distribuição (HU-080/081) e de SLA (HU-144),
- * nunca pelo cidadão. O território materializado (zona_codigo, bairro_oficial,
- * cod_log, property_point_lat/lng, property_location_source) idem: é escrito
+ * nunca pelo cidadão. O território materializado (zona_codigo, zona_fonte,
+ * bairro_oficial, cod_log, property_point_lat/lng, property_location_source,
+ * address_polygon_geojson) idem: é escrito
  * pelos serviços de localização a partir da identificação espacial ou do
  * Cadastro Imobiliário, nunca pelo cidadão. cod_log é o CODLOG oficial do
  * logradouro — casamento das regras territoriais por endereço (RT-01,
@@ -105,6 +107,9 @@ class ViabilityRequest extends Model
             'status' => ViabilityRequestStatus::class,
             'origin' => ViabilityRequestOrigin::class,
             'property_polygon_geojson' => 'array',
+            'address_polygon_geojson' => 'array',
+            'address_polygon_consulted_at' => 'datetime',
+            'zona_fonte' => ZonaFonte::class,
             'property_point_lat' => 'float',
             'property_point_lng' => 'float',
             'property_location_source' => PropertyLocationSource::class,

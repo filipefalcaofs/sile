@@ -75,4 +75,23 @@ describe('Modal', () => {
 
         expect(geracoes).toEqual([1]);
     });
+
+    it('separa a rolagem da centralização para o topo do diálogo continuar alcançável', () => {
+        montar(
+            <Modal isOpen onClose={() => undefined}>
+                <p>Formulário longo</p>
+            </Modal>,
+        );
+
+        const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
+        const scroller = document.querySelector('.modal') as HTMLElement;
+        const centro = dialog.parentElement as HTMLElement;
+
+        expect(scroller.className).toContain('overflow-y-auto');
+        expect(scroller.className).not.toContain('items-center');
+        expect(centro.className).toContain('min-h-full');
+        expect(centro.className).toContain('items-center');
+        expect(centro.className).toContain('pointer-events-none');
+        expect(dialog.className).toContain('pointer-events-auto');
+    });
 });

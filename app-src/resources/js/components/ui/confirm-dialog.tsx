@@ -50,7 +50,7 @@ export default function ConfirmDialog({
     const styles = variantStyles[variant];
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} className="max-w-[507px] p-6 lg:p-10" showCloseButton={false}>
+        <Modal isOpen={isOpen} onClose={onClose} className="m-4 max-h-[90vh] max-w-[507px] overflow-y-auto p-6 lg:p-10" showCloseButton={false}>
             <div className="text-center">
                 <span
                     className={`mx-auto flex h-15 w-15 items-center justify-center rounded-full ${styles.iconWrapper}`}

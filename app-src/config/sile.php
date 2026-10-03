@@ -40,6 +40,9 @@ return [
         // análise técnica com o motivo registrado — nunca falha silenciosa.
         'geoserver_territorio' => true,
         'geoserver_via_classe' => true,
+        // Polígono do endereçamento SEDUR (enderecamento:VM_ENDERECAMENTO) e zona
+        // pela maior porção do lote. Desligado, a zona segue pelo ponto.
+        'geoserver_enderecamento' => true,
         'cadastro_imobiliario' => env('SILE_CADASTRO_IMOBILIARIO', true),
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
@@ -357,6 +360,9 @@ return [
             'classificacao_viaria' => [
                 'type_name' => 'louos_classificacao_viaria:VM_L_CLASSIF_VIARIA',
                 'atributo' => 'CLASSIFICACAO_VIARIA',
+            ],
+            'enderecamento' => [
+                'type_name' => 'enderecamento:VM_ENDERECAMENTO',
             ],
         ],
         // WhatsApp (HU-095): base_url/token são parametrizáveis (catálogo

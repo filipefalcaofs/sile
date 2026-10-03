@@ -187,8 +187,8 @@ function EditarRegraModal({
     const labelClass = 'mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400';
 
     return (
-        <Modal isOpen onClose={onClose} className="m-4 max-w-3xl p-6 lg:p-8">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+        <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-3xl overflow-y-auto p-6 lg:p-8">
+            <h4 className="pr-12 text-lg font-semibold text-gray-800 dark:text-white/90">
                 Editar {regra.codigo} — {regra.titulo}
             </h4>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">

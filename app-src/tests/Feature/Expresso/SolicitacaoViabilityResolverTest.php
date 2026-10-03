@@ -8,6 +8,7 @@ use App\Enums\Quadro10Permissao;
 use App\Enums\ResultadoViabilidade;
 use App\Enums\RiscoMunicipal;
 use App\Enums\RuleDomain;
+use App\Enums\ZonaFonte;
 use App\Models\Cnae;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
@@ -263,6 +264,37 @@ class SolicitacaoViabilityResolverTest extends TestCase
         $resolved = $this->resolver()->resolve($this->draftComCnaes(['4712100']));
 
         $this->assertSame(ResultadoViabilidade::Permitido->value, $resolved->consolidado);
+    }
+
+    public function test_zona_da_maior_porcao_substitui_a_zona_do_ponto_no_quadro_10(): void
+    {
+        // Ponto cai em ZR-1 (proibido); a maior porção do lote é ZR-2 (permitido).
+        $this->fakeBairroComZona('ZR-1');
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Proibido);
+        $this->seedQuadro10('ZR-2', 'nR1', Quadro10Permissao::Permitido);
+
+        $request = $this->draftComCnaes(['4712100']);
+        $request->forceFill(['zona_codigo' => 'ZR-2', 'zona_fonte' => ZonaFonte::EnderecamentoMaiorPorcao])->save();
+
+        $resolved = $this->resolver()->resolve($request->fresh());
+
+        $this->assertSame(ResultadoViabilidade::Permitido->value, $resolved->consolidado);
+        $territorio = $resolved->por_cnae[0]['consulta_array']['territorio'];
+        $this->assertSame('ZR-2', $territorio['zona']['nome']);
+        $this->assertSame('Comércio', $territorio['bairro']['nome']);
+    }
+
+    public function test_zona_pelo_ponto_continua_quando_a_fonte_e_o_ponto(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Proibido);
+
+        $request = $this->draftComCnaes(['4712100']);
+        $request->forceFill(['zona_codigo' => 'ZR-1', 'zona_fonte' => ZonaFonte::Ponto])->save();
+
+        $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $this->resolver()->resolve($request->fresh())->consolidado);
     }
 
     public function test_sem_poligono_usa_via_cnae_sem_geocodificar(): void
