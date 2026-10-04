@@ -110,7 +110,11 @@ final class RecebimentoProcesso
      */
     public static function fromEnvelope(array $envelope): self
     {
-        $abrigada = self::booleano($envelope['atividadeAbrigadaEmEscritorioVirtual'] ?? null);
+        $abrigada = self::booleano(
+            $envelope['atividadeAbrigadaEmEscritorioVirtual']
+                ?? $envelope['trataSeDeEscritorioVirtual']
+                ?? null,
+        );
 
         return new self(
             protocolo: trim((string) ($envelope['protocolo'] ?? '')),

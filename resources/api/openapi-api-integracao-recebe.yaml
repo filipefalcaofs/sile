@@ -93,7 +93,7 @@ paths:
                   municipio: Salvador
                   uf: BA
                   areaUtilizada: 45.75
-                  areaConstruida: 216
+                  areaEstabelecimento: 216
                   areaTerreno: 300
                   tipoComplemento: Sala
                   descricaoComplemento: "2"
@@ -109,17 +109,12 @@ paths:
                   tipoImovel: Loja
                   porteEmpresa: Microempresa
                   atividadeEmAreaPublica: Sim
-                  escritorioVirtual: Sim
-                  atividadeAbrigadaEmEscritorioVirtual: Sim
+                  possuiConcessaoDeUso: Não
+                  trataSeDeEscritorioVirtual: Sim
                   prestaServicoDeEscritorioVirtual: Não
                   cnpjEscritorioVirtual: "11222333000181"
-                  acessosIndependentes: Sim
                   imovelEmCondominio: Não
                   areaEmbarqueDesembarque: Não
-                  possuiConcessaoDeUso: Não
-                  atividadesExercidasNoLocal:
-                    - cnae: "4712100"
-                      exercida: Sim
                   poligonoDeclarado:
                     type: Polygon
                     coordinates:
@@ -132,19 +127,11 @@ paths:
                     latitude: -12.977852
                     longitude: -38.516331
                   evento: Inscrição de primeiro estabelecimento (Matriz)
-                  objetoSocial: Comércio varejista de produtos de padaria
-                  naturezaJuridica: Sociedade Empresária Limitada
                   termoDispensaViabilidadeLocacional: Não
                   meiDesenquadrado: Não
-                  contador:
-                    nome: Contabilidade Souza
-                    documento: "52998224725"
-                    crc: BA-012345/O
                   servico: Consulta de viabilidade
                   dataAbertura: "2026-10-03"
-                  cnpjDestino: "13927801000149"
                   cnpjEmpresa: "13927801000149"
-                  cnpjOrigem: "13927801000149"
                   codFuncao: 103
                   dataGeracao: "2026-09-16T16:00:00.000Z"
                   nire: "00000000000"
@@ -275,8 +262,14 @@ components:
           oneOf:
             - type: number
             - type: string
+        areaEstabelecimento:
+          description: Área do estabelecimento, em m². Registrada no processo; não substitui `areaUtilizada`.
+          oneOf:
+            - type: number
+            - type: string
         areaConstruida:
-          description: Área construída do imóvel, em m². Registrada no processo; não substitui `areaUtilizada`.
+          deprecated: true
+          description: Sinônimo anterior de `areaEstabelecimento`. Prefira `areaEstabelecimento`.
           oneOf:
             - type: number
             - type: string
@@ -328,13 +321,14 @@ components:
           oneOf:
             - type: boolean
             - type: string
-        escritorioVirtual:
-          description: Resposta a "Trata-se de escritório virtual?".
+        trataSeDeEscritorioVirtual:
+          description: Resposta a "Trata-se de escritório virtual?". Sim, Não ou boolean.
           oneOf:
             - type: boolean
             - type: string
         atividadeAbrigadaEmEscritorioVirtual:
-          description: Resposta a "Sua atividade será abrigada em um escritório virtual?".
+          deprecated: true
+          description: Sinônimo anterior de `trataSeDeEscritorioVirtual`. Prefira `trataSeDeEscritorioVirtual`.
           oneOf:
             - type: boolean
             - type: string
@@ -347,13 +341,7 @@ components:
             - type: string
         cnpjEscritorioVirtual:
           type: string
-          description: CNPJ do escritório virtual. Gravado só quando a atividade está abrigada.
-        acessosIndependentes:
-          description: |
-            Resposta a "O imóvel possui acessos independentes?". Sim, Não ou boolean.
-          oneOf:
-            - type: boolean
-            - type: string
+          description: CNPJ do escritório virtual. Gravado quando `trataSeDeEscritorioVirtual` é sim.
         poligonoDeclarado:
           type: object
           description: |
@@ -386,30 +374,10 @@ components:
             longitude:
               type: number
               example: -38.516331
-        atividadesExercidasNoLocal:
-          type: array
-          description: Por CNAE, se a atividade é exercida no local (campo padrão REDESIM).
-          items:
-            type: object
-            required: [cnae, exercida]
-            properties:
-              cnae:
-                type: string
-              exercida:
-                description: Sim ou Não.
-                oneOf:
-                  - type: boolean
-                  - type: string
         evento:
           type: string
-          description: Evento do pedido (abertura de matriz, alteração de endereço, alteração de atividade).
+          description: Serviço ou evento solicitado (constituição de matriz ou filial, alteração de endereço, alteração de atividade).
           example: Inscrição de primeiro estabelecimento (Matriz)
-        objetoSocial:
-          type: string
-          description: Descrição do objeto social declarado.
-        naturezaJuridica:
-          type: string
-          description: Natureza jurídica da empresa.
         imovelEmCondominio:
           description: Resposta a "Imóvel em condomínio?".
           oneOf:
@@ -431,27 +399,11 @@ components:
           oneOf:
             - type: boolean
             - type: string
-        bapAnteriorIndeferido:
-          type: string
-          description: BAP, BAN ou BAB indeferido que originou este novo pedido.
-          example: BAP-2025-0777
         meiDesenquadrado:
           description: Pedido originado de MEI desenquadrado.
           oneOf:
             - type: boolean
             - type: string
-        contador:
-          type: object
-          description: Contador que preencheu o pedido, quando o solicitante é contador.
-          properties:
-            nome:
-              type: string
-            documento:
-              type: string
-              description: CPF ou CNPJ, só dígitos.
-            crc:
-              type: string
-              example: BA-012345/O
         servico:
           type: string
           description: Serviço solicitado.
@@ -459,17 +411,9 @@ components:
           type: string
           format: date
           description: Data de abertura do processo (AAAA-MM-DD ou data/hora ISO 8601).
-        cnpjDestino:
-          type: string
-          description: CNPJ da instituição que recebe. 14 dígitos, com pontuação opcional.
-          example: "13927801000149"
         cnpjEmpresa:
           type: string
-          description: CNPJ da empresa.
-          example: "13927801000149"
-        cnpjOrigem:
-          type: string
-          description: CNPJ de origem dos dados. 14 dígitos, com pontuação opcional.
+          description: CNPJ da empresa. Na constituição de filial, o CNPJ da matriz.
           example: "13927801000149"
         codFuncao:
           type: integer
@@ -483,7 +427,7 @@ components:
           example: "2026-09-16T16:00:00.000Z"
         nire:
           type: string
-          description: NIRE ou matrícula.
+          description: NIRE ou matrícula. Obrigatório nos pedidos de alteração.
           example: "00000000000"
         RAE_CALIF_ACTV:
           type: string

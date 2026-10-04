@@ -49,7 +49,7 @@ final readonly class RecebimentoComplemento
             evento: RecebimentoProcesso::texto($envelope['evento'] ?? null, 255),
             objetoSocial: RecebimentoProcesso::texto($envelope['objetoSocial'] ?? null, 4000),
             naturezaJuridica: RecebimentoProcesso::texto($envelope['naturezaJuridica'] ?? null, 255),
-            areaConstruida: RecebimentoProcesso::area($envelope['areaConstruida'] ?? null),
+            areaConstruida: RecebimentoProcesso::area($envelope['areaEstabelecimento'] ?? $envelope['areaConstruida'] ?? null),
             areaTerreno: RecebimentoProcesso::area($envelope['areaTerreno'] ?? null),
             coordenada: self::coordenada($envelope['coordenadaGeografica'] ?? null),
             imovelEmCondominio: RecebimentoProcesso::booleano($envelope['imovelEmCondominio'] ?? null),

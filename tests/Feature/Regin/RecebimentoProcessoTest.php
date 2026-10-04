@@ -90,7 +90,7 @@ class RecebimentoProcessoTest extends TestCase
         $payload = $this->declaracao($this->cnpjValido());
         unset($payload['area']);
         $payload['areaUtilizada'] = '45,75';
-        $payload['areaConstruida'] = 216;
+        $payload['areaEstabelecimento'] = 216;
         $payload['areaTerreno'] = 300;
 
         $this->postJson('/api_integracao/recebe', $payload)->assertOk();
@@ -193,6 +193,20 @@ class RecebimentoProcessoTest extends TestCase
             [['cnae' => '4712100', 'exercida' => 'Sim'], ['cnae' => '5611201', 'exercida' => 'Não']],
             $declarada['atividades_exercidas_no_local'],
         );
+    }
+
+    public function test_trata_se_de_escritorio_virtual_e_sinonimo_da_pergunta_anterior(): void
+    {
+        $payload = $this->declaracao($this->cnpjValido());
+        unset($payload['atividadeAbrigadaEmEscritorioVirtual'], $payload['cnpjEscritorioVirtual']);
+        $payload['trataSeDeEscritorioVirtual'] = 'Sim';
+        $payload['cnpjEscritorioVirtual'] = $this->cnpjValido();
+
+        $this->postJson('/api_integracao/recebe', $payload)->assertOk();
+
+        $processo = ViabilityRequest::query()->firstOrFail();
+        $this->assertTrue($processo->wants_virtual_office_tenant);
+        $this->assertSame($payload['cnpjEscritorioVirtual'], $processo->origem_declarada['cnpj_escritorio_virtual']);
     }
 
     public function test_resposta_de_sede_de_escritorio_virtual_vira_gatilho_no_processo(): void
