@@ -10,7 +10,6 @@
   p { margin: 0 0 10px; text-align: justify; }
   ol { margin: 4px 0 12px 22px; padding: 0; }
   ol > li { margin: 0 0 3px; }
-  ol ol { list-style-type: lower-alpha; margin-top: 3px; }
 </style>
 </head>
 <body>
@@ -21,8 +20,8 @@
 <p>O encaminhamento desses dados é necessário para subsidiar a análise, instrução e tratamento do processo, garantindo a integridade das informações e a adequada continuidade do fluxo administrativo.</p>
 
 <ol>
-  <li>Nº do Protocolo (BAP);</li>
-  <li>Razão Social;</li>
+  <li>Nº do Protocolo (BAP / BAN / BAB);</li>
+  <li>Razão Social informada;</li>
   <li>CPF do solicitante;</li>
   <li>Nome do solicitante;</li>
   <li>E-mail do solicitante;</li>
@@ -36,9 +35,11 @@
   <li>Ponto de Referência/Perímetro;</li>
   <li>Cidade/Município;</li>
   <li>Estado/UF;</li>
-  <li>Área utilizada pela atividade, em m²;</li>
-  <li>Área construída do imóvel, em m²;</li>
+  <li>Área utilizada pela atividade, m²;</li>
+  <li>Área do estabelecimento, m²;</li>
   <li>Área do terreno, em m²;</li>
+  <li>Resposta à pergunta “Imóvel em condomínio?”;</li>
+  <li>Resposta à pergunta “Possui área de embarque/desembarque?”;</li>
   <li>Tipo de Complemento;</li>
   <li>Descrição do Complemento;</li>
   <li>Categoria do Imóvel;</li>
@@ -46,41 +47,23 @@
   <li>Todos os CNAEs Secundários;</li>
   <li>Pergunta associada ao respectivo CNAE;</li>
   <li>Resposta associada à pergunta do respectivo CNAE;</li>
-  <li>Por CNAE, se a atividade é exercida no local;</li>
   <li>Tipo de Imóvel;</li>
   <li>Porte da Empresa;</li>
   <li>Resposta à pergunta “A atividade está estabelecida em área pública?”;</li>
   <li>Resposta à pergunta “Possui concessão de uso?”;</li>
   <li>Resposta à pergunta “Trata-se de escritório virtual?”;</li>
-  <li>Resposta à pergunta “Sua atividade será abrigada em um escritório virtual?”;</li>
-  <li>Caso respondido “Sim” à pergunta do item anterior, o CNPJ do escritório virtual informado;</li>
+  <li>Caso respondido “Sim” à pergunta anterior, encaminhar o CNPJ informado;</li>
   <li>Resposta à pergunta “Irá prestar serviço de escritório virtual, centro de negócios ou coworking?”;</li>
-  <li>Resposta à pergunta “O imóvel possui acessos independentes?”;</li>
-  <li>Resposta à pergunta “Imóvel em condomínio?”;</li>
-  <li>Resposta à pergunta “Possui área de embarque/desembarque?”;</li>
-  <li>Evento do pedido (abertura de matriz, alteração de endereço, alteração de atividade);</li>
-  <li>Objeto social declarado;</li>
-  <li>Natureza jurídica da empresa;</li>
-  <li>Aceite do Termo de Dispensa de Viabilidade Locacional;</li>
-  <li>BAP, BAN ou BAB indeferido que originou o pedido;</li>
-  <li>Indicação de pedido originado de MEI desenquadrado;</li>
-  <li>Contador que preencheu o pedido, quando o solicitante é contador:
-    <ol>
-      <li>nome;</li>
-      <li>documento (CPF ou CNPJ);</li>
-      <li>CRC.</li>
-    </ol>
-  </li>
-  <li>Latitude e longitude do estabelecimento;</li>
+  <li>Serviço / Evento solicitado (Constituição — Matriz e Filial / Alteração de Endereço / Alteração de Atividade Econômica);</li>
+  <li>NIRE ou Matrícula (para os casos de alteração);</li>
+  <li>CNPJ da Matriz (para os casos de constituição de filial);</li>
   <li>Polígono do imóvel desenhado pelo requerente (GeoJSON);</li>
-  <li>Serviço;</li>
-  <li>Data de abertura do processo;</li>
-  <li>CNPJ da instituição de destino;</li>
-  <li>CNPJ da empresa;</li>
-  <li>CNPJ de origem dos dados;</li>
-  <li>Código da função do envio;</li>
-  <li>Data e hora de geração do envio;</li>
-  <li>NIRE ou matrícula;</li>
+  <li>Data e hora da geração do processo;</li>
+  <li>Data e hora da geração do envio;</li>
+  <li>Aceite do Termo de Dispensa de Viabilidade Locacional;</li>
+  <li>Indicação do pedido originado de MEI desenquadrado;</li>
+  <li>Código da função de envio;</li>
+  <li>Latitude e longitude do estabelecimento;</li>
   <li>Qualificação da atividade (RAE_CALIF_ACTV);</li>
   <li>Código do tipo do item genérico do protocolo (RGP_TGE_COD_TIP_TAB);</li>
   <li>Valor do item genérico do protocolo (RGP_VALOR).</li>
