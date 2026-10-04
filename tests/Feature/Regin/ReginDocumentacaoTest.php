@@ -66,10 +66,22 @@ class ReginDocumentacaoTest extends TestCase
             $spec['paths']['/api_integracao/recebe']['post']['requestBody']['content']['application/json']['schema'],
         );
 
+        // Campos que a SEDUR tirou da solicitação: a API ainda aceita e grava,
+        // mas o contrato publicado não os oferece.
+        $foraDoContrato = [
+            'cnpj_destino',
+            'cnpj_origem',
+            'objeto_social',
+            'natureza_juridica',
+            'bap_anterior_indeferido',
+            'contador',
+            'atividades_exercidas_no_local',
+            'acessos_independentes',
+            'escritorio_virtual',
+        ];
+
         foreach ([
-            'cnpjDestino',
             'cnpjEmpresa',
-            'cnpjOrigem',
             'codFuncao',
             'dataGeracao',
             'nire',
@@ -116,8 +128,14 @@ class ReginDocumentacaoTest extends TestCase
             poligonoDeclarado: null,
             complemento: RecebimentoComplemento::fromEnvelope([]),
         ))->toArray()) as $campoGravado) {
+            if (in_array($campoGravado, $foraDoContrato, true)) {
+                continue;
+            }
+
             $nomeNoContrato = match ($campoGravado) {
                 'RAE_CALIF_ACTV', 'RGP_TGE_COD_TIP_TAB', 'RGP_VALOR' => $campoGravado,
+                'area_construida' => 'areaEstabelecimento',
+                'atividade_abrigada_em_escritorio_virtual' => 'trataSeDeEscritorioVirtual',
                 default => Str::camel($campoGravado),
             };
 
