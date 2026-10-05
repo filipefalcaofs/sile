@@ -96,6 +96,21 @@ final class RecebimentoProcesso
             'evento',
             'objetoSocial',
             'naturezaJuridica',
+            'RGE_NOMB',
+            'RES_TTL_TIP_LOGRADORO',
+            'RES_DIRECCION',
+            'RES_NUME',
+            'RES_IDENT_COMP',
+            'RES_URBANIZACION',
+            'RES_ZONA_POSTAL',
+            'RES_REFER',
+            'RES_TMU_DESC_MUN',
+            'RES_TES_COD_ESTADO',
+            'RES_AREA',
+            'RES_DS_EVENTO',
+            'RES_CNPJ_SEDE',
+            'RGE_TGE_VTAMANHO',
+            'RUC_ACTV_ECON',
         ] as $chave) {
             if (array_key_exists($chave, $envelope)) {
                 return true;
@@ -116,31 +131,33 @@ final class RecebimentoProcesso
                 ?? null,
         );
 
+        [$cnaePrincipal, $cnaesSecundarios] = self::atividadesDoEnvelope($envelope);
+
         return new self(
             protocolo: trim((string) ($envelope['protocolo'] ?? '')),
-            razaoSocial: self::texto($envelope['razaoSocial'] ?? null, 255),
+            razaoSocial: self::texto($envelope['RGE_NOMB'] ?? $envelope['razaoSocial'] ?? null, 255),
             cpfSolicitante: self::digitos($envelope['cpfSolicitante'] ?? null, 11),
             nomeSolicitante: self::texto($envelope['nomeSolicitante'] ?? null, 255),
             emailSolicitante: self::email($envelope['emailSolicitante'] ?? null),
-            inscricaoImobiliaria: self::texto($envelope['inscricaoImobiliaria'] ?? null, 32),
+            inscricaoImobiliaria: self::inscricao($envelope),
             codlog: self::texto($envelope['codlog'] ?? null, 32),
-            tipoLogradouro: self::texto($envelope['tipoLogradouro'] ?? null, 40),
-            logradouro: self::texto($envelope['logradouro'] ?? null, 255),
-            numero: self::texto($envelope['numero'] ?? null, 20),
-            bairro: self::texto($envelope['bairro'] ?? null, 255),
-            cep: self::digitos($envelope['cep'] ?? null, 8),
-            pontoReferencia: self::texto($envelope['pontoReferencia'] ?? null, 255),
-            municipio: self::texto($envelope['municipio'] ?? null, 255),
-            uf: self::uf($envelope['uf'] ?? null),
-            area: self::area($envelope['areaUtilizada'] ?? $envelope['area'] ?? null),
+            tipoLogradouro: self::texto($envelope['RES_TTL_TIP_LOGRADORO'] ?? $envelope['tipoLogradouro'] ?? null, 40),
+            logradouro: self::texto($envelope['RES_DIRECCION'] ?? $envelope['logradouro'] ?? null, 255),
+            numero: self::texto($envelope['RES_NUME'] ?? $envelope['numero'] ?? null, 20),
+            bairro: self::texto($envelope['RES_URBANIZACION'] ?? $envelope['bairro'] ?? null, 255),
+            cep: self::digitos($envelope['RES_ZONA_POSTAL'] ?? $envelope['cep'] ?? null, 8),
+            pontoReferencia: self::texto($envelope['RES_REFER'] ?? $envelope['pontoReferencia'] ?? null, 255),
+            municipio: self::texto($envelope['RES_TMU_DESC_MUN'] ?? $envelope['municipio'] ?? null, 255),
+            uf: self::uf($envelope['RES_TES_COD_ESTADO'] ?? $envelope['uf'] ?? null),
+            area: self::area($envelope['RES_AREA'] ?? $envelope['areaUtilizada'] ?? $envelope['area'] ?? null),
             tipoComplemento: self::texto($envelope['tipoComplemento'] ?? null, 80),
-            descricaoComplemento: self::texto($envelope['descricaoComplemento'] ?? null, 255),
+            descricaoComplemento: self::texto($envelope['RES_IDENT_COMP'] ?? $envelope['descricaoComplemento'] ?? null, 255),
             categoriaImovel: self::texto($envelope['categoriaImovel'] ?? null, 120),
-            cnaePrincipal: self::cnae($envelope['cnaePrincipal'] ?? null),
-            cnaesSecundarios: self::cnaes($envelope['cnaesSecundarios'] ?? null),
+            cnaePrincipal: $cnaePrincipal,
+            cnaesSecundarios: $cnaesSecundarios,
             perguntas: self::perguntas($envelope['perguntas'] ?? null),
             tipoImovel: self::texto($envelope['tipoImovel'] ?? null, 120),
-            porteEmpresa: self::texto($envelope['porteEmpresa'] ?? null, 80),
+            porteEmpresa: self::texto($envelope['RGE_TGE_VTAMANHO'] ?? $envelope['porteEmpresa'] ?? null, 80),
             atividadeEmAreaPublica: self::booleano($envelope['atividadeEmAreaPublica'] ?? null),
             escritorioVirtual: self::booleano($envelope['escritorioVirtual'] ?? null),
             atividadeAbrigadaEmEscritorioVirtual: $abrigada,
@@ -245,27 +262,27 @@ final class RecebimentoProcesso
         $faltam = [];
 
         if ($this->razaoSocial === null) {
-            $faltam[] = 'razaoSocial';
+            $faltam[] = 'RGE_NOMB';
         }
 
         if ($this->cnaePrincipal === null) {
-            $faltam[] = 'cnaePrincipal';
+            $faltam[] = 'RUC_ACTV_ECON';
         }
 
         if ($this->area === null) {
-            $faltam[] = 'areaUtilizada';
+            $faltam[] = 'RES_AREA';
         }
 
         if ($this->logradouro === null) {
-            $faltam[] = 'logradouro';
+            $faltam[] = 'RES_DIRECCION';
         }
 
         if ($this->bairro === null) {
-            $faltam[] = 'bairro';
+            $faltam[] = 'RES_URBANIZACION';
         }
 
         if ($this->cep === null) {
-            $faltam[] = 'cep';
+            $faltam[] = 'RES_ZONA_POSTAL';
         }
 
         return $faltam;
@@ -427,6 +444,65 @@ final class RecebimentoProcesso
         $area = (float) $normalizado;
 
         return $area > 0 ? $area : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $envelope
+     * @return array{0: ?string, 1: list<string>}
+     */
+    private static function atividadesDoEnvelope(array $envelope): array
+    {
+        $lista = $envelope['RUC_ACTV_ECON'] ?? null;
+
+        if (! is_array($lista)) {
+            return [
+                self::cnae($envelope['cnaePrincipal'] ?? null),
+                self::cnaes($envelope['cnaesSecundarios'] ?? null),
+            ];
+        }
+
+        $principal = null;
+        $secundarios = [];
+
+        foreach ($lista as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $codigo = self::cnae($item['RAE_TAE_COD_ACTVD'] ?? null);
+
+            if ($codigo === null) {
+                continue;
+            }
+
+            if (trim((string) ($item['RAE_CALIF_ACTV'] ?? '')) === '1' && $principal === null) {
+                $principal = $codigo;
+
+                continue;
+            }
+
+            $secundarios[] = $codigo;
+        }
+
+        return [$principal, array_values(array_unique($secundarios))];
+    }
+
+    /**
+     * @param  array<string, mixed>  $envelope
+     */
+    private static function inscricao(array $envelope): ?string
+    {
+        $informada = self::texto($envelope['inscricaoImobiliaria'] ?? null, 32);
+
+        if ($informada !== null) {
+            return $informada;
+        }
+
+        if (trim((string) ($envelope['RGP_TGE_COD_TIP_TAB'] ?? '')) !== '5') {
+            return null;
+        }
+
+        return self::texto($envelope['RGP_VALOR'] ?? null, 32);
     }
 
     public static function cnae(mixed $valor): ?string

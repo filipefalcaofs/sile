@@ -17,13 +17,13 @@ info:
     | --- | --- | --- |
     | `3` | 200 | Protocolo gravado. |
     | `5` | 200 | Esse `protocolo` já foi recebido. |
-    | `0` | 400 | Recusado: `protocolo` ausente ou vazio, ou falta dado que abre o processo (`razaoSocial`, `cnaePrincipal`, `areaUtilizada` maior que zero, `logradouro`, `bairro` ou `cep`). Nada é gravado. |
+    | `0` | 400 | Recusado: `protocolo` ausente ou vazio, ou falta dado que abre o processo (`RGE_NOMB`, `RUC_ACTV_ECON` com `RAE_CALIF_ACTV` 1, `RES_AREA` maior que zero, `RES_DIRECCION`, `RES_URBANIZACION` ou `RES_ZONA_POSTAL`). Nada é gravado. |
 
     A duplicidade é o número do `protocolo`.
 
     ## Para o processo ser criado
 
-    Envie também `razaoSocial`, `cnaePrincipal`, `areaUtilizada` maior que zero, `logradouro`, `bairro` e `cep`. Sem algum desses a resposta é `0` (HTTP 400) e nada é gravado.
+    Envie também `RGE_NOMB`, `RUC_ACTV_ECON` com uma atividade `RAE_CALIF_ACTV` 1, `RES_AREA` maior que zero, `RES_DIRECCION`, `RES_URBANIZACION` e `RES_ZONA_POSTAL`. Sem algum desses a resposta é `0` (HTTP 400) e nada é gravado. O nome é o original do campo.
   contact:
     name: SEDUR — Viabiliza
     url: https://www.sedur.salvador.ba.gov.br
@@ -66,7 +66,7 @@ paths:
 
         - `3` — protocolo gravado agora (HTTP 200).
         - `5` — o mesmo `protocolo` já existe (HTTP 200).
-        - `0` — recusado: `protocolo` ausente, ou falta razão social, CNAE principal, área, logradouro, bairro ou CEP (HTTP 400). Nada é gravado.
+        - `0` — recusado: `protocolo` ausente, ou falta `RGE_NOMB`, atividade principal, `RES_AREA`, `RES_DIRECCION`, `RES_URBANIZACION` ou `RES_ZONA_POSTAL` (HTTP 400). Nada é gravado.
       requestBody:
         required: true
         content:
@@ -78,36 +78,32 @@ paths:
                 summary: Declaração do processo
                 value:
                   protocolo: BAP-2026-0001
-                  razaoSocial: Padaria do Porto Ltda
+                  RGE_NOMB: Padaria do Porto Ltda
                   cpfSolicitante: "52998224725"
                   nomeSolicitante: Maria Souza
                   emailSolicitante: maria.souza@exemplo.com
-                  inscricaoImobiliaria: "12345678"
-                  codlog: "212"
-                  tipoLogradouro: Rua
-                  logradouro: das Flores
-                  numero: "100"
-                  bairro: Comércio
-                  cep: "40020000"
-                  pontoReferencia: Em frente à praça
-                  municipio: Salvador
-                  uf: BA
-                  areaUtilizada: 45.75
-                  areaEstabelecimento: 216
-                  areaTerreno: 300
-                  tipoComplemento: Sala
-                  descricaoComplemento: "2"
-                  categoriaImovel: Comercial
-                  cnaePrincipal: "4712100"
-                  cnaesSecundarios:
-                    - "5611201"
-                    - "5620104"
+                  RES_TTL_TIP_LOGRADORO: Rua
+                  RES_DIRECCION: das Flores
+                  RES_NUME: "100"
+                  RES_URBANIZACION: Comércio
+                  RES_ZONA_POSTAL: "40020000"
+                  RES_REFER: Em frente à praça
+                  RES_TMU_DESC_MUN: Salvador
+                  RES_TES_COD_ESTADO: BA
+                  RES_AREA: 45.75
+                  RES_IDENT_COMP: "2"
+                  RUC_ACTV_ECON:
+                    - RAE_TAE_COD_ACTVD: "4712100"
+                      RAE_CALIF_ACTV: "1"
+                    - RAE_TAE_COD_ACTVD: "5611201"
+                      RAE_CALIF_ACTV: "2"
+                    - RAE_TAE_COD_ACTVD: "5620104"
+                      RAE_CALIF_ACTV: "2"
                   perguntas:
                     - cnae: "4712100"
                       pergunta: "12"
                       resposta: Não
-                  tipoImovel: Loja
-                  porteEmpresa: Microempresa
+                  RGE_TGE_VTAMANHO: "1"
                   atividadeEmAreaPublica: Sim
                   possuiConcessaoDeUso: Não
                   trataSeDeEscritorioVirtual: Sim
@@ -115,18 +111,8 @@ paths:
                   cnpjEscritorioVirtual: "11222333000181"
                   imovelEmCondominio: Não
                   areaEmbarqueDesembarque: Não
-                  poligonoDeclarado:
-                    type: Polygon
-                    coordinates:
-                      - - [-38.516331, -12.977852]
-                        - [-38.516291, -12.977746]
-                        - [-38.516453, -12.977688]
-                        - [-38.516492, -12.977795]
-                        - [-38.516331, -12.977852]
-                  coordenadaGeografica:
-                    latitude: -12.977852
-                    longitude: -38.516331
-                  evento: Inscrição de primeiro estabelecimento (Matriz)
+                  RES_DS_EVENTO: Inscrição de primeiro estabelecimento (Matriz)
+                  RES_CNPJ_SEDE: "13927801000149"
                   termoDispensaViabilidadeLocacional: Não
                   meiDesenquadrado: Não
                   servico: Consulta de viabilidade
@@ -155,7 +141,7 @@ paths:
                   summary: Protocolo já gravado
                   value: "5"
         "400":
-          description: Recusado. Protocolo ausente, ou falta razão social, CNAE principal, área, logradouro, bairro ou CEP. Corpo em texto puro `0`. Nenhum registro é criado.
+          description: Recusado. Protocolo ausente, ou falta `RGE_NOMB`, atividade principal em `RUC_ACTV_ECON`, `RES_AREA`, `RES_DIRECCION`, `RES_URBANIZACION` ou `RES_ZONA_POSTAL`. Corpo em texto puro `0`. Nenhum registro é criado.
           content:
             text/plain:
               schema:
@@ -190,7 +176,7 @@ components:
     CodigoInvalido:
       type: string
       enum: ["0"]
-      description: Recusado. Falta o protocolo ou dado que abre o processo (razão social, CNAE principal, área, logradouro, bairro ou CEP).
+      description: Recusado. Falta o protocolo ou dado que abre o processo (`RGE_NOMB`, atividade principal, `RES_AREA`, `RES_DIRECCION`, `RES_URBANIZACION` ou `RES_ZONA_POSTAL`).
 
     ProcessoDeclaracao:
       type: object
@@ -204,9 +190,13 @@ components:
           type: string
           description: Número do protocolo (BAP).
           example: BAP-2026-0001
-        razaoSocial:
+        RGE_NOMB:
           type: string
-          description: Razão social.
+          description: Nome empresarial ou razão social. Nome original do campo.
+        razaoSocial:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RGE_NOMB`. Prefira `RGE_NOMB`.
         cpfSolicitante:
           type: string
           description: CPF do solicitante, com ou sem máscara.
@@ -220,79 +210,115 @@ components:
         inscricaoImobiliaria:
           type: string
           description: Número da inscrição imobiliária (IPTU).
-        codlog:
+        RES_TTL_TIP_LOGRADORO:
           type: string
-          description: CODLOG do logradouro.
+          description: Tipo de logradouro do estabelecimento. Nome original do campo.
         tipoLogradouro:
+          deprecated: true
           type: string
-          description: Tipo de logradouro (Rua, Avenida, Travessa).
+          description: Sinônimo de `RES_TTL_TIP_LOGRADORO`.
+        RES_DIRECCION:
+          type: string
+          description: Nome do logradouro do estabelecimento. Nome original do campo.
         logradouro:
+          deprecated: true
           type: string
-          description: Nome do logradouro.
+          description: Sinônimo de `RES_DIRECCION`.
+        RES_NUME:
+          type: string
+          description: Número do estabelecimento no logradouro. Nome original do campo. Vazio vira `s/n`.
         numero:
+          deprecated: true
           type: string
-          description: Número do imóvel. Vazio vira `s/n`.
+          description: Sinônimo de `RES_NUME`.
+        RES_URBANIZACION:
+          type: string
+          description: Bairro do estabelecimento. Nome original do campo.
         bairro:
+          deprecated: true
           type: string
-          description: Bairro ou loteamento.
+          description: Sinônimo de `RES_URBANIZACION`.
+        RES_ZONA_POSTAL:
+          type: string
+          description: CEP do estabelecimento. Nome original do campo.
         cep:
+          deprecated: true
           type: string
-          description: CEP, com ou sem máscara.
+          description: Sinônimo de `RES_ZONA_POSTAL`.
+        RES_REFER:
+          type: string
+          description: Referência do endereço. Nome original do campo.
         pontoReferencia:
+          deprecated: true
           type: string
-          description: Ponto de referência ou perímetro.
+          description: Sinônimo de `RES_REFER`.
+        RES_TMU_DESC_MUN:
+          type: string
+          description: Nome do município. Nome original do campo.
         municipio:
+          deprecated: true
           type: string
-          description: Cidade ou município.
-        uf:
+          description: Sinônimo de `RES_TMU_DESC_MUN`.
+        RES_TES_COD_ESTADO:
           type: string
-          description: Estado, sigla de duas letras.
+          description: UF do estabelecimento. Nome original do campo.
           example: BA
-        areaUtilizada:
+        uf:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_TES_COD_ESTADO`.
+          example: BA
+        RES_AREA:
           description: |
-            Área da atividade, em m². Número ou texto com vírgula decimal.
-            Maior que zero para o processo ser criado. Não é a área do imóvel.
-            O campo `area` é sinônimo antigo.
+            Área utilizada pela empresa, em m². Nome original do campo. Maior que
+            zero para o processo ser criado.
+          oneOf:
+            - type: number
+            - type: string
+        areaUtilizada:
+          deprecated: true
+          description: |
+            Sinônimo de `RES_AREA`. Prefira `RES_AREA`.
           oneOf:
             - type: number
             - type: string
         area:
           deprecated: true
-          description: Sinônimo histórico de `areaUtilizada`. Prefira `areaUtilizada`.
+          description: Sinônimo histórico de `RES_AREA`. Prefira `RES_AREA`.
           oneOf:
             - type: number
             - type: string
-        areaEstabelecimento:
-          description: Área do estabelecimento, em m². Registrada no processo; não substitui `areaUtilizada`.
-          oneOf:
-            - type: number
-            - type: string
-        areaConstruida:
-          deprecated: true
-          description: Sinônimo anterior de `areaEstabelecimento`. Prefira `areaEstabelecimento`.
-          oneOf:
-            - type: number
-            - type: string
-        areaTerreno:
-          description: Área do terreno, em m². Registrada no processo; não substitui `areaUtilizada`.
-          oneOf:
-            - type: number
-            - type: string
-        tipoComplemento:
+        RES_IDENT_COMP:
           type: string
-          description: Tipo de complemento (Sala, Loja, Andar).
+          description: Complemento do endereço do estabelecimento. Nome original do campo.
         descricaoComplemento:
+          deprecated: true
           type: string
-          description: Descrição do complemento.
-        categoriaImovel:
-          type: string
-          description: Categoria do imóvel.
-        cnaePrincipal:
-          type: string
-          description: CNAE principal, com ou sem máscara. Obrigatório para o processo ser criado.
-        cnaesSecundarios:
+          description: Sinônimo de `RES_IDENT_COMP`.
+        RUC_ACTV_ECON:
           type: array
-          description: Todos os CNAEs secundários.
+          description: |
+            Atividades econômicas, como no envio original. `RAE_CALIF_ACTV` `1` é a
+            principal; `2` é secundária. Precisa de uma principal para o
+            processo ser criado.
+          items:
+            type: object
+            required: [RAE_TAE_COD_ACTVD, RAE_CALIF_ACTV]
+            properties:
+              RAE_TAE_COD_ACTVD:
+                type: string
+                description: Código CNAE.
+              RAE_CALIF_ACTV:
+                type: string
+                description: "`1` principal, `2` secundária."
+        cnaePrincipal:
+          deprecated: true
+          type: string
+          description: Sinônimo da atividade com `RAE_CALIF_ACTV` `1` em `RUC_ACTV_ECON`.
+        cnaesSecundarios:
+          deprecated: true
+          type: array
+          description: Sinônimo das atividades com `RAE_CALIF_ACTV` `2`.
           items:
             type: string
         perguntas:
@@ -310,12 +336,14 @@ components:
               resposta:
                 type: string
                 description: Resposta informada. Use Sim ou Não.
-        tipoImovel:
+        RGE_TGE_VTAMANHO:
           type: string
-          description: Tipo de imóvel.
+          description: "Tamanho da empresa, como no envio original. `1` ME, `2` EPP, `3` normal."
+          example: "1"
         porteEmpresa:
+          deprecated: true
           type: string
-          description: Porte da empresa.
+          description: Sinônimo de `RGE_TGE_VTAMANHO`.
         atividadeEmAreaPublica:
           description: Resposta a "A atividade está estabelecida em área pública?".
           oneOf:
@@ -342,42 +370,18 @@ components:
         cnpjEscritorioVirtual:
           type: string
           description: CNPJ do escritório virtual. Gravado quando `trataSeDeEscritorioVirtual` é sim.
-        poligonoDeclarado:
-          type: object
-          description: |
-            Polígono do imóvel em GeoJSON, EPSG:4326, ordem [longitude, latitude].
-            Aceita `Polygon`, `MultiPolygon` ou um `Feature` que os contenha.
-            Linha e ponto são ignorados.
-          properties:
-            type:
-              type: string
-              enum: [Polygon, MultiPolygon, Feature]
-            coordinates:
-              type: array
-              items: {}
-          example:
-            type: Polygon
-            coordinates:
-              - - [-38.516331, -12.977852]
-                - [-38.516291, -12.977746]
-                - [-38.516453, -12.977688]
-                - [-38.516492, -12.977795]
-                - [-38.516331, -12.977852]
-        coordenadaGeografica:
-          type: object
-          description: |
-            Latitude e longitude do estabelecimento.
-          properties:
-            latitude:
-              type: number
-              example: -12.977852
-            longitude:
-              type: number
-              example: -38.516331
-        evento:
+        RES_DS_EVENTO:
           type: string
-          description: Serviço ou evento solicitado (constituição de matriz ou filial, alteração de endereço, alteração de atividade).
+          description: Descrição do evento, como no envio original.
           example: Inscrição de primeiro estabelecimento (Matriz)
+        RES_CNPJ_SEDE:
+          type: string
+          description: CNPJ da sede, como no envio original. Na constituição de filial, o CNPJ da matriz.
+          example: "13927801000149"
+        evento:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_DS_EVENTO`.
         imovelEmCondominio:
           description: Resposta a "Imóvel em condomínio?".
           oneOf:

@@ -78,6 +78,14 @@ class ReginDocumentacaoTest extends TestCase
             'atividades_exercidas_no_local',
             'acessos_independentes',
             'escritorio_virtual',
+            'codlog',
+            'tipo_complemento',
+            'categoria_imovel',
+            'tipo_imovel',
+            'area_construida',
+            'area_terreno',
+            'poligono_declarado',
+            'coordenada_geografica',
         ];
 
         foreach ([
@@ -134,7 +142,6 @@ class ReginDocumentacaoTest extends TestCase
 
             $nomeNoContrato = match ($campoGravado) {
                 'RAE_CALIF_ACTV', 'RGP_TGE_COD_TIP_TAB', 'RGP_VALOR' => $campoGravado,
-                'area_construida' => 'areaEstabelecimento',
                 'atividade_abrigada_em_escritorio_virtual' => 'trataSeDeEscritorioVirtual',
                 default => Str::camel($campoGravado),
             };

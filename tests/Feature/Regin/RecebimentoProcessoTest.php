@@ -282,6 +282,52 @@ class RecebimentoProcessoTest extends TestCase
         $this->assertSame('12345678', $tela['recepcao']['RGP_VALOR']);
     }
 
+    public function test_declaracao_com_os_nomes_do_envio_dto_abre_o_processo(): void
+    {
+        $payload = [
+            'protocolo' => 'BAP-2026-0001',
+            'RGE_NOMB' => 'Padaria do Porto Ltda',
+            'cpfSolicitante' => '529.982.247-25',
+            'nomeSolicitante' => 'Maria Souza',
+            'emailSolicitante' => 'maria.souza@exemplo.com',
+            'RES_TTL_TIP_LOGRADORO' => 'Rua',
+            'RES_DIRECCION' => 'das Flores',
+            'RES_NUME' => '100',
+            'RES_IDENT_COMP' => 'Sala 2',
+            'RES_URBANIZACION' => 'Comércio',
+            'RES_ZONA_POSTAL' => '40020-000',
+            'RES_REFER' => 'Em frente à praça',
+            'RES_TMU_DESC_MUN' => 'Salvador',
+            'RES_TES_COD_ESTADO' => 'BA',
+            'RES_AREA' => '120,5',
+            'RES_DS_EVENTO' => 'Inscrição de primeiro estabelecimento (Matriz)',
+            'RES_CNPJ_SEDE' => '13927801000149',
+            'RGE_TGE_VTAMANHO' => '1',
+            'RUC_ACTV_ECON' => [
+                ['RAE_TAE_COD_ACTVD' => '4712-1/00', 'RAE_CALIF_ACTV' => '1'],
+                ['RAE_TAE_COD_ACTVD' => '5611201', 'RAE_CALIF_ACTV' => '2'],
+            ],
+            'RGP_TGE_COD_TIP_TAB' => '5',
+            'RGP_VALOR' => '12345678',
+        ];
+
+        $this->postJson('/api_integracao/recebe', $payload)->assertOk();
+
+        $processo = ViabilityRequest::query()->firstOrFail();
+
+        $this->assertSame('Padaria do Porto Ltda', $processo->company?->legal_name);
+        $this->assertSame('das Flores', $processo->address_street);
+        $this->assertSame('Comércio', $processo->address_neighborhood);
+        $this->assertSame('40020000', $processo->address_zip);
+        $this->assertSame(120.5, (float) $processo->used_area_m2);
+        $this->assertSame('4712100', $processo->primaryCnae()->first()?->code);
+        $this->assertSame(['5611201'], $processo->cnaes()->wherePivot('is_primary', false)->pluck('code')->all());
+        $this->assertSame('12345678', $processo->property_registration);
+        $this->assertSame('1', $processo->company?->size);
+        $this->assertSame('13927801000149', $processo->origem_declarada['cnpj_empresa']);
+        $this->assertSame('Inscrição de primeiro estabelecimento (Matriz)', $processo->origem_declarada['evento']);
+    }
+
     public function test_declaracao_sem_cnae_principal_e_recusada_sem_gravar(): void
     {
         $payload = $this->declaracao($this->cnpjValido());

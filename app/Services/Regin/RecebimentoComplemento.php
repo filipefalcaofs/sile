@@ -46,7 +46,7 @@ final readonly class RecebimentoComplemento
     public static function fromEnvelope(array $envelope): self
     {
         return new self(
-            evento: RecebimentoProcesso::texto($envelope['evento'] ?? null, 255),
+            evento: RecebimentoProcesso::texto($envelope['RES_DS_EVENTO'] ?? $envelope['evento'] ?? null, 255),
             objetoSocial: RecebimentoProcesso::texto($envelope['objetoSocial'] ?? null, 4000),
             naturezaJuridica: RecebimentoProcesso::texto($envelope['naturezaJuridica'] ?? null, 255),
             areaConstruida: RecebimentoProcesso::area($envelope['areaEstabelecimento'] ?? $envelope['areaConstruida'] ?? null),
@@ -61,7 +61,7 @@ final readonly class RecebimentoComplemento
             contador: self::contador($envelope['contador'] ?? null),
             atividadesExercidasNoLocal: self::atividadesNoLocal($envelope['atividadesExercidasNoLocal'] ?? null),
             cnpjDestino: RecebimentoProcesso::texto($envelope['cnpjDestino'] ?? null, 18),
-            cnpjEmpresa: RecebimentoProcesso::texto($envelope['cnpjEmpresa'] ?? null, 18),
+            cnpjEmpresa: RecebimentoProcesso::texto($envelope['RES_CNPJ_SEDE'] ?? $envelope['cnpjEmpresa'] ?? null, 18),
             cnpjOrigem: RecebimentoProcesso::texto($envelope['cnpjOrigem'] ?? null, 18),
             codFuncao: self::inteiro($envelope['codFuncao'] ?? null),
             dataGeracao: RecebimentoProcesso::texto($envelope['dataGeracao'] ?? null, 40),
