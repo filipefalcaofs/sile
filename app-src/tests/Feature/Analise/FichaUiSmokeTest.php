@@ -6,6 +6,7 @@ use App\Enums\AnalysisRecordStatus;
 use App\Enums\RuleDomain;
 use App\Enums\RuleVersionStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Enums\ZonaFonte;
 use App\Models\AnalysisRecord;
 use App\Models\ExpressoQueda;
 use App\Models\RuleVersion;
@@ -208,6 +209,56 @@ class FichaUiSmokeTest extends TestCase
                 ->where('localizacao.camadas.via', 'Avenida Luís Viana Filho')
                 ->where('localizacao.zona', 'ZPR 3')
                 ->where('localizacao.via', 'Avenida Luís Viana Filho'));
+    }
+
+    public function test_ca_fc_01_ficha_expoe_o_poligono_do_enderecamento_e_a_fonte_da_zona(): void
+    {
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocol_number' => 'VIA-'.now()->year.'-000126',
+            'protocoled_at' => now(),
+        ]);
+        $processo->forceFill([
+            'zona_codigo' => 'ZPR 3',
+            'zona_fonte' => ZonaFonte::EnderecamentoMaiorPorcao,
+            'address_polygon_geojson' => ['type' => 'Polygon', 'coordinates' => [[[-38.5, -12.98], [-38.499, -12.98], [-38.499, -12.979], [-38.5, -12.98]]]],
+            'camadas_incidentes' => ['zona' => ['status' => 'indisponivel', 'nome' => null]],
+        ])->save();
+
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('localizacao.poligono_enderecamento.type', 'Polygon')
+                ->where('localizacao.poligono.type', 'Polygon')
+                ->where('localizacao.camadas.zona.nome', 'ZPR 3')
+                ->where('localizacao.camadas.zona.fonte', 'enderecamento_maior_porcao'));
+    }
+
+    public function test_ficha_sem_poligono_do_enderecamento_entrega_nulo(): void
+    {
+        $processo = ViabilityRequest::factory()->create([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'protocol_number' => 'VIA-'.now()->year.'-000127',
+            'protocoled_at' => now(),
+        ]);
+
+        AnalysisRecord::factory()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('localizacao.poligono_enderecamento', null));
     }
 
     public function test_ficha_expoe_o_checklist_dos_quadros_lido_do_snapshot(): void

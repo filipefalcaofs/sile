@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import type { Polygon } from 'geojson';
+import type { MultiPolygon, Polygon } from 'geojson';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import BaixarTvl from '@/components/analise/baixar-tvl';
@@ -7,12 +7,14 @@ import {
     CategoriaBadges,
     formatarDataHora,
     type ProcessoItem,
+    RecepcaoRecebida,
     SemaforoBadge,
 } from '@/components/analise/processo-ui';
 import DecisionExplanation, { type DecisionExplanationData } from '@/components/auditoria/decision-explanation';
 import PageHeader from '@/components/app/page-header';
 import ParecerCard, { type ParecerDecisao } from '@/components/decisao/parecer-card';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
+import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
 import { MapaSection } from '@/components/geo/mapa-section';
 import Select from '@/components/form/select';
 import { AlertIcon, ArrowRightIcon, MapPinIcon } from '@/components/icons';
@@ -52,6 +54,7 @@ interface ShowProps {
     timeline: TimelineItem[];
     geo: {
         poligono: Polygon | null;
+        poligono_enderecamento?: Polygon | MultiPolygon | null;
         ponto: { lat: number; lng: number } | null;
         origem: { value: string; label: string } | null;
         camadas: CamadasImovel | null;
@@ -179,7 +182,7 @@ export default function Show({
         ...(explicacao ? [{ value: 'explicabilidade' as const, label: 'Explicabilidade' }] : []),
     ];
 
-    const centroCalculado = centroide(geo.poligono) ?? geo.ponto;
+    const centroCalculado = centroide(geo.poligono) ?? centroDaGeometria(geo.poligono_enderecamento) ?? geo.ponto;
     const centro =
         centroCalculado && Number.isFinite(centroCalculado.lat) && Number.isFinite(centroCalculado.lng)
             ? centroCalculado
@@ -253,7 +256,7 @@ export default function Show({
                                     <span className="font-medium">{processo.protocol_number ?? '—'}</span>
                                 </DescItem>
                                 <DescItem label="Protocolo BAP">{processo.bap ?? '—'}</DescItem>
-                                <DescItem label="Produto TVL">
+                                <DescItem label="Nº da viabilidade">
                                     {processo.tvl_product_number ? (
                                         <span className="inline-flex flex-wrap items-center justify-end gap-2">
                                             <span>{processo.tvl_product_number}</span>
@@ -335,6 +338,7 @@ export default function Show({
                                         <DescItem label="Imóvel">{processo.endereco_completo || processo.imovel || '—'}</DescItem>
                                         <DescItem label="Inscrição imobiliária">{processo.inscricao ?? '—'}</DescItem>
                                         <DescItem label="Tipo de imóvel">{processo.tipo_imovel ?? '—'}</DescItem>
+                                        {processo.recepcao && <RecepcaoRecebida recepcao={processo.recepcao} />}
                                         <DescItem label="Origem">{processo.origin_label}</DescItem>
                                         {processo.motivo_da_analise ? (
                                             <DescItem label="Motivo do encaminhamento">{processo.motivo_da_analise}</DescItem>
@@ -600,12 +604,25 @@ export default function Show({
                                             lat={centro.lat}
                                             lng={centro.lng}
                                             draggable={false}
-                                            camadas={
-                                                geo.poligono
-                                                    ? [{ id: 'poligono', type: 'poligono', geojson: geo.poligono }]
-                                                    : []
-                                            }
+                                            camadas={[
+                                                ...(geo.poligono ? [{ id: 'poligono', type: 'poligono', geojson: geo.poligono }] : []),
+                                                ...(geo.poligono_enderecamento
+                                                    ? [
+                                                          {
+                                                              id: 'enderecamento',
+                                                              type: 'enderecamento',
+                                                              geojson: geo.poligono_enderecamento,
+                                                              estilo: ESTILO_ENDERECAMENTO,
+                                                          },
+                                                      ]
+                                                    : []),
+                                            ]}
                                         />
+                                        {geo.poligono_enderecamento ? (
+                                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                Contorno tracejado: polígono do endereçamento SEDUR.
+                                            </p>
+                                        ) : null}
                                         {geo.origem && !geo.poligono ? (
                                             <p className="text-sm text-gray-600 dark:text-gray-300">
                                                 Localização pelo {geo.origem.label} (ponto, sem o desenho do lote).

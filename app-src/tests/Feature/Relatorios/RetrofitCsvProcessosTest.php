@@ -60,7 +60,7 @@ class RetrofitCsvProcessosTest extends TestCase
         $conteudo = $response->streamedContent();
         $cabecalho = strtok($conteudo, "\n");
 
-        foreach (['Processo', 'BAP', 'Produto TVL', 'Empresa', 'CNPJ', 'Status', 'Categoria', 'Analista', 'Prazo'] as $coluna) {
+        foreach (['Processo', 'BAP', 'Nº da viabilidade', 'Empresa', 'CNPJ', 'Status', 'Categoria', 'Analista', 'Prazo'] as $coluna) {
             $this->assertStringContainsString($coluna, (string) $cabecalho);
         }
 

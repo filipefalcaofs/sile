@@ -2,9 +2,11 @@ import { Head, Link, router, useHttp, usePage, WhenVisible } from '@inertiajs/re
 import type { GeoJsonObject } from 'geojson';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { rotuloFluxoRisco } from '@/components/analise/processo-ui';
+import { RecepcaoRecebida, rotuloFluxoRisco, type ProcessoRecepcao } from '@/components/analise/processo-ui';
+import { sinteseDaFicha, type EstadoLeitura } from '@/pages/gestao/ficha-analise/sintese';
 import PageHeader from '@/components/app/page-header';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
+import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
 import { MapaSection } from '@/components/geo/mapa-section';
 import Checkbox from '@/components/form/checkbox';
 import Input from '@/components/form/input';
@@ -102,6 +104,7 @@ interface TextoPadrao {
 
 interface Localizacao {
     poligono: GeoJsonObject | null;
+    poligono_enderecamento?: GeoJsonObject | null;
     endereco: string | null;
     cod_log: string | null;
     logradouro: string | null;
@@ -112,6 +115,8 @@ interface Localizacao {
     zona: string | null;
     via: string | null;
     is_public_area: boolean | null;
+    categoria_uso_lote: string | null;
+    padrao_construtivo_lote: string | null;
     camadas?: CamadasImovel | null;
 }
 
@@ -244,6 +249,7 @@ interface FichaAnaliseShowProps {
     conclusaoOpcoes: { value: string; label: string }[];
     localizacao?: Localizacao;
     dadosTvl: DadosTvl;
+    recepcao?: ProcessoRecepcao | null;
     cadastroImobiliario: CadastroImobiliario;
     tramitacao: TramitacaoItem[];
     /** Opções da planilha vigente por CNAE (dígitos) — seleção do enquadramento. */
@@ -782,6 +788,7 @@ export default function FichaAnaliseShow({
     conclusaoOpcoes,
     localizacao,
     dadosTvl,
+    recepcao,
     cadastroImobiliario,
     tramitacao,
     enquadramentoOpcoes,
@@ -819,6 +826,19 @@ export default function FichaAnaliseShow({
     const [sedeEscritorioVirtual, setSedeEscritorioVirtual] = useState<boolean>(() => ficha.is_virtual_office_hq ?? false);
     const [novaCondicao, setNovaCondicao] = useState('');
     const analysisReasons = ficha.analysis_reasons ?? [];
+    const sintese = useMemo(
+        () =>
+            sinteseDaFicha({
+                statusProcesso: processo.status,
+                rotuloProcesso: processo.status_label,
+                motorDisponivel: ficha.engine_available,
+                motivosAnalise: analysisReasons,
+                atividades: perCnae,
+                zona: localizacao?.zona ?? null,
+                via: localizacao?.via ?? null,
+            }),
+        [analysisReasons, ficha.engine_available, localizacao?.via, localizacao?.zona, perCnae, processo.status, processo.status_label],
+    );
     const [addressConfirmed, setAddressConfirmed] = useState<boolean | null>(() => ficha.address_confirmed ?? null);
     const [saveState, setSaveState] = useState<'idle' | 'salvando' | 'salvo' | 'erro'>('idle');
 
@@ -1501,8 +1521,8 @@ export default function FichaAnaliseShow({
         return Array.from(conjunto);
     }, [perCnae]);
 
-    const centro = centroideDoPoligono(localizacao?.poligono);
-    const temPoligono = centro !== null && localizacao?.poligono != null;
+    const centro = centroideDoPoligono(localizacao?.poligono) ?? centroDaGeometria(localizacao?.poligono_enderecamento);
+    const temPoligono = centro !== null && (localizacao?.poligono != null || localizacao?.poligono_enderecamento != null);
 
     const vagasRequeridas = parking.vagas_requeridas;
     const vagasExigidas = parking.vagas_exigidas;
@@ -1586,20 +1606,7 @@ export default function FichaAnaliseShow({
                     </div>
                 )}
 
-                {/* Resumo no topo da ficha: o analista lê a síntese antes de
-                    endereço, mapa e atividades. Prop deferida — entra em tela
-                    assim que a página abre. */}
-                <WhenVisible data="sugestoesIa" buffer={200} fallback={<SugestoesIaSkeleton />}>
-                    <ResumoProcessoCard
-                        sugestoes={sugestoesIa ?? []}
-                        iaFicha={iaFicha}
-                        restricoes={analysisReasons}
-                        status={resumoStatus}
-                        mensagem={resumoMensagem}
-                        gerando={resumoHttp.processing || resumoStatus === 'aguardando'}
-                        onGerar={gerarResumo}
-                    />
-                </WhenVisible>
+                <SinteseLeitura sintese={sintese} />
 
                 {/* Topo no padrão legado SAPS (design 2026-07-22): Localização + Cadastro
                     Imobiliário à esquerda, Polígono à direita, e a faixa Dados
@@ -1620,14 +1627,21 @@ export default function FichaAnaliseShow({
                                 <DescItem label="Ponto de Referência">
                                     {valorOuTraco(localizacao?.ponto_referencia)}
                                 </DescItem>
+                                <DescItem label="Categoria de uso do lote">{valorOuTraco(localizacao?.categoria_uso_lote)}</DescItem>
+                                <DescItem label="Padrão construtivo do lote">
+                                    {valorOuTraco(localizacao?.padrao_construtivo_lote)}
+                                </DescItem>
                             </dl>
+                            <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
+                                Categoria e padrão vêm do lote no cadastro municipal e não decidem o fluxo.
+                            </p>
 
                             <CadastroImobiliarioPanel cadastro={cadastroImobiliario} />
                         </CardContent>
                     </Card>
 
                     <Card>
-                        <CardHeader title="Polígono" description="Polígono cadastrado do imóvel." />
+                        <CardHeader title="Polígono" description="Polígono cadastrado do imóvel e polígono do endereçamento SEDUR." />
                         <CardContent>
                             {temPoligono && centro ? (
                                 <>
@@ -1637,13 +1651,26 @@ export default function FichaAnaliseShow({
                                         zoom={17}
                                         draggable={false}
                                         camadas={[
-                                            {
-                                                id: 'imovel',
-                                                type: 'imovel',
-                                                geojson: localizacao!.poligono as GeoJsonObject,
-                                            },
+                                            ...(localizacao?.poligono
+                                                ? [{ id: 'imovel', type: 'imovel', geojson: localizacao.poligono }]
+                                                : []),
+                                            ...(localizacao?.poligono_enderecamento
+                                                ? [
+                                                      {
+                                                          id: 'enderecamento',
+                                                          type: 'enderecamento',
+                                                          geojson: localizacao.poligono_enderecamento,
+                                                          estilo: ESTILO_ENDERECAMENTO,
+                                                      },
+                                                  ]
+                                                : []),
                                         ]}
                                     />
+                                    {localizacao?.poligono_enderecamento ? (
+                                        <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
+                                            Contorno tracejado: polígono do endereçamento SEDUR.
+                                        </p>
+                                    ) : null}
                                     <p className="mt-3 text-theme-xs text-gray-500 dark:text-gray-400">
                                         Mapa &copy; OpenStreetMap (ODbL).
                                     </p>
@@ -1727,7 +1754,7 @@ export default function FichaAnaliseShow({
                 )}
 
                 <Card>
-                    <CardHeader title="Dados da Viabilidade" description="Paridade com a ficha do legado (SAPS)." />
+                    <CardHeader title="Dados da Viabilidade" description="Empresa e imóvel desta solicitação." />
                     <CardContent>
                         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <DescItem label="Razão Social">{valorOuTraco(dadosTvl.razao_social)}</DescItem>
@@ -1741,17 +1768,39 @@ export default function FichaAnaliseShow({
                             <DescItem label="Complemento">{valorOuTraco(dadosTvl.complemento)}</DescItem>
                         </dl>
                         <p className="mt-3 text-theme-xs text-gray-400 dark:text-gray-500">
-                            A marcação de sede de escritório virtual é editada no card da atividade CNAE gatilho, abaixo.
+                            O tipo de imóvel é o declarado no recebimento. A marcação de sede de escritório virtual é editada no
+                            card da atividade CNAE gatilho, abaixo.
                         </p>
                     </CardContent>
                 </Card>
 
+                {recepcao && (
+                    <Card>
+                        <CardHeader
+                            title="Declaração recebida"
+                            description="Dados enviados no recebimento do processo. Não substituem a categoria de uso do lote."
+                        />
+                        <CardContent>
+                            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                                <RecepcaoRecebida recepcao={recepcao} />
+                            </dl>
+                        </CardContent>
+                    </Card>
+                )}
+
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="space-y-6 lg:col-span-2">
-                        {/* Minutas e alertas de IA — o resumo já está no topo
-                            da ficha. A prop deferida sugestoesIa é a mesma. */}
                         <WhenVisible data="sugestoesIa" buffer={200} fallback={<SugestoesIaSkeleton />}>
                             <div className="space-y-6">
+                                <ResumoProcessoCard
+                                    sugestoes={sugestoesIa ?? []}
+                                    iaFicha={iaFicha}
+                                    restricoes={[]}
+                                    status={resumoStatus}
+                                    mensagem={resumoMensagem}
+                                    gerando={resumoHttp.processing || resumoStatus === 'aguardando'}
+                                    onGerar={gerarResumo}
+                                />
                                 <MinutaParecerCard
                                     sugestoes={sugestoesIa ?? []}
                                     editavel={editavel}
@@ -2128,7 +2177,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Condicionantes"
-                                description="Obrigações que o requerente precisa cumprir para a atividade ficar permitida neste local. O que estiver nesta lista entra no parecer e no TVL."
+                                description="Obrigações que o requerente precisa cumprir para a atividade ficar permitida neste local. O que estiver nesta lista entra no parecer."
                             />
                             <CardContent>
                                 <p className="mb-4 text-theme-sm text-gray-600 dark:text-gray-300">
@@ -2543,7 +2592,7 @@ export default function FichaAnaliseShow({
                         {processo.renovacao && (
                             <span className="mt-3 flex flex-col gap-3 text-left font-normal text-gray-700 dark:text-gray-300">
                                 <span>
-                                    TVL {processo.tvl_numero ?? '—'}. A renovação não gera número novo: informe o tipo
+                                    Viabilidade {processo.tvl_numero ?? '—'}. A renovação não gera número novo: informe o tipo
                                     liberado e a nova validade.
                                 </span>
                                 <label className="flex min-h-11 items-center gap-2 text-sm">
@@ -2552,7 +2601,7 @@ export default function FichaAnaliseShow({
                                         checked={condicionantesAtendidos}
                                         onChange={(event) => setCondicionantesAtendidos(event.target.checked)}
                                     />
-                                    Condicionantes do TVL provisório atendidos
+                                    Condicionantes da viabilidade provisória atendidos
                                 </label>
                                 <label className="flex flex-col gap-1 text-sm">
                                     Tipo liberado
@@ -2893,6 +2942,79 @@ export default function FichaAnaliseShow({
 }
 
 /** Skeleton da prop deferida de sugestões de IA (resumo HU-117 + alertas HU-115) enquanto carrega sob demanda. */
+function marcaLeitura(estado: EstadoLeitura): { Icone: typeof CheckCircleIcon; classe: string } {
+    if (estado === 'permitido') {
+        return { Icone: CheckCircleIcon, classe: 'text-success-500' };
+    }
+
+    if (estado === 'nao_permitido') {
+        return { Icone: CloseIcon, classe: 'text-error-500' };
+    }
+
+    if (estado === 'impedimento' || estado === 'condicionado') {
+        return { Icone: AlertIcon, classe: 'text-warning-500' };
+    }
+
+    return { Icone: InfoIcon, classe: 'text-gray-400' };
+}
+
+function SinteseLeitura({ sintese }: { sintese: ReturnType<typeof sinteseDaFicha> }) {
+    return (
+        <Card>
+            <CardHeader title="Decisão" description={sintese.contexto} />
+            <CardContent>
+                <p
+                    className={`text-2xl font-semibold tracking-tight ${
+                        sintese.tom === 'deferida'
+                            ? 'text-success-600 dark:text-success-500'
+                            : sintese.tom === 'indeferida'
+                              ? 'text-error-600 dark:text-error-500'
+                              : 'text-gray-800 dark:text-white/90'
+                    }`}
+                >
+                    {sintese.titulo}
+                </p>
+
+                {sintese.linhas.length > 0 && (
+                    <ul className="mt-4 space-y-2" aria-label="Por que o processo está neste estado">
+                        {sintese.linhas.map((linha) => {
+                            const marca = marcaLeitura(linha.estado);
+
+                            return (
+                                <li key={linha.id} className="flex items-start gap-2 text-theme-sm text-gray-800 dark:text-white/90">
+                                    <marca.Icone className={`mt-0.5 size-4 shrink-0 fill-current ${marca.classe}`} />
+                                    <span>{linha.texto}</span>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
+
+                <div className="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
+                    <p className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">Base</p>
+                    {sintese.base.length === 0 ? (
+                        <p className="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">Não registrada nesta leitura.</p>
+                    ) : (
+                        <ul className="mt-1 space-y-1 text-theme-sm text-gray-700 dark:text-gray-300">
+                            {sintese.base.map((item) => (
+                                <li key={item}>{item}</li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+                <button
+                    type="button"
+                    className="mt-4 text-theme-sm text-brand-500 underline-offset-2 hover:underline"
+                    onClick={() => document.getElementById('parecer-editor')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                >
+                    Ver o parecer completo
+                </button>
+            </CardContent>
+        </Card>
+    );
+}
+
 function SugestoesIaSkeleton() {
     return (
         <div className="space-y-6">
@@ -2951,8 +3073,8 @@ function ResumoProcessoCard({
     return (
         <Card>
             <CardHeader
-                title="Resumo"
-                description="Síntese do processo (sistema, enquadramento, inconsistências e pendências) gerada pela IA para apoiar a leitura. Não decide nem antecipa o desfecho."
+                title="Apoio de leitura"
+                description="Texto da IA para apoiar a leitura do parecer. Não decide nem antecipa o desfecho."
                 actions={
                     resumos.length === 0 ? (
                         <Button
@@ -3481,7 +3603,7 @@ function AbrigadosPanel({
                         <table className="w-full text-left text-theme-sm">
                             <thead>
                                 <tr className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
-                                    <th className="pb-2 pr-3">Nº TVL</th>
+                                    <th className="pb-2 pr-3">Nº da viabilidade</th>
                                     <th className="pb-2 pr-3">Razão social</th>
                                     <th className="pb-2">Validade</th>
                                 </tr>

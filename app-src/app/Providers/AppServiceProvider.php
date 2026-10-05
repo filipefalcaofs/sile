@@ -23,10 +23,13 @@ use App\Services\Cnpj\SedurCnpjLookup;
 use App\Services\Expresso\DatabaseHolidayProvider;
 use App\Services\Expresso\HolidayProvider;
 use App\Services\Geo\Geocoder;
+use App\Services\Geo\GeoServerEnderecamentoClient;
 use App\Services\Geo\GeoServerWfsCamadaClient;
+use App\Services\Geo\GeoServerZonaMaiorPorcaoResolver;
 use App\Services\Geo\NominatimGeocoder;
 use App\Services\Geo\PostgisSpatialRepository;
 use App\Services\Geo\SpatialRepository;
+use App\Services\Geo\ZonaMaiorPorcaoResolver;
 use App\Services\GovBr\GovBrIdTokenValidator;
 use App\Services\GovBr\GovBrProvider;
 use App\Services\Realty\LocalizacaoInscricaoService;
@@ -96,6 +99,8 @@ class AppServiceProvider extends ServiceProvider
         // tributário e a checagem de divergência compartilham o resultado.
         $this->app->scoped(LocalizacaoInscricaoService::class);
         $this->app->scoped(GeoServerWfsCamadaClient::class);
+        $this->app->scoped(GeoServerEnderecamentoClient::class);
+        $this->app->scoped(ZonaMaiorPorcaoResolver::class, GeoServerZonaMaiorPorcaoResolver::class);
 
         // Fonte de feriados (HU-137) atrás de contrato: o BusinessDeadlineCalculator
         // (HU-129) desconta os feriados ativos via este provider para medir

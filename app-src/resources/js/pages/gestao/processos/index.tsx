@@ -110,7 +110,7 @@ const ROTULOS_FILTRO: Record<keyof FiltrosTexto, string> = {
     fluxo: 'Fluxo',
     protocolo: 'Nº do processo',
     bap: 'BAP',
-    produto_tvl: 'Produto TVL',
+    produto_tvl: 'Nº da viabilidade',
     nome: 'Empresa / requerente',
     cnpj: 'CNPJ',
     inscricao: 'Inscrição imobiliária',
@@ -461,7 +461,7 @@ export default function ConsultaProcessos({
                             id="busca-processos"
                             value={form.busca}
                             onChange={(evento) => definir('busca', evento.target.value)}
-                            placeholder="Buscar por processo, BAP, protocolo, TVL, CNPJ ou empresa"
+                            placeholder="Buscar por processo, BAP, protocolo, viabilidade, CNPJ ou empresa"
                             className="pl-11"
                             aria-label="Buscar processos"
                         />
@@ -847,7 +847,7 @@ function PainelFiltros({
                     <GrupoFiltro titulo="Identificadores">
                         <CampoTexto id="filtro-protocolo" label="Nº do processo" value={form.protocolo} onChange={(valor) => definir('protocolo', valor)} />
                         <CampoTexto id="filtro-bap" label="BAP" value={form.bap} onChange={(valor) => definir('bap', valor)} />
-                        <CampoTexto id="filtro-produto-tvl" label="Produto TVL" value={form.produto_tvl} onChange={(valor) => definir('produto_tvl', valor)} />
+                        <CampoTexto id="filtro-produto-tvl" label="Nº da viabilidade" value={form.produto_tvl} onChange={(valor) => definir('produto_tvl', valor)} />
                     </GrupoFiltro>
                     <GrupoFiltro titulo="Requerente">
                         <CampoTexto id="filtro-nome" label="Empresa / requerente" value={form.nome} onChange={(valor) => definir('nome', valor)} />

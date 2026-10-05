@@ -1,33 +1,32 @@
 openapi: 3.0.3
 info:
   title: Viabiliza — recebimento REGIN (api_integracao/recebe)
-  version: "1.0.0"
+  version: "2.0.0"
   description: |
-    Endpoint municipal que a JUCEB/REGIN chama para entregar o processo de
-    viabilidade à SEDUR.
+    API chamada pelo REGIN para enviar o processo de viabilidade.
 
-    O contrato foi montado a partir da documentação da API da JUCEB (PSCS),
-    não o contrário:
+    Não envie token nem header `JWT`.
 
-    - OpenAPI de produção da Junta: `EnvioDto` e a operação `testeEnvio`,
-      que exige retorno em texto `3` (recebido) e `5` (duplicado).
-    - Guia Técnico REGIN/PSCS v2.10: GET de conectividade e POST do processo
-      no caminho `/api_integracao/recebe`, serviço `WsProSol098`.
+    O `GET /api_integracao/recebe` testa a conectividade e devolve o texto `3`.
 
-    Esta URL é o lado da Prefeitura. Autenticação (`POST /acesso/auth`) e o
-    header `JWT` pertencem à API da JUCEB, quando o Viabiliza devolve o
-    parecer. Neste recebimento não há token: a JUCEB chama a URL publicada.
+    O `POST` na mesma URL recebe `application/json` no formato `ProcessoDeclaracao`.
 
-    O layout completo do objeto `json` (schema `Ruc`) está na OpenAPI da
-    JUCEB. O anexo «Dados do Processo v2_08» não integra este documento.
-    Sem CNAE principal, área ou endereço no `Ruc`, o envelope é aceito
-    (`3`) e fica gravado, sem abrir processo.
+    ## Resposta do POST
+
+    | Código | HTTP | Significado |
+    | --- | --- | --- |
+    | `3` | 200 | Protocolo gravado. |
+    | `5` | 200 | Esse `protocolo` já foi recebido. |
+    | `0` | 400 | Recusado: `protocolo` ausente ou vazio, ou falta dado que abre o processo (`RGE_NOMB`, `RUC_ACTV_ECON` com `RAE_CALIF_ACTV` 1, `RES_AREA` maior que zero, `RES_DIRECCION`, `RES_URBANIZACION` ou `RES_ZONA_POSTAL`). Nada é gravado. |
+
+    A duplicidade é o número do `protocolo`.
+
+    ## Para o processo ser criado
+
+    Envie também `RGE_NOMB`, `RUC_ACTV_ECON` com uma atividade `RAE_CALIF_ACTV` 1, `RES_AREA` maior que zero, `RES_DIRECCION`, `RES_URBANIZACION` e `RES_ZONA_POSTAL`. Sem algum desses a resposta é `0` (HTTP 400) e nada é gravado. O nome é o original do campo.
   contact:
     name: SEDUR — Viabiliza
     url: https://www.sedur.salvador.ba.gov.br
-  externalDocs:
-    description: OpenAPI de produção da API REGIN/JUCEB (PSCS), fonte do EnvioDto
-    url: http://regin.prefeitura.juceb.ba.gov.br:8080/api_integracao/v3/api-docs
 
 servers:
   - url: https://viabiliza-hml.salvador.ba.gov.br
@@ -46,12 +45,7 @@ paths:
       operationId: pingRecebe
       summary: Teste de conectividade
       description: |
-        A JUCEB envia este GET antes do POST (`testeEnvio` na OpenAPI da Junta).
-        Corpo da resposta, em texto puro: `3`.
-
-        A descrição geral da OpenAPI da JUCEB menciona retorno `OK` no GET do
-        servidor REGIN. No teste de envio para a instituição, e no Guia Técnico
-        v2.10, o valor conferido é `3`. Este endpoint devolve `3`.
+        Teste de conectividade, antes do POST. Corpo da resposta, em texto puro: `3`.
       responses:
         "200":
           description: Conectividade confirmada
@@ -68,53 +62,68 @@ paths:
       operationId: recebeProcesso
       summary: Recebe o processo enviado pelo REGIN
       description: |
-        Persiste o envelope `EnvioDto` e responde em texto puro.
+        Recebe o processo e responde em texto puro.
 
         - `3` — protocolo gravado agora (HTTP 200).
-        - `5` — o mesmo `protocolo` já existe (HTTP 200). Não cria segunda linha.
-        - `0` — `protocolo` ausente ou vazio (HTTP 400). Nada é gravado.
-
-        O ack sai só depois da gravação. Duplicidade é pelo número do protocolo
-        na Junta, não pelo CNPJ.
-
-        Quando o `json` (`Ruc`) traz CNAE principal, área utilizada e endereço
-        (logradouro, bairro e CEP), o Viabiliza abre o processo com origem
-        REDESIM/Regin e a referência externa igual a `protocolo`.
+        - `5` — o mesmo `protocolo` já existe (HTTP 200).
+        - `0` — recusado: `protocolo` ausente, ou falta `RGE_NOMB`, atividade principal, `RES_AREA`, `RES_DIRECCION`, `RES_URBANIZACION` ou `RES_ZONA_POSTAL` (HTTP 400). Nada é gravado.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EnvioDto"
-            example:
-              cnpjDestino: "13927801000149"
-              cnpjEmpresa: "13927801000149"
-              cnpjOrigem: "13927801000149"
-              codFuncao: 103
-              dataGeracao: "2026-09-16T16:00:00.000Z"
-              nire: "00000000000"
-              protocolo: "43747"
-              servico: WsProSol098
-              json:
-                rowset:
-                  RUC_GENERAL:
-                    RGE_CGC_CPF: "13927801000149"
-                    RGE_NOMB: Empresa exemplo
-                  RUC_ESTAB:
-                    RES_AREA: "834"
-                    RES_DIRECCION: Rua das Flores
-                    RES_NUME: "100"
-                    RES_IDENT_COMP: Sala 2
-                    RES_URBANIZACION: Centro
-                    RES_ZONA_POSTAL: "40000000"
-                  GROUPRUC_ACTV_ECON:
-                    RUC_ACTV_ECON:
-                      - RAE_TAE_COD_ACTVD: "4712100"
-                        RAE_CALIF_ACTV: "1"
-                  GROUPRUC_GEN_PROTOCOLO:
-                    RUC_GEN_PROTOCOLO:
-                      - RGP_TGE_COD_TIP_TAB: "5"
-                        RGP_VALOR: "123456"
+              $ref: "#/components/schemas/ProcessoDeclaracao"
+            examples:
+              declaracao:
+                summary: Declaração do processo
+                value:
+                  protocolo: BAP-2026-0001
+                  RGE_NOMB: Padaria do Porto Ltda
+                  cpfSolicitante: "52998224725"
+                  nomeSolicitante: Maria Souza
+                  emailSolicitante: maria.souza@exemplo.com
+                  RES_TTL_TIP_LOGRADORO: Rua
+                  RES_DIRECCION: das Flores
+                  RES_NUME: "100"
+                  RES_URBANIZACION: Comércio
+                  RES_ZONA_POSTAL: "40020000"
+                  RES_REFER: Em frente à praça
+                  RES_TMU_DESC_MUN: Salvador
+                  RES_TES_COD_ESTADO: BA
+                  RES_AREA: 45.75
+                  RES_IDENT_COMP: "2"
+                  RUC_ACTV_ECON:
+                    - RAE_TAE_COD_ACTVD: "4712100"
+                      RAE_CALIF_ACTV: "1"
+                    - RAE_TAE_COD_ACTVD: "5611201"
+                      RAE_CALIF_ACTV: "2"
+                    - RAE_TAE_COD_ACTVD: "5620104"
+                      RAE_CALIF_ACTV: "2"
+                  perguntas:
+                    - cnae: "4712100"
+                      pergunta: "12"
+                      resposta: Não
+                  RGE_TGE_VTAMANHO: "1"
+                  atividadeEmAreaPublica: Sim
+                  possuiConcessaoDeUso: Não
+                  trataSeDeEscritorioVirtual: Sim
+                  prestaServicoDeEscritorioVirtual: Não
+                  cnpjEscritorioVirtual: "11222333000181"
+                  imovelEmCondominio: Não
+                  areaEmbarqueDesembarque: Não
+                  RES_DS_EVENTO: Inscrição de primeiro estabelecimento (Matriz)
+                  RES_CNPJ_SEDE: "13927801000149"
+                  termoDispensaViabilidadeLocacional: Não
+                  meiDesenquadrado: Não
+                  servico: Consulta de viabilidade
+                  dataAbertura: "2026-10-03"
+                  cnpjEmpresa: "13927801000149"
+                  codFuncao: 103
+                  dataGeracao: "2026-09-16T16:00:00.000Z"
+                  nire: "00000000000"
+                  RAE_CALIF_ACTV: "1"
+                  RGP_TGE_COD_TIP_TAB: "5"
+                  RGP_VALOR: "12345678"
       responses:
         "200":
           description: Recebido (`3`) ou protocolo já existente (`5`)
@@ -132,7 +141,7 @@ paths:
                   summary: Protocolo já gravado
                   value: "5"
         "400":
-          description: Protocolo ausente. Corpo em texto puro `0`. Nenhum registro é criado.
+          description: Recusado. Protocolo ausente, ou falta `RGE_NOMB`, atividade principal em `RUC_ACTV_ECON`, `RES_AREA`, `RES_DIRECCION`, `RES_URBANIZACION` ou `RES_ZONA_POSTAL`. Corpo em texto puro `0`. Nenhum registro é criado.
           content:
             text/plain:
               schema:
@@ -146,7 +155,6 @@ components:
     LimiteExcedido:
       description: |
         Mais de 60 chamadas por minuto a partir do mesmo IP.
-        O limite é o do Viabiliza (`regin_recebe`), não o da API da JUCEB.
       content:
         application/json:
           schema:
@@ -168,135 +176,272 @@ components:
     CodigoInvalido:
       type: string
       enum: ["0"]
-      description: Requisição recusada pelo Viabiliza por falta de protocolo.
+      description: Recusado. Falta o protocolo ou dado que abre o processo (`RGE_NOMB`, atividade principal, `RES_AREA`, `RES_DIRECCION`, `RES_URBANIZACION` ou `RES_ZONA_POSTAL`).
 
-    EnvioDto:
+    ProcessoDeclaracao:
       type: object
       description: |
-        Espelho do schema `EnvioDto` da OpenAPI de produção da JUCEB
-        (`/api_integracao/v3/api-docs`). Na Junta, `dataGeracao`, `json` e
-        `protocolo` são obrigatórios. No Viabiliza, a única rejeição explícita
-        é `protocolo` vazio (HTTP 400, corpo `0`).
+        Dados do processo enviados no POST. `protocolo` é a chave de
+        duplicidade (número BAP). O CNPJ do escritório virtual só é
+        considerado quando `atividadeAbrigadaEmEscritorioVirtual` é sim.
       required: [protocolo]
       properties:
         protocolo:
           type: string
-          description: Número do processo na Junta. Chave de duplicidade.
-          example: "43747"
-        dataGeracao:
+          description: Número do protocolo (BAP).
+          example: BAP-2026-0001
+        RGE_NOMB:
           type: string
-          format: date-time
-          description: Data e hora de geração do envelope (ISO 8601, como na OpenAPI da JUCEB).
-          example: "2026-09-16T16:00:00.000Z"
-        json:
-          $ref: "#/components/schemas/Ruc"
-        cnpjDestino:
+          description: Nome empresarial ou razão social. Nome original do campo.
+        razaoSocial:
+          deprecated: true
           type: string
-          description: CNPJ da instituição que recebe. Na OpenAPI da JUCEB, 14 dígitos com pontuação opcional.
+          description: Sinônimo de `RGE_NOMB`. Prefira `RGE_NOMB`.
+        cpfSolicitante:
+          type: string
+          description: CPF do solicitante, com ou sem máscara.
+        nomeSolicitante:
+          type: string
+          description: Nome do solicitante.
+        emailSolicitante:
+          type: string
+          format: email
+          description: E-mail do solicitante.
+        inscricaoImobiliaria:
+          type: string
+          description: Número da inscrição imobiliária (IPTU).
+        RES_TTL_TIP_LOGRADORO:
+          type: string
+          description: Tipo de logradouro do estabelecimento. Nome original do campo.
+        tipoLogradouro:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_TTL_TIP_LOGRADORO`.
+        RES_DIRECCION:
+          type: string
+          description: Nome do logradouro do estabelecimento. Nome original do campo.
+        logradouro:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_DIRECCION`.
+        RES_NUME:
+          type: string
+          description: Número do estabelecimento no logradouro. Nome original do campo. Vazio vira `s/n`.
+        numero:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_NUME`.
+        RES_URBANIZACION:
+          type: string
+          description: Bairro do estabelecimento. Nome original do campo.
+        bairro:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_URBANIZACION`.
+        RES_ZONA_POSTAL:
+          type: string
+          description: CEP do estabelecimento. Nome original do campo.
+        cep:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_ZONA_POSTAL`.
+        RES_REFER:
+          type: string
+          description: Referência do endereço. Nome original do campo.
+        pontoReferencia:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_REFER`.
+        RES_TMU_DESC_MUN:
+          type: string
+          description: Nome do município. Nome original do campo.
+        municipio:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_TMU_DESC_MUN`.
+        RES_TES_COD_ESTADO:
+          type: string
+          description: UF do estabelecimento. Nome original do campo.
+          example: BA
+        uf:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_TES_COD_ESTADO`.
+          example: BA
+        RES_AREA:
+          description: |
+            Área utilizada pela empresa, em m². Nome original do campo. Maior que
+            zero para o processo ser criado.
+          oneOf:
+            - type: number
+            - type: string
+        areaUtilizada:
+          deprecated: true
+          description: |
+            Sinônimo de `RES_AREA`. Prefira `RES_AREA`.
+          oneOf:
+            - type: number
+            - type: string
+        area:
+          deprecated: true
+          description: Sinônimo histórico de `RES_AREA`. Prefira `RES_AREA`.
+          oneOf:
+            - type: number
+            - type: string
+        RES_IDENT_COMP:
+          type: string
+          description: Complemento do endereço do estabelecimento. Nome original do campo.
+        descricaoComplemento:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_IDENT_COMP`.
+        RUC_ACTV_ECON:
+          type: array
+          description: |
+            Atividades econômicas, como no envio original. `RAE_CALIF_ACTV` `1` é a
+            principal; `2` é secundária. Precisa de uma principal para o
+            processo ser criado.
+          items:
+            type: object
+            required: [RAE_TAE_COD_ACTVD, RAE_CALIF_ACTV]
+            properties:
+              RAE_TAE_COD_ACTVD:
+                type: string
+                description: Código CNAE.
+              RAE_CALIF_ACTV:
+                type: string
+                description: "`1` principal, `2` secundária."
+        cnaePrincipal:
+          deprecated: true
+          type: string
+          description: Sinônimo da atividade com `RAE_CALIF_ACTV` `1` em `RUC_ACTV_ECON`.
+        cnaesSecundarios:
+          deprecated: true
+          type: array
+          description: Sinônimo das atividades com `RAE_CALIF_ACTV` `2`.
+          items:
+            type: string
+        perguntas:
+          type: array
+          description: Pergunta e resposta associadas a cada CNAE.
+          items:
+            type: object
+            required: [cnae, pergunta, resposta]
+            properties:
+              cnae:
+                type: string
+              pergunta:
+                type: string
+                description: Número ou texto da pergunta.
+              resposta:
+                type: string
+                description: Resposta informada. Use Sim ou Não.
+        RGE_TGE_VTAMANHO:
+          type: string
+          description: "Tamanho da empresa, como no envio original. `1` ME, `2` EPP, `3` normal."
+          example: "1"
+        porteEmpresa:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RGE_TGE_VTAMANHO`.
+        atividadeEmAreaPublica:
+          description: Resposta a "A atividade está estabelecida em área pública?".
+          oneOf:
+            - type: boolean
+            - type: string
+        trataSeDeEscritorioVirtual:
+          description: Resposta a "Trata-se de escritório virtual?". Sim, Não ou boolean.
+          oneOf:
+            - type: boolean
+            - type: string
+        atividadeAbrigadaEmEscritorioVirtual:
+          deprecated: true
+          description: Sinônimo anterior de `trataSeDeEscritorioVirtual`. Prefira `trataSeDeEscritorioVirtual`.
+          oneOf:
+            - type: boolean
+            - type: string
+        prestaServicoDeEscritorioVirtual:
+          description: |
+            Resposta a "Irá prestar serviço de escritório virtual, centro de
+            negócios ou coworking?". Sim, Não ou boolean. Se omitido, vale Não.
+          oneOf:
+            - type: boolean
+            - type: string
+        cnpjEscritorioVirtual:
+          type: string
+          description: CNPJ do escritório virtual. Gravado quando `trataSeDeEscritorioVirtual` é sim.
+        RES_DS_EVENTO:
+          type: string
+          description: Descrição do evento, como no envio original.
+          example: Inscrição de primeiro estabelecimento (Matriz)
+        RES_CNPJ_SEDE:
+          type: string
+          description: CNPJ da sede, como no envio original. Na constituição de filial, o CNPJ da matriz.
           example: "13927801000149"
+        evento:
+          deprecated: true
+          type: string
+          description: Sinônimo de `RES_DS_EVENTO`.
+        imovelEmCondominio:
+          description: Resposta a "Imóvel em condomínio?".
+          oneOf:
+            - type: boolean
+            - type: string
+        areaEmbarqueDesembarque:
+          description: Resposta a "Possui área de embarque/desembarque?".
+          oneOf:
+            - type: boolean
+            - type: string
+        possuiConcessaoDeUso:
+          description: Resposta a "Possui concessão de uso?". Sim, Não ou boolean.
+          oneOf:
+            - type: boolean
+            - type: string
+        termoDispensaViabilidadeLocacional:
+          description: |
+            Aceite do termo de dispensa de viabilidade locacional. Sim, Não ou boolean.
+          oneOf:
+            - type: boolean
+            - type: string
+        meiDesenquadrado:
+          description: Pedido originado de MEI desenquadrado.
+          oneOf:
+            - type: boolean
+            - type: string
+        servico:
+          type: string
+          description: Serviço solicitado.
+        dataAbertura:
+          type: string
+          format: date
+          description: Data de abertura do processo (AAAA-MM-DD ou data/hora ISO 8601).
         cnpjEmpresa:
           type: string
-          description: CNPJ da empresa, quando a Junta envia.
-          example: "13927801000149"
-        cnpjOrigem:
-          type: string
-          description: CNPJ de origem dos dados. Na OpenAPI da JUCEB, 14 dígitos com pontuação opcional.
+          description: CNPJ da empresa. Na constituição de filial, o CNPJ da matriz.
           example: "13927801000149"
         codFuncao:
           type: integer
           format: int32
-          description: |
-            Código de função do envelope, conforme a JUCEB. O Viabiliza grava
-            o inteiro recebido e não restringe a lista. Exemplo da OpenAPI da
-            Junta: `3`.
-          example: 3
+          description: Código de função do envio. O inteiro recebido é gravado como veio.
+          example: 103
+        dataGeracao:
+          type: string
+          format: date-time
+          description: Data e hora de geração do envio, em ISO 8601.
+          example: "2026-09-16T16:00:00.000Z"
         nire:
           type: string
-          description: NIRE ou matrícula, quando a Junta envia.
-        servico:
+          description: NIRE ou matrícula. Obrigatório nos pedidos de alteração.
+          example: "00000000000"
+        RAE_CALIF_ACTV:
           type: string
-          description: Serviço REGIN. No guia e na OpenAPI da JUCEB, `WsProSol098`.
-          example: WsProSol098
-        xml:
+          description: Qualificação da atividade. `1` indica a atividade principal.
+          example: "1"
+        RGP_TGE_COD_TIP_TAB:
           type: string
-          description: Payload legado em XML. A integração atual usa `json`.
-
-    Ruc:
-      type: object
-      description: |
-        Schema `Ruc` da OpenAPI da JUCEB. O objeto completo (todos os grupos
-        `rowset`) está naquela documentação. Abaixo, só os campos que o
-        Viabiliza lê para abrir o processo. Os demais são armazenados no
-        envelope e não alteram o código de retorno.
-      properties:
-        rowset:
-          $ref: "#/components/schemas/RowsetViabiliza"
-
-    RowsetViabiliza:
-      type: object
-      description: Recorte do `ROWSET` da JUCEB usado na protocolação.
-      properties:
-        RUC_GENERAL:
-          type: object
-          description: Empresa. Schema `RUCGENERAL` na OpenAPI da JUCEB.
-          properties:
-            RGE_CGC_CPF:
-              type: string
-              description: CNPJ ou CPF da empresa.
-            RGE_NOMB:
-              type: string
-              description: Nome empresarial.
-        RUC_ESTAB:
-          type: object
-          description: |
-            Estabelecimento. Schema `RUCESTAB` na OpenAPI da JUCEB.
-            Sem área, logradouro, bairro ou CEP, o processo não é aberto.
-          properties:
-            RES_AREA:
-              type: string
-              description: Área utilizada. Precisa ser maior que zero para protocolar.
-            RES_DIRECCION:
-              type: string
-              description: Logradouro.
-            RES_NUME:
-              type: string
-              description: Número. Vazio vira `s/n`.
-            RES_IDENT_COMP:
-              type: string
-              description: Complemento.
-            RES_URBANIZACION:
-              type: string
-              description: Bairro.
-            RES_ZONA_POSTAL:
-              type: string
-              description: CEP.
-        GROUPRUC_ACTV_ECON:
-          type: object
-          description: Atividades. Schema `GROUPRUCACTVECON` na OpenAPI da JUCEB.
-          properties:
-            RUC_ACTV_ECON:
-              type: array
-              items:
-                type: object
-                properties:
-                  RAE_TAE_COD_ACTVD:
-                    type: string
-                    description: Código da atividade (CNAE).
-                  RAE_CALIF_ACTV:
-                    type: string
-                    description: "`1` marca a atividade principal. Sem principal, o processo não é aberto."
-        GROUPRUC_GEN_PROTOCOLO:
-          type: object
-          description: Dados genéricos do protocolo. Schema `GROUPRUCGENPROTOCOLO` na OpenAPI da JUCEB.
-          properties:
-            RUC_GEN_PROTOCOLO:
-              type: array
-              items:
-                type: object
-                properties:
-                  RGP_TGE_COD_TIP_TAB:
-                    type: string
-                    description: "`5` identifica a inscrição imobiliária."
-                  RGP_VALOR:
-                    type: string
-                    description: Valor do item. Na tabulação 5, a inscrição imobiliária.
+          description: Código do tipo do item genérico do protocolo. `5` identifica a inscrição imobiliária.
+          example: "5"
+        RGP_VALOR:
+          type: string
+          description: Valor do item genérico do protocolo. Quando o tipo é `5`, a inscrição imobiliária.
+          example: "12345678"

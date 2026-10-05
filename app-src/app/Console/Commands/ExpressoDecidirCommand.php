@@ -29,7 +29,7 @@ class ExpressoDecidirCommand extends Command
     protected $signature = 'expresso:decidir
         {solicitacao : ID da solicitação protocolada a decidir}';
 
-    protected $description = 'Roda o motor de decisão do fluxo expresso (HU-073 a HU-078) e imprime a evidência real (status/desfecho/TVL)';
+    protected $description = 'Roda o motor de decisão do fluxo expresso (HU-073 a HU-078) e imprime a evidência real (status/desfecho/viabilidade)';
 
     public function handle(FluxoExpressoService $service): int
     {
@@ -86,7 +86,7 @@ class ExpressoDecidirCommand extends Command
             $this->line('Desfecho: '.mb_strtoupper($decision->outcome->label()));
 
             if ($decision->tvl_product_number !== null) {
-                $this->line("Número TVL: {$decision->tvl_product_number}");
+                $this->line("Número da viabilidade: {$decision->tvl_product_number}");
             }
 
             $this->renderFundamentacao($decision->fundamentacao);

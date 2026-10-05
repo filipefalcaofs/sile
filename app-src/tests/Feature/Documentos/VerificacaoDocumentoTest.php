@@ -53,7 +53,7 @@ class VerificacaoDocumentoTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('verificacao-documento', false)
                 ->where('resultado.valido', true)
-                ->where('resultado.tipo', 'Termo de Viabilidade de Localização (TVL)')
+                ->where('resultado.tipo', 'Viabilidade locacional')
                 ->where('resultado.protocolo', 'VIA-2026-000100')
                 ->has('resultado.data')
                 ->missing('resultado.empresa')

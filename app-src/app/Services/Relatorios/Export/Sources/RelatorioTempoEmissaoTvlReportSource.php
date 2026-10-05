@@ -30,14 +30,14 @@ final class RelatorioTempoEmissaoTvlReportSource implements ReportSource
     public function definition(ReportFilters $filtros): ReportDefinition
     {
         return new ReportDefinition(
-            titulo: 'Tempo de emissão de TVL',
+            titulo: 'Tempo de emissão da viabilidade locacional',
             colunas: [
                 ['key' => 'processo', 'label' => 'Processo'],
                 ['key' => 'servico', 'label' => 'Serviço'],
                 ['key' => 'tipo', 'label' => 'Tipo'],
                 ['key' => 'abertura', 'label' => 'Abertura'],
-                ['key' => 'tvl_disponivel', 'label' => 'TVL Disponível'],
-                ['key' => 'tvl_numero', 'label' => 'Nº TVL'],
+                ['key' => 'tvl_disponivel', 'label' => 'PDF disponível'],
+                ['key' => 'tvl_numero', 'label' => 'Nº da viabilidade'],
                 ['key' => 'emissao', 'label' => 'Emissão'],
                 ['key' => 'duracao_minutos', 'label' => 'Emissão−Abertura (min úteis)'],
             ],

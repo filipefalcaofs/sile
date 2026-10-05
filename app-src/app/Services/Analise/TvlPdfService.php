@@ -46,7 +46,7 @@ class TvlPdfService
     public function generate(ViabilityDecision $decision, ?User $ator = null): TvlDocument
     {
         if (! $decision->isDeferida()) {
-            throw new DomainException('O TVL só pode ser emitido para decisões deferidas.');
+            throw new DomainException('O PDF da viabilidade locacional só pode ser gerado para decisões deferidas.');
         }
 
         $disk = $this->resolverDisco();
@@ -75,7 +75,7 @@ class TvlPdfService
         $this->audit->log(
             logName: 'analise',
             event: 'tvl-emitido',
-            description: "Emissão do TVL do processo #{$decision->viability_request_id} (documento {$verificationCode})",
+            description: "PDF da viabilidade locacional do processo #{$decision->viability_request_id} (documento {$verificationCode})",
             properties: [
                 'viability_request_id' => $decision->viability_request_id,
                 'viability_decision_id' => $decision->id,

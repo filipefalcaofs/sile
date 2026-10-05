@@ -49,6 +49,16 @@ Schedule::command('expresso:indeferir-sem-bap')
     ->withoutOverlapping()
     ->onOneServer();
 
+// Benchmark nacional de viabilidade: importa a última competência fechada dos
+// microdados da REDESIM, nas 27 UFs. Roda no dia 10 porque a origem consolida
+// a competência ao longo dos primeiros dias do mês seguinte. Competência já
+// importada com sucesso é pulada, então reexecutar é barato; UF que falhar
+// fica registrada como lacuna e entra na próxima passagem.
+Schedule::command('benchmark:importar-redesim')
+    ->monthlyOn(10, '03:00')
+    ->withoutOverlapping()
+    ->onOneServer();
+
 // HU-093 (EP11): alerta ANTECIPADO de vencimentos. Varre, na antecedência
 // parametrizável (notificacoes.vencimento.antecedencia_dias), os processos
 // em_analise (analysis_due_at — fonte única da Fase 10) e as pendências abertas

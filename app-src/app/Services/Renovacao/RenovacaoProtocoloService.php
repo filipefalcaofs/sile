@@ -45,7 +45,7 @@ class RenovacaoProtocoloService
         $tipo = ViabilityServiceType::query()->where('code', 'renovacao-tvl')->first();
 
         if ($tipo === null) {
-            throw new DomainException('O tipo de serviço Renovação de TVL não está cadastrado.');
+            throw new DomainException('O tipo de serviço Renovação de viabilidade locacional não está cadastrado.');
         }
 
         $obrigatorias = ServiceDeclaration::vigentesPara($tipo->id)
@@ -114,7 +114,7 @@ class RenovacaoProtocoloService
                 $renovacao,
                 ViabilityRequestStatus::EmAnalise,
                 $ator,
-                reason: 'Renovação de TVL provisório encaminhada à análise semi-expressa.',
+                reason: 'Renovação de viabilidade locacional provisória encaminhada à análise semi-expressa.',
                 publicLabel: ViabilityRequestStatus::EmAnalise->publicLabel(),
             );
 
@@ -125,7 +125,7 @@ class RenovacaoProtocoloService
             $this->audit->log(
                 logName: 'solicitacoes',
                 event: 'renovacao_protocolada',
-                description: "Renovação do TVL da solicitação #{$origem->id} protocolada como #{$renovacao->id}",
+                description: "Renovação da viabilidade locacional da solicitação #{$origem->id} protocolada como #{$renovacao->id}",
                 properties: [
                     'origem_id' => $origem->id,
                     'renovacao_id' => $renovacao->id,

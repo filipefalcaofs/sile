@@ -228,6 +228,7 @@ class ProcessoController extends Controller
             // mostra o que existe e degrada honestamente quando não há polígono.
             'geo' => [
                 'poligono' => $viabilityRequest->property_polygon_geojson,
+                'poligono_enderecamento' => $viabilityRequest->address_polygon_geojson,
                 'ponto' => $viabilityRequest->property_polygon_geojson ? null : $viabilityRequest->pontoDoImovel(),
                 'origem' => $viabilityRequest->property_location_source === null ? null : [
                     'value' => $viabilityRequest->property_location_source->value,

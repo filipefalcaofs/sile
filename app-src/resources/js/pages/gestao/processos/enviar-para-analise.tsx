@@ -151,7 +151,7 @@ export default function EnviarParaAnalise({ featureEnabled, mensagens }: EnviarP
                     <Card>
                         <CardHeader
                             title="Localizar o processo"
-                            description="Informe o número do protocolo do processo de TVL. Qualquer situação pode ser enviada para a análise técnica."
+                            description="Informe o número do protocolo do processo. Qualquer situação pode ser enviada para a análise técnica."
                         />
                         <CardContent>
                             <form onSubmit={pesquisar} className="flex flex-col gap-4 sm:flex-row sm:items-end">

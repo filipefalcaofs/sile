@@ -117,8 +117,8 @@ final class PermissionCatalog
             ],
             [
                 'name' => 'emitir-tvl',
-                'label' => 'Emitir TVL',
-                'description' => 'Emite o Termo de Viabilidade Locacional.',
+                'label' => 'Gerar PDF da viabilidade',
+                'description' => 'Gera o PDF interno da viabilidade locacional.',
                 'group' => 'Análise técnica',
             ],
             [
@@ -135,8 +135,8 @@ final class PermissionCatalog
             ],
             [
                 'name' => 'enviar-tvl-analise',
-                'label' => 'Enviar TVL para análise',
-                'description' => 'Encaminha um TVL já emitido para análise.',
+                'label' => 'Enviar viabilidade para análise',
+                'description' => 'Encaminha uma viabilidade já decidida para análise técnica.',
                 'group' => 'Análise técnica',
             ],
             [

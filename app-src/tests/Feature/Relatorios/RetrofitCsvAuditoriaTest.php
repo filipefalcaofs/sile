@@ -36,7 +36,7 @@ class RetrofitCsvAuditoriaTest extends TestCase
     ];
 
     private const COLUNAS_PROCESSOS = [
-        'Processo', 'BAP', 'Produto TVL', 'Empresa', 'CNPJ', 'Status',
+        'Processo', 'BAP', 'Nº da viabilidade', 'Empresa', 'CNPJ', 'Status',
         'Categoria', 'Analista', 'Prazo',
     ];
 

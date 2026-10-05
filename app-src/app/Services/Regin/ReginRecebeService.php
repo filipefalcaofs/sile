@@ -46,6 +46,20 @@ class ReginRecebeService
             return '5';
         }
 
+        $declaracao = RecebimentoProcesso::reconhece($envelope)
+            ? RecebimentoProcesso::fromEnvelope($envelope)
+            : null;
+
+        if ($declaracao !== null) {
+            $faltam = $declaracao->faltamParaProtocolar();
+
+            if ($faltam !== []) {
+                throw new InvalidArgumentException(
+                    'Declaração sem os dados que abrem o processo: '.implode(', ', $faltam).'.',
+                );
+            }
+        }
+
         try {
             $recebimento = ReginRecebimento::query()->create([
                 'protocolo' => $protocolo,
@@ -54,9 +68,11 @@ class ReginRecebeService
                 'cnpj_origem' => $this->texto($envelope['cnpjOrigem'] ?? null),
                 'cod_funcao' => $this->inteiro($envelope['codFuncao'] ?? null),
                 'nire' => $this->texto($envelope['nire'] ?? null),
-                'servico' => $this->texto($envelope['servico'] ?? null),
-                'data_geracao' => $this->data($envelope['dataGeracao'] ?? null),
-                'corpo' => is_array($envelope['json'] ?? null) ? $envelope['json'] : null,
+                'servico' => $declaracao?->servico ?? $this->texto($envelope['servico'] ?? null),
+                'data_geracao' => $this->data($envelope['dataGeracao'] ?? null) ?? $declaracao?->dataAbertura,
+                'corpo' => $declaracao !== null
+                    ? ['formato' => 'processo', 'dados' => $declaracao->toArray()]
+                    : (is_array($envelope['json'] ?? null) ? $envelope['json'] : null),
                 'envelope' => $envelope,
             ]);
         } catch (UniqueConstraintViolationException) {

@@ -312,6 +312,41 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Consulta a classificação viária da LOUOS no GeoServer SEDUR (insumo do Quadro 11A). Desligado, as condições pela via ficam indisponíveis',
             ],
+            'features.geoserver_enderecamento' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Consulta o polígono do endereçamento no GeoServer SEDUR e decide a zona pela maior porção do lote (art. 18, § 2º, da Lei 9.148/2016). Desligado, a zona segue pelo ponto da inscrição',
+            ],
+            'features.arcgis_semap' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Consulta o lote por inscrição imobiliária no cadastro municipal (ArcGIS, camada SEMAP — Inscrições Geo) quando o endereçamento não tem polígono para o endereço',
+            ],
+            'features.benchmark_redesim' => [
+                'group' => 'features',
+                'type' => 'boolean',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'boolean'],
+                'description' => 'Importa o benchmark nacional de tempo de viabilidade a partir dos microdados da REDESIM. Desligado, as telas de benchmark mostram a lacuna da competência — nenhum valor é estimado',
+            ],
+            'integrations.redesim_estatistica.base_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://estatistica.redesim.gov.br/tempos-abertura-redesim',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'URL base da API de estatísticas da REDESIM, de onde vêm os microdados de tempo de viabilidade por UF e competência',
+            ],
+            'integrations.arcgis_semap.query_url' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => 'https://geo.salvador.ba.gov.br/arcgis/rest/services/MAPA_BASE/MAPA_BASE_SEFAZ/MapServer/18/query',
+                'validation_rules' => ['required', 'url'],
+                'description' => 'URL de consulta da camada SEMAP (Inscrições Geo) do ArcGIS municipal',
+            ],
             'features.geoserver_territorio' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -432,7 +467,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'string',
                 'default_value' => 'municipal',
                 'validation_rules' => ['required', 'in:municipal,sanitario'],
-                'description' => 'Dimensão de risco que prevalece no encaminhamento/TVL (default municipal; confirmar com a SEDUR)',
+                'description' => 'Dimensão de risco que prevalece no encaminhamento da viabilidade locacional (default municipal; confirmar com a SEDUR)',
             ],
             'louos.vagas.exigencia_por_grupo' => [
                 'group' => 'louos',
@@ -502,7 +537,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'integer',
                 'default_value' => '3',
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:60'],
-                'description' => 'Intervalo mínimo (meses) entre renovações do mesmo TVL. Dentro do intervalo o sistema recusa um novo protocolo',
+                'description' => 'Intervalo mínimo (meses) entre renovações da mesma viabilidade locacional. Dentro do intervalo o sistema recusa um novo protocolo',
             ],
             'features.fluxo_expresso' => [
                 'group' => 'features',
@@ -516,7 +551,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'boolean',
                 'default_value' => '1',
                 'validation_rules' => ['required', 'boolean'],
-                'description' => 'Habilita a notificação por e-mail do resultado do fluxo expresso ao requerente (sem anexo de TVL; canais plenos no EP11)',
+                'description' => 'Habilita a notificação por e-mail do resultado do fluxo expresso ao requerente (sem anexo da viabilidade locacional; canais plenos no EP11)',
             ],
             'expresso.bap.prazo_horas' => [
                 'group' => 'expresso',
@@ -530,7 +565,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'string',
                 'default_value' => 'TVL',
                 'validation_rules' => ['required', 'string', 'max:10'],
-                'description' => 'Prefixo do número de produto TVL do deferimento ({prefixo}-AAAA-NNNNNN) — numeração oficial do SAPS a confirmar SEDUR',
+                'description' => 'Prefixo do número da viabilidade locacional ({prefixo}-AAAA-NNNNNN)',
             ],
             'analise.sla.distribuicao_dias' => [
                 'group' => 'analise',
@@ -600,7 +635,7 @@ class ParameterSeeder extends Seeder
                 'type' => 'string',
                 'default_value' => 'imagem',
                 'validation_rules' => ['required', 'in:imagem,nenhuma'],
-                'description' => 'Modo de assinatura do TVL PDF: imagem do diretor (legado) ou nenhuma; assinatura digital gov.br/ICP é gancho → SEDUR',
+                'description' => 'Modo de assinatura do PDF da viabilidade locacional: imagem do diretor ou nenhuma; assinatura digital gov.br/ICP é gancho da SEDUR',
             ],
             // Comunicação multicanal (EP11). Os toggles de canal nascem
             // administráveis: e-mail e in-app ligados; WhatsApp DESLIGADO

@@ -9,6 +9,7 @@ use App\Http\Controllers\Gestao\ApiIntegracaoController;
 use App\Http\Controllers\Gestao\AssistedAttendanceController;
 use App\Http\Controllers\Gestao\AuditoriaController;
 use App\Http\Controllers\Gestao\AuditoriaPreditivaController;
+use App\Http\Controllers\Gestao\BenchmarkController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\ConclusaoAnaliseController;
@@ -58,6 +59,7 @@ use App\Http\Controllers\Gestao\ResetPasswordController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RiskTriggerController;
 use App\Http\Controllers\Gestao\RoleController;
+use App\Http\Controllers\Gestao\SalaDeControleController;
 use App\Http\Controllers\Gestao\SectorController;
 use App\Http\Controllers\Gestao\StandardTextController;
 use App\Http\Controllers\Gestao\TermoLgpdController;
@@ -209,6 +211,13 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // assíncronas (exportacoes/{exportFile}/download) é estático e vem ANTES dos
         // relatórios. Telas React em 15-13/15-14; RelatorioController é o ÚNICO
         // editor de routes/gestao.php nesta fase.
+        // Visão executiva: reúne, num carregamento só, o que está espalhado
+        // pelos relatórios. Fica fora do prefixo relatorios por ser destino de
+        // gestão, não um relatório; o gate de permissão é o mesmo.
+        Route::middleware('permission:consultar-relatorios')
+            ->get('sala-de-controle', SalaDeControleController::class)
+            ->name('sala-de-controle');
+
         Route::middleware('permission:consultar-relatorios')->prefix('relatorios')->name('relatorios.')->group(function () {
             // Download do arquivo da exportação assíncrona (15-02): URL TEMPORÁRIA
             // ASSINADA (signed) servindo o disco NÃO público por streaming, alvo do
@@ -219,6 +228,11 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
                 ->name('exportacoes.download');
 
             Route::get('indicadores', [RelatorioController::class, 'indicadores'])->name('indicadores');
+
+            // Referência externa: como a REDESIM mede Salvador e onde isso a
+            // coloca entre as capitais. Não se mistura com a telemetria do
+            // VIABILIZA, que mede outra grandeza.
+            Route::get('benchmark', BenchmarkController::class)->name('benchmark');
             Route::get('tempo', [RelatorioController::class, 'tempo'])->name('tempo');
             Route::get('produtividade', [RelatorioController::class, 'produtividade'])->name('produtividade');
             Route::get('quedas', [RelatorioController::class, 'quedas'])->name('quedas');

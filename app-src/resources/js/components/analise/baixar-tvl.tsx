@@ -25,17 +25,17 @@ export default function BaixarTvl({ solicitacaoId }: { solicitacaoId: number }) 
                     return;
                 }
 
-                setErro('O TVL não devolveu o arquivo.');
+                setErro('A viabilidade locacional não devolveu o arquivo.');
             },
             onHttpException: () => {
                 setAbrindo(false);
-                setErro('Não foi possível abrir o PDF do TVL.');
+                setErro('Não foi possível abrir o PDF da viabilidade locacional.');
 
                 return false;
             },
             onNetworkError: () => {
                 setAbrindo(false);
-                setErro('Não foi possível abrir o PDF do TVL. Verifique a conexão e tente novamente.');
+                setErro('Não foi possível abrir o PDF da viabilidade locacional. Verifique a conexão e tente novamente.');
             },
         });
     }

@@ -59,7 +59,7 @@ function EditDecisionTextModal({ texto, onClose }: { texto: DecisionTextItem; on
                 <Alert
                     variant="warning"
                     title="Texto de documento oficial"
-                    message="Este texto é emitido em documentos oficiais (TVL/parecer). Placeholders `:nome` são substituídos pelo motor; removê-los remove a informação do documento."
+                    message="Este texto entra em documentos oficiais (parecer e PDF da viabilidade locacional). Placeholders `:nome` são substituídos pelo motor; removê-los remove a informação do documento."
                 />
             </div>
 

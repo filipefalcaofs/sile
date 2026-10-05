@@ -114,7 +114,7 @@ const colunas: ColumnDef<RelatorioRow>[] = [
     },
     {
         id: 'tvl',
-        header: 'Nº TVL',
+        header: 'Nº da viabilidade',
         cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
         cell: (linha) => linha.tvl ?? '—',
     },
@@ -222,20 +222,20 @@ export default function EscritorioVirtual({ relatorio, filtros, perPageOptions }
                 <Card>
                     <CardHeader
                         title="Filtros"
-                        description="Recorte por número da sede (TVL) e/ou inscrição imobiliária. A sede é o alvo do lock ativo da inscrição; os abrigados são as decisões marcadas como escritório virtual."
+                        description="Recorte por número da viabilidade da sede e/ou inscrição imobiliária. A sede é o alvo do lock ativo da inscrição; os abrigados são as decisões marcadas como escritório virtual."
                         actions={<ExportMenu url={URL_ESCRITORIO_VIRTUAL} params={exportParams} />}
                     />
                     <CardContent>
                         <form onSubmit={pesquisar}>
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
-                                    <Label htmlFor="filtro-sede">Nº da Sede (TVL)</Label>
+                                    <Label htmlFor="filtro-sede">Nº da sede</Label>
                                     <Input
                                         id="filtro-sede"
                                         type="text"
                                         value={form.sede}
                                         onChange={(e) => setForm((atual) => ({ ...atual, sede: e.target.value }))}
-                                        placeholder="Nº do TVL da sede"
+                                        placeholder="Nº da viabilidade da sede"
                                     />
                                 </div>
                                 <div>

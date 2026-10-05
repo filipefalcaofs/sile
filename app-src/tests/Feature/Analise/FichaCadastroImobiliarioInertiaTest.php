@@ -73,6 +73,35 @@ class FichaCadastroImobiliarioInertiaTest extends TestCase
                 ->where('localizacao.logradouro', 'Rua das Flores'));
     }
 
+    public function test_ficha_expoe_tipo_do_regin_categoria_do_lote_e_declaracao(): void
+    {
+        $processo = $this->processoComFicha([
+            'property_registration' => '344672',
+            'origem_declarada' => [
+                'protocolo' => 'REG-344672',
+                'presta_servico_de_escritorio_virtual' => 'Sim',
+                'cnae_principal' => '6202-3/00',
+            ],
+        ]);
+        $processo->forceFill([
+            'tipo_imovel' => 'Edificação Comercial',
+            'semap_use_category' => 'COMERCIAL',
+            'semap_construction_standard' => 'MÉDIO',
+        ])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}/ficha")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('gestao/ficha-analise/show')
+                ->where('dadosTvl.tipo_imovel', 'Edificação Comercial')
+                ->where('localizacao.categoria_uso_lote', 'COMERCIAL')
+                ->where('localizacao.padrao_construtivo_lote', 'MÉDIO')
+                ->where('recepcao.protocolo', 'REG-344672')
+                ->where('recepcao.presta_servico_de_escritorio_virtual', 'Sim')
+                ->where('recepcao.cnae_principal', '6202-3/00'));
+    }
+
     public function test_localizacao_expoe_cod_log_materializado(): void
     {
         $processo = $this->processoComFicha();

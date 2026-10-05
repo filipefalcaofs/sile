@@ -37,7 +37,7 @@ final class ProcessosReportSource implements ReportSource
             colunas: [
                 ['key' => 'protocolo', 'label' => 'Processo'],
                 ['key' => 'bap', 'label' => 'BAP'],
-                ['key' => 'produto_tvl', 'label' => 'Produto TVL'],
+                ['key' => 'produto_tvl', 'label' => 'Nº da viabilidade'],
                 ['key' => 'empresa', 'label' => 'Empresa'],
                 ['key' => 'cnpj', 'label' => 'CNPJ'],
                 ['key' => 'status', 'label' => 'Status'],

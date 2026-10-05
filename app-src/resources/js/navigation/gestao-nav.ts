@@ -1,6 +1,7 @@
 /**
  * Catálogo único da sidebar de Gestão. Fonte de verdade do menu e do Cmd+K.
  *
+ * Antes de incluir, mover ou criar grupo, seguir a normativa de menu do projeto.
  */
 
 export type GestaoNavIcon =
@@ -31,6 +32,8 @@ export type GestaoNavIcon =
     | 'trending-up'
     | 'seal'
     | 'trending-down'
+    | 'podium'
+    | 'control-room'
     | 'warning-list'
     | 'route'
     | 'pin'
@@ -163,6 +166,12 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
         label: 'Indicadores',
         items: [
             {
+                name: 'Sala de Controle',
+                href: '/gestao/sala-de-controle',
+                icon: 'control-room',
+                permission: 'consultar-relatorios',
+            },
+            {
                 name: 'Indicadores de viabilidade',
                 href: '/gestao/relatorios/indicadores',
                 icon: 'chart',
@@ -177,7 +186,7 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 permission: 'consultar-relatorios',
             },
             {
-                name: 'Tempo de emissão de TVL',
+                name: 'Emissão da viabilidade',
                 href: '/gestao/relatorios/tempo-emissao-tvl',
                 icon: 'seal',
                 permission: 'consultar-relatorios',
@@ -186,6 +195,12 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 name: 'Quedas do expresso',
                 href: '/gestao/relatorios/quedas',
                 icon: 'trending-down',
+                permission: 'consultar-relatorios',
+            },
+            {
+                name: 'Benchmark nacional',
+                href: '/gestao/relatorios/benchmark',
+                icon: 'podium',
                 permission: 'consultar-relatorios',
             },
         ],

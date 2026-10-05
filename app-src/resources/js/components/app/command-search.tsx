@@ -128,7 +128,7 @@ export default function CommandSearch() {
                             onChange={(evento) => setTermo(evento.target.value)}
                             placeholder={
                                 podeConsultar
-                                    ? 'Buscar por protocolo, BAP, TVL, CNPJ, empresa ou ir para uma área…'
+                                    ? 'Buscar por protocolo, BAP, viabilidade, CNPJ, empresa ou ir para uma área…'
                                     : 'Ir para uma área…'
                             }
                             className="w-full bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-hidden dark:text-white/90 dark:placeholder:text-white/30"

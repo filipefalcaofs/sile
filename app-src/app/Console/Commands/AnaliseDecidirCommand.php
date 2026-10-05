@@ -32,7 +32,7 @@ class AnaliseDecidirCommand extends Command
         {solicitacao : ID da solicitação em análise a concluir}
         {--finalizar : Finaliza a ficha em rascunho antes de decidir}';
 
-    protected $description = 'Conclui o processo a partir da ficha do analista (HU-085 a HU-089) e imprime a evidência real (status/desfecho/TVL)';
+    protected $description = 'Conclui o processo a partir da ficha do analista (HU-085 a HU-089) e imprime a evidência real (status/desfecho/viabilidade)';
 
     public function handle(AnaliseTecnicaDecisionService $decisionService, AnalysisRecordService $records): int
     {
@@ -144,7 +144,7 @@ class AnaliseDecidirCommand extends Command
         $this->line("Analista responsável: {$analista->name} (#{$analista->id})");
 
         if ($result->decision->tvl_product_number !== null) {
-            $this->line("Número TVL: {$result->decision->tvl_product_number}");
+            $this->line("Número da viabilidade: {$result->decision->tvl_product_number}");
         }
 
         $this->renderFundamentacao($result->decision->fundamentacao);
