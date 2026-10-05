@@ -15,9 +15,12 @@ export default function Label({ htmlFor, children, className = '', required = fa
         >
             {children}
             {required && (
-                <span className="ml-0.5 text-error-500" aria-hidden="true">
-                    *
-                </span>
+                <>
+                    <span className="ml-0.5 text-error-500" aria-hidden="true">
+                        *
+                    </span>
+                    <span className="sr-only"> (obrigatório)</span>
+                </>
             )}
         </label>
     );

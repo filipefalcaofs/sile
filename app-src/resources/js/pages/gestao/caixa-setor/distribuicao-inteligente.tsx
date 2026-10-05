@@ -1,6 +1,7 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { type ReactNode, useMemo, useState } from 'react';
 import PageHeader from '@/components/app/page-header';
+import Select from '@/components/form/select';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import GestaoLayout from '@/layouts/gestao-layout';
@@ -77,21 +78,21 @@ export default function DistribuicaoInteligente({ criterio, alocacoes, naoAlocad
 
     function mover(processoId: number, paraId: number) {
         setAtual((linhas) => {
-            let processo: ProcessoSugerido | null = null;
-            const sem = linhas.map((linha) => {
-                const encontrado = linha.processos.find((item) => item.id === processoId);
-                if (encontrado) {
-                    processo = encontrado;
-                }
-                return { ...linha, processos: linha.processos.filter((item) => item.id !== processoId) };
-            });
+            const processo = linhas
+                .flatMap((linha) => linha.processos)
+                .find((item) => item.id === processoId);
 
-            if (processo === null || !processo.elegiveis.includes(paraId)) {
+            if (!processo || !processo.elegiveis.includes(paraId)) {
                 return linhas;
             }
 
+            const sem = linhas.map((linha) => ({
+                ...linha,
+                processos: linha.processos.filter((item) => item.id !== processoId),
+            }));
+
             return sem.map((linha) => {
-                const processos = linha.analista_id === paraId ? [...linha.processos, processo as ProcessoSugerido] : linha.processos;
+                const processos = linha.analista_id === paraId ? [...linha.processos, processo] : linha.processos;
                 return { ...linha, recebera: processos.length, apos: linha.atual + processos.length, processos };
             });
         });
@@ -233,18 +234,18 @@ export default function DistribuicaoInteligente({ criterio, alocacoes, naoAlocad
                                                         <span className="text-theme-sm text-gray-700 dark:text-gray-300">{rotulo(processo)}</span>
                                                         <label className="flex items-center gap-2 text-theme-xs text-gray-500">
                                                             Destinatário
-                                                            <select
-                                                                aria-label={`Destinatário de ${rotulo(processo)}`}
-                                                                value={linha.analista_id}
-                                                                onChange={(evento) => mover(processo.id, Number(evento.target.value))}
-                                                                className="h-9 rounded-lg border border-gray-300 bg-transparent px-2 text-sm text-gray-800 dark:border-gray-700 dark:text-white/90"
-                                                            >
-                                                                {processo.elegiveis.map((id) => (
-                                                                    <option key={id} value={id}>
-                                                                        {nomes.get(id) ?? `Analista ${id}`}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
+                                                            <span className="w-56">
+                                                                <Select
+                                                                    hidePlaceholder
+                                                                    ariaLabel={`Destinatário de ${rotulo(processo)}`}
+                                                                    value={String(linha.analista_id)}
+                                                                    onChange={(valor) => mover(processo.id, Number(valor))}
+                                                                    options={processo.elegiveis.map((id) => ({
+                                                                        value: String(id),
+                                                                        label: nomes.get(id) ?? `Analista ${id}`,
+                                                                    }))}
+                                                                />
+                                                            </span>
                                                         </label>
                                                     </li>
                                                 ))}

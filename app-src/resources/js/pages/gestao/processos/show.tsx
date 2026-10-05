@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { MultiPolygon, Polygon } from 'geojson';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import BaixarTvl from '@/components/analise/baixar-tvl';
 import {
     CategoriaBadges,
@@ -16,6 +17,8 @@ import ParecerCard, { type ParecerDecisao } from '@/components/decisao/parecer-c
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
 import { centroDaGeometria, ESTILO_ENDERECAMENTO } from '@/components/geo/geometria';
 import { MapaSection } from '@/components/geo/mapa-section';
+import OptionSelect from '@/components/form/option-select';
+import SearchableSelect from '@/components/form/searchable-select';
 import Select from '@/components/form/select';
 import { AlertIcon, ArrowRightIcon, MapPinIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
@@ -353,39 +356,26 @@ export default function Show({
                                         </DescItem>
                                         {podeAnalisar && podeConcluirAnalise && (
                                             <DescItem label="Conclusão de Análise">
-                                                <div className="flex flex-col gap-2 sm:items-end">
-                                                    <Select
-                                                        id="resultado-conclusao"
-                                                        value={resultadoConclusao}
-                                                        placeholder="Selecione o resultado"
-                                                        options={conclusaoOpcoes}
-                                                        onChange={setResultadoConclusao}
-                                                        className="sm:min-w-56"
-                                                    />
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={concluirAnalise}
-                                                        disabled={resultadoConclusao === ''}
-                                                        loading={conclusaoProcessing}
-                                                    >
-                                                        Concluir análise
-                                                    </Button>
-                                                    {erroConclusao && (
-                                                        <p className="text-theme-xs text-error-600 dark:text-error-500" role="alert">
-                                                            {erroConclusao}
-                                                        </p>
-                                                    )}
-                                                </div>
+                                                <ConclusaoAnaliseForm
+                                                    resultadoId="resultado-conclusao"
+                                                    resultado={resultadoConclusao}
+                                                    onResultado={setResultadoConclusao}
+                                                    opcoes={conclusaoOpcoes}
+                                                    erro={erroConclusao}
+                                                    processing={conclusaoProcessing}
+                                                    onConfirm={concluirAnalise}
+                                                />
                                             </DescItem>
                                         )}
                                         {podeAnalisar && analysisStatusProximas.length > 0 && (
                                             <DescItem label="Alterar situação da análise">
                                                 <div className="flex flex-col gap-2">
-                                                    <select
-                                                        className="rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                                                    <Select
+                                                        ariaLabel="Situação da análise"
                                                         value={situacaoAnalise}
-                                                        onChange={(e) => {
-                                                            const valor = e.target.value;
+                                                        placeholder="Selecione…"
+                                                        options={analysisStatusProximas}
+                                                        onChange={(valor) => {
                                                             setSituacaoAnalise(valor);
                                                             if (valor !== '' && valor !== 'encaminhado') {
                                                                 router.post(
@@ -395,51 +385,38 @@ export default function Show({
                                                                 );
                                                             }
                                                         }}
-                                                    >
-                                                        <option value="">Selecione…</option>
-                                                        {analysisStatusProximas.map((o) => (
-                                                            <option key={o.value} value={o.value}>
-                                                                {o.label}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    />
                                                     {situacaoAnalise === 'encaminhado' && (
                                                         <>
-                                                            <select
-                                                                aria-label="Setor"
-                                                                className="rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                                                            <OptionSelect
+                                                                id="setor-encaminhamento"
                                                                 value={setorEncaminhamento}
-                                                                onChange={(e) => {
-                                                                    setSetorEncaminhamento(e.target.value);
+                                                                placeholder="Setor"
+                                                                options={setoresEncaminhamento.map((setor) => ({
+                                                                    value: String(setor.id),
+                                                                    label: setor.name,
+                                                                }))}
+                                                                onChange={(valor) => {
+                                                                    setSetorEncaminhamento(valor);
                                                                     setAnalistaEncaminhamento('');
                                                                 }}
-                                                            >
-                                                                <option value="">Setor</option>
-                                                                {setoresEncaminhamento.map((setor) => (
-                                                                    <option key={setor.id} value={setor.id}>
-                                                                        {setor.name}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                            <select
-                                                                aria-label="Usuário"
-                                                                className="rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                                                            />
+                                                            <SearchableSelect
+                                                                id="usuario-encaminhamento"
                                                                 value={analistaEncaminhamento}
-                                                                onChange={(e) => setAnalistaEncaminhamento(e.target.value)}
-                                                            >
-                                                                <option value="">Usuário</option>
-                                                                {analistasEncaminhamento
+                                                                placeholder="Usuário"
+                                                                options={analistasEncaminhamento
                                                                     .filter((analista) =>
                                                                         setorEncaminhamento === ''
                                                                             ? false
                                                                             : analista.setores.includes(Number(setorEncaminhamento)),
                                                                     )
-                                                                    .map((analista) => (
-                                                                        <option key={analista.id} value={analista.id}>
-                                                                            {analista.name}
-                                                                        </option>
-                                                                    ))}
-                                                            </select>
+                                                                    .map((analista) => ({
+                                                                        value: String(analista.id),
+                                                                        label: analista.name,
+                                                                    }))}
+                                                                onChange={setAnalistaEncaminhamento}
+                                                            />
                                                             <Button
                                                                 size="sm"
                                                                 disabled={setorEncaminhamento === '' || analistaEncaminhamento === ''}

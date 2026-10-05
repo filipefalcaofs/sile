@@ -9,7 +9,7 @@ const MapImovel = lazy(() =>
 );
 
 function MapaSkeleton() {
-    return <div className="h-[420px] animate-pulse rounded-2xl bg-gray-100 dark:bg-white/[0.03]" />;
+    return <div className="h-[min(420px,55vh)] animate-pulse rounded-2xl bg-gray-100 dark:bg-white/[0.03]" />;
 }
 
 /**

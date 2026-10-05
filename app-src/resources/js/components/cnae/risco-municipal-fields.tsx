@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 
@@ -68,7 +69,7 @@ export default function RiscoMunicipalFields({
                     options={niveisMunicipais}
                 />
                 {errors.risco_municipal && (
-                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.risco_municipal}</p>
+                    <FieldError>{errors.risco_municipal}</FieldError>
                 )}
             </div>
             <div>
@@ -76,7 +77,7 @@ export default function RiscoMunicipalFields({
                     Exige responsável técnico?
                 </Label>
                 <Select id="exige-rt" name="exige_rt" value={exigeRt} onChange={onExigeRtChange} options={SIM_NAO_OPTIONS} />
-                {errors.exige_rt && <p className="mt-1.5 text-theme-xs text-error-500">{errors.exige_rt}</p>}
+                {errors.exige_rt && <FieldError>{errors.exige_rt}</FieldError>}
             </div>
             <div>
                 <Label htmlFor="exige-rt-se-alto" required>
@@ -93,7 +94,7 @@ export default function RiscoMunicipalFields({
                     O Responsável Técnico será exigido apenas quando o estabelecimento for classificado como Alto Risco.
                 </p>
                 {errors.exige_rt_se_alto && (
-                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.exige_rt_se_alto}</p>
+                    <FieldError>{errors.exige_rt_se_alto}</FieldError>
                 )}
             </div>
             <div>
@@ -108,7 +109,7 @@ export default function RiscoMunicipalFields({
                     options={SIM_NAO_OPTIONS}
                 />
                 {errors.exige_fator_multiplicador && (
-                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.exige_fator_multiplicador}</p>
+                    <FieldError>{errors.exige_fator_multiplicador}</FieldError>
                 )}
             </div>
             <div>
@@ -123,7 +124,7 @@ export default function RiscoMunicipalFields({
                     options={SIM_NAO_OPTIONS}
                 />
                 {errors.exige_detalhamento_multiplicador && (
-                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.exige_detalhamento_multiplicador}</p>
+                    <FieldError>{errors.exige_detalhamento_multiplicador}</FieldError>
                 )}
             </div>
         </div>

@@ -44,7 +44,9 @@ export default function MaskedInput({
             {...rest}
             value={displayValue}
             onChange={handleChange}
-            inputMode="numeric"
+            type={mask === 'phone' ? 'tel' : rest.type}
+            inputMode={mask === 'phone' ? 'tel' : 'numeric'}
+            autoComplete={mask === 'phone' ? (rest.autoComplete ?? 'tel') : rest.autoComplete}
         />
     );
 }

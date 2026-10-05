@@ -76,9 +76,9 @@ function PageBreadcrumb({ pageTitle }: { pageTitle: string }) {
                     <li>
                         <Link
                             className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
-                            href="/portal"
+                            href="/portal/painel"
                         >
-                            Portal
+                            Meu painel
                             <svg
                                 className="stroke-current"
                                 width="17"

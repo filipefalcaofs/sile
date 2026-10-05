@@ -2,9 +2,10 @@ import { Head, Link, useForm, useHttp } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
+import CnpjInput from '@/components/form/cnpj-input';
 import Input from '@/components/form/input';
 import MaskedInput from '@/components/form/masked-input';
-import { applyAlphanumericCnpjMask } from '@/lib/masks';
+import UfSelect from '@/components/form/uf-select';
 import Label from '@/components/form/label';
 import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
@@ -78,7 +79,7 @@ export default function CadastrarEmpresa({ cnpjLookupEnabled }: CadastrarEmpresa
     const [lookupError, setLookupError] = useState<string | null>(null);
 
     function handleCnpjChange(value: string) {
-        setData('cnpj', applyAlphanumericCnpjMask(value));
+        setData('cnpj', value);
     }
 
     function buscarCnpj() {
@@ -143,13 +144,11 @@ export default function CadastrarEmpresa({ cnpjLookupEnabled }: CadastrarEmpresa
                                     <Label htmlFor="cnpj" required>
                                         CNPJ
                                     </Label>
-                                    <Input
+                                    <CnpjInput
                                         id="cnpj"
-                                        type="text"
                                         name="cnpj"
                                         value={data.cnpj}
-                                        onChange={(event) => handleCnpjChange(event.target.value)}
-                                        placeholder="00.000.000/0000-00"
+                                        onChange={handleCnpjChange}
                                         error={!!errors.cnpj}
                                         hint={
                                             errors.cnpj ??
@@ -318,14 +317,11 @@ export default function CadastrarEmpresa({ cnpjLookupEnabled }: CadastrarEmpresa
                             </div>
                             <div>
                                 <Label htmlFor="state">UF</Label>
-                                <Input
+                                <UfSelect
                                     id="state"
-                                    type="text"
                                     name="state"
-                                    maxLength={2}
                                     value={data.state}
-                                    onChange={(event) => setData('state', event.target.value.toUpperCase())}
-                                    placeholder="BA"
+                                    onChange={(valor) => setData('state', valor)}
                                     error={!!errors.state}
                                     hint={errors.state}
                                 />

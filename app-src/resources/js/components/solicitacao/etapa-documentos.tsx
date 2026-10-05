@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import Label from '@/components/form/label';
@@ -216,7 +217,7 @@ export default function EtapaDocumentos({
                                 onChange={(event) => setData('file', event.target.files?.[0] ?? null)}
                                 className="block w-full cursor-pointer text-sm text-gray-600 file:mr-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-brand-600 hover:file:bg-brand-100 dark:text-gray-400 dark:file:bg-brand-500/15 dark:file:text-brand-400"
                             />
-                            {errors.file && <p className="mt-1.5 text-theme-xs text-error-500">{errors.file}</p>}
+                            {errors.file && <FieldError>{errors.file}</FieldError>}
                         </div>
 
                         <div className="flex justify-end">

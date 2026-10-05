@@ -2,6 +2,8 @@ import { useState } from 'react';
 
 interface SwitchProps {
     label: string;
+    /** Quando informado, o componente é controlado pelo pai. */
+    checked?: boolean;
     defaultChecked?: boolean;
     disabled?: boolean;
     onChange?: (checked: boolean) => void;
@@ -10,41 +12,50 @@ interface SwitchProps {
 
 export default function Switch({
     label,
+    checked,
     defaultChecked = false,
     disabled = false,
     onChange,
     color = 'blue',
 }: SwitchProps) {
-    const [isChecked, setIsChecked] = useState(defaultChecked);
+    const [interno, setInterno] = useState(defaultChecked);
+    const ligado = checked ?? interno;
 
     const handleToggle = () => {
         if (disabled) {
             return;
         }
-        const newCheckedState = !isChecked;
-        setIsChecked(newCheckedState);
-        if (onChange) {
-            onChange(newCheckedState);
+
+        const proximo = !ligado;
+
+        if (checked === undefined) {
+            setInterno(proximo);
         }
+
+        onChange?.(proximo);
     };
 
     const switchColors =
         color === 'blue'
             ? {
-                  background: isChecked ? 'bg-brand-500' : 'bg-gray-200 dark:bg-white/10',
-                  knob: isChecked ? 'translate-x-full bg-white' : 'translate-x-0 bg-white',
+                  background: ligado ? 'bg-brand-500' : 'bg-gray-200 dark:bg-white/10',
+                  knob: ligado ? 'translate-x-full bg-white' : 'translate-x-0 bg-white',
               }
             : {
-                  background: isChecked ? 'bg-gray-800 dark:bg-white/10' : 'bg-gray-200 dark:bg-white/10',
-                  knob: isChecked ? 'translate-x-full bg-white' : 'translate-x-0 bg-white',
+                  background: ligado ? 'bg-gray-800 dark:bg-white/10' : 'bg-gray-200 dark:bg-white/10',
+                  knob: ligado ? 'translate-x-full bg-white' : 'translate-x-0 bg-white',
               };
 
     return (
-        <label
-            className={`flex cursor-pointer select-none items-center gap-3 text-sm font-medium ${
+        <button
+            type="button"
+            role="switch"
+            aria-checked={ligado}
+            disabled={disabled}
+            onClick={handleToggle}
+            className={`flex cursor-pointer items-center gap-3 text-left text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed ${
                 disabled ? 'text-gray-400' : 'text-gray-700 dark:text-gray-400'
             }`}
-            onClick={handleToggle}
         >
             <div className="relative">
                 <div
@@ -57,6 +68,6 @@ export default function Switch({
                 ></div>
             </div>
             {label}
-        </label>
+        </button>
     );
 }

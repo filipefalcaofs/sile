@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Form, Head, Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -132,7 +133,7 @@ export default function CnaesEditar({
                                                     ]}
                                                 />
                                                 {errors.active && (
-                                                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.active}</p>
+                                                    <FieldError>{errors.active}</FieldError>
                                                 )}
                                             </div>
                                             <div className="sm:col-span-2">

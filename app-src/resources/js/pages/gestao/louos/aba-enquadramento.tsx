@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { router, useForm, usePage } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 import Badge from '@/components/ui/badge';
@@ -166,7 +167,7 @@ export default function AbaEnquadramento({ enquadramento }: { enquadramento: Enq
                                     onChange={(event) => form.setData('arquivo', event.target.files?.[0] ?? null)}
                                     className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-800 file:mr-3 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1 file:text-xs file:text-gray-700 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
                                 />
-                                {form.errors.arquivo && <p className="mt-1 text-theme-xs text-error-500">{form.errors.arquivo}</p>}
+                                {form.errors.arquivo && <FieldError>{form.errors.arquivo}</FieldError>}
                             </div>
                             <button
                                 type="submit"

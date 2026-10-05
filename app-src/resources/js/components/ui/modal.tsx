@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { ReactNode } from 'react';
 import { CloseIcon } from '@/components/icons';
@@ -12,6 +12,8 @@ interface ModalProps {
     children: ReactNode;
     showCloseButton?: boolean;
     isFullscreen?: boolean;
+    ariaLabel?: string;
+    ariaLabelledBy?: string;
 }
 
 const FOCUSABLE_SELECTOR =
@@ -30,8 +32,11 @@ export function Modal({
     className,
     showCloseButton = true,
     isFullscreen = false,
+    ariaLabel,
+    ariaLabelledBy,
 }: ModalProps) {
     const modalRef = useRef<HTMLDivElement>(null);
+    const tituloGerado = useId();
     const previousFocusRef = useRef<HTMLElement | null>(null);
     // onClose chega inline do pai e muda a cada tecla. Se entrar nas deps do
     // efeito, o cleanup devolve o foco e a abertura foca de novo o Fechar.
@@ -90,6 +95,25 @@ export function Modal({
     }, [isOpen]);
 
     useEffect(() => {
+        if (!isOpen || ariaLabel || ariaLabelledBy) {
+            return;
+        }
+
+        const modal = modalRef.current;
+        const titulo = modal?.querySelector('h1, h2, h3, h4');
+
+        if (!(titulo instanceof HTMLElement)) {
+            return;
+        }
+
+        if (!titulo.id) {
+            titulo.id = tituloGerado;
+        }
+
+        modal?.setAttribute('aria-labelledby', titulo.id);
+    }, [ariaLabel, ariaLabelledBy, isOpen, tituloGerado]);
+
+    useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
         } else {
@@ -135,6 +159,8 @@ export function Modal({
                             ref={modalRef}
                             role="dialog"
                             aria-modal="true"
+                            aria-label={ariaLabel}
+                            aria-labelledby={ariaLabelledBy}
                             tabIndex={-1}
                             className={`${contentClasses} ${className ?? ''} focus:outline-hidden`}
                             onClick={(e) => e.stopPropagation()}

@@ -162,7 +162,7 @@ export default function SalaDeControle({ tempo, operacao, distancia, evolucao, g
                     </CardContent>
                 </Card>
 
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 md:gap-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
                     <KpiCard label="Tempo médio" value={formatarHoras(tempo.media)} note={`${numberFormat.format(tempo.n)} decididos`} tone="brand" />
                     <KpiCard label="P90" value={formatarHoras(tempo.p90)} note="90% saem abaixo disso" tone="brand" />
                     <KpiCard

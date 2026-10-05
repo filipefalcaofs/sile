@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -84,7 +85,7 @@ function EditRiskTriggerModal({ gatilho, onClose }: { gatilho: RiskTriggerItem; 
                             onChange={(e) => form.setData('motivo', e.target.value)}
                             className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                         />
-                        {form.errors.motivo && <p className="mt-1.5 text-xs text-error-500">{form.errors.motivo}</p>}
+                        {form.errors.motivo && <FieldError>{form.errors.motivo}</FieldError>}
                     </div>
                     <div className="flex items-center justify-end gap-3">
                         <Button size="sm" variant="outline" onClick={onClose} disabled={form.processing} type="button">

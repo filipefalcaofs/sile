@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
@@ -102,9 +103,9 @@ function PendenciaForm({ solicitacaoId, pendencia }: { solicitacaoId: number; pe
                             className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
                         />
                         {errors.response && (
-                            <p id={errorId} role="alert" className="text-theme-xs text-error-500">
+                            <FieldError id={errorId}>
                                 {errors.response}
-                            </p>
+                            </FieldError>
                         )}
                         <div className="flex justify-end">
                             <Button type="submit" loading={processing}>

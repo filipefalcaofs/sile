@@ -60,7 +60,10 @@ function UserDropdown({ logoutHref, accountHref }: { logoutHref: string; account
             <button
                 type="button"
                 onClick={toggleDropdown}
-                className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
+                aria-label="Menu da conta"
+                aria-haspopup="menu"
+                aria-expanded={isOpen}
+                className="flex items-center text-gray-700 dropdown-toggle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 dark:text-gray-400"
             >
                 <span className="mr-3 flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-brand-500 text-sm font-semibold text-white">
                     {initials}
@@ -141,7 +144,7 @@ export default function AppHeader({ homeHref, logoutHref, accountHref, toolbar }
     };
 
     return (
-        <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 lg:border-b">
+        <header className="flex w-full border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 lg:border-b">
             <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
                 <div
                     className={`flex items-center justify-between gap-2 border-b border-gray-200 px-3 py-3 dark:border-gray-800 sm:gap-4 lg:border-b-0 lg:px-0 lg:py-4 ${

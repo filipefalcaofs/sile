@@ -1,8 +1,8 @@
 import { Form, Head } from '@inertiajs/react';
-import { useState } from 'react';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
-import { EyeCloseIcon, EyeIcon, LockIcon } from '@/components/icons';
+import PasswordField from '@/components/form/password-field';
+import { LockIcon } from '@/components/icons';
 import Button from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
 
@@ -11,43 +11,6 @@ interface ResetPasswordProps {
     token: string;
 }
 
-interface PasswordFieldProps {
-    id: string;
-    name: string;
-    label: string;
-    autoFocus?: boolean;
-    error?: string;
-}
-
-function PasswordField({ id, name, label, autoFocus = false, error }: PasswordFieldProps) {
-    const [show, setShow] = useState(false);
-
-    return (
-        <div>
-            <Label htmlFor={id}>{label}</Label>
-            <div className="relative">
-                <Input
-                    id={id}
-                    type={show ? 'text' : 'password'}
-                    name={name}
-                    autoComplete="new-password"
-                    autoFocus={autoFocus}
-                    required
-                    error={!!error}
-                    hint={error}
-                />
-                <button
-                    type="button"
-                    onClick={() => setShow((current) => !current)}
-                    aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}
-                    className="absolute top-3 right-4 z-30 cursor-pointer text-gray-500 dark:text-gray-400"
-                >
-                    {show ? <EyeIcon className="size-5" /> : <EyeCloseIcon className="size-5" />}
-                </button>
-            </div>
-        </div>
-    );
-}
 
 export default function ResetPassword({ email, token }: ResetPasswordProps) {
     return (

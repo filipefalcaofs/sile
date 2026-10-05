@@ -44,7 +44,11 @@ function TableRow({ children, className }: TableRowProps) {
 
 function TableCell({ children, isHeader = false, className }: TableCellProps) {
     const CellTag = isHeader ? 'th' : 'td';
-    return <CellTag className={className}>{children}</CellTag>;
+    return (
+        <CellTag scope={isHeader ? 'col' : undefined} className={className}>
+            {children}
+        </CellTag>
+    );
 }
 
 export { Table, TableHeader, TableBody, TableRow, TableCell };

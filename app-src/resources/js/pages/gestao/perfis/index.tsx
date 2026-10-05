@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Form, Head, router } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -51,14 +52,6 @@ function groupPermissionCatalog(catalog: PermissionOption[]): { label: string; i
 
 function permissionLabel(catalog: PermissionOption[], name: string): string {
     return catalog.find((item) => item.name === name)?.label ?? name;
-}
-
-function FieldError({ message }: { message?: string }) {
-    if (!message) {
-        return null;
-    }
-
-    return <p className="mt-1.5 text-theme-xs text-error-500">{message}</p>;
 }
 
 function PermissionChips({ permissions, catalog }: { permissions: string[]; catalog: PermissionOption[] }) {
@@ -411,7 +404,7 @@ export default function RolesIndex({ roles, permissionCatalog }: RolesIndexProps
                             <p>
                                 Confirma a exclusão do perfil {deletingRole.name}? Esta ação não pode ser desfeita.
                             </p>
-                            {deleteError && <p className="mt-2 text-error-500">{deleteError}</p>}
+                            {deleteError && <FieldError>{deleteError}</FieldError>}
                         </>
                     }
                     confirmLabel="Excluir"

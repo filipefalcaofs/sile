@@ -1,6 +1,6 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
-import Select from '@/components/form/select';
+import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import ProcessoFiltros, { FILTROS_VAZIOS, type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
 import PageHeader from '@/components/app/page-header';
 import { ArrowRightIcon } from '@/components/icons';
@@ -351,52 +351,25 @@ export default function MalhaFinaIndex({
                     e indeferido seguem a ficha finalizada. Desativado, cassado e revogado encerram o processo —
                     inclusive um já deferido.
                 </p>
-                <label htmlFor="concluir-resultado" className="mt-4 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Resultado
-                </label>
-                <Select
-                    id="concluir-resultado"
-                    className="mt-1"
-                    value={conclusao.data.resultado}
-                    placeholder="Selecione o resultado"
-                    options={conclusaoOpcoes}
-                    onChange={(valor) => conclusao.setData('resultado', valor)}
-                />
-                {conclusao.errors.resultado && (
-                    <p className="mt-1 text-sm text-error-600 dark:text-error-500" role="alert">
-                        {conclusao.errors.resultado}
-                    </p>
-                )}
-                <label htmlFor="concluir-observacao" className="mt-4 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Parecer (opcional)
-                </label>
-                <textarea
-                    id="concluir-observacao"
-                    value={conclusao.data.observacao}
-                    onChange={(evento) => conclusao.setData('observacao', evento.target.value)}
-                    rows={3}
-                    maxLength={2000}
-                    placeholder="Parecer da conclusão, se houver"
-                    className="mt-1 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-                />
-                {conclusao.errors.conclusao && (
-                    <p className="mt-3 text-sm font-medium text-error-600 dark:text-error-500" role="alert">
-                        {conclusao.errors.conclusao}
-                    </p>
-                )}
-                <div className="mt-5 flex justify-end gap-3">
-                    <Button type="button" variant="outline" onClick={() => setConcluindo(null)} disabled={conclusao.processing}>
-                        Cancelar
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="primary"
-                        onClick={concluir}
-                        disabled={conclusao.processing || conclusao.data.resultado === ''}
-                        loading={conclusao.processing}
-                    >
-                        Concluir análise
-                    </Button>
+                <div className="mt-4">
+                    <ConclusaoAnaliseForm
+                        resultadoId="concluir-resultado"
+                        resultado={conclusao.data.resultado}
+                        onResultado={(valor) => conclusao.setData('resultado', valor)}
+                        opcoes={conclusaoOpcoes}
+                        parecerId="concluir-observacao"
+                        parecer={conclusao.data.observacao}
+                        onParecer={(valor) => conclusao.setData('observacao', valor)}
+                        parecerLabel="Parecer (opcional)"
+                        erro={
+                            (conclusao.errors as Record<string, string | undefined>).resultado
+                            ?? (conclusao.errors as Record<string, string | undefined>).conclusao
+                            ?? null
+                        }
+                        processing={conclusao.processing}
+                        onConfirm={concluir}
+                        onCancel={() => setConcluindo(null)}
+                    />
                 </div>
             </Modal>
         </>

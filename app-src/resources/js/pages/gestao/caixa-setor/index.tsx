@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { type ReactNode, useState } from 'react';
 import ProcessoFiltros, { FILTROS_VAZIOS, type ProcessoFiltrosValores } from '@/components/analise/processo-filtros';
@@ -496,7 +497,7 @@ export default function CaixaSetorIndex({
                         disabled={opcoesDoModal.length === 0}
                     />
                     {tramitacao.errors.analista_id && (
-                        <p className="mt-1.5 text-theme-xs text-error-500">{tramitacao.errors.analista_id}</p>
+                        <FieldError>{tramitacao.errors.analista_id}</FieldError>
                     )}
                 </div>
 

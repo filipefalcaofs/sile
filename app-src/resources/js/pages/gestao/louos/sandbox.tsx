@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
@@ -196,9 +197,9 @@ export default function LouosSandbox({ rascunhos, amostraPadrao, simulacao = nul
                                             options={rascunhoOptions}
                                         />
                                         {errors.versao_rascunho && (
-                                            <p className="mt-1.5 text-theme-xs text-error-500">
+                                            <FieldError>
                                                 {errors.versao_rascunho}
-                                            </p>
+                                            </FieldError>
                                         )}
                                     </div>
                                     <div>

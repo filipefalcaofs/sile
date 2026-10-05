@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
@@ -95,7 +96,7 @@ function ImportarModal({ tipos, uploadMaxMb, onClose }: { tipos: CamadasIndexPro
                             value={form.data.tipo}
                             onChange={(value) => form.setData('tipo', value)}
                         />
-                        {form.errors.tipo && <p className="mt-1 text-theme-xs text-error-500">{form.errors.tipo}</p>}
+                        {form.errors.tipo && <FieldError>{form.errors.tipo}</FieldError>}
                     </div>
                     <div>
                         <Label htmlFor="import-versao">Versão</Label>
@@ -133,7 +134,7 @@ function ImportarModal({ tipos, uploadMaxMb, onClose }: { tipos: CamadasIndexPro
                             onChange={(e) => form.setData('arquivo', e.target.files?.[0] ?? null)}
                             className={inputArquivo}
                         />
-                        {form.errors.arquivo && <p className="mt-1 text-theme-xs text-error-500">{form.errors.arquivo}</p>}
+                        {form.errors.arquivo && <FieldError>{form.errors.arquivo}</FieldError>}
                     </div>
                     <div className="flex items-center justify-end gap-3">
                         <Button size="sm" variant="outline" onClick={onClose} disabled={form.processing} type="button">

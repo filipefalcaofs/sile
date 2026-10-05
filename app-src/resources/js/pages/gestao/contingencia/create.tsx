@@ -1,14 +1,15 @@
+import FieldError from '@/components/form/field-error';
 import { Head, useForm, useHttp } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
+import CnaePicker from '@/components/cnae/cnae-picker';
 import Input from '@/components/form/input';
 import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
 import Switch from '@/components/form/switch';
 import { MapaSection } from '@/components/geo/mapa-section';
-import { SearchIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
@@ -172,123 +173,6 @@ function quadradoAoRedor(lat: number, lng: number, delta = 0.0003): PoligonoGeoJ
             ],
         ],
     };
-}
-
-/**
- * Busca incremental de CNAEs ativos pela rota da gestão
- * (gestao.contingencia.cnaes-disponiveis), reusando o CnaeSearchController
- * (somente dados reais — máx. 20 itens). Local a esta tela.
- */
-function CnaeSearch({
-    onSelect,
-    excludeIds = [],
-    placeholder = 'Buscar CNAE por código ou descrição...',
-}: {
-    onSelect: (cnae: CnaeOption) => void;
-    excludeIds?: number[];
-    placeholder?: string;
-}) {
-    const [term, setTerm] = useState('');
-    const [results, setResults] = useState<CnaeOption[]>([]);
-    const [searched, setSearched] = useState(false);
-    const [failed, setFailed] = useState(false);
-
-    const http = useHttp<Record<string, never>, CnaeOption[]>({});
-    const httpRef = useRef(http);
-    httpRef.current = http;
-    const requestSeq = useRef(0);
-
-    useEffect(() => {
-        const trimmed = term.trim();
-
-        if (trimmed.length < MIN_SEARCH_LENGTH) {
-            requestSeq.current += 1;
-            setResults([]);
-            setSearched(false);
-            setFailed(false);
-
-            return;
-        }
-
-        const timeout = setTimeout(() => {
-            const seq = ++requestSeq.current;
-
-            void httpRef.current.get(`/gestao/contingencia/cnaes-disponiveis?search=${encodeURIComponent(trimmed)}`, {
-                onSuccess: (response) => {
-                    if (seq !== requestSeq.current) {
-                        return;
-                    }
-                    setResults(Array.isArray(response) ? response : []);
-                    setSearched(true);
-                    setFailed(false);
-                },
-                onError: () => {
-                    if (seq !== requestSeq.current) {
-                        return;
-                    }
-                    setResults([]);
-                    setSearched(false);
-                    setFailed(true);
-                },
-            });
-        }, SEARCH_DEBOUNCE_MS);
-
-        return () => clearTimeout(timeout);
-    }, [term]);
-
-    function select(cnae: CnaeOption) {
-        onSelect(cnae);
-        requestSeq.current += 1;
-        setTerm('');
-        setResults([]);
-        setSearched(false);
-        setFailed(false);
-    }
-
-    const visibleResults = results.filter((cnae) => !excludeIds.includes(cnae.id));
-
-    return (
-        <div className="flex flex-col gap-3">
-            <div className="relative">
-                <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-gray-400 dark:text-gray-500">
-                    <SearchIcon className="size-5" />
-                </span>
-                <input
-                    type="search"
-                    value={term}
-                    onChange={(event) => setTerm(event.target.value)}
-                    placeholder={placeholder}
-                    autoComplete="off"
-                    className="h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent py-2.5 pr-4 pl-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                />
-            </div>
-
-            {failed && (
-                <Alert variant="error" title="Busca de CNAEs indisponível" message="Não foi possível consultar a tabela oficial de CNAEs. Tente novamente." />
-            )}
-
-            {searched && visibleResults.length === 0 && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum CNAE ativo encontrado.</p>
-            )}
-
-            {visibleResults.length > 0 && (
-                <ul className="max-h-64 divide-y divide-gray-100 overflow-y-auto rounded-xl border border-gray-200 dark:divide-white/[0.05] dark:border-gray-800">
-                    {visibleResults.map((cnae) => (
-                        <li key={cnae.id}>
-                            <button
-                                type="button"
-                                onClick={() => select(cnae)}
-                                className="flex w-full flex-col items-start gap-0.5 px-4 py-3 text-start transition hover:bg-gray-50 focus:bg-gray-50 focus:outline-hidden dark:hover:bg-white/[0.03] dark:focus:bg-white/[0.03]"
-                            >
-                                <span className="text-sm font-medium text-gray-800 dark:text-white/90">{cnae.formatted_code}</span>
-                                <span className="text-theme-xs text-gray-500 dark:text-gray-400">{cnae.description}</span>
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </div>
-    );
 }
 
 /**
@@ -519,7 +403,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                         {consultaCpf.processing ? 'Buscando...' : 'Buscar CPF'}
                                     </Button>
                                 </div>
-                                {cpfErro && <p className="mt-1.5 text-theme-xs text-error-500">{cpfErro}</p>}
+                                {cpfErro && <FieldError>{cpfErro}</FieldError>}
                                 {cpfResumo && !cpfErro && <p className="mt-1.5 text-theme-xs text-gray-500 dark:text-gray-400">{cpfResumo}</p>}
                             </div>
                             <div>
@@ -550,7 +434,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                         {consultaCnpj.processing ? 'Buscando...' : 'Buscar CNPJ'}
                                     </Button>
                                 </div>
-                                {cnpjErro && <p className="mt-1.5 text-theme-xs text-error-500">{cnpjErro}</p>}
+                                {cnpjErro && <FieldError>{cnpjErro}</FieldError>}
                                 {cnpjResumo && !cnpjErro && <p className="mt-1.5 text-theme-xs text-gray-500 dark:text-gray-400">{cnpjResumo}</p>}
                             </div>
                         </div>
@@ -572,7 +456,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                     options={serviceTypes.map((type) => ({ value: String(type.id), label: type.name }))}
                                 />
                                 {errors.service_type_id && (
-                                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.service_type_id}</p>
+                                    <FieldError>{errors.service_type_id}</FieldError>
                                 )}
                             </div>
                             <div>
@@ -589,7 +473,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                     className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                                 />
                                 {errors.contingency_reason && (
-                                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.contingency_reason}</p>
+                                    <FieldError>{errors.contingency_reason}</FieldError>
                                 )}
                             </div>
                             <div>
@@ -625,7 +509,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                         options={tiposImovel.map((tipo) => ({ value: tipo.value, label: tipo.label }))}
                                     />
                                     {errors.tipo_imovel && (
-                                        <p className="mt-1.5 text-theme-xs text-error-500">{errors.tipo_imovel}</p>
+                                        <FieldError>{errors.tipo_imovel}</FieldError>
                                     )}
                                 </div>
                                 <div>
@@ -655,7 +539,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                         </Button>
                                     </div>
                                     {consultaErro && (
-                                        <p className="mt-1.5 text-theme-xs text-error-500">{consultaErro}</p>
+                                        <FieldError>{consultaErro}</FieldError>
                                     )}
                                 </div>
                             </div>
@@ -668,7 +552,7 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                         : 'Clique ou arraste o marcador no mapa para definir o imóvel.'}
                                 </p>
                                 {errors.property_polygon_geojson && (
-                                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.property_polygon_geojson}</p>
+                                    <FieldError>{errors.property_polygon_geojson}</FieldError>
                                 )}
                             </div>
 
@@ -795,10 +679,10 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                         </button>
                                     </div>
                                 ) : (
-                                    <CnaeSearch onSelect={selecionarPrincipal} excludeIds={excludeIds} placeholder="Buscar atividade principal..." />
+                                    <CnaePicker endpoint="/gestao/contingencia/cnaes-disponiveis" onSelect={selecionarPrincipal} excludeIds={excludeIds} placeholder="Buscar atividade principal..." />
                                 )}
                                 {errors.principal_cnae_id && (
-                                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.principal_cnae_id}</p>
+                                    <FieldError>{errors.principal_cnae_id}</FieldError>
                                 )}
                             </div>
 
@@ -824,9 +708,9 @@ export default function RegistrarContingencia({ serviceTypes, documentRequiremen
                                         ))}
                                     </div>
                                 )}
-                                <CnaeSearch onSelect={adicionarComplementar} excludeIds={excludeIds} placeholder="Adicionar CNAE complementar..." />
+                                <CnaePicker endpoint="/gestao/contingencia/cnaes-disponiveis" onSelect={adicionarComplementar} excludeIds={excludeIds} placeholder="Adicionar CNAE complementar..." />
                                 {errors.complementares && (
-                                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.complementares}</p>
+                                    <FieldError>{errors.complementares}</FieldError>
                                 )}
                             </div>
                         </div>

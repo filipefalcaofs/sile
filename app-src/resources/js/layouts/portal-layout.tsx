@@ -23,7 +23,7 @@ const groups: SidebarGroup[] = [
     {
         label: 'Serviços',
         items: [
-            { name: 'Meus processos', href: '/portal/solicitacoes', icon: <FileIcon /> },
+            { name: 'Minhas solicitações', href: '/portal/solicitacoes', icon: <FileIcon /> },
             { name: 'Renovação de Viabilidade', href: '/portal/renovacao', icon: <CheckCircleIcon /> },
         ],
     },

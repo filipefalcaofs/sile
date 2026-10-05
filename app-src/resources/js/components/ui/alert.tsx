@@ -46,8 +46,11 @@ export default function Alert({
         info: <InfoIcon className="size-6 fill-current" />,
     };
 
+    const live = variant === 'error' || variant === 'warning' ? 'alert' : 'status';
+
     return (
         <motion.div
+            role={live}
             initial={fadeInUp.initial}
             animate={fadeInUp.animate}
             className={`rounded-xl border p-4 ${variantClasses[variant].container}`}

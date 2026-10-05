@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Form, Head, router } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -152,7 +153,7 @@ function RoleModal({ user, roles, onClose }: { user: UserItem; roles: string[]; 
                                 placeholder="Selecionar..."
                                 options={roles.map((roleOption) => ({ value: roleOption, label: roleOption }))}
                             />
-                            {errors.role && <p className="mt-1.5 text-theme-xs text-error-500">{errors.role}</p>}
+                            {errors.role && <FieldError>{errors.role}</FieldError>}
                         </div>
                         <div className="flex items-center justify-end gap-3">
                             <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>
@@ -195,7 +196,7 @@ function AuthTypeModal({ user, onClose }: { user: UserItem; onClose: () => void 
                                     { value: 'ad', label: 'Active Directory (rede corporativa)' },
                                 ]}
                             />
-                            {errors.auth_type && <p className="mt-1.5 text-theme-xs text-error-500">{errors.auth_type}</p>}
+                            {errors.auth_type && <FieldError>{errors.auth_type}</FieldError>}
                         </div>
 
                         {authType === 'ad' && (
@@ -210,7 +211,7 @@ function AuthTypeModal({ user, onClose }: { user: UserItem; onClose: () => void 
                                     autoComplete="off"
                                 />
                                 {errors.ad_username && (
-                                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.ad_username}</p>
+                                    <FieldError>{errors.ad_username}</FieldError>
                                 )}
                             </div>
                         )}

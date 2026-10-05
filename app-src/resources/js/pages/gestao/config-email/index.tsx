@@ -123,7 +123,7 @@ function ServerFormModal({ server, isOpen, onClose }: { server?: EmailServerItem
                                 </div>
                                 <div>
                                     <Label required htmlFor="from_address">E-mail do remetente</Label>
-                                    <Input id="from_address" name="from_address" type="text" inputMode="email" autoComplete="off" required defaultValue={server?.from_address} placeholder="nao-responda@viabiliza.salvador.ba.gov.br" error={!!errors.from_address} hint={errors.from_address} />
+                                    <Input id="from_address" name="from_address" type="email" inputMode="email" autoComplete="email" required defaultValue={server?.from_address} placeholder="nao-responda@viabiliza.salvador.ba.gov.br" error={!!errors.from_address} hint={errors.from_address} />
                                 </div>
                                 <div>
                                     <Label required htmlFor="from_name">Nome do remetente</Label>

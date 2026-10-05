@@ -28,9 +28,17 @@ export function Dropdown({ isOpen, onClose, children, className = '' }: Dropdown
             }
         };
 
+        function aoTeclar(evento: KeyboardEvent) {
+            if (evento.key === 'Escape') {
+                onClose();
+            }
+        }
+
         document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', aoTeclar);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', aoTeclar);
         };
     }, [onClose]);
 
@@ -41,6 +49,7 @@ export function Dropdown({ isOpen, onClose, children, className = '' }: Dropdown
             {isOpen && (
                 <motion.div
                     ref={dropdownRef}
+                    role="menu"
                     className={`absolute z-40 right-0 mt-2 origin-top-right rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark ${className}`}
                     initial={dropdownPop.initial}
                     animate={dropdownPop.animate}

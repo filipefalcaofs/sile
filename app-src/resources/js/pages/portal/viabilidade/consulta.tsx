@@ -240,7 +240,7 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                     </h1>
                     <p className="mt-3 text-base text-gray-500 dark:text-gray-400">
                         Verifique se uma atividade econômica pode funcionar em um local de Salvador, aplicando as regras
-                        da LOUOS e a classificação de risco municipal. Consulte por endereço, CNAE ou inscrição
+                        da lei de ordenamento (LOUOS) e a classificação de risco municipal. Consulte por endereço, código da atividade (CNAE) ou inscrição
                         imobiliária — sem necessidade de login.
                     </p>
                     <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
@@ -349,7 +349,7 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
 
                                         <div>
                                             <Label htmlFor="cnae" required>
-                                                CNAE da atividade
+                                                Código da atividade (CNAE)
                                             </Label>
                                             <Input
                                                 id="cnae"

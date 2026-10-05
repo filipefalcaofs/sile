@@ -8,7 +8,9 @@ export default function Backdrop() {
     return (
         <AnimatePresence>
             {isMobileOpen && (
-                <motion.div
+                <motion.button
+                    type="button"
+                    aria-label="Fechar menu"
                     className="fixed inset-0 z-40 bg-gray-900/50 lg:hidden"
                     onClick={toggleMobileSidebar}
                     initial={backdropFade.initial}

@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
@@ -13,6 +14,8 @@ import Select from '@/components/form/select';
 import { CloseIcon, FileIcon, SearchIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
+import DataTable from '@/components/ui/data-table/data-table';
+import type { ColumnDef } from '@/components/ui/data-table/types';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import GestaoLayout from '@/layouts/gestao-layout';
@@ -612,48 +615,36 @@ export default function ConsultaProcessos({
                         >
                             Cancelar
                         </button>
-                        {erroMotivo && <p className="w-full text-theme-xs text-error-500">{erroMotivo}</p>}
+                        {erroMotivo && <FieldError>{erroMotivo}</FieldError>}
                     </div>
                 )}
 
-                <div className="hidden items-center gap-4 border-t border-gray-100 bg-gray-50 px-5 py-2.5 text-xs font-medium text-gray-500 lg:flex dark:border-gray-800 dark:bg-white/[0.02] dark:text-gray-400">
-                    {podeMalhaFina && <span className="w-5 shrink-0" />}
-                    <span className="min-w-[150px] flex-[3]">Processo e requerente</span>
-                    <span className="min-w-[150px] flex-[3]">Status e análise</span>
-                    <span className="min-w-[120px] flex-[2]">Serviço e protocolo</span>
-                    <span className="min-w-[110px] flex-[2]">Analista</span>
-                    <span className="min-w-[100px] flex-1">Prazo</span>
-                    <span className="w-16 shrink-0" />
-                </div>
-
-                {processos.data.length === 0 ? (
-                    <div className="border-t border-gray-100 dark:border-gray-800">
-                        <EmptyState
-                            title={
-                                chips.length > 0 || form.busca.trim() !== '' || abaAtiva !== 'todos'
-                                    ? 'Nenhum processo para esta busca'
-                                    : 'Nenhum processo cadastrado'
-                            }
-                            description={
-                                chips.length > 0 || form.busca.trim() !== '' || abaAtiva !== 'todos'
-                                    ? 'Ajuste a busca, troque de aba ou limpe os filtros ativos.'
-                                    : 'Os processos protocolados aparecem aqui conforme avançam no fluxo.'
-                            }
-                        />
-                    </div>
-                ) : (
-                    <ul className="divide-y divide-gray-100 border-t border-gray-100 dark:divide-gray-800 dark:border-gray-800">
-                        {processos.data.map((item) => (
-                            <LinhaProcesso
-                                key={item.id}
-                                item={item}
-                                selecionavel={podeMalhaFina}
-                                selecionado={selecionados.includes(item.id)}
-                                onAlternar={() => alternar(item.id)}
+                <div className="border-t border-gray-100 dark:border-gray-800">
+                    <DataTable
+                        columns={colunasProcessos({
+                            selecionavel: podeMalhaFina,
+                            selecionado: (id) => selecionados.includes(id),
+                            onAlternar: alternar,
+                        })}
+                        rows={processos.data}
+                        rowKey={(item) => item.id}
+                        density="compact"
+                        emptyState={
+                            <EmptyState
+                                title={
+                                    chips.length > 0 || form.busca.trim() !== '' || abaAtiva !== 'todos'
+                                        ? 'Nenhum processo para esta busca'
+                                        : 'Nenhum processo cadastrado'
+                                }
+                                description={
+                                    chips.length > 0 || form.busca.trim() !== '' || abaAtiva !== 'todos'
+                                        ? 'Ajuste a busca, troque de aba ou limpe os filtros ativos.'
+                                        : 'Os processos protocolados aparecem aqui conforme avançam no fluxo.'
+                                }
                             />
-                        ))}
-                    </ul>
-                )}
+                        }
+                    />
+                </div>
 
                 <div className="border-t border-gray-100 px-5 py-4 dark:border-gray-800">
                     <Pagination
@@ -684,105 +675,95 @@ export default function ConsultaProcessos({
     );
 }
 
-function LinhaProcesso({
-    item,
-    selecionavel,
-    selecionado,
-    onAlternar,
-}: {
-    item: ProcessoItem;
+function colunasProcessos(opcoes: {
     selecionavel: boolean;
-    selecionado: boolean;
-    onAlternar: () => void;
-}) {
-    const identificadores = [
-        item.bap ? item.protocol_number : null,
-        item.tvl_product_number ? `Viabilidade ${item.tvl_product_number}` : null,
-    ].filter((parte): parte is string => parte !== null && parte !== '');
-    const protocolado = formatarData(item.protocoled_at);
-    const motivo =
-        item.sem_decisao_automatica && item.motivo_encaminhamento
-            ? `Sem decisão automática — ${item.motivo_encaminhamento}`
-            : null;
+    selecionado: (id: number) => boolean;
+    onAlternar: (id: number) => void;
+}): ColumnDef<ProcessoItem>[] {
+    const colunas: ColumnDef<ProcessoItem>[] = [];
 
-    return (
-        <li
-            className={`flex flex-wrap items-start gap-x-4 gap-y-2.5 px-5 py-3 ${
-                selecionado ? 'bg-brand-50/70 dark:bg-brand-500/10' : 'bg-white hover:bg-gray-50 dark:bg-transparent dark:hover:bg-white/[0.03]'
-            }`}
-        >
-            {selecionavel && (
-                <div className="pt-0.5">
-                    <Checkbox checked={selecionado} onChange={onAlternar} />
+    if (opcoes.selecionavel) {
+        colunas.push({
+            id: 'selecao',
+            header: '',
+            cell: (item) => (
+                <Checkbox checked={opcoes.selecionado(item.id)} onChange={() => opcoes.onAlternar(item.id)} />
+            ),
+        });
+    }
+
+    colunas.push(
+        {
+            id: 'processo',
+            header: 'Processo',
+            cell: (item) => (
+                <div className="flex min-w-[10rem] flex-col gap-0.5">
+                    <span className="font-semibold text-gray-800 tabular-nums dark:text-white/90">
+                        {item.bap ?? item.protocol_number ?? '—'}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {item.empresa ?? 'Requerente não informado'}
+                    </span>
                 </div>
-            )}
-
-            <div className="flex min-w-[150px] flex-[3] flex-col gap-0.5">
-                <span className="text-sm font-semibold text-gray-800 tabular-nums dark:text-white/90">
-                    {item.bap ?? item.protocol_number ?? '—'}
-                </span>
-                {identificadores.length > 0 && (
-                    <span className="text-xs text-gray-400">{identificadores.join('  ·  ')}</span>
-                )}
-                <span className="text-[13px] text-gray-600 dark:text-gray-300">
-                    {item.empresa ?? 'Requerente não informado'}
-                </span>
-            </div>
-
-            <div className="flex min-w-[150px] flex-[3] flex-col gap-1.5">
-                <div className="flex flex-wrap items-center gap-1.5">
+            ),
+        },
+        {
+            id: 'status',
+            header: 'Status',
+            cell: (item) => (
+                <div className="flex max-w-xs flex-col gap-1">
                     <Badge color={statusColor(item.status)} size="sm">
                         {item.status_label}
                     </Badge>
-                    {item.fluxo_label && item.fluxo !== 'em_analise' && (
-                        <Badge color={item.fluxo === 'expresso' ? 'success' : 'light'} size="sm">
-                            {item.fluxo_label}
-                        </Badge>
-                    )}
-                    {item.analysis_status_label && (
-                        <Badge color="light" size="sm">
-                            {item.analysis_status_label}
-                        </Badge>
+                    {item.sem_decisao_automatica && item.motivo_encaminhamento && (
+                        <p title={item.motivo_encaminhamento} className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+                            Sem decisão automática — {item.motivo_encaminhamento}
+                        </p>
                     )}
                 </div>
-                {motivo && <p className="line-clamp-2 text-xs leading-snug text-gray-500 dark:text-gray-400">{motivo}</p>}
-            </div>
-
-            <div className="flex min-w-[120px] flex-[2] flex-col gap-0.5">
-                <span className="text-[13px] text-gray-700 dark:text-gray-300">{item.servico ?? item.categoria ?? '—'}</span>
-                <span className="text-xs text-gray-400">
-                    {protocolado ? `Protocolado em ${protocolado}` : 'Sem data de protocolo'}
-                </span>
-            </div>
-
-            <div className="flex min-w-[110px] flex-[2] flex-col gap-0.5">
-                <span className="text-[13px] text-gray-700 dark:text-gray-300">{item.analista ?? 'Não atribuído'}</span>
-                <span className="text-xs text-gray-400">{item.setor ?? '—'}</span>
-            </div>
-
-            <div className="flex min-w-[100px] flex-1 flex-col items-start gap-0.5">
-                {item.sla ? (
-                    <>
-                        <Badge color={slaColor(item.sla.status)} size="sm">
-                            {item.sla.status_label}
-                        </Badge>
-                        {item.sla.restante && <span className="text-xs text-gray-400">{item.sla.restante}</span>}
-                    </>
+            ),
+        },
+        {
+            id: 'servico',
+            header: 'Serviço',
+            cell: (item) => item.servico ?? item.categoria ?? '—',
+        },
+        {
+            id: 'analista',
+            header: 'Analista',
+            cell: (item) => item.analista ?? 'Não atribuído',
+        },
+        {
+            id: 'prazo',
+            header: 'Prazo',
+            cell: (item) =>
+                item.sla ? (
+                    <Badge color={slaColor(item.sla.status)} size="sm">
+                        {item.sla.status_label}
+                        {item.sla.restante ? ` · ${item.sla.restante}` : ''}
+                    </Badge>
                 ) : (
                     <Badge color={item.fluxo === 'expresso' ? 'success' : 'light'} size="sm">
                         {rotuloSemSla(item.fluxo)}
                     </Badge>
-                )}
-            </div>
-
-            <Link
-                href={`/gestao/processos/${item.id}`}
-                className="inline-flex h-9 items-center rounded-lg border border-gray-300 bg-white px-3.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-            >
-                Abrir
-            </Link>
-        </li>
+                ),
+        },
+        {
+            id: 'abrir',
+            header: '',
+            align: 'end',
+            cell: (item) => (
+                <Link
+                    href={`/gestao/processos/${item.id}`}
+                    className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
+                >
+                    Abrir
+                </Link>
+            ),
+        },
     );
+
+    return colunas;
 }
 
 function PainelFiltros({
