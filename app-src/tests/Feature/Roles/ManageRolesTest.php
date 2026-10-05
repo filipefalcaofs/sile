@@ -46,8 +46,8 @@ class ManageRolesTest extends TestCase
                             && $role['users_count'] === 1
                     )
                 )
-                ->has('permissions', 35)
-                ->has('permissionCatalog', 35)
+                ->has('permissions', 36)
+                ->has('permissionCatalog', 36)
                 ->where(
                     'permissionCatalog',
                     fn ($catalog) => collect($catalog)->contains(

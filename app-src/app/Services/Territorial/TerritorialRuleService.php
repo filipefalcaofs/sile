@@ -2,8 +2,10 @@
 
 namespace App\Services\Territorial;
 
+use App\Enums\EtapaMotor;
 use App\Enums\IntencaoAtividade;
 use App\Enums\RuleDomain;
+use App\Enums\SituacaoEtapa;
 use App\Enums\TerritorialRuleEffect;
 use App\Enums\TerritorialRuleType;
 use App\Models\RuleVersion;
@@ -11,6 +13,7 @@ use App\Models\TerritorialRule;
 use App\Models\ViabilityRequest;
 use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Geo\GeoServerWfsCamadaClient;
+use App\Services\Motor\EtapaMotorRegistrador;
 use App\Services\Realty\LocalizacaoInscricao;
 use App\Services\Realty\LocalizacaoInscricaoService;
 use App\Support\Audit\AuditService;
@@ -41,7 +44,11 @@ class TerritorialRuleService
         private AuditService $audit,
         private GeoServerWfsCamadaClient $wfs,
         private LocalizacaoInscricaoService $localizacao,
+        private EtapaMotorRegistrador $etapas,
     ) {}
+
+    /** Marca que alguma camada de poligonal não respondeu nesta avaliação. */
+    private bool $camadaIndisponivel = false;
 
     /**
      * Avalia as regras territoriais ativas da versão vigente contra a
@@ -51,6 +58,27 @@ class TerritorialRuleService
      * @param  array{lat: float, lng: float}|null  $ponto
      */
     public function avaliar(ViabilityRequest $request, ?array $ponto): TerritorialRuleVerdict
+    {
+        $this->camadaIndisponivel = false;
+
+        $verdict = $this->avaliarRegras($request, $ponto);
+
+        if ($ponto !== null) {
+            $this->etapas->registrar(
+                $request,
+                EtapaMotor::RegraTerritorial,
+                $this->camadaIndisponivel ? SituacaoEtapa::Indisponivel : SituacaoEtapa::Ok,
+                $this->camadaIndisponivel ? 'Camada territorial indisponível no GeoServer' : null,
+            );
+        }
+
+        return $verdict;
+    }
+
+    /**
+     * @param  array{lat: float, lng: float}|null  $ponto
+     */
+    private function avaliarRegras(ViabilityRequest $request, ?array $ponto): TerritorialRuleVerdict
     {
         $versao = RuleVersion::vigente(RuleDomain::Territorial)->first();
 
@@ -263,7 +291,14 @@ class TerritorialRuleService
      */
     private function casarPoligonal(TerritorialRule $regra, ?array $ponto): ?array
     {
-        if ($ponto === null || ! is_string($regra->camada) || trim($regra->camada) === '') {
+        if ($ponto === null) {
+            return [
+                'efeito' => TerritorialRuleEffect::EncaminharAnalise,
+                'motivo' => $this->motivoLocalizacaoIndisponivel($regra),
+            ];
+        }
+
+        if (! is_string($regra->camada) || trim($regra->camada) === '') {
             return [
                 'efeito' => TerritorialRuleEffect::EncaminharAnalise,
                 'motivo' => $this->motivoCamadaIndisponivel($regra),
@@ -273,6 +308,8 @@ class TerritorialRuleService
         $hit = $this->wfs->consultar($regra->camada, $ponto['lat'], $ponto['lng'], $regra->camada_filtro);
 
         if ($hit->indisponivel()) {
+            $this->camadaIndisponivel = true;
+
             return [
                 'efeito' => TerritorialRuleEffect::EncaminharAnalise,
                 'motivo' => $this->motivoCamadaIndisponivel($regra),
@@ -299,7 +336,14 @@ class TerritorialRuleService
      */
     private function casarPoligonalAllowlist(TerritorialRule $regra, ViabilityRequest $request, ?array $ponto): ?array
     {
-        if ($ponto === null || ! is_string($regra->camada) || trim($regra->camada) === '') {
+        if ($ponto === null) {
+            return [
+                'efeito' => TerritorialRuleEffect::EncaminharAnalise,
+                'motivo' => $this->motivoLocalizacaoIndisponivel($regra),
+            ];
+        }
+
+        if (! is_string($regra->camada) || trim($regra->camada) === '') {
             return [
                 'efeito' => TerritorialRuleEffect::EncaminharAnalise,
                 'motivo' => $this->motivoCamadaIndisponivel($regra),
@@ -309,6 +353,8 @@ class TerritorialRuleService
         $hit = $this->wfs->consultar($regra->camada, $ponto['lat'], $ponto['lng'], $regra->camada_filtro);
 
         if ($hit->indisponivel()) {
+            $this->camadaIndisponivel = true;
+
             return [
                 'efeito' => TerritorialRuleEffect::EncaminharAnalise,
                 'motivo' => $this->motivoCamadaIndisponivel($regra),
@@ -466,6 +512,13 @@ class TerritorialRuleService
         return strtr($template, [
             ':alvo' => $alvo,
             ':fundamento' => (string) $regra->base_legal,
+        ]);
+    }
+
+    private function motivoLocalizacaoIndisponivel(TerritorialRule $regra): string
+    {
+        return $this->textos->render('territorial.motivo.localizacao_indisponivel', [
+            ':regra' => $regra->titulo,
         ]);
     }
 

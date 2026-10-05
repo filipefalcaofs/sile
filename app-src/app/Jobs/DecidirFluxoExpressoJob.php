@@ -5,6 +5,8 @@ namespace App\Jobs;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Realty\LocalizacaoInscricao;
+use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Support\Audit\AuditService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -52,7 +54,7 @@ class DecidirFluxoExpressoJob implements ShouldQueue
         }
     }
 
-    public function handle(FluxoExpressoService $service): void
+    public function handle(FluxoExpressoService $service, ?ProtocolarSolicitacaoService $protocolo = null): void
     {
         $request = ViabilityRequest::query()->find($this->viabilityRequestId);
 
@@ -63,7 +65,36 @@ class DecidirFluxoExpressoJob implements ShouldQueue
             return;
         }
 
+        if ($this->aguardarCadastroImobiliario($request, $protocolo ?? app(ProtocolarSolicitacaoService::class))) {
+            return;
+        }
+
         $service->decide($request);
+    }
+
+    /**
+     * Sem ponto do imóvel e com inscrição, repete a localização antes de
+     * decidir: o Cadastro Imobiliário fora do ar é falha transitória, e o
+     * encaminhamento à análise não se desfaz depois. Enquanto houver tentativas
+     * o job volta para a fila; na última, decide com a degradação honesta
+     * (veredito pendente → análise técnica). Inscrição não encontrada ou sem
+     * coordenada é definitiva e não adia.
+     */
+    private function aguardarCadastroImobiliario(ViabilityRequest $request, ProtocolarSolicitacaoService $protocolo): bool
+    {
+        if ($request->pontoDoImovel() !== null || blank($request->property_registration)) {
+            return false;
+        }
+
+        $status = $protocolo->completarTerritorio($request);
+
+        if ($status !== LocalizacaoInscricao::INDISPONIVEL || $this->attempts() >= $this->tries) {
+            return false;
+        }
+
+        $this->release($this->backoff[$this->attempts() - 1] ?? (end($this->backoff) ?: 30));
+
+        return true;
     }
 
     public function failed(?Throwable $exception): void

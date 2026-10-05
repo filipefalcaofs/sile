@@ -2,8 +2,11 @@
 
 namespace App\Services\Geo;
 
+use App\Enums\EtapaMotor;
 use App\Enums\PropertyLocationSource;
+use App\Enums\SituacaoEtapa;
 use App\Models\ViabilityRequest;
+use App\Services\Motor\EtapaMotorRegistrador;
 use App\Services\Realty\LocalizacaoInscricao;
 use App\Services\Realty\LocalizacaoInscricaoService;
 use App\Support\Audit\AuditService;
@@ -26,6 +29,7 @@ class TerritorioProcessoService
         private readonly TerritoryService $territory,
         private readonly LocalizacaoInscricaoService $localizacao,
         private readonly AuditService $audit,
+        private readonly EtapaMotorRegistrador $etapas,
     ) {}
 
     /**
@@ -45,6 +49,8 @@ class TerritorioProcessoService
 
             $territorio = $this->territory->identify($ponto['lat'], $ponto['lng']);
         }
+
+        $this->registrarEtapasDoTerritorio($request, $territorio);
 
         $mudou = false;
 
@@ -83,15 +89,30 @@ class TerritorioProcessoService
      * Sem polígono e sem ponto, grava o ponto do Cadastro Imobiliário da
      * inscrição. Se o cadastro trouxe logradouro e número sem coordenada, o
      * ponto gravado é o da geocodificação. Outro status não grava nada e
-     * fica na auditoria.
+     * fica na auditoria. Devolve o status (LocalizacaoInscricao::*); processo
+     * que já tem ponto conta como localizado.
      */
-    public function localizarPelaInscricao(ViabilityRequest $request): bool
+    public function localizarPelaInscricao(ViabilityRequest $request): string
     {
         if ($request->pontoDoImovel() !== null) {
-            return false;
+            return LocalizacaoInscricao::LOCALIZADA;
         }
 
         $localizacao = $this->localizacao->localizar($request->property_registration);
+
+        $this->etapas->registrar(
+            $request,
+            EtapaMotor::LocalizacaoInscricao,
+            match ($localizacao->status) {
+                LocalizacaoInscricao::LOCALIZADA => SituacaoEtapa::Ok,
+                LocalizacaoInscricao::INDISPONIVEL => SituacaoEtapa::Indisponivel,
+                LocalizacaoInscricao::SEM_INSCRICAO => SituacaoEtapa::Pulada,
+                default => SituacaoEtapa::Definitiva,
+            },
+            $localizacao->status === LocalizacaoInscricao::LOCALIZADA
+                ? null
+                : "Localização pela inscrição: {$localizacao->status}",
+        );
 
         if ($localizacao->status !== LocalizacaoInscricao::LOCALIZADA) {
             $this->audit->log(
@@ -107,7 +128,7 @@ class TerritorioProcessoService
                 result: $localizacao->status,
             );
 
-            return false;
+            return $localizacao->status;
         }
 
         $request->forceFill([
@@ -116,7 +137,7 @@ class TerritorioProcessoService
             'property_location_source' => $localizacao->origemPonto ?? PropertyLocationSource::CadastroImobiliario,
         ])->save();
 
-        return true;
+        return LocalizacaoInscricao::LOCALIZADA;
     }
 
     /**
@@ -197,5 +218,31 @@ class TerritorioProcessoService
         $nome = $dim['nome'] ?? null;
 
         return is_string($nome) && trim($nome) !== '' ? trim($nome) : null;
+    }
+
+    /**
+     * Zona, via e bairro viram etapas do motor: `indisponivel` é transitória e
+     * reprocessável; `nao_encontrado` é definitiva.
+     */
+    private function registrarEtapasDoTerritorio(ViabilityRequest $request, TerritoryResult $territorio): void
+    {
+        foreach ([
+            'zona' => EtapaMotor::Zona,
+            'via' => EtapaMotor::Via,
+            'bairro' => EtapaMotor::Bairro,
+        ] as $dimensao => $etapa) {
+            $dados = $territorio->{$dimensao};
+
+            $this->etapas->registrar(
+                $request,
+                $etapa,
+                match ((string) ($dados['status'] ?? '')) {
+                    'identificado' => SituacaoEtapa::Ok,
+                    'indisponivel' => SituacaoEtapa::Indisponivel,
+                    default => SituacaoEtapa::Definitiva,
+                },
+                isset($dados['motivo']) ? (string) $dados['motivo'] : null,
+            );
+        }
     }
 }

@@ -110,6 +110,12 @@ final class PermissionCatalog
                 'group' => 'Análise técnica',
             ],
             [
+                'name' => 'reprocessar-processos',
+                'label' => 'Reprocessar etapas do motor',
+                'description' => 'Refaz as etapas do motor que falharam por serviço de terceiro indisponível e reavalia o veredito.',
+                'group' => 'Análise técnica',
+            ],
+            [
                 'name' => 'distribuir-processos',
                 'label' => 'Distribuir processos',
                 'description' => 'Encaminha processos para setores e analistas.',

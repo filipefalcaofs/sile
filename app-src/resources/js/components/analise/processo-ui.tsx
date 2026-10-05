@@ -96,6 +96,8 @@ export interface ProcessoRecepcao {
     acessos_independentes: string | null;
     imovel_em_condominio: string | null;
     area_embarque_desembarque: string | null;
+    vagas_embarque_desembarque?: number | null;
+    vagas_estacionamento?: number | null;
     possui_concessao_de_uso: string | null;
     termo_dispensa_viabilidade_locacional: string | null;
     bap_anterior_indeferido: string | null;
@@ -103,10 +105,8 @@ export interface ProcessoRecepcao {
     evento: string | null;
     objeto_social: string | null;
     natureza_juridica: string | null;
-    coordenada_geografica: { latitude: number; longitude: number } | null;
     contador: ProcessoContadorRecebido | null;
     atividades_exercidas_no_local: ProcessoAtividadeNoLocal[];
-    poligono_declarado: { type: string } | null;
 }
 
 export interface ProcessoItem {
@@ -284,6 +284,10 @@ export function RecepcaoRecebida({ recepcao }: { recepcao: ProcessoRecepcao }) {
             <ItemDeclaracao label="Acessos independentes">{textoOuTraco(recepcao.acessos_independentes)}</ItemDeclaracao>
             <ItemDeclaracao label="Imóvel em condomínio">{textoOuTraco(recepcao.imovel_em_condominio)}</ItemDeclaracao>
             <ItemDeclaracao label="Embarque/desembarque">{textoOuTraco(recepcao.area_embarque_desembarque)}</ItemDeclaracao>
+            <ItemDeclaracao label="Vagas de embarque/desembarque">
+                {textoOuTraco(recepcao.vagas_embarque_desembarque)}
+            </ItemDeclaracao>
+            <ItemDeclaracao label="Vagas de estacionamento">{textoOuTraco(recepcao.vagas_estacionamento)}</ItemDeclaracao>
             <ItemDeclaracao label="Concessão de uso">{textoOuTraco(recepcao.possui_concessao_de_uso)}</ItemDeclaracao>
             <ItemDeclaracao label="Evento">{textoOuTraco(recepcao.evento)}</ItemDeclaracao>
             <ItemDeclaracao label="Natureza jurídica">{textoOuTraco(recepcao.natureza_juridica)}</ItemDeclaracao>
@@ -297,7 +301,6 @@ export function RecepcaoRecebida({ recepcao }: { recepcao: ProcessoRecepcao }) {
                     ? [recepcao.contador.nome, recepcao.contador.crc].filter(Boolean).join(' · ') || '—'
                     : '—'}
             </ItemDeclaracao>
-            <ItemDeclaracao label="Polígono declarado">{recepcao.poligono_declarado ? 'Sim' : '—'}</ItemDeclaracao>
             <ItemDeclaracao label="Categoria do imóvel">{textoOuTraco(recepcao.categoria_imovel)}</ItemDeclaracao>
             <ItemDeclaracao label="CNAE principal">{textoOuTraco(recepcao.cnae_principal)}</ItemDeclaracao>
             <ItemDeclaracao label="CNAEs secundários">{secundarios || '—'}</ItemDeclaracao>

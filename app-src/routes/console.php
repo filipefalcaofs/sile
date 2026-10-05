@@ -39,6 +39,13 @@ Schedule::command('expresso:reavaliar')
     ->withoutOverlapping()
     ->onOneServer();
 
+// Reprocessa as etapas do motor que falharam por serviço de terceiro indisponível
+// (spec 2026-10-05). Respeita a agenda de cada etapa; esgota em 24 h.
+Schedule::command('processos:reprocessar-etapas')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping()
+    ->onOneServer();
+
 // HU-134 DORMENTE (EP09): indefere "sem atuação" as solicitações paradas em
 // aguardando_bap além do prazo (expresso.bap.prazo_horas). Hoje é NO-OP em
 // produção — nada entra em aguardando_bap até o Regin alimentar bap_due_at

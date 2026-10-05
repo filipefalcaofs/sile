@@ -290,6 +290,14 @@ return [
             'regin_recebe' => ['por_minuto' => 60],
         ],
     ],
+    // Reprocessamento por etapa do motor (spec 2026-10-05): constantes técnicas.
+    'reprocessamento' => [
+        'intervalo_inicial_min' => 15,
+        'tentativas_iniciais' => 4,
+        'intervalo_posterior_min' => 60,
+        'janela_horas' => 24,
+    ],
+
     'integrations' => [
         // Constantes técnicas (timeout/retries/cache_ttl) ficam SÓ aqui,
         // nunca no registry — precedente [02-02]. base_url é parametrizável.

@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Services\Motor;
+
+use App\Enums\EtapaMotor;
+use App\Enums\SituacaoEtapa;
+use App\Models\User;
+use App\Models\ViabilityRequest;
+use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Geo\TerritorioProcessoService;
+use App\Services\Realty\LocalizacaoInscricao;
+use App\Services\Solicitacao\ProtocolarSolicitacaoService;
+use App\Support\Audit\AuditService;
+
+/**
+ * Refaz as etapas do motor que falharam por serviço indisponível, na ordem, e
+ * reavalia o veredito. Para na primeira etapa que continua indisponível: sem a
+ * localização pela inscrição as demais não têm o que consultar.
+ */
+class ReprocessarEtapasService
+{
+    public function __construct(
+        private TerritorioProcessoService $territorio,
+        private ProtocolarSolicitacaoService $protocolo,
+        private FluxoExpressoService $expresso,
+        private AuditService $audit,
+    ) {}
+
+    public function reprocessar(ViabilityRequest $request, ?User $actor = null): ReprocessoResultado
+    {
+        $pendentes = $request->etapas()
+            ->where('situacao', SituacaoEtapa::Indisponivel->value)
+            ->get()
+            ->sortBy(fn ($etapa) => $etapa->etapa->ordem());
+
+        if ($pendentes->isEmpty()) {
+            return new ReprocessoResultado(false, null, $request->status->value, 'Nenhuma etapa indisponível a reprocessar.');
+        }
+
+        $paradaEm = null;
+
+        if ($pendentes->contains(fn ($etapa) => $etapa->etapa === EtapaMotor::LocalizacaoInscricao)
+            && $this->territorio->localizarPelaInscricao($request) === LocalizacaoInscricao::INDISPONIVEL) {
+            $paradaEm = EtapaMotor::LocalizacaoInscricao;
+        }
+
+        if ($paradaEm === null) {
+            $this->protocolo->completarTerritorio($request);
+            $this->expresso->reavaliar($request, $actor);
+        }
+
+        $request->refresh();
+
+        $mensagem = $paradaEm === null
+            ? 'Etapas reprocessadas e veredito reavaliado.'
+            : "Serviço de {$paradaEm->rotulo()} continua indisponível. Nova tentativa agendada.";
+
+        $this->audit->log(
+            logName: 'motor',
+            event: 'reprocesso',
+            description: "Reprocesso das etapas da solicitação #{$request->id}",
+            properties: [
+                'viability_request_id' => $request->id,
+                'ator_id' => $actor?->id,
+                'parada_em' => $paradaEm?->value,
+                'status_do_processo' => $request->status->value,
+            ],
+            subject: $request,
+            result: $paradaEm === null ? 'sucesso' : 'parcial',
+        );
+
+        return new ReprocessoResultado(true, $paradaEm, $request->status->value, $mensagem);
+    }
+}
