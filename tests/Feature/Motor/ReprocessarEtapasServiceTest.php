@@ -98,11 +98,61 @@ class ReprocessarEtapasServiceTest extends TestCase
 
     public function test_sem_etapa_indisponivel_nao_faz_nada(): void
     {
-        $processo = ViabilityRequest::factory()->protocoled()->create();
+        $processo = $this->processoEmAnaliseSemPonto();
+        ViabilityRequestEtapa::factory()->create([
+            'viability_request_id' => $processo->id,
+            'etapa' => EtapaMotor::LocalizacaoInscricao,
+        ]);
 
         $resultado = app(ReprocessarEtapasService::class)->reprocessar($processo);
 
         $this->assertFalse($resultado->reprocessou);
+    }
+
+    public function test_processo_anterior_ao_registro_de_etapas_e_reprocessado_e_passa_a_ter_etapas(): void
+    {
+        $this->cadastroIndisponivel();
+        $processo = $this->processoEmAnaliseSemPonto();
+
+        $resultado = app(ReprocessarEtapasService::class)->reprocessar($processo);
+
+        $this->assertTrue($resultado->reprocessou);
+        $this->assertSame(EtapaMotor::LocalizacaoInscricao, $resultado->paradaEm);
+        $this->assertSame(
+            SituacaoEtapa::Indisponivel,
+            $processo->etapas()->where('etapa', EtapaMotor::LocalizacaoInscricao->value)->first()?->situacao,
+        );
+    }
+
+    public function test_processo_anterior_ao_registro_com_cadastro_de_volta_grava_ponto_e_etapas(): void
+    {
+        $this->cadastroLocalizado();
+        $processo = $this->processoEmAnaliseSemPonto();
+
+        $resultado = app(ReprocessarEtapasService::class)->reprocessar($processo);
+
+        $processo->refresh();
+
+        $this->assertTrue($resultado->reprocessou);
+        $this->assertNull($resultado->paradaEm);
+        $this->assertEqualsWithDelta(-12.9738, (float) $processo->property_point_lat, 0.0000001);
+        $this->assertSame(
+            SituacaoEtapa::Ok,
+            $processo->etapas()->where('etapa', EtapaMotor::Zona->value)->first()?->situacao,
+        );
+    }
+
+    public function test_processo_anterior_ao_registro_com_analise_assumida_nao_e_tocado(): void
+    {
+        $this->cadastroLocalizado();
+        $processo = $this->processoEmAnaliseSemPonto();
+        $processo->forceFill(['analysis_status' => AnalysisStatus::EmAnalise])->save();
+
+        $resultado = app(ReprocessarEtapasService::class)->reprocessar($processo);
+
+        $this->assertFalse($resultado->reprocessou);
+        $this->assertNull($processo->fresh()->property_point_lat);
+        $this->assertSame(0, $processo->etapas()->count());
     }
 
     public function test_para_na_localizacao_quando_o_cadastro_continua_fora_do_ar(): void

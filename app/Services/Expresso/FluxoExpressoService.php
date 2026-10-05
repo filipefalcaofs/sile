@@ -128,6 +128,16 @@ class FluxoExpressoService
         );
     }
 
+    /**
+     * O processo ainda admite reavaliação: protocolado, ou em análise que
+     * ninguém assumiu e sem decisão.
+     */
+    public function podeReavaliar(ViabilityRequest $request): bool
+    {
+        return $request->status === ViabilityRequestStatus::Protocolada
+            || $this->reavaliavelEmAnalise($request);
+    }
+
     private function reavaliavelEmAnalise(ViabilityRequest $request): bool
     {
         return $request->status === ViabilityRequestStatus::EmAnalise

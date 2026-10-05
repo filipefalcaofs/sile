@@ -21,11 +21,10 @@ class ReprocessarEtapasCommand extends Command
 
     public function handle(ReprocessarEtapasService $servico): int
     {
-        $query = ViabilityRequest::query()->whereHas('etapas', function ($etapas): void {
-            $etapas->where('situacao', SituacaoEtapa::Indisponivel->value);
-        });
+        $query = ViabilityRequest::query();
 
         if ($this->option('processo') !== null) {
+            // Pedido explícito: vale também para processo anterior ao registro de etapas.
             $query->whereKey((int) $this->option('processo'));
         } else {
             $query->whereHas('etapas', function ($etapas): void {
@@ -44,7 +43,9 @@ class ReprocessarEtapasCommand extends Command
         $processos = $query->get();
 
         if ($processos->isEmpty()) {
-            $this->info('Nenhum processo com etapa indisponível a reprocessar.');
+            $this->info($this->option('processo') !== null
+                ? 'Processo não encontrado.'
+                : 'Nenhum processo com etapa indisponível a reprocessar.');
 
             return self::SUCCESS;
         }
