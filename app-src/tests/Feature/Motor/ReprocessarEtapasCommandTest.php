@@ -52,6 +52,27 @@ class ReprocessarEtapasCommandTest extends TestCase
         $this->artisan('processos:reprocessar-etapas', ['--processo' => $etapa->viability_request_id])->assertSuccessful();
     }
 
+    public function test_opcao_processo_reprocessa_processo_que_nunca_registrou_etapas(): void
+    {
+        $processo = ViabilityRequest::factory()->create();
+
+        $servico = Mockery::mock(ReprocessarEtapasService::class);
+        $servico->shouldReceive('reprocessar')
+            ->once()
+            ->withArgs(fn (ViabilityRequest $p) => $p->is($processo))
+            ->andReturn(new ReprocessoResultado(true, null, 'em_analise', 'ok'));
+        $this->app->instance(ReprocessarEtapasService::class, $servico);
+
+        $this->artisan('processos:reprocessar-etapas', ['--processo' => $processo->id])->assertSuccessful();
+    }
+
+    public function test_opcao_processo_inexistente_informa_que_nao_encontrou(): void
+    {
+        $this->artisan('processos:reprocessar-etapas', ['--processo' => 999999])
+            ->expectsOutput('Processo não encontrado.')
+            ->assertSuccessful();
+    }
+
     public function test_sem_candidatos_informa_e_sai_com_sucesso(): void
     {
         $this->artisan('processos:reprocessar-etapas')

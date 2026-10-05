@@ -33,13 +33,23 @@ class ReprocessarEtapasService
             ->get()
             ->sortBy(fn ($etapa) => $etapa->etapa->ordem());
 
-        if ($pendentes->isEmpty()) {
-            return new ReprocessoResultado(false, null, $request->status->value, 'Nenhuma etapa indisponível a reprocessar.');
+        // Processo anterior ao registro de etapas: nunca gravou nenhuma. Reprocessar
+        // por pedido explícito refaz o passe completo e já deixa as etapas gravadas.
+        $anteriorAoRegistro = $pendentes->isEmpty()
+            && $request->etapas()->doesntExist()
+            && $this->expresso->podeReavaliar($request);
+
+        if ($pendentes->isEmpty() && ! $anteriorAoRegistro) {
+            return new ReprocessoResultado(false, null, $request->status->value, $this->semEtapaParaReprocessar($request));
         }
 
         $paradaEm = null;
 
-        if ($pendentes->contains(fn ($etapa) => $etapa->etapa === EtapaMotor::LocalizacaoInscricao)
+        $precisaLocalizar = $anteriorAoRegistro
+            ? $request->pontoDoImovel() === null && filled($request->property_registration)
+            : $pendentes->contains(fn ($etapa) => $etapa->etapa === EtapaMotor::LocalizacaoInscricao);
+
+        if ($precisaLocalizar
             && $this->territorio->localizarPelaInscricao($request) === LocalizacaoInscricao::INDISPONIVEL) {
             $paradaEm = EtapaMotor::LocalizacaoInscricao;
         }
@@ -70,5 +80,14 @@ class ReprocessarEtapasService
         );
 
         return new ReprocessoResultado(true, $paradaEm, $request->status->value, $mensagem);
+    }
+
+    private function semEtapaParaReprocessar(ViabilityRequest $request): string
+    {
+        if ($request->etapas()->doesntExist() && ! $this->expresso->podeReavaliar($request)) {
+            return 'O processo já foi decidido ou a análise já foi assumida: não há o que reprocessar.';
+        }
+
+        return 'Nenhuma etapa indisponível a reprocessar.';
     }
 }
