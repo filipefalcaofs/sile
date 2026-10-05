@@ -45,8 +45,7 @@ class ReginProcessoProtocolador
             return $this->protocolarDeclaracao($recebimento, RecebimentoProcesso::fromStored($corpo['dados']));
         }
 
-        $ruc = $corpo;
-        $rowset = is_array($ruc['rowset'] ?? null) ? $ruc['rowset'] : [];
+        $rowset = $this->rowset($corpo);
 
         $cnaes = $this->cnaes($rowset);
         $area = $this->area($rowset);
@@ -83,6 +82,24 @@ class ReginProcessoProtocolador
         $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $ator);
 
         return $solicitacao->fresh() ?? $solicitacao;
+    }
+
+    /**
+     * A OpenAPI da integração define `rowset`, mas o envio real da JUCEB chega
+     * como `ROWSET` (conversão do XML). Aceita as duas grafias.
+     *
+     * @param  array<string, mixed>  $corpo
+     * @return array<string, mixed>
+     */
+    private function rowset(array $corpo): array
+    {
+        foreach (['rowset', 'ROWSET'] as $chave) {
+            if (is_array($corpo[$chave] ?? null)) {
+                return $corpo[$chave];
+            }
+        }
+
+        return [];
     }
 
     private function protocolarDeclaracao(ReginRecebimento $recebimento, RecebimentoProcesso $dados): ?ViabilityRequest
