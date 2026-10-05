@@ -40,6 +40,7 @@ use App\Support\Settings;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Spatie\Activitylog\Models\Activity;
 
 /**
  * Motor de decisão do fluxo expresso (HU-073 a HU-078) — o CORE VALUE do Viabiliza.
@@ -103,6 +104,38 @@ class FluxoExpressoService
     }
 
     /**
+     * Reavalia o veredito: processo protocolado decide como sempre; processo em
+     * análise que ninguém assumiu (para_distribuir, sem decisão) refaz a resolução
+     * com os dados atuais. Análise já assumida nunca é sobrescrita.
+     */
+    public function reavaliar(ViabilityRequest $request, ?User $actor = null): DecisionResult
+    {
+        $request->refresh();
+
+        if ($request->status === ViabilityRequestStatus::Protocolada) {
+            return $this->decide($request, $actor);
+        }
+
+        if (! $this->reavaliavelEmAnalise($request)) {
+            return $this->resultadoIdempotente($request);
+        }
+
+        $ttl = (int) config('sile.expresso.lock.ttl_segundos', 10);
+
+        return Cache::lock("expresso:decisao:{$request->id}", $ttl)->block(
+            $ttl,
+            fn (): DecisionResult => $this->decidirSobLock($request, $actor),
+        );
+    }
+
+    private function reavaliavelEmAnalise(ViabilityRequest $request): bool
+    {
+        return $request->status === ViabilityRequestStatus::EmAnalise
+            && $request->analysis_status === AnalysisStatus::ParaDistribuir
+            && $request->decision()->doesntExist();
+    }
+
+    /**
      * Corpo da decisão executado já com o lock adquirido. RECARREGA o estado e
      * re-checa que ainda está protocolada (idempotência: se já saiu, não
      * redecide), aplica o toggle e a elegibilidade, e roteia para a análise ou a
@@ -112,7 +145,7 @@ class FluxoExpressoService
     {
         $request->refresh();
 
-        if ($request->status !== ViabilityRequestStatus::Protocolada) {
+        if ($request->status !== ViabilityRequestStatus::Protocolada && ! $this->reavaliavelEmAnalise($request)) {
             return $this->resultadoIdempotente($request);
         }
 
@@ -415,6 +448,10 @@ class FluxoExpressoService
         ?TerritorialRuleVerdict $territorial = null,
         ?TipoGatilho $gatilho = null,
     ): DecisionResult {
+        if ($request->status === ViabilityRequestStatus::EmAnalise) {
+            return $this->manterEmAnalise($request, $reason, $resolved, $territorial, $gatilho);
+        }
+
         DB::transaction(function () use ($request, $reason, $actor, $resolved, $territorial, $gatilho): void {
             $this->stateMachine->transition(
                 $request,
@@ -459,6 +496,52 @@ class FluxoExpressoService
         // APÓS o commit: gatilho da pré-análise (10-08). Sem listener no ambiente
         // atual é inerte; o ShouldDispatchAfterCommit do evento é defesa extra.
         EncaminhadoParaAnalise::dispatch($request);
+
+        return DecisionResult::paraAnalise($reason);
+    }
+
+    /**
+     * Reavaliação que continua pendente: sem nova transição, SLA nem evento.
+     * Registra a reavaliação na auditoria e, se o motivo mudou, acrescenta a
+     * queda (a anterior permanece como histórico).
+     */
+    private function manterEmAnalise(
+        ViabilityRequest $request,
+        string $reason,
+        ?ResolvedViability $resolved,
+        ?TerritorialRuleVerdict $territorial,
+        ?TipoGatilho $gatilho,
+    ): DecisionResult {
+        DB::transaction(function () use ($request, $reason, $resolved, $territorial, $gatilho): void {
+            // O motivo das quedas por CNAE é o do risco, não o do encaminhamento;
+            // a auditoria guarda o motivo exato de cada passada.
+            $ultimoMotivo = Activity::query()
+                ->where('log_name', 'expresso')
+                ->whereIn('event', ['decisao', 'reavaliacao'])
+                ->where('subject_type', $request->getMorphClass())
+                ->where('subject_id', $request->id)
+                ->latest('id')
+                ->first()
+                ?->properties->get('motivo');
+
+            if ($ultimoMotivo !== $reason) {
+                $this->capturarQueda($request, $reason, $resolved, $territorial, $gatilho);
+            }
+
+            $this->audit->log(
+                logName: 'expresso',
+                event: 'reavaliacao',
+                description: "Reavaliação da solicitação #{$request->id}: continua em análise",
+                properties: [
+                    'viability_request_id' => $request->id,
+                    'protocol_number' => $request->protocol_number,
+                    'resultado' => 'analise',
+                    'motivo' => $reason,
+                ],
+                subject: $request,
+                result: 'analise',
+            );
+        });
 
         return DecisionResult::paraAnalise($reason);
     }
@@ -892,6 +975,14 @@ class FluxoExpressoService
                     : ViabilityRequestStatus::Indeferida;
 
                 $this->stateMachine->transition($request, $destino, $actor, publicLabel: $destino->publicLabel());
+
+                if ($request->analysis_status !== null) {
+                    $request->forceFill([
+                        'analysis_status' => null,
+                        'analysis_stage' => null,
+                        'analysis_due_at' => null,
+                    ])->save();
+                }
 
                 $this->audit->log(
                     logName: 'expresso',

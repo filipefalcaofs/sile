@@ -3,6 +3,8 @@
 namespace Tests\Feature\Regin;
 
 use App\Enums\ViabilityRequestOrigin;
+use App\Enums\ViabilityRequestStatus;
+use App\Jobs\DecidirFluxoExpressoJob;
 use App\Models\Company;
 use App\Models\ReginRecebimento;
 use App\Models\User;
@@ -10,6 +12,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginProcessoProtocolador;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class ReginProcessoProtocoladorTest extends TestCase
@@ -98,6 +101,17 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertSame('Rua das Flores', $processo->address_street);
         $this->assertSame('12345678', $processo->property_registration);
         $this->assertSame(2, $processo->cnaes()->count());
+    }
+
+    public function test_protocolo_nao_decide_na_hora_e_deixa_a_decisao_para_o_job(): void
+    {
+        Queue::fake();
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+
+        $this->assertNotNull($processo);
+        $this->assertSame(ViabilityRequestStatus::Protocolada, $processo->status);
+        Queue::assertPushed(DecidirFluxoExpressoJob::class, 1);
     }
 
     public function test_ruc_sem_cnae_principal_nao_protocola(): void

@@ -2,7 +2,10 @@
 
 namespace App\Services\Geo;
 
+use App\Enums\EtapaMotor;
+use App\Enums\SituacaoEtapa;
 use App\Models\ViabilityRequest;
+use App\Services\Motor\EtapaMotorRegistrador;
 use App\Support\Audit\AuditService;
 
 /**
@@ -22,6 +25,7 @@ class PoligonoEnderecamentoService
         private GeoServerEnderecamentoClient $cliente,
         private SemapLoteClient $semap,
         private AuditService $audit,
+        private EtapaMotorRegistrador $etapas,
     ) {}
 
     public function aplicar(ViabilityRequest $request): bool
@@ -30,15 +34,19 @@ class PoligonoEnderecamentoService
         $numero = trim((string) $request->address_number);
         $complemento = $request->address_complement;
 
+        $statusEnderecamento = 'sem_chave';
+
         if ($codLog === '' || $numero === '') {
             $this->auditar($request, 'enderecamento', 'sem_chave', $codLog, $numero, $complemento, new EnderecamentoHit('sem_chave', motivo: 'Processo sem CODLOG ou número métrico.'));
         } else {
             $hit = $this->cliente->consultar($codLog, $numero, $complemento);
+            $statusEnderecamento = $hit->status;
 
             $this->auditar($request, 'enderecamento', $hit->status, $codLog, $numero, $complemento, $hit);
 
             if ($hit->encontrado()) {
                 $this->gravar($request, $hit);
+                $this->registrarLote($request, SituacaoEtapa::Ok);
 
                 return true;
             }
@@ -49,12 +57,38 @@ class PoligonoEnderecamentoService
         $this->auditar($request, 'semap', $semap->status, $codLog, $numero, $complemento, $semap);
 
         if (! $semap->encontrado()) {
+            $this->registrarLote($request, $this->situacaoSemLote($statusEnderecamento, $semap->status));
+
             return false;
         }
 
         $this->gravar($request, $semap, atributosDoLote: true);
+        $this->registrarLote($request, SituacaoEtapa::Ok);
 
         return true;
+    }
+
+    private function situacaoSemLote(string $enderecamento, string $semap): SituacaoEtapa
+    {
+        if ($enderecamento === EnderecamentoHit::INDISPONIVEL || $semap === EnderecamentoHit::INDISPONIVEL) {
+            return SituacaoEtapa::Indisponivel;
+        }
+
+        if ($enderecamento === EnderecamentoHit::DESLIGADO && $semap === EnderecamentoHit::DESLIGADO) {
+            return SituacaoEtapa::Pulada;
+        }
+
+        return SituacaoEtapa::Definitiva;
+    }
+
+    private function registrarLote(ViabilityRequest $request, SituacaoEtapa $situacao): void
+    {
+        $this->etapas->registrar(
+            $request,
+            EtapaMotor::PoligonoLote,
+            $situacao,
+            $situacao === SituacaoEtapa::Ok ? null : 'Polígono do lote não obtido pelo endereçamento nem pelo SEMAP',
+        );
     }
 
     private function gravar(ViabilityRequest $request, EnderecamentoHit $hit, bool $atributosDoLote = false): void

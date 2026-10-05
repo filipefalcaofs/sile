@@ -56,6 +56,7 @@ use App\Http\Controllers\Gestao\PropertyTypeController;
 use App\Http\Controllers\Gestao\ReginIntegrationController;
 use App\Http\Controllers\Gestao\ReginProtocoloSimulacaoController;
 use App\Http\Controllers\Gestao\RelatorioController;
+use App\Http\Controllers\Gestao\ReprocessarProcessoController;
 use App\Http\Controllers\Gestao\ResetPasswordController;
 use App\Http\Controllers\Gestao\ResultadoExpressoController;
 use App\Http\Controllers\Gestao\RiskTriggerController;
@@ -732,6 +733,12 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // no ponto único (bootstrap/app.php). A decisão (deferir/indeferir) NÃO
         // está aqui — é 10-10, a partir da ficha finalizada. ÚNICO editor de rotas
         // da Wave 4; telas em 10-17.
+        // Reprocessa as etapas do motor que falharam por serviço de terceiro
+        // indisponível (spec 2026-10-05). Permissão própria, auditada no serviço.
+        Route::middleware('permission:reprocessar-processos')
+            ->post('processos/{viabilityRequest}/reprocessar', [ReprocessarProcessoController::class, 'store'])
+            ->name('processos.reprocessar');
+
         Route::middleware('permission:analisar-processos')->prefix('processos/{viabilityRequest}')->name('processos.')->group(function () {
             Route::get('ficha', [AnalysisRecordController::class, 'show'])->name('ficha.show');
             Route::patch('ficha', [AnalysisRecordController::class, 'autosave'])->name('ficha.autosave');

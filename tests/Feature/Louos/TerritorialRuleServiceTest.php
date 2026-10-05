@@ -3,6 +3,7 @@
 namespace Tests\Feature\Louos;
 
 use App\Enums\IntencaoAtividade;
+use App\Enums\SituacaoEtapa;
 use App\Models\Cnae;
 use App\Models\RuleVersion;
 use App\Models\TerritorialRule;
@@ -275,6 +276,54 @@ class TerritorialRuleServiceTest extends TestCase
 
         $this->assertSame(TerritorialRuleVerdict::ENCAMINHAR_ANALISE, $verdict->status);
         $this->assertStringContainsString('indisponível', (string) $verdict->motivo);
+    }
+
+    public function test_sem_ponto_do_imovel_encaminha_com_motivo_de_localizacao_e_nao_de_camada(): void
+    {
+        $request = $this->solicitacao([], ['9602501']);
+
+        $verdict = app(TerritorialRuleService::class)->avaliar($request, null);
+
+        $this->assertSame(TerritorialRuleVerdict::ENCAMINHAR_ANALISE, $verdict->status);
+        $this->assertStringContainsString('localização do imóvel', (string) $verdict->motivo);
+        $this->assertStringNotContainsString('camada geográfica', (string) $verdict->motivo);
+    }
+
+    public function test_camada_indisponivel_registra_a_etapa_de_regra_territorial_como_indisponivel(): void
+    {
+        Http::fake(fn () => Http::response('erro', 500));
+
+        $request = $this->solicitacao([], ['9602501']);
+
+        $this->avaliar($request);
+
+        $etapa = $request->etapas()->where('etapa', 'regra_territorial')->first();
+
+        $this->assertSame(SituacaoEtapa::Indisponivel, $etapa?->situacao);
+        $this->assertSame('geoserver_camadas', $etapa?->servico);
+    }
+
+    public function test_camada_respondendo_registra_a_etapa_como_ok(): void
+    {
+        Http::fake(fn () => Http::response(['type' => 'FeatureCollection', 'features' => []]));
+
+        $request = $this->solicitacao([], ['9602501']);
+
+        $this->avaliar($request);
+
+        $this->assertSame(
+            SituacaoEtapa::Ok,
+            $request->etapas()->where('etapa', 'regra_territorial')->first()?->situacao,
+        );
+    }
+
+    public function test_sem_ponto_nao_registra_a_etapa_de_regra_territorial(): void
+    {
+        $request = $this->solicitacao([], ['9602501']);
+
+        app(TerritorialRuleService::class)->avaliar($request, null);
+
+        $this->assertSame(0, $request->etapas()->where('etapa', 'regra_territorial')->count());
     }
 
     public function test_regra_inativa_nao_e_avaliada(): void

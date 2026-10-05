@@ -15,8 +15,6 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Rules\ValidCpf;
-use App\Services\Expresso\FluxoExpressoService;
-use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -32,9 +30,7 @@ class ReginProcessoProtocolador
 {
     public function __construct(
         private ProtocolarSolicitacaoService $protocolar,
-        private FluxoExpressoService $expresso,
         private ReginTipoImovelApplier $tipoImovel,
-        private PoligonoEnderecamentoService $poligonoLote,
     ) {}
 
     public function protocolar(ReginRecebimento $recebimento): ?ViabilityRequest
@@ -79,7 +75,6 @@ class ReginProcessoProtocolador
         }
 
         $this->protocolar->protocol($solicitacao->fresh() ?? $solicitacao, $ator);
-        $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $ator);
 
         return $solicitacao->fresh() ?? $solicitacao;
     }
@@ -134,7 +129,6 @@ class ReginProcessoProtocolador
             'address_zip' => $dados->cep,
             'address_reference' => $dados->pontoReferencia,
             'property_registration' => $dados->inscricaoImobiliaria,
-            'property_polygon_geojson' => $dados->poligonoDeclarado,
             'has_independent_access' => $dados->acessosIndependentes === true,
             'is_virtual_office' => $dados->escritorioVirtual === true,
             'wants_virtual_office_tenant' => $dados->atividadeAbrigadaEmEscritorioVirtual,
@@ -157,29 +151,18 @@ class ReginProcessoProtocolador
 
         $this->tipoImovel->apply($solicitacao, $dados->tipoImovel);
 
+        // O CODLOG declarado entra antes do protocolo: a cadeia do lote roda
+        // dentro dele e o evento já enfileira a decisão, que não pode correr
+        // antes desse dado.
+        if ($dados->codlog !== null) {
+            $solicitacao->forceFill(['cod_log' => $dados->codlog])->save();
+        }
+
         $this->protocolar->protocol($solicitacao->fresh() ?? $solicitacao, $ator);
 
-        $ajuste = [];
-
-        if ($dados->codlog !== null) {
-            $ajuste['cod_log'] = $dados->codlog;
-        }
-
         if ($dados->dataAbertura !== null) {
-            $ajuste['protocoled_at'] = $dados->dataAbertura;
+            $solicitacao->forceFill(['protocoled_at' => $dados->dataAbertura])->save();
         }
-
-        if ($ajuste !== []) {
-            $solicitacao->forceFill($ajuste)->save();
-        }
-
-        // Geometria oficial do lote ANTES da decisão: é ela que zoneia pela
-        // maior porção. Já fora da transação — fonte indisponível não desfaz
-        // o processo. O polígono declarado no REGIN fica em
-        // property_polygon_geojson e só vale se a cadeia oficial não achar.
-        $this->poligonoLote->aplicar($solicitacao->fresh() ?? $solicitacao);
-
-        $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $ator);
 
         return $solicitacao->fresh() ?? $solicitacao;
     }

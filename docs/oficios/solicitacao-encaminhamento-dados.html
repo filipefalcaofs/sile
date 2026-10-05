@@ -10,6 +10,9 @@
   p { margin: 0 0 10px; text-align: justify; }
   ol { margin: 4px 0 12px 22px; padding: 0; }
   ol > li { margin: 0 0 3px; }
+  h2 { font-size: 12pt; margin: 14px 0 6px; }
+  .end p { margin: 0 0 3px; text-align: left; }
+  a { color: #1155cc; }
 </style>
 </head>
 <body>
@@ -40,6 +43,8 @@
   <li>Área do terreno, em m²;</li>
   <li>Resposta à pergunta “Imóvel em condomínio?”;</li>
   <li>Resposta à pergunta “Possui área de embarque/desembarque?”;</li>
+  <li>Vagas de embarque e desembarque, em quantidade;</li>
+  <li>Vagas de estacionamento, em quantidade;</li>
   <li>Tipo de Complemento;</li>
   <li>Descrição do Complemento;</li>
   <li>Categoria do Imóvel;</li>
@@ -57,18 +62,25 @@
   <li>Serviço / Evento solicitado (Constituição — Matriz e Filial / Alteração de Endereço / Alteração de Atividade Econômica);</li>
   <li>NIRE ou Matrícula (para os casos de alteração);</li>
   <li>CNPJ da Matriz (para os casos de constituição de filial);</li>
-  <li>Polígono do imóvel desenhado pelo requerente (GeoJSON);</li>
   <li>Data e hora da geração do processo;</li>
   <li>Data e hora da geração do envio;</li>
   <li>Aceite do Termo de Dispensa de Viabilidade Locacional;</li>
   <li>Indicação do pedido originado de MEI desenquadrado;</li>
   <li>Código da função de envio;</li>
-  <li>Latitude e longitude do estabelecimento;</li>
   <li>Qualificação da atividade (RAE_CALIF_ACTV);</li>
   <li>Código do tipo do item genérico do protocolo (RGP_TGE_COD_TIP_TAB);</li>
   <li>Valor do item genérico do protocolo (RGP_VALOR).</li>
 </ol>
 
 <p>O encaminhamento deverá contemplar todas as informações preenchidas e/ou obtidas durante o cadastramento da solicitação, assegurando a integridade dos dados necessários à continuidade dos trâmites internos da Secretaria.</p>
+
+<h2>Endereços de recebimento</h2>
+<p>O Viabiliza já está adequado para receber as informações acima, conforme o contrato descrito no Swagger. O envio é um POST em JSON; o teste de conectividade é um GET no mesmo endereço, que responde 3.</p>
+<div class="end">
+<p><strong>Homologação — recebimento:</strong> <a href="https://viabiliza-hml.salvador.ba.gov.br/api_integracao/recebe">https://viabiliza-hml.salvador.ba.gov.br/api_integracao/recebe</a></p>
+<p><strong>Homologação — Swagger:</strong> <a href="https://viabiliza-hml.salvador.ba.gov.br/api_integracao/docs">https://viabiliza-hml.salvador.ba.gov.br/api_integracao/docs</a></p>
+<p><strong>Produção — recebimento:</strong> <a href="https://viabiliza.salvador.ba.gov.br/api_integracao/recebe">https://viabiliza.salvador.ba.gov.br/api_integracao/recebe</a></p>
+<p><strong>Produção — Swagger:</strong> <a href="https://viabiliza.salvador.ba.gov.br/api_integracao/docs">https://viabiliza.salvador.ba.gov.br/api_integracao/docs</a></p>
+</div>
 </body>
 </html>

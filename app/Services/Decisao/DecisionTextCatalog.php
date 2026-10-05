@@ -179,6 +179,7 @@ final class DecisionTextCatalog
             // placeholders do alvo e do fundamento lidos da própria regra.
             'territorial.indeferimento.logradouro_cnae' => 'A solicitação está localizada no :alvo e contempla atividade(s) econômica(s) abrangida(s) pelas restrições estabelecidas no :fundamento. Dessa forma, considerando o disposto na legislação vigente, o pedido não atende aos requisitos legais para deferimento, razão pela qual a solicitação é indeferida.',
             'territorial.motivo.camada_indisponivel' => 'Não foi possível verificar a restrição territorial ":regra" (camada geográfica indisponível) — segue para análise técnica.',
+            'territorial.motivo.localizacao_indisponivel' => 'Não foi possível verificar a restrição territorial ":regra" (localização do imóvel não obtida: Cadastro Imobiliário indisponível ou inscrição sem coordenada) — segue para análise técnica.',
             'territorial.motivo.cadastro_indisponivel' => 'Não foi possível verificar a restrição territorial ":regra" (Cadastro Imobiliário indisponível para conferir o logradouro tributário) — segue para análise técnica.',
             'zona.motivo.empate_maior_porcao' => 'Zona urbanística indefinida (art. 18, § 2º, da Lei nº 9.148/2016): o terreno tem porções iguais nas zonas :zona_a e :zona_b — segue para análise técnica.',
             'localizacao.motivo.divergencia_zona' => 'Localização divergente (HU-037 RN-005): o polígono informado está na zona :zona_poligono e a inscrição imobiliária, na zona :zona_inscricao — segue para análise técnica.',
