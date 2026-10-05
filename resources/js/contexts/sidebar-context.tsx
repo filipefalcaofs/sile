@@ -40,11 +40,19 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
             }
         };
 
+        function aoTeclar(evento: KeyboardEvent) {
+            if (evento.key === 'Escape') {
+                setIsMobileOpen(false);
+            }
+        }
+
         handleResize();
         window.addEventListener('resize', handleResize);
+        document.addEventListener('keydown', aoTeclar);
 
         return () => {
             window.removeEventListener('resize', handleResize);
+            document.removeEventListener('keydown', aoTeclar);
         };
     }, []);
 

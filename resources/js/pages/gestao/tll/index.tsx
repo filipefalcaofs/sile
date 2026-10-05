@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Form, Head, router, useHttp, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -221,7 +222,7 @@ function CamposValor({ valor, errors }: { valor?: TllValorItem; errors: Record<s
                     onChange={setActive}
                     options={SITUACAO_OPTIONS}
                 />
-                {errors.active && <p className="mt-1.5 text-theme-xs text-error-500">{errors.active}</p>}
+                {errors.active && <FieldError>{errors.active}</FieldError>}
             </div>
         </div>
     );
@@ -347,7 +348,7 @@ function CnaesVinculadosModal({ valor, onClose }: { valor: TllValorItem; onClose
             </p>
 
             {failed && (
-                <p className="mt-4 text-sm text-error-500">Não foi possível carregar os CNAEs vinculados.</p>
+                <FieldError>Não foi possível carregar os CNAEs vinculados.</FieldError>
             )}
 
             {!failed && resposta === null && (
@@ -506,13 +507,15 @@ export default function TllIndex({ valores, exercicios, filters, perPageOptions 
         {
             id: 'valor',
             header: 'Valor',
-            cellClassName: 'whitespace-nowrap text-gray-800 dark:text-white/90',
+            align: 'end',
+            cellClassName: 'whitespace-nowrap text-right tabular-nums text-gray-800 dark:text-white/90',
             cell: (valor) => formatarMoeda(valor.valor),
         },
         {
             id: 'taxa_servico',
             header: 'Taxa de serviço',
-            cellClassName: 'whitespace-nowrap text-gray-800 dark:text-white/90',
+            align: 'end',
+            cellClassName: 'whitespace-nowrap text-right tabular-nums text-gray-800 dark:text-white/90',
             cell: (valor) => formatarMoeda(valor.taxa_servico),
         },
         {

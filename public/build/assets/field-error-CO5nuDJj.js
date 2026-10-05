@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-DsKLSDJq.js";var t=e();function n({id:e,message:n,children:r}){let i=r??n;return i==null||i===!1||i===``?null:(0,t.jsx)(`p`,{id:e,role:`alert`,className:`mt-1.5 text-theme-xs text-error-500`,children:i})}export{n as t};

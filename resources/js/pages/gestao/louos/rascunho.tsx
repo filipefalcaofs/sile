@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
@@ -159,7 +160,7 @@ function LinhaQuadroModal({
                                         options={field.options ?? []}
                                     />
                                     {errors[field.key] && (
-                                        <p className="mt-1 text-theme-xs text-error-500">{errors[field.key]}</p>
+                                        <FieldError>{errors[field.key]}</FieldError>
                                     )}
                                 </>
                             ) : field.kind === 'textarea' ? (
@@ -292,7 +293,7 @@ function ImportarCsvModal({
                         onChange={(event) => setData('arquivo', event.target.files?.[0] ?? null)}
                         className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-800 file:mr-3 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1 file:text-xs file:text-gray-700 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
                     />
-                    {errors.arquivo && <p className="mt-1 text-theme-xs text-error-500">{errors.arquivo}</p>}
+                    {errors.arquivo && <FieldError>{errors.arquivo}</FieldError>}
                 </div>
 
                 <label className="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300">

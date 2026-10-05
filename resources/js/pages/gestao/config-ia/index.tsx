@@ -264,7 +264,7 @@ export default function ConfigIaIndex({ configurations }: ConfigIaIndexProps) {
 
             <Card>
                 <CardHeader
-                    title="Configuração de IA"
+                    title="Provedores"
                     description="Gerencie os provedores de IA (OpenAI, Anthropic, Google e compatíveis) usados pelas funções de inteligência artificial."
                     actions={
                         canMaintain ? (

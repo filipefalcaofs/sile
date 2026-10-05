@@ -58,6 +58,54 @@ export function applyAlphanumericCnpjMask(raw: string): string {
     return result;
 }
 
+/** Formata dígitos digitados como reais (os dois últimos são centavos). */
+export function applyCurrencyMask(raw: string): string {
+    const digits = raw.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+
+    if (digits === '') {
+        return '';
+    }
+
+    const padded = digits.padStart(3, '0');
+    const inteiro = padded.slice(0, -2);
+    const decimal = padded.slice(-2);
+
+    return `${inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${decimal}`;
+}
+
+/** Converte "1.111,78" no decimal "1111.78". */
+export function brlToDecimal(masked: string): string {
+    if (masked.trim() === '') {
+        return '';
+    }
+
+    const digits = masked.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+
+    if (digits === '') {
+        return '';
+    }
+
+    const padded = digits.padStart(3, '0');
+    const inteiro = padded.slice(0, -2).replace(/^0+(?=\d)/, '') || '0';
+
+    return `${inteiro}.${padded.slice(-2)}`;
+}
+
+/** Converte o decimal "1111.78" para "1.111,78". */
+export function decimalToBrl(decimal: string): string {
+    const limpo = decimal.trim();
+
+    if (limpo === '') {
+        return '';
+    }
+
+    const [inteiroRaw, fracRaw = ''] = limpo.replace('-', '').split('.');
+    const inteiro = inteiroRaw.replace(/\D/g, '') || '0';
+    const frac = `${fracRaw.replace(/\D/g, '')}00`.slice(0, 2);
+
+    return applyCurrencyMask(`${inteiro}${frac}`);
+}
+
 export function isoToBrDate(iso: string): string {
     const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!match) {

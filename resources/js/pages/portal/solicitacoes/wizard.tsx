@@ -1,9 +1,11 @@
+import FieldError from '@/components/form/field-error';
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { Polygon } from 'geojson';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Label from '@/components/form/label';
+import SearchableSelect from '@/components/form/searchable-select';
 import Select from '@/components/form/select';
 import { StepTransition } from '@/components/motion';
 import EtapaAtividades from '@/components/solicitacao/etapa-atividades';
@@ -219,7 +221,7 @@ function IniciarStep({
                                 disabled={!enabled}
                             />
                             {errors.service_type_id && (
-                                <p className="mt-1.5 text-theme-xs text-error-500">{errors.service_type_id}</p>
+                                <FieldError>{errors.service_type_id}</FieldError>
                             )}
                         </div>
 
@@ -227,7 +229,7 @@ function IniciarStep({
                             <Label htmlFor="company_id" required>
                                 Empresa
                             </Label>
-                            <Select
+                            <SearchableSelect
                                 id="company_id"
                                 value={data.company_id}
                                 onChange={(value) => setData('company_id', value)}
@@ -239,7 +241,7 @@ function IniciarStep({
                                 disabled={!enabled || semEmpresa}
                             />
                             {errors.company_id && (
-                                <p className="mt-1.5 text-theme-xs text-error-500">{errors.company_id}</p>
+                                <FieldError>{errors.company_id}</FieldError>
                             )}
                         </div>
                     </div>

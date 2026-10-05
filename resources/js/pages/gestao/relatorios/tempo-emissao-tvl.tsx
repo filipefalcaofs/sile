@@ -283,7 +283,7 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
         { id: 'dam_numero', header: 'DAM Nº', cell: (linha) => linha.dam_numero ?? '—' },
         { id: 'dam_emissao', header: 'DAM Emissão', cell: (linha) => formatarDataHora(linha.dam_emissao) },
         { id: 'dam_pagamento', header: 'DAM Pagamento', cell: (linha) => formatarDataHora(linha.dam_pagamento) },
-        { id: 'dam_valor', header: 'DAM Valor', cell: (linha) => linha.dam_valor ?? '—' },
+        { id: 'dam_valor', header: 'DAM Valor', align: 'end', cellClassName: 'text-right tabular-nums', cell: (linha) => linha.dam_valor ?? '—' },
         {
             id: 'tvl_disponivel',
             header: 'PDF disponível',

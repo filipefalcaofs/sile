@@ -19,6 +19,7 @@ import type {
 } from 'echarts/components';
 import type { ComposeOption } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
+import { chartPalette } from '@/components/ui/chart/chart-palette';
 
 // Registro central tree-shakeable (echarts/core + echarts.use): só os charts,
 // componentes e o renderer Canvas usados pelos relatórios entram no bundle
@@ -45,22 +46,22 @@ export const CHART_DARK_THEME = 'sile-dark';
 echarts.registerTheme(CHART_DARK_THEME, {
     darkMode: true,
     backgroundColor: 'transparent',
-    textStyle: { color: '#98a2b3' },
-    legend: { textStyle: { color: '#d0d5dd' } },
+    textStyle: { color: chartPalette.gray400 },
+    legend: { textStyle: { color: chartPalette.gray300 } },
     tooltip: {
-        backgroundColor: '#1d2939',
-        borderColor: '#344054',
-        textStyle: { color: '#f2f4f7' },
+        backgroundColor: chartPalette.gray800,
+        borderColor: chartPalette.gray700,
+        textStyle: { color: chartPalette.gray25 },
     },
     categoryAxis: {
-        axisLine: { lineStyle: { color: '#344054' } },
+        axisLine: { lineStyle: { color: chartPalette.gray700 } },
         axisTick: { show: false },
-        axisLabel: { color: '#98a2b3' },
+        axisLabel: { color: chartPalette.gray400 },
         splitLine: { lineStyle: { color: 'rgba(152,162,179,0.16)' } },
     },
     valueAxis: {
         axisLine: { show: false },
-        axisLabel: { color: '#98a2b3' },
+        axisLabel: { color: chartPalette.gray400 },
         splitLine: { lineStyle: { color: 'rgba(152,162,179,0.16)' } },
     },
 });

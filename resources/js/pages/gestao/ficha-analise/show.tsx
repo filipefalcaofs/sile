@@ -1,7 +1,9 @@
+import FieldError from '@/components/form/field-error';
 import { Head, Link, router, useHttp, usePage, WhenVisible } from '@inertiajs/react';
 import type { GeoJsonObject } from 'geojson';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import { RecepcaoRecebida, rotuloFluxoRisco, type ProcessoRecepcao } from '@/components/analise/processo-ui';
 import { sinteseDaFicha, type EstadoLeitura } from '@/pages/gestao/ficha-analise/sintese';
 import PageHeader from '@/components/app/page-header';
@@ -2645,44 +2647,18 @@ export default function FichaAnaliseShow({
                         processo — inclusive um já deferido.
                     </p>
                     <div className="mt-4">
-                        <Label htmlFor="resultado-conclusao" required>
-                            Resultado
-                        </Label>
-                        <Select
-                            id="resultado-conclusao"
-                            value={resultadoConclusao}
-                            placeholder="Selecione o resultado"
-                            options={conclusaoOpcoes}
-                            onChange={setResultadoConclusao}
+                        <ConclusaoAnaliseForm
+                            resultadoId="resultado-conclusao"
+                            resultado={resultadoConclusao}
+                            onResultado={setResultadoConclusao}
+                            opcoes={conclusaoOpcoes}
+                            parecer={parecerConclusao}
+                            onParecer={setParecerConclusao}
+                            erro={erroConclusao}
+                            processing={conclusaoProcessing}
+                            onConfirm={concluirAnalise}
+                            onCancel={() => setShowConclusao(false)}
                         />
-                    </div>
-                    <div className="mt-4">
-                        <Label htmlFor="parecer-conclusao">Parecer</Label>
-                        <Textarea
-                            id="parecer-conclusao"
-                            rows={4}
-                            placeholder="Parecer da conclusão…"
-                            value={parecerConclusao}
-                            onChange={setParecerConclusao}
-                        />
-                    </div>
-                    {erroConclusao && (
-                        <p className="mt-4 text-sm font-medium text-error-600 dark:text-error-500" role="alert">
-                            {erroConclusao}
-                        </p>
-                    )}
-                    <div className="mt-6 flex items-center justify-end gap-3">
-                        <Button variant="outline" size="sm" onClick={() => setShowConclusao(false)}>
-                            Cancelar
-                        </Button>
-                        <Button
-                            size="sm"
-                            onClick={concluirAnalise}
-                            disabled={resultadoConclusao === ''}
-                            loading={conclusaoProcessing}
-                        >
-                            Concluir análise
-                        </Button>
                     </div>
                 </Modal>
 
@@ -2933,7 +2909,7 @@ export default function FichaAnaliseShow({
                         </Button>
                     </div>
 
-                    {diffErro && <p className="mt-4 text-theme-sm text-error-500">{diffErro}</p>}
+                    {diffErro && <FieldError>{diffErro}</FieldError>}
 
                     {diffData && <DiffView diff={diffData.diff} />}
                 </Modal>
@@ -3658,7 +3634,7 @@ function PrecedentesPanel({
                     </div>
                 )}
 
-                {!carregando && erro && <p className="text-theme-sm text-error-500">{erro}</p>}
+                {!carregando && erro && <FieldError>{erro}</FieldError>}
 
                 {!carregando && !erro && dados && (
                     <div className="space-y-4">

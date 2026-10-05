@@ -1,12 +1,13 @@
-import { Form, Head, router, useHttp, usePage } from '@inertiajs/react';
+import FieldError from '@/components/form/field-error';
+import { Form, Head, router, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
+import CnaePicker from '@/components/cnae/cnae-picker';
 import Input from '@/components/form/input';
 import Label from '@/components/form/label';
 import Select from '@/components/form/select';
-import { PencilIcon, PowerIcon, SearchIcon, TagIcon } from '@/components/icons';
-import Alert from '@/components/ui/alert';
+import { PencilIcon, PowerIcon, TagIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -19,7 +20,6 @@ import { useServerTable } from '@/components/ui/data-table/use-server-table';
 import EmptyState from '@/components/ui/empty-state';
 import { Modal } from '@/components/ui/modal';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
-import { Skeleton } from '@/components/ui/skeleton';
 import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
@@ -83,138 +83,6 @@ function SituationBadge({ active }: { active: boolean }) {
     );
 }
 
-const SEARCH_DEBOUNCE_MS = 350;
-const MIN_SEARCH_LENGTH = 2;
-
-/**
- * Busca incremental de CNAEs ativos para vincular ao requisito, reusando o
- * CnaeSearchController via GET /gestao/requisitos-documentais/cnaes-disponiveis
- * (só ativos, máx. 20). Local a esta tela do console.
- */
-function CnaePicker({ onSelect, excludeIds }: { onSelect: (cnae: CnaeLink) => void; excludeIds: number[] }) {
-    const inputId = useId();
-    const [term, setTerm] = useState('');
-    const [results, setResults] = useState<CnaeLink[]>([]);
-    const [searched, setSearched] = useState(false);
-    const [failed, setFailed] = useState(false);
-
-    const http = useHttp<Record<string, never>, CnaeLink[]>({});
-    const httpRef = useRef(http);
-    httpRef.current = http;
-
-    const requestSeq = useRef(0);
-
-    useEffect(() => {
-        const trimmed = term.trim();
-
-        if (trimmed.length < MIN_SEARCH_LENGTH) {
-            requestSeq.current += 1;
-            setResults([]);
-            setSearched(false);
-            setFailed(false);
-
-            return;
-        }
-
-        const timeout = setTimeout(() => {
-            const seq = ++requestSeq.current;
-
-            void httpRef.current.get(`/gestao/requisitos-documentais/cnaes-disponiveis?search=${encodeURIComponent(trimmed)}`, {
-                onSuccess: (response) => {
-                    if (seq !== requestSeq.current) {
-                        return;
-                    }
-
-                    setResults(Array.isArray(response) ? response : []);
-                    setSearched(true);
-                    setFailed(false);
-                },
-                onError: () => {
-                    if (seq !== requestSeq.current) {
-                        return;
-                    }
-
-                    setResults([]);
-                    setSearched(false);
-                    setFailed(true);
-                },
-            });
-        }, SEARCH_DEBOUNCE_MS);
-
-        return () => clearTimeout(timeout);
-    }, [term]);
-
-    function select(cnae: CnaeLink) {
-        onSelect(cnae);
-        requestSeq.current += 1;
-        setTerm('');
-        setResults([]);
-        setSearched(false);
-        setFailed(false);
-    }
-
-    const visibleResults = results.filter((cnae) => !excludeIds.includes(cnae.id));
-    const searching = http.processing;
-
-    return (
-        <div className="flex flex-col gap-3">
-            <div className="relative">
-                <label htmlFor={inputId} className="sr-only">
-                    Buscar CNAE
-                </label>
-                <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-gray-400 dark:text-gray-500">
-                    <SearchIcon className="size-5" />
-                </span>
-                <input
-                    id={inputId}
-                    type="search"
-                    value={term}
-                    onChange={(event) => setTerm(event.target.value)}
-                    placeholder="Buscar CNAE por código ou descrição..."
-                    autoComplete="off"
-                    className="h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent py-2.5 pr-4 pl-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                />
-            </div>
-
-            {failed && (
-                <Alert
-                    variant="error"
-                    title="Busca de CNAEs indisponível"
-                    message="Não foi possível consultar a tabela oficial de CNAEs. Tente novamente."
-                />
-            )}
-
-            {searching && (
-                <div className="flex flex-col gap-2" aria-label="Buscando CNAEs">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-2/3" />
-                </div>
-            )}
-
-            {!searching && searched && visibleResults.length === 0 && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum CNAE ativo encontrado.</p>
-            )}
-
-            {!searching && visibleResults.length > 0 && (
-                <ul className="max-h-56 divide-y divide-gray-100 overflow-y-auto rounded-xl border border-gray-200 dark:divide-white/[0.05] dark:border-gray-800">
-                    {visibleResults.map((cnae) => (
-                        <li key={cnae.id}>
-                            <button
-                                type="button"
-                                onClick={() => select(cnae)}
-                                className="flex w-full flex-col items-start gap-0.5 px-4 py-3 text-start transition hover:bg-gray-50 focus:bg-gray-50 focus:outline-hidden dark:hover:bg-white/[0.03] dark:focus:bg-white/[0.03]"
-                            >
-                                <span className="text-sm font-medium text-gray-800 dark:text-white/90">{cnae.formatted_code}</span>
-                                <span className="text-theme-xs text-gray-500 dark:text-gray-400">{cnae.description}</span>
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </div>
-    );
-}
-
 function CreateRequirementModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const [required, setRequired] = useState('1');
 
@@ -275,7 +143,7 @@ function CreateRequirementModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                                 className={textareaClassName}
                                 placeholder="Quando e por que este documento é exigido."
                             />
-                            {errors.description && <p className="mt-1.5 text-theme-xs text-error-500">{errors.description}</p>}
+                            {errors.description && <FieldError>{errors.description}</FieldError>}
                         </div>
 
                         <div>
@@ -288,7 +156,7 @@ function CreateRequirementModal({ isOpen, onClose }: { isOpen: boolean; onClose:
                                 placeholder="O que conferir no documento (gancho da validação por IA, inerte por ora)."
                             />
                             {errors.validation_instructions && (
-                                <p className="mt-1.5 text-theme-xs text-error-500">{errors.validation_instructions}</p>
+                                <FieldError>{errors.validation_instructions}</FieldError>
                             )}
                         </div>
 
@@ -353,7 +221,7 @@ function EditRequirementModal({ requirement, onClose }: { requirement: Requireme
                                 defaultValue={requirement.description ?? ''}
                                 className={textareaClassName}
                             />
-                            {errors.description && <p className="mt-1.5 text-theme-xs text-error-500">{errors.description}</p>}
+                            {errors.description && <FieldError>{errors.description}</FieldError>}
                         </div>
 
                         <div>
@@ -366,7 +234,7 @@ function EditRequirementModal({ requirement, onClose }: { requirement: Requireme
                                 className={textareaClassName}
                             />
                             {errors.validation_instructions && (
-                                <p className="mt-1.5 text-theme-xs text-error-500">{errors.validation_instructions}</p>
+                                <FieldError>{errors.validation_instructions}</FieldError>
                             )}
                         </div>
 
@@ -418,7 +286,7 @@ function ManageCnaesModal({ requirement, onClose }: { requirement: RequirementIt
             </p>
 
             <div className="mt-6 flex flex-col gap-5">
-                <CnaePicker onSelect={add} excludeIds={selected.map((cnae) => cnae.id)} />
+                <CnaePicker endpoint="/gestao/requisitos-documentais/cnaes-disponiveis" onSelect={add} excludeIds={selected.map((cnae) => cnae.id)} />
 
                 <div>
                     <span className="text-theme-xs font-medium text-gray-500 dark:text-gray-400">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import AccessibilityBar from '@/components/app/accessibility-bar';
 import AppHeader from '@/components/app/app-header';
 import AppSidebar from '@/components/app/app-sidebar';
 import { consumirEntradaConsole } from '@/components/app/console-entrance';
@@ -77,16 +78,22 @@ function ShellContent({
                     isExpanded || isHovered ? 'lg:ml-[290px]' : 'lg:ml-[90px]'
                 } ${isMobileOpen ? 'ml-0' : ''}`}
             >
-                <AppHeader
-                    homeHref={homeHref}
-                    logoutHref={logoutHref ?? '/portal/logout'}
-                    accountHref={accountHref ?? '/portal/conta/perfil'}
-                    toolbar={headerToolbar}
-                />
-                <div id="conteudo" className="w-full min-w-0 p-4 md:p-6">
+                <div className="sticky top-0 z-99999">
+                    <AccessibilityBar />
+                    <AppHeader
+                        homeHref={homeHref}
+                        logoutHref={logoutHref ?? '/portal/logout'}
+                        accountHref={accountHref ?? '/portal/conta/perfil'}
+                        toolbar={headerToolbar}
+                    />
+                </div>
+                <main id="conteudo" tabIndex={-1} className="w-full min-w-0 p-4 outline-none md:p-6">
                     {entradaDoLogin && <NotaEntradaConsole />}
                     <PageTransition>{children}</PageTransition>
-                </div>
+                </main>
+                <footer id="rodape" className="border-t border-gray-200 px-4 py-4 text-xs text-gray-500 md:px-6 dark:border-gray-800 dark:text-gray-400">
+                    Viabiliza · Secretaria de Desenvolvimento Urbano (SEDUR)
+                </footer>
             </div>
         </div>
     );

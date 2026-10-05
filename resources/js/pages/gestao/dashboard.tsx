@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { RevealLink, Surface } from '@/components/motion';
+import { chartPalette } from '@/components/ui/chart/chart-palette';
 import Chart from '@/components/ui/chart/chart';
 import type { EChartsOption } from '@/components/ui/chart/echarts-core';
 import { ExportMenu } from '@/components/ui/data-table/export-menu';
@@ -151,10 +152,10 @@ const TOM_ACAO = {
 } as const;
 
 const COR_AGING: Record<string, string> = {
-    '0_5': '#12b76a',
-    '6_10': '#5992ed',
-    '11_20': '#f79009',
-    acima_20: '#f04438',
+    '0_5': chartPalette.success,
+    '6_10': chartPalette.brandSoft,
+    '11_20': chartPalette.warning,
+    acima_20: chartPalette.error,
 };
 
 const TOM_AGING: Record<string, string> = {
@@ -354,8 +355,8 @@ function fluxoChartOption(pontos: SerieFluxoPonto[]): EChartsOption {
                 smooth: true,
                 showSymbol: pontos.length === 1,
                 data: pontos.map((ponto) => ponto.entrada),
-                itemStyle: { color: '#1351b4' },
-                lineStyle: { width: 2.5, color: '#1351b4' },
+                itemStyle: { color: chartPalette.brand },
+                lineStyle: { width: 2.5, color: chartPalette.brand },
                 areaStyle: { color: 'rgba(19,81,180,0.08)' },
             },
             {
@@ -364,8 +365,8 @@ function fluxoChartOption(pontos: SerieFluxoPonto[]): EChartsOption {
                 smooth: true,
                 showSymbol: pontos.length === 1,
                 data: pontos.map((ponto) => ponto.saida),
-                itemStyle: { color: '#12b76a' },
-                lineStyle: { width: 2.5, color: '#12b76a' },
+                itemStyle: { color: chartPalette.success },
+                lineStyle: { width: 2.5, color: chartPalette.success },
             },
         ],
     };
@@ -377,10 +378,10 @@ function corEtapa(etapa: EtapaPainel): string {
     }
 
     if (etapa.meta_dias !== null && etapa.media_dias > etapa.meta_dias) {
-        return '#f04438';
+        return chartPalette.error;
     }
 
-    return etapa.meta_dias === null ? '#1351b4' : '#12b76a';
+    return etapa.meta_dias === null ? chartPalette.brand : chartPalette.success;
 }
 
 function etapasChartOption(etapas: EtapaPainel[]): EChartsOption {
@@ -416,7 +417,7 @@ function etapasChartOption(etapas: EtapaPainel[]): EChartsOption {
                 markPoint: {
                     symbol: 'rect',
                     symbolSize: [2, 16],
-                    itemStyle: { color: '#98a2b3' },
+                    itemStyle: { color: chartPalette.gray400 },
                     label: { show: false },
                     tooltip: { show: false },
                     data: etapas.flatMap((etapa) =>
@@ -442,7 +443,7 @@ function motivosChartOption(motivos: MotivoExpresso[]): EChartsOption {
                 name: 'Quedas',
                 cursor: 'pointer',
                 data: motivos.map((motivo) => motivo.total),
-                itemStyle: { color: '#5992ed', borderRadius: [0, 6, 6, 0] },
+                itemStyle: { color: chartPalette.brandSoft, borderRadius: [0, 6, 6, 0] },
             },
         ],
     };
@@ -462,7 +463,7 @@ function expressoChartOption(taxa: number | null, meta: number | null): EChartsO
                 barWidth: 10,
                 showBackground: true,
                 backgroundStyle: { color: '#f2f4f7', borderRadius: 8 },
-                itemStyle: { color: '#1351b4', borderRadius: 8 },
+                itemStyle: { color: chartPalette.brand, borderRadius: 8 },
                 markLine:
                     meta === null
                         ? undefined
@@ -490,7 +491,7 @@ function agingChartOption(faixas: FaixaAging[]): EChartsOption {
                 cursor: 'pointer',
                 data: faixas.map((faixa) => ({
                     value: faixa.total,
-                    itemStyle: { color: COR_AGING[faixa.faixa] ?? '#98a2b3', borderRadius: [0, 6, 6, 0] },
+                    itemStyle: { color: COR_AGING[faixa.faixa] ?? chartPalette.gray400, borderRadius: [0, 6, 6, 0] },
                 })),
             },
         ],
@@ -610,7 +611,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
             <div className="flex flex-col gap-5">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
-                        <h2 className="text-[22px] leading-[30px] font-semibold text-gray-800 dark:text-white/90">Painel da operação</h2>
+                        <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">Painel da operação</h2>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             Últimos {operacao.janela_dias} dias · atualizado às {formatarAtualizado(operacao.gerado_em)}
                         </p>

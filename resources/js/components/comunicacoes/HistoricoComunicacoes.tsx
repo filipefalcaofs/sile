@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { MailIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import EmptyState from '@/components/ui/empty-state';
@@ -115,9 +116,9 @@ export default function HistoricoComunicacoes({ comunicacoes }: HistoricoComunic
                         {comunicacao.recipient ? ` · para ${comunicacao.recipient.name}` : ''}
                     </p>
                     {comunicacao.error_message && (
-                        <p className="mt-1 text-theme-xs text-error-600 dark:text-error-500">
+                        <FieldError>
                             Diagnóstico: {comunicacao.error_message}
-                        </p>
+                        </FieldError>
                     )}
                 </li>
             ))}

@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from 'react';
+import { useId, type InputHTMLAttributes } from 'react';
 import { Presence } from '@/components/motion';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -18,8 +18,12 @@ export default function Input({
     success = false,
     error = false,
     hint,
+    id,
+    'aria-describedby': describedBy,
     ...rest
 }: InputProps) {
+    const hintId = useId();
+    const described = [hint ? hintId : undefined, describedBy].filter(Boolean).join(' ') || undefined;
     let inputClasses = `h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${className}`;
 
     if (disabled) {
@@ -34,10 +38,19 @@ export default function Input({
 
     return (
         <div className="relative">
-            <input disabled={disabled} className={inputClasses} {...rest} />
+            <input
+                id={id}
+                disabled={disabled}
+                className={inputClasses}
+                {...rest}
+                aria-invalid={error || undefined}
+                aria-describedby={described}
+            />
 
             <Presence open={Boolean(hint)}>
                 <p
+                    id={hintId}
+                    role={error ? 'alert' : undefined}
                     className={`pt-1.5 text-xs ${
                         error ? 'text-error-500' : success ? 'text-success-500' : 'text-gray-500'
                     }`}

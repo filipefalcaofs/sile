@@ -84,8 +84,8 @@ export function MapImovel({ lat, lng, zoom = 17, draggable = true, camadas, onMo
             center={[lat, lng]}
             zoom={zoom}
             scrollWheelZoom
-            className="relative z-0 w-full overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800"
-            style={{ height: 420 }}
+            className="relative z-0 h-[min(420px,55vh)] w-full overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800"
+            
         >
             <TileLayer
                 attribution='&copy; OpenStreetMap (ODbL)'

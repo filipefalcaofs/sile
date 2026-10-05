@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -250,7 +251,7 @@ function CreatePropertyTypeModal({ isOpen, onClose }: { isOpen: boolean; onClose
                         <div>
                             <DrivesRuleField checked={drivesRule} onChange={handleDrivesRuleChange} />
                             {form.errors.drives_rule && (
-                                <p className="mt-1.5 text-xs text-error-500">{form.errors.drives_rule}</p>
+                                <FieldError>{form.errors.drives_rule}</FieldError>
                             )}
                         </div>
                         <div>
@@ -380,7 +381,7 @@ function EditPropertyTypeModal({ propertyType, onClose }: { propertyType: Proper
                         <div>
                             <DrivesRuleField checked={drivesRule} onChange={handleDrivesRuleChange} />
                             {form.errors.drives_rule && (
-                                <p className="mt-1.5 text-xs text-error-500">{form.errors.drives_rule}</p>
+                                <FieldError>{form.errors.drives_rule}</FieldError>
                             )}
                         </div>
                         <div>
@@ -395,7 +396,7 @@ function EditPropertyTypeModal({ propertyType, onClose }: { propertyType: Proper
                                     { value: '0', label: 'Inativo' },
                                 ]}
                             />
-                            {form.errors.active && <p className="mt-1.5 text-theme-xs text-error-500">{form.errors.active}</p>}
+                            {form.errors.active && <FieldError>{form.errors.active}</FieldError>}
                         </div>
                         <div className="flex items-center justify-end gap-3">
                             <Button size="sm" variant="outline" onClick={onClose} disabled={form.processing} type="button">
@@ -538,7 +539,7 @@ export default function PropertyTypesIndex({ propertyTypes, filters, perPageOpti
 
             <Card>
                 <CardHeader
-                    title="Tipos de imóvel"
+                    title="Cadastro"
                     description="Classificam o imóvel no enquadramento da LOUOS e determinam o roteamento dos processos de viabilidade."
                     actions={
                         canMaintain ? (

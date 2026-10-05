@@ -194,7 +194,7 @@ export default function LgpdIndex({
                                     </p>
                                 </div>
                             ) : (
-                                <dl className="grid grid-cols-2 gap-5">
+                                <dl className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                     <Metrica
                                         label="Aceitaram a versão vigente"
                                         value={formatarNumero(consentimentos.aceitaram_vigente)}
@@ -232,7 +232,7 @@ export default function LgpdIndex({
                             description="Política de retenção dos logs de acesso e o último expurgo executado."
                         />
                         <CardContent>
-                            <dl className="grid grid-cols-2 gap-5">
+                            <dl className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                 <Metrica
                                     label="Retenção (logs de acesso)"
                                     value={retencao?.access_logs_dias !== null ? `${formatarNumero(retencao.access_logs_dias)} dias` : '—'}

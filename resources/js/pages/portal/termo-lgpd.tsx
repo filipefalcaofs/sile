@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Form, Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import Checkbox from '@/components/form/checkbox';
@@ -48,7 +49,7 @@ export default function TermoLgpd({ term }: TermoLgpdProps) {
                                     onChange={setAccepted}
                                 />
                                 {errors.accepted && (
-                                    <p className="text-sm text-error-500">{errors.accepted}</p>
+                                    <FieldError>{errors.accepted}</FieldError>
                                 )}
 
                                 <Button type="submit" size="sm" className="w-full" disabled={processing}>

@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useState } from 'react';
@@ -184,7 +185,7 @@ function ImportarCard({ versaoSugerida }: { versaoSugerida: string }) {
                             onChange={(event) => setData('anexo_a', event.target.files?.[0] ?? null)}
                             className={inputArquivo}
                         />
-                        {errors.anexo_a && <p className="mt-1 text-theme-xs text-error-500">{errors.anexo_a}</p>}
+                        {errors.anexo_a && <FieldError>{errors.anexo_a}</FieldError>}
                     </div>
                     <div>
                         <Label htmlFor="anexo_b" required>
@@ -197,7 +198,7 @@ function ImportarCard({ versaoSugerida }: { versaoSugerida: string }) {
                             onChange={(event) => setData('anexo_b', event.target.files?.[0] ?? null)}
                             className={inputArquivo}
                         />
-                        {errors.anexo_b && <p className="mt-1 text-theme-xs text-error-500">{errors.anexo_b}</p>}
+                        {errors.anexo_b && <FieldError>{errors.anexo_b}</FieldError>}
                     </div>
                     <div className="md:col-span-2">
                         <Button

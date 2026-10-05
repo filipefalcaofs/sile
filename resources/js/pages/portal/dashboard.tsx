@@ -122,7 +122,7 @@ function formatDate(value: string | null): string {
 
 const quickActions: QuickAction[] = [
     {
-        name: 'Meus processos',
+        name: 'Minhas solicitações',
         label: 'Viabilidades e renovações em seu nome',
         href: '/portal/solicitacoes',
         icon: <FileIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,

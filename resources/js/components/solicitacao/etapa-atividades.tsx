@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { CloseIcon } from '@/components/icons';
@@ -8,7 +9,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { SharedProps } from '@/types';
 // Reusa o CnaePicker da Fase 3 (busca incremental só de CNAEs ativos na tabela
 // oficial pela rota portal.cnaes.search — GET /portal/cnaes?search=...).
-import CnaePicker, { type CnaeOption } from '@/pages/portal/empresas/cnae-picker';
+import CnaePicker, { type CnaeOption } from '@/components/cnae/cnae-picker';
 
 interface CnaeItem {
     id: number;
@@ -356,7 +357,7 @@ export default function EtapaAtividades({
                             </label>
                         </div>
                         {errors.confirma_perda_condicao_sede && (
-                            <p className="mt-2 text-theme-xs text-error-500">{errors.confirma_perda_condicao_sede}</p>
+                            <FieldError>{errors.confirma_perda_condicao_sede}</FieldError>
                         )}
                     </CardContent>
                 </Card>

@@ -1,5 +1,6 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { GESTAO_NAV_GROUPS } from '@/navigation/gestao-nav';
 
 export interface BreadcrumbItem {
     label: string;
@@ -39,7 +40,32 @@ function BreadcrumbChevron() {
  * navegação à direita e ações opcionais — substitui os PageBreadcrumb
  * duplicados por página.
  */
+function grupoDaPagina(path: string): string | undefined {
+    const candidatos = GESTAO_NAV_GROUPS.flatMap((grupo) =>
+        grupo.items.map((item) => ({ grupo: grupo.label, href: item.href })),
+    );
+    const encontrado = candidatos
+        .filter((item) => path === item.href || path.startsWith(`${item.href}/`))
+        .sort((a, b) => b.href.length - a.href.length)[0];
+
+    return encontrado?.grupo;
+}
+
 export default function PageHeader({ title, breadcrumbs = [], actions }: PageHeaderProps) {
+    const { url } = usePage();
+    const path = url.split('?')[0] ?? '';
+    const grupo = grupoDaPagina(path);
+    const trilha = [...breadcrumbs];
+
+    if (grupo && grupo !== title && !trilha.some((item) => item.label === grupo)) {
+        const painel = trilha.findIndex((item) => item.href === '/gestao' || item.label === 'Painel');
+        const crumb = { label: grupo };
+
+        if (painel >= 0) {
+            trilha.splice(painel + 1, 0, crumb);
+        }
+    }
+
     return (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
@@ -48,7 +74,7 @@ export default function PageHeader({ title, breadcrumbs = [], actions }: PageHea
             </div>
             <nav aria-label="Trilha de navegação">
                 <ol className="flex flex-wrap items-center gap-1.5">
-                    {breadcrumbs
+                    {trilha
                         .filter((item) => item.label !== title)
                         .map((item) => (
                         <li key={item.label}>

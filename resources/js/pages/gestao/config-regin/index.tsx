@@ -1,4 +1,5 @@
-import { Form, Head, usePage } from '@inertiajs/react';
+import FieldError from '@/components/form/field-error';
+import { Form, Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
@@ -9,7 +10,6 @@ import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import GestaoLayout from '@/layouts/gestao-layout';
-import type { SharedProps } from '@/types';
 
 interface ReginConfig {
     em_producao: boolean;
@@ -26,7 +26,6 @@ interface Props {
 }
 
 export default function ConfigRegin({ config }: Props) {
-    const { flash } = usePage<SharedProps>().props;
     const [emProducao, setEmProducao] = useState(config.em_producao);
 
     return (
@@ -56,10 +55,6 @@ export default function ConfigRegin({ config }: Props) {
                             )}
                         </div>
 
-                        {flash.status && (
-                            <p className="text-theme-sm text-gray-700 dark:text-gray-200">{flash.status}</p>
-                        )}
-
                         <Form action="/gestao/config-regin" method="put" className="space-y-5">
                             {({ errors, processing }) => (
                                 <>
@@ -72,7 +67,7 @@ export default function ConfigRegin({ config }: Props) {
                                             onChange={setEmProducao}
                                         />
                                         {errors.em_producao && (
-                                            <p className="mt-1.5 text-theme-xs text-error-500">{errors.em_producao}</p>
+                                            <FieldError>{errors.em_producao}</FieldError>
                                         )}
                                     </div>
 
@@ -149,9 +144,9 @@ export default function ConfigRegin({ config }: Props) {
                             {({ errors, processing }) => (
                                 <div className="space-y-3">
                                     {errors.regin_connection && (
-                                        <p className="text-theme-sm break-all whitespace-pre-wrap text-error-500">
+                                        <FieldError>
                                             {errors.regin_connection}
-                                        </p>
+                                        </FieldError>
                                     )}
                                     <Button size="sm" type="submit" variant="outline" disabled={processing}>
                                         {processing ? 'Testando…' : 'Testar conexão na URL ativa'}

@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDownIcon } from '@/components/icons';
@@ -20,6 +20,10 @@ interface OptionSelectProps {
     disabled?: boolean;
     className?: string;
     emptyMessage?: string;
+    error?: boolean;
+    hint?: string;
+    /** Exibe um campo de busca dentro da lista. */
+    searchable?: boolean;
 }
 
 interface PosicaoPainel {
@@ -43,16 +47,32 @@ export default function OptionSelect({
     disabled = false,
     className = '',
     emptyMessage = 'Nenhuma opção disponível',
+    error = false,
+    hint,
+    searchable = false,
 }: OptionSelectProps) {
     const listaId = useId();
+    const hintId = useId();
     const gatilhoRef = useRef<HTMLButtonElement>(null);
     const listaRef = useRef<HTMLDivElement>(null);
     const ativoRef = useRef(0);
     const [aberto, setAberto] = useState(false);
     const [ativo, setAtivo] = useState(0);
+    const [busca, setBusca] = useState('');
     const [posicao, setPosicao] = useState<PosicaoPainel | null>(null);
 
     const selecionada = options.find((opcao) => opcao.value === value);
+    const visiveis = useMemo(() => {
+        const termo = busca.trim().toLocaleLowerCase('pt-BR');
+
+        if (!searchable || termo === '') {
+            return options;
+        }
+
+        return options.filter((opcao) =>
+            `${opcao.label} ${opcao.description ?? ''} ${opcao.meta ?? ''}`.toLocaleLowerCase('pt-BR').includes(termo),
+        );
+    }, [busca, options, searchable]);
     ativoRef.current = ativo;
 
     function escolher(opcao: OptionSelectOption | undefined) {
@@ -71,6 +91,7 @@ export default function OptionSelect({
         }
 
         const indice = options.findIndex((opcao) => opcao.value === value);
+        setBusca('');
         setAtivo(indice >= 0 ? indice : 0);
         setAberto(true);
     }
@@ -139,13 +160,13 @@ export default function OptionSelect({
                 return;
             }
 
-            if (options.length === 0) {
+            if (visiveis.length === 0) {
                 return;
             }
 
             if (evento.key === 'ArrowDown') {
                 evento.preventDefault();
-                setAtivo((indice) => Math.min(options.length - 1, indice + 1));
+                setAtivo((indice) => Math.min(visiveis.length - 1, indice + 1));
             } else if (evento.key === 'ArrowUp') {
                 evento.preventDefault();
                 setAtivo((indice) => Math.max(0, indice - 1));
@@ -154,10 +175,10 @@ export default function OptionSelect({
                 setAtivo(0);
             } else if (evento.key === 'End') {
                 evento.preventDefault();
-                setAtivo(options.length - 1);
+                setAtivo(visiveis.length - 1);
             } else if (evento.key === 'Enter') {
                 evento.preventDefault();
-                const opcao = options[ativoRef.current];
+                const opcao = visiveis[ativoRef.current];
 
                 if (opcao) {
                     onChange(opcao.value);
@@ -174,7 +195,7 @@ export default function OptionSelect({
             document.removeEventListener('pointerdown', aoPointer);
             document.removeEventListener('keydown', aoTecla);
         };
-    }, [aberto, onChange, options]);
+    }, [aberto, onChange, visiveis]);
 
     useEffect(() => {
         if (!aberto) {
@@ -215,11 +236,32 @@ export default function OptionSelect({
                       }}
                       className="fixed z-99999 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900"
                   >
+                      {searchable && (
+                          <div className="border-b border-gray-100 p-2 dark:border-gray-800">
+                              <label htmlFor={`${listaId}-busca`} className="sr-only">
+                                  Buscar opção
+                              </label>
+                              <input
+                                  id={`${listaId}-busca`}
+                                  type="search"
+                                  value={busca}
+                                  placeholder="Buscar…"
+                                  autoComplete="off"
+                                  onChange={(evento) => {
+                                      setBusca(evento.target.value);
+                                      setAtivo(0);
+                                  }}
+                                  className="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                              />
+                          </div>
+                      )}
                       <div className="flex flex-col gap-0.5 overflow-y-auto overscroll-contain p-1.5">
-                          {options.length === 0 ? (
-                              <p className="px-3 py-2.5 text-sm text-gray-500 dark:text-gray-400">{emptyMessage}</p>
+                          {visiveis.length === 0 ? (
+                              <p className="px-3 py-2.5 text-sm text-gray-500 dark:text-gray-400">
+                                  {busca.trim() !== '' ? 'Nenhuma opção encontrada' : emptyMessage}
+                              </p>
                           ) : (
-                              options.map((opcao, indice) => {
+                              visiveis.map((opcao, indice) => {
                                   const marcada = opcao.value === value;
                                   const destacada = indice === ativo;
 
@@ -286,13 +328,17 @@ export default function OptionSelect({
                 aria-haspopup="listbox"
                 aria-expanded={aberto}
                 aria-controls={listaId}
+                aria-invalid={error || undefined}
+                aria-describedby={hint ? hintId : undefined}
                 aria-activedescendant={aberto ? `${listaId}-opcao-${ativo}` : undefined}
                 title={selecionada?.label}
                 onClick={() => (aberto ? setAberto(false) : abrir())}
                 onKeyDown={aoTeclaGatilho}
-                className={`flex min-h-11 w-full items-center rounded-lg border border-gray-300 bg-transparent py-2.5 pr-10 pl-4 text-left text-sm shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/20 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:focus:border-brand-800 ${
-                    selecionada ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400'
-                }`}
+                className={`flex min-h-11 w-full items-center rounded-lg border bg-transparent py-2.5 pr-10 pl-4 text-left text-sm shadow-theme-xs focus:ring-3 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-900 ${
+                    error
+                        ? 'border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:border-error-500'
+                        : 'border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:focus:border-brand-800'
+                } ${selecionada ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400'}`}
             >
                 <span className="block min-w-0 flex-1 whitespace-normal break-words">
                     {selecionada?.label ?? placeholder}
@@ -304,6 +350,11 @@ export default function OptionSelect({
                     aria-hidden="true"
                 />
             </button>
+            {hint && (
+                <p id={hintId} role={error ? 'alert' : undefined} className={`pt-1.5 text-xs ${error ? 'text-error-500' : 'text-gray-500'}`}>
+                    {hint}
+                </p>
+            )}
             {painel}
         </div>
     );

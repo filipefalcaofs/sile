@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { useForm, usePage } from '@inertiajs/react';
 import type { Polygon } from 'geojson';
 import { useMemo, useState } from 'react';
@@ -407,7 +408,7 @@ export default function EtapaImovel({
                             </label>
                         </div>
                         {errors.wants_virtual_office_tenant && (
-                            <p className="mt-2 text-theme-xs text-error-500">{errors.wants_virtual_office_tenant}</p>
+                            <FieldError>{errors.wants_virtual_office_tenant}</FieldError>
                         )}
                     </fieldset>
 

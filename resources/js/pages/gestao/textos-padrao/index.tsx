@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Form, Head, router, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
@@ -97,7 +98,7 @@ function CreateStandardTextModal({ isOpen, onClose }: { isOpen: boolean; onClose
                                 placeholder="Texto do trecho pré-aprovado…"
                                 className={CONTENT_STYLES}
                             />
-                            {errors.content && <p className="mt-1.5 text-theme-xs text-error-500">{errors.content}</p>}
+                            {errors.content && <FieldError>{errors.content}</FieldError>}
                         </div>
                         <div>
                             <Label htmlFor="create-text-active">Situação</Label>
@@ -167,7 +168,7 @@ function EditStandardTextModal({ text, onClose }: { text: StandardTextItem; onCl
                                 required
                                 className={CONTENT_STYLES}
                             />
-                            {errors.content && <p className="mt-1.5 text-theme-xs text-error-500">{errors.content}</p>}
+                            {errors.content && <FieldError>{errors.content}</FieldError>}
                         </div>
                         <div>
                             <Label htmlFor={`edit-text-active-${text.id}`}>Situação</Label>
@@ -181,7 +182,7 @@ function EditStandardTextModal({ text, onClose }: { text: StandardTextItem; onCl
                                     { value: '0', label: 'Inativo' },
                                 ]}
                             />
-                            {errors.active && <p className="mt-1.5 text-theme-xs text-error-500">{errors.active}</p>}
+                            {errors.active && <FieldError>{errors.active}</FieldError>}
                         </div>
                         <div className="flex items-center justify-end gap-3">
                             <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>

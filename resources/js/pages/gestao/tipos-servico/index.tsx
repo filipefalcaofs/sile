@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Form, Head, router, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -181,7 +182,7 @@ function EditServiceTypeModal({ serviceType, onClose }: { serviceType: ServiceTy
                                     { value: '0', label: 'Inativo' },
                                 ]}
                             />
-                            {errors.active && <p className="mt-1.5 text-theme-xs text-error-500">{errors.active}</p>}
+                            {errors.active && <FieldError>{errors.active}</FieldError>}
                         </div>
                         <div className="flex items-center justify-end gap-3">
                             <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>

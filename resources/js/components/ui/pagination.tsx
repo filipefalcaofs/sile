@@ -21,6 +21,17 @@ interface PaginationProps {
  * Paginação do Laravel paginator no padrão do design system, com
  * contador "Mostrando X–Y de Z" quando a página fornece o meta.
  */
+function rotuloAcessivel(html: string): string {
+    return html
+        .replace(/<[^>]+>/g, '')
+        .replace(/&laquo;|&lsaquo;/g, '')
+        .replace(/&raquo;|&rsaquo;/g, '')
+        .replace(/&amp;/g, '&')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 export default function Pagination({ links, meta }: PaginationProps) {
     if (links.length <= 3) {
         return null;
@@ -45,6 +56,8 @@ export default function Pagination({ links, meta }: PaginationProps) {
                             key={index}
                             href={link.url}
                             preserveScroll
+                            aria-label={rotuloAcessivel(link.label)}
+                            aria-current={link.active ? 'page' : undefined}
                             className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-theme-sm font-medium transition ${
                                 link.active
                                     ? 'bg-brand-500 text-white'

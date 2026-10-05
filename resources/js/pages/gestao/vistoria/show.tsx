@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Head, Link, router, useHttp, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
@@ -948,7 +949,7 @@ function VistoriaConteudo({
                                     />
                                 </div>
 
-                                {erroPoligono && <p className="mt-2 text-sm text-error-500">{erroPoligono}</p>}
+                                {erroPoligono && <FieldError>{erroPoligono}</FieldError>}
                                 {editandoPoligono && (
                                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                                         Clique no mapa para adicionar vértices; arraste os marcadores para ajustar.
@@ -1505,6 +1506,7 @@ function VistoriaConteudo({
                                                         <a
                                                             href={anexo.download_url}
                                                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-white/[0.05]"
+                                                            aria-label="Visualizar anexo"
                                                             title="Visualizar anexo"
                                                         >
                                                             <EyeIcon className="size-4 fill-current" />
@@ -1513,8 +1515,9 @@ function VistoriaConteudo({
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setAnexoParaRemover(anexo)}
-                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-error-50 hover:text-error-500"
+                                                                aria-label="Remover anexo"
                                                                 title="Remover anexo"
+                                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-error-50 hover:text-error-500 dark:hover:bg-error-500/10 dark:hover:text-error-400"
                                                             >
                                                                 <TrashIcon className="size-4 fill-current" />
                                                             </button>
@@ -1570,7 +1573,7 @@ function VistoriaConteudo({
                                         : 'border-brand-200 focus:border-brand-300 focus:ring-brand-500/20 dark:border-brand-500/30'
                                 }`}
                             />
-                            {erroParecer && <p className="mt-1.5 text-xs text-error-500">{erroParecer}</p>}
+                            {erroParecer && <FieldError>{erroParecer}</FieldError>}
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 border-t border-gray-100 pt-6 sm:grid-cols-3 dark:border-gray-800">

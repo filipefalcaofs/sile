@@ -1,9 +1,11 @@
+import FieldError from '@/components/form/field-error';
 import { Form, Head, router, useHttp } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
+import SearchableSelect from '@/components/form/searchable-select';
 import Select from '@/components/form/select';
 import { AlertIcon } from '@/components/icons';
 import Button from '@/components/ui/button';
@@ -112,7 +114,7 @@ function StartCard() {
                                         {consultaCpf.processing ? 'Buscando...' : 'Buscar CPF'}
                                     </Button>
                                 </div>
-                                {cpfErro && <p className="mt-1.5 text-theme-xs text-error-500">{cpfErro}</p>}
+                                {cpfErro && <FieldError>{cpfErro}</FieldError>}
                                 {cpfResumo && !cpfErro && (
                                     <p className="mt-1.5 text-theme-xs text-gray-500 dark:text-gray-400">{cpfResumo}</p>
                                 )}
@@ -193,12 +195,12 @@ function OpenRequestCard({ companies, serviceTypes }: { companies: CompanyOption
                                     options={serviceTypes.map((type) => ({ value: String(type.id), label: type.name }))}
                                 />
                                 {errors.service_type_id && (
-                                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.service_type_id}</p>
+                                    <FieldError>{errors.service_type_id}</FieldError>
                                 )}
                             </div>
                             <div>
                                 <Label htmlFor="company_id">Empresa</Label>
-                                <Select
+                                <SearchableSelect
                                     id="company_id"
                                     name="company_id"
                                     value={companyId}
@@ -210,7 +212,7 @@ function OpenRequestCard({ companies, serviceTypes }: { companies: CompanyOption
                                     }))}
                                 />
                                 {errors.company_id && (
-                                    <p className="mt-1.5 text-theme-xs text-error-500">{errors.company_id}</p>
+                                    <FieldError>{errors.company_id}</FieldError>
                                 )}
                             </div>
                             <div>

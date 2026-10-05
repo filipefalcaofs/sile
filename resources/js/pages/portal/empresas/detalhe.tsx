@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import PageHeader from '@/components/app/page-header';
 import Input from '@/components/form/input';
+import UfSelect from '@/components/form/uf-select';
 import MaskedInput from '@/components/form/masked-input';
 import Label from '@/components/form/label';
 import { CloseIcon } from '@/components/icons';
@@ -14,7 +15,7 @@ import ConfirmDialog from '@/components/ui/confirm-dialog';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import PortalLayout from '@/layouts/portal-layout';
 import type { SharedProps } from '@/types';
-import CnaePicker, { type CnaeOption } from './cnae-picker';
+import CnaePicker, { type CnaeOption } from '@/components/cnae/cnae-picker';
 
 interface CompanyDetail {
     id: number;
@@ -229,14 +230,11 @@ function CompanyDataCard({ company, abilities }: { company: CompanyDetail; abili
                         {textField('city', 'Município')}
                         <div>
                             <Label htmlFor="state">UF</Label>
-                            <Input
+                            <UfSelect
                                 id="state"
-                                type="text"
                                 name="state"
-                                maxLength={2}
                                 value={data.state}
-                                onChange={(event) => setData('state', event.target.value.toUpperCase())}
-                                placeholder="BA"
+                                onChange={(valor) => setData('state', valor)}
                                 disabled={readOnly}
                                 error={!!errors.state}
                                 hint={errors.state}

@@ -1,10 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
-import Input from '@/components/form/input';
 import { Surface } from '@/components/motion';
-import Label from '@/components/form/label';
-import { EyeCloseIcon, EyeIcon } from '@/components/icons';
+import PasswordField from '@/components/form/password-field';
 import Button from '@/components/ui/button';
 import SettingsLayout from '@/layouts/settings-layout';
 
@@ -12,43 +9,6 @@ interface PasswordProps {
     passwordRules: string;
 }
 
-interface PasswordFieldProps {
-    id: string;
-    name: string;
-    label: string;
-    autoComplete: string;
-    error?: string;
-    hint?: string;
-}
-
-function PasswordField({ id, name, label, autoComplete, error, hint }: PasswordFieldProps) {
-    const [show, setShow] = useState(false);
-
-    return (
-        <div>
-            <Label htmlFor={id}>{label}</Label>
-            <div className="relative">
-                <Input
-                    id={id}
-                    type={show ? 'text' : 'password'}
-                    name={name}
-                    autoComplete={autoComplete}
-                    required
-                    error={!!error}
-                    hint={error ?? hint}
-                />
-                <button
-                    type="button"
-                    onClick={() => setShow((current) => !current)}
-                    aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}
-                    className="absolute top-3 right-4 z-30 cursor-pointer text-gray-500 dark:text-gray-400"
-                >
-                    {show ? <EyeIcon className="size-5" /> : <EyeCloseIcon className="size-5" />}
-                </button>
-            </div>
-        </div>
-    );
-}
 
 export default function Password({ passwordRules }: PasswordProps) {
     return (

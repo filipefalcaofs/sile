@@ -67,8 +67,13 @@ export default function ConfirmDialog({
                     <Button variant="outline" onClick={onClose} disabled={processing}>
                         {cancelLabel}
                     </Button>
-                    <Button onClick={onConfirm} disabled={processing} className={styles.confirmClass}>
-                        {processing ? 'Processando...' : confirmLabel}
+                    <Button
+                        variant={variant === 'danger' ? 'danger' : 'primary'}
+                        onClick={onConfirm}
+                        loading={processing}
+                        className={variant === 'warning' ? styles.confirmClass : undefined}
+                    >
+                        {confirmLabel}
                     </Button>
                 </div>
             </div>

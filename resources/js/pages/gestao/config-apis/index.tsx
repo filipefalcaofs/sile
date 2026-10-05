@@ -1,3 +1,4 @@
+import FieldError from '@/components/form/field-error';
 import { Form, Head, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -63,7 +64,7 @@ function Escolha({ name, id, value, options }: { name: string; id: string; value
 }
 
 export default function ConfigApis({ aba, abas }: Props) {
-    const { flash, errors } = usePage<SharedProps>().props;
+    const { errors } = usePage<SharedProps>().props;
     const inicial = abas.some((item) => item.id === aba) ? aba : (abas[0]?.id ?? '');
     const [ativa, setAtiva] = useState(inicial);
     const selecionada = abas.find((item) => item.id === ativa) ?? abas[0];
@@ -79,8 +80,6 @@ export default function ConfigApis({ aba, abas }: Props) {
                     Endereços e credenciais das integrações em uso. A alteração vale na hora, sem novo deploy. Senha e
                     token gravados não são exibidos.
                 </p>
-
-                {flash.status && <p className="text-theme-sm text-gray-700 dark:text-gray-200">{flash.status}</p>}
 
                 <div className="border-b border-gray-200 dark:border-gray-800">
                     <nav role="tablist" aria-label="APIs" className="-mb-px flex flex-wrap gap-1">
@@ -130,7 +129,7 @@ export default function ConfigApis({ aba, abas }: Props) {
                                                     return (
                                                         <div key={campo.id}>
                                                             <Interruptor name={name} label={campo.rotulo} checked={campo.valor === true} />
-                                                            {erro && <p className="mt-1.5 text-theme-xs text-error-500">{erro}</p>}
+                                                            {erro && <FieldError>{erro}</FieldError>}
                                                         </div>
                                                     );
                                                 }
@@ -145,7 +144,7 @@ export default function ConfigApis({ aba, abas }: Props) {
                                                                 value={typeof campo.valor === 'string' ? campo.valor : ''}
                                                                 options={campo.opcoes}
                                                             />
-                                                            {erro && <p className="mt-1.5 text-theme-xs text-error-500">{erro}</p>}
+                                                            {erro && <FieldError>{erro}</FieldError>}
                                                         </div>
                                                     );
                                                 }
@@ -193,7 +192,7 @@ export default function ConfigApis({ aba, abas }: Props) {
                                             {({ processing }) => (
                                                 <div className="space-y-3">
                                                     {erroTeste && (
-                                                        <p className="text-theme-sm break-all whitespace-pre-wrap text-error-500">{erroTeste}</p>
+                                                        <FieldError>{erroTeste}</FieldError>
                                                     )}
                                                     <Button size="sm" type="submit" variant="outline" disabled={processing}>
                                                         {processing ? 'Testando…' : 'Testar conexão'}
