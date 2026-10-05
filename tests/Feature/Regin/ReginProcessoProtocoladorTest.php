@@ -86,6 +86,20 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertNotNull($processo->protocol_number);
     }
 
+    public function test_rowset_em_maiusculas_como_a_juceb_envia_tambem_protocola(): void
+    {
+        $corpo = ['ROWSET' => $this->ruc()['rowset']];
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($corpo));
+
+        $this->assertNotNull($processo);
+        $this->assertSame('43747', $processo->external_reference);
+        $this->assertSame(834.0, (float) $processo->used_area_m2);
+        $this->assertSame('Rua das Flores', $processo->address_street);
+        $this->assertSame('12345678', $processo->property_registration);
+        $this->assertSame(2, $processo->cnaes()->count());
+    }
+
     public function test_ruc_sem_cnae_principal_nao_protocola(): void
     {
         $corpo = $this->ruc();
