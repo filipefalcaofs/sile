@@ -1754,7 +1754,7 @@ export default function FichaAnaliseShow({
                 )}
 
                 <Card>
-                    <CardHeader title="Dados da Viabilidade" description="Paridade com a ficha do legado (SAPS)." />
+                    <CardHeader title="Dados da Viabilidade" description="Empresa e imóvel desta solicitação." />
                     <CardContent>
                         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <DescItem label="Razão Social">{valorOuTraco(dadosTvl.razao_social)}</DescItem>
@@ -2177,7 +2177,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Condicionantes"
-                                description="Obrigações que o requerente precisa cumprir para a atividade ficar permitida neste local. O que estiver nesta lista entra no parecer e no TVL."
+                                description="Obrigações que o requerente precisa cumprir para a atividade ficar permitida neste local. O que estiver nesta lista entra no parecer."
                             />
                             <CardContent>
                                 <p className="mb-4 text-theme-sm text-gray-600 dark:text-gray-300">
@@ -2592,7 +2592,7 @@ export default function FichaAnaliseShow({
                         {processo.renovacao && (
                             <span className="mt-3 flex flex-col gap-3 text-left font-normal text-gray-700 dark:text-gray-300">
                                 <span>
-                                    TVL {processo.tvl_numero ?? '—'}. A renovação não gera número novo: informe o tipo
+                                    Viabilidade {processo.tvl_numero ?? '—'}. A renovação não gera número novo: informe o tipo
                                     liberado e a nova validade.
                                 </span>
                                 <label className="flex min-h-11 items-center gap-2 text-sm">
@@ -2601,7 +2601,7 @@ export default function FichaAnaliseShow({
                                         checked={condicionantesAtendidos}
                                         onChange={(event) => setCondicionantesAtendidos(event.target.checked)}
                                     />
-                                    Condicionantes do TVL provisório atendidos
+                                    Condicionantes da viabilidade provisória atendidos
                                 </label>
                                 <label className="flex flex-col gap-1 text-sm">
                                     Tipo liberado
@@ -3603,7 +3603,7 @@ function AbrigadosPanel({
                         <table className="w-full text-left text-theme-sm">
                             <thead>
                                 <tr className="text-theme-xs font-medium tracking-wide text-gray-400 uppercase dark:text-gray-500">
-                                    <th className="pb-2 pr-3">Nº TVL</th>
+                                    <th className="pb-2 pr-3">Nº da viabilidade</th>
                                     <th className="pb-2 pr-3">Razão social</th>
                                     <th className="pb-2">Validade</th>
                                 </tr>

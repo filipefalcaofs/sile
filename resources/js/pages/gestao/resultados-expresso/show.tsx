@@ -379,8 +379,8 @@ export default function ResultadoExpressoShow({ decisao, transmissao, explicacao
                         <div className="mt-4 flex items-start gap-3 rounded-xl border border-blue-light-200 bg-blue-light-50 p-4 dark:border-blue-light-500/30 dark:bg-blue-light-500/15">
                             <InfoIcon className="size-5 shrink-0 fill-current text-blue-light-500" />
                             <p className="text-theme-sm text-gray-600 dark:text-gray-300">
-                                Canal oficial ao cidadão: <strong>Regin/SEFAZ</strong>. A emissão do documento (TVL/PDF)
-                                é função da retaguarda; aqui a decisão é apenas consultada.
+                                Canal oficial ao cidadão: <strong>Regin/SEFAZ</strong>. O PDF interno da viabilidade
+                                locacional é função da retaguarda; aqui a decisão é apenas consultada.
                             </p>
                         </div>
                     </CardContent>

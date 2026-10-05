@@ -30,7 +30,7 @@ class ServiceDeclarationSeeder extends Seeder
 
         $declaracoes = [
             1 => 'Declaro que o endereço e as atividades da viabilidade permanecem os mesmos e que não serão alterados nesta renovação.',
-            2 => 'Declaro que os condicionantes do TVL provisório estão atendidos no momento da renovação.',
+            2 => 'Declaro que os condicionantes da viabilidade provisória estão atendidos no momento da renovação.',
         ];
 
         foreach ($declaracoes as $version => $body) {

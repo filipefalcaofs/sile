@@ -23,7 +23,7 @@ import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 /**
- * Linha do relatório "Tempo de Emissão de TVL" (Tela R2 — SAPS): um processo
+ * Linha do relatório "Tempo de emissão da viabilidade locacional" (Tela R2 — SAPS): um processo
  * DECIDIDO no recorte com o tempo Emissão−Abertura em minutos ÚTEIS. Campos
  * anuláveis degradam para travessão — nunca um dado inventado. Os blocos DAM não
  * são modelados no Viabiliza (vêm em branco) e o `tipo` é sempre "Viabilidade" (a
@@ -286,7 +286,7 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
         { id: 'dam_valor', header: 'DAM Valor', cell: (linha) => linha.dam_valor ?? '—' },
         {
             id: 'tvl_disponivel',
-            header: 'TVL Disponível',
+            header: 'PDF disponível',
             cell: (linha) => (
                 <span className="inline-flex flex-wrap items-center gap-2">
                     <DisponivelBadge disponivel={linha.tvl_disponivel} />
@@ -296,7 +296,7 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
         },
         {
             id: 'tvl_numero',
-            header: 'Nº TVL',
+            header: 'Nº da viabilidade',
             cellClassName: 'whitespace-nowrap font-medium text-gray-800 dark:text-white/90',
             cell: (linha) => linha.tvl_numero ?? '—',
         },
@@ -323,13 +323,13 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
 
     return (
         <>
-            <Head title="Tempo de Emissão de TVL" />
+            <Head title="Tempo de emissão da viabilidade locacional" />
             <PageHeader
-                title="Tempo de Emissão de TVL"
+                title="Tempo de emissão da viabilidade locacional"
                 breadcrumbs={[
                     { label: 'Painel', href: '/gestao' },
                     { label: 'Indicadores' },
-                    { label: 'Tempo de Emissão de TVL' },
+                    { label: 'Tempo de emissão da viabilidade locacional' },
                 ]}
             />
 
@@ -339,7 +339,7 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
                 <Card>
                     <CardHeader
                         title="Filtros"
-                        description="Recorte por serviço, período de emissão, resultado e CNAE. O período usa a data de emissão do TVL. Sem processos no recorte, a tabela fica vazia."
+                        description="Recorte por serviço, período, resultado e CNAE. O período usa a data da decisão. Sem processos no recorte, a tabela fica vazia."
                         actions={<ExportMenu url={URL_TEMPO_EMISSAO_TVL} params={exportParams} />}
                     />
                     <CardContent>
@@ -409,7 +409,7 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
                 <Card>
                     <CardHeader
                         title="Processos e tempo de emissão"
-                        description="Cada linha é um processo decidido no recorte com o tempo entre a abertura e a emissão do TVL. A exportação (CSV/Excel/PDF) entrega exatamente este recorte."
+                        description="Cada linha é um processo decidido no recorte com o tempo entre a abertura e a decisão. A exportação (CSV/Excel/PDF) entrega exatamente este recorte."
                         actions={
                             <div className="flex flex-wrap items-center gap-3">
                                 <SeletorColunas
@@ -438,13 +438,13 @@ export default function TempoEmissaoTvl({ relatorio, servicos, filtros, perPageO
                                     <EmptyState
                                         title={
                                             filtrando
-                                                ? 'Nenhum TVL emitido para os filtros'
-                                                : 'Nenhum TVL emitido no período'
+                                                ? 'Nenhuma viabilidade decidida para os filtros'
+                                                : 'Nenhuma viabilidade decidida no período'
                                         }
                                         description={
                                             filtrando
                                                 ? 'Ajuste o serviço, o período, o resultado ou o CNAE e tente novamente.'
-                                                : 'Quando houver processos decididos, o tempo de emissão do TVL aparece aqui.'
+                                                : 'Quando houver processos decididos, o tempo até a decisão aparece aqui.'
                                         }
                                     />
                                 }

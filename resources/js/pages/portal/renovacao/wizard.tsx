@@ -33,7 +33,7 @@ interface Contato {
     phone: string | null;
 }
 
-const passos = ['Confirmar TVL', 'Contato', 'Declarações', 'Revisar'];
+const passos = ['Confirmar viabilidade', 'Contato', 'Declarações', 'Revisar'];
 
 export default function RenovacaoWizard({
     origem,
@@ -99,7 +99,7 @@ export default function RenovacaoWizard({
             </ol>
 
             <Card>
-                <CardHeader title={passos[passo]} description={origem.numero ? `TVL ${origem.numero}` : undefined} />
+                <CardHeader title={passos[passo]} description={origem.numero ? `Viabilidade ${origem.numero}` : undefined} />
                 <CardContent className="flex flex-col gap-6">
                     <StepTransition stepKey={String(passo)}>
                     {passo === 0 && (
@@ -200,7 +200,7 @@ export default function RenovacaoWizard({
                     {passo === 3 && (
                         <div className="flex flex-col gap-3 text-sm text-gray-700 dark:text-gray-300">
                             <p>
-                                <span className="text-gray-500">TVL </span>
+                                <span className="text-gray-500">Viabilidade </span>
                                 {origem.numero} — {origem.empresa}
                             </p>
                             <p>

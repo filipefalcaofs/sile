@@ -40,7 +40,7 @@ class ViabilityServiceTypeSeeder extends Seeder
             ['code' => 'viabilidade-1-estabelecimento', 'name' => 'Viabilidade — primeiro estabelecimento'],
             ['code' => 'alteracao-endereco', 'name' => 'Alteração de endereço'],
             ['code' => 'alteracao-atividade', 'name' => 'Alteração de atividade'],
-            ['code' => 'renovacao-tvl', 'name' => 'Renovação de TVL'],
+            ['code' => 'renovacao-tvl', 'name' => 'Renovação de viabilidade locacional'],
         ];
     }
 }

@@ -34,7 +34,7 @@ final class RelatorioSedeReportSource implements ReportSource
             titulo: 'Relatório sede × abrigados de escritório virtual',
             colunas: [
                 ['key' => 'tipo', 'label' => 'Tipo'],
-                ['key' => 'tvl', 'label' => 'TVL'],
+                ['key' => 'tvl', 'label' => 'Nº da viabilidade'],
                 ['key' => 'razao_social', 'label' => 'Razão social'],
                 ['key' => 'data_emissao', 'label' => 'Data de emissão'],
                 ['key' => 'inscricao', 'label' => 'Inscrição imobiliária'],

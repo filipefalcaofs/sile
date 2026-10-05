@@ -469,7 +469,7 @@ class ReginProcessoProtocolador
         return ViabilityServiceType::query()->firstOrCreate(
             ['code' => 'tvl'],
             [
-                'name' => 'Termo de Viabilidade de Localização',
+                'name' => 'Viabilidade locacional',
                 'flow_hint' => 'expresso',
                 'active' => true,
             ],

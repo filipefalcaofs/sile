@@ -35,7 +35,7 @@ class TvlDocumentController extends Controller
     {
         $decision = $viabilityRequest->decision;
 
-        abort_if($decision === null, 422, 'O processo ainda não possui decisão para emitir o TVL.');
+        abort_if($decision === null, 422, 'O processo ainda não possui decisão para gerar o PDF da viabilidade locacional.');
 
         try {
             $document = $this->tvlPdf->generate($decision, $request->user());
@@ -63,7 +63,7 @@ class TvlDocumentController extends Controller
         $this->audit->log(
             'analise',
             'tvl-download',
-            "Download do TVL {$tvlDocument->verification_code}",
+            "Download do PDF da viabilidade locacional {$tvlDocument->verification_code}",
             [
                 'tvl_document_id' => $tvlDocument->id,
                 'viability_decision_id' => $tvlDocument->viability_decision_id,
@@ -74,7 +74,7 @@ class TvlDocumentController extends Controller
 
         return Storage::disk($tvlDocument->disk)->download(
             $tvlDocument->path,
-            "tvl-{$tvlDocument->verification_code}.pdf",
+            "viabilidade-{$tvlDocument->verification_code}.pdf",
         );
     }
 

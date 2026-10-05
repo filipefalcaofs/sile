@@ -256,7 +256,7 @@ export default function Show({
                                     <span className="font-medium">{processo.protocol_number ?? '—'}</span>
                                 </DescItem>
                                 <DescItem label="Protocolo BAP">{processo.bap ?? '—'}</DescItem>
-                                <DescItem label="Produto TVL">
+                                <DescItem label="Nº da viabilidade">
                                     {processo.tvl_product_number ? (
                                         <span className="inline-flex flex-wrap items-center justify-end gap-2">
                                             <span>{processo.tvl_product_number}</span>

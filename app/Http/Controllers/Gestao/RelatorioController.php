@@ -292,7 +292,7 @@ class RelatorioController extends Controller
             return $this->exportar(app(RelatorioTempoEmissaoTvlReportSource::class), $filtros, $formato, $request);
         }
 
-        $this->auditarConsulta('consulta-tempo-emissao-tvl', 'Consulta do relatório de tempo de emissão de TVL', $filtros);
+        $this->auditarConsulta('consulta-tempo-emissao-tvl', 'Consulta do relatório de tempo de emissão da viabilidade locacional', $filtros);
 
         return Inertia::render('gestao/relatorios/tempo-emissao-tvl', [
             'relatorio' => $this->tempoEmissaoTvl

@@ -291,7 +291,7 @@ class PainelOperacaoService
 
         $resultado[] = [
             'chave' => 'emissao_tvl',
-            'label' => 'Emissão do TVL',
+            'label' => 'Emissão da viabilidade',
             'media_dias' => $tvl['media_minutos'] === null ? null : round($tvl['media_minutos'] / 1440, 1),
             'meta_dias' => null,
             'amostras' => $tvl['amostras'],

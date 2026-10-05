@@ -404,7 +404,7 @@ export default function SimulacaoRegin({
                                         <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                                             <Dado label="Protocolo">{relatorio.protocol_number ?? '—'}</Dado>
                                             <Dado label="Situação">{statusLabel(relatorio.status)}</Dado>
-                                            <Dado label="TVL">{relatorio.tvl ?? '—'}</Dado>
+                                            <Dado label="Viabilidade">{relatorio.tvl ?? '—'}</Dado>
                                             <Dado label="Número SEDUR">{relatorio.processo}</Dado>
                                         </dl>
                                         {relatorio.processo_url && (

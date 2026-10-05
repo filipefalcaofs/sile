@@ -193,7 +193,7 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 permission: 'consultar-relatorios',
             },
             {
-                name: 'Tempo de emissão de TVL',
+                name: 'Emissão da viabilidade',
                 href: '/gestao/relatorios/tempo-emissao-tvl',
                 icon: 'seal',
                 permission: 'consultar-relatorios',

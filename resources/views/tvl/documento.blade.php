@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <title>Termo de Viabilidade de Localização</title>
+    <title>Viabilidade locacional</title>
     <style>
         * { font-family: "DejaVu Sans", sans-serif; }
         body { font-size: 12px; color: #1a1a1a; margin: 0; line-height: 1.4; }
@@ -30,8 +30,8 @@
     <div class="cabecalho">
         <div class="orgao">Viabiliza &mdash; Sistema de Licenciamento Eletrônico</div>
         <div class="orgao">Prefeitura Municipal de Salvador &mdash; SEDUR</div>
-        <h1>Termo de Viabilidade de Localização (TVL)</h1>
-        <div class="numero-produto">Nº do produto: {{ $tvl_product_number ?? '—' }}</div>
+        <h1>Viabilidade locacional</h1>
+        <div class="numero-produto">Nº da viabilidade: {{ $tvl_product_number ?? '—' }}</div>
     </div>
 
     <p class="nota-interna">

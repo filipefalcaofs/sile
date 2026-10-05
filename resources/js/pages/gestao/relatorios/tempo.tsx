@@ -338,11 +338,11 @@ export default function TempoAnalise({
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
                     <KpiCard
-                        label="Tempo médio de emissão do TVL"
+                        label="Tempo médio de emissão da viabilidade"
                         value={formatarDuracao(tempoEmissaoTvl.media_minutos)}
                         note={
                             tempoEmissaoTvl.media_minutos === null
-                                ? 'sem TVL emitido no período'
+                                ? 'sem viabilidade decidida no período'
                                 : `${numberFormat.format(tempoEmissaoTvl.amostras)} ${tempoEmissaoTvl.amostras === 1 ? 'documento' : 'documentos'}`
                         }
                         icon={<CheckCircleIcon className="size-6" />}
@@ -467,7 +467,7 @@ export default function TempoAnalise({
 
                 <Card>
                     <CardHeader
-                        title="Sedes de escritório virtual (SAPS)"
+                        title="Sedes de escritório virtual"
                         description="A relação das sedes de escritório virtual — empresa, CNPJ, protocolo e resultado — é exportada pelo relatório de escritório virtual sobre o mesmo recorte de período."
                         actions={
                             <ExportMenu url={URL_ESCRITORIO_VIRTUAL} params={sedesParams} label="Exportar sedes de escritório virtual" />

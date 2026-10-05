@@ -49,7 +49,7 @@ class VerificacaoDocumentoService
 
             return [
                 'valido' => true,
-                'tipo' => 'Termo de Viabilidade de Localização (TVL)',
+                'tipo' => 'Viabilidade locacional',
                 'protocolo' => $documento->viabilityDecision?->viabilityRequest?->protocol_number,
                 'data_label' => 'Emitido em',
                 'data' => $documento->generated_at?->toIso8601String(),
