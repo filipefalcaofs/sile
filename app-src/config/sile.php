@@ -55,11 +55,6 @@ return [
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,
         'fluxo_expresso' => true,
-        // Bypass de HOMOLOGAÇÃO do motor de risco (simulação REGIN): ligado,
-        // processo nascido do simulador com veredito pendente (zona oficial
-        // pendente SEDUR) emite TVL como permitido. DESLIGADO por default —
-        // NUNCA ligar em produção; remoção definitiva antes do go-live.
-        'simulacao_protocolo' => false,
         'notificacao_resultado_expresso' => true,
         'analise_tecnica' => true,
         // Toggles de canal da comunicação multicanal (EP11). E-mail e in-app
@@ -290,14 +285,6 @@ return [
             'regin_recebe' => ['por_minuto' => 60],
         ],
     ],
-    // Reprocessamento por etapa do motor (spec 2026-10-05): constantes técnicas.
-    'reprocessamento' => [
-        'intervalo_inicial_min' => 15,
-        'tentativas_iniciais' => 4,
-        'intervalo_posterior_min' => 60,
-        'janela_horas' => 24,
-    ],
-
     'integrations' => [
         // Constantes técnicas (timeout/retries/cache_ttl) ficam SÓ aqui,
         // nunca no registry — precedente [02-02]. base_url é parametrizável.

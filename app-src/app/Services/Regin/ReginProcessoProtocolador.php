@@ -15,6 +15,8 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Rules\ValidCpf;
+use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -30,7 +32,9 @@ class ReginProcessoProtocolador
 {
     public function __construct(
         private ProtocolarSolicitacaoService $protocolar,
+        private FluxoExpressoService $expresso,
         private ReginTipoImovelApplier $tipoImovel,
+        private PoligonoEnderecamentoService $poligonoLote,
     ) {}
 
     public function protocolar(ReginRecebimento $recebimento): ?ViabilityRequest
@@ -41,7 +45,10 @@ class ReginProcessoProtocolador
             return $this->protocolarDeclaracao($recebimento, RecebimentoProcesso::fromStored($corpo['dados']));
         }
 
-        $rowset = $this->rowset($corpo);
+        $ruc = $corpo;
+        $rowset = is_array($ruc['rowset'] ?? null)
+            ? $ruc['rowset']
+            : (is_array($ruc['ROWSET'] ?? null) ? $ruc['ROWSET'] : []);
 
         $cnaes = $this->cnaes($rowset);
         $area = $this->area($rowset);
@@ -79,24 +86,6 @@ class ReginProcessoProtocolador
         return $solicitacao->fresh() ?? $solicitacao;
     }
 
-    /**
-     * A OpenAPI da integração define `rowset`, mas o envio real da JUCEB chega
-     * como `ROWSET` (conversão do XML). Aceita as duas grafias.
-     *
-     * @param  array<string, mixed>  $corpo
-     * @return array<string, mixed>
-     */
-    private function rowset(array $corpo): array
-    {
-        foreach (['rowset', 'ROWSET'] as $chave) {
-            if (is_array($corpo[$chave] ?? null)) {
-                return $corpo[$chave];
-            }
-        }
-
-        return [];
-    }
-
     private function protocolarDeclaracao(ReginRecebimento $recebimento, RecebimentoProcesso $dados): ?ViabilityRequest
     {
         if (! $dados->podeProtocolar()) {
@@ -129,6 +118,7 @@ class ReginProcessoProtocolador
             'address_zip' => $dados->cep,
             'address_reference' => $dados->pontoReferencia,
             'property_registration' => $dados->inscricaoImobiliaria,
+            'property_polygon_geojson' => $dados->poligonoDeclarado,
             'has_independent_access' => $dados->acessosIndependentes === true,
             'is_virtual_office' => $dados->escritorioVirtual === true,
             'wants_virtual_office_tenant' => $dados->atividadeAbrigadaEmEscritorioVirtual,
@@ -151,18 +141,29 @@ class ReginProcessoProtocolador
 
         $this->tipoImovel->apply($solicitacao, $dados->tipoImovel);
 
-        // O CODLOG declarado entra antes do protocolo: a cadeia do lote roda
-        // dentro dele e o evento já enfileira a decisão, que não pode correr
-        // antes desse dado.
-        if ($dados->codlog !== null) {
-            $solicitacao->forceFill(['cod_log' => $dados->codlog])->save();
-        }
-
         $this->protocolar->protocol($solicitacao->fresh() ?? $solicitacao, $ator);
 
-        if ($dados->dataAbertura !== null) {
-            $solicitacao->forceFill(['protocoled_at' => $dados->dataAbertura])->save();
+        $ajuste = [];
+
+        if ($dados->codlog !== null) {
+            $ajuste['cod_log'] = $dados->codlog;
         }
+
+        if ($dados->dataAbertura !== null) {
+            $ajuste['protocoled_at'] = $dados->dataAbertura;
+        }
+
+        if ($ajuste !== []) {
+            $solicitacao->forceFill($ajuste)->save();
+        }
+
+        // Geometria oficial do lote ANTES da decisão: é ela que zoneia pela
+        // maior porção. Já fora da transação — fonte indisponível não desfaz
+        // o processo. O polígono declarado no REGIN fica em
+        // property_polygon_geojson e só vale se a cadeia oficial não achar.
+        $this->poligonoLote->aplicar($solicitacao->fresh() ?? $solicitacao);
+
+        $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $ator);
 
         return $solicitacao->fresh() ?? $solicitacao;
     }

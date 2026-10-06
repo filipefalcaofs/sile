@@ -87,6 +87,14 @@ class TerritoryService
 
         $feature = $this->spatial->containingFeature($layer, $lng, $lat);
 
+        if ($feature === null && $type === GeoLayerType::Zona) {
+            $remoto = $this->identifyZonaFromGeoServer($lat, $lng);
+
+            if ($remoto !== null && ($remoto['status'] ?? null) === 'identificado') {
+                return $remoto;
+            }
+        }
+
         return $feature === null
             ? $this->dimNaoEncontrado($layer->version)
             : $this->dimIdentificado($layer->version, $feature['properties']);
@@ -254,6 +262,45 @@ class TerritoryService
             'motivo' => null,
             'versao_camada' => $versao,
         ];
+    }
+
+    /**
+     * O CODLOG da inscrição imobiliária é o logradouro do processo. A via mais
+     * próxima pode não existir na camada local; sem esse código o Quadro 10
+     * (observações) e o Quadro 11A não enxergam a via oficial.
+     */
+    public function comCodLogOficial(TerritoryResult $territorio, ?string $codLog): TerritoryResult
+    {
+        $codLog = trim((string) $codLog);
+
+        if ($codLog === '') {
+            return $territorio;
+        }
+
+        $propriedades = is_array($territorio->via['propriedades'] ?? null) ? $territorio->via['propriedades'] : [];
+        $atual = $propriedades['CODLOG'] ?? null;
+        $atual = is_string($atual) || is_numeric($atual) ? trim((string) $atual) : '';
+
+        if (($territorio->via['status'] ?? null) === 'identificado' && $atual === $codLog) {
+            return $territorio;
+        }
+
+        $via = $this->comClasseViaria([
+            'status' => 'identificado',
+            'nome' => $territorio->via['nome'] ?? null,
+            'propriedades' => [...$propriedades, 'CODLOG' => $codLog],
+            'motivo' => null,
+            'versao_camada' => 'inscricao-imobiliaria',
+            'distancia_m' => $territorio->via['distancia_m'] ?? null,
+        ]);
+
+        return new TerritoryResult(
+            bairro: $territorio->bairro,
+            via: $via,
+            zona: $territorio->zona,
+            lote: $territorio->lote,
+            restricoes: $territorio->restricoes,
+        );
     }
 
     /**

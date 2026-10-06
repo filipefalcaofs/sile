@@ -5,11 +5,14 @@ namespace Tests\Unit\Geo;
 use App\Enums\GeoLayerType;
 use App\Models\Activity;
 use App\Models\GeoLayer;
+use App\Models\GeoServerLayer;
 use App\Services\Geo\GeoServerWfsZonaClient;
 use App\Services\Geo\GeoServerZonaHit;
 use App\Services\Geo\TerritoryService;
 use App\Support\Audit\AuditService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
 
@@ -153,6 +156,33 @@ class TerritoryServiceTest extends TestCase
         $this->assertSame('ZPR 3', $result->zona['propriedades']['SUBZONA']);
         $this->assertSame('geoserver-wfs', $result->zona['versao_camada']);
         $this->assertNotContains('zona', $this->fake->containingCalls);
+    }
+
+    public function test_container_consulta_o_geoserver_quando_a_zona_local_esta_pendente(): void
+    {
+        Http::preventStrayRequests();
+        config(['sile.features.geoserver_zona' => true]);
+        Cache::forget('sile.parameters.features.geoserver_zona');
+
+        GeoServerLayer::factory()->create([
+            'workspace' => 'louos_zcme',
+            'type_name' => 'VM_L_Z_USO_ZCME',
+        ]);
+
+        Http::fake([
+            '*' => Http::response([
+                'type' => 'FeatureCollection',
+                'features' => [[
+                    'type' => 'Feature',
+                    'properties' => ['SUBZONA' => 'ZCMe 1/02'],
+                ]],
+            ], 200),
+        ]);
+
+        $result = app(TerritoryService::class)->identify(-12.963613, -38.47201);
+
+        $this->assertSame('identificado', $result->zona['status']);
+        $this->assertSame('ZCMe 1/02', $result->zona['nome']);
     }
 
     public function test_lote_com_base_pendente_retorna_indisponivel_sem_consulta_espacial(): void

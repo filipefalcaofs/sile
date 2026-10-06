@@ -171,6 +171,21 @@ class FluxoExpressoDecisaoTest extends TestCase
         );
     }
 
+    public function test_em_analise_sem_decisao_e_sem_analista_volta_ao_motor(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $request = $this->setupDeferivel();
+        $request->forceFill([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'assigned_user_id' => null,
+        ])->save();
+
+        $result = $this->service()->decide($request->fresh());
+
+        $this->assertSame(ViabilityRequestStatus::Deferida, $result->status);
+        $this->assertNotNull($request->fresh()->decision);
+    }
+
     public function test_um_cnae_nao_permitido_indefere_sem_tvl(): void
     {
         // HU-075 / RN-009: dois CNAEs expressos, um proibido na zona → o pior

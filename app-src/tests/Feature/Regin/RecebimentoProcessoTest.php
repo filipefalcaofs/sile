@@ -104,7 +104,7 @@ class RecebimentoProcessoTest extends TestCase
         $this->assertSame(300.0, (float) $processo->origem_declarada['area_terreno']);
     }
 
-    public function test_poligono_enviado_e_ignorado_porque_o_lote_vem_das_fontes_oficiais(): void
+    public function test_poligono_declarado_entra_como_geometria_do_imovel(): void
     {
         $payload = $this->declaracao($this->cnpjValido());
         $payload['poligonoDeclarado'] = [
@@ -122,21 +122,25 @@ class RecebimentoProcessoTest extends TestCase
 
         $processo = ViabilityRequest::query()->firstOrFail();
 
-        $this->assertNull($processo->property_polygon_geojson);
-        $this->assertArrayNotHasKey('poligono_declarado', $processo->origem_declarada);
+        $this->assertSame('Polygon', $processo->property_polygon_geojson['type']);
+        $this->assertCount(5, $processo->property_polygon_geojson['coordinates'][0]);
+
+        // Geometria DECLARADA: fica no processo, mas não é a oficial — o
+        // endereçamento e o cadastro municipal passam na frente ao zonear.
+        $this->assertNull($processo->address_polygon_geojson);
     }
 
-    public function test_coordenada_enviada_e_ignorada_porque_o_ponto_vem_da_inscricao(): void
+    public function test_geometria_sem_area_nao_vira_poligono_do_imovel(): void
     {
         $payload = $this->declaracao($this->cnpjValido());
-        $payload['coordenadaGeografica'] = ['latitude' => -12.977852, 'longitude' => -38.516331];
+        $payload['poligonoDeclarado'] = [
+            'type' => 'LineString',
+            'coordinates' => [[-38.5163, -12.9778], [-38.5162, -12.9777]],
+        ];
 
         $this->postJson('/api_integracao/recebe', $payload)->assertOk();
 
-        $processo = ViabilityRequest::query()->firstOrFail();
-
-        $this->assertNull($processo->property_point_lat);
-        $this->assertArrayNotHasKey('coordenada_geografica', $processo->origem_declarada);
+        $this->assertNull(ViabilityRequest::query()->firstOrFail()->property_polygon_geojson);
     }
 
     public function test_acessos_independentes_entram_no_imovel(): void
@@ -162,6 +166,7 @@ class RecebimentoProcessoTest extends TestCase
             'termoDispensaViabilidadeLocacional' => 'Não',
             'bapAnteriorIndeferido' => 'BAP-2025-0777',
             'meiDesenquadrado' => 'Não',
+            'coordenadaGeografica' => ['latitude' => -12.977852, 'longitude' => -38.516331],
             'contador' => ['nome' => 'Contabilidade Souza', 'documento' => '52998224725', 'crc' => 'BA-012345/O'],
             'atividadesExercidasNoLocal' => [
                 ['cnae' => '4712-1/00', 'exercida' => 'Sim'],
@@ -182,56 +187,12 @@ class RecebimentoProcessoTest extends TestCase
         $this->assertSame('Não', $declarada['termo_dispensa_viabilidade_locacional']);
         $this->assertSame('BAP-2025-0777', $declarada['bap_anterior_indeferido']);
         $this->assertSame('Não', $declarada['mei_desenquadrado']);
+        $this->assertSame(-12.977852, $declarada['coordenada_geografica']['latitude']);
         $this->assertSame('BA-012345/O', $declarada['contador']['crc']);
         $this->assertSame(
             [['cnae' => '4712100', 'exercida' => 'Sim'], ['cnae' => '5611201', 'exercida' => 'Não']],
             $declarada['atividades_exercidas_no_local'],
         );
-    }
-
-    public function test_vagas_de_embarque_e_estacionamento_ficam_registradas_como_contagem(): void
-    {
-        $payload = array_merge($this->declaracao($this->cnpjValido()), [
-            'vagasEmbarqueDesembarque' => 3,
-            'vagasEstacionamento' => '12',
-        ]);
-
-        $this->postJson('/api_integracao/recebe', $payload)->assertOk();
-
-        $declarada = ViabilityRequest::query()->firstOrFail()->origem_declarada;
-
-        $this->assertSame(3, $declarada['vagas_embarque_desembarque']);
-        $this->assertSame(12, $declarada['vagas_estacionamento']);
-    }
-
-    public function test_vaga_negativa_ou_nao_numerica_e_descartada(): void
-    {
-        $payload = array_merge($this->declaracao($this->cnpjValido()), [
-            'vagasEmbarqueDesembarque' => -2,
-            'vagasEstacionamento' => 'muitas',
-        ]);
-
-        $this->postJson('/api_integracao/recebe', $payload)->assertOk();
-
-        $declarada = ViabilityRequest::query()->firstOrFail()->origem_declarada;
-
-        $this->assertNull($declarada['vagas_embarque_desembarque']);
-        $this->assertNull($declarada['vagas_estacionamento']);
-    }
-
-    public function test_vaga_zero_e_um_valor_valido(): void
-    {
-        $payload = array_merge($this->declaracao($this->cnpjValido()), [
-            'vagasEmbarqueDesembarque' => 0,
-            'vagasEstacionamento' => '0',
-        ]);
-
-        $this->postJson('/api_integracao/recebe', $payload)->assertOk();
-
-        $declarada = ViabilityRequest::query()->firstOrFail()->origem_declarada;
-
-        $this->assertSame(0, $declarada['vagas_embarque_desembarque']);
-        $this->assertSame(0, $declarada['vagas_estacionamento']);
     }
 
     public function test_trata_se_de_escritorio_virtual_e_sinonimo_da_pergunta_anterior(): void

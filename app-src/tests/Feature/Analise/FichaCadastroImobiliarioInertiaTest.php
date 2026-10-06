@@ -102,24 +102,6 @@ class FichaCadastroImobiliarioInertiaTest extends TestCase
                 ->where('recepcao.cnae_principal', '6202-3/00'));
     }
 
-    public function test_ficha_expoe_as_vagas_declaradas_no_recebimento(): void
-    {
-        $processo = $this->processoComFicha([
-            'origem_declarada' => [
-                'protocolo' => 'REG-VAGAS',
-                'vagas_embarque_desembarque' => 0,
-                'vagas_estacionamento' => 10,
-            ],
-        ]);
-
-        $this->actingAs($this->analista(), 'gestao')
-            ->get("/gestao/processos/{$processo->id}/ficha")
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('recepcao.vagas_embarque_desembarque', 0)
-                ->where('recepcao.vagas_estacionamento', 10));
-    }
-
     public function test_localizacao_expoe_cod_log_materializado(): void
     {
         $processo = $this->processoComFicha();

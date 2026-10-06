@@ -51,6 +51,7 @@ final class RecebimentoProcesso
         public ?string $servico,
         public ?Carbon $dataAbertura,
         public ?bool $acessosIndependentes,
+        public ?array $poligonoDeclarado,
         public RecebimentoComplemento $complemento,
     ) {}
 
@@ -91,6 +92,7 @@ final class RecebimentoProcesso
             'dataAbertura',
             'areaUtilizada',
             'acessosIndependentes',
+            'poligonoDeclarado',
             'evento',
             'objetoSocial',
             'naturezaJuridica',
@@ -164,6 +166,7 @@ final class RecebimentoProcesso
             servico: self::texto($envelope['servico'] ?? null, 255),
             dataAbertura: self::data($envelope['dataAbertura'] ?? null),
             acessosIndependentes: self::booleano($envelope['acessosIndependentes'] ?? null),
+            poligonoDeclarado: self::poligono($envelope['poligonoDeclarado'] ?? null),
             complemento: RecebimentoComplemento::fromEnvelope($envelope),
         );
     }
@@ -238,6 +241,7 @@ final class RecebimentoProcesso
             servico: self::texto($dados['servico'] ?? null, 255),
             dataAbertura: self::data(is_string($dados['data_abertura'] ?? null) ? $dados['data_abertura'] : null),
             acessosIndependentes: self::booleano($dados['acessos_independentes'] ?? null),
+            poligonoDeclarado: self::poligono($dados['poligono_declarado'] ?? null),
             complemento: RecebimentoComplemento::fromStored($dados),
         );
     }
@@ -332,6 +336,7 @@ final class RecebimentoProcesso
             'servico' => $this->servico,
             'data_abertura' => $this->dataAbertura?->toDateString(),
             'acessos_independentes' => self::simNao($this->acessosIndependentes),
+            'poligono_declarado' => $this->poligonoDeclarado,
             ...$this->complemento->toArray(),
         ];
     }
@@ -581,6 +586,32 @@ final class RecebimentoProcesso
         )->passes();
 
         return $valido ? $normalizado : null;
+    }
+
+    /**
+     * Geometria de ÁREA em GeoJSON (EPSG:4326, ordem longitude/latitude).
+     * Linha e ponto não são lote: não viram polígono do imóvel.
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function poligono(mixed $valor): ?array
+    {
+        if (! is_array($valor)) {
+            return null;
+        }
+
+        if (($valor['type'] ?? null) === 'Feature' && is_array($valor['geometry'] ?? null)) {
+            $valor = $valor['geometry'];
+        }
+
+        $tipo = $valor['type'] ?? null;
+        $coordenadas = $valor['coordinates'] ?? null;
+
+        if (! in_array($tipo, ['Polygon', 'MultiPolygon'], true) || ! is_array($coordenadas) || $coordenadas === []) {
+            return null;
+        }
+
+        return ['type' => $tipo, 'coordinates' => $coordenadas];
     }
 
     private static function data(mixed $valor): ?Carbon

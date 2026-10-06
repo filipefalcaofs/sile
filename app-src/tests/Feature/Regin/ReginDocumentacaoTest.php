@@ -84,6 +84,8 @@ class ReginDocumentacaoTest extends TestCase
             'tipo_imovel',
             'area_construida',
             'area_terreno',
+            'poligono_declarado',
+            'coordenada_geografica',
         ];
 
         foreach ([
@@ -131,6 +133,7 @@ class ReginDocumentacaoTest extends TestCase
             servico: null,
             dataAbertura: null,
             acessosIndependentes: null,
+            poligonoDeclarado: null,
             complemento: RecebimentoComplemento::fromEnvelope([]),
         ))->toArray()) as $campoGravado) {
             if (in_array($campoGravado, $foraDoContrato, true)) {
