@@ -34,6 +34,7 @@ use App\Services\Geo\SpatialRepository;
 use App\Services\Geo\ZonaMaiorPorcaoResolver;
 use App\Services\GovBr\GovBrIdTokenValidator;
 use App\Services\GovBr\GovBrProvider;
+use App\Services\Integracao\NormalizaCharsetResposta;
 use App\Services\Realty\LocalizacaoInscricaoService;
 use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\SedurSefazPropertyRegistryLookup;
@@ -49,6 +50,7 @@ use App\Support\Audit\AuditService;
 use App\Support\PasswordPolicy;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
@@ -176,6 +178,8 @@ class AppServiceProvider extends ServiceProvider
         Notification::extend('whatsapp', fn ($app): WhatsAppChannel => $app->make(WhatsAppChannel::class));
 
         PasswordPolicy::configureDefaults();
+
+        Http::globalResponseMiddleware(new NormalizaCharsetResposta);
 
         // Regra nomeada para o catálogo HU-014: as validation_rules são
         // persistidas em JSON (cast array do Parameter), onde closures NÃO
