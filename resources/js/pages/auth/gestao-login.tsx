@@ -245,7 +245,13 @@ function ThemeToggleButton() {
     return (
         <button
             type="button"
-            onClick={toggleTheme}
+            onClick={() => {
+                const raiz = document.documentElement;
+
+                raiz.classList.add('sile-trocando-tema');
+                window.setTimeout(() => raiz.classList.remove('sile-trocando-tema'), 1000);
+                toggleTheme();
+            }}
             aria-label="Alternar tema"
             className={gestaoLoginThemeToggleClasses}
         >
@@ -448,6 +454,7 @@ function GestaoLoginContent({ status }: { status?: string }) {
                     @keyframes sile-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
                     @keyframes sile-sheen { from { transform: translateX(-110%); } to { transform: translateX(110%); } }
                     @keyframes sile-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+                    .sile-trocando-tema .sile-campo { transition-duration: 600ms; transition-delay: 300ms; transition-timing-function: linear; }
                 `}</style>
             </Head>
 
