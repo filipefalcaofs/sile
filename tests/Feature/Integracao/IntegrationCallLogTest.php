@@ -47,6 +47,34 @@ class IntegrationCallLogTest extends TestCase
         $this->assertStringContainsString('[redigido]', (string) $chamada->request_body);
     }
 
+    public function test_resposta_em_iso_8859_1_e_convertida_para_utf8_e_gravada(): void
+    {
+        $corpo = mb_convert_encoding('{"OBS":"Da Rua dos Rodoviários à Avenida Edgard Santos"}', 'ISO-8859-1', 'UTF-8');
+
+        Http::fake([
+            'https://geoserver.exemplo.test/*' => Http::response($corpo, 200, ['Content-Type' => 'application/json; charset=ISO-8859-1']),
+        ]);
+
+        $resposta = Http::acceptJson()->get('https://geoserver.exemplo.test/geoserver/wfs');
+
+        $this->assertSame('Da Rua dos Rodoviários à Avenida Edgard Santos', $resposta->json('OBS'));
+        $this->assertStringContainsString('charset=utf-8', strtolower($resposta->header('Content-Type')));
+
+        $chamada = IntegrationCall::query()->sole();
+
+        $this->assertSame('sucesso', $chamada->outcome);
+        $this->assertStringContainsString('Rodoviários', (string) $chamada->response_body);
+    }
+
+    public function test_resposta_binaria_nao_e_convertida(): void
+    {
+        $binario = "\x89PNG\r\n\x1a\n\xe1\x72\x69";
+
+        Http::fake(['https://x.exemplo.test/*' => Http::response($binario, 200, ['Content-Type' => 'image/png'])]);
+
+        $this->assertSame($binario, Http::get('https://x.exemplo.test/a.png')->body());
+    }
+
     public function test_resposta_de_erro_grava_como_erro(): void
     {
         Http::fake([
