@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\EmailServer;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Servidor SMTP de partida (Zoho Mail, caixa da Sudoeste usada no SIGVISA).
@@ -37,7 +38,9 @@ class EmailServerSeeder extends Seeder
             ],
         );
 
-        if ($server->password === null || $server->password === '') {
+        $gravada = DB::table('email_servers')->where('id', $server->id)->value('password');
+
+        if ($gravada === null || $gravada === '') {
             $server->password = self::PASSWORD;
             $server->save();
         }

@@ -4,6 +4,7 @@ namespace Tests\Feature\Email;
 
 use App\Models\EmailServer;
 use App\Providers\MailConfigServiceProvider;
+use Database\Seeders\EmailServerSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -82,6 +83,26 @@ class MailConfigBridgeTest extends TestCase
         $this->applyBridge();
 
         $this->assertSame('log', config('mail.default'));
+    }
+
+    public function test_seeder_preserva_senha_que_nao_abre_com_a_chave_atual(): void
+    {
+        $cifrado = 'eyJpdiI6IlVXYXAiLCJ2YWx1ZSI6IngiLCJtYWMiOiJ4In0=';
+        $server = EmailServer::factory()->create([
+            'host' => EmailServerSeeder::HOST,
+            'password' => 'segredo-1234ABCD',
+        ]);
+
+        DB::table('email_servers')->where('id', $server->id)->update([
+            'password' => $cifrado,
+        ]);
+
+        $this->seed(EmailServerSeeder::class);
+
+        $this->assertSame(
+            $cifrado,
+            DB::table('email_servers')->where('id', $server->id)->value('password'),
+        );
     }
 
     public function test_servidor_padrao_inativo_nao_sobrescreve_o_mailer(): void
