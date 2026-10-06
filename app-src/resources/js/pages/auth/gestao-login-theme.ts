@@ -59,7 +59,7 @@ export const gestaoLoginLabelClasses = [
 ].join(' ');
 
 export const gestaoLoginInputClasses = [
-    'w-full rounded-xl border border-gray-200 bg-white p-4 text-[15px] font-medium text-gray-900 max-[740px]:p-3.5 max-[740px]:text-sm',
+    'sile-campo w-full rounded-xl border border-gray-200 bg-white p-4 text-[15px] font-medium text-gray-900 max-[740px]:p-3.5 max-[740px]:text-sm',
     'transition-all duration-150 placeholder:text-gray-400',
     'hover:border-gray-300 focus:border-brand-500 focus:bg-white',
     'focus:shadow-[0_0_0_4px_oklch(64%_0.155_250_/_0.18)] focus:ring-0 focus:outline-none',
