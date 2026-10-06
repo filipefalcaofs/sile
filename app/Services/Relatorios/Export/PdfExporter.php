@@ -58,6 +58,8 @@ class PdfExporter implements ReportFormatExporter
             'total' => count($linhas),
             'geradoEm' => now(),
             'filtros' => $definition->filtrosAplicados,
+            'filtrosCard' => ReportFilterLabels::pares($definition->filtrosAplicados),
+            'responsavel' => auth()->user()?->name ?? '—',
             'limite' => $definition->maxRows,
         ];
     }
