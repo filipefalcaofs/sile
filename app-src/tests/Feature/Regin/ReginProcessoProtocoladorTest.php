@@ -10,6 +10,7 @@ use App\Models\ReginRecebimento;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginProcessoProtocolador;
+use App\Services\Regin\ReginProtocoloSimulacaoService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
@@ -74,7 +75,7 @@ class ReginProcessoProtocoladorTest extends TestCase
 
         $this->assertNotNull($processo);
         $this->assertSame(ViabilityRequestOrigin::Regin, $processo->origin);
-        $this->assertSame('regin_recebe', $processo->contingency_reason);
+        $this->assertSame(ReginProtocoloSimulacaoService::CONTINGENCIA_RECEBE, $processo->contingency_reason);
         $this->assertSame('43747', $processo->external_reference);
         $this->assertSame(834.0, (float) $processo->used_area_m2);
         $this->assertSame('Rua das Flores', $processo->address_street);

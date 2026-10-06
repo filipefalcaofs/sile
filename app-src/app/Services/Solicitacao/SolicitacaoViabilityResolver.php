@@ -9,6 +9,7 @@ use App\Models\Cnae;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\TerritoryResult;
 use App\Services\Geo\TerritoryService;
+use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
@@ -71,7 +72,9 @@ class SolicitacaoViabilityResolver
 
         foreach ($this->orderedCnaes($request) as $cnae) {
             $respostas = $request->respostasDaPlanilha($cnae->code);
-            $territorio = $territorioDoPonto;
+            $territorio = ReginProtocoloSimulacaoService::territorioDoSnapshot(
+                is_array($request->simulation_snapshot) ? $request->simulation_snapshot : [],
+            ) ?? $territorioDoPonto;
 
             $result = $territorio !== null
                 ? $this->consulta->consultarComTerritorio($territorio, $cnae->code, $area, $tipoImovel, $respostas)

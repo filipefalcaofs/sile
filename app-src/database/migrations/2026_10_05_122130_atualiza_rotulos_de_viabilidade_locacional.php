@@ -71,6 +71,7 @@ return new class extends Migration
         return [
             'risco.dimensao_tvl' => 'Dimensão de risco que prevalece no encaminhamento da viabilidade locacional (default municipal; confirmar com a SEDUR)',
             'renovacao.intervalo_meses' => 'Intervalo mínimo (meses) entre renovações da mesma viabilidade locacional. Dentro do intervalo o sistema recusa um novo protocolo',
+            'features.simulacao_protocolo' => 'SOMENTE HOMOLOGAÇÃO: processos do simulador REGIN com veredito pendente registram a viabilidade locacional como permitida. Desligado, seguem o fluxo normal (pendente → análise). NUNCA ligar em produção',
             'features.notificacao_resultado_expresso' => 'Habilita a notificação por e-mail do resultado do fluxo expresso ao requerente (sem anexo da viabilidade locacional; canais plenos no EP11)',
             'expresso.tvl.prefixo' => 'Prefixo do número da viabilidade locacional ({prefixo}-AAAA-NNNNNN)',
             'analise.tvl.assinatura.modo' => 'Modo de assinatura do PDF da viabilidade locacional: imagem do diretor ou nenhuma; assinatura digital gov.br/ICP é gancho da SEDUR',
@@ -85,6 +86,7 @@ return new class extends Migration
         return [
             'risco.dimensao_tvl' => 'Dimensão de risco que prevalece no encaminhamento/TVL (default municipal; confirmar com a SEDUR)',
             'renovacao.intervalo_meses' => 'Intervalo mínimo (meses) entre renovações do mesmo TVL. Dentro do intervalo o sistema recusa um novo protocolo',
+            'features.simulacao_protocolo' => 'SOMENTE HOMOLOGAÇÃO: processos do simulador REGIN com veredito pendente emitem TVL como permitidos. Desligado, seguem o fluxo normal (pendente → análise). NUNCA ligar em produção',
             'features.notificacao_resultado_expresso' => 'Habilita a notificação por e-mail do resultado do fluxo expresso ao requerente (sem anexo de TVL; canais plenos no EP11)',
             'expresso.tvl.prefixo' => 'Prefixo do número de produto TVL do deferimento ({prefixo}-AAAA-NNNNNN)',
             'analise.tvl.assinatura.modo' => 'Modo de assinatura do TVL PDF: imagem do diretor (legado) ou nenhuma; assinatura digital gov.br/ICP é gancho → SEDUR',
