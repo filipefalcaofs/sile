@@ -874,7 +874,11 @@ export default function GestaoLoginScene({
     const mostraOperador = tipoConta !== null && ['session', 'secure', 'ready', 'validating', 'authorized'].includes(estado);
 
     return (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-6 transition-opacity duration-600">
+        <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-6 transition-opacity duration-600"
+            style={noShell ? undefined : { clipPath: 'inset(0 clamp(440px, 34vw, 580px) 0 0)' }}
+        >
             <svg className="absolute inset-0 size-full overflow-visible">
                 <path ref={linha} d="M0 0" fill="none" stroke="oklch(64% 0.155 250 / 0.85)" strokeWidth="1" style={{ opacity: 0 }} />
                 <circle ref={noInicial} cx="0" cy="0" r="2.5" fill={AZUL} style={{ opacity: 0 }} />
