@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Driver PDF do contrato de exportação (HU-131) — dompdf sobre o Blade genérico
- * `relatorios.relatorio`, espelhando o TvlPdfService. O documento traz o rodapé
+ * `relatorios.relatorio`, espelhando o TvlPdfService. Layout Operacional (A4 paisagem) do Report Design System. O documento traz o rodapé
  * "Total de registros: N" + data/hora + filtros aplicados (CA-07/RN-010). O PDF
  * fica abaixo do limiar assíncrono, então carrega todas as linhas com ->get()
  * (precisa do total). No síncrono streama ao navegador; no assíncrono grava o
@@ -28,15 +28,8 @@ class PdfExporter implements ReportFormatExporter
 
     private function render(ReportDefinition $definition): DomPdf
     {
-        $orientacao = count($definition->colunas) > 7
-            ? 'landscape'
-            : (string) config('sile.relatorios.export.pdf.orientation', 'portrait');
-
         return Pdf::loadView('relatorios.relatorio', $this->dados($definition))
-            ->setPaper(
-                (string) config('sile.relatorios.export.pdf.paper', 'a4'),
-                $orientacao,
-            );
+            ->setPaper((string) config('sile.relatorios.export.pdf.paper', 'a4'), 'landscape');
     }
 
     /**
@@ -65,6 +58,7 @@ class PdfExporter implements ReportFormatExporter
             'total' => count($linhas),
             'geradoEm' => now(),
             'filtros' => $definition->filtrosAplicados,
+            'limite' => $definition->maxRows,
         ];
     }
 }

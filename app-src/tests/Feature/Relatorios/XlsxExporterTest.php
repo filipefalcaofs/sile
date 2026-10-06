@@ -65,13 +65,26 @@ class XlsxExporterTest extends TestCase
 
         $linhas = [];
         foreach ($reader->getSheetIterator() as $sheet) {
+            if ($sheet->getName() !== 'DADOS') {
+                continue;
+            }
             foreach ($sheet->getRowIterator() as $row) {
                 $linhas[] = $row->toArray();
             }
-            break;
         }
 
         $reader->close();
+
+        // Aba DADOS: identificação + nota, depois cabeçalho e dados, total ao final.
+        foreach ($linhas as $i => $linha) {
+            if (str_contains((string) ($linha[0] ?? ''), 'registros · filtros')) {
+                $linhas = array_slice($linhas, $i + 1);
+                break;
+            }
+        }
+        if ($linhas !== [] && str_contains((string) end($linhas)[0], 'Total (filtrado)')) {
+            array_pop($linhas);
+        }
 
         return $linhas;
     }
