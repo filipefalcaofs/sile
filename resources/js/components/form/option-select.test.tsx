@@ -102,4 +102,22 @@ describe('OptionSelect', () => {
         expect(document.querySelector('[role="listbox"]')).toBeNull();
         expect(document.activeElement).toBe(document.getElementById('enquadramento'));
     });
+
+    it('filtra as opções pelo texto digitado na busca', () => {
+        montar(<Campo />);
+        abrir();
+
+        const busca = document.querySelector('[role="listbox"] input') as HTMLInputElement;
+        expect(busca).not.toBeNull();
+
+        act(() => {
+            const definir = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+            definir?.call(busca, 'escritório');
+            busca.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
+        const opcoesLista = document.querySelectorAll('[role="option"]');
+        expect(opcoesLista).toHaveLength(1);
+        expect(opcoesLista[0]?.textContent).toContain('Escritório');
+    });
 });
