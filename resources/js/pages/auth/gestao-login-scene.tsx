@@ -208,9 +208,14 @@ export default function GestaoLoginScene({
             const larguraJanela = window.innerWidth;
             const larguraPainel = Math.min(580, Math.max(440, larguraJanela * 0.34));
 
+            // A linha de estado fica 268px acima do centro: o piso evita que
+            // ela invada o cabeçalho (padding vertical do palco + logo de 46px).
+            const paddingPalco = Math.min(56, Math.max(28, larguraJanela * 0.035));
+            const pisoY = paddingPalco + 46 + 16 + 268;
+
             centro.current = {
                 x: (larguraJanela - larguraPainel) * 0.7,
-                y: window.innerHeight * 0.47,
+                y: Math.max(window.innerHeight * 0.47, pisoY),
             };
         };
 
