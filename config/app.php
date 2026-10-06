@@ -59,15 +59,16 @@ return [
     | Versão da aplicação
     |--------------------------------------------------------------------------
     |
-    | Número semver (arquivo VERSION) e revisão do build (SHA curto). No
-    | Docker, ambos são injetados como ENV no build da imagem para o login
-    | mostrar exatamente o que está no ar.
+    | Número semver (arquivo VERSION) e revisão do build (SHA curto). O
+    | arquivo VERSION é a fonte da verdade: APP_VERSION só vale se o arquivo
+    | não existir, para uma variável esquecida no ambiente não fixar a versão
+    | exibida no login. O prefixo "v" é descartado (a tela já o acrescenta).
     |
     */
 
-    'version' => env('APP_VERSION') ?: (is_file(base_path('VERSION'))
+    'version' => ltrim(is_file(base_path('VERSION'))
         ? trim((string) file_get_contents(base_path('VERSION')))
-        : '0.0.0'),
+        : (env('APP_VERSION') ?: '0.0.0'), 'vV'),
 
     'revision' => env('APP_REVISION') ?: 'dev',
 
