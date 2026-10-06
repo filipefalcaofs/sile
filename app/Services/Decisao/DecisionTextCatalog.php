@@ -184,6 +184,27 @@ final class DecisionTextCatalog
             'zona.motivo.empate_maior_porcao' => 'Zona urbanística indefinida (art. 18, § 2º, da Lei nº 9.148/2016): o terreno tem porções iguais nas zonas :zona_a e :zona_b — segue para análise técnica.',
             'localizacao.motivo.divergencia_zona' => 'Localização divergente (HU-037 RN-005): o polígono informado está na zona :zona_poligono e a inscrição imobiliária, na zona :zona_inscricao — segue para análise técnica.',
             'localizacao.motivo.divergencia_zona_enderecamento' => 'Localização divergente: o polígono desenhado está na zona :zona_desenho e o polígono do endereçamento SEDUR, na zona :zona_enderecamento — segue para análise técnica.',
+            // Planilha de tratamento — motivos do ramo não resolvido. A pergunta
+            // sem resposta cita o enunciado da planilha (:numero, :texto).
+            'tratamento.motivo.sem_versao' => 'Planilha de tratamento sem versão vigente',
+            'tratamento.motivo.cnae_sem_regra' => 'CNAE sem regra de tratamento vigente',
+            'tratamento.motivo.pergunta_sem_resposta' => 'Pergunta :numero sem resposta — :texto',
+            'tratamento.motivo.sem_linha' => 'CNAE sem enquadramento no ramo escolhido',
+            'tratamento.motivo.ramo_bloqueado' => 'A regra da planilha não permite o prosseguimento deste ramo',
+            'tratamento.motivo.cnlu' => 'A SER DEFINIDO PELA CNLU',
+            'tratamento.motivo.area_ausente' => 'Área utilizada ausente para o ramo que depende de faixa',
+            'tratamento.motivo.tipo_ausente' => 'Tipo de imóvel ausente para o ramo que depende do tipo',
+            'tratamento.motivo.tipo_desconhecido' => 'Tipo de imóvel desconhecido para o ramo que depende do tipo',
+
+            // Fluxo expresso — motivos do encaminhamento à análise técnica,
+            // registrados na transição e na queda do processo.
+            'expresso.motivo.desativado' => 'fluxo expresso desativado',
+            'expresso.motivo.alto_risco' => 'atividade de alto risco — análise técnica',
+            'expresso.motivo.fora_do_expresso' => 'atividade fora do fluxo expresso (análise técnica)',
+            'expresso.motivo.veredito_pendente' => 'veredito locacional pendente — :motivo',
+            'expresso.motivo.zona_pendente' => 'zona urbanística pendente SEDUR',
+            'expresso.motivo.exclusao_sede_sem_inscricao' => 'exclusão do CNAE gatilho sem inscrição imobiliária informada — encaminhado para verificação',
+            'expresso.motivo.exclusao_sede_nao_titular' => 'exclusão do CNAE gatilho da sede pedida por solicitação que não é a titular do vínculo de sede — encaminhado para verificação',
             'louos.motivo.quadro10_observacao_fora_da_lista' => 'Uso sujeito à observação :observacao do Quadro 10 permitido somente nas localizações listadas — endereço fora da allow-list',
             'louos.motivo.quadro10_observacao_sem_verificacao' => 'Uso sujeito à observação :observacao do Quadro 10, mas sem CODLOG/bairro para verificar a allow-list de localizações',
         ];

@@ -38,6 +38,9 @@ class DecisionTextController extends Controller
         'explicacao' => 'Explicação da decisão',
         'territorial' => 'Regras territoriais',
         'localizacao' => 'Localização do imóvel',
+        'zona' => 'Zona urbanística',
+        'tratamento' => 'Planilha de tratamento — ramo',
+        'expresso' => 'Fluxo expresso — encaminhamento',
     ];
 
     /**

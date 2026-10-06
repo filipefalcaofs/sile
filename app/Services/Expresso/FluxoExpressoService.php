@@ -23,6 +23,7 @@ use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Analise\AnalysisSlaService;
 use App\Services\Auditoria\DecisionTraceBuilder;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\EscritorioVirtual\AbrigadoResolver;
 use App\Services\EscritorioVirtual\DesvincularInscricaoService;
 use App\Services\Geo\CamadasIncidentesService;
@@ -87,6 +88,7 @@ class FluxoExpressoService
         private CamadasIncidentesService $camadasIncidentes,
         private ZonaProcessoService $zonaProcesso,
         private PoligonoEnderecamentoService $poligonoEnderecamento,
+        private DecisionTextCatalog $textos,
     ) {}
 
     /**
@@ -123,7 +125,7 @@ class FluxoExpressoService
         $toggleAtivo = (bool) Settings::get('features.fluxo_expresso', config('sile.features.fluxo_expresso', true));
 
         if (! $toggleAtivo) {
-            return $this->encaminharAnalise($request, 'fluxo expresso desativado', $actor);
+            return $this->encaminharAnalise($request, $this->textos->get('expresso.motivo.desativado'), $actor);
         }
 
         // RN-AA-03/RN-AA-05: solicitação EXCLUSIVAMENTE de exclusão de
@@ -177,7 +179,7 @@ class FluxoExpressoService
                 if (! $this->gatilhoSede->titularDoVinculo($request, $lock)) {
                     return $this->encaminharAnalise(
                         $request,
-                        'exclusão do CNAE gatilho da sede pedida por solicitação que não é a titular do vínculo de sede — encaminhado para verificação',
+                        $this->textos->get('expresso.motivo.exclusao_sede_nao_titular'),
                         $actor,
                     );
                 }
@@ -210,7 +212,7 @@ class FluxoExpressoService
                 if (blank($request->property_registration)) {
                     return $this->encaminharAnalise(
                         $request,
-                        'exclusão do CNAE gatilho sem inscrição imobiliária informada — encaminhado para verificação',
+                        $this->textos->get('expresso.motivo.exclusao_sede_sem_inscricao'),
                         $actor,
                     );
                 }
@@ -309,11 +311,11 @@ class FluxoExpressoService
         // expresso explícito (ex.: regra 51 — "Fluxo Expresso (ALTO RISCO)")
         // não cai neste gate — a planilha prevalece.
         if ($resolved->temAltoRiscoForaDoExpresso()) {
-            return $this->encaminharAnalise($request, 'atividade de alto risco — análise técnica', $actor, $resolved);
+            return $this->encaminharAnalise($request, $this->textos->get('expresso.motivo.alto_risco'), $actor, $resolved);
         }
 
         if (! $resolved->elegivelExpresso()) {
-            return $this->encaminharAnalise($request, 'atividade fora do fluxo expresso (análise técnica)', $actor, $resolved);
+            return $this->encaminharAnalise($request, $this->textos->get('expresso.motivo.fora_do_expresso'), $actor, $resolved);
         }
 
         // Sem a zona (Quadro 10), o veredito é pendente — encaminha à análise SEM
@@ -329,7 +331,9 @@ class FluxoExpressoService
             && ! $this->bypassSimulacaoHomologacao($request)) {
             return $this->encaminharAnalise(
                 $request,
-                'veredito locacional pendente — '.($resolved->motivoPendente() ?? 'zona urbanística pendente SEDUR'),
+                $this->textos->render('expresso.motivo.veredito_pendente', [
+                    ':motivo' => $resolved->motivoPendente() ?? $this->textos->get('expresso.motivo.zona_pendente'),
+                ]),
                 $actor,
                 $resolved,
             );
@@ -586,6 +590,8 @@ class FluxoExpressoService
             return;
         }
 
+        $gravadas = 0;
+
         foreach ($resolved->por_cnae as $item) {
             if (($item['fluxo'] ?? null) !== Fluxo::Analise->value) {
                 continue;
@@ -599,6 +605,19 @@ class FluxoExpressoService
                 'tipo_gatilho' => $encaminhamento['gatilhos_acionados'][0]['codigo'] ?? null,
                 'dimensao' => $encaminhamento['dimensao_decisiva'] ?? null,
                 'motivo' => $encaminhamento['motivo'] ?? $reason,
+            ]);
+            $gravadas++;
+        }
+
+        // Nenhum CNAE caiu pelo risco (veredito pendente, gatilho de sede):
+        // o motivo do encaminhamento fica na linha de nível-processo.
+        if ($gravadas === 0) {
+            ExpressoQueda::create([
+                'viability_request_id' => $request->id,
+                'cnae' => null,
+                'tipo_gatilho' => null,
+                'dimensao' => null,
+                'motivo' => $reason,
             ]);
         }
     }
