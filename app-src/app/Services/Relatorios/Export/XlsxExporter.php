@@ -242,11 +242,8 @@ final class XlsxExporter implements ReportFormatExporter
         $writer->addRow(Row::fromValues(['Parâmetro', 'Valor', 'Observação'], $this->estiloCabecalho()));
 
         $linhas = [];
-        foreach ($definition->filtrosAplicados as $chave => $valor) {
-            $linhas[] = [(string) $chave, (string) $valor, 'Filtro da tela'];
-        }
-        if ($definition->filtrosAplicados === []) {
-            $linhas[] = ['Filtros', 'Todos (sem filtro)', 'Filtro da tela'];
+        foreach (ReportFilterLabels::pares($definition->filtrosAplicados) as [$rotulo, $valor]) {
+            $linhas[] = [$rotulo, $valor ?? 'Todos (sem filtro)', 'Filtro da tela'];
         }
         $linhas[] = ['Usuário', auth()->user()?->name ?? '—', 'Quem gerou'];
         $linhas[] = ['Gerado em', $gerado->format('d/m/Y H:i:s'), (string) config('app.timezone')];
