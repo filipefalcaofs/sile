@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\EmailServer;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
@@ -47,12 +48,18 @@ class MailConfigServiceProvider extends ServiceProvider
             return;
         }
 
+        try {
+            $password = $server->password;
+        } catch (DecryptException) {
+            return;
+        }
+
         config([
             'mail.default' => 'smtp',
             'mail.mailers.smtp.host' => $server->host,
             'mail.mailers.smtp.port' => $server->port,
             'mail.mailers.smtp.username' => $server->username,
-            'mail.mailers.smtp.password' => $server->password,
+            'mail.mailers.smtp.password' => $password,
             'mail.mailers.smtp.scheme' => $server->scheme,
             'mail.mailers.smtp.timeout' => $server->timeout,
             'mail.from.address' => $server->from_address,

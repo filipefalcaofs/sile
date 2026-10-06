@@ -5,6 +5,7 @@ namespace Tests\Feature\Email;
 use App\Models\EmailServer;
 use App\Providers\MailConfigServiceProvider;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class MailConfigBridgeTest extends TestCase
@@ -62,6 +63,25 @@ class MailConfigBridgeTest extends TestCase
         $this->applyBridge();
 
         $this->assertSame('resend', config('mail.default'), 'Sem servidor cadastrado deve manter o mailer do .env.');
+    }
+
+    public function test_senha_ilegivel_nao_derruba_a_aplicacao(): void
+    {
+        config(['mail.default' => 'log']);
+
+        $server = EmailServer::factory()->create([
+            'is_default' => true,
+            'active' => true,
+            'password' => 'segredo-1234ABCD',
+        ]);
+
+        DB::table('email_servers')->where('id', $server->id)->update([
+            'password' => 'eyJpdiI6IlVXYXAiLCJ2YWx1ZSI6IngiLCJtYWMiOiJ4In0=',
+        ]);
+
+        $this->applyBridge();
+
+        $this->assertSame('log', config('mail.default'));
     }
 
     public function test_servidor_padrao_inativo_nao_sobrescreve_o_mailer(): void
