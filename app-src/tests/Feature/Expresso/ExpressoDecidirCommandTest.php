@@ -85,7 +85,7 @@ class ExpressoDecidirCommandTest extends TestCase
 
         $this->artisan('expresso:decidir', ['solicitacao' => $request->id])
             ->expectsOutputToContain('EM ANÁLISE')
-            ->expectsOutputToContain('zona urbanística pendente')
+            ->expectsOutputToContain('veredito locacional pendente')
             ->assertExitCode(0);
 
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);

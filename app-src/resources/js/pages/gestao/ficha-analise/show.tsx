@@ -5,6 +5,12 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { ReactNode } from 'react';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
 import { RecepcaoRecebida, rotuloFluxoRisco, type ProcessoRecepcao } from '@/components/analise/processo-ui';
+import {
+    comAreaEmbarqueInformada,
+    vereditoEstacionamento,
+    type AreaEmbarqueExigida,
+    type AreaEmbarqueRequerente,
+} from '@/pages/gestao/ficha-analise/area-embarque';
 import { sinteseDaFicha, type EstadoLeitura } from '@/pages/gestao/ficha-analise/sintese';
 import PageHeader from '@/components/app/page-header';
 import CamadasImovelLista, { type CamadasImovel } from '@/components/geo/camadas-imovel';
@@ -66,6 +72,8 @@ interface Parking {
     vagas_requeridas?: number | null;
     vagas_exigidas?: number | null;
     vistoria?: boolean;
+    area_embarque_requerente?: AreaEmbarqueRequerente | null;
+    area_embarque_exigida?: AreaEmbarqueExigida | null;
 }
 
 interface Ficha {
@@ -824,7 +832,9 @@ export default function FichaAnaliseShow({
     const [tvlKind, setTvlKind] = useState<'provisoria' | 'definitiva'>('provisoria');
     const [tvlValidUntil, setTvlValidUntil] = useState('');
     const [condicionantesAtendidos, setCondicionantesAtendidos] = useState(true);
-    const [parking, setParking] = useState<Parking>(() => ficha.parking ?? {});
+    const [parking, setParking] = useState<Parking>(() =>
+        comAreaEmbarqueInformada(ficha.parking ?? {}, recepcao?.area_embarque_desembarque),
+    );
     const [sedeEscritorioVirtual, setSedeEscritorioVirtual] = useState<boolean>(() => ficha.is_virtual_office_hq ?? false);
     const [novaCondicao, setNovaCondicao] = useState('');
     const analysisReasons = ficha.analysis_reasons ?? [];
@@ -1528,10 +1538,12 @@ export default function FichaAnaliseShow({
 
     const vagasRequeridas = parking.vagas_requeridas;
     const vagasExigidas = parking.vagas_exigidas;
-    const vagasConforme =
-        typeof vagasRequeridas === 'number' && typeof vagasExigidas === 'number'
-            ? vagasRequeridas >= vagasExigidas
-            : null;
+    const vagasConforme = vereditoEstacionamento({
+        vagasRequeridas,
+        vagasExigidas,
+        embarqueRequerente: parking.area_embarque_requerente,
+        embarqueExigida: parking.area_embarque_exigida,
+    });
 
     return (
         <>
@@ -2288,7 +2300,7 @@ export default function FichaAnaliseShow({
                         <Card>
                             <CardHeader
                                 title="Vagas de estacionamento"
-                                description="Compara as vagas informadas pelo requerente com as exigidas pela norma."
+                                description="Compara as vagas e a área de embarque e desembarque informadas pelo requerente com o exigido pela norma."
                             />
                             <CardContent>
                                 <div className="grid gap-4 sm:grid-cols-2">
@@ -2350,6 +2362,54 @@ export default function FichaAnaliseShow({
                                             Imóvel não conforme
                                         </Badge>
                                     )}
+                                </div>
+
+                                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <Label htmlFor="area-embarque-requerente">
+                                            Área para embarque e desembarque (requerente)
+                                        </Label>
+                                        <Select
+                                            id="area-embarque-requerente"
+                                            disabled={!editavel}
+                                            placeholder="Selecione"
+                                            value={parking.area_embarque_requerente ?? ''}
+                                            onChange={(valor) =>
+                                                setParking((atual) => ({
+                                                    ...atual,
+                                                    area_embarque_requerente:
+                                                        valor === 'sim' || valor === 'nao' ? valor : null,
+                                                }))
+                                            }
+                                            options={[
+                                                { value: 'sim', label: 'Sim' },
+                                                { value: 'nao', label: 'Não' },
+                                            ]}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="area-embarque-exigida">
+                                            Área para embarque e desembarque (norma)
+                                        </Label>
+                                        <Select
+                                            id="area-embarque-exigida"
+                                            disabled={!editavel}
+                                            placeholder="Selecione"
+                                            value={parking.area_embarque_exigida ?? ''}
+                                            onChange={(valor) =>
+                                                setParking((atual) => ({
+                                                    ...atual,
+                                                    area_embarque_exigida:
+                                                        valor === 'sim' || valor === 'nao' || valor === 'na' ? valor : null,
+                                                }))
+                                            }
+                                            options={[
+                                                { value: 'sim', label: 'Sim' },
+                                                { value: 'nao', label: 'Não' },
+                                                { value: 'na', label: 'Não se aplica' },
+                                            ]}
+                                        />
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

@@ -3,6 +3,7 @@
 namespace App\Services\Solicitacao;
 
 use App\Enums\Fluxo;
+use App\Enums\ResultadoViabilidade;
 
 /**
  * Insumo imutável da resolução de viabilidade por solicitação (09-04): o
@@ -34,6 +35,24 @@ final readonly class ResolvedViability
         public ?array $ponto,
         public ?float $area_m2,
     ) {}
+
+    /**
+     * Motivo do primeiro CNAE com veredito pendente, como o motor LOUOS o
+     * informou (sem enquadramento na planilha, zona indisponível, via na CNLU).
+     */
+    public function motivoPendente(): ?string
+    {
+        foreach ($this->por_cnae as $item) {
+            $motivo = $item['veredito_motivo'] ?? null;
+
+            if (($item['tendencia'] ?? null) === ResultadoViabilidade::Pendente->value
+                && is_string($motivo) && trim($motivo) !== '') {
+                return trim($motivo);
+            }
+        }
+
+        return null;
+    }
 
     /**
      * Elegibilidade ao fluxo expresso (HU-073): elegível somente se TODOS os

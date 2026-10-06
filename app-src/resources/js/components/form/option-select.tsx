@@ -22,7 +22,7 @@ interface OptionSelectProps {
     emptyMessage?: string;
     error?: boolean;
     hint?: string;
-    /** Exibe um campo de busca dentro da lista. */
+    /** Exibe um campo de busca dentro da lista. Ligado por padrão. */
     searchable?: boolean;
 }
 
@@ -49,7 +49,7 @@ export default function OptionSelect({
     emptyMessage = 'Nenhuma opção disponível',
     error = false,
     hint,
-    searchable = false,
+    searchable = true,
 }: OptionSelectProps) {
     const listaId = useId();
     const hintId = useId();
@@ -247,6 +247,7 @@ export default function OptionSelect({
                                   value={busca}
                                   placeholder="Buscar…"
                                   autoComplete="off"
+                                  autoFocus
                                   onChange={(evento) => {
                                       setBusca(evento.target.value);
                                       setAtivo(0);
