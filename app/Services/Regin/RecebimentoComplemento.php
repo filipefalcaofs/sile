@@ -10,6 +10,7 @@ namespace App\Services\Regin;
 final readonly class RecebimentoComplemento
 {
     /**
+     * @param  array{latitude: float, longitude: float}|null  $coordenada
      * @param  array{nome: ?string, documento: ?string, crc: ?string}|null  $contador
      * @param  list<array{cnae: string, exercida: string}>  $atividadesExercidasNoLocal
      */
@@ -19,10 +20,9 @@ final readonly class RecebimentoComplemento
         public ?string $naturezaJuridica,
         public ?float $areaConstruida,
         public ?float $areaTerreno,
+        public ?array $coordenada,
         public ?bool $imovelEmCondominio,
         public ?bool $areaEmbarqueDesembarque,
-        public ?int $vagasEmbarqueDesembarque,
-        public ?int $vagasEstacionamento,
         public ?bool $possuiConcessaoDeUso,
         public ?bool $termoDispensaViabilidadeLocacional,
         public ?string $bapAnteriorIndeferido,
@@ -51,10 +51,9 @@ final readonly class RecebimentoComplemento
             naturezaJuridica: RecebimentoProcesso::texto($envelope['naturezaJuridica'] ?? null, 255),
             areaConstruida: RecebimentoProcesso::area($envelope['areaEstabelecimento'] ?? $envelope['areaConstruida'] ?? null),
             areaTerreno: RecebimentoProcesso::area($envelope['areaTerreno'] ?? null),
+            coordenada: self::coordenada($envelope['coordenadaGeografica'] ?? null),
             imovelEmCondominio: RecebimentoProcesso::booleano($envelope['imovelEmCondominio'] ?? null),
             areaEmbarqueDesembarque: RecebimentoProcesso::booleano($envelope['areaEmbarqueDesembarque'] ?? null),
-            vagasEmbarqueDesembarque: self::vagas($envelope['vagasEmbarqueDesembarque'] ?? null),
-            vagasEstacionamento: self::vagas($envelope['vagasEstacionamento'] ?? null),
             possuiConcessaoDeUso: RecebimentoProcesso::booleano($envelope['possuiConcessaoDeUso'] ?? null),
             termoDispensaViabilidadeLocacional: RecebimentoProcesso::booleano($envelope['termoDispensaViabilidadeLocacional'] ?? null),
             bapAnteriorIndeferido: RecebimentoProcesso::texto($envelope['bapAnteriorIndeferido'] ?? null, 60),
@@ -84,10 +83,9 @@ final readonly class RecebimentoComplemento
             naturezaJuridica: RecebimentoProcesso::texto($dados['natureza_juridica'] ?? null, 255),
             areaConstruida: RecebimentoProcesso::area($dados['area_construida'] ?? null),
             areaTerreno: RecebimentoProcesso::area($dados['area_terreno'] ?? null),
+            coordenada: self::coordenada($dados['coordenada_geografica'] ?? null),
             imovelEmCondominio: RecebimentoProcesso::booleano($dados['imovel_em_condominio'] ?? null),
             areaEmbarqueDesembarque: RecebimentoProcesso::booleano($dados['area_embarque_desembarque'] ?? null),
-            vagasEmbarqueDesembarque: self::vagas($dados['vagas_embarque_desembarque'] ?? null),
-            vagasEstacionamento: self::vagas($dados['vagas_estacionamento'] ?? null),
             possuiConcessaoDeUso: RecebimentoProcesso::booleano($dados['possui_concessao_de_uso'] ?? null),
             termoDispensaViabilidadeLocacional: RecebimentoProcesso::booleano($dados['termo_dispensa_viabilidade_locacional'] ?? null),
             bapAnteriorIndeferido: RecebimentoProcesso::texto($dados['bap_anterior_indeferido'] ?? null, 60),
@@ -117,10 +115,9 @@ final readonly class RecebimentoComplemento
             'natureza_juridica' => $this->naturezaJuridica,
             'area_construida' => $this->areaConstruida,
             'area_terreno' => $this->areaTerreno,
+            'coordenada_geografica' => $this->coordenada,
             'imovel_em_condominio' => RecebimentoProcesso::simNao($this->imovelEmCondominio),
             'area_embarque_desembarque' => RecebimentoProcesso::simNao($this->areaEmbarqueDesembarque),
-            'vagas_embarque_desembarque' => $this->vagasEmbarqueDesembarque,
-            'vagas_estacionamento' => $this->vagasEstacionamento,
             'possui_concessao_de_uso' => RecebimentoProcesso::simNao($this->possuiConcessaoDeUso),
             'termo_dispensa_viabilidade_locacional' => RecebimentoProcesso::simNao($this->termoDispensaViabilidadeLocacional),
             'bap_anterior_indeferido' => $this->bapAnteriorIndeferido,
@@ -137,6 +134,25 @@ final readonly class RecebimentoComplemento
             'RGP_TGE_COD_TIP_TAB' => $this->rgpTgeCodTipTab,
             'RGP_VALOR' => $this->rgpValor,
         ];
+    }
+
+    /**
+     * @return array{latitude: float, longitude: float}|null
+     */
+    private static function coordenada(mixed $valor): ?array
+    {
+        if (! is_array($valor)) {
+            return null;
+        }
+
+        $lat = $valor['latitude'] ?? $valor['lat'] ?? null;
+        $lng = $valor['longitude'] ?? $valor['lng'] ?? null;
+
+        if (! is_numeric($lat) || ! is_numeric($lng)) {
+            return null;
+        }
+
+        return ['latitude' => (float) $lat, 'longitude' => (float) $lng];
     }
 
     /**
@@ -184,23 +200,6 @@ final readonly class RecebimentoComplemento
         }
 
         return $lista;
-    }
-
-    /**
-     * Contagem de vagas: inteiro maior ou igual a zero, número ou texto só de
-     * dígitos. Negativo, decimal ou texto livre é descartado.
-     */
-    private static function vagas(mixed $valor): ?int
-    {
-        if (is_int($valor)) {
-            return $valor >= 0 ? $valor : null;
-        }
-
-        if (is_string($valor) && preg_match('/^\d+$/', trim($valor)) === 1) {
-            return (int) trim($valor);
-        }
-
-        return null;
     }
 
     private static function inteiro(mixed $valor): ?int

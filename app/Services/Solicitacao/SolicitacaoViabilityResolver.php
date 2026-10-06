@@ -68,19 +68,17 @@ class SolicitacaoViabilityResolver
 
         $porCnae = [];
         $rulesVersions = [];
-        $territorioPorArea = $ponto !== null ? $this->territorioComZonaDoLote($request, $ponto) : null;
+        $territorioDoPonto = $ponto !== null ? $this->territorioDoPonto($request, $ponto) : null;
 
         foreach ($this->orderedCnaes($request) as $cnae) {
             $respostas = $request->respostasDaPlanilha($cnae->code);
             $territorio = ReginProtocoloSimulacaoService::territorioDoSnapshot(
                 is_array($request->simulation_snapshot) ? $request->simulation_snapshot : [],
-            ) ?? $territorioPorArea;
+            ) ?? $territorioDoPonto;
 
             $result = $territorio !== null
                 ? $this->consulta->consultarComTerritorio($territorio, $cnae->code, $area, $tipoImovel, $respostas)
-                : ($ponto === null
-                    ? $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $respostas)
-                    : $this->consulta->consultarPorPontoConhecido($ponto['lat'], $ponto['lng'], $cnae->code, $area, $tipoImovel, $respostas));
+                : $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $respostas);
 
             $veredito = $result->vereditoLocacional();
 
@@ -112,33 +110,32 @@ class SolicitacaoViabilityResolver
     }
 
     /**
-     * Com a zona decidida pela maior porção do endereçamento (art. 18, § 2º),
-     * o enquadramento recebe essa zona; bairro, via e restrições continuam do
-     * ponto do imóvel.
+     * Território do ponto, com a zona da maior porção do lote quando ela já
+     * foi gravada e com o CODLOG da inscrição no lugar da via mais próxima.
      *
      * @param  array{lat: float, lng: float}  $ponto
      */
-    private function territorioComZonaDoLote(ViabilityRequest $request, array $ponto): ?TerritoryResult
+    private function territorioDoPonto(ViabilityRequest $request, array $ponto): TerritoryResult
     {
-        if ($request->zona_fonte !== ZonaFonte::EnderecamentoMaiorPorcao || blank($request->zona_codigo)) {
-            return null;
-        }
-
         $base = $this->territory->identify($ponto['lat'], $ponto['lng']);
 
-        return new TerritoryResult(
-            bairro: $base->bairro,
-            via: $base->via,
-            zona: [
-                'status' => 'identificado',
-                'nome' => $request->zona_codigo,
-                'propriedades' => ['ZONA' => $request->zona_codigo, 'fonte' => ZonaFonte::EnderecamentoMaiorPorcao->value],
-                'motivo' => null,
-                'versao_camada' => 'geoserver-wfs-maior-porcao',
-            ],
-            lote: $base->lote,
-            restricoes: $base->restricoes,
-        );
+        if ($request->zona_fonte === ZonaFonte::EnderecamentoMaiorPorcao && filled($request->zona_codigo)) {
+            $base = new TerritoryResult(
+                bairro: $base->bairro,
+                via: $base->via,
+                zona: [
+                    'status' => 'identificado',
+                    'nome' => $request->zona_codigo,
+                    'propriedades' => ['ZONA' => $request->zona_codigo, 'fonte' => ZonaFonte::EnderecamentoMaiorPorcao->value],
+                    'motivo' => null,
+                    'versao_camada' => 'geoserver-wfs-maior-porcao',
+                ],
+                lote: $base->lote,
+                restricoes: $base->restricoes,
+            );
+        }
+
+        return $this->territory->comCodLogOficial($base, $request->cod_log);
     }
 
     /**

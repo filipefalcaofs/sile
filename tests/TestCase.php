@@ -47,6 +47,7 @@ abstract class TestCase extends BaseTestCase
         // padrão — testes do cliente WFS ligam e usam Http::fake.
         config(['sile.features.geoserver_zona' => false]);
         config(['sile.features.geoserver_enderecamento' => false]);
+        config(['sile.features.geoserver_via_classe' => false]);
 
         // ArcGIS municipal (SEMAP) é integração HTTP real: desligada por
         // padrão na suíte; o teste do cliente liga e usa Http::fake.

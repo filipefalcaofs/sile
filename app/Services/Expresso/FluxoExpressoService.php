@@ -27,6 +27,7 @@ use App\Services\EscritorioVirtual\AbrigadoResolver;
 use App\Services\EscritorioVirtual\DesvincularInscricaoService;
 use App\Services\Geo\CamadasIncidentesService;
 use App\Services\Geo\LocalizacaoDivergenciaService;
+use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Geo\ZonaMaiorPorcao;
 use App\Services\Geo\ZonaProcessoService;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
@@ -40,7 +41,6 @@ use App\Support\Settings;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Spatie\Activitylog\Models\Activity;
 
 /**
  * Motor de decisão do fluxo expresso (HU-073 a HU-078) — o CORE VALUE do Viabiliza.
@@ -86,6 +86,7 @@ class FluxoExpressoService
         private JustificativaIndeferimentoBuilder $justificativa,
         private CamadasIncidentesService $camadasIncidentes,
         private ZonaProcessoService $zonaProcesso,
+        private PoligonoEnderecamentoService $poligonoEnderecamento,
     ) {}
 
     /**
@@ -95,30 +96,7 @@ class FluxoExpressoService
      */
     public function decide(ViabilityRequest $request, ?User $actor = null): DecisionResult
     {
-        $ttl = (int) config('sile.expresso.lock.ttl_segundos', 10);
-
-        return Cache::lock("expresso:decisao:{$request->id}", $ttl)->block(
-            $ttl,
-            fn (): DecisionResult => $this->decidirSobLock($request, $actor),
-        );
-    }
-
-    /**
-     * Reavalia o veredito: processo protocolado decide como sempre; processo em
-     * análise que ninguém assumiu (para_distribuir, sem decisão) refaz a resolução
-     * com os dados atuais. Análise já assumida nunca é sobrescrita.
-     */
-    public function reavaliar(ViabilityRequest $request, ?User $actor = null): DecisionResult
-    {
-        $request->refresh();
-
-        if ($request->status === ViabilityRequestStatus::Protocolada) {
-            return $this->decide($request, $actor);
-        }
-
-        if (! $this->reavaliavelEmAnalise($request)) {
-            return $this->resultadoIdempotente($request);
-        }
+        $this->garantirPoligonoRegin($request);
 
         $ttl = (int) config('sile.expresso.lock.ttl_segundos', 10);
 
@@ -126,23 +104,6 @@ class FluxoExpressoService
             $ttl,
             fn (): DecisionResult => $this->decidirSobLock($request, $actor),
         );
-    }
-
-    /**
-     * O processo ainda admite reavaliação: protocolado, ou em análise que
-     * ninguém assumiu e sem decisão.
-     */
-    public function podeReavaliar(ViabilityRequest $request): bool
-    {
-        return $request->status === ViabilityRequestStatus::Protocolada
-            || $this->reavaliavelEmAnalise($request);
-    }
-
-    private function reavaliavelEmAnalise(ViabilityRequest $request): bool
-    {
-        return $request->status === ViabilityRequestStatus::EmAnalise
-            && $request->analysis_status === AnalysisStatus::ParaDistribuir
-            && $request->decision()->doesntExist();
     }
 
     /**
@@ -155,7 +116,7 @@ class FluxoExpressoService
     {
         $request->refresh();
 
-        if ($request->status !== ViabilityRequestStatus::Protocolada && ! $this->reavaliavelEmAnalise($request)) {
+        if ($request->status !== ViabilityRequestStatus::Protocolada && ! $this->podeReavaliarEncaminhamento($request)) {
             return $this->resultadoIdempotente($request);
         }
 
@@ -450,6 +411,37 @@ class FluxoExpressoService
      * o ANALISTA fica nulo — a distribuição (HU-080/081) é uma ação humana
      * posterior na caixa do setor (apoio/gestor distribui, analista assume).
      */
+    /**
+     * Processo REGIN já encaminhado à análise, ainda sem analista e sem
+     * decisão: o motor pode concluir agora que a zona passou a ser
+     * identificável. Quem já assumiu o processo não é redecidido.
+     */
+    private function podeReavaliarEncaminhamento(ViabilityRequest $request): bool
+    {
+        return $request->status === ViabilityRequestStatus::EmAnalise
+            && $request->assigned_user_id === null
+            && ! $request->decision()->exists();
+    }
+
+    /**
+     * O protocolo já tenta o polígono. Se o endereçamento ou o SEMAP falharam
+     * naquela hora, a decisão tenta de novo — fora do lock, porque a consulta
+     * externa pode passar do tempo do lock da decisão.
+     */
+    private function garantirPoligonoRegin(ViabilityRequest $request): void
+    {
+        if ($request->origin !== ViabilityRequestOrigin::Regin) {
+            return;
+        }
+
+        if (is_array($request->address_polygon_geojson) && $request->address_polygon_geojson !== []) {
+            return;
+        }
+
+        $this->poligonoEnderecamento->aplicar($request);
+        $request->refresh();
+    }
+
     private function encaminharAnalise(
         ViabilityRequest $request,
         string $reason,
@@ -459,7 +451,7 @@ class FluxoExpressoService
         ?TipoGatilho $gatilho = null,
     ): DecisionResult {
         if ($request->status === ViabilityRequestStatus::EmAnalise) {
-            return $this->manterEmAnalise($request, $reason, $resolved, $territorial, $gatilho);
+            return DecisionResult::paraAnalise($reason);
         }
 
         DB::transaction(function () use ($request, $reason, $actor, $resolved, $territorial, $gatilho): void {
@@ -506,52 +498,6 @@ class FluxoExpressoService
         // APÓS o commit: gatilho da pré-análise (10-08). Sem listener no ambiente
         // atual é inerte; o ShouldDispatchAfterCommit do evento é defesa extra.
         EncaminhadoParaAnalise::dispatch($request);
-
-        return DecisionResult::paraAnalise($reason);
-    }
-
-    /**
-     * Reavaliação que continua pendente: sem nova transição, SLA nem evento.
-     * Registra a reavaliação na auditoria e, se o motivo mudou, acrescenta a
-     * queda (a anterior permanece como histórico).
-     */
-    private function manterEmAnalise(
-        ViabilityRequest $request,
-        string $reason,
-        ?ResolvedViability $resolved,
-        ?TerritorialRuleVerdict $territorial,
-        ?TipoGatilho $gatilho,
-    ): DecisionResult {
-        DB::transaction(function () use ($request, $reason, $resolved, $territorial, $gatilho): void {
-            // O motivo das quedas por CNAE é o do risco, não o do encaminhamento;
-            // a auditoria guarda o motivo exato de cada passada.
-            $ultimoMotivo = Activity::query()
-                ->where('log_name', 'expresso')
-                ->whereIn('event', ['decisao', 'reavaliacao'])
-                ->where('subject_type', $request->getMorphClass())
-                ->where('subject_id', $request->id)
-                ->latest('id')
-                ->first()
-                ?->properties->get('motivo');
-
-            if ($ultimoMotivo !== $reason) {
-                $this->capturarQueda($request, $reason, $resolved, $territorial, $gatilho);
-            }
-
-            $this->audit->log(
-                logName: 'expresso',
-                event: 'reavaliacao',
-                description: "Reavaliação da solicitação #{$request->id}: continua em análise",
-                properties: [
-                    'viability_request_id' => $request->id,
-                    'protocol_number' => $request->protocol_number,
-                    'resultado' => 'analise',
-                    'motivo' => $reason,
-                ],
-                subject: $request,
-                result: 'analise',
-            );
-        });
 
         return DecisionResult::paraAnalise($reason);
     }
@@ -985,14 +931,6 @@ class FluxoExpressoService
                     : ViabilityRequestStatus::Indeferida;
 
                 $this->stateMachine->transition($request, $destino, $actor, publicLabel: $destino->publicLabel());
-
-                if ($request->analysis_status !== null) {
-                    $request->forceFill([
-                        'analysis_status' => null,
-                        'analysis_stage' => null,
-                        'analysis_due_at' => null,
-                    ])->save();
-                }
 
                 $this->audit->log(
                     logName: 'expresso',

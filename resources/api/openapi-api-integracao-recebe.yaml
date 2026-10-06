@@ -111,8 +111,6 @@ paths:
                   cnpjEscritorioVirtual: "11222333000181"
                   imovelEmCondominio: Não
                   areaEmbarqueDesembarque: Não
-                  vagasEmbarqueDesembarque: 2
-                  vagasEstacionamento: 10
                   RES_DS_EVENTO: Inscrição de primeiro estabelecimento (Matriz)
                   RES_CNPJ_SEDE: "13927801000149"
                   termoDispensaViabilidadeLocacional: Não
@@ -299,11 +297,10 @@ components:
           description: Sinônimo de `RES_IDENT_COMP`.
         RUC_ACTV_ECON:
           type: array
-          maxItems: 100
           description: |
             Atividades econômicas, como no envio original. `RAE_CALIF_ACTV` `1` é a
-            principal; `2` é secundária. Até 100 atividades: uma principal e até 99
-            secundárias. Precisa de uma principal para o processo ser criado.
+            principal; `2` é secundária. Precisa de uma principal para o
+            processo ser criado.
           items:
             type: object
             required: [RAE_TAE_COD_ACTVD, RAE_CALIF_ACTV]
@@ -321,7 +318,6 @@ components:
         cnaesSecundarios:
           deprecated: true
           type: array
-          maxItems: 99
           description: Sinônimo das atividades com `RAE_CALIF_ACTV` `2`.
           items:
             type: string
@@ -396,16 +392,6 @@ components:
           oneOf:
             - type: boolean
             - type: string
-        vagasEmbarqueDesembarque:
-          type: integer
-          minimum: 0
-          description: Quantidade de vagas de embarque e desembarque. Inteiro maior ou igual a zero; texto só de dígitos também é aceito.
-          example: 2
-        vagasEstacionamento:
-          type: integer
-          minimum: 0
-          description: Quantidade de vagas de estacionamento. Inteiro maior ou igual a zero; texto só de dígitos também é aceito.
-          example: 10
         possuiConcessaoDeUso:
           description: Resposta a "Possui concessão de uso?". Sim, Não ou boolean.
           oneOf:

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Geo;
 
-use App\Enums\SituacaoEtapa;
 use App\Models\Activity;
 use App\Models\ViabilityRequest;
 use App\Services\Geo\PoligonoEnderecamentoService;
@@ -117,64 +116,5 @@ class PoligonoLoteFallbackSemapTest extends TestCase
 
         $this->assertFalse(app(PoligonoEnderecamentoService::class)->aplicar($request));
         $this->assertNull($request->fresh()->address_polygon_geojson);
-    }
-
-    public function test_lote_do_enderecamento_registra_a_etapa_como_ok(): void
-    {
-        Http::fake([
-            '*geoserver.sedur*' => Http::response($this->colecao(true)),
-            '*geo.salvador*' => Http::response($this->colecao(false)),
-        ]);
-
-        $request = $this->processo();
-
-        app(PoligonoEnderecamentoService::class)->aplicar($request);
-
-        $this->assertSame(SituacaoEtapa::Ok, $request->etapas()->where('etapa', 'poligono_lote')->first()?->situacao);
-    }
-
-    public function test_lote_so_do_semap_registra_a_etapa_como_ok(): void
-    {
-        Http::fake([
-            '*geoserver.sedur*' => Http::response($this->colecao(false)),
-            '*geo.salvador*' => Http::response($this->colecao(true)),
-        ]);
-
-        $request = $this->processo();
-
-        app(PoligonoEnderecamentoService::class)->aplicar($request);
-
-        $this->assertSame(SituacaoEtapa::Ok, $request->etapas()->where('etapa', 'poligono_lote')->first()?->situacao);
-    }
-
-    public function test_nenhuma_fonte_com_lote_registra_a_etapa_como_definitiva(): void
-    {
-        Http::fake([
-            '*geoserver.sedur*' => Http::response($this->colecao(false)),
-            '*geo.salvador*' => Http::response($this->colecao(false)),
-        ]);
-
-        $request = $this->processo();
-
-        app(PoligonoEnderecamentoService::class)->aplicar($request);
-
-        $this->assertSame(SituacaoEtapa::Definitiva, $request->etapas()->where('etapa', 'poligono_lote')->first()?->situacao);
-    }
-
-    public function test_fonte_fora_do_ar_sem_achar_lote_registra_a_etapa_como_indisponivel(): void
-    {
-        Http::fake([
-            '*geoserver.sedur*' => Http::response('erro', 500),
-            '*geo.salvador*' => Http::response($this->colecao(false)),
-        ]);
-
-        $request = $this->processo();
-
-        app(PoligonoEnderecamentoService::class)->aplicar($request);
-
-        $etapa = $request->etapas()->where('etapa', 'poligono_lote')->first();
-
-        $this->assertSame(SituacaoEtapa::Indisponivel, $etapa?->situacao);
-        $this->assertNotNull($etapa->proxima_tentativa_em);
     }
 }

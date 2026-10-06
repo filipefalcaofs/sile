@@ -23,8 +23,10 @@ use App\Services\Cnpj\SedurCnpjLookup;
 use App\Services\Expresso\DatabaseHolidayProvider;
 use App\Services\Expresso\HolidayProvider;
 use App\Services\Geo\Geocoder;
+use App\Services\Geo\GeoServerClassificacaoViariaClient;
 use App\Services\Geo\GeoServerEnderecamentoClient;
 use App\Services\Geo\GeoServerWfsCamadaClient;
+use App\Services\Geo\GeoServerWfsZonaClient;
 use App\Services\Geo\GeoServerZonaMaiorPorcaoResolver;
 use App\Services\Geo\NominatimGeocoder;
 use App\Services\Geo\PostgisSpatialRepository;
@@ -101,6 +103,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(GeoServerWfsCamadaClient::class);
         $this->app->scoped(GeoServerEnderecamentoClient::class);
         $this->app->scoped(ZonaMaiorPorcaoResolver::class, GeoServerZonaMaiorPorcaoResolver::class);
+        // Sem binding, o container trata o default `null` do construtor como
+        // valor final e NÃO instancia o concreto (resolveClass). O motor então
+        // lia a zona como "base pendente" mesmo com o WFS respondendo.
+        $this->app->scoped(GeoServerWfsZonaClient::class);
+        $this->app->scoped(GeoServerClassificacaoViariaClient::class);
 
         // Fonte de feriados (HU-137) atrás de contrato: o BusinessDeadlineCalculator
         // (HU-129) desconta os feriados ativos via este provider para medir
