@@ -134,11 +134,11 @@ function ServerFormModal({ server, isOpen, onClose }: { server?: EmailServerItem
 
                         <div className="flex flex-wrap items-center gap-6">
                             <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                                <input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} className="size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500" />
+                                <input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} className="size-4 rounded border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark" />
                                 Ativo
                             </label>
                             <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                                <input type="checkbox" checked={isDefault} onChange={(event) => setIsDefault(event.target.checked)} className="size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500" />
+                                <input type="checkbox" checked={isDefault} onChange={(event) => setIsDefault(event.target.checked)} className="size-4 rounded border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark" />
                                 Servidor padrão
                             </label>
                         </div>

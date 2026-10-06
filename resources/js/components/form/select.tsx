@@ -1,4 +1,5 @@
 import { useId, type ChangeEvent } from 'react';
+import { ChevronDownIcon } from '@/components/icons';
 
 interface Option {
     value: string;
@@ -57,9 +58,9 @@ export default function Select({
                 aria-label={ariaLabel}
                 aria-invalid={error || undefined}
                 aria-describedby={hint ? hintId : undefined}
-                className={`h-11 w-full appearance-none rounded-lg border bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:placeholder:text-white/30 ${borda} ${
+                className={`h-11 w-full appearance-none rounded-lg border bg-white px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:scheme-dark dark:placeholder:text-white/30 ${borda} ${
                     value ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400'
-                } ${className}`}
+                } ${disabled ? 'cursor-not-allowed opacity-40' : ''} ${className}`}
                 value={value}
                 onChange={handleChange}
             >
@@ -78,6 +79,11 @@ export default function Select({
                     </option>
                 ))}
             </select>
+            <span
+                className={`pointer-events-none absolute top-0 right-0 flex h-11 w-11 items-center justify-center text-gray-500 dark:text-gray-400 ${disabled ? 'opacity-40' : ''}`}
+            >
+                <ChevronDownIcon className="size-4" aria-hidden="true" />
+            </span>
             {hint && (
                 <p id={hintId} role={error ? 'alert' : undefined} className={`pt-1.5 text-xs ${error ? 'text-error-500' : 'text-gray-500'}`}>
                     {hint}

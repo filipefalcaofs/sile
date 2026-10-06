@@ -112,7 +112,7 @@ function PermissionsGrid({
                                                 value={permission.name}
                                                 defaultChecked={locked || defaultChecked.includes(permission.name)}
                                                 disabled={locked}
-                                                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 checked:border-transparent checked:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700"
+                                                className="peer size-5 cursor-pointer appearance-none rounded-md border border-gray-300 bg-white scheme-light checked:border-brand-500 checked:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark dark:checked:border-brand-500 dark:checked:bg-brand-500"
                                             />
                                             <svg
                                                 className="pointer-events-none absolute hidden text-white peer-checked:block peer-disabled:text-gray-200"

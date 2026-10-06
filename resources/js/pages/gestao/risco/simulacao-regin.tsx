@@ -750,7 +750,7 @@ function FormularioPendencias({ pendencias }: { pendencias: PendenciasSimulacao 
                                                             },
                                                         })
                                                     }
-                                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                                    className="size-4 rounded-full border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                                 />
                                                 Sim
                                             </label>
@@ -768,7 +768,7 @@ function FormularioPendencias({ pendencias }: { pendencias: PendenciasSimulacao 
                                                             },
                                                         })
                                                     }
-                                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                                    className="size-4 rounded-full border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                                 />
                                                 Não
                                             </label>

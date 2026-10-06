@@ -1,6 +1,7 @@
 import { router, WhenVisible } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { metrosComUnidade } from '@/lib/metros';
 import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
@@ -113,7 +114,7 @@ export default function EtapaRevisao({ solicitacao, requisitosFaltantes, simulat
                         <InfoRow label="CNPJ" value={solicitacao.company?.formatted_cnpj} />
                         <InfoRow
                             label="Área utilizada"
-                            value={solicitacao.used_area_m2 ? `${solicitacao.used_area_m2} m²` : null}
+                            value={metrosComUnidade(solicitacao.used_area_m2)}
                         />
                         <InfoRow label="Endereço" value={endereco || null} />
                         <InfoRow label="Ponto de referência" value={solicitacao.address.reference} />
@@ -188,7 +189,7 @@ export default function EtapaRevisao({ solicitacao, requisitosFaltantes, simulat
                                 type="checkbox"
                                 checked={ciente}
                                 onChange={(event) => setCiente(event.target.checked)}
-                                className="mt-0.5 size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                className="mt-0.5 size-4 rounded border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                             />
                             Estou ciente da tendência de indeferimento e desejo prosseguir com o protocolo.
                         </label>

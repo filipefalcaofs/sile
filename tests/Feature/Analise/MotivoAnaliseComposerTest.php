@@ -42,7 +42,7 @@ class MotivoAnaliseComposerTest extends TestCase
         $linhas = app(MotivoAnaliseComposer::class)->para($request->fresh(), null);
 
         $this->assertContains('CNAE 1353-9/00 — não enquadrado — para enquadramento do analista', $linhas);
-        $this->assertContains('Área utilizada declarada: 156636 m².', $linhas);
+        $this->assertContains('Área utilizada declarada: 156.636 m².', $linhas);
         $this->assertFalse(collect($linhas)->contains(
             fn (string $linha): bool => str_contains($linha, 'gatilho') || str_contains($linha, 'dimensão decisiva'),
         ));

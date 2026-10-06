@@ -559,7 +559,7 @@ export default function ConsultaProcessos({
                             <select
                                 value={ordem}
                                 onChange={(evento) => trocarOrdem(evento.target.value)}
-                                className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 scheme-light dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:scheme-dark"
                             >
                                 {ORDEM_OPTIONS.map((opcao) => (
                                     <option key={opcao.value} value={opcao.value}>
@@ -573,7 +573,7 @@ export default function ConsultaProcessos({
                             <select
                                 value={perPage}
                                 onChange={(evento) => trocarPerPage(Number(evento.target.value))}
-                                className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                                className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 scheme-light dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:scheme-dark"
                             >
                                 {perPageOptions.map((opcao) => (
                                     <option key={opcao} value={opcao}>

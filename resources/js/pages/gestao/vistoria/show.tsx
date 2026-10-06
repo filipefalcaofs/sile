@@ -360,7 +360,7 @@ function RadioSimNao({
                         checked={valor === opcao}
                         disabled={disabled}
                         onChange={() => onChange(opcao)}
-                        className="h-4 w-4 border-gray-300 text-brand-500 focus:ring-brand-500/20 dark:border-gray-700"
+                        className="size-4 rounded-full border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/20 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                     />
                     {opcao === '1' ? 'Sim' : 'Não'}
                 </label>
@@ -394,7 +394,7 @@ function RadioOpcoes({
                         checked={valor === valorOpcao}
                         disabled={disabled}
                         onChange={() => onChange(valorOpcao)}
-                        className="h-4 w-4 border-gray-300 text-brand-500 focus:ring-brand-500/20 dark:border-gray-700"
+                        className="size-4 rounded-full border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/20 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                     />
                     {rotulo}
                 </label>

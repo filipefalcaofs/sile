@@ -353,7 +353,7 @@ export default function EtapaImovel({
                                     type="checkbox"
                                     checked={data.is_virtual_office}
                                     onChange={(event) => setData('is_virtual_office', event.target.checked)}
-                                    className="size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                    className="size-4 rounded border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                 />
                                 Escritório virtual
                             </label>
@@ -362,7 +362,7 @@ export default function EtapaImovel({
                                     type="checkbox"
                                     checked={data.is_public_area}
                                     onChange={(event) => setData('is_public_area', event.target.checked)}
-                                    className="size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                    className="size-4 rounded border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                 />
                                 Em área pública (exige termo de concessão de uso)
                             </label>
@@ -371,7 +371,7 @@ export default function EtapaImovel({
                                     type="checkbox"
                                     checked={data.has_independent_access}
                                     onChange={(event) => setData('has_independent_access', event.target.checked)}
-                                    className="size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                    className="size-4 rounded border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                 />
                                 Possui acesso independente
                             </label>
@@ -392,7 +392,7 @@ export default function EtapaImovel({
                                     name="wants_virtual_office_tenant"
                                     checked={data.wants_virtual_office_tenant === true}
                                     onChange={() => setData('wants_virtual_office_tenant', true)}
-                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                    className="size-4 rounded-full border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                 />
                                 Sim
                             </label>
@@ -402,7 +402,7 @@ export default function EtapaImovel({
                                     name="wants_virtual_office_tenant"
                                     checked={data.wants_virtual_office_tenant === false}
                                     onChange={() => setData('wants_virtual_office_tenant', false)}
-                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                    className="size-4 rounded-full border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                 />
                                 Não
                             </label>

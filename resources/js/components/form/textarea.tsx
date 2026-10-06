@@ -22,7 +22,7 @@ export default function Textarea({
 }: TextareaProps) {
     const hintId = useId();
 
-    let classes = `min-h-24 w-full rounded-lg border px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${className}`;
+    let classes = `min-h-24 w-full rounded-lg border px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark dark:placeholder:text-white/30 ${className}`;
 
     if (disabled) {
         classes += ` cursor-not-allowed border-gray-300 bg-gray-100 text-gray-500 opacity-40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400`;

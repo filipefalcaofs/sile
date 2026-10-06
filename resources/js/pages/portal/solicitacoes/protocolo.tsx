@@ -2,6 +2,7 @@ import { Head, Link, WhenVisible } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
+import { metrosComUnidade } from '@/lib/metros';
 import ParecerCard, { type ParecerDecisao } from '@/components/decisao/parecer-card';
 import { AlertIcon, CheckCircleIcon, InfoIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
@@ -458,7 +459,7 @@ export default function Protocolo({
                             <InfoRow label="Criado em" value={formatDateTime(solicitacao.created_at)} />
                             <InfoRow
                                 label="Área utilizada"
-                                value={solicitacao.used_area_m2 ? `${solicitacao.used_area_m2} m²` : null}
+                                value={metrosComUnidade(solicitacao.used_area_m2)}
                             />
                             <InfoRow
                                 label="Endereço"

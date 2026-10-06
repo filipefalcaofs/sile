@@ -5,6 +5,7 @@ namespace App\Services\Solicitacao;
 use App\Models\Cnae;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Support\AreaMetros;
 use App\Support\Audit\AuditService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DomainException;
@@ -99,7 +100,7 @@ class ComprovanteProtocoloService
                 'endereco' => $endereco,
                 'bairro' => $solicitacao->address_neighborhood,
                 'cep' => self::cepFormatado($solicitacao->address_zip),
-                'area_m2' => $solicitacao->used_area_m2,
+                'area_m2' => AreaMetros::formatar($solicitacao->used_area_m2),
             ],
             'atividades' => $solicitacao->cnaes
                 ->sortByDesc(fn (Cnae $cnae) => (bool) $cnae->pivot->is_primary)

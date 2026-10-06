@@ -183,7 +183,7 @@ function EditarRegraModal({
     }
 
     const inputClass =
-        'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90';
+        'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-brand-500 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark';
     const labelClass = 'mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400';
 
     return (
@@ -420,7 +420,7 @@ function EditarRegraModal({
                 <input
                     id="rt-ativo"
                     type="checkbox"
-                    className="size-4 rounded border-gray-300"
+                    className="size-4 rounded border-gray-300 bg-white scheme-light accent-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark dark:accent-brand-400"
                     checked={form.ativo}
                     onChange={(event) => setCampo('ativo', event.target.checked)}
                 />

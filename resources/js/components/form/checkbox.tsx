@@ -28,7 +28,7 @@ export default function Checkbox({
                     id={id}
                     name={name}
                     type="checkbox"
-                    className={`w-5 h-5 appearance-none cursor-pointer dark:border-gray-700 border border-gray-300 checked:border-transparent rounded-md checked:bg-brand-500 disabled:opacity-60 ${className}`}
+                    className={`size-5 cursor-pointer appearance-none rounded-md border border-gray-300 bg-white scheme-light checked:border-brand-500 checked:bg-brand-500 disabled:opacity-60 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark dark:checked:border-brand-500 dark:checked:bg-brand-500 ${className}`}
                     checked={checked}
                     onChange={(e) => onChange(e.target.checked)}
                     disabled={disabled}

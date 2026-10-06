@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Badge from '@/components/ui/badge';
+import { formatarMetros, metrosComUnidade } from '@/lib/metros';
 
 /** Semáforo do SLA da fila (HU-144) — espelha o enum SlaStatus do backend. */
 export interface ProcessoSla {
@@ -271,15 +272,11 @@ export function RecepcaoRecebida({ recepcao }: { recepcao: ProcessoRecepcao }) {
             <ItemDeclaracao label="CODLOG">{textoOuTraco(recepcao.codlog)}</ItemDeclaracao>
             <ItemDeclaracao label="Município">{cidade || '—'}</ItemDeclaracao>
             <ItemDeclaracao label="Ponto de referência">{textoOuTraco(recepcao.ponto_referencia)}</ItemDeclaracao>
-            <ItemDeclaracao label="Área utilizada">
-                {recepcao.area_utilizada === null || recepcao.area_utilizada === undefined
-                    ? '—'
-                    : `${recepcao.area_utilizada} m²`}
-            </ItemDeclaracao>
+            <ItemDeclaracao label="Área utilizada">{metrosComUnidade(recepcao.area_utilizada) ?? '—'}</ItemDeclaracao>
             <ItemDeclaracao label="Área construída / terreno">
-                {[recepcao.area_construida, recepcao.area_terreno].every((valor) => valor === null || valor === undefined)
+                {recepcao.area_construida == null && recepcao.area_terreno == null
                     ? '—'
-                    : `${recepcao.area_construida ?? '—'} / ${recepcao.area_terreno ?? '—'} m²`}
+                    : `${formatarMetros(recepcao.area_construida) ?? '—'} / ${formatarMetros(recepcao.area_terreno) ?? '—'} m²`}
             </ItemDeclaracao>
             <ItemDeclaracao label="Acessos independentes">{textoOuTraco(recepcao.acessos_independentes)}</ItemDeclaracao>
             <ItemDeclaracao label="Imóvel em condomínio">{textoOuTraco(recepcao.imovel_em_condominio)}</ItemDeclaracao>
