@@ -88,6 +88,7 @@ class SolicitacaoViabilityResolver
                 'is_primary' => (bool) $cnae->pivot->is_primary,
                 'tendencia' => $veredito['resultado'],
                 'tendencia_label' => $veredito['label'],
+                'veredito_motivo' => $veredito['motivo'] ?? null,
                 'fluxo' => $result->risco->encaminhamento['fluxo'] ?? Fluxo::Analise->value,
                 'consulta' => $result,
                 'consulta_array' => $result->toArray(),

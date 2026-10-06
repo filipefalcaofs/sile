@@ -329,7 +329,7 @@ class FluxoExpressoService
             && ! $this->bypassSimulacaoHomologacao($request)) {
             return $this->encaminharAnalise(
                 $request,
-                'veredito locacional pendente — zona urbanística pendente SEDUR',
+                'veredito locacional pendente — '.($resolved->motivoPendente() ?? 'zona urbanística pendente SEDUR'),
                 $actor,
                 $resolved,
             );
