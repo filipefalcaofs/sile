@@ -37,17 +37,21 @@ final readonly class ResolvedViability
     ) {}
 
     /**
-     * Motivo do primeiro CNAE com veredito pendente, como o motor LOUOS o
-     * informou (sem enquadramento na planilha, zona indisponível, via na CNLU).
+     * Motivo do primeiro CNAE com veredito pendente. Quando o ramo da planilha
+     * não foi resolvido, o motivo específico (pergunta sem resposta, área ou
+     * tipo de imóvel ausente) vale mais que o consolidado genérico.
      */
     public function motivoPendente(): ?string
     {
         foreach ($this->por_cnae as $item) {
-            $motivo = $item['veredito_motivo'] ?? null;
+            if (($item['tendencia'] ?? null) !== ResultadoViabilidade::Pendente->value) {
+                continue;
+            }
 
-            if (($item['tendencia'] ?? null) === ResultadoViabilidade::Pendente->value
-                && is_string($motivo) && trim($motivo) !== '') {
-                return trim($motivo);
+            foreach ([$item['enquadramento_motivo'] ?? null, $item['veredito_motivo'] ?? null] as $motivo) {
+                if (is_string($motivo) && trim($motivo) !== '') {
+                    return trim($motivo);
+                }
             }
         }
 

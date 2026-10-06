@@ -89,6 +89,9 @@ class SolicitacaoViabilityResolver
                 'tendencia' => $veredito['resultado'],
                 'tendencia_label' => $veredito['label'],
                 'veredito_motivo' => $veredito['motivo'] ?? null,
+                'enquadramento_motivo' => $result->enquadramento->ramoResolvido()
+                    ? null
+                    : ($result->enquadramento->enquadramento['motivo'] ?? null),
                 'fluxo' => $result->risco->encaminhamento['fluxo'] ?? Fluxo::Analise->value,
                 'consulta' => $result,
                 'consulta_array' => $result->toArray(),
