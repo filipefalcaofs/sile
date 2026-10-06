@@ -202,8 +202,8 @@ function BrandStage({
                 </div>
             </div>
 
-            <dl className={`relative z-1 flex shrink-0 items-end justify-between gap-6 overflow-hidden border-t border-white/8 pt-[clamp(16px,2.5vh,24px)] ${saidaDoPalco}`}>
-                <div className="flex gap-[clamp(28px,3.5vw,64px)]">
+            <dl className={`relative z-1 flex shrink-0 flex-wrap items-end justify-between gap-x-6 gap-y-5 overflow-hidden border-t border-white/8 pt-[clamp(16px,2.5vh,24px)] ${saidaDoPalco}`}>
+                <div className="flex min-w-0 flex-wrap gap-x-[clamp(20px,3vw,64px)] gap-y-4">
                     {footStats.map((stat) => (
                         <div key={stat.label}>
                             <dt className={`${monoFont} mb-2 text-[10px] leading-none font-medium tracking-[0.1em] text-[oklch(50%_0.02_250)] uppercase`}>
@@ -221,15 +221,15 @@ function BrandStage({
                         </div>
                     ))}
                 </div>
-                <div className="flex items-center gap-[22px]">
+                <div className="flex shrink-0 items-center gap-[clamp(14px,1.6vw,22px)]">
                     <img
-                        className="block h-11 w-auto opacity-92"
+                        className="block h-11 w-auto max-w-none shrink-0 opacity-92"
                         src="/images/logo_prefeitura.png"
                         alt="Prefeitura de Salvador"
                     />
                     <span className="h-9 w-px bg-white/18" aria-hidden="true" />
                     <img
-                        className="block h-[30px] w-auto opacity-92"
+                        className="block h-[30px] w-auto max-w-none shrink-0 opacity-92"
                         src="/images/01JW9M9BYJ76Y0M06Z1XHJDKH8.png"
                         alt="SEDUR — Secretaria de Desenvolvimento Urbano"
                     />
