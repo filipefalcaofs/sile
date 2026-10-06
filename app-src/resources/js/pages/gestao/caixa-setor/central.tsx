@@ -240,7 +240,7 @@ export default function CentralDistribuicao({
                                 <select
                                     value={ordenacao}
                                     onChange={(e) => setOrdenacao(e.target.value as Ordenacao)}
-                                    className="h-11 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                                    className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 scheme-light dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark"
                                 >
                                     <option value="menor">Menor carga primeiro</option>
                                     <option value="maior">Maior carga primeiro</option>

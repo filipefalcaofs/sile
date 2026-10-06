@@ -61,7 +61,18 @@ class TratamentoRegrasUiTest extends TestCase
                 ->has('enquadramento.regras', 59)
                 ->has('enquadramento.ramos')
                 ->has('enquadramento.condicionantes', 32)
-                ->has('enquadramento.enquadramentos.data'));
+                ->has('enquadramento.enquadramentos.data')
+                ->where('enquadramento.enquadramentos.data', function (Collection $linhas): bool {
+                    $linha = $linhas->first(
+                        fn (array $item): bool => $item['cnae'] === '0111-3/01' && $item['codigo_louos'] === '07.12.13',
+                    );
+
+                    return is_array($linha)
+                        && $linha['denominacao'] === 'Cultivo de arroz'
+                        && $linha['enquadramento2'] === 'nR2-12'
+                        && abs((float) $linha['ate_m2'] - 1250) < 0.001
+                        && abs((float) $linha['ate_m2_2'] - 1250.01) < 0.001;
+                }));
     }
 
     public function test_aba_enquadramento_sem_versao_nao_inventa_planilha(): void

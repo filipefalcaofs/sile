@@ -239,7 +239,7 @@ export default function CaixaSetorIndex({
                               aria-label="Selecionar todos os processos da página"
                               checked={todosSelecionados}
                               onChange={alternarTodos}
-                              className="size-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600"
+                              className="size-4 rounded border-gray-300 bg-white text-brand-600 scheme-light focus:ring-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                           />
                       ),
                       cellClassName: 'w-10 whitespace-nowrap',
@@ -249,7 +249,7 @@ export default function CaixaSetorIndex({
                               aria-label={`Selecionar processo ${item.bap ?? item.protocol_number ?? item.id}`}
                               checked={selecionados.includes(item.id)}
                               onChange={() => alternarSelecao(item.id)}
-                              className="size-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600"
+                              className="size-4 rounded border-gray-300 bg-white text-brand-600 scheme-light focus:ring-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                           />
                       ),
                   } satisfies ColumnDef<ProcessoItem>,

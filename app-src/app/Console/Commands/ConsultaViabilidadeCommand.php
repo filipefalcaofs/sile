@@ -12,6 +12,7 @@ use App\Services\Louos\EnquadramentoResult;
 use App\Services\Risco\RiscoResult;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
+use App\Support\AreaMetros;
 use Illuminate\Console\Command;
 
 /**
@@ -316,6 +317,6 @@ class ConsultaViabilidadeCommand extends Command
 
     private function formatArea(float $area): string
     {
-        return rtrim(rtrim(number_format($area, 2, '.', ''), '0'), '.');
+        return AreaMetros::formatar($area) ?? '';
     }
 }

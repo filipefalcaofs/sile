@@ -399,6 +399,7 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                                                     <input
                                                                         type="radio"
                                                                         name={`pergunta-${pergunta.numero}`}
+                                                                        className="size-4 border-gray-300 bg-white scheme-light accent-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                                                         checked={respostas[pergunta.numero] === true}
                                                                         onChange={() =>
                                                                             setRespostas((atual) => ({
@@ -413,6 +414,7 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                                                     <input
                                                                         type="radio"
                                                                         name={`pergunta-${pergunta.numero}`}
+                                                                        className="size-4 border-gray-300 bg-white scheme-light accent-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                                                         checked={respostas[pergunta.numero] === false}
                                                                         onChange={() =>
                                                                             setRespostas((atual) => ({

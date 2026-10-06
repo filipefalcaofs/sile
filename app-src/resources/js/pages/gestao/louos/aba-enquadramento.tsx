@@ -3,10 +3,16 @@ import { router, useForm, usePage } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import DataTable from '@/components/ui/data-table/data-table';
+import PerPageSelect from '@/components/ui/data-table/per-page-select';
+import TableToolbar from '@/components/ui/data-table/table-toolbar';
+import type { ColumnDef } from '@/components/ui/data-table/types';
+import { useServerTable } from '@/components/ui/data-table/use-server-table';
 import EmptyState from '@/components/ui/empty-state';
 import Label from '@/components/form/label';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import type { SharedProps } from '@/types';
+import { apresentacaoClassificacao, apresentacaoRisco, faixasDaLinha } from './faixas-enquadramento';
 
 interface Pergunta {
     numero: number;
@@ -54,14 +60,17 @@ interface Nota {
 
 interface EnquadramentoLinha {
     cnae: string;
+    denominacao: string | null;
     codigo_louos: string;
+    denominacao_louos: string | null;
     subcategoria: string;
     grupo: string;
     risco: string;
-    ate_m2: string | null;
+    ate_m2: string | number | null;
     enquadramento2: string | null;
+    ate_m2_2: string | number | null;
     enquadramento3: string | null;
-    acima_m2: string | null;
+    acima_m2: string | number | null;
     classificacao: string | null;
     codigo_tll: string | null;
     regra: number | null;
@@ -118,7 +127,99 @@ function comoLista<T>(valor: T[] | Record<string, T> | null | undefined): T[] {
     return [];
 }
 
-export default function AbaEnquadramento({ enquadramento }: { enquadramento: EnquadramentoData }) {
+function CelulaCodigo({ codigo, nome }: { codigo: string; nome: string | null }) {
+    return (
+        <div className="max-w-64">
+            <div className="font-medium whitespace-nowrap text-gray-800 dark:text-white/90">{codigo}</div>
+            {nome && <p className="mt-0.5 line-clamp-2 text-theme-xs text-gray-500 dark:text-gray-400">{nome}</p>}
+        </div>
+    );
+}
+
+function CelulaFaixas({ linha }: { linha: EnquadramentoLinha }) {
+    const faixas = faixasDaLinha(linha);
+
+    if (faixas.length === 0) {
+        return <>—</>;
+    }
+
+    return (
+        <ul className="flex min-w-52 flex-col gap-1">
+            {faixas.map((faixa) => (
+                <li key={`${faixa.codigo}-${faixa.limite ?? 'qualquer'}`} className="flex items-baseline gap-2">
+                    <span className="w-16 shrink-0 font-medium text-gray-800 dark:text-white/90">{faixa.codigo}</span>
+                    <span className="text-theme-xs tabular-nums text-gray-500 dark:text-gray-400">
+                        {faixa.limite ?? 'qualquer área'}
+                    </span>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+const colunasEnquadramento: ColumnDef<EnquadramentoLinha>[] = [
+    {
+        id: 'cnae',
+        header: 'CNAE',
+        cell: (linha) => <CelulaCodigo codigo={linha.cnae} nome={linha.denominacao} />,
+    },
+    {
+        id: 'louos',
+        header: 'LOUOS',
+        cell: (linha) => <CelulaCodigo codigo={linha.codigo_louos} nome={linha.denominacao_louos} />,
+    },
+    {
+        id: 'risco',
+        header: 'Risco',
+        cell: (linha) => {
+            const risco = apresentacaoRisco(linha.risco);
+
+            return (
+                <Badge color={risco.cor} size="sm">
+                    {risco.rotulo}
+                </Badge>
+            );
+        },
+    },
+    {
+        id: 'faixas',
+        header: 'Faixas de área',
+        cell: (linha) => <CelulaFaixas linha={linha} />,
+    },
+    {
+        id: 'classificacao',
+        header: 'Classificação',
+        cell: (linha) => {
+            const classificacao = apresentacaoClassificacao(linha.classificacao);
+
+            if (!classificacao) {
+                return '—';
+            }
+
+            return (
+                <Badge color={classificacao.cor} size="sm">
+                    {classificacao.rotulo}
+                </Badge>
+            );
+        },
+    },
+    {
+        id: 'tll',
+        header: 'TLL',
+        cellClassName: 'font-medium tabular-nums whitespace-nowrap text-gray-800 dark:text-white/90',
+        cell: (linha) => linha.codigo_tll ?? '—',
+    },
+];
+
+export default function AbaEnquadramento({
+    enquadramento,
+    filtros,
+    perPageOptions,
+}: {
+    enquadramento: EnquadramentoData;
+    filtros: { search: string; per_page: number };
+    perPageOptions: number[];
+}) {
     const { versao, contagens } = enquadramento;
     const perguntas = comoLista(enquadramento.perguntas);
     const regras = comoLista(enquadramento.regras);
@@ -139,6 +240,14 @@ export default function AbaEnquadramento({ enquadramento }: { enquadramento: Enq
         : null;
     const { auth } = usePage<SharedProps>().props;
     const canMaintain = auth.permissions.includes('manter-louos');
+    const table = useServerTable({
+        url: '/gestao/louos',
+        initialSearch: filtros.search,
+        initialSort: { column: 'cnae', direction: 'asc' },
+        initialPerPage: filtros.per_page,
+        initialFilters: { aba: 'enquadramento' },
+    });
+    const buscando = table.search.trim() !== '';
     const form = useForm<{ arquivo: File | null }>({ arquivo: null });
 
     function importar(event: FormEvent) {
@@ -165,7 +274,7 @@ export default function AbaEnquadramento({ enquadramento }: { enquadramento: Enq
                                     type="file"
                                     accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                     onChange={(event) => form.setData('arquivo', event.target.files?.[0] ?? null)}
-                                    className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-800 file:mr-3 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1 file:text-xs file:text-gray-700 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                                    className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-800 file:mr-3 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1 file:text-xs file:text-gray-700 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark dark:file:bg-white/10 dark:file:text-gray-200"
                                 />
                                 {form.errors.arquivo && <FieldError>{form.errors.arquivo}</FieldError>}
                             </div>
@@ -238,6 +347,53 @@ export default function AbaEnquadramento({ enquadramento }: { enquadramento: Enq
                             {contagens.cnaes} CNAEs · {contagens.enquadramentos} enquadramentos · {contagens.regras} regras ·{' '}
                             {contagens.ramos} ramos · {contagens.condicionantes} condicionantes
                         </span>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader
+                    title="Enquadramentos"
+                    description="Cada linha é o uso que o motor escolhe: CNAE, LOUOS e o corte de área de cada faixa."
+                />
+                <CardContent>
+                    <div className="flex flex-col gap-4">
+                        <TableToolbar
+                            search={{
+                                value: table.search,
+                                onChange: table.setSearch,
+                                placeholder: 'CNAE, atividade, LOUOS ou uso',
+                                label: 'Buscar enquadramentos',
+                            }}
+                            actions={
+                                <PerPageSelect
+                                    value={table.perPage}
+                                    options={perPageOptions}
+                                    onChange={table.setPerPage}
+                                />
+                            }
+                        />
+                        <DataTable
+                            columns={colunasEnquadramento}
+                            rows={enquadramentos.data}
+                            rowKey={(linha) => `${linha.cnae}-${linha.codigo_louos}-${linha.subcategoria}`}
+                            loading={table.processing}
+                            density="compact"
+                            emptyState={
+                                <EmptyState
+                                    title={buscando ? 'Nenhum enquadramento para a busca' : 'Nenhuma linha nesta versão'}
+                                    description={
+                                        buscando
+                                            ? 'Tente o código do CNAE, o nome da atividade ou o código LOUOS.'
+                                            : 'A versão vigente não tem linhas de enquadramento.'
+                                    }
+                                />
+                            }
+                        />
+                        <Pagination
+                            links={enquadramentos.links}
+                            meta={{ from: enquadramentos.from, to: enquadramentos.to, total: enquadramentos.total }}
+                        />
                     </div>
                 </CardContent>
             </Card>
@@ -367,52 +523,6 @@ export default function AbaEnquadramento({ enquadramento }: { enquadramento: Enq
                 </Card>
             )}
 
-            <Card>
-                <CardHeader
-                    title="Enquadramentos"
-                    description="Linha que o motor escolhe: CNAE, código LOUOS, faixas de área, risco, classificação e TLL."
-                />
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="text-gray-500 dark:text-gray-400">
-                                    <th className="py-2 pr-3">CNAE</th>
-                                    <th className="py-2 pr-3">LOUOS</th>
-                                    <th className="py-2 pr-3">Subcategoria</th>
-                                    <th className="py-2 pr-3">Risco</th>
-                                    <th className="py-2 pr-3">Até m²</th>
-                                    <th className="py-2 pr-3">Faixa 2</th>
-                                    <th className="py-2 pr-3">Faixa 3</th>
-                                    <th className="py-2 pr-3">Classificação</th>
-                                    <th className="py-2">TLL</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {enquadramentos.data.map((linha) => (
-                                    <tr key={`${linha.cnae}-${linha.codigo_louos}-${linha.subcategoria}`} className="border-t border-gray-200 dark:border-gray-800">
-                                        <td className="py-2 pr-3">{linha.cnae}</td>
-                                        <td className="py-2 pr-3">{linha.codigo_louos}</td>
-                                        <td className="py-2 pr-3">{linha.subcategoria}</td>
-                                        <td className="py-2 pr-3">{linha.risco}</td>
-                                        <td className="py-2 pr-3">{linha.ate_m2 ?? '—'}</td>
-                                        <td className="py-2 pr-3">{linha.enquadramento2 ?? '—'}</td>
-                                        <td className="py-2 pr-3">{linha.enquadramento3 ?? '—'}</td>
-                                        <td className="py-2 pr-3">{linha.classificacao ?? '—'}</td>
-                                        <td className="py-2">{linha.codigo_tll ?? '—'}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="mt-4">
-                        <Pagination
-                            links={enquadramentos.links}
-                            meta={{ from: enquadramentos.from, to: enquadramentos.to, total: enquadramentos.total }}
-                        />
-                    </div>
-                </CardContent>
-            </Card>
                 </>
             )}
         </div>

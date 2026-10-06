@@ -7,6 +7,7 @@ use App\Models\AnalysisRecord;
 use App\Models\ExpressoQueda;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\ResolvedViability;
+use App\Support\AreaMetros;
 
 /**
  * Motivo de Análise que o sistema grava na ficha: só a frase operacional da
@@ -111,7 +112,7 @@ class MotivoAnaliseComposer
 
     private function formatarArea(mixed $area): string
     {
-        $texto = rtrim(rtrim(number_format((float) $area, 2, '.', ''), '0'), '.');
+        $texto = AreaMetros::formatar($area) ?? '';
 
         return 'Área utilizada declarada: '.$texto.' m².';
     }

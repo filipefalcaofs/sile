@@ -18,6 +18,7 @@ import {
     type ResultadoConsulta,
     type VereditoResultado,
 } from '@/components/viabilidade/resultado-viabilidade';
+import { metrosComUnidade } from '@/lib/metros';
 import PortalLayout from '@/layouts/portal-layout';
 
 type EntryType = EntradaConsulta['tipo'];
@@ -76,7 +77,9 @@ function entradaResumo(input: EntradaConsulta): string {
 
     const cnae = input.cnae_formatado ?? input.cnae;
 
-    return input.area != null ? `${cnae} · ${input.area} m²` : cnae;
+    const area = metrosComUnidade(input.area);
+
+    return area != null ? `${cnae} · ${area}` : cnae;
 }
 
 export default function Historico({ consultas }: HistoricoProps) {

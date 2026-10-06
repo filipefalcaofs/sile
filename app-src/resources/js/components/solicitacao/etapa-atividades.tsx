@@ -54,7 +54,7 @@ function ExclusaoCheckbox({ checked, onChange }: { checked: boolean; onChange: (
                 type="checkbox"
                 checked={checked}
                 onChange={onChange}
-                className="size-4 rounded border-gray-300 text-error-500 focus:ring-error-500/30 dark:border-gray-700 dark:bg-gray-900"
+                className="size-4 rounded border-gray-300 bg-white text-error-500 scheme-light focus:ring-error-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
             />
             Excluir esta atividade
         </label>
@@ -317,7 +317,7 @@ export default function EtapaAtividades({
                                 type="checkbox"
                                 checked={prestaServicoVinculado}
                                 onChange={(event) => setPrestaServicoVinculado(event.target.checked)}
-                                className="size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                className="size-4 rounded border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                             />
                             {escritorioVirtual.pergunta_vinculada}
                         </label>
@@ -341,7 +341,7 @@ export default function EtapaAtividades({
                                     name="confirma_perda_condicao_sede"
                                     checked={confirmaPerda === true}
                                     onChange={() => setConfirmaPerda(true)}
-                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                    className="size-4 rounded-full border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                 />
                                 Sim
                             </label>
@@ -351,7 +351,7 @@ export default function EtapaAtividades({
                                     name="confirma_perda_condicao_sede"
                                     checked={confirmaPerda === false}
                                     onChange={() => setConfirmaPerda(false)}
-                                    className="size-4 border-gray-300 text-brand-500 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900"
+                                    className="size-4 rounded-full border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                 />
                                 Não
                             </label>

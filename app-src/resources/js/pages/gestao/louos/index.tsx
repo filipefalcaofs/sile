@@ -113,7 +113,7 @@ export default function LouosIndex({
             )}
 
             {abaAtiva === 'enquadramento' && enquadramento !== null && (
-                <AbaEnquadramento enquadramento={enquadramento} />
+                <AbaEnquadramento enquadramento={enquadramento} filtros={filtros} perPageOptions={perPageOptions} />
             )}
 
             {abaAtiva === 'territoriais' && territoriais !== null && (

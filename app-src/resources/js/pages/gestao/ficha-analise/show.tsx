@@ -2662,13 +2662,14 @@ export default function FichaAnaliseShow({
                                         type="checkbox"
                                         checked={condicionantesAtendidos}
                                         onChange={(event) => setCondicionantesAtendidos(event.target.checked)}
+                                        className="size-4 rounded border-gray-300 bg-white scheme-light accent-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                                     />
                                     Condicionantes da viabilidade provisória atendidos
                                 </label>
                                 <label className="flex flex-col gap-1 text-sm">
                                     Tipo liberado
                                     <select
-                                        className="min-h-11 rounded-lg border border-gray-300 px-3 dark:border-gray-700 dark:bg-gray-900"
+                                        className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-gray-800 scheme-light dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark"
                                         value={tvlKind}
                                         onChange={(event) => setTvlKind(event.target.value as 'provisoria' | 'definitiva')}
                                     >

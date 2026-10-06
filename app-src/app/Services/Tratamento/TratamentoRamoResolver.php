@@ -10,11 +10,14 @@ use App\Models\TratamentoCnluItem;
 use App\Models\TratamentoEnquadramento;
 use App\Models\TratamentoPergunta;
 use App\Models\TratamentoRegraRamo;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Risco\TipoImovel;
 use Illuminate\Support\Collection;
 
 class TratamentoRamoResolver
 {
+    public function __construct(private DecisionTextCatalog $textos = new DecisionTextCatalog) {}
+
     /**
      * Perguntas da planilha vigente para o CNAE, no formato 0000-0/00.
      * A consulta pública exibe estas perguntas e devolve as respostas.
@@ -71,7 +74,7 @@ class TratamentoRamoResolver
         if ($versao === null) {
             return new TratamentoRamoResult(
                 status: 'nao_resolvido',
-                motivo: 'Planilha de tratamento sem versão vigente',
+                motivo: $this->textos->get('tratamento.motivo.sem_versao'),
             );
         }
 
@@ -83,7 +86,7 @@ class TratamentoRamoResolver
         if ($bindings->isEmpty()) {
             return new TratamentoRamoResult(
                 status: 'nao_resolvido',
-                motivo: 'CNAE sem regra de tratamento vigente',
+                motivo: $this->textos->get('tratamento.motivo.cnae_sem_regra'),
                 versaoRegra: $versao->version,
             );
         }
@@ -107,7 +110,7 @@ class TratamentoRamoResolver
 
                 return new TratamentoRamoResult(
                     status: 'nao_resolvido',
-                    motivo: "Pergunta {$numero} sem resposta",
+                    motivo: $this->motivoPerguntaSemResposta((int) $numero, (int) $versao->getKey()),
                     versaoRegra: $versao->version,
                 );
             }
@@ -138,7 +141,7 @@ class TratamentoRamoResolver
         if ($linha === null) {
             return new TratamentoRamoResult(
                 status: 'nao_resolvido',
-                motivo: 'CNAE sem enquadramento no ramo escolhido',
+                motivo: $this->textos->get('tratamento.motivo.sem_linha'),
                 versaoRegra: $versao->version,
             );
         }
@@ -152,7 +155,7 @@ class TratamentoRamoResolver
                 risco: $this->normalizarRisco($linha->risco),
                 fluxo: 'analise',
                 bloqueia: true,
-                motivo: 'A regra da planilha não permite o prosseguimento deste ramo',
+                motivo: $this->textos->get('tratamento.motivo.ramo_bloqueado'),
                 versaoRegra: $versao->version,
             );
         }
@@ -161,7 +164,7 @@ class TratamentoRamoResolver
             return new TratamentoRamoResult(
                 status: 'nao_resolvido',
                 fluxo: 'analise',
-                motivo: 'A SER DEFINIDO PELA CNLU',
+                motivo: $this->textos->get('tratamento.motivo.cnlu'),
                 codigoLouos: $linha->codigo_louos,
                 grupo: $linha->grupo,
                 subgrupo: $linha->subcategoria,
@@ -172,7 +175,7 @@ class TratamentoRamoResolver
         if ($linha->ate_m2 !== null && $input->areaUtilizada === null) {
             return new TratamentoRamoResult(
                 status: 'nao_resolvido',
-                motivo: 'Área utilizada ausente para o ramo que depende de faixa',
+                motivo: $this->textos->get('tratamento.motivo.area_ausente'),
                 versaoRegra: $versao->version,
             );
         }
@@ -531,14 +534,33 @@ class TratamentoRamoResolver
         return $tipo !== null && $tipo->dirigeRegra();
     }
 
+    /**
+     * Enunciado da pergunta da planilha, só a primeira linha: as opções de
+     * resposta ficam de fora do motivo.
+     */
+    private function motivoPerguntaSemResposta(int $numero, int $versaoId): string
+    {
+        $texto = TratamentoPergunta::query()
+            ->where('rule_version_id', $versaoId)
+            ->where('numero', $numero)
+            ->value('texto');
+
+        $primeiraLinha = trim((string) strtok((string) $texto, "\n"));
+
+        return $this->textos->render('tratamento.motivo.pergunta_sem_resposta', [
+            ':numero' => (string) $numero,
+            ':texto' => $primeiraLinha !== '' ? $primeiraLinha : "Pergunta {$numero}",
+        ]);
+    }
+
     private function motivoTipoAusente(?TipoImovel $tipo): ?string
     {
         if ($tipo === null || $tipo->reconhecimento === TipoImovelReconhecimento::Ausente) {
-            return 'Tipo de imóvel ausente para o ramo que depende do tipo';
+            return $this->textos->get('tratamento.motivo.tipo_ausente');
         }
 
         if ($tipo->reconhecimento === TipoImovelReconhecimento::Desconhecido) {
-            return 'Tipo de imóvel desconhecido para o ramo que depende do tipo';
+            return $this->textos->get('tratamento.motivo.tipo_desconhecido');
         }
 
         return null;

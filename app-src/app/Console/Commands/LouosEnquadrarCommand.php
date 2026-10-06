@@ -9,6 +9,7 @@ use App\Services\Geo\TerritoryResult;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Louos\LouosEnquadramentoService;
+use App\Support\AreaMetros;
 use Illuminate\Console\Command;
 
 /**
@@ -393,6 +394,6 @@ class LouosEnquadrarCommand extends Command
 
     private function formatArea(float $area): string
     {
-        return rtrim(rtrim(number_format($area, 2, '.', ''), '0'), '.');
+        return AreaMetros::formatar($area) ?? '';
     }
 }

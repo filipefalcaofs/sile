@@ -56,6 +56,11 @@ final readonly class EnquadramentoResult
         return $this->consolidado['resultado'];
     }
 
+    public function ramoResolvido(): bool
+    {
+        return ($this->enquadramento['status'] ?? null) === self::STATUS_IDENTIFICADO;
+    }
+
     public function pendente(): bool
     {
         return $this->resultado() === ResultadoViabilidade::Pendente->value;

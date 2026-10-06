@@ -206,8 +206,12 @@ class LouosController extends Controller
             ->where('rule_version_id', $id ?? 0)
             ->when($search !== '', fn ($query) => $query->where(function ($inner) use ($search) {
                 $inner->whereLike('cnae', "%{$search}%", caseSensitive: false)
+                    ->orWhereLike('denominacao', "%{$search}%", caseSensitive: false)
                     ->orWhereLike('codigo_louos', "%{$search}%", caseSensitive: false)
+                    ->orWhereLike('denominacao_louos', "%{$search}%", caseSensitive: false)
                     ->orWhereLike('subcategoria', "%{$search}%", caseSensitive: false)
+                    ->orWhereLike('enquadramento2', "%{$search}%", caseSensitive: false)
+                    ->orWhereLike('enquadramento3', "%{$search}%", caseSensitive: false)
                     ->orWhereLike('risco', "%{$search}%", caseSensitive: false);
             }))
             ->orderBy('cnae')
@@ -216,12 +220,15 @@ class LouosController extends Controller
             ->withQueryString()
             ->through(fn (TratamentoEnquadramento $linha) => [
                 'cnae' => $linha->cnae,
+                'denominacao' => $linha->denominacao,
                 'codigo_louos' => $linha->codigo_louos,
+                'denominacao_louos' => $linha->denominacao_louos,
                 'subcategoria' => $linha->subcategoria,
                 'grupo' => $linha->grupo,
                 'risco' => $linha->risco,
                 'ate_m2' => $linha->ate_m2,
                 'enquadramento2' => $linha->enquadramento2,
+                'ate_m2_2' => $linha->ate_m2_2,
                 'enquadramento3' => $linha->enquadramento3,
                 'acima_m2' => $linha->acima_m2,
                 'classificacao' => $linha->classificacao,

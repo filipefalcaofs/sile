@@ -248,6 +248,12 @@
     background-color: #344054;
 }
 
+/* Sem isto, checkbox e select nativos ignoram o tema e ficam claros
+   (fundo branco ou faixa amarela do sistema) sobre o cartão escuro. */
+html.dark {
+    color-scheme: dark;
+}
+
 /* Acessibilidade — alto contraste (eMAG), acionado pela AccessibilityBar
    via classe na raiz do documento.
 

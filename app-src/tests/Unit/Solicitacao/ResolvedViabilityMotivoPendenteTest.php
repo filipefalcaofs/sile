@@ -28,6 +28,20 @@ class ResolvedViabilityMotivoPendenteTest extends TestCase
         );
     }
 
+    public function test_prefere_o_motivo_especifico_do_enquadramento(): void
+    {
+        $resolvida = $this->viabilidade([
+            [
+                'cnae' => '0111301',
+                'tendencia' => 'pendente',
+                'veredito_motivo' => 'Atividade sem enquadramento na planilha vigente — segue para análise técnica',
+                'enquadramento_motivo' => 'Pergunta 11 sem resposta',
+            ],
+        ]);
+
+        $this->assertSame('Pergunta 11 sem resposta', $resolvida->motivoPendente());
+    }
+
     public function test_sem_cnae_pendente_ou_sem_motivo_devolve_nulo(): void
     {
         $this->assertNull($this->viabilidade([['cnae' => '1', 'tendencia' => 'permitido', 'veredito_motivo' => 'x']])->motivoPendente());

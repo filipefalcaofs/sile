@@ -291,7 +291,7 @@ function ImportarCsvModal({
                         type="file"
                         accept=".csv,text/csv"
                         onChange={(event) => setData('arquivo', event.target.files?.[0] ?? null)}
-                        className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-800 file:mr-3 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1 file:text-xs file:text-gray-700 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                        className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-800 file:mr-3 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1 file:text-xs file:text-gray-700 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:scheme-dark dark:file:bg-white/10 dark:file:text-gray-200"
                     />
                     {errors.arquivo && <FieldError>{errors.arquivo}</FieldError>}
                 </div>
@@ -301,7 +301,7 @@ function ImportarCsvModal({
                         type="checkbox"
                         checked={data.substituir}
                         onChange={(event) => setData('substituir', event.target.checked)}
-                        className="mt-0.5 size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                        className="mt-0.5 size-4 rounded border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
                     />
                     <span>
                         Substituir todas as linhas do rascunho pelo arquivo. Desmarque para apenas inserir ou

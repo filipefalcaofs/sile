@@ -1,0 +1,1 @@
+var e=new Intl.NumberFormat(`pt-BR`,{maximumFractionDigits:2});function t(t){if(t==null||t===``)return null;let n=typeof t==`number`?t:Number(String(t).trim());return Number.isFinite(n)?e.format(n):null}function n(e){let n=t(e);return n===null?null:`${n} m²`}export{n,t};

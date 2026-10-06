@@ -4,6 +4,7 @@ namespace App\Services\Analise\Concerns;
 
 use App\Models\Company;
 use App\Models\ViabilityRequest;
+use App\Support\AreaMetros;
 use App\Support\Settings;
 use RuntimeException;
 
@@ -63,7 +64,7 @@ trait MontaDadosDocumentoDecisao
             'endereco' => $endereco,
             'bairro' => $request->address_neighborhood,
             'cep' => $request->address_zip,
-            'area_m2' => $request->used_area_m2,
+            'area_m2' => AreaMetros::formatar($request->used_area_m2),
         ];
     }
 

@@ -1,3 +1,5 @@
+import { metrosComUnidade } from '@/lib/metros';
+
 /** Rótulos de chaves do snapshot que a humanização genérica não cobre bem. */
 const CHAVE_LABEL: Record<string, string> = {
     status_escolhido: 'Conclusão',
@@ -166,9 +168,13 @@ export function paresLegiveis(dados: Record<string, unknown>): { label: string; 
             continue;
         }
 
-        if (chave === 'area_m2' && typeof valor === 'number') {
-            pares.push({ label: rotular(chave), value: `${valor} m²` });
-            continue;
+        if (chave === 'area_m2' && (typeof valor === 'number' || typeof valor === 'string')) {
+            const area = metrosComUnidade(valor);
+
+            if (area !== null) {
+                pares.push({ label: rotular(chave), value: area });
+                continue;
+            }
         }
 
         pares.push({ label: rotular(chave), value: valorLegivel(valor) });
