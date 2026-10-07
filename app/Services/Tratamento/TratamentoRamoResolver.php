@@ -261,13 +261,13 @@ class TratamentoRamoResolver
 
         foreach ($preferidas as $numero) {
             if ($perguntas->contains($numero) && array_key_exists($numero, $input->respostas)) {
-                return (bool) $input->respostas[$numero];
+                return RespostaPlanilha::de($input->respostas[$numero])->comoBooleano();
             }
         }
 
         foreach ($perguntas as $numero) {
             if (array_key_exists((int) $numero, $input->respostas)) {
-                return (bool) $input->respostas[(int) $numero];
+                return RespostaPlanilha::de($input->respostas[(int) $numero])->comoBooleano();
             }
         }
 
@@ -276,7 +276,7 @@ class TratamentoRamoResolver
 
     /**
      * @param  Collection<int, TratamentoEnquadramento>  $linhas
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     private function escolherLinha($linhas, ?bool $noLocal, array $respostas = []): ?TratamentoEnquadramento
     {
@@ -300,7 +300,7 @@ class TratamentoRamoResolver
 
     /**
      * @param  Collection<int, TratamentoEnquadramento>  $outros
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     private function escolherLinhaNoLocal($outros, array $respostas): ?TratamentoEnquadramento
     {
@@ -308,7 +308,7 @@ class TratamentoRamoResolver
             return $outros->first();
         }
 
-        $artesanal = array_key_exists(3, $respostas) ? (bool) $respostas[3] : null;
+        $artesanal = array_key_exists(3, $respostas) ? RespostaPlanilha::de($respostas[3])->comoBooleano() : null;
 
         // P3 = "modo artesanal?" (planilha de tratamento, regras 3/7/19/25/52/57/59):
         // SIM = artesanal → linha de serviço (07.09.xx, fora da família ID);
@@ -344,7 +344,7 @@ class TratamentoRamoResolver
      * na heurística (degradação honesta, nunca inferência silenciosa).
      *
      * @param  Collection<int, TratamentoCnaeBinding>  $bindings
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     private function ramoCurado(Collection $bindings, array $respostas, ?float $area, bool $tipoDirige, int $versaoId): ?TratamentoRegraRamo
     {
@@ -372,7 +372,7 @@ class TratamentoRamoResolver
                     return false;
                 }
 
-                if ($ramo->resposta !== null && $ramo->resposta !== (bool) $respostas[$pergunta]) {
+                if ($ramo->resposta !== null && $ramo->resposta !== RespostaPlanilha::de($respostas[$pergunta])->comoBooleano()) {
                     return false;
                 }
 

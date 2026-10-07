@@ -23,7 +23,7 @@ final readonly class EnquadramentoInput
     /**
      * @param  list<string>  $cnaesSecundarios  CNAEs secundários (dígitos).
      * @param  array<string, mixed>  $vagasDeclaradas  Vagas/carga/descarga declaradas pelo requerente (HU-042).
-     * @param  array<int, bool>  $respostas  Número da pergunta da planilha → sim/não.
+     * @param  array<int, bool|int|list<int>>  $respostas  Número da pergunta da planilha → sim/não.
      * @param  array<string, string>  $versoesOverride  Mapa domínio (RuleDomain->value) → versão específica (sandbox HU-143).
      */
     public function __construct(
@@ -43,7 +43,7 @@ final readonly class EnquadramentoInput
      * opcional), sem secundários, vagas, época ou override de versão.
      */
     /**
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     public static function paraConsulta(float $area, string $cnae, ?TerritoryResult $territory = null, array $respostas = []): self
     {

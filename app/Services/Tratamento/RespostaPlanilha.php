@@ -92,6 +92,15 @@ final readonly class RespostaPlanilha
         };
     }
 
+    /**
+     * Leitura Sim/Não para o código que só distingue "respondeu sim" de "não":
+     * resposta que não é Sim nem Não (opção 3, conjunto) conta como sim.
+     */
+    public function comoBooleano(): bool
+    {
+        return $this->sim() ?? ($this->opcoes !== []);
+    }
+
     public function contem(int $opcao): bool
     {
         return in_array($opcao, $this->opcoes, true);

@@ -8,7 +8,7 @@ use Carbon\CarbonInterface;
 final readonly class TratamentoRamoInput
 {
     /**
-     * @param  array<int, bool>  $respostas  Número da pergunta → sim/não
+     * @param  array<int, bool|int|list<int>>  $respostas  Número da pergunta → sim/não, opção ou opções marcadas
      * @param  array<string, string>  $versoesOverride
      */
     public function __construct(

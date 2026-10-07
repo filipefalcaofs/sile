@@ -387,6 +387,35 @@ class TratamentoRamoResolverTest extends TestCase
         $this->assertStringContainsString('desconhecido', mb_strtolower($ramo->motivo ?? ''));
     }
 
+    public function test_resposta_em_opcao_vale_como_sim_e_nao(): void
+    {
+        $nao = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0111-3/01',
+            respostas: [11 => false],
+            areaUtilizada: 800.0,
+        ));
+        $naoComoOpcao = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0111-3/01',
+            respostas: [11 => 2],
+            areaUtilizada: 800.0,
+        ));
+        $simComoOpcao = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0111-3/01',
+            respostas: [11 => [1]],
+            areaUtilizada: 800.0,
+        ));
+        $sim = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '0111-3/01',
+            respostas: [11 => true],
+            areaUtilizada: 800.0,
+        ));
+
+        $this->assertSame($nao->codigoLouos, $naoComoOpcao->codigoLouos);
+        $this->assertSame($nao->fluxo, $naoComoOpcao->fluxo);
+        $this->assertSame($sim->codigoLouos, $simComoOpcao->codigoLouos);
+        $this->assertNotSame($nao->codigoLouos, $sim->codigoLouos);
+    }
+
     private function resolver(): TratamentoRamoResolver
     {
         return new TratamentoRamoResolver;
