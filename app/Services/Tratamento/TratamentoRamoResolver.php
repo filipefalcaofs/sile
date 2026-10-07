@@ -22,7 +22,7 @@ class TratamentoRamoResolver
      * Perguntas da planilha vigente para o CNAE, no formato 0000-0/00.
      * A consulta pública exibe estas perguntas e devolve as respostas.
      *
-     * @return list<array{numero: int, texto: string}>
+     * @return list<array{numero: int, texto: string, tipo: string, opcoes: list<array{rotulo: string, texto: string}>}>
      */
     public function perguntasExibidas(string $cnae): array
     {
@@ -61,10 +61,17 @@ class TratamentoRamoResolver
             ->get()
             ->keyBy(fn (TratamentoPergunta $pergunta): int => (int) $pergunta->numero);
 
-        return $numeros->map(fn (int $numero): array => [
-            'numero' => $numero,
-            'texto' => (string) ($textos->get($numero)?->texto ?? "Pergunta {$numero}"),
-        ])->all();
+        return $numeros->map(function (int $numero) use ($textos): array {
+            $texto = (string) ($textos->get($numero)?->texto ?? "Pergunta {$numero}");
+            $enunciado = PerguntaEnunciado::analisar($texto);
+
+            return [
+                'numero' => $numero,
+                'texto' => $texto,
+                'tipo' => $enunciado['tipo'],
+                'opcoes' => $enunciado['opcoes'],
+            ];
+        })->all();
     }
 
     public function resolver(TratamentoRamoInput $input): TratamentoRamoResult
