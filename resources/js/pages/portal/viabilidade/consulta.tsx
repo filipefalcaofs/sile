@@ -1,5 +1,5 @@
 import PerguntaPlanilhaCampo from '@/components/viabilidade/pergunta-planilha-campo';
-import type { PerguntaPlanilha, RespostaPlanilha } from '@/lib/respostas-planilha';
+import { perguntasVisiveis, type PerguntaPlanilha, type RespostaPlanilha } from '@/lib/respostas-planilha';
 import { Head, Link, useHttp } from '@inertiajs/react';
 import type { ComponentType, ReactNode, SVGProps } from 'react';
 import { useState } from 'react';
@@ -386,8 +386,7 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                                 <legend className="text-sm font-medium text-gray-800 dark:text-white/90">
                                                     Perguntas da atividade
                                                 </legend>
-                                                {perguntas
-                                                    .filter((pergunta) => pergunta.numero !== 3 || respostas[2] !== false)
+                                                {perguntasVisiveis(perguntas, respostas)
                                                     .map((pergunta) => (
                                                         <PerguntaPlanilhaCampo
                                                             key={pergunta.numero}

@@ -58,4 +58,13 @@ class TratamentoPerguntasExibidasTest extends TestCase
         $this->assertSame('opcao_unica', $p27['tipo']);
         $this->assertSame(['A', 'B'], array_column($p27['opcoes'], 'rotulo'));
     }
+
+    public function test_pergunta_dependente_traz_de_qual_resposta_ela_depende(): void
+    {
+        $perguntas = $this->porNumero('4682-6/00');
+
+        $this->assertSame(['pergunta' => 25, 'sim' => true], $perguntas[26]['depende']);
+        $this->assertSame(['pergunta' => 26, 'sim' => false], $perguntas[29]['depende']);
+        $this->assertNull($perguntas[25]['depende']);
+    }
 }
