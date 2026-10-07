@@ -508,15 +508,7 @@ class TratamentoRamoResolver
             ->where('rule_version_id', $versaoId)
             ->pluck('codigo');
 
-        foreach ($codigos as $codigo) {
-            $codigo = (string) $codigo;
-
-            if (strcasecmp($subgrupo, $codigo) === 0 || str_starts_with($subgrupo, $codigo.'-')) {
-                return true;
-            }
-        }
-
-        return false;
+        return CnluLista::contem($subgrupo, $codigos);
     }
 
     private function eCnlu(string $risco): bool
