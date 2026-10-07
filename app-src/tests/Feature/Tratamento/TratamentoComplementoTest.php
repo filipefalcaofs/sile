@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Tratamento;
 
+use App\Models\DecisionText;
 use App\Models\TratamentoCnluItem;
 use App\Models\TratamentoEnquadramento;
 use App\Models\TratamentoNota;
@@ -83,6 +84,24 @@ class TratamentoComplementoTest extends TestCase
                 TratamentoRegraRamo::query()->where('regra', $regra)->whereNotNull('condicoes')->count(),
                 "A regra {$regra} ficou sem ramo curado.",
             );
+        }
+    }
+
+    public function test_seed_registra_os_textos_das_pendencias_e_dos_motivos_para_edicao(): void
+    {
+        $this->seed(TratamentoRegrasSeeder::class);
+
+        foreach ([
+            'tratamento.pendencia.opcoes_pergunta_1',
+            'tratamento.pendencia.sem_fluxo_curado',
+            'tratamento.motivo.cnlu',
+            'tratamento.bloqueio.so_orgao_publico',
+            'expresso.motivo.veredito_pendente',
+        ] as $chave) {
+            $texto = DecisionText::query()->where('key', $chave)->first();
+
+            $this->assertNotNull($texto, "A chave {$chave} não foi registrada para edição.");
+            $this->assertStringStartsNotWith('Texto decisório ', (string) $texto->description, "A chave {$chave} ficou com descrição genérica.");
         }
     }
 

@@ -4,6 +4,7 @@ import type { GeoJsonObject } from 'geojson';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import ConclusaoAnaliseForm from '@/components/analise/conclusao-analise-form';
+import { EtapasMotorCard, type EtapaMotor } from '@/components/analise/etapas-motor';
 import { RecepcaoRecebida, rotuloFluxoRisco, type ProcessoRecepcao } from '@/components/analise/processo-ui';
 import {
     comAreaEmbarqueInformada,
@@ -260,6 +261,8 @@ interface FichaAnaliseShowProps {
     localizacao?: Localizacao;
     dadosTvl: DadosTvl;
     recepcao?: ProcessoRecepcao | null;
+    etapasMotor?: EtapaMotor[];
+    podeReprocessar?: boolean;
     cadastroImobiliario: CadastroImobiliario;
     tramitacao: TramitacaoItem[];
     /** Opções da planilha vigente por CNAE (dígitos) — seleção do enquadramento. */
@@ -799,6 +802,8 @@ export default function FichaAnaliseShow({
     localizacao,
     dadosTvl,
     recepcao,
+    etapasMotor,
+    podeReprocessar,
     cadastroImobiliario,
     tramitacao,
     enquadramentoOpcoes,
@@ -1787,6 +1792,12 @@ export default function FichaAnaliseShow({
                         </p>
                     </CardContent>
                 </Card>
+
+                <EtapasMotorCard
+                    processoId={processo.id}
+                    etapas={etapasMotor ?? []}
+                    podeReprocessar={podeReprocessar ?? false}
+                />
 
                 {recepcao && (
                     <Card>

@@ -12,6 +12,7 @@ use App\Services\Geo\TerritoryService;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
+use App\Services\Tratamento\CategoriaEmpresa;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -65,6 +66,10 @@ class SolicitacaoViabilityResolver
         $ponto = $request->pontoDoImovel();
         $area = $request->used_area_m2 !== null ? (float) $request->used_area_m2 : null;
         $tipoImovel = $this->tipoImovel($request);
+        $categoriaEmpresa = CategoriaEmpresa::deNaturezaJuridica(
+            $request->company?->legal_nature_code,
+            $request->company?->legal_nature,
+        );
 
         $porCnae = [];
         $rulesVersions = [];
@@ -77,8 +82,8 @@ class SolicitacaoViabilityResolver
             ) ?? $territorioDoPonto;
 
             $result = $territorio !== null
-                ? $this->consulta->consultarComTerritorio($territorio, $cnae->code, $area, $tipoImovel, $respostas)
-                : $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $respostas);
+                ? $this->consulta->consultarComTerritorio($territorio, $cnae->code, $area, $tipoImovel, $respostas, $categoriaEmpresa)
+                : $this->consulta->consultarPorCnae($cnae->code, $area, $tipoImovel, $respostas, $categoriaEmpresa);
 
             $veredito = $result->vereditoLocacional();
 

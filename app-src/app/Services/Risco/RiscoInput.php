@@ -20,6 +20,7 @@ final readonly class RiscoInput
      * @param  ?float  $areaUtilizada  Área onde a atividade será exercida (corte 1.250 m² da planilha 20.08.26).
      * @param  ?TipoImovel  $tipoImovel  Tipo enviado pelo REGIN; nulo = ausente.
      * @param  array<int, bool|int|list<int>>  $respostasTratamento  Perguntas da planilha (número → sim/não).
+     * @param  ?string  $categoriaEmpresa  `orgao_publico` ou `outra`; nulo = não informada.
      * @param  ?string  $subcategoriaUso  Subcategoria do enquadramento (nR1-12, ID3-01, …).
      */
     public function __construct(
@@ -30,6 +31,7 @@ final readonly class RiscoInput
         public ?TipoImovel $tipoImovel = null,
         public ?string $subcategoriaUso = null,
         public array $respostasTratamento = [],
+        public ?string $categoriaEmpresa = null,
     ) {}
 
     /**

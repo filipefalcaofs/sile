@@ -17,6 +17,7 @@ use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\SpatialRepository;
@@ -138,7 +139,7 @@ class FluxoExpressoReavaliarTest extends TestCase
         Event::fake([ResultadoEmitido::class, EncaminhadoParaAnalise::class]);
         $request = $this->emAnaliseNaoAssumida($this->setupDeferivel());
 
-        $resultado = app(FluxoExpressoService::class)->reavaliar($request);
+        $resultado = app(FluxoExpressoService::class)->decide($request);
 
         $request->refresh();
 
@@ -155,9 +156,10 @@ class FluxoExpressoReavaliarTest extends TestCase
         $request->forceFill([
             'status' => ViabilityRequestStatus::EmAnalise,
             'analysis_status' => AnalysisStatus::EmAnalise,
+            'assigned_user_id' => User::factory()->create()->id,
         ])->save();
 
-        app(FluxoExpressoService::class)->reavaliar($request);
+        app(FluxoExpressoService::class)->decide($request);
 
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);
         $this->assertDatabaseCount('viability_decisions', 0);
@@ -169,7 +171,7 @@ class FluxoExpressoReavaliarTest extends TestCase
         $request = $this->emAnaliseNaoAssumida($this->protocoladaComCnaes(['2222222']));
         $transicoesAntes = $request->transitions()->count();
 
-        app(FluxoExpressoService::class)->reavaliar($request);
+        app(FluxoExpressoService::class)->decide($request);
 
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);
         $this->assertSame($transicoesAntes, $request->transitions()->count());
@@ -178,11 +180,16 @@ class FluxoExpressoReavaliarTest extends TestCase
 
     public function test_reavaliacao_com_o_mesmo_motivo_nao_duplica_a_queda(): void
     {
-        $request = $this->emAnaliseNaoAssumida($this->protocoladaComCnaes(['2222222']));
+        $request = $this->protocoladaComCnaes(['2222222']);
         $servico = app(FluxoExpressoService::class);
 
-        $servico->reavaliar($request);
-        $servico->reavaliar($request);
+        // A primeira decisão encaminha à análise e grava a queda; a segunda
+        // refaz a resolução do processo em análise sem analista e, com o mesmo
+        // motivo, não grava outra.
+        $servico->decide($request);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);
+
+        $servico->decide($request->fresh());
 
         $this->assertSame(1, ExpressoQueda::query()->where('viability_request_id', $request->id)->count());
     }
@@ -192,7 +199,7 @@ class FluxoExpressoReavaliarTest extends TestCase
         Event::fake([ResultadoEmitido::class]);
         $request = $this->setupDeferivel();
 
-        app(FluxoExpressoService::class)->reavaliar($request);
+        app(FluxoExpressoService::class)->decide($request);
 
         $this->assertSame(ViabilityRequestStatus::Deferida, $request->fresh()->status);
     }

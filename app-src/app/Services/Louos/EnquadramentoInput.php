@@ -36,6 +36,7 @@ final readonly class EnquadramentoInput
         public array $versoesOverride = [],
         public array $respostas = [],
         public ?TipoImovel $tipoImovel = null,
+        public ?string $categoriaEmpresa = null,
     ) {}
 
     /**

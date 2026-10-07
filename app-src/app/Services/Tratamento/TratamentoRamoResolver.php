@@ -22,7 +22,7 @@ class TratamentoRamoResolver
      * Perguntas da planilha vigente para o CNAE, no formato 0000-0/00.
      * A consulta pública exibe estas perguntas e devolve as respostas.
      *
-     * @return list<array{numero: int, texto: string, tipo: string, opcoes: list<array{rotulo: string, texto: string}>}>
+     * @return list<array{numero: int, texto: string, tipo: string, opcoes: list<array{rotulo: string, texto: string}>, depende: array{pergunta: int, sim: bool}|null}>
      */
     public function perguntasExibidas(string $cnae): array
     {
@@ -70,6 +70,7 @@ class TratamentoRamoResolver
                 'texto' => $texto,
                 'tipo' => $enunciado['tipo'],
                 'opcoes' => $enunciado['opcoes'],
+                'depende' => PerguntaEnunciado::dependencia($texto),
             ];
         })->all();
     }

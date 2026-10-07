@@ -112,6 +112,8 @@ class AnalysisRecordController extends Controller
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
             'dadosTvl' => $this->dadosTvl($viabilityRequest, $record),
             'recepcao' => $this->recepcao($viabilityRequest),
+            'etapasMotor' => $this->etapasDoMotor($viabilityRequest),
+            'podeReprocessar' => (bool) request()->user()?->can('reprocessar-processos'),
             'cadastroImobiliario' => $cadastro,
             'tramitacao' => $this->tramitacao($viabilityRequest),
             'conclusaoOpcoes' => ConclusionOutcome::options(),
@@ -646,6 +648,31 @@ class AnalysisRecordController extends Controller
                 'status' => $transicao->to_status->label(),
                 'reason' => $transicao->reason,
             ])
+            ->all();
+    }
+
+    /**
+     * Etapas do motor que dependem de serviço de terceiro, na ordem em que rodam.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function etapasDoMotor(ViabilityRequest $processo): array
+    {
+        return $processo->etapas()
+            ->get()
+            ->sortBy(fn ($etapa) => $etapa->etapa->ordem())
+            ->map(fn ($etapa): array => [
+                'etapa' => $etapa->etapa->value,
+                'rotulo' => $etapa->etapa->rotulo(),
+                'servico' => $etapa->servico,
+                'situacao' => $etapa->situacao->value,
+                'situacao_rotulo' => $etapa->situacao->rotulo(),
+                'motivo' => $etapa->motivo,
+                'tentativas' => $etapa->tentativas,
+                'proxima_tentativa_em' => $etapa->proxima_tentativa_em?->toIso8601String(),
+                'esgotada' => $etapa->esgotada_em !== null,
+            ])
+            ->values()
             ->all();
     }
 

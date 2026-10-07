@@ -109,6 +109,29 @@ class FluxoExpressoService
     }
 
     /**
+     * Reavalia o veredito. A decisão já refaz a resolução do processo em
+     * análise que ninguém assumiu (sem decisão e sem analista) e é idempotente
+     * para os demais, então reavaliar e decidir são o mesmo caminho; o nome
+     * continua para o reprocessamento das etapas e para o comando de segurança.
+     */
+    public function reavaliar(ViabilityRequest $request, ?User $actor = null): DecisionResult
+    {
+        return $this->decide($request, $actor);
+    }
+
+    /**
+     * Processo que ainda pode voltar ao motor: protocolado ou em análise sem
+     * analista e sem decisão.
+     */
+    public function podeReavaliar(ViabilityRequest $request): bool
+    {
+        $request->refresh();
+
+        return $request->status === ViabilityRequestStatus::Protocolada
+            || $this->podeReavaliarEncaminhamento($request);
+    }
+
+    /**
      * Corpo da decisão executado já com o lock adquirido. RECARREGA o estado e
      * re-checa que ainda está protocolada (idempotência: se já saiu, não
      * redecide), aplica o toggle e a elegibilidade, e roteia para a análise ou a
@@ -416,14 +439,35 @@ class FluxoExpressoService
      * posterior na caixa do setor (apoio/gestor distribui, analista assume).
      */
     /**
+     * Processo decidido sai da fila da análise: a decisão que volta ao motor
+     * (em análise, sem analista) não pode deixar o status e a etapa da
+     * distribuição para trás.
+     */
+    private function limparEncaminhamentoDaAnalise(ViabilityRequest $request): void
+    {
+        if ($request->analysis_status === null) {
+            return;
+        }
+
+        $request->forceFill([
+            'analysis_status' => null,
+            'analysis_stage' => null,
+            'analysis_due_at' => null,
+        ])->save();
+    }
+
+    /**
      * Processo REGIN já encaminhado à análise, ainda sem analista e sem
      * decisão: o motor pode concluir agora que a zona passou a ser
      * identificável. Quem já assumiu o processo não é redecidido.
      */
     private function podeReavaliarEncaminhamento(ViabilityRequest $request): bool
     {
+        // Ninguém assumiu: sem analista e sem análise iniciada. Análise em
+        // andamento nunca volta ao motor.
         return $request->status === ViabilityRequestStatus::EmAnalise
             && $request->assigned_user_id === null
+            && in_array($request->analysis_status, [null, AnalysisStatus::ParaDistribuir], true)
             && ! $request->decision()->exists();
     }
 
@@ -682,6 +726,7 @@ class FluxoExpressoService
                     $actor,
                     publicLabel: ViabilityRequestStatus::Deferida->publicLabel(),
                 );
+                $this->limparEncaminhamentoDaAnalise($request);
 
                 $this->audit->log(
                     logName: 'expresso',
@@ -773,6 +818,7 @@ class FluxoExpressoService
                     $actor,
                     publicLabel: ViabilityRequestStatus::Deferida->publicLabel(),
                 );
+                $this->limparEncaminhamentoDaAnalise($request);
 
                 $this->audit->log(
                     logName: 'expresso',
@@ -867,6 +913,7 @@ class FluxoExpressoService
                     $actor,
                     publicLabel: ViabilityRequestStatus::Indeferida->publicLabel(),
                 );
+                $this->limparEncaminhamentoDaAnalise($request);
 
                 $this->audit->log(
                     logName: 'expresso',
@@ -950,6 +997,7 @@ class FluxoExpressoService
                     : ViabilityRequestStatus::Indeferida;
 
                 $this->stateMachine->transition($request, $destino, $actor, publicLabel: $destino->publicLabel());
+                $this->limparEncaminhamentoDaAnalise($request);
 
                 $this->audit->log(
                     logName: 'expresso',

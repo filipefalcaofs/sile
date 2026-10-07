@@ -75,7 +75,7 @@ class EnvironmentAccessTest extends TestCase
         $administrador = User::factory()->administrador()->create();
 
         $this->post('/gestao/login', [
-            'email' => $administrador->email,
+            'identifier' => $administrador->email,
             'password' => 'password',
         ])->assertRedirect('/gestao');
 

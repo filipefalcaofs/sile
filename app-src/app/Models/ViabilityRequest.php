@@ -371,6 +371,16 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * Etapas do motor que dependem de serviço de terceiro.
+     *
+     * @return HasMany<ViabilityRequestEtapa, $this>
+     */
+    public function etapas(): HasMany
+    {
+        return $this->hasMany(ViabilityRequestEtapa::class);
+    }
+
+    /**
      * Transições de estado — fonte da timeline (HU-069), mais recente primeiro.
      *
      * @return HasMany<ViabilityRequestTransition, $this>

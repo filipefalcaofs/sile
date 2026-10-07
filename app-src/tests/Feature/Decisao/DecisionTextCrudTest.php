@@ -117,7 +117,7 @@ class DecisionTextCrudTest extends TestCase
 
         $this->assertSame(ResultadoViabilidade::NaoPermitido->value, $result->resultado());
         $this->assertSame(
-            'Não permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR1 pelo enquadramento da planilha vigente e esse grupo é proibido na zona ZPAM pelo Quadro 10. Uso vedado na zona pelo Quadro 10 da LOUOS.',
+            'Não permitido: o CNAE 4712-1/00 (área 100 m²) classificou-se no grupo nR1 (nR1-01) pelo enquadramento da planilha vigente e esse grupo é proibido na zona ZPAM pelo Quadro 10. Uso vedado na zona pelo Quadro 10 da LOUOS.',
             $result->consolidado['motivo'],
         );
     }

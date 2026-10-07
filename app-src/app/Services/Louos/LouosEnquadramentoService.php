@@ -111,11 +111,12 @@ class LouosEnquadramentoService
             tipoImovel: $input->tipoImovel,
             data: $input->data,
             versoesOverride: $input->versoesOverride,
+            categoriaEmpresa: $input->categoriaEmpresa,
         ));
 
         $dimensao = $ramo->toEnquadramentoDimensao();
 
-        if ($ramo->resolvido()) {
+        if ($ramo->resolvido() && ! $ramo->bloqueia) {
             $dimensao['motivo'] = $this->motivoEnquadramento($ramo, $input);
         }
 

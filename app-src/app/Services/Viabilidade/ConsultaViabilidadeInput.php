@@ -41,6 +41,7 @@ final readonly class ConsultaViabilidadeInput
         public ?string $inscricao = null,
         public ?TipoImovel $tipoImovel = null,
         public array $respostas = [],
+        public ?string $categoriaEmpresa = null,
     ) {}
 
     /**
@@ -68,7 +69,7 @@ final readonly class ConsultaViabilidadeInput
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
      */
-    public static function paraCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): self
+    public static function paraCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = [], ?string $categoriaEmpresa = null): self
     {
         return new self(
             tipo: self::TIPO_CNAE,
@@ -76,6 +77,7 @@ final readonly class ConsultaViabilidadeInput
             area: $area,
             tipoImovel: $tipoImovel,
             respostas: $respostas,
+            categoriaEmpresa: $categoriaEmpresa,
         );
     }
 
@@ -107,7 +109,7 @@ final readonly class ConsultaViabilidadeInput
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
      */
-    public static function paraPonto(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): self
+    public static function paraPonto(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = [], ?string $categoriaEmpresa = null): self
     {
         return new self(
             tipo: self::TIPO_PONTO,
@@ -115,6 +117,7 @@ final readonly class ConsultaViabilidadeInput
             area: $area,
             tipoImovel: $tipoImovel,
             respostas: $respostas,
+            categoriaEmpresa: $categoriaEmpresa,
         );
     }
 }
