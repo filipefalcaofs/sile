@@ -71,12 +71,31 @@ class ProtocolarSolicitacaoService
             );
         });
 
+        $this->completarTerritorio($request);
+
+        // Disparo APÓS o commit: a transação já fechou aqui. O evento implementa
+        // ShouldDispatchAfterCommit como defesa adicional contra disparo precoce.
+        SolicitacaoProtocolada::dispatch($request);
+
+        return $request;
+    }
+
+    /**
+     * Completa o território do processo: ponto pela inscrição (Cadastro SEFAZ,
+     * quando não há polígono), zona/bairro/CODLOG, logradouro tributário e a
+     * geometria do lote. Fora de transação: a indisponibilidade da SEFAZ ou do
+     * GIS não desfaz o protocolo. Repetível — o job de decisão e o
+     * reprocessamento das etapas chamam de novo enquanto o cadastro estiver
+     * fora do ar. Devolve o status da localização pela inscrição
+     * (LocalizacaoInscricao::*).
+     */
+    public function completarTerritorio(ViabilityRequest $request): string
+    {
         // Sem polígono, o ponto vem da inscrição (Cadastro SEFAZ). A
         // materialização cobre zona/bairro/CODLOG da via quando ainda faltam.
         // O logradouro tributário, quando a inscrição o traz, é a fonte do
-        // CODLOG e sobrepõe a via mais próxima. Fora da transação: a
-        // indisponibilidade da SEFAZ ou do GIS não desfaz o protocolo.
-        $this->territorioProcesso->localizarPelaInscricao($request);
+        // CODLOG e sobrepõe a via mais próxima.
+        $status = $this->territorioProcesso->localizarPelaInscricao($request);
 
         if ($request->zona_codigo === null || $request->bairro_oficial === null || $request->cod_log === null) {
             $this->territorioProcesso->materializar($request);
@@ -90,11 +109,7 @@ class ProtocolarSolicitacaoService
         $this->poligonoEnderecamento->aplicar($request);
         $this->zonaProcesso->materializar($request);
 
-        // Disparo APÓS o commit: a transação já fechou aqui. O evento implementa
-        // ShouldDispatchAfterCommit como defesa adicional contra disparo precoce.
-        SolicitacaoProtocolada::dispatch($request);
-
-        return $request;
+        return $status;
     }
 
     /**
