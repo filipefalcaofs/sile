@@ -262,6 +262,7 @@ class RiscoClassificationService
             areaUtilizada: $input->areaUtilizada,
             tipoImovel: $input->tipoImovel,
             data: $input->data,
+            categoriaEmpresa: $input->categoriaEmpresa,
         ));
     }
 

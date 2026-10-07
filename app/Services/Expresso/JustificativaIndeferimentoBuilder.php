@@ -33,6 +33,12 @@ class JustificativaIndeferimentoBuilder
                 continue;
             }
 
+            if (($consulta->enquadramento->enquadramento['bloqueia'] ?? false) === true) {
+                $paragrafos[] = 'CNAE '.$item['cnae_formatado'].":\n".$this->justificativaDoCnae($consulta);
+
+                continue;
+            }
+
             $paragrafos[] = 'CNAE '.$item['cnae_formatado'].":\n".$this->linhaDeEnquadramento($consulta)."\n".$this->justificativaDoCnae($consulta);
         }
 

@@ -81,9 +81,9 @@ class ConsultaViabilidadeService
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
      */
-    public function consultarPorCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): ConsultaViabilidadeResult
+    public function consultarPorCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = [], ?string $categoriaEmpresa = null): ConsultaViabilidadeResult
     {
-        $input = ConsultaViabilidadeInput::paraCnae($cnae, $area, $tipoImovel, $respostas);
+        $input = ConsultaViabilidadeInput::paraCnae($cnae, $area, $tipoImovel, $respostas, $categoriaEmpresa);
 
         return $this->consultarPorCnaeComEntrada($input, [$this->textos->get('consulta.aviso.cnae_sem_local')]);
     }
@@ -138,9 +138,9 @@ class ConsultaViabilidadeService
     /**
      * @param  array<int, bool|int|list<int>>  $respostas
      */
-    public function consultarPorPontoConhecido(float $lat, float $lng, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): ConsultaViabilidadeResult
+    public function consultarPorPontoConhecido(float $lat, float $lng, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = [], ?string $categoriaEmpresa = null): ConsultaViabilidadeResult
     {
-        $input = ConsultaViabilidadeInput::paraPonto($cnae, $area, $tipoImovel, $respostas);
+        $input = ConsultaViabilidadeInput::paraPonto($cnae, $area, $tipoImovel, $respostas, $categoriaEmpresa);
 
         return $this->consultarPorPonto($lat, $lng, $input, null);
     }
@@ -151,9 +151,9 @@ class ConsultaViabilidadeService
      *
      * @param  array<int, bool|int|list<int>>  $respostas
      */
-    public function consultarComTerritorio(TerritoryResult $territory, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): ConsultaViabilidadeResult
+    public function consultarComTerritorio(TerritoryResult $territory, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = [], ?string $categoriaEmpresa = null): ConsultaViabilidadeResult
     {
-        $input = ConsultaViabilidadeInput::paraPonto($cnae, $area, $tipoImovel, $respostas);
+        $input = ConsultaViabilidadeInput::paraPonto($cnae, $area, $tipoImovel, $respostas, $categoriaEmpresa);
 
         $enquadramento = $this->louos->enquadrar(
             new EnquadramentoInput(
@@ -162,6 +162,7 @@ class ConsultaViabilidadeService
                 territory: $territory,
                 respostas: $input->respostas,
                 tipoImovel: $input->tipoImovel,
+                categoriaEmpresa: $input->categoriaEmpresa,
             ),
         );
 
@@ -185,6 +186,7 @@ class ConsultaViabilidadeService
                 cnaePrincipal: $input->cnae,
                 respostas: $input->respostas,
                 tipoImovel: $input->tipoImovel,
+                categoriaEmpresa: $input->categoriaEmpresa,
             ),
         );
         $risco = $this->risco->classify($this->riscoInput($input));
@@ -215,6 +217,7 @@ class ConsultaViabilidadeService
                 territory: $territory,
                 respostas: $input->respostas,
                 tipoImovel: $input->tipoImovel,
+                categoriaEmpresa: $input->categoriaEmpresa,
             ),
         );
         $risco = $this->risco->classify($this->riscoInput($input));
@@ -288,6 +291,7 @@ class ConsultaViabilidadeService
             areaUtilizada: $input->area,
             tipoImovel: $input->tipoImovel,
             respostasTratamento: $input->respostas,
+            categoriaEmpresa: $input->categoriaEmpresa,
         );
     }
 
