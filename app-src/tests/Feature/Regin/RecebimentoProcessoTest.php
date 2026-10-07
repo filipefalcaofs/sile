@@ -106,6 +106,32 @@ class RecebimentoProcessoTest extends TestCase
         $this->assertFalse($respostas[11]);
     }
 
+    public function test_natureza_juridica_da_declaracao_vai_para_a_empresa(): void
+    {
+        $declaracao = $this->declaracao($this->cnpjValido());
+        $declaracao['naturezaJuridica'] = '1015 - Órgão Público do Poder Executivo Federal';
+
+        $this->postJson('/api_integracao/recebe', $declaracao)->assertOk();
+
+        $empresa = ViabilityRequest::query()->firstOrFail()->company;
+
+        $this->assertSame('1015', $empresa->legal_nature_code);
+        $this->assertSame('Órgão Público do Poder Executivo Federal', $empresa->legal_nature);
+    }
+
+    public function test_natureza_juridica_so_com_texto_fica_na_descricao(): void
+    {
+        $declaracao = $this->declaracao($this->cnpjValido());
+        $declaracao['naturezaJuridica'] = 'Sociedade Empresária Limitada';
+
+        $this->postJson('/api_integracao/recebe', $declaracao)->assertOk();
+
+        $empresa = ViabilityRequest::query()->firstOrFail()->company;
+
+        $this->assertNull($empresa->legal_nature_code);
+        $this->assertSame('Sociedade Empresária Limitada', $empresa->legal_nature);
+    }
+
     public function test_area_utilizada_da_atividade_manda_sobre_as_areas_do_cadastro(): void
     {
         $payload = $this->declaracao($this->cnpjValido());

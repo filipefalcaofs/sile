@@ -32,4 +32,14 @@ class CategoriaEmpresaTest extends TestCase
     {
         $this->assertSame($esperada, CategoriaEmpresa::deNaturezaJuridica($codigo, $descricao));
     }
+
+    public function test_separa_codigo_e_descricao_da_natureza_juridica_do_regin(): void
+    {
+        $this->assertSame(['codigo' => '1015', 'descricao' => 'Órgão Público do Poder Executivo Federal'], CategoriaEmpresa::separar('1015 - Órgão Público do Poder Executivo Federal'));
+        $this->assertSame(['codigo' => '2062', 'descricao' => null], CategoriaEmpresa::separar('2062'));
+        $this->assertSame(['codigo' => '2062', 'descricao' => null], CategoriaEmpresa::separar('206-2'));
+        $this->assertSame(['codigo' => null, 'descricao' => 'Sociedade Empresária Limitada'], CategoriaEmpresa::separar('Sociedade Empresária Limitada'));
+        $this->assertSame(['codigo' => null, 'descricao' => null], CategoriaEmpresa::separar('  '));
+        $this->assertSame(['codigo' => null, 'descricao' => null], CategoriaEmpresa::separar(null));
+    }
 }

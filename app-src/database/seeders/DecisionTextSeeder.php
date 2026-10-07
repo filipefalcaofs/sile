@@ -90,6 +90,8 @@ class DecisionTextSeeder extends Seeder
         'tratamento.motivo.tipo_desconhecido' => 'Motivo do ramo da planilha quando o tipo de imóvel enviado não é reconhecido e o ramo depende do tipo.',
         'tratamento.motivo.categoria_ausente' => 'Motivo do ramo da planilha quando a categoria da empresa (órgão público ou não) falta e a regra depende dela.',
         'tratamento.bloqueio.so_orgao_publico' => 'Mensagem do indeferimento da regra 38: atividade permitida só para órgãos da Administração Pública.',
+        'tratamento.bloqueio.ambulante_alimentacao' => 'Mensagem do indeferimento da regra 9 para serviço ambulante de alimentação (opção 1 da pergunta 1): a licença é da SEMOP.',
+        'tratamento.bloqueio.food_truck' => 'Mensagem do indeferimento da regra 9 para food truck com atividade no local (opção 2 da pergunta 1 e SIM na pergunta 11): a SEDUR licencia só o escritório.',
         'tratamento.bloqueio.residencial_plural' => 'Mensagem do indeferimento da regra 38 para imóvel residencial (Decreto Municipal nº 29.987/2018), no plural.',
         'tratamento.bloqueio.residencial' => 'Mensagem do indeferimento das regras 39 e 55 para imóvel residencial (Decreto Municipal nº 29.987/2018).',
         'tratamento.bloqueio.categoria_incompativel' => 'Mensagem do indeferimento da regra 39 quando a resposta não é compatível com a categoria da empresa. Placeholder: :cnae.',

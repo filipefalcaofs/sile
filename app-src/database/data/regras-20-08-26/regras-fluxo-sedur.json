@@ -1012,6 +1012,195 @@
       "codigo_louos": "07.12.13",
       "fluxo": "semiexpresso",
       "bloqueia": false
+    },
+    {
+      "regra": 9,
+      "frase": "Se a solicitação for em Edificação Residencial, não permitir o prosseguimento do cadastro",
+      "condicoes": {
+        "tipo_imovel": "residencial"
+      },
+      "codigo_louos": null,
+      "fluxo": "analise",
+      "bloqueia": true,
+      "mensagem": "tratamento.bloqueio.residencial"
+    },
+    {
+      "regra": 9,
+      "frase": "Pergunta 1, opção 1: A SEDUR não licencia serviços ambulantes de alimentação (SEMOP) — não permitir o prosseguimento",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              1
+            ]
+          }
+        }
+      },
+      "codigo_louos": null,
+      "fluxo": "analise",
+      "bloqueia": true,
+      "mensagem": "tratamento.bloqueio.ambulante_alimentacao"
+    },
+    {
+      "regra": 9,
+      "frase": "Pergunta 1, opção 2 e SIM na pergunta 11: A SEDUR licencia apenas o escritório para Food Truck — não permitir o prosseguimento",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              2
+            ]
+          },
+          "11": {
+            "sim": true
+          }
+        }
+      },
+      "codigo_louos": null,
+      "fluxo": "analise",
+      "bloqueia": true,
+      "mensagem": "tratamento.bloqueio.food_truck"
+    },
+    {
+      "regra": 9,
+      "frase": "Fluxo Semiexpresso: opção 2 na pergunta 1 e NÃO na pergunta 11: Escritório - 07.12.13, crítica do analista",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              2
+            ]
+          },
+          "11": {
+            "sim": false
+          }
+        }
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 9,
+      "frase": "Fluxo Expresso: opção 3 na pergunta 1 e NÃO na pergunta 11, em qualquer área: Escritório - 07.12.13",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              3
+            ],
+            "sem": [
+              1,
+              2
+            ]
+          },
+          "11": {
+            "sim": false
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 9,
+      "frase": "Fluxo Semiexpresso: opção 3, NÃO na pergunta 11 e espaço GALPÃO, EDIFICAÇÃO RESIDENCIAL ou CONTAINER: Escritório - 07.12.13, crítica do analista",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              3
+            ],
+            "sem": [
+              1,
+              2
+            ]
+          },
+          "11": {
+            "sim": false
+          }
+        },
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 9,
+      "frase": "Fluxo Semiexpresso: opção 3 e SIM na pergunta 11, em qualquer área: segundo enquadramento disponível - 07.02.03",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              3
+            ],
+            "sem": [
+              1,
+              2
+            ]
+          },
+          "11": {
+            "sim": true
+          }
+        }
+      },
+      "codigo_louos": "07.02.03",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 33,
+      "frase": "Fluxo Expresso: NÃO na pergunta 11, em qualquer área: Escritório - 07.12.13",
+      "condicoes": {
+        "perguntas": {
+          "11": {
+            "sim": false
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 33,
+      "frase": "Fluxo Semiexpresso: NÃO na pergunta 11 e imóvel GALPÃO, EDIFICAÇÃO RESIDENCIAL ou CONTAINER: Escritório - 07.12.13, crítica do analista",
+      "condicoes": {
+        "perguntas": {
+          "11": {
+            "sim": false
+          }
+        },
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 33,
+      "frase": "Fluxo Semiexpresso: opções 1, 2 e 3 na pergunta 1 e SIM na pergunta 11: Adestramento e serviço de hospedagem de animais de estimação - 07.12.02",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              1,
+              2,
+              3
+            ]
+          },
+          "11": {
+            "sim": true
+          }
+        }
+      },
+      "codigo_louos": "07.12.02",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
     }
   ]
 }
