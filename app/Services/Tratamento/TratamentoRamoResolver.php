@@ -472,10 +472,13 @@ class TratamentoRamoResolver
             })
             // Mais específico vence: tipo que dirige regra pesa mais, depois a
             // pergunta explícita (ramo curado à mão), depois faixa e resposta.
-            ->sortByDesc(fn (TratamentoRegraRamo $ramo): int => $ramo->condicoes !== null ? 10 + CondicaoRamo::peso($ramo->condicoes) : ($ramo->resposta !== null ? 1 : 0)
-                + ($ramo->faixa !== null ? 1 : 0)
-                + ($ramo->tipo_dirige !== null ? 2 : 0)
-                + ($ramo->pergunta !== null ? 2 : 0))
+            ->sortByDesc(fn (TratamentoRegraRamo $ramo): int => ($ramo->bloqueia ? 100 : 0)
+                + ($ramo->condicoes !== null
+                    ? 10 + CondicaoRamo::peso($ramo->condicoes)
+                    : ($ramo->resposta !== null ? 1 : 0)
+                        + ($ramo->faixa !== null ? 1 : 0)
+                        + ($ramo->tipo_dirige !== null ? 2 : 0)
+                        + ($ramo->pergunta !== null ? 2 : 0)))
             ->first();
     }
 

@@ -21,7 +21,7 @@ class TratamentoComplementoTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    private const REGRAS_COM_RAMO_DA_SEDUR = [29, 30, 31, 37, 38, 39, 40, 43, 53, 55];
+    private const REGRAS_COM_RAMO_DA_SEDUR = [9, 29, 30, 31, 33, 37, 38, 39, 40, 43, 53, 55];
 
     public function test_todo_enquadramento_recebe_metadados_e_vagas_da_planilha(): void
     {
@@ -87,6 +87,19 @@ class TratamentoComplementoTest extends TestCase
 
             $this->assertNotNull($texto, "A chave {$chave} não foi registrada para edição.");
             $this->assertStringStartsNotWith('Texto decisório ', (string) $texto->description, "A chave {$chave} ficou com descrição genérica.");
+        }
+    }
+
+    public function test_ramos_antigos_das_regras_curadas_pela_sedur_saem_do_caminho(): void
+    {
+        $this->seed(TratamentoRegrasSeeder::class);
+
+        foreach ([9, 33] as $regra) {
+            $this->assertSame(
+                0,
+                TratamentoRegraRamo::query()->where('regra', $regra)->whereNull('condicoes')->count(),
+                "A regra {$regra} ficou com ramo antigo, que lê a pergunta 1 como Sim/Não.",
+            );
         }
     }
 

@@ -58,6 +58,14 @@ class TratamentoRamosSedur
             ->whereNotIn('chave', $chaves)
             ->delete();
 
+        // O ramo curado substitui o antigo da mesma regra: o antigo lê a
+        // pergunta vinculada como Sim/Não e, com opções, casaria errado.
+        TratamentoRegraRamo::query()
+            ->where('rule_version_id', $versao->getKey())
+            ->whereIn('regra', array_values(array_unique(array_column($dados['ramos'], 'regra'))))
+            ->whereNull('condicoes')
+            ->delete();
+
         return count($chaves);
     }
 }

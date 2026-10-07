@@ -191,6 +191,8 @@ final class DecisionTextCatalog
             'tratamento.motivo.categoria_ausente' => 'Categoria da empresa ausente para a regra que depende dela',
             'tratamento.bloqueio.so_orgao_publico' => 'Esta atividade só é permitida para órgãos da Administração Pública',
             'tratamento.bloqueio.residencial_plural' => 'A (s) atividade (s) solicitada (s) não é (são) permitida(s) em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares.',
+            'tratamento.bloqueio.ambulante_alimentacao' => 'A SEDUR não licencia serviços ambulantes de alimentação, o requerente deverá solicitar licença junto a SEMOP (Secretaria Municipal de Ordem Pública).',
+            'tratamento.bloqueio.food_truck' => 'A SEDUR licencia apenas o escritório para a atividade de Food Truck. Deverá solicitar licença específica no órgão competente para o local do funcionamento',
             'tratamento.bloqueio.residencial' => 'A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares.',
             'tratamento.bloqueio.categoria_incompativel' => 'Resposta selecionada para a CNAE :cnae não é compatível com a categoria da empresa indicada nesta etapa. Revise as informações para continuar.',
             'tratamento.motivo.sem_versao' => 'Planilha de tratamento sem versão vigente',

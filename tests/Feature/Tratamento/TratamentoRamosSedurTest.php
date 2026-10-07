@@ -15,7 +15,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Ramos curados das regras 29, 30, 31, 37, 38, 39, 40, 43, 53 e 55 conforme o texto da
+ * Ramos curados das regras 9, 29, 30, 31, 33, 37, 38, 39, 40, 43, 53 e 55 conforme o texto da
  * planilha 20.08.26 e as respostas da SEDUR de 07/10/2026. Cada teste leva no
  * nome a frase da planilha que o motiva.
  */
@@ -295,6 +295,84 @@ class TratamentoRamosSedurTest extends TestCase
     {
         $this->assertEnquadra($this->resolver('9609-2/99', [1 => [10], 11 => false], tipo: 'Galpão'), '07.12.13', 'semiexpresso');
         $this->assertEnquadra($this->resolver('9609-2/99', [1 => [10], 11 => true], tipo: 'Edificação Residencial'), '07.12.14', 'semiexpresso');
+    }
+
+    // ---- Regra 9: alimentação em barracas, food truck e máquinas (5612-1/00, perguntas 1 e 11) ----
+
+    private const AMBULANTE = 'A SEDUR não licencia serviços ambulantes de alimentação, o requerente deverá solicitar licença junto a SEMOP (Secretaria Municipal de Ordem Pública).';
+
+    private const FOOD_TRUCK = 'A SEDUR licencia apenas o escritório para a atividade de Food Truck. Deverá solicitar licença específica no órgão competente para o local do funcionamento';
+
+    public function test_regra_9_opcao_1_ambulante_nao_prossegue(): void
+    {
+        $this->assertBloqueia($this->resolver('5612-1/00', [1 => [1], 11 => true]), self::AMBULANTE);
+        $this->assertBloqueia($this->resolver('5612-1/00', [1 => [1], 11 => false]), self::AMBULANTE);
+    }
+
+    public function test_regra_9_food_truck_com_sim_na_p11_nao_prossegue(): void
+    {
+        $this->assertBloqueia($this->resolver('5612-1/00', [1 => [2], 11 => true]), self::FOOD_TRUCK);
+    }
+
+    public function test_regra_9_food_truck_com_nao_na_p11_enquadra_escritorio_no_semiexpresso(): void
+    {
+        $this->assertEnquadra($this->resolver('5612-1/00', [1 => [2], 11 => false]), '07.12.13', 'semiexpresso');
+    }
+
+    public function test_regra_9_maquina_automatica_com_nao_na_p11_enquadra_escritorio_no_expresso(): void
+    {
+        $this->assertEnquadra($this->resolver('5612-1/00', [1 => [3], 11 => false]), '07.12.13', 'expresso');
+        $this->assertEnquadra($this->resolver('5612-1/00', [1 => [3], 11 => false], area: 2000.0), '07.12.13', 'expresso');
+    }
+
+    public function test_regra_9_maquina_automatica_com_sim_na_p11_enquadra_o_segundo_enquadramento_no_semiexpresso(): void
+    {
+        $this->assertEnquadra($this->resolver('5612-1/00', [1 => [3], 11 => true]), '07.02.03', 'semiexpresso');
+        $this->assertEnquadra($this->resolver('5612-1/00', [1 => [3], 11 => true], area: 2000.0), '07.02.03', 'semiexpresso');
+    }
+
+    public function test_regra_9_maquina_automatica_em_galpao_residencial_ou_container_vai_ao_semiexpresso(): void
+    {
+        $this->assertEnquadra($this->resolver('5612-1/00', [1 => [3], 11 => false], tipo: 'Galpão'), '07.12.13', 'semiexpresso');
+        $this->assertEnquadra($this->resolver('5612-1/00', [1 => [3], 11 => true], tipo: 'Container'), '07.02.03', 'semiexpresso');
+    }
+
+    public function test_regra_9_imovel_residencial_nao_prossegue_qualquer_que_seja_a_opcao(): void
+    {
+        foreach ([[3], [2]] as $opcoes) {
+            $this->assertBloqueia(
+                $this->resolver('5612-1/00', [1 => $opcoes, 11 => false], tipo: 'Edificação Residencial'),
+                'A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018',
+            );
+        }
+    }
+
+    public function test_regra_9_mistura_de_opcoes_segue_a_mais_restritiva(): void
+    {
+        $this->assertBloqueia($this->resolver('5612-1/00', [1 => [1, 3], 11 => false]), self::AMBULANTE);
+        $this->assertBloqueia($this->resolver('5612-1/00', [1 => [2, 3], 11 => true]), self::FOOD_TRUCK);
+        $this->assertEnquadra($this->resolver('5612-1/00', [1 => [2, 3], 11 => false]), '07.12.13', 'semiexpresso');
+    }
+
+    // ---- Regra 33: animais de estimação (9609-2/07, perguntas 1 e 11) ----
+
+    public function test_regra_33_nao_na_p11_enquadra_escritorio_no_expresso_em_qualquer_area(): void
+    {
+        $this->assertEnquadra($this->resolver('9609-2/07', [1 => [1], 11 => false]), '07.12.13', 'expresso');
+        $this->assertEnquadra($this->resolver('9609-2/07', [1 => [2], 11 => false], area: 2000.0), '07.12.13', 'expresso');
+    }
+
+    public function test_regra_33_sim_na_p11_enquadra_adestramento_e_hospedagem_de_animais_no_semiexpresso(): void
+    {
+        foreach ([[1], [2], [3], [1, 2, 3]] as $opcoes) {
+            $this->assertEnquadra($this->resolver('9609-2/07', [1 => $opcoes, 11 => true]), '07.12.02', 'semiexpresso');
+        }
+    }
+
+    public function test_regra_33_em_galpao_residencial_ou_container_vai_ao_semiexpresso(): void
+    {
+        $this->assertEnquadra($this->resolver('9609-2/07', [1 => [1], 11 => false], tipo: 'Galpão'), '07.12.13', 'semiexpresso');
+        $this->assertEnquadra($this->resolver('9609-2/07', [1 => [1], 11 => true], tipo: 'Edificação Residencial'), '07.12.02', 'semiexpresso');
     }
 
     // ---- Regra 53: revenda de GLP (4682-6/00 e 4784-9/00, perguntas 25 a 29) ----
