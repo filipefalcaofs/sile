@@ -112,6 +112,7 @@ final class DecisionTextCatalog
             // LOUOS — motivos das dimensões e do consolidado
             // (LouosEnquadramentoService, constantes das linhas 38-62).
             'louos.motivo.sem_enquadramento_consolidado' => 'Atividade sem enquadramento na planilha vigente — segue para análise técnica',
+            'louos.motivo.cnlu_enquadramento' => 'Enquadramento sinalizado para análise da CNLU — segue para análise técnica',
             'louos.motivo.proibido' => 'Atividade proibida na zona pelo Quadro 10',
             'louos.motivo.permitido' => 'Atividade permitida na zona, sem condicionantes incidentes',
             'louos.motivo.permitido_com_condicoes' => 'Atividade permitida na zona mediante observância das condicionantes',

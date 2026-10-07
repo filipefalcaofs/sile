@@ -45,7 +45,7 @@ class PlanilhaTratamentoImportTest extends TestCase
         $this->assertSame(32, TratamentoPergunta::query()->where('rule_version_id', $versao->id)->count());
         $this->assertSame(1332, TratamentoEnquadramento::query()->where('rule_version_id', $versao->id)->distinct()->count('cnae'));
         $this->assertSame(32, TratamentoCondicionante::query()->where('rule_version_id', $versao->id)->count());
-        $this->assertTrue(TratamentoCnluItem::query()->where('rule_version_id', $versao->id)->where('codigo', 'nRa')->exists());
+        $this->assertTrue(TratamentoCnluItem::query()->where('rule_version_id', $versao->id)->where('codigo', 'nRa-02')->exists());
 
         $this->actingAs($autor, 'gestao')
             ->post('/gestao/louos/enquadramento/importar', ['arquivo' => $this->arquivo()])

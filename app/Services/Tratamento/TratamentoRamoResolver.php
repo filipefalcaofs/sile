@@ -169,6 +169,7 @@ class TratamentoRamoResolver
                 grupo: $linha->grupo,
                 subgrupo: $linha->subcategoria,
                 versaoRegra: $versao->version,
+                cnlu: true,
             );
         }
 
