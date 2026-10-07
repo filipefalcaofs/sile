@@ -26,24 +26,23 @@ class PlanilhaCnluParserTest extends TestCase
         ];
     }
 
-    public function test_codigos_no_nivel_de_subgrupo_da_planilha(): void
+    public function test_codigos_conforme_a_resposta_da_sedur(): void
     {
         $resultado = (new PlanilhaCnluParser)->interpretar($this->linhas());
 
         $this->assertSame(
-            ['nR3-08', 'nR3-14', 'nRa', 'nR4', 'ID3-01', 'ID3-04', 'ID3-05', 'ID3-07', 'ID3-17', 'ID3-21'],
+            [
+                'nR3-08', 'nR3-14', 'nRa-02', 'nR4',
+                'ID3-01', 'ID3-02', 'ID3-03', 'ID3-04', 'ID3-05', 'ID3-07',
+                'ID3-13', 'ID3-14', 'ID3-17', 'ID3-19', 'ID3-21',
+            ],
             array_column($resultado['itens'], 'codigo'),
         );
     }
 
-    public function test_itens_subgrupo_2_ficam_aguardando_a_sedur(): void
+    public function test_nenhum_item_fica_aguardando_a_sedur(): void
     {
-        $resultado = (new PlanilhaCnluParser)->interpretar($this->linhas());
-
-        $this->assertSame(
-            ['ID3-02', 'ID3-03', 'ID3-13', 'ID3-14', 'ID3-19'],
-            $resultado['aguardando'],
-        );
+        $this->assertSame([], (new PlanilhaCnluParser)->interpretar($this->linhas())['aguardando']);
     }
 
     public function test_texto_do_item_guarda_a_celula_de_origem(): void

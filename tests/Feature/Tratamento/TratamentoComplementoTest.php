@@ -43,10 +43,13 @@ class TratamentoComplementoTest extends TestCase
         $codigos = TratamentoCnluItem::query()->orderBy('codigo')->pluck('codigo')->all();
 
         $this->assertSame(
-            ['ID3-01', 'ID3-04', 'ID3-05', 'ID3-07', 'ID3-17', 'ID3-21', 'nR3-08', 'nR3-14', 'nR4', 'nRa'],
+            [
+                'ID3-01', 'ID3-02', 'ID3-03', 'ID3-04', 'ID3-05', 'ID3-07', 'ID3-13', 'ID3-14', 'ID3-17', 'ID3-19', 'ID3-21',
+                'nR3-08', 'nR3-14', 'nR4', 'nRa-02',
+            ],
             $codigos,
         );
-        $this->assertTrue(TratamentoNota::query()->where('chave', 'cnlu_aguardando_sedur')->exists());
+        $this->assertFalse(TratamentoNota::query()->where('chave', 'cnlu_aguardando_sedur')->exists());
     }
 
     public function test_regras_sem_fluxo_curado_ficam_como_pendencia_da_sedur(): void
@@ -72,7 +75,7 @@ class TratamentoComplementoTest extends TestCase
         $this->seed(TratamentoRegrasSeeder::class);
 
         $this->assertSame(2850, TratamentoEnquadramento::query()->count());
-        $this->assertSame(10, TratamentoCnluItem::query()->count());
+        $this->assertSame(15, TratamentoCnluItem::query()->count());
         $this->assertSame(12, TratamentoPendencia::query()->count());
         $this->assertSame($ramos, TratamentoRegraRamo::query()->count());
     }

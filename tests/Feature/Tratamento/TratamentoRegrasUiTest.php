@@ -62,7 +62,7 @@ class TratamentoRegrasUiTest extends TestCase
                 ->has('enquadramento.pendencias', 12)
                 ->where('enquadramento.pendencias.0.regra', 29)
                 ->where('enquadramento.pendencias', fn (Collection $pendencias): bool => array_is_list($pendencias->all()))
-                ->has('enquadramento.cnlu', 10)
+                ->has('enquadramento.cnlu', 15)
                 ->where('enquadramento.enquadramentos.data', fn (Collection $linhas): bool => array_is_list($linhas->all()))
                 ->has('enquadramento.regras', 59)
                 ->has('enquadramento.ramos')

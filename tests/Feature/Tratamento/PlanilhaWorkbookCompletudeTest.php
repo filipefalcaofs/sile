@@ -79,20 +79,21 @@ class PlanilhaWorkbookCompletudeTest extends TestCase
         }
     }
 
-    public function test_cnlu_sai_no_nivel_de_subgrupo_sem_os_itens_subgrupo_2(): void
+    public function test_cnlu_sai_no_nivel_de_subgrupo_conforme_a_sedur(): void
     {
         $codigos = array_column($this->carga()['cnlu'], 'codigo');
 
         $this->assertContains('nR3-08', $codigos);
+        $this->assertContains('nRa-02', $codigos);
+        $this->assertContains('ID3-02', $codigos);
         $this->assertNotContains('nR3', $codigos);
-        $this->assertNotContains('ID3-02', $codigos);
+        $this->assertNotContains('nRa', $codigos);
     }
 
-    public function test_itens_aguardando_a_sedur_ficam_numa_nota(): void
+    public function test_nenhum_item_cnlu_fica_aguardando_a_sedur(): void
     {
         $notas = array_column($this->carga()['notas'], 'texto', 'chave');
 
-        $this->assertArrayHasKey('cnlu_aguardando_sedur', $notas);
-        $this->assertStringContainsString('ID3-02', $notas['cnlu_aguardando_sedur']);
+        $this->assertArrayNotHasKey('cnlu_aguardando_sedur', $notas);
     }
 }

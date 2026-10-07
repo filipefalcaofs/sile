@@ -4,8 +4,9 @@ namespace App\Services\Tratamento;
 
 /**
  * Lista da aba "Análise CNLU": cada código entra no nível de subgrupo que a
- * planilha escreve. Item com ressalva "(subgrupo N)" não entra na lista do
- * motor até a SEDUR dizer o que a ressalva restringe.
+ * planilha escreve. Resposta da SEDUR de 07/10/2026: `nRa` vale só para o
+ * subgrupo `nRa-02`, e os itens do art. 132 valem em qualquer subgrupo, com ou
+ * sem a ressalva "(subgrupo N)".
  */
 class PlanilhaCnluParser
 {
@@ -14,14 +15,17 @@ class PlanilhaCnluParser
     private const CODIGO_ID = '/\bID\d+-\d+\b/u';
 
     /**
+     * @var array<string, string>
+     */
+    private const AJUSTES_SEDUR = ['nRa' => 'nRa-02'];
+
+    /**
      * @param  list<array<int, string>>  $linhas
      * @return array{itens: list<array{codigo: string, texto: string}>, aguardando: list<string>}
      */
     public function interpretar(array $linhas): array
     {
         $itens = [];
-        $aguardando = [];
-
         foreach ($linhas as $linha) {
             $texto = trim(implode(' ', array_filter($linha, fn (string $v): bool => trim($v) !== '')));
 
@@ -30,17 +34,17 @@ class PlanilhaCnluParser
             }
 
             if (preg_match(self::CODIGO_ID, $texto) === 1) {
-                $this->bloco($texto, $itens, $aguardando);
+                $this->bloco($texto, $itens);
 
                 continue;
             }
 
             foreach ($this->codigos($texto) as $codigo) {
-                $itens[] = ['codigo' => $codigo, 'texto' => $texto];
+                $itens[] = ['codigo' => self::AJUSTES_SEDUR[$codigo] ?? $codigo, 'texto' => $texto];
             }
         }
 
-        return ['itens' => $itens, 'aguardando' => $aguardando];
+        return ['itens' => $itens, 'aguardando' => []];
     }
 
     /**
@@ -58,18 +62,11 @@ class PlanilhaCnluParser
 
     /**
      * @param  list<array{codigo: string, texto: string}>  $itens
-     * @param  list<string>  $aguardando
      */
-    private function bloco(string $texto, array &$itens, array &$aguardando): void
+    private function bloco(string $texto, array &$itens): void
     {
         foreach (preg_split('/\R/u', $texto) ?: [] as $linha) {
             if (preg_match(self::CODIGO_ID, $linha, $codigo) !== 1) {
-                continue;
-            }
-
-            if (preg_match('/\(\s*subgrupo\s+\d+\s*\)/iu', $linha) === 1) {
-                $aguardando[] = $codigo[0];
-
                 continue;
             }
 
