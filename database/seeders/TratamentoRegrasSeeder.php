@@ -26,6 +26,9 @@ class TratamentoRegrasSeeder extends Seeder
             return;
         }
 
+        // Os textos de motivo e de pendência vêm do catálogo: registra-os antes de usá-los.
+        $this->call(DecisionTextSeeder::class);
+
         $rules = app(RuleVersionService::class);
 
         $version = RuleVersion::vigente(RuleDomain::RiscoTratamento)->first();
