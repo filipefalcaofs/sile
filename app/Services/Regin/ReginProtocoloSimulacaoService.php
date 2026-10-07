@@ -26,6 +26,7 @@ use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
 use App\Services\Solicitacao\DocumentRequirementResolver;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
+use App\Services\Tratamento\RespostaPlanilha;
 use App\Support\Audit\AuditService;
 use App\Support\Louos\Quadro10Zona;
 
@@ -644,7 +645,7 @@ class ReginProtocoloSimulacaoService
     /**
      * @param  array<string, mixed>  $atividade
      * @param  array<string, mixed>  $entrada
-     * @return array<int, bool>
+     * @return array<int, bool|int|list<int>>
      */
     private function respostasPlanilha(string $cnae, array $atividade, array $entrada): array
     {
@@ -653,14 +654,15 @@ class ReginProtocoloSimulacaoService
         $mapa = [];
 
         foreach ($atividade['perguntas'] ?? [] as $pergunta) {
-            if (! is_array($pergunta) || ! array_key_exists('valor', $pergunta) || ! is_bool($pergunta['valor'])) {
+            if (! is_array($pergunta) || ! array_key_exists('valor', $pergunta)
+                || ! (is_bool($pergunta['valor']) || is_int($pergunta['valor']) || is_array($pergunta['valor']))) {
                 continue;
             }
 
             $numero = $this->numeroPerguntaCatalogo($pergunta, $obrigatorias);
 
             if ($numero !== null) {
-                $mapa[$numero] = $pergunta['valor'];
+                $mapa[$numero] = RespostaPlanilha::de($pergunta['valor'])->paraArmazenar();
             }
         }
 
@@ -668,7 +670,7 @@ class ReginProtocoloSimulacaoService
 
         if (is_array($informadas)) {
             foreach ($informadas as $numero => $valor) {
-                $mapa[(int) $numero] = (bool) $valor;
+                $mapa[(int) $numero] = RespostaPlanilha::de($valor)->paraArmazenar();
             }
         }
 

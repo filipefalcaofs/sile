@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Portal;
 
+use App\Rules\RespostaPlanilhaValida;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -27,7 +28,7 @@ class ConsultaViabilidadeCnaeRequest extends FormRequest
             'cnae' => ['required', 'string', 'max:14'],
             'area' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
             'respostas' => ['nullable', 'array'],
-            'respostas.*' => ['boolean'],
+            'respostas.*' => [new RespostaPlanilhaValida],
         ];
     }
 

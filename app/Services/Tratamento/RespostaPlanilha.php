@@ -55,7 +55,7 @@ final readonly class RespostaPlanilha
             return self::de(true);
         }
 
-        if (in_array($limpo, ['não', 'nao', 'n', 'false'], true)) {
+        if (in_array($limpo, ['não', 'nao', 'n', 'false', '0'], true)) {
             return self::de(false);
         }
 
@@ -72,7 +72,11 @@ final readonly class RespostaPlanilha
             }
         }
 
-        return $opcoes === [] ? null : self::de($opcoes);
+        if ($opcoes === []) {
+            return null;
+        }
+
+        return self::de(count($opcoes) === 1 ? $opcoes[0] : $opcoes);
     }
 
     /**

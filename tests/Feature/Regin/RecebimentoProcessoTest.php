@@ -85,6 +85,27 @@ class RecebimentoProcessoTest extends TestCase
         $this->assertStringContainsString('Salvador/BA', $tela['endereco_completo']);
     }
 
+    public function test_resposta_em_opcoes_do_regin_chega_ao_motor(): void
+    {
+        $declaracao = $this->declaracao($this->cnpjValido());
+        $declaracao['perguntas'] = [
+            ['cnae' => '4712100', 'pergunta' => '14', 'resposta' => '1,2'],
+            ['cnae' => '4712100', 'pergunta' => '22', 'resposta' => '2'],
+            ['cnae' => '4712100', 'pergunta' => '27', 'resposta' => 'B'],
+            ['cnae' => '4712100', 'pergunta' => '11', 'resposta' => 'Não'],
+        ];
+
+        $this->postJson('/api_integracao/recebe', $declaracao)->assertOk();
+
+        $processo = ViabilityRequest::query()->firstOrFail();
+        $respostas = $processo->respostasDaPlanilha('4712100');
+
+        $this->assertSame([1, 2], $respostas[14]);
+        $this->assertSame(2, $respostas[22]);
+        $this->assertSame(2, $respostas[27]);
+        $this->assertFalse($respostas[11]);
+    }
+
     public function test_area_utilizada_da_atividade_manda_sobre_as_areas_do_cadastro(): void
     {
         $payload = $this->declaracao($this->cnpjValido());

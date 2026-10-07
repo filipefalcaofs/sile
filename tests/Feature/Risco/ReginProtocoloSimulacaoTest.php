@@ -665,6 +665,21 @@ class ReginProtocoloSimulacaoTest extends TestCase
         $this->assertNotEmpty($processo->decision?->tvl_product_number);
     }
 
+    public function test_33072_com_resposta_em_opcao_vale_como_nao_e_defere(): void
+    {
+        $this->seedPlanilhaTratamento();
+        $this->seed([LouosQuadro10Seeder::class, LouosQuadro11Seeder::class]);
+
+        $this->post('/gestao/risco/simulacao-regin', [
+            'codigo' => '33072',
+            'respostas' => ['6622300' => ['11' => 2]],
+        ])
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('pendencias', null)
+                ->where('relatorio.status', ViabilityRequestStatus::Deferida->value));
+    }
+
     public function test_nenhum_protocolo_do_catalogo_fica_com_veredito_pendente(): void
     {
         $this->seedPlanilhaTratamento();

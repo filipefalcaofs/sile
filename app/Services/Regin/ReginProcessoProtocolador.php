@@ -18,6 +18,7 @@ use App\Rules\ValidCpf;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
+use App\Services\Tratamento\RespostaPlanilha;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -270,7 +271,7 @@ class ReginProcessoProtocolador
     }
 
     /**
-     * @return array<string, array<int, bool>>
+     * @return array<string, array<int, bool|int|list<int>>>
      */
     private function respostasPorCnae(RecebimentoProcesso $dados): array
     {
@@ -278,13 +279,13 @@ class ReginProcessoProtocolador
 
         foreach ($dados->perguntas as $item) {
             $numero = $this->numeroDaPergunta($item['pergunta']);
-            $resposta = RecebimentoProcesso::booleano($item['resposta']);
+            $resposta = RespostaPlanilha::deTexto($item['resposta']);
 
             if ($numero === null || $resposta === null) {
                 continue;
             }
 
-            $mapa[$item['cnae']][$numero] = $resposta;
+            $mapa[$item['cnae']][$numero] = $resposta->paraArmazenar();
         }
 
         return $mapa;

@@ -192,6 +192,35 @@ class ConsultaViabilidadePublicaTest extends TestCase
         $this->assertNotSame('', $perguntas[0]['texto']);
     }
 
+    public function test_consulta_aceita_respostas_em_opcao_e_em_conjunto_de_opcoes(): void
+    {
+        $this->postJson('/portal/viabilidade/cnae', [
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+            'respostas' => [11 => true, 14 => [1, 2], 22 => 2],
+        ])->assertOk();
+    }
+
+    public function test_resposta_que_nao_e_sim_nao_nem_opcao_e_recusada(): void
+    {
+        $this->postJson('/portal/viabilidade/cnae', [
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+            'respostas' => [11 => 'talvez'],
+        ])->assertStatus(422)->assertJsonValidationErrors(['respostas.11']);
+    }
+
+    public function test_perguntas_devolvem_tipo_e_opcoes(): void
+    {
+        $perguntas = $this->postJson('/portal/viabilidade/cnae', [
+            'cnae' => self::CNAE_MINIMERCADO,
+            'area' => 120,
+        ])->assertOk()->json('perguntas');
+
+        $this->assertSame('sim_nao', $perguntas[0]['tipo']);
+        $this->assertIsArray($perguntas[0]['opcoes']);
+    }
+
     public function test_endereco_nao_localizado_retorna_mensagem_honesta(): void
     {
         // Anti-fachada: endereço não localizado devolve mensagem HONESTA (404),
