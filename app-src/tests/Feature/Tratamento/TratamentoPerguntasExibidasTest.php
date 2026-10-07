@@ -81,11 +81,11 @@ class TratamentoPerguntasExibidasTest extends TestCase
         $this->assertSame('Serviços pessoais por telefone, disque sexo, disque amizade e similares', $p1['opcoes'][16]['texto']);
     }
 
-    public function test_pergunta_1_de_organizacao_religiosa_e_de_opcao_unica(): void
+    public function test_pergunta_1_de_organizacao_religiosa_e_de_multipla_escolha(): void
     {
         $p1 = $this->porNumero('9491-0/00')[1];
 
-        $this->assertSame('opcao_unica', $p1['tipo']);
+        $this->assertSame('multipla', $p1['tipo']);
         $this->assertSame(['1', '2', '3', '4'], array_column($p1['opcoes'], 'rotulo'));
         $this->assertSame('Culto religioso', $p1['opcoes'][0]['texto']);
     }
