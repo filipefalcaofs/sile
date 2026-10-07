@@ -10,13 +10,12 @@ namespace App\Services\Tratamento;
 final class SubdivisaoCnae
 {
     /**
-     * CNAEs em que cada opção leva a um enquadramento diferente e só uma vale
-     * (organizações religiosas, regra 43). Nos demais a pergunta aceita mais de
-     * uma opção; quando misturam, vale a mais restritiva.
+     * CNAEs em que só uma opção vale. Nenhum hoje: a SEDUR definiu que todas,
+     * inclusive 9491-0/00, aceitam mais de uma; quando misturam, vale a mais restritiva.
      *
      * @var list<string>
      */
-    private const OPCAO_UNICA = ['9491-0/00'];
+    private const OPCAO_UNICA = [];
 
     /**
      * @return list<array{rotulo: string, texto: string}>
