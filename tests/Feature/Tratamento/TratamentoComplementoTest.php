@@ -60,6 +60,25 @@ class TratamentoComplementoTest extends TestCase
         $this->assertSame(0, TratamentoPendencia::query()->count());
     }
 
+    public function test_pendencia_antiga_some_ao_semear_uma_versao_ja_carregada(): void
+    {
+        $this->seed(TratamentoRegrasSeeder::class);
+
+        $versaoId = TratamentoRegraRamo::query()->where('regra', 40)->value('rule_version_id');
+
+        foreach ([40, 43] as $regra) {
+            TratamentoPendencia::query()->create([
+                'rule_version_id' => $versaoId,
+                'regra' => $regra,
+                'motivo' => 'Aguardando a SEDUR: a planilha não traz as opções da pergunta 1 que esta regra cita.',
+            ]);
+        }
+
+        $this->seed(TratamentoRegrasSeeder::class);
+
+        $this->assertSame(0, TratamentoPendencia::query()->count());
+    }
+
     public function test_regras_respondidas_pela_sedur_ganham_ramo_curado(): void
     {
         $this->seed(TratamentoRegrasSeeder::class);
