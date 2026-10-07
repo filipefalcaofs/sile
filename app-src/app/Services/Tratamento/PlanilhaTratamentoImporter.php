@@ -29,13 +29,6 @@ class PlanilhaTratamentoImporter
      */
     private const REGRAS_DO_ESCRITORIO_VIRTUAL = [41, 42];
 
-    /**
-     * Regras 40 e 43 citam as opções da pergunta 1, que a planilha não traz.
-     *
-     * @var list<int>
-     */
-    private const REGRAS_COM_OPCOES_DA_PERGUNTA_1 = [40, 43];
-
     public function __construct(
         private PlanilhaTratamentoWorkbook $workbook,
         private RuleVersionService $versions,
@@ -194,11 +187,7 @@ class PlanilhaTratamentoImporter
             TratamentoPendencia::query()->create([
                 'rule_version_id' => $versaoId,
                 'regra' => $numero,
-                'motivo' => $this->textos->get(
-                    in_array($numero, self::REGRAS_COM_OPCOES_DA_PERGUNTA_1, true)
-                        ? 'tratamento.pendencia.opcoes_pergunta_1'
-                        : 'tratamento.pendencia.sem_fluxo_curado',
-                ),
+                'motivo' => $this->textos->get('tratamento.pendencia.sem_fluxo_curado'),
             ]);
             $total++;
         }

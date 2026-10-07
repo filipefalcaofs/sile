@@ -21,9 +21,7 @@ class TratamentoComplementoTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    private const REGRAS_AGUARDANDO = [40, 43];
-
-    private const REGRAS_COM_RAMO_DA_SEDUR = [29, 30, 31, 37, 38, 39, 53, 55];
+    private const REGRAS_COM_RAMO_DA_SEDUR = [29, 30, 31, 37, 38, 39, 40, 43, 53, 55];
 
     public function test_todo_enquadramento_recebe_metadados_e_vagas_da_planilha(): void
     {
@@ -55,23 +53,11 @@ class TratamentoComplementoTest extends TestCase
         $this->assertFalse(TratamentoNota::query()->where('chave', 'cnlu_aguardando_sedur')->exists());
     }
 
-    public function test_regras_sem_fluxo_curado_ficam_como_pendencia_da_sedur(): void
+    public function test_nenhuma_regra_fica_pendente_depois_das_respostas_da_sedur(): void
     {
         $this->seed(TratamentoRegrasSeeder::class);
 
-        $this->assertSame(
-            self::REGRAS_AGUARDANDO,
-            TratamentoPendencia::query()->orderBy('regra')->pluck('regra')->all(),
-        );
-        $this->assertStringStartsWith(
-            'Aguardando a SEDUR',
-            (string) TratamentoPendencia::query()->where('regra', 40)->value('motivo'),
-        );
-        $this->assertSame(0, TratamentoRegraRamo::query()->whereIn('regra', self::REGRAS_AGUARDANDO)->count());
-        $this->assertStringContainsString(
-            'opções da pergunta 1',
-            (string) TratamentoPendencia::query()->where('regra', 40)->value('motivo'),
-        );
+        $this->assertSame(0, TratamentoPendencia::query()->count());
     }
 
     public function test_regras_respondidas_pela_sedur_ganham_ramo_curado(): void
@@ -92,7 +78,6 @@ class TratamentoComplementoTest extends TestCase
         $this->seed(TratamentoRegrasSeeder::class);
 
         foreach ([
-            'tratamento.pendencia.opcoes_pergunta_1',
             'tratamento.pendencia.sem_fluxo_curado',
             'tratamento.motivo.cnlu',
             'tratamento.bloqueio.so_orgao_publico',
@@ -114,7 +99,7 @@ class TratamentoComplementoTest extends TestCase
 
         $this->assertSame(2850, TratamentoEnquadramento::query()->count());
         $this->assertSame(15, TratamentoCnluItem::query()->count());
-        $this->assertSame(2, TratamentoPendencia::query()->count());
+        $this->assertSame(0, TratamentoPendencia::query()->count());
         $this->assertSame($ramos, TratamentoRegraRamo::query()->count());
     }
 }

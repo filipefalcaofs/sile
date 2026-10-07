@@ -769,6 +769,249 @@
       "codigo_louos": "08.01.11",
       "fluxo": "semiexpresso",
       "bloqueia": false
+    },
+    {
+      "regra": 43,
+      "frase": "Pergunta 1, opção 1 (culto religioso): Templo (igrejas, terreiros, e demais locais de culto) - 07.07.02 — Fluxo Semiexpresso",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              1
+            ]
+          }
+        }
+      },
+      "codigo_louos": "07.07.02",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 43,
+      "frase": "Pergunta 1, opção 2 (organização filosófica) ou 4 (irmandade religiosa): Outras associações e organizações não classificadas - 07.10.07 — Fluxo Semiexpresso",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              2,
+              4
+            ]
+          }
+        }
+      },
+      "codigo_louos": "07.10.07",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 43,
+      "frase": "Pergunta 1, opção 3 (convento, mosteiro): Casa de geriatria, asilo, casa de repouso, convento, mosteiro, seminário, casa de retiro - 07.13.02 — Fluxo Semiexpresso",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              3
+            ]
+          }
+        }
+      },
+      "codigo_louos": "07.13.02",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 40,
+      "frase": "Fluxo Expresso: opções 1,2,3,5,6,7,10 a 17 na pergunta 1 e NÃO na pergunta 11: Escritório - 07.12.13",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              1,
+              2,
+              3,
+              5,
+              6,
+              7,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "sem": [
+              4,
+              8,
+              9
+            ]
+          },
+          "11": {
+            "sim": false
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 40,
+      "frase": "Fluxo Expresso: opções 1,2,3,5,6,7,10 a 17 na pergunta 1 e SIM na pergunta 11: segundo enquadramento disponível - 07.12.14",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              1,
+              2,
+              3,
+              5,
+              6,
+              7,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "sem": [
+              4,
+              8,
+              9
+            ]
+          },
+          "11": {
+            "sim": true
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.12.14",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 40,
+      "frase": "Fluxo Semiexpresso (galpão, edificação residencial ou container): opções 1,2,3,5,6,7,10 a 17 na pergunta 1 e NÃO na pergunta 11: Escritório - 07.12.13",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              1,
+              2,
+              3,
+              5,
+              6,
+              7,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "sem": [
+              4,
+              8,
+              9
+            ]
+          },
+          "11": {
+            "sim": false
+          }
+        },
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 40,
+      "frase": "Fluxo Semiexpresso (galpão, edificação residencial ou container): opções 1,2,3,5,6,7,10 a 17 na pergunta 1 e SIM na pergunta 11: segundo enquadramento disponível - 07.12.14",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              1,
+              2,
+              3,
+              5,
+              6,
+              7,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "sem": [
+              4,
+              8,
+              9
+            ]
+          },
+          "11": {
+            "sim": true
+          }
+        },
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": "07.12.14",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 40,
+      "frase": "Fluxo Semiexpresso: opções 4, 8 ou 9 na pergunta 1 e SIM na pergunta 11: segundo enquadramento disponível - 07.12.14",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              4,
+              8,
+              9
+            ]
+          },
+          "11": {
+            "sim": true
+          }
+        }
+      },
+      "codigo_louos": "07.12.14",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 40,
+      "frase": "Fluxo Semiexpresso: opções 4, 8 ou 9 na pergunta 1 e NÃO na pergunta 11: Escritório - 07.12.13",
+      "condicoes": {
+        "perguntas": {
+          "1": {
+            "opcoes": [
+              4,
+              8,
+              9
+            ]
+          },
+          "11": {
+            "sim": false
+          }
+        }
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
     }
   ]
 }

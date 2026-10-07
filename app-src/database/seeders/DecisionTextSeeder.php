@@ -94,7 +94,6 @@ class DecisionTextSeeder extends Seeder
         'tratamento.bloqueio.residencial' => 'Mensagem do indeferimento das regras 39 e 55 para imóvel residencial (Decreto Municipal nº 29.987/2018).',
         'tratamento.bloqueio.categoria_incompativel' => 'Mensagem do indeferimento da regra 39 quando a resposta não é compatível com a categoria da empresa. Placeholder: :cnae.',
         'tratamento.pendencia.sem_fluxo_curado' => 'Texto da pendência exibida na aba Enquadramento para regra cujo texto não define o fluxo de forma inequívoca.',
-        'tratamento.pendencia.opcoes_pergunta_1' => 'Texto da pendência das regras 40 e 43, que citam opções da pergunta 1 que a planilha não traz.',
         'expresso.motivo.desativado' => 'Motivo do encaminhamento à análise quando o fluxo expresso está desativado.',
         'expresso.motivo.alto_risco' => 'Motivo do encaminhamento à análise de atividade de alto risco.',
         'expresso.motivo.fora_do_expresso' => 'Motivo do encaminhamento à análise de atividade fora do fluxo expresso.',

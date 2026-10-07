@@ -15,7 +15,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Ramos curados das regras 29, 30, 31, 37, 38, 39, 53 e 55 conforme o texto da
+ * Ramos curados das regras 29, 30, 31, 37, 38, 39, 40, 43, 53 e 55 conforme o texto da
  * planilha 20.08.26 e as respostas da SEDUR de 07/10/2026. Cada teste leva no
  * nome a frase da planilha que o motiva.
  */
@@ -241,6 +241,60 @@ class TratamentoRamosSedurTest extends TestCase
         $this->assertEnquadra($this->resolver('9601-7/01', [21 => true, 22 => 1], area: 2000.0), '07.09.15', 'semiexpresso');
         $this->assertEnquadra($this->resolver('9601-7/01', [21 => true, 22 => 1], tipo: 'Galpão'), '07.09.15', 'semiexpresso');
         $this->assertEnquadra($this->resolver('9601-7/03', [23 => true, 24 => 2], tipo: 'Container'), '07.09.03', 'semiexpresso');
+    }
+
+    // ---- Regra 43: organizações religiosas (9491-0/00, pergunta 1: Subdivisão CNAE) ----
+
+    public function test_regra_43_opcao_1_culto_religioso_enquadra_templo(): void
+    {
+        $this->assertEnquadra($this->resolver('9491-0/00', [1 => 1]), '07.07.02', 'semiexpresso');
+    }
+
+    public function test_regra_43_organizacao_filosofica_ou_irmandade_enquadra_outras_associacoes(): void
+    {
+        $this->assertEnquadra($this->resolver('9491-0/00', [1 => 2]), '07.10.07', 'semiexpresso');
+        $this->assertEnquadra($this->resolver('9491-0/00', [1 => 4]), '07.10.07', 'semiexpresso');
+    }
+
+    public function test_regra_43_convento_ou_mosteiro_enquadra_casa_de_geriatria_e_similares(): void
+    {
+        $this->assertEnquadra($this->resolver('9491-0/00', [1 => 3]), '07.13.02', 'semiexpresso');
+    }
+
+    // ---- Regra 40: outros serviços pessoais (9609-2/99, perguntas 1 e 11) ----
+
+    public function test_regra_40_opcoes_de_escritorio_com_nao_na_p11_enquadram_escritorio_no_expresso(): void
+    {
+        foreach ([1, 2, 3, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17] as $opcao) {
+            $this->assertEnquadra($this->resolver('9609-2/99', [1 => [$opcao], 11 => false]), '07.12.13', 'expresso');
+        }
+
+        $this->assertEnquadra($this->resolver('9609-2/99', [1 => [1, 2], 11 => false], area: 2000.0), '07.12.13', 'expresso');
+    }
+
+    public function test_regra_40_opcoes_de_escritorio_com_sim_na_p11_enquadram_o_segundo_enquadramento(): void
+    {
+        $this->assertEnquadra($this->resolver('9609-2/99', [1 => [10], 11 => true]), '07.12.14', 'expresso');
+        $this->assertEnquadra($this->resolver('9609-2/99', [1 => [10], 11 => true], area: 2000.0), '07.12.14', 'expresso');
+    }
+
+    public function test_regra_40_manobrista_chuveiro_ou_sanitario_vai_ao_semiexpresso(): void
+    {
+        foreach ([4, 8, 9] as $opcao) {
+            $this->assertEnquadra($this->resolver('9609-2/99', [1 => [$opcao], 11 => true]), '07.12.14', 'semiexpresso');
+            $this->assertEnquadra($this->resolver('9609-2/99', [1 => [$opcao], 11 => false]), '07.12.13', 'semiexpresso');
+        }
+    }
+
+    public function test_regra_40_mistura_de_opcoes_segue_a_mais_restritiva(): void
+    {
+        $this->assertEnquadra($this->resolver('9609-2/99', [1 => [2, 4], 11 => true]), '07.12.14', 'semiexpresso');
+    }
+
+    public function test_regra_40_em_galpao_residencial_ou_container_vai_ao_semiexpresso(): void
+    {
+        $this->assertEnquadra($this->resolver('9609-2/99', [1 => [10], 11 => false], tipo: 'Galpão'), '07.12.13', 'semiexpresso');
+        $this->assertEnquadra($this->resolver('9609-2/99', [1 => [10], 11 => true], tipo: 'Edificação Residencial'), '07.12.14', 'semiexpresso');
     }
 
     // ---- Regra 53: revenda de GLP (4682-6/00 e 4784-9/00, perguntas 25 a 29) ----

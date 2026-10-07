@@ -4,7 +4,8 @@ namespace App\Services\Tratamento;
 
 /**
  * Condições de um ramo curado da planilha, combinadas por E:
- * - `perguntas`: por número, `{"sim": bool}` ou `{"opcoes": [..]}` (qualquer marcada);
+ * - `perguntas`: por número, `{"sim": bool}` ou `{"opcoes": [..], "sem": [..]}` (alguma das
+ *   opções marcada e nenhuma das vetadas);
  * - `categoria`: `orgao_publico` ou `outra`;
  * - `tipo_imovel`: `residencial`, `galpao_container`, `dirige` ou `comum`;
  * - `faixa`: `ate_1250` ou `acima_1250`;
@@ -68,6 +69,10 @@ final class CondicaoRamo
             }
 
             if (array_key_exists('opcoes', $esperado) && ! $resposta->algumaDe(array_map(intval(...), (array) $esperado['opcoes']))) {
+                return false;
+            }
+
+            if (array_key_exists('sem', $esperado) && $resposta->algumaDe(array_map(intval(...), (array) $esperado['sem']))) {
                 return false;
             }
         }

@@ -43,6 +43,17 @@ class CondicaoRamoTest extends TestCase
         $this->assertFalse(CondicaoRamo::atende($condicao, $this->contexto([22 => 3])));
     }
 
+    public function test_pergunta_com_opcoes_marcadas_e_sem_outras(): void
+    {
+        $condicao = ['perguntas' => ['1' => ['opcoes' => [1, 2, 3], 'sem' => [4, 8, 9]]]];
+
+        $this->assertTrue(CondicaoRamo::atende($condicao, $this->contexto([1 => [1, 3]])));
+        $this->assertTrue(CondicaoRamo::atende($condicao, $this->contexto([1 => 2])));
+        $this->assertFalse(CondicaoRamo::atende($condicao, $this->contexto([1 => [1, 4]])), 'Marcou uma opção vetada.');
+        $this->assertFalse(CondicaoRamo::atende($condicao, $this->contexto([1 => 8])));
+        $this->assertFalse(CondicaoRamo::atende($condicao, $this->contexto([1 => [5]])), 'Nenhuma opção pedida.');
+    }
+
     public function test_categoria_da_empresa(): void
     {
         $condicao = ['categoria' => 'orgao_publico'];
