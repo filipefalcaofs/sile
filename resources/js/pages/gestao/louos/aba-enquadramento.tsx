@@ -93,6 +93,7 @@ export interface EnquadramentoData {
     condicionantes: Condicionante[];
     cnlu: Cnlu[];
     notas: Nota[];
+    pendencias: Pendencia[];
     enquadramentos: {
         data: EnquadramentoLinha[];
         links: PaginationLink[];
@@ -227,6 +228,7 @@ export default function AbaEnquadramento({
     const condicionantes = comoLista(enquadramento.condicionantes);
     const cnlu = comoLista(enquadramento.cnlu);
     const notas = comoLista(enquadramento.notas);
+    const aguardandoSedur = comoLista(enquadramento.pendencias);
     const paginado = enquadramento.enquadramentos;
     const enquadramentos = {
         data: comoLista<EnquadramentoLinha>(paginado?.data),
@@ -506,6 +508,24 @@ export default function AbaEnquadramento({
                     )}
                 </CardContent>
             </Card>
+
+            {aguardandoSedur.length > 0 && (
+                <Card>
+                    <CardHeader
+                        title="Regras aguardando a SEDUR"
+                        description="Regras da planilha cujo texto não define o fluxo de forma inequívoca. O motor usa a heurística da versão até a SEDUR confirmar."
+                    />
+                    <CardContent>
+                        <ul className="flex flex-col gap-2 text-sm text-gray-800 dark:text-white/90">
+                            {aguardandoSedur.map((pendencia) => (
+                                <li key={`${pendencia.regra}-${pendencia.motivo}`}>
+                                    <span className="font-medium">{pendencia.regra !== null ? `Regra ${pendencia.regra}.` : 'Planilha.'}</span> {pendencia.motivo}
+                                </li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            )}
 
             {notas.length > 0 && (
                 <Card>

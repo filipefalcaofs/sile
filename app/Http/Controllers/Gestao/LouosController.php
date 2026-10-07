@@ -150,7 +150,7 @@ class LouosController extends Controller
      * contagens e perguntas) — migrada da tela "Planilha de regras", cuja rota
      * antiga redireciona para cá.
      *
-     * @return array{versao: string|null, contagens: array<string, int>, perguntas: array<int, mixed>}
+     * @return array{versao: string|null, contagens: array<string, int>, perguntas: array<int, mixed>, pendencias: array<int, mixed>}
      */
     private function dadosEnquadramento(string $search, int $perPage): array
     {
@@ -181,6 +181,15 @@ class LouosController extends Controller
                 ->all();
 
         $id = $vigente?->getKey();
+
+        $aguardandoSedur = $id === null
+            ? []
+            : TratamentoPendencia::query()
+                ->where('rule_version_id', $id)
+                ->orderBy('regra')
+                ->get(['regra', 'motivo'])
+                ->values()
+                ->all();
 
         $regras = $id === null
             ? []
@@ -255,6 +264,7 @@ class LouosController extends Controller
             'condicionantes' => $condicionantes,
             'cnlu' => $cnlu,
             'notas' => $notas,
+            'pendencias' => $aguardandoSedur,
             'enquadramentos' => $enquadramentos,
             'rascunho' => $rascunho === null ? null : [
                 'id' => $rascunho->getKey(),

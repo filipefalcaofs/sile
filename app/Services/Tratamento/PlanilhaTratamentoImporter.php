@@ -14,6 +14,7 @@ use App\Models\TratamentoPendencia;
 use App\Models\TratamentoPergunta;
 use App\Models\TratamentoRegra;
 use App\Models\TratamentoRegraRamo;
+use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Rules\RuleVersionService;
 use App\Support\Audit\AuditService;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,7 @@ class PlanilhaTratamentoImporter
         private PlanilhaTratamentoWorkbook $workbook,
         private RuleVersionService $versions,
         private AuditService $audit,
+        private DecisionTextCatalog $textos = new DecisionTextCatalog,
     ) {}
 
     /**
@@ -93,6 +95,92 @@ class PlanilhaTratamentoImporter
     }
 
     /**
+     * Completa a versão carregada dos CSVs com o que só a planilha traz:
+     * metadados e vagas por enquadramento, lista CNLU, notas gerais e as regras
+     * sem fluxo curado como pendência. Não toca nos ramos curados.
+     *
+     * @return array{atualizados: int, sem_correspondencia: int, cnlu: int, pendencias: int}
+     */
+    public function complementar(RuleVersion $versao, string $path): array
+    {
+        $carga = $this->workbook->ler($path);
+        $id = $versao->getKey();
+
+        return DB::transaction(function () use ($carga, $id): array {
+            $atualizados = 0;
+            $semCorrespondencia = 0;
+
+            foreach ($carga['enquadramentos'] as $row) {
+                $afetadas = TratamentoEnquadramento::query()
+                    ->where('rule_version_id', $id)
+                    ->where('cnae', $row['cnae'])
+                    ->where('codigo_louos', $row['codigo_louos'])
+                    ->where('subcategoria', (string) $row['subcategoria'])
+                    ->update([
+                        'vagas' => json_encode($row['vagas'], JSON_UNESCAPED_UNICODE),
+                        'metadados' => json_encode($row['metadados'], JSON_UNESCAPED_UNICODE),
+                    ]);
+
+                $afetadas > 0 ? $atualizados++ : $semCorrespondencia++;
+            }
+
+            TratamentoCnluItem::query()->where('rule_version_id', $id)->delete();
+            $this->upsert(TratamentoCnluItem::class, array_map(fn (array $row): array => [
+                'rule_version_id' => $id,
+                'codigo' => $row['codigo'],
+                'texto' => $row['texto'],
+            ], $carga['cnlu']), ['rule_version_id', 'codigo'], ['texto']);
+
+            $this->upsert(TratamentoNota::class, array_map(fn (array $row): array => [
+                'rule_version_id' => $id,
+                'chave' => $row['chave'],
+                'texto' => $row['texto'],
+            ], $carga['notas']), ['rule_version_id', 'chave'], ['texto']);
+
+            $pendencias = $this->pendenciasSemFluxoCurado($id, $carga['regras']);
+
+            return [
+                'atualizados' => $atualizados,
+                'sem_correspondencia' => $semCorrespondencia,
+                'cnlu' => count($carga['cnlu']),
+                'pendencias' => $pendencias,
+            ];
+        });
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $regras
+     */
+    private function pendenciasSemFluxoCurado(int $versaoId, array $regras): int
+    {
+        $comRamo = TratamentoRegraRamo::query()
+            ->where('rule_version_id', $versaoId)
+            ->pluck('regra')
+            ->map(fn (mixed $regra): int => (int) $regra)
+            ->all();
+
+        TratamentoPendencia::query()->where('rule_version_id', $versaoId)->delete();
+
+        $motivo = $this->textos->get('tratamento.pendencia.sem_fluxo_curado');
+        $total = 0;
+
+        foreach ($regras as $regra) {
+            if (in_array((int) $regra['numero'], $comRamo, true)) {
+                continue;
+            }
+
+            TratamentoPendencia::query()->create([
+                'rule_version_id' => $versaoId,
+                'regra' => $regra['numero'],
+                'motivo' => $motivo,
+            ]);
+            $total++;
+        }
+
+        return $total;
+    }
+
+    /**
      * @param  array<string, list<array<string, mixed>>>  $carga
      */
     private function gravar(RuleVersion $draft, array $carga): void
@@ -136,10 +224,11 @@ class PlanilhaTratamentoImporter
                 'especificacao_tll' => $row['especificacao_tll'],
                 'classificacao' => $row['classificacao'],
                 'vagas' => json_encode($row['vagas'], JSON_UNESCAPED_UNICODE),
+                'metadados' => json_encode($row['metadados'], JSON_UNESCAPED_UNICODE),
             ];
         }, $carga['enquadramentos']), ['rule_version_id', 'cnae', 'codigo_louos', 'subcategoria'], [
             'denominacao', 'risco', 'regra', 'denominacao_louos', 'grupo', 'ate_m2', 'enquadramento2', 'ate_m2_2',
-            'enquadramento3', 'acima_m2', 'codigo_tll', 'especificacao_tll', 'classificacao', 'vagas',
+            'enquadramento3', 'acima_m2', 'codigo_tll', 'especificacao_tll', 'classificacao', 'vagas', 'metadados',
         ]);
 
         $this->upsert(TratamentoCnaeBinding::class, array_map(fn (array $row): array => [

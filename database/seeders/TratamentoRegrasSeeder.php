@@ -5,12 +5,14 @@ namespace Database\Seeders;
 use App\Enums\RuleDomain;
 use App\Models\RuleVersion;
 use App\Models\TratamentoCnaeBinding;
+use App\Models\TratamentoCnluItem;
 use App\Models\TratamentoCondicionante;
 use App\Models\TratamentoEnquadramento;
 use App\Models\TratamentoPergunta;
 use App\Models\TratamentoRegra;
 use App\Models\TratamentoRegraRamo;
 use App\Services\Rules\RuleVersionService;
+use App\Services\Tratamento\PlanilhaTratamentoImporter;
 use App\Services\Tratamento\TratamentoRegrasImportService;
 use App\Support\Audit\AuditService;
 use Illuminate\Database\Seeder;
@@ -47,9 +49,16 @@ class TratamentoRegrasSeeder extends Seeder
         // regras-fluxo.csv existir (incidente VIA-2026-000149) — segue para o
         // import, que é upsert idempotente e completa o que falta SEM apagar
         // o dado já em uso pela versão vigente.
+        $complementoCarregado = TratamentoCnluItem::query()->where('rule_version_id', $version->getKey())->exists()
+            && ! TratamentoEnquadramento::query()->where('rule_version_id', $version->getKey())->whereNull('metadados')->exists();
+
         if ($enquadramentosExistem
             && TratamentoRegraRamo::query()->where('rule_version_id', $version->getKey())->exists()
             && TratamentoCondicionante::query()->where('rule_version_id', $version->getKey())->exists()) {
+            if (! $complementoCarregado) {
+                $this->complementar($version);
+            }
+
             return;
         }
 
@@ -71,6 +80,26 @@ class TratamentoRegrasSeeder extends Seeder
             description: 'Carga da planilha 20.08.26',
             subject: $version,
             properties: $report,
+            result: 'sucesso',
+            rulesVersion: $version->version,
+        );
+
+        $this->complementar($version);
+    }
+
+    private function complementar(RuleVersion $version): void
+    {
+        $relatorio = app(PlanilhaTratamentoImporter::class)->complementar(
+            $version,
+            database_path('data/regras-20-08-26/planilha-regras.xlsx'),
+        );
+
+        app(AuditService::class)->log(
+            logName: 'tratamento',
+            event: 'importacao-planilha',
+            description: 'Complemento da planilha 20.08.26 (metadados, vagas, CNLU e pendências)',
+            subject: $version,
+            properties: $relatorio,
             result: 'sucesso',
             rulesVersion: $version->version,
         );

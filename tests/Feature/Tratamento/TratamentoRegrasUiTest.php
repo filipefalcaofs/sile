@@ -5,6 +5,7 @@ namespace Tests\Feature\Tratamento;
 use App\Enums\RuleDomain;
 use App\Models\RuleVersion;
 use App\Models\User;
+use App\Services\Tratamento\PlanilhaTratamentoImporter;
 use App\Services\Tratamento\TratamentoRegrasImportService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -42,6 +43,7 @@ class TratamentoRegrasUiTest extends TestCase
             'version' => 'planilha-20-08-26',
         ]);
         (new TratamentoRegrasImportService)->import($versao, database_path('data/regras-20-08-26'));
+        app(PlanilhaTratamentoImporter::class)->complementar($versao, database_path('data/regras-20-08-26/planilha-regras.xlsx'));
 
         $this->actingAs(User::factory()->administrador()->withAcceptedLgpdTerm()->create(), 'gestao')
             ->get('/gestao/louos?aba=enquadramento')
@@ -57,6 +59,10 @@ class TratamentoRegrasUiTest extends TestCase
                 ->where('enquadramento.perguntas', fn (Collection $perguntas): bool => array_is_list($perguntas->all()))
                 ->where('enquadramento.regras', fn (Collection $regras): bool => array_is_list($regras->all()))
                 ->where('enquadramento.ramos', fn (Collection $ramos): bool => array_is_list($ramos->all()))
+                ->has('enquadramento.pendencias', 12)
+                ->where('enquadramento.pendencias.0.regra', 29)
+                ->where('enquadramento.pendencias', fn (Collection $pendencias): bool => array_is_list($pendencias->all()))
+                ->has('enquadramento.cnlu', 10)
                 ->where('enquadramento.enquadramentos.data', fn (Collection $linhas): bool => array_is_list($linhas->all()))
                 ->has('enquadramento.regras', 59)
                 ->has('enquadramento.ramos')
