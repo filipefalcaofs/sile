@@ -19,6 +19,7 @@ use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Tratamento\RespostaPlanilha;
+use App\Services\Tratamento\TratamentoRamoResolver;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -36,6 +37,7 @@ class ReginProcessoProtocolador
         private FluxoExpressoService $expresso,
         private ReginTipoImovelApplier $tipoImovel,
         private PoligonoEnderecamentoService $poligonoLote,
+        private TratamentoRamoResolver $tratamento,
     ) {}
 
     public function protocolar(ReginRecebimento $recebimento): ?ViabilityRequest
@@ -74,6 +76,7 @@ class ReginProcessoProtocolador
             'address_neighborhood' => $endereco['neighborhood'],
             'address_zip' => $endereco['zip'],
             'property_registration' => $this->inscricao($rowset),
+            'simulation_snapshot' => $this->snapshotDoRowset($rowset, $cnaes),
             'contingency_reason' => ReginProtocoloSimulacaoService::CONTINGENCIA_RECEBE,
             'external_reference' => $recebimento->protocolo,
         ]);
@@ -289,6 +292,170 @@ class ReginProcessoProtocolador
         }
 
         return $mapa;
+    }
+
+    /**
+     * Snapshot do RUC: as respostas do GROUPPERGUNTAS (Anexo v2.12) casadas com
+     * a planilha vigente por CNAE, mais o grupo bruto para auditoria. Null
+     * quando o envelope não traz o grupo.
+     *
+     * @param  array<string, mixed>  $rowset
+     * @param  list<Cnae>  $cnaes
+     * @return array<string, mixed>|null
+     */
+    private function snapshotDoRowset(array $rowset, array $cnaes): ?array
+    {
+        $perguntas = $this->perguntasDoRowset($rowset);
+
+        if ($perguntas === []) {
+            return null;
+        }
+
+        return [
+            'respostas_tratamento_por_cnae' => $this->respostasDoRowsetPorCnae($perguntas, $cnaes),
+            'perguntas_regin' => $perguntas,
+        ];
+    }
+
+    /**
+     * GROUPPERGUNTAS do RUC. Uma pergunta só chega como objeto (não lista) na
+     * conversão XML→JSON — normalizado aqui.
+     *
+     * @param  array<string, mixed>  $rowset
+     * @return list<array{codigo: ?string, tipo: ?string, cnpj: ?string, pergunta: string, resposta: string}>
+     */
+    private function perguntasDoRowset(array $rowset): array
+    {
+        $linhas = $rowset['GROUPPERGUNTAS']['PERGUNTAS'] ?? [];
+
+        if (is_array($linhas) && ! array_is_list($linhas)) {
+            $linhas = [$linhas];
+        }
+
+        if (! is_array($linhas)) {
+            return [];
+        }
+
+        $perguntas = [];
+
+        foreach ($linhas as $linha) {
+            if (! is_array($linha)) {
+                continue;
+            }
+
+            $pergunta = trim((string) ($linha['PER_PERGUNTA'] ?? ''));
+            $resposta = trim((string) ($linha['PER_RESPOSTA'] ?? ''));
+
+            if ($pergunta === '' || $resposta === '') {
+                continue;
+            }
+
+            $perguntas[] = [
+                'codigo' => $this->textoOuNull($linha['COD_PERGUNTA'] ?? null),
+                'tipo' => $this->textoOuNull($linha['TIPO'] ?? null),
+                'cnpj' => $this->textoOuNull($linha['CNPJ'] ?? null),
+                'pergunta' => $pergunta,
+                'resposta' => $resposta,
+            ];
+        }
+
+        return $perguntas;
+    }
+
+    /**
+     * Respostas por CNAE: o enunciado se repete em cadeias diferentes da
+     * planilha, então o casamento é por enunciado DENTRO das perguntas que o
+     * CNAE exibe (TratamentoCnaeBinding) — nunca pelo código REGIN, que é do
+     * sistema deles.
+     *
+     * @param  list<array{codigo: ?string, tipo: ?string, cnpj: ?string, pergunta: string, resposta: string}>  $perguntas
+     * @param  list<Cnae>  $cnaes
+     * @return array<string, array<int, bool|int|list<int>>>
+     */
+    private function respostasDoRowsetPorCnae(array $perguntas, array $cnaes): array
+    {
+        $mapa = [];
+
+        foreach ($cnaes as $cnae) {
+            $exibidas = $this->tratamento->perguntasExibidas($cnae->code);
+
+            foreach ($perguntas as $item) {
+                $alvo = self::normalizarTexto($item['pergunta']);
+
+                foreach ($exibidas as $exibida) {
+                    if (! str_contains(self::normalizarTexto((string) $exibida['texto']), $alvo)) {
+                        continue;
+                    }
+
+                    $numero = (int) $exibida['numero'];
+
+                    if (isset($mapa[$cnae->code][$numero])) {
+                        continue;
+                    }
+
+                    $resposta = $this->respostaRegin($item['resposta'], (string) $exibida['tipo'], $exibida['opcoes']);
+
+                    if ($resposta !== null) {
+                        $mapa[$cnae->code][$numero] = $resposta->paraArmazenar();
+                    }
+                }
+            }
+        }
+
+        return $mapa;
+    }
+
+    /**
+     * Resposta do REGIN: "Sim"/"Não"/"1,2"/"B" direto; senão, o texto da opção
+     * escolhida no formulário deles casa com a opção do enunciado da planilha
+     * ("Sim, a atividade será desenvolvida no local." → opção 1). Em pergunta
+     * Sim/Não a opção 1 é Sim e a 2 é Não — gravado como booleano legado.
+     *
+     * @param  list<array{rotulo: string, texto: string}>  $opcoes
+     */
+    private function respostaRegin(string $resposta, string $tipo, array $opcoes): ?RespostaPlanilha
+    {
+        $direta = RespostaPlanilha::deTexto($resposta);
+
+        if ($direta !== null) {
+            return $direta;
+        }
+
+        $alvo = self::normalizarTexto($resposta);
+
+        foreach ($opcoes as $opcao) {
+            $textoOpcao = self::normalizarTexto($opcao['texto']);
+
+            if ($textoOpcao !== $alvo && ! str_contains($textoOpcao, $alvo) && ! str_contains($alvo, $textoOpcao)) {
+                continue;
+            }
+
+            $rotulo = trim((string) $opcao['rotulo']);
+            $numero = ctype_digit($rotulo) ? (int) $rotulo : (ord(mb_strtolower($rotulo)) - ord('a') + 1);
+
+            if ($tipo === 'sim_nao') {
+                return RespostaPlanilha::de($numero === 1);
+            }
+
+            return RespostaPlanilha::de($numero);
+        }
+
+        return null;
+    }
+
+    private static function normalizarTexto(string $texto): string
+    {
+        $normalizado = mb_strtolower(trim($texto));
+        $normalizado = preg_replace('/\s+/u', ' ', $normalizado) ?? $normalizado;
+
+        return rtrim($normalizado, '? ');
+    }
+
+    private function textoOuNull(mixed $valor): ?string
+    {
+        $texto = trim((string) $valor);
+
+        return $texto === '' ? null : $texto;
     }
 
     private function numeroDaPergunta(string $pergunta): ?int
