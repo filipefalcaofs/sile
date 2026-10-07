@@ -27,7 +27,7 @@
 7. **Entradas.** FormRequests do portal e da simulação; `ConsultaViabilidadeController::respostasInformadas`; `RecebimentoProcesso` e `ReginProcessoProtocolador`; `ReginProtocoloSimulacaoService`; `consulta.tsx` e `simulacao-regin.tsx` renderizam por tipo.
 8. **Condições e ações de ramo.** Migration `condicoes` e `acao` em `treatment_regra_ramos`; model; `CondicaoRamo` (avalia perguntas, categoria, tipo de imóvel, faixa, cnae único); `TratamentoRamoResolver` aplica `acao` (enquadrar código, segundo enquadramento, grupo forçado, fluxo, crítica, bloqueio com mensagem).
 9. **Categoria da empresa e imóvel residencial.** Entradas do resolver: `categoriaEmpresa` (natureza jurídica grupo 1 = órgão público, parâmetro) e `TipoImovel::residencial()`; `SolicitacaoViabilityResolver` e consulta pública as informam.
-10. **Ramos curados das 12 regras.** `regras-fluxo-sedur.json` com os ramos de 29, 30, 31, 37, 38, 39, 40, 43, 53 e 55; seed carrega; pendências só das regras sem ramo. Um teste por ramo.
+10. **Ramos curados.** `regras-fluxo-sedur.json` com os ramos de 29 (P13 e P14), 30, 31, 37, 38, 39, 53 e 55, cada um restrito aos CNAEs da regra; seed carrega; pendências só das regras sem ramo (40 e 43, que esperam as opções da P1). Um teste por ramo.
 11. **Bloqueios indeferem logo após o cadastro.** `FluxoExpressoService` trata `bloqueia` do ramo como `nao_permitido`, com a mensagem do catálogo como justificativa.
 12. **Regras 41 e 42.** Conferir `SedeEscritorioVirtualGatilho` e a trava de inscrição contra a regra (mesma inscrição, só com "quer ser sede = Sim"), completar o que faltar (mensagens, condicionantes, atividades permitidas do Anexo A) com testes.
 13. **Verificação.** Suítes afetadas, `pint`, build do frontend, `tsc`, resultado real.

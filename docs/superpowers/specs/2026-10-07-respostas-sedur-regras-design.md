@@ -93,6 +93,25 @@ que continuam valendo.
   (um item por ramo, com a transcrição da frase da planilha), carregado pelo seed junto
   dos CSVs. As pendências "aguardando a SEDUR" deixam de existir para as regras que ganharem ramo.
 
+### Regras por CNAE e lacunas da planilha
+Cada regra curada vale para poucos CNAEs, e o ramo só se aplica a eles:
+
+| Regra | CNAEs | Perguntas ligadas ao CNAE |
+|---|---|---|
+| 29 | 5223-1/00 | P13 e P14 (o texto da regra cita P21 e P22, que são da lavanderia; vale a ligação do CNAE) |
+| 30 | 8121-4/00 | P11 |
+| 37 | 9601-7/01 e 9601-7/03 | P21 e P22; P23 e P24 (cada CNAE com o seu par) |
+| 38 | 8411-6/00, 8412-4/00, 8413-2/00, 8421-3/00, 8422-1/00, 8424-8/00, 8425-6/00, 8430-2/00 | P7 |
+| 39 | 8423-0/00 | P6 |
+| 53 | 4682-6/00 e 4784-9/00 | P25 a P29 |
+| 55 | 3514-0/00 | P31 e P32 |
+
+- **Regras 40 e 43 ficam de fora desta entrega.** Dependem das "opções 1 a 17 da pergunta 1",
+  e a planilha não traz essas opções: o enunciado da P1 tem só a frase e a lista de CNAEs
+  de referência. Sem a lista, o portal não monta a pergunta e o motor não sabe o que cada
+  número significa. Seguem como pendência até a SEDUR enviar as opções.
+- Regra 31 já está tratada no que depende só de Sim/Não, faixa e tipo de imóvel (parte 3).
+
 ## Mensagens
 Todas as mensagens de bloqueio e de condicionante saem do catálogo `decision_texts`
 (chaves `tratamento.bloqueio.*` e `tratamento.condicionante.*`), com o texto da planilha como padrão.
