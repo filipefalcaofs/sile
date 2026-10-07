@@ -187,7 +187,6 @@ final class DecisionTextCatalog
             'localizacao.motivo.divergencia_zona_enderecamento' => 'Localização divergente: o polígono desenhado está na zona :zona_desenho e o polígono do endereçamento SEDUR, na zona :zona_enderecamento — segue para análise técnica.',
             // Planilha de tratamento — motivos do ramo não resolvido. A pergunta
             // sem resposta cita o enunciado da planilha (:numero, :texto).
-            'tratamento.pendencia.opcoes_pergunta_1' => 'Aguardando a SEDUR: a planilha não traz as opções da pergunta 1 que esta regra cita. O motor usa a heurística desta versão.',
             'tratamento.pendencia.sem_fluxo_curado' => 'Aguardando confirmação da SEDUR: o texto da regra não define o fluxo de forma inequívoca. O motor usa a heurística desta versão.',
             'tratamento.motivo.categoria_ausente' => 'Categoria da empresa ausente para a regra que depende dela',
             'tratamento.bloqueio.so_orgao_publico' => 'Esta atividade só é permitida para órgãos da Administração Pública',

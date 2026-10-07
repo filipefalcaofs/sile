@@ -61,9 +61,17 @@ class TratamentoRamoResolver
             ->get()
             ->keyBy(fn (TratamentoPergunta $pergunta): int => (int) $pergunta->numero);
 
-        return $numeros->map(function (int $numero) use ($textos): array {
+        return $numeros->map(function (int $numero) use ($textos, $formatado, $versao): array {
             $texto = (string) ($textos->get($numero)?->texto ?? "Pergunta {$numero}");
             $enunciado = PerguntaEnunciado::analisar($texto);
+
+            if ($numero === 1 && $enunciado['opcoes'] === []) {
+                $opcoes = $this->opcoesDaSubdivisao($formatado, (int) $versao->getKey());
+
+                if ($opcoes !== []) {
+                    $enunciado = ['tipo' => SubdivisaoCnae::tipo($formatado), 'opcoes' => $opcoes];
+                }
+            }
 
             return [
                 'numero' => $numero,
@@ -608,6 +616,21 @@ class TratamentoRamoResolver
     private function tipoDirige(?TipoImovel $tipo): bool
     {
         return $tipo !== null && $tipo->dirigeRegra();
+    }
+
+    /**
+     * @return list<array{rotulo: string, texto: string}>
+     */
+    private function opcoesDaSubdivisao(string $cnaeFormatado, int $versaoId): array
+    {
+        $subdivisao = TratamentoEnquadramento::query()
+            ->where('rule_version_id', $versaoId)
+            ->where('cnae', $cnaeFormatado)
+            ->get()
+            ->map(fn (TratamentoEnquadramento $linha): ?string => $linha->metadados['subdivisao'] ?? null)
+            ->first(fn (?string $valor): bool => filled($valor));
+
+        return SubdivisaoCnae::opcoes($subdivisao);
     }
 
     /**
