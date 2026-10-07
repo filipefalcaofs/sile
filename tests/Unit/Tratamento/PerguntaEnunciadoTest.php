@@ -40,6 +40,31 @@ class PerguntaEnunciadoTest extends TestCase
         $this->assertCount(3, $a['opcoes']);
     }
 
+    public function test_dependencia_da_pergunta_exibida_apenas_apos_outra_resposta(): void
+    {
+        $this->assertSame(
+            ['pergunta' => 2, 'sim' => true],
+            PerguntaEnunciado::dependencia("EXIBIR APENAS SE RESPONDIDO \"SIM\" na pergunta 2:\n\nA atividade será desenvolvida de modo artesanal?"),
+        );
+        $this->assertSame(
+            ['pergunta' => 4, 'sim' => false],
+            PerguntaEnunciado::dependencia('Exibir apenas SE RESPONDIDO "NÃO" na pergunta 4: selecione'),
+        );
+        $this->assertSame(
+            ['pergunta' => 26, 'sim' => false],
+            PerguntaEnunciado::dependencia('Se respondido Não na pergunta 26, exibir a pergunta seguinte:'),
+        );
+        $this->assertSame(
+            ['pergunta' => 25, 'sim' => true],
+            PerguntaEnunciado::dependencia("Se respondido SIM na pergunta 25, exibir a pergunta a seguir:\nTrata-se de revenda?"),
+        );
+    }
+
+    public function test_pergunta_sem_dependencia(): void
+    {
+        $this->assertNull(PerguntaEnunciado::dependencia('A atividade será desenvolvida no local?'));
+    }
+
     public function test_enunciado_sem_opcoes_continua_sim_nao(): void
     {
         $a = PerguntaEnunciado::analisar('Identifique entre as opções a seguir os serviços ou as atividades que serão prestados:');

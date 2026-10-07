@@ -50,7 +50,8 @@ class TratamentoRegrasSeeder extends Seeder
         // import, que é upsert idempotente e completa o que falta SEM apagar
         // o dado já em uso pela versão vigente.
         $complementoCarregado = TratamentoCnluItem::query()->where('rule_version_id', $version->getKey())->exists()
-            && ! TratamentoEnquadramento::query()->where('rule_version_id', $version->getKey())->whereNull('metadados')->exists();
+            && ! TratamentoEnquadramento::query()->where('rule_version_id', $version->getKey())->whereNull('metadados')->exists()
+            && TratamentoRegraRamo::query()->where('rule_version_id', $version->getKey())->whereNotNull('condicoes')->exists();
 
         if ($enquadramentosExistem
             && TratamentoRegraRamo::query()->where('rule_version_id', $version->getKey())->exists()

@@ -37,6 +37,23 @@ final class PerguntaEnunciado
     }
 
     /**
+     * Pergunta que só aparece depois de outra resposta ("Exibir apenas SE
+     * RESPONDIDO SIM na pergunta 2"): número da pergunta e a resposta esperada.
+     *
+     * @return array{pergunta: int, sim: bool}|null
+     */
+    public static function dependencia(string $enunciado): ?array
+    {
+        $padrao = '/(?:exibir apenas se respondido|se respondido|se a resposta for)\s+["“”]?(sim|n[aã]o)["“”]?\s+na[s]?\s+pergunta[s]?\s+(\d+)/iu';
+
+        if (preg_match($padrao, $enunciado, $m) !== 1) {
+            return null;
+        }
+
+        return ['pergunta' => (int) $m[2], 'sim' => mb_strtolower($m[1]) === 'sim'];
+    }
+
+    /**
      * @param  list<array{rotulo: string, texto: string}>  $opcoes
      */
     private static function eSimNao(array $opcoes): bool

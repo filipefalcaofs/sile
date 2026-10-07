@@ -21,6 +21,21 @@ use Illuminate\Support\Facades\DB;
 
 class PlanilhaTratamentoImporter
 {
+    /**
+     * Regras 41 e 42 (CNAE 8211-3/00) são decididas pelo fluxo de escritório
+     * virtual, não por ramo da planilha.
+     *
+     * @var list<int>
+     */
+    private const REGRAS_DO_ESCRITORIO_VIRTUAL = [41, 42];
+
+    /**
+     * Regras 40 e 43 citam as opções da pergunta 1, que a planilha não traz.
+     *
+     * @var list<int>
+     */
+    private const REGRAS_COM_OPCOES_DA_PERGUNTA_1 = [40, 43];
+
     public function __construct(
         private PlanilhaTratamentoWorkbook $workbook,
         private RuleVersionService $versions,
@@ -106,7 +121,7 @@ class PlanilhaTratamentoImporter
         $carga = $this->workbook->ler($path);
         $id = $versao->getKey();
 
-        return DB::transaction(function () use ($carga, $id): array {
+        return DB::transaction(function () use ($carga, $id, $versao, $path): array {
             $atualizados = 0;
             $semCorrespondencia = 0;
 
@@ -137,6 +152,12 @@ class PlanilhaTratamentoImporter
                 'texto' => $row['texto'],
             ], $carga['notas']), ['rule_version_id', 'chave'], ['texto']);
 
+            $ramosSedur = dirname($path).'/regras-fluxo-sedur.json';
+
+            if (is_file($ramosSedur)) {
+                (new TratamentoRamosSedur)->carregar($versao, $ramosSedur);
+            }
+
             $pendencias = $this->pendenciasSemFluxoCurado($id, $carga['regras']);
 
             return [
@@ -161,18 +182,23 @@ class PlanilhaTratamentoImporter
 
         TratamentoPendencia::query()->where('rule_version_id', $versaoId)->delete();
 
-        $motivo = $this->textos->get('tratamento.pendencia.sem_fluxo_curado');
         $total = 0;
 
         foreach ($regras as $regra) {
-            if (in_array((int) $regra['numero'], $comRamo, true)) {
+            $numero = (int) $regra['numero'];
+
+            if (in_array($numero, $comRamo, true) || in_array($numero, self::REGRAS_DO_ESCRITORIO_VIRTUAL, true)) {
                 continue;
             }
 
             TratamentoPendencia::query()->create([
                 'rule_version_id' => $versaoId,
-                'regra' => $regra['numero'],
-                'motivo' => $motivo,
+                'regra' => $numero,
+                'motivo' => $this->textos->get(
+                    in_array($numero, self::REGRAS_COM_OPCOES_DA_PERGUNTA_1, true)
+                        ? 'tratamento.pendencia.opcoes_pergunta_1'
+                        : 'tratamento.pendencia.sem_fluxo_curado',
+                ),
             ]);
             $total++;
         }

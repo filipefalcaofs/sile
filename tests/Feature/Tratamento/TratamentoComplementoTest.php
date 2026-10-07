@@ -20,7 +20,9 @@ class TratamentoComplementoTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    private const REGRAS_AGUARDANDO = [29, 30, 31, 37, 38, 39, 40, 41, 42, 43, 53, 55];
+    private const REGRAS_AGUARDANDO = [40, 43];
+
+    private const REGRAS_COM_RAMO_DA_SEDUR = [29, 30, 31, 37, 38, 39, 53, 55];
 
     public function test_todo_enquadramento_recebe_metadados_e_vagas_da_planilha(): void
     {
@@ -61,10 +63,27 @@ class TratamentoComplementoTest extends TestCase
             TratamentoPendencia::query()->orderBy('regra')->pluck('regra')->all(),
         );
         $this->assertStringStartsWith(
-            'Aguardando confirmação da SEDUR',
-            (string) TratamentoPendencia::query()->where('regra', 38)->value('motivo'),
+            'Aguardando a SEDUR',
+            (string) TratamentoPendencia::query()->where('regra', 40)->value('motivo'),
         );
         $this->assertSame(0, TratamentoRegraRamo::query()->whereIn('regra', self::REGRAS_AGUARDANDO)->count());
+        $this->assertStringContainsString(
+            'opções da pergunta 1',
+            (string) TratamentoPendencia::query()->where('regra', 40)->value('motivo'),
+        );
+    }
+
+    public function test_regras_respondidas_pela_sedur_ganham_ramo_curado(): void
+    {
+        $this->seed(TratamentoRegrasSeeder::class);
+
+        foreach (self::REGRAS_COM_RAMO_DA_SEDUR as $regra) {
+            $this->assertGreaterThan(
+                0,
+                TratamentoRegraRamo::query()->where('regra', $regra)->whereNotNull('condicoes')->count(),
+                "A regra {$regra} ficou sem ramo curado.",
+            );
+        }
     }
 
     public function test_seed_repetido_nao_duplica_nem_apaga(): void
@@ -76,7 +95,7 @@ class TratamentoComplementoTest extends TestCase
 
         $this->assertSame(2850, TratamentoEnquadramento::query()->count());
         $this->assertSame(15, TratamentoCnluItem::query()->count());
-        $this->assertSame(12, TratamentoPendencia::query()->count());
+        $this->assertSame(2, TratamentoPendencia::query()->count());
         $this->assertSame($ramos, TratamentoRegraRamo::query()->count());
     }
 }

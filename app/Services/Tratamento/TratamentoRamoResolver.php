@@ -105,8 +105,30 @@ class TratamentoRamoResolver
             ->unique()
             ->values();
 
-        foreach ($perguntas as $numero) {
+        $textosDasPerguntas = TratamentoPergunta::query()
+            ->where('rule_version_id', $versao->getKey())
+            ->pluck('texto', 'numero');
+
+        $naoSeAplicam = [];
+
+        foreach ($perguntas->sort()->values() as $numero) {
             if (! array_key_exists((int) $numero, $input->respostas)) {
+                // Pergunta exibida só após outra resposta ("Exibir apenas SE
+                // RESPONDIDO SIM na pergunta N"): com a resposta contrária, ou
+                // se a pergunta de que depende também não se aplica, ela não
+                // se aplica e não trava a resolução.
+                $dependencia = PerguntaEnunciado::dependencia((string) ($textosDasPerguntas[(int) $numero] ?? ''));
+
+                if ($dependencia !== null && (
+                    in_array($dependencia['pergunta'], $naoSeAplicam, true)
+                    || (array_key_exists($dependencia['pergunta'], $input->respostas)
+                        && RespostaPlanilha::de($input->respostas[$dependencia['pergunta']])->comoBooleano() !== $dependencia['sim'])
+                )) {
+                    $naoSeAplicam[] = (int) $numero;
+
+                    continue;
+                }
+
                 // A P3 só é exibida quando a P2 é SIM (texto das regras da
                 // família 52: "Se SIM na pergunta 2, exibir a pergunta 3").
                 // Com P2=NÃO ela não se aplica e não pode travar a resolução
@@ -128,6 +150,14 @@ class TratamentoRamoResolver
             ->where('cnae', $input->cnae)
             ->get();
 
+        if ($input->categoriaEmpresa === null && $this->regraDependeDaCategoria($bindings, (int) $versao->getKey())) {
+            return new TratamentoRamoResult(
+                status: 'nao_resolvido',
+                motivo: $this->textos->get('tratamento.motivo.categoria_ausente'),
+                versaoRegra: $versao->version,
+            );
+        }
+
         $noLocal = $this->atividadeNoLocal($input, $perguntas);
         $tipoDirige = $this->tipoDirige($input->tipoImovel);
 
@@ -135,12 +165,46 @@ class TratamentoRamoResolver
         // (treatment_regra_ramos) — quando o ramo traz código LOUOS, ele manda
         // na linha (relatório SEDUR 21/09, item 18); quando traz só o fluxo,
         // a linha segue a seleção atual e o fluxo vence a heurística.
-        $ramoCurado = $this->ramoCurado($bindings, $input->respostas, $input->areaUtilizada, $tipoDirige, (int) $versao->getKey());
+        $ramoCurado = $this->ramoCurado(
+            $bindings,
+            $input->respostas,
+            $input->areaUtilizada,
+            $tipoDirige,
+            (int) $versao->getKey(),
+            new ContextoRamo(
+                respostas: $input->respostas,
+                categoriaEmpresa: $input->categoriaEmpresa,
+                tipoImovel: $input->tipoImovel,
+                faixa: $input->areaUtilizada === null ? null : ($input->areaUtilizada <= 1250 ? 'ate_1250' : 'acima_1250'),
+            ),
+        );
 
         $linha = null;
 
         if ($ramoCurado !== null && $ramoCurado->codigo_louos !== null && $ramoCurado->codigo_louos !== '') {
             $linha = $enquadramentos->firstWhere('codigo_louos', $ramoCurado->codigo_louos);
+        }
+
+        if ($ramoCurado?->bloqueia && $ramoCurado->condicoes !== null) {
+            return new TratamentoRamoResult(
+                status: 'resolvido',
+                grupo: $linha?->grupo,
+                subgrupo: $linha?->subcategoria,
+                codigoLouos: $linha?->codigo_louos,
+                risco: $linha === null ? null : $this->normalizarRisco($linha->risco),
+                fluxo: 'analise',
+                bloqueia: true,
+                motivo: $this->motivoDoBloqueio($ramoCurado, $input->cnae),
+                versaoRegra: $versao->version,
+            );
+        }
+
+        if ($linha === null && $ramoCurado?->condicoes !== null && filled($ramoCurado->codigo_louos)) {
+            return new TratamentoRamoResult(
+                status: 'nao_resolvido',
+                motivo: $this->textos->get('tratamento.motivo.sem_linha'),
+                versaoRegra: $versao->version,
+            );
         }
 
         $linha ??= $this->escolherLinha($enquadramentos, $noLocal, $input->respostas);
@@ -162,7 +226,7 @@ class TratamentoRamoResolver
                 risco: $this->normalizarRisco($linha->risco),
                 fluxo: 'analise',
                 bloqueia: true,
-                motivo: $this->textos->get('tratamento.motivo.ramo_bloqueado'),
+                motivo: $this->motivoDoBloqueio($ramoCurado, $input->cnae),
                 versaoRegra: $versao->version,
             );
         }
@@ -192,6 +256,13 @@ class TratamentoRamoResolver
             $this->linhaComFaixaDaRegra($linha, $ramoCurado),
             $input->areaUtilizada,
         );
+
+        $subgrupoForcado = $ramoCurado?->acao['subgrupo'] ?? null;
+
+        if (is_string($subgrupoForcado) && $subgrupoForcado !== '') {
+            $subgrupo = $subgrupoForcado;
+            $grupo = $this->grupoDe($subgrupoForcado);
+        }
 
         if ($this->eFamiliaId($subgrupo)) {
             $dependenciaTipo = $this->motivoTipoAusente($input->tipoImovel);
@@ -346,7 +417,7 @@ class TratamentoRamoResolver
      * @param  Collection<int, TratamentoCnaeBinding>  $bindings
      * @param  array<int, bool|int|list<int>>  $respostas
      */
-    private function ramoCurado(Collection $bindings, array $respostas, ?float $area, bool $tipoDirige, int $versaoId): ?TratamentoRegraRamo
+    private function ramoCurado(Collection $bindings, array $respostas, ?float $area, bool $tipoDirige, int $versaoId, ContextoRamo $contexto): ?TratamentoRegraRamo
     {
         $regras = $bindings->pluck('regra')->filter()->unique()->values();
 
@@ -363,7 +434,11 @@ class TratamentoRamoResolver
             ->get();
 
         return $ramos
-            ->filter(function (TratamentoRegraRamo $ramo) use ($respostas, $faixa, $tipoDirige, $perguntaVinculada): bool {
+            ->filter(function (TratamentoRegraRamo $ramo) use ($respostas, $faixa, $tipoDirige, $perguntaVinculada, $contexto): bool {
+                if ($ramo->condicoes !== null) {
+                    return CondicaoRamo::atende($ramo->condicoes, $contexto);
+                }
+
                 // Ramo sem número de pergunta no texto (ex.: regra 50) casa com
                 // a pergunta vinculada ao CNAE.
                 $pergunta = $ramo->pergunta ?? $perguntaVinculada;
@@ -388,7 +463,7 @@ class TratamentoRamoResolver
             })
             // Mais específico vence: tipo que dirige regra pesa mais, depois a
             // pergunta explícita (ramo curado à mão), depois faixa e resposta.
-            ->sortByDesc(fn (TratamentoRegraRamo $ramo): int => ($ramo->resposta !== null ? 1 : 0)
+            ->sortByDesc(fn (TratamentoRegraRamo $ramo): int => $ramo->condicoes !== null ? 10 + CondicaoRamo::peso($ramo->condicoes) : ($ramo->resposta !== null ? 1 : 0)
                 + ($ramo->faixa !== null ? 1 : 0)
                 + ($ramo->tipo_dirige !== null ? 2 : 0)
                 + ($ramo->pergunta !== null ? 2 : 0))
@@ -551,6 +626,45 @@ class TratamentoRamoResolver
             ':numero' => (string) $numero,
             ':texto' => $primeiraLinha !== '' ? $primeiraLinha : "Pergunta {$numero}",
         ]);
+    }
+
+    /**
+     * @param  Collection<int, TratamentoCnaeBinding>  $bindings
+     */
+    private function regraDependeDaCategoria(Collection $bindings, int $versaoId): bool
+    {
+        $regras = $bindings->pluck('regra')->filter()->unique()->values();
+
+        if ($regras->isEmpty()) {
+            return false;
+        }
+
+        return TratamentoRegraRamo::query()
+            ->where('rule_version_id', $versaoId)
+            ->whereIn('regra', $regras)
+            ->whereNotNull('condicoes')
+            ->get()
+            ->contains(fn (TratamentoRegraRamo $ramo): bool => array_key_exists('categoria', (array) $ramo->condicoes));
+    }
+
+    private function motivoDoBloqueio(TratamentoRegraRamo $ramo, string $cnae): string
+    {
+        $chave = $ramo->acao['mensagem'] ?? null;
+
+        if (! is_string($chave) || $chave === '') {
+            return $this->textos->get('tratamento.motivo.ramo_bloqueado');
+        }
+
+        return $this->textos->render($chave, [':cnae' => $this->formatarCnae($cnae)]);
+    }
+
+    private function formatarCnae(string $cnae): string
+    {
+        $digitos = (string) preg_replace('/\D/', '', $cnae);
+
+        return strlen($digitos) === 7
+            ? substr($digitos, 0, 4).'-'.substr($digitos, 4, 1).'/'.substr($digitos, 5, 2)
+            : $cnae;
     }
 
     private function motivoTipoAusente(?TipoImovel $tipo): ?string

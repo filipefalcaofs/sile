@@ -187,7 +187,13 @@ final class DecisionTextCatalog
             'localizacao.motivo.divergencia_zona_enderecamento' => 'Localização divergente: o polígono desenhado está na zona :zona_desenho e o polígono do endereçamento SEDUR, na zona :zona_enderecamento — segue para análise técnica.',
             // Planilha de tratamento — motivos do ramo não resolvido. A pergunta
             // sem resposta cita o enunciado da planilha (:numero, :texto).
+            'tratamento.pendencia.opcoes_pergunta_1' => 'Aguardando a SEDUR: a planilha não traz as opções da pergunta 1 que esta regra cita. O motor usa a heurística desta versão.',
             'tratamento.pendencia.sem_fluxo_curado' => 'Aguardando confirmação da SEDUR: o texto da regra não define o fluxo de forma inequívoca. O motor usa a heurística desta versão.',
+            'tratamento.motivo.categoria_ausente' => 'Categoria da empresa ausente para a regra que depende dela',
+            'tratamento.bloqueio.so_orgao_publico' => 'Esta atividade só é permitida para órgãos da Administração Pública',
+            'tratamento.bloqueio.residencial_plural' => 'A (s) atividade (s) solicitada (s) não é (são) permitida(s) em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares.',
+            'tratamento.bloqueio.residencial' => 'A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares.',
+            'tratamento.bloqueio.categoria_incompativel' => 'Resposta selecionada para a CNAE :cnae não é compatível com a categoria da empresa indicada nesta etapa. Revise as informações para continuar.',
             'tratamento.motivo.sem_versao' => 'Planilha de tratamento sem versão vigente',
             'tratamento.motivo.cnae_sem_regra' => 'CNAE sem regra de tratamento vigente',
             'tratamento.motivo.pergunta_sem_resposta' => 'Pergunta :numero sem resposta — :texto',
