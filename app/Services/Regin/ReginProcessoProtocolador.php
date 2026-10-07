@@ -18,6 +18,7 @@ use App\Rules\ValidCpf;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
+use App\Services\Tratamento\CategoriaEmpresa;
 use App\Services\Tratamento\RespostaPlanilha;
 use App\Services\Tratamento\TratamentoRamoResolver;
 use Illuminate\Support\Facades\Hash;
@@ -187,6 +188,8 @@ class ReginProcessoProtocolador
             'zip_code' => $dados->cep,
             'source' => CompanySource::Redesim,
             'redesim_protocol' => $protocolo,
+            'legal_nature_code' => CategoriaEmpresa::separar($dados->complemento->naturezaJuridica)['codigo'],
+            'legal_nature' => CategoriaEmpresa::separar($dados->complemento->naturezaJuridica)['descricao'],
         ]);
     }
 
@@ -620,9 +623,14 @@ class ReginProcessoProtocolador
             $cnpj = '00000000000000';
         }
 
+        $natureza = CategoriaEmpresa::separar((string) ($rowset['RUC_COMP']['RCO_TNC_COD_NATUR'] ?? ''));
         $existente = Company::query()->where('cnpj', $cnpj)->first();
 
         if ($existente !== null) {
+            if ($natureza['codigo'] !== null && blank($existente->legal_nature_code)) {
+                $existente->forceFill(['legal_nature_code' => $natureza['codigo']])->save();
+            }
+
             return $existente;
         }
 
@@ -630,6 +638,8 @@ class ReginProcessoProtocolador
             'cnpj' => $cnpj,
             'legal_name' => $nome !== '' ? $nome : 'Empresa REGIN',
             'source' => CompanySource::Redesim,
+            'legal_nature_code' => $natureza['codigo'],
+            'legal_nature' => $natureza['descricao'],
         ]);
     }
 

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginProcessoProtocolador;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
+use App\Services\Tratamento\CategoriaEmpresa;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\Support\SeedsTratamentoPlanilha;
@@ -89,6 +90,40 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertSame(2, $processo->cnaes()->count());
         $this->assertSame('4712100', $processo->primaryCnae()->first()?->code);
         $this->assertNotNull($processo->protocol_number);
+    }
+
+    public function test_natureza_juridica_do_ruc_vai_para_a_empresa(): void
+    {
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_COMP' => ['RCO_TNC_COD_NATUR' => '2062']])),
+        );
+
+        $this->assertSame('2062', $processo->company->legal_nature_code);
+    }
+
+    public function test_orgao_publico_do_ruc_chega_ao_motor_como_categoria_da_empresa(): void
+    {
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_COMP' => ['RCO_TNC_COD_NATUR' => '1015']])),
+        );
+
+        $this->assertSame('1015', $processo->company->legal_nature_code);
+        $this->assertSame(
+            'orgao_publico',
+            CategoriaEmpresa::deNaturezaJuridica($processo->company->legal_nature_code, $processo->company->legal_nature),
+        );
+    }
+
+    public function test_empresa_ja_cadastrada_sem_natureza_recebe_a_do_ruc(): void
+    {
+        Company::factory()->create(['cnpj' => '13927801000149', 'legal_nature_code' => null, 'legal_nature' => null]);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_COMP' => ['RCO_TNC_COD_NATUR' => '2062']])),
+        );
+
+        $this->assertSame('2062', $processo->company->fresh()->legal_nature_code);
+        $this->assertSame(1, Company::query()->where('cnpj', '13927801000149')->count());
     }
 
     public function test_rowset_em_maiusculas_como_a_juceb_envia_tambem_protocola(): void
@@ -199,6 +234,7 @@ class ReginProcessoProtocoladorTest extends TestCase
                 'RGE_CGC_CPF' => '91237157900',
                 'RGE_NOMB' => 'FABIAN TEIXEIRA FRANCO',
             ],
+            'RUC_COMP' => ['RCO_TNC_COD_NATUR' => '2062'],
             'RUC_ESTAB' => [
                 'RES_AREA' => '55',
                 'RES_DIRECCION' => 'BEIRA MAR',
@@ -239,6 +275,8 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertSame('9269886', $processo->property_registration);
         $this->assertSame('1064300', $processo->primaryCnae()->first()?->code);
         $this->assertSame(55.0, (float) $processo->used_area_m2);
+        $this->assertSame('2062', $processo->company->legal_nature_code);
+        $this->assertSame('outra', CategoriaEmpresa::deNaturezaJuridica($processo->company->legal_nature_code));
 
         $respostas = $processo->simulation_snapshot['respostas_tratamento_por_cnae']['1064300'] ?? [];
         $this->assertSame(true, $respostas[2] ?? null);
