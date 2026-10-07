@@ -61,6 +61,7 @@ class PlanilhaTratamentoWorkbook
         $regras = $this->regras($abas['regras']);
         $extraido = $this->ramos($regras);
         $cnaes = $this->enquadramentos($abas['cnaes']);
+        $cnlu = (new PlanilhaCnluParser)->interpretar($abas['cnlu'] ?? []);
 
         return [
             'perguntas' => $this->perguntas($abas['perguntas']),
@@ -68,8 +69,8 @@ class PlanilhaTratamentoWorkbook
             'enquadramentos' => $cnaes['linhas'],
             'bindings' => $cnaes['bindings'],
             'condicionantes' => $this->condicionantes($abas['condicionantes']),
-            'cnlu' => $this->cnlu($abas['cnlu'] ?? []),
-            'notas' => $this->notas($abas['geral'] ?? [], $abas['regra_geral'] ?? []),
+            'cnlu' => $cnlu['itens'],
+            'notas' => $this->notas($abas['geral'] ?? [], $abas['regra_geral'] ?? [], $cnlu['aguardando']),
             'ramos' => $extraido['ramos'],
             'pendencias' => $extraido['pendencias'],
         ];
@@ -109,6 +110,12 @@ class PlanilhaTratamentoWorkbook
             }
 
             $mapa[$titulo][] = $idx;
+
+            $colapsado = (string) preg_replace('/\s+/u', ' ', $titulo);
+
+            if ($colapsado !== $titulo) {
+                $mapa[$colapsado][] = $idx;
+            }
         }
 
         $out = [];
@@ -167,10 +174,11 @@ class PlanilhaTratamentoWorkbook
                 'codigo_tll' => $this->nulo($this->celula($linha, $mapa, 'Código TLL')),
                 'especificacao_tll' => $this->nulo($this->celula($linha, $mapa, 'Especificação TLL')),
                 'classificacao' => $this->nulo($this->celula($linha, $mapa, 'Classificação')),
-                'vagas' => [
-                    'carga' => $this->nulo($this->celula($linha, $mapa, 'Carga e Descarga')),
-                    'patio' => $this->nulo($this->celula($linha, $mapa, 'Pátio para carga e descarga (5% da ACC)')),
-                    'embarque' => $this->nulo($this->celula($linha, $mapa, 'Área para embarque e desembarque')),
+                'vagas' => $this->vagas($linha, $mapa),
+                'metadados' => [
+                    'subdivisao' => $this->nulo($this->celula($linha, $mapa, 'Subdivisão CNAE')),
+                    'atualizado_em' => $this->nulo($this->celula($linha, $mapa, 'Atualizado em')),
+                    'atualizacao_recente' => $this->nulo($this->celula($linha, $mapa, 'Atualização recentes')),
                 ],
             ];
 
@@ -186,6 +194,42 @@ class PlanilhaTratamentoWorkbook
         }
 
         return ['linhas' => $out, 'bindings' => $bindings];
+    }
+
+    /**
+     * Exigências de vagas da linha: as três colunas-resumo e as variantes 1 a 3
+     * de cada uma (Aplica, análise e quantidade), como a planilha as traz.
+     *
+     * @param  array<int, string>  $linha
+     * @param  array<string, list<int>>  $mapa
+     * @return array<string, string|null>
+     */
+    private function vagas(array $linha, array $mapa): array
+    {
+        $vagas = [
+            'carga' => $this->nulo($this->celula($linha, $mapa, 'Carga e Descarga')),
+            'patio' => $this->nulo($this->celula($linha, $mapa, 'Pátio para carga e descarga (5% da ACC)')),
+            'embarque' => $this->nulo($this->celula($linha, $mapa, 'Área para embarque e desembarque')),
+        ];
+
+        $grupos = [
+            'carga' => ['Carga e Descarga', ['aplica', 'analise', 'quantidade']],
+            'patio' => ['Pátio para carga e descarga (5% da ACC) ', ['aplica', 'analise', 'quantidade']],
+            'embarque' => ['Área para embarque e desembarque', ['aplica', 'analise']],
+        ];
+
+        foreach ($grupos as $chave => [$rotulo, $campos]) {
+            foreach ([1, 2, 3] as $n) {
+                foreach ($campos as $campo) {
+                    $titulo = $campo === 'aplica' ? 'Aplica' : $campo;
+                    $vagas["{$chave}_{$n}_{$campo}"] = $this->nulo(
+                        $this->celula($linha, $mapa, "{$rotulo}{$n} {$titulo}"),
+                    );
+                }
+            }
+        }
+
+        return $vagas;
     }
 
     /**
@@ -272,41 +316,12 @@ class PlanilhaTratamentoWorkbook
     }
 
     /**
-     * @param  list<array<int, string>>  $linhas
-     * @return list<array{codigo: string, texto: string}>
-     */
-    private function cnlu(array $linhas): array
-    {
-        $out = [];
-
-        foreach ($linhas as $linha) {
-            $texto = trim(implode(' ', array_filter($linha, fn (string $v): bool => trim($v) !== '')));
-
-            if ($texto === '') {
-                continue;
-            }
-
-            preg_match_all('/\b(?:nR\d+|nRa|ID\d+-\d+)\b/u', $texto, $codigos);
-            $codigos = array_values(array_unique($codigos[0] ?? []));
-
-            if ($codigos === []) {
-                $codigos = [mb_substr($texto, 0, 32)];
-            }
-
-            foreach ($codigos as $codigo) {
-                $out[] = ['codigo' => $codigo, 'texto' => $texto];
-            }
-        }
-
-        return $out;
-    }
-
-    /**
      * @param  list<array<int, string>>  $geral
      * @param  list<array<int, string>>  $regraGeral
+     * @param  list<string>  $cnluAguardando
      * @return list<array{chave: string, texto: string}>
      */
-    private function notas(array $geral, array $regraGeral): array
+    private function notas(array $geral, array $regraGeral, array $cnluAguardando = []): array
     {
         $notas = [];
         $textoGeral = trim(implode("\n", array_map(
@@ -325,6 +340,14 @@ class PlanilhaTratamentoWorkbook
 
         if ($textoRegra !== '') {
             $notas[] = ['chave' => 'pergunta_regra_geral', 'texto' => $textoRegra];
+        }
+
+        if ($cnluAguardando !== []) {
+            $notas[] = [
+                'chave' => 'cnlu_aguardando_sedur',
+                'texto' => 'Itens da aba Análise CNLU com ressalva "(subgrupo 2)", fora da lista do motor até a SEDUR confirmar o alcance: '
+                    .implode(', ', $cnluAguardando).'.',
+            ];
         }
 
         return $notas;

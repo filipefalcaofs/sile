@@ -1,3 +1,5 @@
+import PerguntaPlanilhaCampo from '@/components/viabilidade/pergunta-planilha-campo';
+import type { PerguntaPlanilha, RespostaPlanilha } from '@/lib/respostas-planilha';
 import { Head, Link, useHttp } from '@inertiajs/react';
 import type { ComponentType, ReactNode, SVGProps } from 'react';
 import { useState } from 'react';
@@ -22,17 +24,14 @@ interface ConsultaProps {
 type TipoEntrada = 'endereco' | 'cnae' | 'inscricao';
 
 /** Corpo POST dos endpoints /portal/viabilidade/* (07-06). */
-interface PerguntaConsulta {
-    numero: number;
-    texto: string;
-}
+type PerguntaConsulta = PerguntaPlanilha;
 
 interface ConsultaPayload {
     endereco?: string;
     inscricao?: string;
     cnae: string;
     area: number | null;
-    respostas?: Record<number, boolean>;
+    respostas?: Record<number, RespostaPlanilha>;
 }
 
 const ENTRADAS: Array<{ tipo: TipoEntrada; rotulo: string; icon: ComponentType<SVGProps<SVGSVGElement>> }> = [
@@ -150,7 +149,7 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
     const [cnae, setCnae] = useState('');
     const [area, setArea] = useState('');
     const [perguntas, setPerguntas] = useState<PerguntaConsulta[]>([]);
-    const [respostas, setRespostas] = useState<Record<number, boolean>>({});
+    const [respostas, setRespostas] = useState<Record<number, RespostaPlanilha>>({});
     const [result, setResult] = useState<ResultadoConsulta | null>(null);
     const [erro, setErro] = useState<string | null>(null);
 
@@ -390,43 +389,14 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                                                 {perguntas
                                                     .filter((pergunta) => pergunta.numero !== 3 || respostas[2] !== false)
                                                     .map((pergunta) => (
-                                                        <div key={pergunta.numero} className="flex flex-col gap-2">
-                                                            <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                                {pergunta.numero}. {pergunta.texto}
-                                                            </p>
-                                                            <div className="flex gap-4">
-                                                                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                                                                    <input
-                                                                        type="radio"
-                                                                        name={`pergunta-${pergunta.numero}`}
-                                                                        className="size-4 border-gray-300 bg-white scheme-light accent-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
-                                                                        checked={respostas[pergunta.numero] === true}
-                                                                        onChange={() =>
-                                                                            setRespostas((atual) => ({
-                                                                                ...atual,
-                                                                                [pergunta.numero]: true,
-                                                                            }))
-                                                                        }
-                                                                    />
-                                                                    Sim
-                                                                </label>
-                                                                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                                                                    <input
-                                                                        type="radio"
-                                                                        name={`pergunta-${pergunta.numero}`}
-                                                                        className="size-4 border-gray-300 bg-white scheme-light accent-brand-500 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
-                                                                        checked={respostas[pergunta.numero] === false}
-                                                                        onChange={() =>
-                                                                            setRespostas((atual) => ({
-                                                                                ...atual,
-                                                                                [pergunta.numero]: false,
-                                                                            }))
-                                                                        }
-                                                                    />
-                                                                    Não
-                                                                </label>
-                                                            </div>
-                                                        </div>
+                                                        <PerguntaPlanilhaCampo
+                                                            key={pergunta.numero}
+                                                            pergunta={pergunta}
+                                                            valor={respostas[pergunta.numero]}
+                                                            onChange={(valor) =>
+                                                                setRespostas((atual) => ({ ...atual, [pergunta.numero]: valor }))
+                                                            }
+                                                        />
                                                     ))}
                                             </fieldset>
                                         )}

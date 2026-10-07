@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table/data-table';
 import type { ColumnDef } from '@/components/ui/data-table/types';
 import Input from '@/components/form/input';
+import PerguntaPlanilhaCampo from '@/components/viabilidade/pergunta-planilha-campo';
+import type { OpcaoPergunta, RespostaPlanilha } from '@/lib/respostas-planilha';
 import Label from '@/components/form/label';
 import GestaoLayout from '@/layouts/gestao-layout';
 
@@ -119,7 +121,9 @@ interface PerguntaPendente {
     cnae: string;
     numero: number;
     texto: string;
-    valor: boolean | null;
+    tipo: 'sim_nao' | 'opcao_unica' | 'multipla';
+    opcoes: OpcaoPergunta[];
+    valor: RespostaPlanilha | null;
 }
 
 interface PendenciasSimulacao {
@@ -667,7 +671,7 @@ function chaveCnae(cnae: string): string {
 }
 
 function FormularioPendencias({ pendencias }: { pendencias: PendenciasSimulacao }) {
-    const respostasIniciais: Record<string, Record<string, boolean | null>> = {};
+    const respostasIniciais: Record<string, Record<string, RespostaPlanilha | null>> = {};
 
     for (const pergunta of pendencias.perguntas) {
         const cnae = chaveCnae(pergunta.cnae);
@@ -732,46 +736,20 @@ function FormularioPendencias({ pendencias }: { pendencias: PendenciasSimulacao 
                                         <legend className="px-1 text-theme-sm font-medium text-gray-800 dark:text-white/90">
                                             CNAE {pergunta.cnae} · Pergunta {pergunta.numero}
                                         </legend>
-                                        <p className="mt-2 whitespace-pre-line text-theme-sm text-gray-600 dark:text-gray-300">
-                                            {pergunta.texto}
-                                        </p>
-                                        <div className="mt-3 flex items-center gap-6">
-                                            <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-                                                <input
-                                                    type="radio"
-                                                    name={`resposta-${cnae}-${chave}`}
-                                                    checked={valor === true}
-                                                    onChange={() =>
-                                                        form.setData('respostas', {
-                                                            ...form.data.respostas,
-                                                            [cnae]: {
-                                                                ...form.data.respostas[cnae],
-                                                                [chave]: true,
-                                                            },
-                                                        })
-                                                    }
-                                                    className="size-4 rounded-full border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
-                                                />
-                                                Sim
-                                            </label>
-                                            <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-                                                <input
-                                                    type="radio"
-                                                    name={`resposta-${cnae}-${chave}`}
-                                                    checked={valor === false}
-                                                    onChange={() =>
-                                                        form.setData('respostas', {
-                                                            ...form.data.respostas,
-                                                            [cnae]: {
-                                                                ...form.data.respostas[cnae],
-                                                                [chave]: false,
-                                                            },
-                                                        })
-                                                    }
-                                                    className="size-4 rounded-full border-gray-300 bg-white text-brand-500 scheme-light focus:ring-brand-500/30 dark:border-gray-400 dark:bg-gray-900 dark:scheme-dark"
-                                                />
-                                                Não
-                                            </label>
+                                        <div className="mt-3">
+                                            <PerguntaPlanilhaCampo
+                                                pergunta={pergunta}
+                                                valor={valor ?? undefined}
+                                                onChange={(resposta) =>
+                                                    form.setData('respostas', {
+                                                        ...form.data.respostas,
+                                                        [cnae]: {
+                                                            ...form.data.respostas[cnae],
+                                                            [chave]: resposta,
+                                                        },
+                                                    })
+                                                }
+                                            />
                                         </div>
                                     </fieldset>
                                 );

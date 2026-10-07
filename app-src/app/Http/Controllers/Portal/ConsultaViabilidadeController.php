@@ -10,6 +10,7 @@ use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\ForaDeSalvadorException;
 use App\Services\Geo\GeocoderException;
+use App\Services\Tratamento\RespostaPlanilha;
 use App\Services\Tratamento\TratamentoRamoResolver;
 use App\Services\Viabilidade\ConsultaViabilidadeResult;
 use App\Services\Viabilidade\ConsultaViabilidadeService;
@@ -151,14 +152,16 @@ class ConsultaViabilidadeController extends Controller
 
     /**
      * @param  array<int|string, mixed>|null  $informadas
-     * @return array<int, bool>
+     * @return array<int, bool|int|list<int>>
      */
     private function respostasInformadas(?array $informadas): array
     {
         $respostas = [];
 
         foreach ($informadas ?? [] as $numero => $valor) {
-            $respostas[(int) $numero] = (bool) $valor;
+            $respostas[(int) $numero] = $valor === 'true' || $valor === 'false'
+                ? $valor === 'true'
+                : RespostaPlanilha::de($valor)->paraArmazenar();
         }
 
         return $respostas;

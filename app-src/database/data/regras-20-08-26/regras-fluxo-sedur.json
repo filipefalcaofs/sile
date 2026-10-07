@@ -1,0 +1,774 @@
+{
+  "fonte": "Planilha de regras - versão 20.08.26 (aba Regras de tratamento) e respostas da SEDUR de 07/10/2026",
+  "ramos": [
+    {
+      "regra": 29,
+      "frase": "Se selecionado as opções 1 e 2 na pergunta 22, enquadrar como Estacionamento, Edifício garagem, locação de veículos (07.08.01) — Fluxo Semiexpresso",
+      "condicoes": {
+        "perguntas": {
+          "13": {
+            "sim": true
+          },
+          "14": {
+            "opcoes": [
+              1,
+              2
+            ]
+          }
+        }
+      },
+      "codigo_louos": "07.08.01",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 29,
+      "frase": "Se selecionado a opção 3 na pergunta 22, enquadrar como Estacionamento e garagens de veículos pesados (07.08.05) — Fluxo Semiexpresso",
+      "condicoes": {
+        "perguntas": {
+          "13": {
+            "sim": true
+          },
+          "14": {
+            "opcoes": [
+              3
+            ]
+          }
+        }
+      },
+      "codigo_louos": "07.08.05",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 30,
+      "frase": "Fluxo Expresso: enquadramento único, até 1250 m², fora de GALPÃO, EDIFICAÇÃO RESIDENCIAL e CONTAINER",
+      "condicoes": {
+        "faixa": "ate_1250",
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": null,
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 30,
+      "frase": "Fora das condições do expresso (acima de 1250 m²): análise (semiexpresso)",
+      "condicoes": {
+        "faixa": "acima_1250"
+      },
+      "codigo_louos": null,
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 30,
+      "frase": "Fora das condições do expresso (galpão, edificação residencial ou container): análise (semiexpresso)",
+      "condicoes": {
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": null,
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 31,
+      "frase": "Fluxo Expresso: NÃO na pergunta 11, enquadrar como Escritório (07.12.13)",
+      "condicoes": {
+        "perguntas": {
+          "11": {
+            "sim": false
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 31,
+      "frase": "Fluxo Expresso: opções 1 a 9 e 11 a 16 na pergunta 10 e SIM na 11, enquadrar como Outros comércios diversificados (07.03.11)",
+      "condicoes": {
+        "perguntas": {
+          "10": {
+            "opcoes": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          "11": {
+            "sim": true
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.03.11",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 31,
+      "frase": "Fluxo Expresso: opção 10 na pergunta 10 e SIM na 11, enquadrar como Outros comércios especializados (07.04.17)",
+      "condicoes": {
+        "perguntas": {
+          "10": {
+            "opcoes": [
+              10
+            ]
+          },
+          "11": {
+            "sim": true
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.04.17",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 31,
+      "frase": "Fluxo Semiexpresso (galpão, edificação residencial ou container): NÃO na pergunta 11, enquadrar como Escritório (07.12.13)",
+      "condicoes": {
+        "perguntas": {
+          "11": {
+            "sim": false
+          }
+        },
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 31,
+      "frase": "Fluxo Semiexpresso (galpão, edificação residencial ou container): opções 1 a 9 e 11 a 16 na pergunta 10 e SIM na 11, enquadrar como Outros comércios diversificados (07.03.11)",
+      "condicoes": {
+        "perguntas": {
+          "10": {
+            "opcoes": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          "11": {
+            "sim": true
+          }
+        },
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": "07.03.11",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 31,
+      "frase": "Fluxo Semiexpresso (galpão, edificação residencial ou container): opção 10 na pergunta 10 e SIM na 11, enquadrar como Outros comércios especializados (07.04.17)",
+      "condicoes": {
+        "perguntas": {
+          "10": {
+            "opcoes": [
+              10
+            ]
+          },
+          "11": {
+            "sim": true
+          }
+        },
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": "07.04.17",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 37,
+      "frase": "lavanderia: opção 1 e até 1250 m², fora de galpão/residencial/container: Lavanderia industrial (07.09.15) — Fluxo Expresso",
+      "condicoes": {
+        "perguntas": {
+          "21": {
+            "sim": true
+          },
+          "22": {
+            "opcoes": [
+              1
+            ]
+          }
+        },
+        "faixa": "ate_1250",
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.09.15",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 37,
+      "frase": "lavanderia: opção 1 acima de 1250 m²: Lavanderia industrial (07.09.15) — Fluxo Semiexpresso",
+      "condicoes": {
+        "perguntas": {
+          "21": {
+            "sim": true
+          },
+          "22": {
+            "opcoes": [
+              1
+            ]
+          }
+        },
+        "faixa": "acima_1250",
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.09.15",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 37,
+      "frase": "lavanderia: opção 1 em galpão, edificação residencial ou container: Lavanderia industrial (07.09.15) — Semiexpresso e crítica do analista",
+      "condicoes": {
+        "perguntas": {
+          "21": {
+            "sim": true
+          },
+          "22": {
+            "opcoes": [
+              1
+            ]
+          }
+        },
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": "07.09.15",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 37,
+      "frase": "lavanderia: opção 2, qualquer área: Lavanderia não industrial (07.09.03) — Fluxo Expresso",
+      "condicoes": {
+        "perguntas": {
+          "21": {
+            "sim": true
+          },
+          "22": {
+            "opcoes": [
+              2
+            ]
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.09.03",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 37,
+      "frase": "lavanderia: opção 2 em galpão, edificação residencial ou container: Lavanderia não industrial (07.09.03) — Semiexpresso e crítica do analista",
+      "condicoes": {
+        "perguntas": {
+          "21": {
+            "sim": true
+          },
+          "22": {
+            "opcoes": [
+              2
+            ]
+          }
+        },
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": "07.09.03",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 37,
+      "frase": "toalheiro: opção 1 e até 1250 m², fora de galpão/residencial/container: Lavanderia industrial (07.09.15) — Fluxo Expresso",
+      "condicoes": {
+        "perguntas": {
+          "23": {
+            "sim": true
+          },
+          "24": {
+            "opcoes": [
+              1
+            ]
+          }
+        },
+        "faixa": "ate_1250",
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.09.15",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 37,
+      "frase": "toalheiro: opção 1 acima de 1250 m²: Lavanderia industrial (07.09.15) — Fluxo Semiexpresso",
+      "condicoes": {
+        "perguntas": {
+          "23": {
+            "sim": true
+          },
+          "24": {
+            "opcoes": [
+              1
+            ]
+          }
+        },
+        "faixa": "acima_1250",
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.09.15",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 37,
+      "frase": "toalheiro: opção 1 em galpão, edificação residencial ou container: Lavanderia industrial (07.09.15) — Semiexpresso e crítica do analista",
+      "condicoes": {
+        "perguntas": {
+          "23": {
+            "sim": true
+          },
+          "24": {
+            "opcoes": [
+              1
+            ]
+          }
+        },
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": "07.09.15",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 37,
+      "frase": "toalheiro: opção 2, qualquer área: Lavanderia não industrial (07.09.03) — Fluxo Expresso",
+      "condicoes": {
+        "perguntas": {
+          "23": {
+            "sim": true
+          },
+          "24": {
+            "opcoes": [
+              2
+            ]
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.09.03",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 37,
+      "frase": "toalheiro: opção 2 em galpão, edificação residencial ou container: Lavanderia não industrial (07.09.03) — Semiexpresso e crítica do analista",
+      "condicoes": {
+        "perguntas": {
+          "23": {
+            "sim": true
+          },
+          "24": {
+            "opcoes": [
+              2
+            ]
+          }
+        },
+        "tipo_imovel": "dirige"
+      },
+      "codigo_louos": "07.09.03",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 38,
+      "frase": "Se a solicitação for em Edificação Residencial, não permitir o prosseguimento do cadastro",
+      "condicoes": {
+        "tipo_imovel": "residencial"
+      },
+      "codigo_louos": null,
+      "fluxo": "analise",
+      "bloqueia": true,
+      "mensagem": "tratamento.bloqueio.residencial_plural"
+    },
+    {
+      "regra": 38,
+      "frase": "Se a categoria da empresa for diferente de órgão público: Esta atividade só é permitida para órgãos da Administração Pública",
+      "condicoes": {
+        "categoria": "outra"
+      },
+      "codigo_louos": null,
+      "fluxo": "analise",
+      "bloqueia": true,
+      "mensagem": "tratamento.bloqueio.so_orgao_publico"
+    },
+    {
+      "regra": 38,
+      "frase": "Órgão Público e NÃO na pergunta 7: Esta atividade só é permitida para órgãos da Administração Pública",
+      "condicoes": {
+        "categoria": "orgao_publico",
+        "perguntas": {
+          "7": {
+            "sim": false
+          }
+        }
+      },
+      "codigo_louos": null,
+      "fluxo": "analise",
+      "bloqueia": true,
+      "mensagem": "tratamento.bloqueio.so_orgao_publico"
+    },
+    {
+      "regra": 38,
+      "frase": "Fluxo Expresso: Órgão Público e SIM na pergunta 7, enquadrar como Órgãos dos poderes executivo, legislativo e judiciário (07.11.03)",
+      "condicoes": {
+        "categoria": "orgao_publico",
+        "perguntas": {
+          "7": {
+            "sim": true
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.11.03",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 38,
+      "frase": "Fluxo Semiexpresso: Órgão Público, SIM na pergunta 7 e tipo de imóvel GALPÃO ou CONTAINER (07.11.03)",
+      "condicoes": {
+        "categoria": "orgao_publico",
+        "perguntas": {
+          "7": {
+            "sim": true
+          }
+        },
+        "tipo_imovel": "galpao_container"
+      },
+      "codigo_louos": "07.11.03",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 39,
+      "frase": "Se a solicitação for em Edificação Residencial, não permitir o prosseguimento do cadastro",
+      "condicoes": {
+        "tipo_imovel": "residencial"
+      },
+      "codigo_louos": null,
+      "fluxo": "analise",
+      "bloqueia": true,
+      "mensagem": "tratamento.bloqueio.residencial"
+    },
+    {
+      "regra": 39,
+      "frase": "Órgão Público e SIM na pergunta 6: resposta não compatível com a categoria da empresa",
+      "condicoes": {
+        "categoria": "orgao_publico",
+        "perguntas": {
+          "6": {
+            "sim": true
+          }
+        }
+      },
+      "codigo_louos": null,
+      "fluxo": "analise",
+      "bloqueia": true,
+      "mensagem": "tratamento.bloqueio.categoria_incompativel"
+    },
+    {
+      "regra": 39,
+      "frase": "Categoria diferente de Órgão Público e NÃO na pergunta 6: resposta não compatível com a categoria da empresa",
+      "condicoes": {
+        "categoria": "outra",
+        "perguntas": {
+          "6": {
+            "sim": false
+          }
+        }
+      },
+      "codigo_louos": null,
+      "fluxo": "analise",
+      "bloqueia": true,
+      "mensagem": "tratamento.bloqueio.categoria_incompativel"
+    },
+    {
+      "regra": 39,
+      "frase": "Fluxo Expresso: Órgão Público e NÃO na pergunta 6, enquadrar como Órgãos dos poderes (07.11.03)",
+      "condicoes": {
+        "categoria": "orgao_publico",
+        "perguntas": {
+          "6": {
+            "sim": false
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.11.03",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 39,
+      "frase": "Fluxo Semiexpresso: Órgão Público, NÃO na pergunta 6 e imóvel GALPÃO ou CONTAINER (07.11.03)",
+      "condicoes": {
+        "categoria": "orgao_publico",
+        "perguntas": {
+          "6": {
+            "sim": false
+          }
+        },
+        "tipo_imovel": "galpao_container"
+      },
+      "codigo_louos": "07.11.03",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 39,
+      "frase": "Fluxo Expresso: categoria diferente de Órgão Público e SIM na pergunta 6, enquadrar como Escritório (07.12.13)",
+      "condicoes": {
+        "categoria": "outra",
+        "perguntas": {
+          "6": {
+            "sim": true
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 39,
+      "frase": "Fluxo Semiexpresso: categoria diferente, SIM na pergunta 6 e imóvel GALPÃO ou CONTAINER (07.12.13)",
+      "condicoes": {
+        "categoria": "outra",
+        "perguntas": {
+          "6": {
+            "sim": true
+          }
+        },
+        "tipo_imovel": "galpao_container"
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 53,
+      "frase": "NÃO na pergunta 25, enquadrar como Escritório (07.12.13) — Fluxo Semiexpresso",
+      "condicoes": {
+        "perguntas": {
+          "25": {
+            "sim": false
+          }
+        }
+      },
+      "codigo_louos": "07.12.13",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 53,
+      "frase": "NÃO na pergunta 26 e opção 1 e/ou 2 na pergunta 29: Comércio de GLP (07.04.16), grupo nR1-04, crítica do analista",
+      "condicoes": {
+        "perguntas": {
+          "25": {
+            "sim": true
+          },
+          "26": {
+            "sim": false
+          },
+          "29": {
+            "opcoes": [
+              1,
+              2
+            ]
+          }
+        }
+      },
+      "codigo_louos": "07.04.16",
+      "fluxo": "semiexpresso",
+      "bloqueia": false,
+      "subgrupo": "nR1-04"
+    },
+    {
+      "regra": 53,
+      "frase": "NÃO na pergunta 26 e demais opções na pergunta 29: Comércio de GLP (07.04.16), grupo nR2-04, crítica do analista",
+      "condicoes": {
+        "perguntas": {
+          "25": {
+            "sim": true
+          },
+          "26": {
+            "sim": false
+          },
+          "29": {
+            "opcoes": [
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ]
+          }
+        }
+      },
+      "codigo_louos": "07.04.16",
+      "fluxo": "semiexpresso",
+      "bloqueia": false,
+      "subgrupo": "nR2-04"
+    },
+    {
+      "regra": 53,
+      "frase": "SIM na pergunta 26 e plataformas x capacidade igual ou menor a 1560: Comércio de GLP (07.04.16), grupo nR1-04, crítica do analista",
+      "condicoes": {
+        "perguntas": {
+          "25": {
+            "sim": true
+          },
+          "26": {
+            "sim": true
+          }
+        },
+        "glp_kg": {
+          "ate": 1560
+        }
+      },
+      "codigo_louos": "07.04.16",
+      "fluxo": "semiexpresso",
+      "bloqueia": false,
+      "subgrupo": "nR1-04"
+    },
+    {
+      "regra": 53,
+      "frase": "SIM na pergunta 26 e plataformas x capacidade superior a 1560: Comércio de GLP (07.04.16), grupo nR2-04, crítica do analista",
+      "condicoes": {
+        "perguntas": {
+          "25": {
+            "sim": true
+          },
+          "26": {
+            "sim": true
+          }
+        },
+        "glp_kg": {
+          "acima": 1560
+        }
+      },
+      "codigo_louos": "07.04.16",
+      "fluxo": "semiexpresso",
+      "bloqueia": false,
+      "subgrupo": "nR2-04"
+    },
+    {
+      "regra": 55,
+      "frase": "Se a solicitação for em Edificação Residencial, não permitir o prosseguimento do cadastro",
+      "condicoes": {
+        "tipo_imovel": "residencial"
+      },
+      "codigo_louos": null,
+      "fluxo": "analise",
+      "bloqueia": true,
+      "mensagem": "tratamento.bloqueio.residencial"
+    },
+    {
+      "regra": 55,
+      "frase": "Fluxo Expresso: SIM na pergunta 31 e opção 1 na pergunta 32: Gestão e administração de serviços públicos (07.11.01)",
+      "condicoes": {
+        "perguntas": {
+          "31": {
+            "sim": true
+          },
+          "32": {
+            "opcoes": [
+              1
+            ]
+          }
+        },
+        "tipo_imovel": "comum"
+      },
+      "codigo_louos": "07.11.01",
+      "fluxo": "expresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 55,
+      "frase": "Fluxo Semiexpresso: opção 1 na pergunta 32 e tipo de imóvel GALPÃO ou CONTAINER (07.11.01)",
+      "condicoes": {
+        "perguntas": {
+          "31": {
+            "sim": true
+          },
+          "32": {
+            "opcoes": [
+              1
+            ]
+          }
+        },
+        "tipo_imovel": "galpao_container"
+      },
+      "codigo_louos": "07.11.01",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    },
+    {
+      "regra": 55,
+      "frase": "Fluxo Semiexpresso: opções 2, 3 ou 4 na pergunta 32: Central Elétrica (08.01.11)",
+      "condicoes": {
+        "perguntas": {
+          "31": {
+            "sim": true
+          },
+          "32": {
+            "opcoes": [
+              2,
+              3,
+              4
+            ]
+          }
+        }
+      },
+      "codigo_louos": "08.01.11",
+      "fluxo": "semiexpresso",
+      "bloqueia": false
+    }
+  ]
+}

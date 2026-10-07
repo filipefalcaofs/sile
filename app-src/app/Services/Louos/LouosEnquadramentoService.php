@@ -175,6 +175,27 @@ class LouosEnquadramentoService
             ];
         }
 
+        // Enquadramento sinalizado como CNLU: o Quadro 10 que proíbe o uso
+        // indefere; nos demais casos a CNLU analisa (nunca decisão automática).
+        if (($enquadramento['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO
+            && $this->sinalizadoCnlu($enquadramento)) {
+            if (($quadro10['permissao'] ?? null) === Quadro10Permissao::Proibido->value) {
+                return [
+                    'resultado' => ResultadoViabilidade::NaoPermitido->value,
+                    'fundamentacao' => $this->buildFundamentacao($enquadramento, $quadro10, $quadro11a),
+                    'condicionantes' => [],
+                    'motivo' => $this->motivoNaoPermitido($enquadramento, $input),
+                ];
+            }
+
+            $motivo = $this->textos->get('louos.motivo.cnlu_enquadramento');
+
+            return $this->consolidadoPendente(
+                $motivo,
+                $this->buildFundamentacao($enquadramento, $quadro10, $quadro11a, $motivo),
+            );
+        }
+
         // Precedência 1 — anti-fachada: sem ramo resolvido não há grupo
         // de uso para verificar permissão; o consolidado é honestamente pendente.
         if (($enquadramento['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
@@ -647,7 +668,10 @@ class LouosEnquadramentoService
         }
 
         // Pré-condição: sem grupo de uso (ramo não resolvido) não há o que permitir.
-        if (($enquadramento['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO) {
+        // O enquadramento sinalizado como CNLU já tem o grupo da linha: o
+        // Quadro 10 vale antes da CNLU (resposta da SEDUR de 07/10/2026).
+        if (($enquadramento['status'] ?? null) !== EnquadramentoResult::STATUS_IDENTIFICADO
+            && ! $this->sinalizadoCnlu($enquadramento)) {
             return $this->dimIndisponivel(
                 $this->textos->get('louos.motivo.sem_enquadramento'),
                 null,
@@ -828,6 +852,19 @@ class LouosEnquadramentoService
             ':zona' => $zona,
             ':condicao' => rtrim($condicao, '.'),
         ]);
+    }
+
+    /**
+     * Linha da planilha que a SEDUR reservou à CNLU: o grupo é conhecido, mas
+     * o motor não decide o enquadramento.
+     *
+     * @param  array<string, mixed>  $enquadramento
+     */
+    private function sinalizadoCnlu(array $enquadramento): bool
+    {
+        return ($enquadramento['cnlu'] ?? false) === true
+            && is_string($enquadramento['grupo'] ?? null)
+            && $enquadramento['grupo'] !== '';
     }
 
     /**

@@ -89,7 +89,7 @@ class DatabaseSeederTest extends TestCase
         // atividades do portal (SDD escritorio-virtual-telas-portal, Tarefa 3:
         // analise.escritorio_virtual.pergunta_vinculada)
         // + 1 da flag de bypass de homologação do motor de risco (Fase 0
-        // parametrização — default desligado).
+        // parametrização: features.simulacao_protocolo — DEFAULT OFF).
         // + 1 dos atributos de nome da zona na feição (Fase 3 parametrização,
         // item 3.4: geo.zona.atributos_nome).
         // + 3 da Fase 5 (janela de duplicidade + pesos e cortes da auditoria

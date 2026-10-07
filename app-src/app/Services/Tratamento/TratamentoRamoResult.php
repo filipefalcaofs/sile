@@ -19,6 +19,7 @@ final readonly class TratamentoRamoResult
         public ?string $motivo = null,
         public ?string $versaoRegra = null,
         public bool $bloqueia = false,
+        public bool $cnlu = false,
     ) {}
 
     public function resolvido(): bool
@@ -40,6 +41,7 @@ final readonly class TratamentoRamoResult
             'versao_regra' => $this->versaoRegra,
             'condicionantes_planilha' => $this->condicionantes,
             'bloqueia' => $this->bloqueia,
+            'cnlu' => $this->cnlu,
         ];
     }
 }

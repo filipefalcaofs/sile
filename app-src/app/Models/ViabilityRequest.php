@@ -12,6 +12,7 @@ use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Enums\VirtualOfficeIntent;
 use App\Enums\ZonaFonte;
+use App\Services\Tratamento\RespostaPlanilha;
 use Database\Factories\ViabilityRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -66,7 +67,7 @@ class ViabilityRequest extends Model
      * Respostas da planilha de tratamento (número da pergunta → sim/não).
      * Ainda não persistidas — o resolver lê o que o fluxo/teste informar.
      *
-     * @var array<int, bool>
+     * @var array<int, bool|int|list<int>>
      */
     public array $respostasTratamento = [];
 
@@ -74,7 +75,7 @@ class ViabilityRequest extends Model
      * Respostas da planilha para um CNAE: primeiro as informadas em memória,
      * senão as gravadas no snapshot da simulação REGIN.
      *
-     * @return array<int, bool>
+     * @return array<int, bool|int|list<int>>
      */
     public function respostasDaPlanilha(?string $cnae = null): array
     {
@@ -92,7 +93,10 @@ class ViabilityRequest extends Model
             if (is_array($respostas)) {
                 return array_combine(
                     array_map(intval(...), array_keys($respostas)),
-                    array_map(boolval(...), array_values($respostas)),
+                    array_map(
+                        fn (mixed $valor): bool|int|array => RespostaPlanilha::de($valor)->paraArmazenar(),
+                        array_values($respostas),
+                    ),
                 ) ?: [];
             }
         }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Gestao;
 
+use App\Rules\RespostaPlanilhaValida;
 use App\Services\Regin\ReginProtocoloCatalog;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -30,7 +31,7 @@ class SimularProtocoloReginRequest extends FormRequest
             }
 
             foreach ($mapa as $numero => $valor) {
-                $normalizadas[$cnae][$numero] = $this->paraBool($valor);
+                $normalizadas[$cnae][$numero] = $this->paraResposta($valor);
             }
         }
 
@@ -48,7 +49,7 @@ class SimularProtocoloReginRequest extends FormRequest
             'codigo' => ['required', 'string', 'max:64', Rule::in($codigos)],
             'respostas' => ['nullable', 'array'],
             'respostas.*' => ['array'],
-            'respostas.*.*' => ['boolean'],
+            'respostas.*.*' => [new RespostaPlanilhaValida],
             'zona' => ['nullable', 'string', 'max:64'],
             'via' => ['nullable', 'string', 'max:32'],
             'tipo_imovel' => ['nullable', 'string', 'max:120'],
@@ -65,8 +66,19 @@ class SimularProtocoloReginRequest extends FormRequest
         ];
     }
 
-    private function paraBool(mixed $valor): bool
+    /**
+     * Sim/Não continua booleano; opção vira inteiro e conjunto de opções, lista de inteiros.
+     */
+    private function paraResposta(mixed $valor): mixed
     {
-        return filter_var($valor, FILTER_VALIDATE_BOOLEAN);
+        if (is_array($valor)) {
+            return array_values(array_map(fn (mixed $item): int => (int) $item, $valor));
+        }
+
+        if (is_bool($valor) || in_array($valor, ['true', 'false', '0', 0, '1', 1], true)) {
+            return filter_var($valor, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        return is_numeric($valor) ? (int) $valor : $valor;
     }
 }

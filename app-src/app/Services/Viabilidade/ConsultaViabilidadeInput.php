@@ -31,7 +31,7 @@ final readonly class ConsultaViabilidadeInput
     public const TIPO_PONTO = 'ponto';
 
     /**
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     public function __construct(
         public string $tipo,
@@ -48,7 +48,7 @@ final readonly class ConsultaViabilidadeInput
      * território e orquestra os motores. `area` alimenta o enquadramento da planilha.
      */
     /**
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     public static function paraEndereco(string $endereco, string $cnae, ?float $area = null, array $respostas = []): self
     {
@@ -66,7 +66,7 @@ final readonly class ConsultaViabilidadeInput
      * da planilha — sem território (sem ponto, sem zona/via). O veredito locacional fica pendente.
      */
     /**
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     public static function paraCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): self
     {
@@ -85,7 +85,7 @@ final readonly class ConsultaViabilidadeInput
      * Enquanto indisponível, degrada com aviso e sugere o endereço.
      */
     /**
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     public static function paraInscricao(string $inscricao, string $cnae, ?float $area = null, array $respostas = []): self
     {
@@ -105,7 +105,7 @@ final readonly class ConsultaViabilidadeInput
      * (território → motores) a partir do ponto. `area` alimenta o enquadramento da planilha.
      */
     /**
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     public static function paraPonto(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): self
     {

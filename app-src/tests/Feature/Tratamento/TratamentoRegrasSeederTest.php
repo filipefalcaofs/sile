@@ -52,7 +52,7 @@ class TratamentoRegrasSeederTest extends TestCase
 
         $this->seed(TratamentoRegrasSeeder::class);
 
-        $this->assertSame(191, TratamentoRegraRamo::query()->count(), 'Re-seed deve completar os ramos curados ausentes.');
+        $this->assertSame(233, TratamentoRegraRamo::query()->count(), 'Re-seed deve completar os ramos curados ausentes (191 dos CSVs e 42 da SEDUR).');
         $this->assertSame(32, TratamentoCondicionante::query()->count(), 'Re-seed deve completar as condicionantes ausentes.');
         $this->assertSame(2850, TratamentoEnquadramento::query()->count(), 'A carga existente não pode ser apagada na completude.');
         $this->assertSame(3114, TratamentoCnaeBinding::query()->count());

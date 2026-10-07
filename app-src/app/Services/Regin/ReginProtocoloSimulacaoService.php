@@ -26,6 +26,8 @@ use App\Services\Risco\TipoImovel;
 use App\Services\Risco\TipoImovelCatalog;
 use App\Services\Solicitacao\DocumentRequirementResolver;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
+use App\Services\Tratamento\PerguntaEnunciado;
+use App\Services\Tratamento\RespostaPlanilha;
 use App\Support\Audit\AuditService;
 use App\Support\Louos\Quadro10Zona;
 
@@ -618,7 +620,7 @@ class ReginProtocoloSimulacaoService
     /**
      * @param  array<string, mixed>  $protocolo
      * @param  array<string, mixed>  $entrada
-     * @return list<array{cnae: string, numero: int, texto: string, valor: ?bool}>
+     * @return list<array{cnae: string, numero: int, texto: string, tipo: string, opcoes: list<array{rotulo: string, texto: string}>, valor: bool|int|list<int>|null}>
      */
     private function perguntasPendentes(array $protocolo, array $entrada): array
     {
@@ -629,10 +631,15 @@ class ReginProtocoloSimulacaoService
             $respostas = $this->respostasPlanilha($cnae, is_array($atividade) ? $atividade : [], $entrada);
 
             foreach ($this->perguntasDoCnae($cnae) as $numero) {
+                $texto = $this->textoPergunta($numero);
+                $enunciado = PerguntaEnunciado::analisar($texto);
+
                 $lista[] = [
                     'cnae' => $cnae,
                     'numero' => $numero,
-                    'texto' => $this->textoPergunta($numero),
+                    'texto' => $texto,
+                    'tipo' => $enunciado['tipo'],
+                    'opcoes' => $enunciado['opcoes'],
                     'valor' => $respostas[$numero] ?? null,
                 ];
             }
@@ -644,7 +651,7 @@ class ReginProtocoloSimulacaoService
     /**
      * @param  array<string, mixed>  $atividade
      * @param  array<string, mixed>  $entrada
-     * @return array<int, bool>
+     * @return array<int, bool|int|list<int>>
      */
     private function respostasPlanilha(string $cnae, array $atividade, array $entrada): array
     {
@@ -653,14 +660,15 @@ class ReginProtocoloSimulacaoService
         $mapa = [];
 
         foreach ($atividade['perguntas'] ?? [] as $pergunta) {
-            if (! is_array($pergunta) || ! array_key_exists('valor', $pergunta) || ! is_bool($pergunta['valor'])) {
+            if (! is_array($pergunta) || ! array_key_exists('valor', $pergunta)
+                || ! (is_bool($pergunta['valor']) || is_int($pergunta['valor']) || is_array($pergunta['valor']))) {
                 continue;
             }
 
             $numero = $this->numeroPerguntaCatalogo($pergunta, $obrigatorias);
 
             if ($numero !== null) {
-                $mapa[$numero] = $pergunta['valor'];
+                $mapa[$numero] = RespostaPlanilha::de($pergunta['valor'])->paraArmazenar();
             }
         }
 
@@ -668,7 +676,7 @@ class ReginProtocoloSimulacaoService
 
         if (is_array($informadas)) {
             foreach ($informadas as $numero => $valor) {
-                $mapa[(int) $numero] = (bool) $valor;
+                $mapa[(int) $numero] = RespostaPlanilha::de($valor)->paraArmazenar();
             }
         }
 

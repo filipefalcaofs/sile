@@ -7,6 +7,7 @@ use App\Models\RuleVersion;
 use App\Models\TratamentoCnaeBinding;
 use App\Models\TratamentoPergunta;
 use App\Models\ViabilityRequest;
+use App\Services\Tratamento\RespostaPlanilha;
 use Illuminate\Support\Collection;
 
 /**
@@ -37,7 +38,7 @@ final class PerguntaLocalFicha
         $respostas = $request->respostasDaPlanilha($cnae);
         $numero = $this->numeroDaPergunta($cnae, $respostas);
         $valor = $numero !== null && array_key_exists($numero, $respostas)
-            ? (bool) $respostas[$numero]
+            ? RespostaPlanilha::de($respostas[$numero])->comoBooleano()
             : null;
 
         return [
@@ -53,7 +54,7 @@ final class PerguntaLocalFicha
      * (respondida, senão a de menor número); sem vínculo, o legado das
      * preferidas já respondidas.
      *
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     private function numeroDaPergunta(string $cnae, array $respostas): ?int
     {

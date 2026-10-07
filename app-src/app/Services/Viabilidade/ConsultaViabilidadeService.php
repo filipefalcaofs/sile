@@ -58,7 +58,7 @@ class ConsultaViabilidadeService
      * localizado/serviço indisponível NUNCA vira resultado falso (sem fachada).
      */
     /**
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     public function consultarPorEndereco(string $endereco, string $cnae, ?float $area = null, array $respostas = []): ConsultaViabilidadeResult
     {
@@ -79,7 +79,7 @@ class ConsultaViabilidadeService
      * (o motor degrada sozinho) e a consulta avisa que não avalia o local.
      */
     /**
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     public function consultarPorCnae(string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): ConsultaViabilidadeResult
     {
@@ -95,7 +95,7 @@ class ConsultaViabilidadeService
      * para a análise por CNAE + área com aviso — JAMAIS inventa um ponto.
      */
     /**
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     public function consultarPorInscricao(string $inscricao, string $cnae, ?float $area = null, array $respostas = []): ConsultaViabilidadeResult
     {
@@ -136,7 +136,7 @@ class ConsultaViabilidadeService
      * altera o comportamento das três entradas públicas (endereço/CNAE/inscrição).
      */
     /**
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     public function consultarPorPontoConhecido(float $lat, float $lng, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): ConsultaViabilidadeResult
     {
@@ -149,7 +149,7 @@ class ConsultaViabilidadeService
      * Consulta com território já resolvido (simulação REGIN: zona/via do
      * catálogo ou do formulário). Mesma pipeline de motores, sem GIS.
      *
-     * @param  array<int, bool>  $respostas
+     * @param  array<int, bool|int|list<int>>  $respostas
      */
     public function consultarComTerritorio(TerritoryResult $territory, string $cnae, ?float $area = null, ?TipoImovel $tipoImovel = null, array $respostas = []): ConsultaViabilidadeResult
     {
