@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Expresso;
 
+use App\Enums\AnalysisStage;
+use App\Enums\AnalysisStatus;
 use App\Enums\DecisionOutcome;
 use App\Enums\GeoLayerType;
 use App\Enums\ViabilityRequestStatus;
@@ -63,6 +65,26 @@ class ExpressoBloqueioPlanilhaTest extends TestCase
             (string) $solicitacao->fresh()->decision->reason,
         );
         $this->assertStringNotContainsString('Quadro 10', (string) $solicitacao->fresh()->decision->reason);
+    }
+
+    public function test_indeferimento_a_partir_da_analise_nao_assumida_sai_da_fila(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+        $solicitacao = $this->protocolada('8411600', '2062', [7 => true]);
+        $solicitacao->forceFill([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'analysis_status' => AnalysisStatus::ParaDistribuir,
+            'analysis_stage' => AnalysisStage::Distribuicao,
+            'assigned_user_id' => null,
+        ])->save();
+
+        app(FluxoExpressoService::class)->decide($solicitacao);
+
+        $solicitacao->refresh();
+
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $solicitacao->status);
+        $this->assertNull($solicitacao->analysis_status);
+        $this->assertNull($solicitacao->analysis_stage);
     }
 
     public function test_regra_39_resposta_incompativel_com_a_categoria_e_indeferida(): void

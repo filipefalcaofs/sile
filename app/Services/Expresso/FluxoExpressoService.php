@@ -416,6 +416,24 @@ class FluxoExpressoService
      * posterior na caixa do setor (apoio/gestor distribui, analista assume).
      */
     /**
+     * Processo decidido sai da fila da análise: a decisão que volta ao motor
+     * (em análise, sem analista) não pode deixar o status e a etapa da
+     * distribuição para trás.
+     */
+    private function limparEncaminhamentoDaAnalise(ViabilityRequest $request): void
+    {
+        if ($request->analysis_status === null) {
+            return;
+        }
+
+        $request->forceFill([
+            'analysis_status' => null,
+            'analysis_stage' => null,
+            'analysis_due_at' => null,
+        ])->save();
+    }
+
+    /**
      * Processo REGIN já encaminhado à análise, ainda sem analista e sem
      * decisão: o motor pode concluir agora que a zona passou a ser
      * identificável. Quem já assumiu o processo não é redecidido.
@@ -682,6 +700,7 @@ class FluxoExpressoService
                     $actor,
                     publicLabel: ViabilityRequestStatus::Deferida->publicLabel(),
                 );
+                $this->limparEncaminhamentoDaAnalise($request);
 
                 $this->audit->log(
                     logName: 'expresso',
@@ -773,6 +792,7 @@ class FluxoExpressoService
                     $actor,
                     publicLabel: ViabilityRequestStatus::Deferida->publicLabel(),
                 );
+                $this->limparEncaminhamentoDaAnalise($request);
 
                 $this->audit->log(
                     logName: 'expresso',
@@ -867,6 +887,7 @@ class FluxoExpressoService
                     $actor,
                     publicLabel: ViabilityRequestStatus::Indeferida->publicLabel(),
                 );
+                $this->limparEncaminhamentoDaAnalise($request);
 
                 $this->audit->log(
                     logName: 'expresso',
@@ -950,6 +971,7 @@ class FluxoExpressoService
                     : ViabilityRequestStatus::Indeferida;
 
                 $this->stateMachine->transition($request, $destino, $actor, publicLabel: $destino->publicLabel());
+                $this->limparEncaminhamentoDaAnalise($request);
 
                 $this->audit->log(
                     logName: 'expresso',
