@@ -383,6 +383,12 @@ class LouosEnquadramentoService
             $condicionantes[] = $vagas;
         }
 
+        $escritorioVirtual = (new CondicionanteEscritorioVirtual)->texto($input->cnaePrincipal, $input->respostas);
+
+        if ($escritorioVirtual !== null) {
+            $condicionantes[] = ['tipo' => 'planilha', 'texto' => $escritorioVirtual, 'motivo' => $escritorioVirtual];
+        }
+
         return [...$condicionantes, ...$this->condicionantesDaPlanilha($enquadramento), ...$this->avaliarRestricoes($input)];
     }
 

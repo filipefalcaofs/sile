@@ -79,6 +79,24 @@ class ViabilityRequest extends Model
      */
     public function respostasDaPlanilha(?string $cnae = null): array
     {
+        $respostas = $this->respostasDaPlanilhaSemSede($cnae);
+
+        // Pergunta 4 do CNAE gatilho (sede de escritório virtual) é respondida no passo do imóvel.
+        if ($cnae !== null
+            && ! array_key_exists(4, $respostas)
+            && preg_replace('/\D/', '', $cnae) === preg_replace('/\D/', '', (string) config('sile.analise.escritorio_virtual.cnae_gatilho_sede'))
+            && $this->wants_virtual_office_hq !== null) {
+            $respostas[4] = (bool) $this->wants_virtual_office_hq;
+        }
+
+        return $respostas;
+    }
+
+    /**
+     * @return array<int, bool|int|list<int>>
+     */
+    private function respostasDaPlanilhaSemSede(?string $cnae): array
+    {
         if ($this->respostasTratamento !== []) {
             return $this->respostasTratamento;
         }

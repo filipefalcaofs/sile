@@ -207,6 +207,8 @@ return [
         'escritorio_virtual' => [
             'cnae_gatilho_sede' => '8211-3/00',
             'condicionante_sede' => 'Prestação de Serviço de Escritório Virtual.',
+            'condicionante_apoio_administrativo' => 'Os serviços constantes na CNAE 8211-3/00 referem-se aos serviços de apoio administrativo, não estando autorizada a prestação de serviço de escritório virtual.',
+            'condicionante_coworking' => 'Trata-se de Coworking, não estando autorizada a prestação de serviço de escritório virtual.',
             'mensagem_bloqueio_abrigado' => 'A atividade informada não está na lista de atividades permitidas para escritório virtual nesta inscrição.',
             'mensagem_recusa_abrigo' => 'Inscrição imobiliária vinculada a uma sede de escritório virtual. Para exercer atividades nesse local, deverá ser abrigado da sede vinculada.',
             'mensagem_cnae_sede_em_abrigado' => 'CNAE :cnae: atividade não permitida em escritório virtual conforme Anexo B do Decreto Municipal nº 35.062 de 29 dezembro de 2021 que estabelece diretrizes para Viabilidade Locacional para Sede de escritório virtual e Coworking e dá outras providências.',
