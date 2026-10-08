@@ -79,6 +79,24 @@ class TratamentoComplementoTest extends TestCase
         $this->assertSame(0, TratamentoPendencia::query()->count());
     }
 
+    public function test_seed_recarrega_os_ramos_curados_que_faltam_na_versao_ja_carregada(): void
+    {
+        $this->seed(TratamentoRegrasSeeder::class);
+
+        $versaoId = TratamentoRegraRamo::query()->where('regra', 40)->value('rule_version_id');
+        TratamentoRegraRamo::query()->whereIn('regra', [40, 43])->delete();
+        foreach ([40, 43] as $regra) {
+            TratamentoPendencia::query()->create(['rule_version_id' => $versaoId, 'regra' => $regra, 'motivo' => 'Aguardando a SEDUR.']);
+        }
+
+        $this->seed(TratamentoRegrasSeeder::class);
+
+        $this->assertSame(0, TratamentoPendencia::query()->count());
+        foreach ([40, 43] as $regra) {
+            $this->assertGreaterThan(0, TratamentoRegraRamo::query()->where('regra', $regra)->whereNotNull('condicoes')->count());
+        }
+    }
+
     public function test_regras_respondidas_pela_sedur_ganham_ramo_curado(): void
     {
         $this->seed(TratamentoRegrasSeeder::class);
