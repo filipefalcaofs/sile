@@ -60,7 +60,7 @@ class TratamentoRegrasSeeder extends Seeder
         if ($enquadramentosExistem
             && TratamentoRegraRamo::query()->where('rule_version_id', $version->getKey())->exists()
             && TratamentoCondicionante::query()->where('rule_version_id', $version->getKey())->exists()) {
-            if (! $complementoCarregado) {
+            if (! $complementoCarregado || $this->faltamRamosCurados($version)) {
                 $this->complementar($version);
             } else {
                 $this->removerPendenciasComRamo($version);
@@ -125,5 +125,32 @@ class TratamentoRegrasSeeder extends Seeder
             ->where('rule_version_id', $version->getKey())
             ->whereIn('regra', $comRamo)
             ->delete();
+    }
+
+    /**
+     * Versão carregada antes de uma regra ganhar ramo curado: o complemento precisa rodar de novo.
+     */
+    private function faltamRamosCurados(RuleVersion $version): bool
+    {
+        $caminho = database_path('data/regras-20-08-26/regras-fluxo-sedur.json');
+
+        if (! is_file($caminho)) {
+            return false;
+        }
+
+        $esperadas = collect(json_decode((string) file_get_contents($caminho), true)['ramos'] ?? [])
+            ->pluck('regra')
+            ->unique()
+            ->map(fn (mixed $regra): int => (int) $regra);
+
+        $carregadas = TratamentoRegraRamo::query()
+            ->where('rule_version_id', $version->getKey())
+            ->whereNotNull('condicoes')
+            ->whereIn('regra', $esperadas->all())
+            ->pluck('regra')
+            ->map(fn (mixed $regra): int => (int) $regra)
+            ->unique();
+
+        return $esperadas->diff($carregadas)->isNotEmpty();
     }
 }
