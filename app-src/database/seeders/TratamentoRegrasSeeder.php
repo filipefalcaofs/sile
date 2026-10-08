@@ -8,6 +8,7 @@ use App\Models\TratamentoCnaeBinding;
 use App\Models\TratamentoCnluItem;
 use App\Models\TratamentoCondicionante;
 use App\Models\TratamentoEnquadramento;
+use App\Models\TratamentoPendencia;
 use App\Models\TratamentoPergunta;
 use App\Models\TratamentoRegra;
 use App\Models\TratamentoRegraRamo;
@@ -61,6 +62,8 @@ class TratamentoRegrasSeeder extends Seeder
             && TratamentoCondicionante::query()->where('rule_version_id', $version->getKey())->exists()) {
             if (! $complementoCarregado) {
                 $this->complementar($version);
+            } else {
+                $this->removerPendenciasComRamo($version);
             }
 
             return;
@@ -107,5 +110,20 @@ class TratamentoRegrasSeeder extends Seeder
             result: 'sucesso',
             rulesVersion: $version->version,
         );
+    }
+
+    /**
+     * Versão já complementada: a regra que ganhou ramo curado deixa de aguardar a SEDUR.
+     */
+    private function removerPendenciasComRamo(RuleVersion $version): void
+    {
+        $comRamo = TratamentoRegraRamo::query()
+            ->where('rule_version_id', $version->getKey())
+            ->select('regra');
+
+        TratamentoPendencia::query()
+            ->where('rule_version_id', $version->getKey())
+            ->whereIn('regra', $comRamo)
+            ->delete();
     }
 }
