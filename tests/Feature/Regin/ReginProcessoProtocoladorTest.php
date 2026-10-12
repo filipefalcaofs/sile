@@ -5,6 +5,7 @@ namespace Tests\Feature\Regin;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Jobs\DecidirFluxoExpressoJob;
+use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\ReginRecebimento;
 use App\Models\User;
@@ -14,6 +15,7 @@ use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Tratamento\CategoriaEmpresa;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use ReflectionMethod;
 use Tests\Support\SeedsTratamentoPlanilha;
 use Tests\TestCase;
 
@@ -281,6 +283,97 @@ class ReginProcessoProtocoladorTest extends TestCase
         $respostas = $processo->simulation_snapshot['respostas_tratamento_por_cnae']['1064300'] ?? [];
         $this->assertSame(true, $respostas[2] ?? null);
         $this->assertCount(5, $processo->simulation_snapshot['perguntas_regin']);
+    }
+
+    public function test_perguntas_do_xml_do_envelope_alimentam_a_planilha_quando_o_json_vem_vazio(): void
+    {
+        $this->seedTratamentoPlanilha();
+
+        $corpo = ['ROWSET' => $this->ruc()['rowset']];
+        $corpo['ROWSET']['GROUPPER_PERGUNTAS'] = ['PER_PERGUNTAS' => []];
+
+        $recebimento = ReginRecebimento::factory()->create([
+            'protocolo' => 'BAP2601473733',
+            'corpo' => $corpo,
+            'envelope' => [
+                'protocolo' => 'BAP2601473733',
+                'json' => $corpo,
+                'xml' => <<<'XML'
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Ruc><ROWSET><GROUPPERGUNTAS>
+ <PERGUNTAS>
+  <TIPO>2</TIPO>
+  <CNPJ>05457349000170</CNPJ>
+  <COD_PERGUNTA>352</COD_PERGUNTA>
+  <PER_PERGUNTA><![CDATA[A atividade será desenvolvida no local?]]></PER_PERGUNTA>
+  <PER_RESPOSTA>Sim, a atividade será desenvolvida no local.</PER_RESPOSTA>
+ </PERGUNTAS>
+</GROUPPERGUNTAS></ROWSET></Ruc>
+XML,
+            ],
+        ]);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($recebimento);
+
+        $this->assertNotNull($processo);
+        $respostas = $processo->simulation_snapshot['respostas_tratamento_por_cnae']['4712100'] ?? [];
+        $this->assertSame(true, $respostas[11] ?? null);
+        $this->assertSame('352', $processo->simulation_snapshot['perguntas_regin'][0]['codigo'] ?? null);
+    }
+
+    public function test_snapshot_do_recebimento_reconstroi_as_respostas_pelo_xml_do_envelope(): void
+    {
+        $this->seedTratamentoPlanilha();
+
+        $processo = ViabilityRequest::factory()->create(['external_reference' => 'BAP2601473733']);
+        $cnae = Cnae::query()->firstOrCreate(
+            ['code' => '4712100'],
+            ['description' => 'Comercio', 'section_code' => 'G', 'section_description' => 'Comercio', 'division_code' => '47', 'division_description' => 'Comercio', 'group_code' => '471', 'group_description' => 'Varejo', 'class_code' => '47121', 'class_description' => 'Varejo', 'active' => true],
+        );
+        $processo->cnaes()->attach($cnae->id, ['is_primary' => true]);
+
+        $recebimento = new ReginRecebimento;
+        $recebimento->protocolo = 'BAP2601473733';
+        $recebimento->corpo = ['ROWSET' => $this->ruc()['rowset']];
+        $recebimento->envelope = [
+            'protocolo' => 'BAP2601473733',
+            'xml' => <<<'XML'
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Ruc><ROWSET><GROUPPERGUNTAS>
+ <PERGUNTAS>
+  <TIPO>2</TIPO>
+  <CNPJ>05457349000170</CNPJ>
+  <COD_PERGUNTA>352</COD_PERGUNTA>
+  <PER_PERGUNTA><![CDATA[A atividade será desenvolvida no local?]]></PER_PERGUNTA>
+  <PER_RESPOSTA>Sim, a atividade será desenvolvida no local.</PER_RESPOSTA>
+ </PERGUNTAS>
+</GROUPPERGUNTAS></ROWSET></Ruc>
+XML,
+        ];
+
+        $snapshot = app(ReginProcessoProtocolador::class)->snapshotDoRecebimento($recebimento);
+
+        $this->assertNotNull($snapshot);
+        $this->assertSame(true, $snapshot['respostas_tratamento_por_cnae']['4712100'][11] ?? null);
+    }
+
+    public function test_xml_declarado_iso8859_com_byte_latin1_entra_na_planilha(): void
+    {
+        $protocolador = app(ReginProcessoProtocolador::class);
+        $metodo = new ReflectionMethod($protocolador, 'linhasDePerguntaDoXml');
+
+        $xml = '<?xml version="1.0" encoding="ISO-8859-1"?>'
+            .'<Ruc><ROWSET><GROUPPERGUNTAS><PERGUNTAS>'
+            .'<TIPO>2</TIPO><CNPJ>05457349000170</CNPJ><COD_PERGUNTA>352</COD_PERGUNTA>'
+            .'<PER_PERGUNTA><![CDATA[A atividade ser'.chr(0xE1).' desenvolvida no local?]]></PER_PERGUNTA>'
+            .'<PER_RESPOSTA>Sim, a atividade ser'.chr(0xE1).' desenvolvida no local.</PER_RESPOSTA>'
+            .'</PERGUNTAS></GROUPPERGUNTAS></ROWSET></Ruc>';
+
+        $linhas = $metodo->invoke($protocolador, $xml);
+
+        $this->assertCount(1, $linhas);
+        $this->assertSame('352', $linhas[0]['COD_PERGUNTA']);
+        $this->assertStringContainsString('será', $linhas[0]['PER_PERGUNTA']);
     }
 
     public function test_ruc_sem_cnae_principal_nao_protocola(): void
