@@ -53,6 +53,7 @@ class ReginProcessoProtocolador
         $rowset = is_array($ruc['rowset'] ?? null)
             ? $ruc['rowset']
             : (is_array($ruc['ROWSET'] ?? null) ? $ruc['ROWSET'] : []);
+        $rowset = $this->completarPerguntasPeloXml($rowset, $recebimento);
 
         $cnaes = $this->cnaes($rowset);
         $area = $this->area($rowset);
@@ -298,6 +299,43 @@ class ReginProcessoProtocolador
     }
 
     /**
+     * Snapshot das respostas de um recebimento já gravado, com o mesmo caminho
+     * do protocolo: rowset do corpo, completado pelo xml do envelope quando o
+     * grupo do json veio vazio. Serve ao reprocesso de recebimentos antigos,
+     * que reconstroem o simulation_snapshot sem abrir outro processo.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function snapshotDoRecebimento(ReginRecebimento $recebimento): ?array
+    {
+        $corpo = $recebimento->corpo ?? [];
+
+        if (! is_array($corpo)) {
+            return null;
+        }
+
+        $rowset = is_array($corpo['rowset'] ?? null)
+            ? $corpo['rowset']
+            : (is_array($corpo['ROWSET'] ?? null) ? $corpo['ROWSET'] : []);
+
+        if ($rowset === []) {
+            return null;
+        }
+
+        $rowset = $this->completarPerguntasPeloXml($rowset, $recebimento);
+
+        $processo = ViabilityRequest::query()
+            ->where('external_reference', $recebimento->protocolo)
+            ->first();
+
+        $cnaes = $processo !== null
+            ? $processo->cnaes()->orderByPivot('is_primary', 'desc')->orderBy('code')->get()->all()
+            : $this->cnaes($rowset);
+
+        return $this->snapshotDoRowset($rowset, $cnaes);
+    }
+
+    /**
      * Snapshot do RUC: as respostas do GROUPPERGUNTAS (Anexo v2.12) casadas com
      * a planilha vigente por CNAE, mais o grupo bruto para auditoria. Null
      * quando o envelope não traz o grupo.
@@ -318,6 +356,74 @@ class ReginProcessoProtocolador
             'respostas_tratamento_por_cnae' => $this->respostasDoRowsetPorCnae($perguntas, $cnaes),
             'perguntas_regin' => $perguntas,
         ];
+    }
+
+    /**
+     * A JUCEB entrega as respostas no xml do envelope. O json.ROWSET chega sem
+     * GROUPPERGUNTAS — o grupo irmão GROUPPER_PERGUNTAS.PER_PERGUNTAS vem vazio.
+     * Sem o xml, o motor protocola como se nenhuma pergunta tivesse resposta.
+     *
+     * @param  array<string, mixed>  $rowset
+     * @return array<string, mixed>
+     */
+    private function completarPerguntasPeloXml(array $rowset, ReginRecebimento $recebimento): array
+    {
+        if ($this->perguntasDoRowset($rowset) !== []) {
+            return $rowset;
+        }
+
+        $xml = $recebimento->envelope['xml'] ?? null;
+
+        if (! is_string($xml) || trim($xml) === '') {
+            return $rowset;
+        }
+
+        $xml = $this->utf8($xml);
+
+        $linhas = $this->linhasDePerguntaDoXml($xml);
+
+        if ($linhas === []) {
+            return $rowset;
+        }
+
+        $rowset['GROUPPERGUNTAS'] = ['PERGUNTAS' => $linhas];
+
+        return $rowset;
+    }
+
+    /**
+     * @return list<array{TIPO: string, CNPJ: string, COD_PERGUNTA: string, PER_PERGUNTA: string, PER_RESPOSTA: string}>
+     */
+    private function linhasDePerguntaDoXml(string $xml): array
+    {
+        $errosInternos = libxml_use_internal_errors(true);
+        $documento = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NONET);
+        libxml_clear_errors();
+        libxml_use_internal_errors($errosInternos);
+
+        if ($documento === false) {
+            return [];
+        }
+
+        $nos = $documento->xpath('//GROUPPERGUNTAS/PERGUNTAS');
+
+        if ($nos === false || $nos === []) {
+            return [];
+        }
+
+        $linhas = [];
+
+        foreach ($nos as $no) {
+            $linhas[] = [
+                'TIPO' => trim((string) $no->TIPO),
+                'CNPJ' => trim((string) $no->CNPJ),
+                'COD_PERGUNTA' => trim((string) $no->COD_PERGUNTA),
+                'PER_PERGUNTA' => trim((string) $no->PER_PERGUNTA),
+                'PER_RESPOSTA' => trim((string) $no->PER_RESPOSTA),
+            ];
+        }
+
+        return $linhas;
     }
 
     /**
@@ -459,6 +565,22 @@ class ReginProcessoProtocolador
         $texto = trim((string) $valor);
 
         return $texto === '' ? null : $texto;
+    }
+
+    /**
+     * O envelope declara ISO-8859-1 e a JUCEB manda bytes Latin-1. Normaliza
+     * para UTF-8: sem isso, o json_encode do envelope inteiro falha ao gravar e
+     * o parse do xml não confia na declaração.
+     */
+    private function utf8(string $texto): string
+    {
+        if (mb_check_encoding($texto, 'UTF-8')) {
+            return preg_replace('/encoding\s*=\s*"[^"]*"/i', 'encoding="UTF-8"', $texto, 1) ?? $texto;
+        }
+
+        $convertido = mb_convert_encoding($texto, 'UTF-8', 'ISO-8859-1');
+
+        return preg_replace('/encoding\s*=\s*"[^"]*"/i', 'encoding="UTF-8"', $convertido, 1) ?? $convertido;
     }
 
     private function numeroDaPergunta(string $pergunta): ?int
