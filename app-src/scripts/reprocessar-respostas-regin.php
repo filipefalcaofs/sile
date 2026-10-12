@@ -21,7 +21,9 @@ declare(strict_types=1);
  * (padrão: /opt/app-root/src, depois /var/www/html).
  */
 
+use App\Enums\AnalysisRecordStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\AnalysisRecord;
 use App\Models\ReginRecebimento;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\PreAnaliseService;
@@ -77,6 +79,31 @@ foreach ($recebimentos as $recebimento) {
     $respostasAtuais = $snapshotAtual['respostas_tratamento_por_cnae'] ?? [];
 
     if (is_array($respostasAtuais) && $respostasAtuais !== []) {
+        // Reprocesso já rodou: repara a ficha se a revisão 1 ficou da passada
+        // sem respostas (idempotência do PreAnaliseService devolveu a antiga).
+        if ($simulacao) {
+            if (fichaIntocada($processo) !== null) {
+                echo "{$recebimento->protocolo}: recriaria a revisão 1 da ficha\n";
+            }
+
+            continue;
+        }
+
+        try {
+            $revisao = fichaIntocada($processo);
+
+            if ($revisao !== null) {
+                $revisao->delete();
+                $processo->unsetRelation('analysisRecords');
+                $processo->unsetRelation('currentAnalysisRecord');
+                $preAnalise->preAnalisar($processo->fresh() ?? $processo);
+
+                echo "{$recebimento->protocolo}: revisão 1 da ficha recriada · {$processo->fresh()->status->value}\n";
+            }
+        } catch (Throwable $erro) {
+            echo "{$recebimento->protocolo}: falhou ao reparar a ficha · ".get_class($erro).': '.$erro->getMessage()."\n";
+        }
+
         continue;
     }
 
@@ -121,3 +148,26 @@ foreach ($recebimentos as $recebimento) {
 }
 
 echo "\nprocessos sem resposta gravada: {$semResposta}\n";
+
+/**
+ * Revisão 1 em rascunho que o analista nunca tocou: pode ser recriada pelo
+ * motor. Revisão finalizada, assumida ou com parecer é trabalho humano —
+ * intocável.
+ */
+function fichaIntocada(ViabilityRequest $processo): ?AnalysisRecord
+{
+    $revisao = $processo->analysisRecords()->where('revision', 1)->first();
+
+    if ($revisao === null) {
+        return null;
+    }
+
+    $parecer = trim((string) ($revisao->parecer ?? ''));
+
+    $intocada = $revisao->status === AnalysisRecordStatus::Rascunho
+        && $revisao->analyst_user_id === null
+        && $revisao->finalized_at === null
+        && $parecer === '';
+
+    return $intocada ? $revisao : null;
+}
