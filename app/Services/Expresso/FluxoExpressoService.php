@@ -498,7 +498,14 @@ class FluxoExpressoService
         ?TerritorialRuleVerdict $territorial = null,
         ?TipoGatilho $gatilho = null,
     ): DecisionResult {
+        // Reavaliação de processo em análise que ninguém assumiu: a queda passa
+        // a ser o motivo atual do motor, não o da passada anterior (HU-145).
         if ($request->status === ViabilityRequestStatus::EmAnalise) {
+            DB::transaction(function () use ($request, $reason, $resolved, $territorial, $gatilho): void {
+                $request->expressoQuedas()->delete();
+                $this->capturarQueda($request, $reason, $resolved, $territorial, $gatilho);
+            });
+
             return DecisionResult::paraAnalise($reason);
         }
 

@@ -194,6 +194,25 @@ class FluxoExpressoReavaliarTest extends TestCase
         $this->assertSame(1, ExpressoQueda::query()->where('viability_request_id', $request->id)->count());
     }
 
+    public function test_reavaliacao_que_continua_em_analise_troca_a_queda_pelo_motivo_atual(): void
+    {
+        $request = $this->protocoladaComCnaes(['2222222']);
+        $servico = app(FluxoExpressoService::class);
+
+        $servico->decide($request);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);
+        $motivosDoEncaminhamento = ExpressoQueda::query()->where('viability_request_id', $request->id)->pluck('motivo')->all();
+
+        ExpressoQueda::query()->where('viability_request_id', $request->id)->update(['motivo' => 'Pergunta 11 sem resposta']);
+
+        $servico->decide($request->fresh());
+
+        $motivosAtuais = ExpressoQueda::query()->where('viability_request_id', $request->id)->pluck('motivo')->all();
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);
+        $this->assertSame($motivosDoEncaminhamento, $motivosAtuais);
+    }
+
     public function test_processo_protocolado_segue_o_caminho_de_decisao_normal(): void
     {
         Event::fake([ResultadoEmitido::class]);
