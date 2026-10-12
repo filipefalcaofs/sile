@@ -7,9 +7,13 @@ declare(strict_types=1);
  * respostas da planilha (a JUCEB entrega as respostas no xml do envelope e o
  * json.ROWSET chega sem GROUPPERGUNTAS) e redecide no motor.
  *
- * Idempotente: pula processo que já tem resposta gravada, que já tem decisão,
- * ou que um analista assumiu. Reconstroi a pré-análise (a revisão 1 vazia da
- * ficha é refeita pelo PreAnaliseService). Não altera o recebimento gravado.
+ * Ordem por processo: grava as respostas, redecide e só então acerta a ficha.
+ * - Continua em análise: a revisão 1 intocada é refeita com o motivo atual.
+ * - O motor decidiu: a revisão 1 intocada e as quedas da passada sem resposta
+ *   saem, como num processo que o expresso decide de primeira.
+ *
+ * Idempotente: processo que um analista assumiu, ficha com trabalho humano e
+ * decisão de analista não são tocados. Não altera o recebimento gravado.
  *
  * No terminal do pod:
  *
@@ -75,73 +79,81 @@ foreach ($recebimentos as $recebimento) {
         continue;
     }
 
+    $protocolo = $recebimento->protocolo;
     $snapshotAtual = is_array($processo->simulation_snapshot) ? $processo->simulation_snapshot : [];
     $respostasAtuais = $snapshotAtual['respostas_tratamento_por_cnae'] ?? [];
+    $jaTinhaResposta = is_array($respostasAtuais) && $respostasAtuais !== [];
+    $snapshot = null;
+    $nRespostas = 0;
 
-    if (is_array($respostasAtuais) && $respostasAtuais !== []) {
-        // Reprocesso já rodou: repara a ficha se a revisão 1 ficou da passada
-        // sem respostas (idempotência do PreAnaliseService devolveu a antiga).
-        if ($simulacao) {
-            if (fichaIntocada($processo) !== null) {
-                echo "{$recebimento->protocolo}: recriaria a revisão 1 da ficha\n";
-            }
+    if (! $jaTinhaResposta) {
+        $semResposta++;
+        $snapshot = $protocolador->snapshotDoRecebimento($recebimento);
+        $respostasNovas = is_array($snapshot) ? ($snapshot['respostas_tratamento_por_cnae'] ?? []) : [];
+
+        if (! is_array($respostasNovas) || $respostasNovas === []) {
+            echo "{$protocolo}: envelope sem resposta utilizável (xml ausente ou sem pergunta da planilha)\n";
 
             continue;
         }
 
-        try {
-            $revisao = fichaIntocada($processo);
-
-            if ($revisao !== null) {
-                $revisao->delete();
-                $processo->unsetRelation('analysisRecords');
-                $processo->unsetRelation('currentAnalysisRecord');
-                $preAnalise->preAnalisar($processo->fresh() ?? $processo);
-
-                echo "{$recebimento->protocolo}: revisão 1 da ficha recriada · {$processo->fresh()->status->value}\n";
-            }
-        } catch (Throwable $erro) {
-            echo "{$recebimento->protocolo}: falhou ao reparar a ficha · ".get_class($erro).': '.$erro->getMessage()."\n";
+        foreach ($respostasNovas as $mapa) {
+            $nRespostas += is_array($mapa) ? count($mapa) : 0;
         }
-
-        continue;
     }
 
-    $semResposta++;
-    $protocolo = $recebimento->protocolo;
-
-    $snapshot = $protocolador->snapshotDoRecebimento($recebimento);
-    $respostasNovas = is_array($snapshot) ? ($snapshot['respostas_tratamento_por_cnae'] ?? []) : [];
-
-    if (! is_array($respostasNovas) || $respostasNovas === []) {
-        echo "{$protocolo}: envelope sem resposta utilizável (xml ausente ou sem pergunta da planilha)\n";
-
-        continue;
-    }
-
-    $nRespostas = 0;
-
-    foreach ($respostasNovas as $mapa) {
-        $nRespostas += is_array($mapa) ? count($mapa) : 0;
-    }
+    $redecidir = ! $jaTinhaResposta || $expresso->podeReavaliar($processo);
 
     if ($simulacao) {
-        echo "{$protocolo}: reconstruiria {$nRespostas} resposta(s) e redecidiria\n";
+        $acoes = [];
+
+        if (! $jaTinhaResposta) {
+            $acoes[] = "reconstruiria {$nRespostas} resposta(s)";
+        }
+
+        if ($redecidir) {
+            $acoes[] = 'redecidiria';
+        }
+
+        if (fichaIntocada($processo) !== null) {
+            $acoes[] = 'refaria ou removeria a revisão 1 da ficha';
+        }
+
+        if (decididoPeloMotor($processo) && $processo->expressoQuedas()->exists()) {
+            $acoes[] = 'removeria '.$processo->expressoQuedas()->count().' queda(s) da passada sem resposta';
+        }
+
+        if ($acoes !== []) {
+            echo "{$protocolo}: ".implode(' · ', $acoes)."\n";
+        }
 
         continue;
     }
 
     try {
-        $processo->forceFill(['simulation_snapshot' => $snapshot])->save();
-
-        if ($processo->status === ViabilityRequestStatus::EmAnalise) {
-            $preAnalise->preAnalisar($processo->fresh() ?? $processo);
+        if ($snapshot !== null) {
+            $processo->forceFill(['simulation_snapshot' => $snapshot])->save();
         }
 
-        $resultado = $expresso->decide($processo->fresh() ?? $processo);
-        $motivo = $resultado->reason ?? $resultado->status->value;
+        $motivo = null;
 
-        echo "{$protocolo}: {$nRespostas} resposta(s) · {$processo->fresh()->status->value} · {$motivo}\n";
+        if ($redecidir) {
+            $resultado = $expresso->decide($processo->fresh() ?? $processo);
+            $motivo = $resultado->reason ?? $resultado->status->value;
+        }
+
+        $ficha = acertarFicha($processo->fresh() ?? $processo, $preAnalise);
+
+        $partes = array_filter([
+            $nRespostas > 0 ? "{$nRespostas} resposta(s)" : null,
+            $processo->fresh()->status->value,
+            $motivo,
+            $ficha,
+        ]);
+
+        if ($nRespostas > 0 || $ficha !== null) {
+            echo "{$protocolo}: ".implode(' · ', $partes)."\n";
+        }
     } catch (Throwable $erro) {
         echo "{$protocolo}: falhou · ".get_class($erro).': '.$erro->getMessage()."\n";
     }
@@ -150,15 +162,60 @@ foreach ($recebimentos as $recebimento) {
 echo "\nprocessos sem resposta gravada: {$semResposta}\n";
 
 /**
+ * Deixa a ficha e as quedas coerentes com o estado que o motor acabou de
+ * decidir. Devolve a descrição do que mudou, ou null.
+ */
+function acertarFicha(ViabilityRequest $processo, PreAnaliseService $preAnalise): ?string
+{
+    $revisao = fichaIntocada($processo);
+
+    if ($processo->status === ViabilityRequestStatus::EmAnalise && $processo->assigned_user_id === null) {
+        $revisao?->delete();
+        $processo->unsetRelation('analysisRecords');
+        $processo->unsetRelation('currentAnalysisRecord');
+        $preAnalise->preAnalisar($processo);
+
+        return $revisao !== null ? 'revisão 1 da ficha refeita' : null;
+    }
+
+    if (! decididoPeloMotor($processo)) {
+        return null;
+    }
+
+    $quedas = $processo->expressoQuedas()->count();
+    $processo->expressoQuedas()->delete();
+    $revisao?->delete();
+
+    if ($revisao === null && $quedas === 0) {
+        return null;
+    }
+
+    return "ficha e {$quedas} queda(s) da passada sem resposta removidas";
+}
+
+/**
+ * Decisão emitida pelo motor sem analista: nenhum usuário decidiu nem assumiu.
+ */
+function decididoPeloMotor(ViabilityRequest $processo): bool
+{
+    $decisao = $processo->decision()->first();
+
+    return $decisao !== null
+        && $decisao->decided_by_user_id === null
+        && $processo->assigned_user_id === null;
+}
+
+/**
  * Revisão 1 em rascunho que o analista nunca tocou: pode ser recriada pelo
  * motor. Revisão finalizada, assumida ou com parecer é trabalho humano —
  * intocável.
  */
 function fichaIntocada(ViabilityRequest $processo): ?AnalysisRecord
 {
+    $revisoes = $processo->analysisRecords()->count();
     $revisao = $processo->analysisRecords()->where('revision', 1)->first();
 
-    if ($revisao === null) {
+    if ($revisao === null || $revisoes > 1) {
         return null;
     }
 
