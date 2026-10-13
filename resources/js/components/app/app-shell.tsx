@@ -12,6 +12,8 @@ import { SidebarProvider, useSidebar } from '@/contexts/sidebar-context';
 interface AppShellProps {
     groups: SidebarGroup[];
     homeHref: string;
+    /** Destino do logo da sidebar; padrão `homeHref`. */
+    logoHref?: string;
     logoutHref?: string;
     accountHref?: string;
     subtitle?: string;
@@ -50,6 +52,7 @@ function NotaEntradaConsole() {
 function ShellContent({
     groups,
     homeHref,
+    logoHref,
     logoutHref,
     accountHref,
     subtitle,
@@ -68,6 +71,7 @@ function ShellContent({
             <AppSidebar
                 groups={groups}
                 homeHref={homeHref}
+                logoHref={logoHref}
                 subtitle={subtitle}
                 variant={variant}
                 collapsibleGroups={collapsibleGroups}

@@ -12,7 +12,7 @@ TELA NOVA NÃO NASCE NO MENU POR REFLEXO. ENTRA NO GRUPO DO TRABALHO, NUNCA NUM 
 Fonte de verdade do console SEDUR: `resources/js/navigation/gestao-nav.ts`.
 Sidebar e Cmd+K **leem o mesmo catálogo**. Proibido duplicar lista de itens em `gestao-layout.tsx` ou `command-search.tsx`.
 
-Portal do cidadão: `resources/js/layouts/portal-layout.tsx` (Início / Serviços / Minha conta). Mesmas regras, catálogo menor.
+Portal do cidadão: `resources/js/navigation/portal-nav.ts` (Início / Serviços / Minha conta). Mesmas regras, catálogo menor. `portal-layout.tsx`, painel e landing **leem** esse catálogo; proibido lista local.
 
 ## Árvore de decisão — onde entra o item
 
@@ -76,8 +76,15 @@ Trabalho primeiro, leitura no meio, quem-pode e o-que-o-sistema-usa por último.
 
 ## Portal do cidadão
 
-Grupos fixos: **Início** (painel), **Serviços** (empresas, viabilidade, procurações), **Minha conta**.
-Item novo do requerente: Serviços, salvo se for perfil/senha (Minha conta) ou home (Início).
+Fonte de verdade: `resources/js/navigation/portal-nav.ts`. Grupos fixos, nessa ordem:
+
+- **Início**: painel e notificações.
+- **Serviços**: tudo o que o requerente faz (consultar, solicitar, renovar, empresas, procurações).
+- **Minha conta**: dados pessoais e histórico de acessos.
+
+Todo item de Serviços precisa de uma ação em `PORTAL_ACOES` (card do painel). Ações com `publica: true` aparecem na landing.
+Tela-filha (histórico de consultas, comunicações, pendências) não entra no menu: link na tela-mãe.
+`assertPortalNavHealth()` valida isso; `portal-nav.test.ts` tem que continuar verde.
 Não replicar telas de gestão no portal.
 
 ## Checklist antes de commitar uma tela nova

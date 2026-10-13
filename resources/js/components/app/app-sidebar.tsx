@@ -33,6 +33,8 @@ export type SidebarVariant = 'light' | 'console';
 interface AppSidebarProps {
     groups: SidebarGroup[];
     homeHref: string;
+    /** Destino do logo; padrão `homeHref`. */
+    logoHref?: string;
     subtitle?: string;
     variant?: SidebarVariant;
     collapsibleGroups?: boolean;
@@ -52,6 +54,7 @@ interface AppSidebarProps {
 export default function AppSidebar({
     groups,
     homeHref,
+    logoHref,
     subtitle,
     variant = 'light',
     collapsibleGroups = false,
@@ -162,7 +165,7 @@ export default function AppSidebar({
             onMouseLeave={() => setIsHovered(false)}
         >
             <div className={`flex ${showText ? 'pt-8 pb-4' : 'py-8'} ${!isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'}`}>
-                <Link href={homeHref}>
+                <Link href={logoHref ?? homeHref}>
                     {showText ? (
                         <Logo
                             subtitle={subtitle}
