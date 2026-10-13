@@ -8,15 +8,16 @@ import {
     BellIcon,
     CheckCircleIcon,
     FileIcon,
-    GroupIcon,
-    ListIcon,
     PencilIcon,
+    SearchIcon,
 } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import KpiCard, { type KpiTone } from '@/components/ui/kpi-card';
 import PortalLayout from '@/layouts/portal-layout';
+import { FILTROS_SOLICITACOES, PORTAL_ACOES } from '@/navigation/portal-nav';
+import { PORTAL_NAV_ICONS } from '@/navigation/portal-nav-icons';
 import type { SharedProps } from '@/types';
 
 type BadgeColor = 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light';
@@ -76,13 +77,6 @@ interface Indicator {
     href?: string;
 }
 
-interface QuickAction {
-    name: string;
-    label: string;
-    href: string;
-    icon: ReactNode;
-}
-
 const numberFormat = new Intl.NumberFormat('pt-BR');
 
 /** Cor do selo conforme o estado do processo (reforço visual, nunca único canal). */
@@ -120,74 +114,49 @@ function formatDate(value: string | null): string {
     return `${day}/${month}/${year}`;
 }
 
-const quickActions: QuickAction[] = [
-    {
-        name: 'Minhas solicitações',
-        label: 'Viabilidades e renovações em seu nome',
-        href: '/portal/solicitacoes',
-        icon: <FileIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
-    },
-    {
-        name: 'Minhas empresas',
-        label: 'Empresas vinculadas a você',
-        href: '/portal/empresas',
-        icon: <ListIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
-    },
-    {
-        name: 'Renovação de Viabilidade',
-        label: 'Prorrogue uma viabilidade provisória deste portal',
-        href: '/portal/renovacao',
-        icon: <CheckCircleIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
-    },
-    {
-        name: 'Meus acessos',
-        label: 'Histórico da sua conta',
-        href: '/portal/acessos',
-        icon: <GroupIcon className="size-6 text-gray-800 dark:text-white/90" aria-hidden="true" />,
-    },
-];
-
 export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }: DashboardProps) {
     const { auth } = usePage<SharedProps>().props;
+    const primeiroNome = auth.user?.name.split(' ')[0] ?? 'cidadão';
 
     const temAtencao = atencao.pendencias.length > 0 || atencao.rascunhos.length > 0;
 
-    const possibleIndicators: Indicator[] = [
+    const indicators: Indicator[] = [
+        {
+            key: 'convite',
+            label: 'Convites para responder',
+            value: numberFormat.format(indicadores.em_convite),
+            note: 'aguardando a sua resposta',
+            icon: <BellIcon className="size-6" aria-hidden="true" />,
+            tone: 'warning',
+            href: FILTROS_SOLICITACOES.convites,
+        },
         {
             key: 'analise',
-            label: 'Em Análise',
+            label: 'Em análise',
             value: numberFormat.format(indicadores.em_analise),
-            note: 'processos em análise',
-            icon: <FileIcon className="size-6" aria-hidden="true" />,
+            note: 'sendo analisadas pela SEDUR',
+            icon: <SearchIcon className="size-6" aria-hidden="true" />,
             tone: 'brand',
-            href: '/portal/solicitacoes',
+            href: FILTROS_SOLICITACOES.emAnalise,
         },
         {
             key: 'processos',
-            label: 'Meus Processos',
+            label: 'Total de solicitações',
             value: numberFormat.format(indicadores.processos),
-            note: 'processos com os seus dados',
-            icon: <ListIcon className="size-6" aria-hidden="true" />,
+            note: 'todas as suas solicitações',
+            icon: <FileIcon className="size-6" aria-hidden="true" />,
             tone: 'info',
-            href: '/portal/solicitacoes',
-        },
-        {
-            key: 'convite',
-            label: 'Em Convite',
-            value: numberFormat.format(indicadores.em_convite),
-            note: 'processos aguardando a sua resposta',
-            icon: <BellIcon className="size-6" aria-hidden="true" />,
-            tone: 'warning',
-            href: '/portal/solicitacoes',
+            href: FILTROS_SOLICITACOES.todas,
         },
     ];
-
-    const indicators = possibleIndicators.filter((indicator): indicator is Indicator => indicator !== null);
 
     return (
         <>
             <Head title="Meu painel" />
             <PageHeader title="Meu painel" />
+            <p className="-mt-2 mb-6 text-base text-gray-600 dark:text-gray-300">
+                Olá, {primeiroNome}. O que você precisa resolver hoje?
+            </p>
 
             <div className="grid grid-cols-12 gap-4 md:gap-6">
                 <div className="col-span-12">
@@ -213,7 +182,10 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                                             >
                                                 <div className="min-w-0">
                                                     <p className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                                        Convite — {pendencia.protocol_number ?? 'solicitação'}
+                                                        Convite para responder — {pendencia.protocol_number ?? 'solicitação'}
+                                                    </p>
+                                                    <p className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                        A SEDUR pediu uma informação ou documento para seguir com a análise.
                                                     </p>
                                                     <p className="truncate text-theme-xs text-gray-500 dark:text-gray-400">
                                                         {pendencia.descricao}
@@ -271,8 +243,45 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                     )}
                 </div>
 
+                <section className="col-span-12" aria-labelledby="painel-acoes">
+                    <h2 id="painel-acoes" className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
+                        O que você quer fazer?
+                    </h2>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-3">
+                        {PORTAL_ACOES.map((acao) => {
+                            const Icon = PORTAL_NAV_ICONS[acao.icon];
+
+                            return (
+                                <RevealLink
+                                    key={acao.href}
+                                    href={acao.href}
+                                    className="group flex items-start gap-4 rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-brand-300 hover:shadow-theme-md dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-500/40 md:p-6"
+                                >
+                                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-500 dark:bg-brand-500/10 dark:text-brand-400">
+                                        <Icon className="size-6" aria-hidden="true" />
+                                    </span>
+                                    <span className="min-w-0 flex-1">
+                                        <span className="flex items-center justify-between gap-2">
+                                            <span className="text-base font-semibold text-gray-800 dark:text-white/90">
+                                                {acao.titulo}
+                                            </span>
+                                            <ArrowRightIcon
+                                                className="size-5 shrink-0 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-brand-500 dark:text-gray-500 dark:group-hover:text-brand-400"
+                                                aria-hidden="true"
+                                            />
+                                        </span>
+                                        <span className="mt-1 block text-theme-sm text-gray-500 dark:text-gray-400">
+                                            {acao.descricao}
+                                        </span>
+                                    </span>
+                                </RevealLink>
+                            );
+                        })}
+                    </div>
+                </section>
+
                 <div className="col-span-12">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-3">
                         {indicators.map((indicator) => {
                             const card = (
                                 <KpiCard
@@ -305,13 +314,21 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                             title="Minhas solicitações recentes"
                             description="Acompanhe o andamento dos seus pedidos de viabilidade."
                             actions={
-                                <Link
-                                    href="/portal/solicitacoes"
-                                    className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
-                                >
-                                    Ver todas
-                                    <ArrowRightIcon className="size-4" aria-hidden="true" />
-                                </Link>
+                                <div className="flex flex-wrap items-center gap-4">
+                                    <Link
+                                        href="/portal/viabilidade/historico"
+                                        className="text-theme-sm font-medium text-gray-600 transition hover:text-brand-500 dark:text-gray-300 dark:hover:text-brand-400"
+                                    >
+                                        Minhas consultas de viabilidade
+                                    </Link>
+                                    <Link
+                                        href={FILTROS_SOLICITACOES.todas}
+                                        className="inline-flex items-center gap-1.5 text-theme-sm font-medium text-brand-500 transition hover:text-brand-600 dark:text-brand-400"
+                                    >
+                                        Ver todas
+                                        <ArrowRightIcon className="size-4" aria-hidden="true" />
+                                    </Link>
+                                </div>
                             }
                         />
                         <CardContent flush>
@@ -355,53 +372,6 @@ export default function Dashboard({ indicadores, atencao, solicitacoesRecentes }
                                     ))}
                                 </ul>
                             )}
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="col-span-12">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4">
-                        {quickActions.map((action) => (
-                            <RevealLink
-                                key={action.href}
-                                href={action.href}
-                                className="group rounded-2xl border border-gray-200 bg-white p-5 transition hover:border-brand-300 hover:shadow-theme-md dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-500/40 md:p-6"
-                            >
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
-                                    {action.icon}
-                                </div>
-                                <div className="mt-5 flex items-end justify-between">
-                                    <div>
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">{action.label}</span>
-                                        <h4 className="mt-2 text-title-sm font-bold text-gray-800 dark:text-white/90">
-                                            {action.name}
-                                        </h4>
-                                    </div>
-                                    <ArrowRightIcon className="mb-1.5 size-5 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-brand-500 dark:text-gray-500 dark:group-hover:text-brand-400" aria-hidden="true" />
-                                </div>
-                            </RevealLink>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="col-span-12">
-                    <Card>
-                        <CardHeader title="Minha conta" description="Bem-vindo(a) ao Viabiliza." />
-                        <CardContent>
-                            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-                                <div>
-                                    <dt className="text-theme-xs text-gray-500 dark:text-gray-400">Nome</dt>
-                                    <dd className="mt-1 text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                        {auth.user?.name ?? '—'}
-                                    </dd>
-                                </div>
-                                <div>
-                                    <dt className="text-theme-xs text-gray-500 dark:text-gray-400">E-mail</dt>
-                                    <dd className="mt-1 text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                                        {auth.user?.email ?? '—'}
-                                    </dd>
-                                </div>
-                            </dl>
                         </CardContent>
                     </Card>
                 </div>
