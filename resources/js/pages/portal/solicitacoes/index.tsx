@@ -58,6 +58,8 @@ interface SolicitacoesIndexProps {
         sort: string;
         direction: SortDirection;
         per_page: number;
+        status: string;
+        status_label: string | null;
     };
     perPageOptions: number[];
     solicitacaoEnabled: boolean;
@@ -111,9 +113,10 @@ export default function SolicitacoesIndex({
         initialSearch: filters.search,
         initialSort: { column: filters.sort, direction: filters.direction },
         initialPerPage: filters.per_page,
+        initialFilters: filters.status ? { status: filters.status } : {},
     });
 
-    const filtering = table.search.trim() !== '';
+    const filtering = table.search.trim() !== '' || filters.status !== '';
 
     const [cancelTarget, setCancelTarget] = useState<SolicitacaoRow | null>(null);
     const [cancelReason, setCancelReason] = useState('');
@@ -263,6 +266,21 @@ export default function SolicitacoesIndex({
                         title="Novas solicitações temporariamente indisponíveis"
                         message="A abertura de novas solicitações de viabilidade está desativada no momento. Você ainda pode consultar e acompanhar as suas solicitações."
                     />
+                </div>
+            )}
+
+            {filters.status_label && (
+                <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-theme-sm text-gray-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-gray-300">
+                    <span>
+                        Filtrando por: <strong className="font-semibold">{filters.status_label}</strong>
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => table.setFilter('status', '')}
+                        className="font-medium text-brand-500 underline-offset-4 hover:underline dark:text-brand-400"
+                    >
+                        Limpar filtro
+                    </button>
                 </div>
             )}
 

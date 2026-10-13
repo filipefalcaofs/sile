@@ -59,7 +59,8 @@ class SolicitacaoController extends Controller
     /**
      * "Minhas solicitações": lista server-driven SOMENTE das solicitações do
      * requerente efetivo (em representação, as do representado). Busca por
-     * número de protocolo ou razão social da empresa; ordenação whitelistada;
+     * número de protocolo ou razão social da empresa; filtro opcional por
+     * estado (`status`); ordenação whitelistada;
      * paginação por constante. A tela é o 08-13 (aqui só o backend).
      */
     public function index(Request $request): Response
@@ -77,6 +78,11 @@ class SolicitacaoController extends Controller
 
         $search = (string) $request->string('search')->trim();
 
+        // Filtro por estado (destino dos indicadores do painel). Valor fora do
+        // enum, ou não-string, é ignorado: lista tudo, nunca 500.
+        $statusInput = $request->input('status');
+        $status = is_string($statusInput) ? ViabilityRequestStatus::tryFrom($statusInput) : null;
+
         $cancelableStates = $this->cancelableStates();
 
         $solicitacoes = ViabilityRequest::query()
@@ -89,6 +95,7 @@ class SolicitacaoController extends Controller
                             ->whereLike('legal_name', "%{$search}%", caseSensitive: false));
                 });
             })
+            ->when($status !== null, fn ($query) => $query->where('status', $status))
             ->orderBy($sort, $direction)
             ->orderByDesc('id')
             ->paginate($perPage)
@@ -109,6 +116,8 @@ class SolicitacaoController extends Controller
                 'sort' => $sort,
                 'direction' => $direction,
                 'per_page' => $perPage,
+                'status' => $status?->value ?? '',
+                'status_label' => $status?->publicLabel(),
             ],
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'solicitacaoEnabled' => true,
