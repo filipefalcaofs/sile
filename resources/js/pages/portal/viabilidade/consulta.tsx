@@ -1,7 +1,7 @@
 import PerguntaPlanilhaCampo from '@/components/viabilidade/pergunta-planilha-campo';
 import { perguntasVisiveis, type PerguntaPlanilha, type RespostaPlanilha } from '@/lib/respostas-planilha';
-import { Head, Link, useHttp } from '@inertiajs/react';
-import type { ComponentType, ReactNode, SVGProps } from 'react';
+import { Head, Link, useHttp, usePage } from '@inertiajs/react';
+import type { ComponentType, ReactElement, ReactNode, SVGProps } from 'react';
 import { useState } from 'react';
 import AccessibilityBar from '@/components/app/accessibility-bar';
 import Logo from '@/components/app/logo';
@@ -16,6 +16,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ResultadoViabilidade } from '@/components/viabilidade/resultado-viabilidade';
 import type { ResultadoConsulta } from '@/components/viabilidade/resultado-viabilidade';
 import { ThemeProvider, useTheme } from '@/contexts/theme-context';
+import PortalLayout from '@/layouts/portal-layout';
+import type { SharedProps } from '@/types';
+import { shellDaConsulta } from './shell-da-consulta';
 
 interface ConsultaProps {
     consultaEnabled: boolean;
@@ -143,6 +146,7 @@ function PublicShell({ children }: { children: ReactNode }) {
  * quando sem zona, nunca Permitido/Não permitido sem o dado oficial.
  */
 export default function Consulta({ consultaEnabled }: ConsultaProps) {
+    const { auth } = usePage<SharedProps>().props;
     const [tipo, setTipo] = useState<TipoEntrada>('endereco');
     const [endereco, setEndereco] = useState('');
     const [inscricao, setInscricao] = useState('');
@@ -232,7 +236,7 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
         <>
             <Head title="Consulta de viabilidade" />
 
-            <div className="mx-auto w-full max-w-(--breakpoint-xl) px-4 py-10 sm:px-6">
+            <div className={auth.user ? 'w-full' : 'mx-auto w-full max-w-(--breakpoint-xl) px-4 py-10 sm:px-6'}>
                 <div className="max-w-2xl">
                     <h1 className="text-2xl font-semibold tracking-tight text-gray-800 dark:text-white/90 sm:text-title-sm">
                         Consulta de viabilidade locacional
@@ -240,16 +244,26 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
                     <p className="mt-3 text-base text-gray-500 dark:text-gray-400">
                         Verifique se uma atividade econômica pode funcionar em um local de Salvador, aplicando as regras
                         da lei de ordenamento (LOUOS) e a classificação de risco municipal. Consulte por endereço, código da atividade (CNAE) ou inscrição
-                        imobiliária — sem necessidade de login.
+                        imobiliária{auth.user ? '.' : ' — sem necessidade de login.'}
                     </p>
                     <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                        <Link
-                            href="/portal/login"
-                            className="inline-flex items-center gap-1 font-medium text-brand-500 underline-offset-4 hover:underline dark:text-brand-400"
-                        >
-                            Entre para salvar o histórico das suas consultas
-                            <ArrowRightIcon className="size-4" aria-hidden="true" />
-                        </Link>
+                        {auth.user ? (
+                            <Link
+                                href="/portal/viabilidade/historico"
+                                className="inline-flex items-center gap-1 font-medium text-brand-500 underline-offset-4 hover:underline dark:text-brand-400"
+                            >
+                                Ver minhas consultas anteriores
+                                <ArrowRightIcon className="size-4" aria-hidden="true" />
+                            </Link>
+                        ) : (
+                            <Link
+                                href="/portal/login"
+                                className="inline-flex items-center gap-1 font-medium text-brand-500 underline-offset-4 hover:underline dark:text-brand-400"
+                            >
+                                Entre para salvar o histórico das suas consultas
+                                <ArrowRightIcon className="size-4" aria-hidden="true" />
+                            </Link>
+                        )}
                     </p>
                 </div>
 
@@ -460,4 +474,9 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
     );
 }
 
-Consulta.layout = (page: ReactNode) => <PublicShell>{page}</PublicShell>;
+Consulta.layout = (page: ReactElement<SharedProps>) =>
+    shellDaConsulta(page.props.auth?.user) === 'portal' ? (
+        <PortalLayout>{page}</PortalLayout>
+    ) : (
+        <PublicShell>{page}</PublicShell>
+    );

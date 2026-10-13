@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Viabilidade;
 
+use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
@@ -27,5 +29,18 @@ class ConsultaViabilidadePaginaTest extends TestCase
                 ->component('portal/viabilidade/consulta')
                 ->has('consultaEnabled')
             );
+    }
+
+    public function test_pagina_continua_acessivel_para_cidadao_logado(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $user = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($user)
+            ->get('/portal/viabilidade')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('portal/viabilidade/consulta')
+                ->where('auth.user.id', $user->id));
     }
 }
