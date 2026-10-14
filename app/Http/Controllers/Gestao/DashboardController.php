@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccessRequest;
+use App\Models\User;
 use App\Services\Relatorios\PainelOperacaoService;
+use App\Support\PerfisSolicitaveis;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,7 +41,37 @@ class DashboardController extends Controller
                     ? $painel->montar($this->janelaDias($request), $user->can('relatorios.produtividade.nominal'))
                     : null,
             ],
+            'acesso' => $this->acessoPendente($user),
         ]);
+    }
+
+    /**
+     * Servidor que entrou pelo AD e ainda não tem papel: perfis que pode pedir
+     * e o estado do último pedido (primeiro acesso).
+     *
+     * @return array{perfis: list<string>, solicitacao: array{status: string, perfil: string, justificativa: string, motivo: ?string}|null}|null
+     */
+    private function acessoPendente(User $user): ?array
+    {
+        if ($user->roles()->exists()) {
+            return null;
+        }
+
+        $ultima = AccessRequest::query()
+            ->where('user_id', $user->id)
+            ->with('role:id,name')
+            ->latest('id')
+            ->first();
+
+        return [
+            'perfis' => PerfisSolicitaveis::roles()->pluck('name')->all(),
+            'solicitacao' => $ultima === null ? null : [
+                'status' => $ultima->status->value,
+                'perfil' => $ultima->role->name,
+                'justificativa' => $ultima->justificativa,
+                'motivo' => $ultima->decision_note,
+            ],
+        ];
     }
 
     private function janelaDias(Request $request): int

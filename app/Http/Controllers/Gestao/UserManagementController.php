@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\ToggleUserActivationRequest;
 use App\Http\Requests\Gestao\UpdateUserAuthTypeRequest;
 use App\Http\Requests\Gestao\UpdateUserRoleRequest;
+use App\Models\AccessRequest;
 use App\Models\User;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\UsuariosReportSource;
@@ -93,6 +94,20 @@ class UserManagementController extends Controller
                 'portal' => $scopeTab(User::query(), 'portal')->count(),
             ],
             'roles' => Role::orderBy('name')->pluck('name'),
+            'solicitacoes' => AccessRequest::query()
+                ->pendentes()
+                ->with(['user:id,name,email,ad_username', 'role:id,name'])
+                ->oldest()
+                ->get()
+                ->map(fn (AccessRequest $solicitacao) => [
+                    'id' => $solicitacao->id,
+                    'name' => $solicitacao->user->name,
+                    'email' => $solicitacao->user->email,
+                    'ad_username' => $solicitacao->user->ad_username,
+                    'perfil' => $solicitacao->role->name,
+                    'justificativa' => $solicitacao->justificativa,
+                    'created_at' => $solicitacao->created_at->toIso8601String(),
+                ]),
         ]);
     }
 

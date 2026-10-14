@@ -1,7 +1,12 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import FieldError from '@/components/form/field-error';
+import Label from '@/components/form/label';
+import Select from '@/components/form/select';
+import Textarea from '@/components/form/textarea';
 import { RevealLink, Surface } from '@/components/motion';
+import Button from '@/components/ui/button';
 import { chartPalette } from '@/components/ui/chart/chart-palette';
 import Chart from '@/components/ui/chart/chart';
 import type { EChartsOption } from '@/components/ui/chart/echarts-core';
@@ -108,8 +113,21 @@ interface OperacaoKpis {
     };
 }
 
+interface SolicitacaoAcesso {
+    status: 'pendente' | 'aprovada' | 'recusada';
+    perfil: string;
+    justificativa: string;
+    motivo: string | null;
+}
+
+interface AcessoPendente {
+    perfis: string[];
+    solicitacao: SolicitacaoAcesso | null;
+}
+
 interface DashboardProps {
     kpis: { operacao: OperacaoKpis | null };
+    acesso: AcessoPendente | null;
 }
 
 type TomDelta = 'alta' | 'baixa' | 'neutro' | 'marca';
@@ -566,7 +584,79 @@ function GraficoFluxo({ operacao }: { operacao: OperacaoKpis }) {
     return <Chart option={option} className="mt-3.5 h-60 w-full" />;
 }
 
-export default function Dashboard({ kpis }: DashboardProps) {
+function SolicitarAcesso({ acesso }: { acesso: AcessoPendente }) {
+    const form = useForm({ role: '', justificativa: '' });
+    const solicitacao = acesso.solicitacao;
+    const pendente = solicitacao?.status === 'pendente';
+
+    function enviar(event: React.FormEvent) {
+        event.preventDefault();
+        form.post('/gestao/solicitacao-acesso', { preserveScroll: true, onSuccess: () => form.reset() });
+    }
+
+    return (
+        <section className="mt-6 max-w-xl rounded-2xl border border-gray-200 p-6 dark:border-gray-800">
+            <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Seu acesso ainda não foi liberado</h3>
+
+            {pendente && solicitacao ? (
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Sua solicitação do perfil <strong>{solicitacao.perfil}</strong> está aguardando a análise de um administrador. Você será liberado
+                    assim que ela for aprovada.
+                </p>
+            ) : acesso.perfis.length === 0 ? (
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Nenhum perfil está disponível para solicitação. Procure o administrador do sistema.
+                </p>
+            ) : (
+                <>
+                    {solicitacao?.status === 'recusada' && (
+                        <p className="mt-2 text-sm text-error-600 dark:text-error-400">
+                            Sua última solicitação foi recusada{solicitacao.motivo ? `: ${solicitacao.motivo}` : '.'} Você pode pedir de novo.
+                        </p>
+                    )}
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        Escolha o perfil de que você precisa e explique o motivo. Um administrador vai analisar o pedido.
+                    </p>
+
+                    <form onSubmit={enviar} className="mt-5 flex flex-col gap-4">
+                        <div>
+                            <Label htmlFor="acesso-perfil">Perfil</Label>
+                            <Select
+                                id="acesso-perfil"
+                                name="role"
+                                value={form.data.role}
+                                onChange={(value) => form.setData('role', value)}
+                                placeholder="Selecionar..."
+                                options={acesso.perfis.map((perfil) => ({ value: perfil, label: perfil }))}
+                            />
+                            {form.errors.role && <FieldError>{form.errors.role}</FieldError>}
+                        </div>
+                        <div>
+                            <Label htmlFor="acesso-justificativa">Justificativa</Label>
+                            <Textarea
+                                id="acesso-justificativa"
+                                name="justificativa"
+                                rows={3}
+                                value={form.data.justificativa}
+                                onChange={(event) => form.setData('justificativa', event.target.value)}
+                                placeholder="Ex.: atuo como coordenador da análise de viabilidade."
+                                error={Boolean(form.errors.justificativa)}
+                            />
+                            {form.errors.justificativa && <FieldError>{form.errors.justificativa}</FieldError>}
+                        </div>
+                        <div className="flex justify-end">
+                            <Button type="submit" size="sm" disabled={form.processing || form.data.role === ''}>
+                                {form.processing ? 'Enviando...' : 'Enviar solicitação'}
+                            </Button>
+                        </div>
+                    </form>
+                </>
+            )}
+        </section>
+    );
+}
+
+export default function Dashboard({ kpis, acesso }: DashboardProps) {
     const operacao = kpis.operacao;
     const [visaoCarga, setVisaoCarga] = useState<'setor' | 'analista'>('setor');
     const optionEtapas = useMemo(() => etapasChartOption(operacao?.etapas ?? []), [operacao]);
@@ -585,6 +675,7 @@ export default function Dashboard({ kpis }: DashboardProps) {
                 <p className="mt-2 max-w-xl text-sm text-gray-500 dark:text-gray-400">
                     Os indicadores da operação ficam disponíveis para quem consulta relatórios. Cadastros e parâmetros continuam no menu lateral.
                 </p>
+                {acesso && <SolicitarAcesso acesso={acesso} />}
             </>
         );
     }
