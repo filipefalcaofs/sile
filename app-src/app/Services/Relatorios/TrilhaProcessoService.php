@@ -17,6 +17,9 @@ use Spatie\Activitylog\Models\Activity;
  */
 class TrilhaProcessoService
 {
+    /** @var list<string> */
+    private const array EVENTOS_DE_ATRIBUICAO = ['distribuir', 'assumir', 'redistribuir'];
+
     /**
      * @return array{processo: array<string, mixed>, eventos: list<array<string, mixed>>}|null
      */
@@ -72,7 +75,7 @@ class TrilhaProcessoService
                 'data' => $a->created_at?->toIso8601String(),
                 'eixo' => 'auditoria',
                 'eixo_label' => 'Auditoria',
-                'descricao' => $a->description,
+                'descricao' => $this->descreverAtividade($a, $usuarios),
                 'usuario' => $a->causer_id !== null ? ($usuarios[$a->causer_id] ?? null) : null,
             ];
         }
@@ -128,6 +131,10 @@ class TrilhaProcessoService
             if ($a->causer_id !== null) {
                 $ids[] = $a->causer_id;
             }
+
+            if (in_array($a->event, self::EVENTOS_DE_ATRIBUICAO, true) && isset($a->properties['assigned_user_id'])) {
+                $ids[] = (int) $a->properties['assigned_user_id'];
+            }
         }
 
         if ($ids === []) {
@@ -135,6 +142,25 @@ class TrilhaProcessoService
         }
 
         return User::query()->whereIn('id', array_unique($ids))->pluck('name', 'id')->all();
+    }
+
+    /**
+     * Registros de atribuição antigos gravaram só o id da analista; o nome entra
+     * na descrição quando ela ainda não o traz.
+     *
+     * @param  array<int, string>  $usuarios
+     */
+    private function descreverAtividade(Activity $atividade, array $usuarios): string
+    {
+        $nome = isset($atividade->properties['assigned_user_id'])
+            ? ($usuarios[(int) $atividade->properties['assigned_user_id']] ?? null)
+            : null;
+
+        if (! in_array($atividade->event, self::EVENTOS_DE_ATRIBUICAO, true) || $nome === null || str_contains($atividade->description, $nome)) {
+            return $atividade->description;
+        }
+
+        return "{$atividade->description} Analista: {$nome}.";
     }
 
     /**
