@@ -137,7 +137,7 @@ class NotificationDispatcher
         $this->audit->log(
             'notificacoes',
             $type->value,
-            "Canal {$channel->label()} desativado por parâmetro (features.notificacao_{$channel->value}) para a comunicação {$type->label()}",
+            "Canal {$channel->label()} desativado por parâmetro para a comunicação {$type->label()}",
             properties: [
                 'viability_request_id' => $notification->viabilityRequestId(),
                 'channel' => $channel->value,

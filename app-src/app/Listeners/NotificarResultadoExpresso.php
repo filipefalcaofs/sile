@@ -50,7 +50,7 @@ class NotificarResultadoExpresso
             $this->audit->log(
                 'notificacoes',
                 'resultado-expresso',
-                "Notificação do resultado do protocolo {$request->protocol_number} desativada por parâmetro (features.notificacao_resultado_expresso)",
+                "Notificação do resultado do protocolo {$request->protocol_number} desativada por parâmetro",
                 properties: [
                     'viability_request_id' => $request->id,
                     'protocol_number' => $request->protocol_number,

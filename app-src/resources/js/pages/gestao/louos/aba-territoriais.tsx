@@ -297,7 +297,7 @@ function EditarRegraModal({
                         <option value="">Nenhum</option>
                         {territoriais.textos.map((texto) => (
                             <option key={texto.id} value={texto.id}>
-                                {texto.key}
+                                {texto.description?.trim() || 'Texto decisório'}
                             </option>
                         ))}
                     </select>

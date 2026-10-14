@@ -21,7 +21,7 @@ class AuditoriaPreditivaCommand extends Command
         $resumo = $service->executar();
 
         if (! $resumo['executado']) {
-            $this->info('Auditoria preditiva desligada (features.ia_auditoria_preditiva=0).');
+            $this->info('Auditoria preditiva desligada.');
 
             return self::SUCCESS;
         }

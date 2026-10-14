@@ -106,7 +106,7 @@ class ParameterController extends Controller
         app(AuditService::class)->log(
             'parametros',
             'parametro-alterado',
-            "Parâmetro {$parameter->key} alterado",
+            "Parâmetro alterado: {$parameter->auditLabel()}",
             [
                 'key' => $parameter->key,
                 'valor_anterior' => $parameter->sensitive ? '[criptografado]' : $old,

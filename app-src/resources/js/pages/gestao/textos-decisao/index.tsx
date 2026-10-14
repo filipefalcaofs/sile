@@ -7,7 +7,6 @@ import Input from '@/components/form/input';
 import Label from '@/components/form/label';
 import { PencilIcon } from '@/components/icons';
 import Alert from '@/components/ui/alert';
-import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import DataTable from '@/components/ui/data-table/data-table';
@@ -52,8 +51,7 @@ function EditDecisionTextModal({ texto, onClose }: { texto: DecisionTextItem; on
         <Modal isOpen onClose={onClose} className="m-4 max-h-[90vh] max-w-[640px] overflow-y-auto p-6 lg:p-8">
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Editar texto decisório</h4>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                <span className="font-mono">{texto.key}</span> — a chave é fixa e vinculada ao motor de decisão; não
-                pode ser alterada.
+                Este texto é fixo e vinculado ao motor de decisão; não pode ser trocado por outro.
             </p>
 
             <div className="mt-4">
@@ -112,16 +110,6 @@ export default function DecisionTextsIndex({ grupos }: DecisionTextsIndexProps) 
     const [editing, setEditing] = useState<DecisionTextItem | null>(null);
 
     const columns: ColumnDef<DecisionTextItem>[] = [
-        {
-            id: 'key',
-            header: 'Chave',
-            cellClassName: 'whitespace-nowrap',
-            cell: (texto) => (
-                <Badge size="sm" color="primary">
-                    <span className="font-mono">{texto.key}</span>
-                </Badge>
-            ),
-        },
         {
             id: 'template',
             header: 'Texto emitido',
@@ -183,7 +171,7 @@ export default function DecisionTextsIndex({ grupos }: DecisionTextsIndexProps) 
                     <Card key={grupo.prefixo}>
                         <CardHeader
                             title={grupo.label}
-                            description={`Chaves ${grupo.prefixo}.* — textos lidos pelo motor na emissão dos documentos. Sem criação ou exclusão pela tela: a chave é vinculada ao código do motor.`}
+                            description="Textos lidos pelo motor na emissão dos documentos. Sem criação ou exclusão pela tela: cada texto permanece vinculado ao motor."
                         />
                         <CardContent>
                             <DataTable

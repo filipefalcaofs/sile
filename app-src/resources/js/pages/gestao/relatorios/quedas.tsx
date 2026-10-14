@@ -282,7 +282,7 @@ export default function QuedasExpresso({ taxa, serie, ranking, filtros }: Quedas
                     <KpiCard
                         label="Meta da taxa"
                         value={metaDefinida ? formatarPercentual(taxa.meta) : 'meta não definida'}
-                        note={metaDefinida ? 'parâmetro relatorios.expresso.meta_taxa' : 'parametrize a meta para acompanhar'}
+                        note={metaDefinida ? 'meta definida nos parâmetros do sistema' : 'parametrize a meta para acompanhar'}
                         icon={<ListIcon className="size-6" />}
                         tone={metaDefinida ? 'success' : 'warning'}
                     />

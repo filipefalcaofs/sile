@@ -23,6 +23,40 @@ import GestaoLayout from '@/layouts/gestao-layout';
 
 type BadgeColor = 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark';
 
+const REGRA_LABEL: Record<string, string> = {
+    volume_cnpj: 'Volume pelo mesmo CNPJ',
+    volume_contador: 'Volume pelo mesmo representante',
+    poligono_repetido: 'Polígono repetido em endereços distintos',
+    condicionante_evasao: 'Respostas que evitam a análise',
+    inscricao_atividades_incompativeis: 'Atividades distintas na mesma inscrição',
+};
+
+const EVIDENCIA_LABEL: Record<string, string> = {
+    cnpj: 'CNPJ',
+    total: 'Total',
+    limite: 'Limite',
+    ids: 'Processos',
+    created_by_user_id: 'Representante',
+    poligono_hash: 'Polígono',
+    enderecos: 'Endereços',
+    enderecos_distintos: 'Endereços distintos',
+    minimo: 'Mínimo',
+    requester_user_id: 'Requerente',
+    processos: 'Processos',
+    inscricao: 'Inscrição',
+    cnaes_primarios: 'CNAEs',
+    cnaes_distintos: 'CNAEs distintos',
+    requerentes: 'Requerentes',
+};
+
+function rotuloRegra(chave: string): string {
+    return REGRA_LABEL[chave] ?? chave.replaceAll('_', ' ');
+}
+
+function rotuloEvidencia(chave: string): string {
+    return EVIDENCIA_LABEL[chave] ?? chave.replaceAll('_', ' ');
+}
+
 interface SelectOption {
     value: string;
     label: string;
@@ -208,7 +242,7 @@ const colunasEfetividade: ColumnDef<EfetividadeRegra>[] = [
         id: 'rule_key',
         header: 'Regra',
         cellClassName: 'font-medium whitespace-nowrap text-gray-800 dark:text-white/90',
-        cell: (linha) => linha.rule_key,
+        cell: (linha) => rotuloRegra(linha.rule_key),
     },
     {
         id: 'gerados',
@@ -357,7 +391,7 @@ export default function AbusoIndex({
 
     const ruleKeyFiltroOptions: SelectOption[] = (Array.isArray(ruleKeyOptions) ? ruleKeyOptions : []).map((chave) => ({
         value: chave,
-        label: chave,
+        label: rotuloRegra(chave),
     }));
     const severitySelect = Array.isArray(severityOptions) ? severityOptions : [];
     const statusSelect = Array.isArray(statusOptions) ? statusOptions : [];
@@ -368,7 +402,7 @@ export default function AbusoIndex({
             header: 'Regra / severidade',
             cell: (alerta) => (
                 <div className="flex flex-col gap-1.5">
-                    <span className="font-medium text-gray-800 dark:text-white/90">{alerta.rule_key}</span>
+                    <span className="font-medium text-gray-800 dark:text-white/90">{rotuloRegra(alerta.rule_key)}</span>
                     <Badge color={severityColor(alerta.severity.value)} size="sm">
                         {alerta.severity.label}
                     </Badge>
@@ -425,7 +459,7 @@ export default function AbusoIndex({
                                 key={item.chave}
                                 className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-theme-xs text-gray-600 dark:bg-white/5 dark:text-gray-300"
                             >
-                                {item.chave}: <strong className="font-medium">{item.valor}</strong>
+                                {rotuloEvidencia(item.chave)}: <strong className="font-medium">{item.valor}</strong>
                             </span>
                         ))}
                     </div>
@@ -643,7 +677,7 @@ export default function AbusoIndex({
                     <form onSubmit={submeterResolucao}>
                         <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">{acaoLabel}</h4>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Regra <strong className="font-medium text-gray-700 dark:text-gray-300">{resolucao.alerta.rule_key}</strong> ·{' '}
+                            Regra <strong className="font-medium text-gray-700 dark:text-gray-300">{rotuloRegra(resolucao.alerta.rule_key)}</strong> ·{' '}
                             {resolucao.alerta.severity.label} · detectado em {formatarDataHora(resolucao.alerta.detected_at)}.
                         </p>
 
@@ -699,7 +733,7 @@ function FiltroCampo({ label, children }: { label: string; children: ReactNode }
 
 /**
  * Estado vazio honesto: distingue "sem resultado de busca" de "sem alertas", e
- * nesse caso explica que a detecção nasce desligada (features.deteccao_abuso) —
+ * nesse caso explica que a detecção nasce desligada —
  * a ausência pode ser desativação OU nada sinalizado, nunca um estado fingido.
  */
 function AlertasVazio({ filtrando }: { filtrando: boolean }) {
@@ -709,7 +743,7 @@ function AlertasVazio({ filtrando }: { filtrando: boolean }) {
             description={
                 filtrando
                     ? 'Ajuste os filtros e tente novamente.'
-                    : 'A detecção de abuso roda como tarefa agendada e nasce desligada (parâmetro features.deteccao_abuso). Sem alertas, ou a detecção está desativada, ou nada foi sinalizado no período.'
+                    : 'A detecção de abuso roda como tarefa agendada e nasce desligada. Sem alertas, ou a detecção está desativada, ou nada foi sinalizado no período.'
             }
         />
     );
