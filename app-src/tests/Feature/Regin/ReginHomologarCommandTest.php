@@ -5,6 +5,7 @@ namespace Tests\Feature\Regin;
 use App\Models\Activity;
 use App\Models\Parameter;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -44,6 +45,21 @@ class ReginHomologarCommandTest extends TestCase
             'value' => 'segredo-forte',
             'default_value' => null,
         ]);
+    }
+
+    public function test_envelope_de_homologacao_envia_data_geracao_sem_fuso_em_horario_de_brasilia(): void
+    {
+        Carbon::setTestNow('2026-10-14 20:47:20 UTC');
+        Http::fake([
+            '*/acesso/auth' => Http::response(['token' => 'jwt-hml']),
+            '*/teste/validaResposta' => Http::response('OK'),
+            '*/teste/testeRecebimento' => Http::response('OK'),
+        ]);
+
+        $this->artisan('regin:homologar', ['--protocolo' => '43747'])->assertSuccessful();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/teste/validaResposta')
+            && $request['dataGeracao'] === '2026-10-14T17:47:20');
     }
 
     public function test_comando_valida_e_testa_recebimento_e_audita_sucesso(): void
