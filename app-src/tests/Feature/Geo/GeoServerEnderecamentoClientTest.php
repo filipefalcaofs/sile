@@ -6,6 +6,7 @@ use App\Models\Parameter;
 use App\Services\Geo\EnderecamentoHit;
 use App\Services\Geo\GeoServerEnderecamentoClient;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -171,5 +172,117 @@ class GeoServerEnderecamentoClientTest extends TestCase
                 && $query['CQL_FILTER'] === 'CODLOG=24574 AND NUMERACAO_METRICA=70'
                 && $query['srsName'] === 'EPSG:4326';
         });
+    }
+
+    public function test_consulta_por_ponto_devolve_o_poligono_unico_e_envia_o_cql_certo(): void
+    {
+        $this->responder([['complemento' => null, 'geometria' => $this->quadrado(-38.5, -12.98)]]);
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultarPorPonto(-12.98, -38.5);
+
+        $this->assertSame(EnderecamentoHit::ENCONTRADO, $hit->status);
+        $this->assertSame($this->quadrado(-38.5, -12.98), $hit->geometria);
+
+        Http::assertSent(function (Request $request): bool {
+            $url = urldecode($request->url());
+
+            return str_contains($url, 'typeName=enderecamento:VM_ENDERECAMENTO')
+                && str_contains($url, 'CQL_FILTER=INTERSECTS(GEOMETRY,SRID=4326;POINT(-38.50000000 -12.98000000))');
+        });
+    }
+
+    public function test_consulta_por_ponto_com_dois_poligonos_distintos_e_ambigua(): void
+    {
+        $this->responder([
+            ['complemento' => null, 'geometria' => $this->quadrado(-38.5, -12.98)],
+            ['complemento' => 'SALA 2', 'geometria' => $this->quadrado(-38.6, -12.9)],
+        ]);
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultarPorPonto(-12.98, -38.5);
+
+        $this->assertSame(EnderecamentoHit::AMBIGUO, $hit->status);
+        $this->assertSame(2, $hit->candidatas);
+        $this->assertNull($hit->geometria);
+        $this->assertStringContainsString('no ponto informado', (string) $hit->motivo);
+    }
+
+    public function test_consulta_por_ponto_com_subunidades_de_geometria_identica_conta_como_uma(): void
+    {
+        $this->responder([
+            ['complemento' => null, 'geometria' => $this->quadrado(-38.5, -12.98)],
+            ['complemento' => 'SALA 2', 'geometria' => $this->quadrado(-38.5, -12.98)],
+        ]);
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultarPorPonto(-12.98, -38.5);
+
+        $this->assertSame(EnderecamentoHit::ENCONTRADO, $hit->status);
+        $this->assertSame($this->quadrado(-38.5, -12.98), $hit->geometria);
+    }
+
+    public function test_consulta_por_ponto_aceita_multipolygon_unico(): void
+    {
+        $multi = ['type' => 'MultiPolygon', 'coordinates' => [$this->quadrado(-38.5, -12.98)['coordinates']]];
+        $this->responder([['complemento' => null, 'geometria' => $multi]]);
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultarPorPonto(-12.98, -38.5);
+
+        $this->assertSame(EnderecamentoHit::ENCONTRADO, $hit->status);
+        $this->assertSame('MultiPolygon', $hit->geometria['type']);
+    }
+
+    public function test_consulta_por_ponto_sem_feicao_nao_encontra(): void
+    {
+        $this->responder([]);
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultarPorPonto(-12.98, -38.5);
+
+        $this->assertSame(EnderecamentoHit::NAO_ENCONTRADO, $hit->status);
+        $this->assertNull($hit->geometria);
+    }
+
+    public function test_consulta_por_ponto_com_http_500_e_indisponivel(): void
+    {
+        Http::fake(['*' => Http::response('erro', 500)]);
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultarPorPonto(-12.98, -38.5);
+
+        $this->assertSame(EnderecamentoHit::INDISPONIVEL, $hit->status);
+        $this->assertStringContainsString('500', (string) $hit->motivo);
+    }
+
+    public function test_consulta_por_ponto_com_falha_de_conexao_e_indisponivel(): void
+    {
+        Http::fake(function (): never {
+            throw new ConnectionException('timeout');
+        });
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultarPorPonto(-12.98, -38.5);
+
+        $this->assertSame(EnderecamentoHit::INDISPONIVEL, $hit->status);
+    }
+
+    public function test_consulta_por_ponto_com_json_fora_do_contrato_e_indisponivel(): void
+    {
+        Http::fake(['*' => Http::response(['erro' => 'x'])]);
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultarPorPonto(-12.98, -38.5);
+
+        $this->assertSame(EnderecamentoHit::INDISPONIVEL, $hit->status);
+    }
+
+    public function test_consulta_por_ponto_desligada_nao_chama_o_geoserver(): void
+    {
+        $this->ligar(false);
+        Http::fake();
+
+        $hit = app(GeoServerEnderecamentoClient::class)->consultarPorPonto(-12.98, -38.5);
+
+        $this->assertSame(EnderecamentoHit::DESLIGADO, $hit->status);
+        Http::assertNothingSent();
+    }
+
+    public function test_timeout_da_consulta_por_ponto_e_de_45_segundos(): void
+    {
+        $this->assertSame(45, config('sile.integrations.geoserver.enderecamento.timeout_ponto'));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services\Geo;
 
+use App\Enums\PoligonoFonte;
 use App\Models\ViabilityRequest;
 use App\Support\Audit\AuditService;
 
@@ -38,7 +39,7 @@ class PoligonoEnderecamentoService
             $this->auditar($request, 'enderecamento', $hit->status, $codLog, $numero, $complemento, $hit);
 
             if ($hit->encontrado()) {
-                $this->gravar($request, $hit);
+                $this->gravar($request, $hit, PoligonoFonte::Chave);
 
                 return true;
             }
@@ -52,16 +53,17 @@ class PoligonoEnderecamentoService
             return false;
         }
 
-        $this->gravar($request, $semap, atributosDoLote: true);
+        $this->gravar($request, $semap, PoligonoFonte::Semap, atributosDoLote: true);
 
         return true;
     }
 
-    private function gravar(ViabilityRequest $request, EnderecamentoHit $hit, bool $atributosDoLote = false): void
+    private function gravar(ViabilityRequest $request, EnderecamentoHit $hit, PoligonoFonte $fonte, bool $atributosDoLote = false): void
     {
         $dados = [
             'address_polygon_geojson' => $hit->geometria,
             'address_polygon_consulted_at' => now(),
+            'address_polygon_source' => $fonte,
         ];
 
         if ($atributosDoLote) {

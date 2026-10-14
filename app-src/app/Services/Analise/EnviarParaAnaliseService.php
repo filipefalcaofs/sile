@@ -45,17 +45,20 @@ class EnviarParaAnaliseService
      * quando o envio foi efetivado agora e `false` quando o processo já estava
      * na análise (no-op).
      */
-    public function enviar(ViabilityRequest $request, ?User $actor = null): bool
-    {
+    public function enviar(
+        ViabilityRequest $request,
+        ?User $actor = null,
+        string $motivo = 'Envio manual para análise (gestão)',
+    ): bool {
         $ttl = (int) config('sile.expresso.lock.ttl_segundos', 10);
 
         return Cache::lock("analise:enviar:{$request->id}", $ttl)->block(
             $ttl,
-            fn (): bool => $this->enviarSobLock($request, $actor),
+            fn (): bool => $this->enviarSobLock($request, $actor, $motivo),
         );
     }
 
-    private function enviarSobLock(ViabilityRequest $request, ?User $actor): bool
+    private function enviarSobLock(ViabilityRequest $request, ?User $actor, string $motivo): bool
     {
         $request->refresh();
 
@@ -65,14 +68,14 @@ class EnviarParaAnaliseService
             return false;
         }
 
-        DB::transaction(function () use ($request, $actor): void {
+        DB::transaction(function () use ($request, $actor, $motivo): void {
             // Transição inicial do eixo operacional (null → para_distribuir): a
             // máquina grava a timeline interna + auditoria da transição (RN-002).
             $this->stateMachine->transition(
                 $request,
                 AnalysisStatus::ParaDistribuir,
                 $actor,
-                reason: 'Envio manual para análise (gestão)',
+                reason: $motivo,
             );
 
             // Materializa o prazo da fila (etapa distribuição) — espelha o
