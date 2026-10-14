@@ -6,6 +6,7 @@ use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -41,6 +42,18 @@ class RegistrationTest extends TestCase
         $user = User::firstWhere('email', 'maria@example.com');
 
         $this->assertTrue($user->hasRole('cidadao'));
+    }
+
+    public function test_cadastro_usa_o_perfil_definido_no_parametro(): void
+    {
+        Role::create(['name' => 'municipe', 'guard_name' => 'web']);
+        config(['sile.portal.perfil_cidadao' => 'municipe']);
+
+        $this->post('/portal/register', $this->validPayload());
+
+        $user = User::firstWhere('email', 'maria@example.com');
+        $this->assertTrue($user->hasRole('municipe'));
+        $this->assertFalse($user->hasRole('cidadao'));
     }
 
     public function test_cadastro_gera_auditoria(): void

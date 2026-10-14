@@ -110,6 +110,18 @@ final class PermissionCatalog
                 'group' => 'Análise técnica',
             ],
             [
+                'name' => 'forcar-transicao-analise',
+                'label' => 'Forçar transição da situação da análise',
+                'description' => 'Muda a situação da análise para qualquer estado permitido pela máquina de estados, mesmo fora das opções manuais.',
+                'group' => 'Análise técnica',
+            ],
+            [
+                'name' => 'receber-escalonamento-sla',
+                'label' => 'Receber escalonamentos de prazo e alertas de TLL',
+                'description' => 'Recebe os avisos de processo com prazo de análise vencido e de exercício sem tabela TLL vigente.',
+                'group' => 'Análise técnica',
+            ],
+            [
                 'name' => 'reprocessar-processos',
                 'label' => 'Reprocessar etapas do motor',
                 'description' => 'Refaz as etapas do motor que falharam por serviço de terceiro indisponível e reavalia o veredito.',

@@ -77,6 +77,6 @@ class ConsultarCpfAtendimentoTest extends TestCase
 
     private function atendente(): User
     {
-        return User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        return User::factory()->administrador()->withAcceptedLgpdTerm()->create();
     }
 }

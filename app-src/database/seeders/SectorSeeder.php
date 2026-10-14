@@ -56,8 +56,8 @@ class SectorSeeder extends Seeder
             return;
         }
 
-        $analista = $this->seedGestaoUser('analista@sile.dev', 'Analista Viabiliza', '39053344705', 'analista');
-        $gestor = $this->seedGestaoUser('gestor@sile.dev', 'Gestor Viabiliza', '48795515006', 'gestor');
+        $analista = $this->seedGestaoUser('analista@sile.dev', 'Analista Viabiliza', '39053344705', 'Analista Terceirizado');
+        $gestor = $this->seedGestaoUser('gestor@sile.dev', 'Gestor Viabiliza', '48795515006', 'Coordenador');
         $apoio = $this->seedGestaoUser('apoio@sile.dev', 'Apoio Viabiliza', '71602913013', 'apoio');
 
         // Vincula os três ao setor (HU-138 RN-005): o apoio/gestor distribuem e

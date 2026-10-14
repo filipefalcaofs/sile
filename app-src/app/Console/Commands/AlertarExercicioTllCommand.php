@@ -5,8 +5,8 @@ namespace App\Console\Commands;
 use App\Enums\RuleDomain;
 use App\Models\Activity;
 use App\Models\RuleVersion;
-use App\Models\User;
 use App\Notifications\TllExercicioFaltanteNotification;
+use App\Services\Comunicacao\DestinatariosEscalonamento;
 use App\Support\Audit\AuditService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Notification;
@@ -22,7 +22,7 @@ class AlertarExercicioTllCommand extends Command
 
     protected $description = 'Alerta gestores quando falta tabela TLL vigente do exercício (dez/jan)';
 
-    public function handle(AuditService $audit): int
+    public function handle(AuditService $audit, DestinatariosEscalonamento $escalonamento): int
     {
         $mes = (int) now()->month;
 
@@ -44,12 +44,7 @@ class AlertarExercicioTllCommand extends Command
             return self::SUCCESS;
         }
 
-        $gestorRole = (string) config('sile.notificacoes.escalonamento.gestor_role', 'gestor');
-
-        $gestores = User::query()
-            ->whereHas('roles', fn ($query) => $query->where('name', $gestorRole))
-            ->orderBy('id')
-            ->get();
+        $gestores = $escalonamento->usuarios();
 
         $alertados = 0;
 

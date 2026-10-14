@@ -140,6 +140,13 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1', 'max:20'],
                 'description' => 'Tentativas de login antes do bloqueio temporário',
             ],
+            'portal.perfil_cidadao' => [
+                'group' => 'seguranca',
+                'type' => 'string',
+                'default_value' => 'cidadao',
+                'validation_rules' => ['required', 'string', 'exists:roles,name'],
+                'description' => 'Perfil atribuído no autocadastro e no login gov.br do cidadão',
+            ],
             'security.password_reset_expire' => [
                 'group' => 'seguranca',
                 'type' => 'integer',

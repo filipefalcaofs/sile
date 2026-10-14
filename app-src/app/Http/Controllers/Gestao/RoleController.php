@@ -10,7 +10,7 @@ use App\Services\Relatorios\Export\Sources\PerfisReportSource;
 use App\Services\Relatorios\ReportFilters;
 use App\Support\Audit\AuditService;
 use App\Support\PermissionCatalog;
-use App\Support\Roles;
+use App\Support\RoleProtection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -24,7 +24,7 @@ class RoleController extends Controller
 {
     /**
      * Perfis com permissões e vínculos (HU-013 CA-01). O flag structural
-     * comunica à tela quais papéis o código referencia e protege.
+     * comunica à tela quais perfis são protegidos.
      */
     public function index(Request $request): Response|HttpResponse
     {
@@ -49,7 +49,7 @@ class RoleController extends Controller
                 'name' => $role->name,
                 'permissions' => $role->permissions->pluck('name')->all(),
                 'users_count' => $role->users_count,
-                'structural' => in_array($role->name, Roles::STRUCTURAL, true),
+                'structural' => RoleProtection::isProtected($role),
             ]);
 
         $permissionNames = Permission::query()->orderBy('name')->pluck('name');
@@ -92,7 +92,7 @@ class RoleController extends Controller
         $validated = $request->validated();
         $before = $role->permissions->pluck('name')->all();
 
-        if (! in_array($role->name, Roles::STRUCTURAL, true)) {
+        if (! RoleProtection::isProtected($role)) {
             $role->update(['name' => $validated['name']]);
         }
 
@@ -114,9 +114,9 @@ class RoleController extends Controller
 
     public function destroy(Role $role): RedirectResponse
     {
-        if (in_array($role->name, Roles::STRUCTURAL, true)) {
+        if (RoleProtection::isProtected($role)) {
             throw ValidationException::withMessages([
-                'role' => __('Papéis estruturais do sistema não podem ser excluídos.'),
+                'role' => __('Perfis protegidos do sistema não podem ser excluídos.'),
             ]);
         }
 

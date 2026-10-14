@@ -6,6 +6,7 @@ use App\Models\AccessLog;
 use App\Models\GovBrAccount;
 use App\Models\User;
 use App\Support\Audit\AuditService;
+use App\Support\PerfilCidadao;
 use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -195,7 +196,7 @@ class GovBrAuthService
             // E-mail já verificado pelo GOV.BR (RN-007) — dispensa reverificação local.
             $user->markEmailAsVerified();
 
-            $user->assignRole('cidadao');
+            $user->assignRole(PerfilCidadao::nome());
 
             GovBrAccount::create([
                 'user_id' => $user->id,

@@ -83,7 +83,7 @@ class PersonalDataMarkingTest extends TestCase
         $target = User::factory()->cidadao()->create();
 
         $this->actingAs($admin, 'gestao')
-            ->put("/gestao/usuarios/{$target->id}/papel", ['role' => 'analista'])
+            ->put("/gestao/usuarios/{$target->id}/papel", ['role' => 'Analista Terceirizado'])
             ->assertRedirect();
 
         $this->assertDatabaseHas('activity_log', [

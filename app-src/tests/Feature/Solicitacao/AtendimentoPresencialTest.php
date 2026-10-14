@@ -109,7 +109,7 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_middleware_resolve_atendimento_ativo_para_representacao(): void
     {
-        $attendant = User::factory()->gestor()->create();
+        $attendant = User::factory()->administrador()->create();
         $citizen = User::factory()->cidadao()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $attendant->id,
@@ -124,7 +124,7 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_middleware_limpa_estado_quando_expirado(): void
     {
-        $attendant = User::factory()->gestor()->create();
+        $attendant = User::factory()->administrador()->create();
         $attendance = AssistedAttendance::factory()->expired()->create([
             'attendant_user_id' => $attendant->id,
         ]);
@@ -139,8 +139,8 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_middleware_ignora_atendimento_de_outro_atendente(): void
     {
-        $attendant = User::factory()->gestor()->create();
-        $outro = User::factory()->gestor()->create();
+        $attendant = User::factory()->administrador()->create();
+        $outro = User::factory()->administrador()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $outro->id,
         ]);
@@ -153,12 +153,12 @@ class AtendimentoPresencialTest extends TestCase
     }
 
     /**
-     * Atendente autorizado: gestor (papel com a permissão atendimento-presencial
+     * Atendente autorizado: administrador (papel com a permissão atendimento-presencial
      * + acessar-gestao + termo LGPD aceito para navegar no console).
      */
     private function attendant(): User
     {
-        return User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        return User::factory()->administrador()->withAcceptedLgpdTerm()->create();
     }
 
     /**
@@ -317,10 +317,12 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_escopo_limitado_por_permissao(): void
     {
-        // O atendente (gestor) tem atendimento-presencial, mas NÃO
-        // manter-parametros: ações fora do escopo concedido (análise/decisão
-        // virão nas Fases 9/10) são barradas e auditadas (CA-02/RN-002).
-        $attendant = $this->attendant();
+        // O atendente tem atendimento-presencial, mas NÃO manter-parametros
+        // (nenhum perfil nativo reúne só a primeira, então ela é concedida
+        // direto a um analista): ações fora do escopo concedido são barradas
+        // e auditadas (CA-02/RN-002).
+        $attendant = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $attendant->givePermissionTo('atendimento-presencial');
 
         $this->actingAs($attendant, 'gestao')
             ->get('/gestao/parametros')

@@ -10,6 +10,7 @@ use App\Models\ViabilityRequest;
 use App\Notifications\ProcessoEscalonadoNotification;
 use App\Services\Analise\AnalysisSlaService;
 use App\Services\Analise\SlaStatus;
+use App\Services\Comunicacao\DestinatariosEscalonamento;
 use App\Services\Comunicacao\NotificationDispatcher;
 use App\Support\Settings;
 use DateTimeInterface;
@@ -22,8 +23,8 @@ use Illuminate\Console\Command;
  * prazo à parte (CA-02, RN-002):
  *
  * - SlaStatus::Amarelo (limiar) → alerta o ANALISTA responsável;
- * - SlaStatus::Vermelho (vencido) → escala ao(s) GESTOR(es) — usuários com a role
- *   parametrizável notificacoes.escalonamento.gestor_role (default 'gestor').
+ * - SlaStatus::Vermelho (vencido) → escala a quem tem a permissão
+ *   receber-escalonamento-sla.
  *
  * O que fazer por faixa vem de notificacoes.escalonamento.tratamento (default só
  * notificar). SÓ notifica — NUNCA decide/transiciona (RN-003); a fonte de prazo é
@@ -31,7 +32,7 @@ use Illuminate\Console\Command;
  * communications (RN-004). Agendado com withoutOverlapping/onOneServer.
  *
  * Pendência SEDUR: o destinatário "gestor DO SETOR" não existe no schema; o
- * default escala a TODOS os usuários da role gestor (roteamento ao setor depende
+ * default escala a TODOS os usuários com a permissão receber-escalonamento-sla (roteamento ao setor depende
  * da SEDUR — não inventado aqui).
  */
 class EscalonarSlaCommand extends Command
@@ -40,13 +41,12 @@ class EscalonarSlaCommand extends Command
 
     protected $description = 'HU-147: escala por SLA (amarelo→analista, vencido→gestor) sobre a fonte única analysis_due_at, de forma idempotente';
 
-    public function handle(NotificationDispatcher $dispatcher, AnalysisSlaService $sla): int
+    public function handle(NotificationDispatcher $dispatcher, AnalysisSlaService $sla, DestinatariosEscalonamento $destinatariosEscalonamento): int
     {
         $tratamento = (array) Settings::get(
             'notificacoes.escalonamento.tratamento',
             config('sile.notificacoes.escalonamento.tratamento', []),
         );
-        $gestorRole = (string) config('sile.notificacoes.escalonamento.gestor_role', 'gestor');
 
         $tratamentoAmarelo = (string) ($tratamento['amarelo'] ?? 'notificar_analista');
         $tratamentoVencido = (string) ($tratamento['vencido'] ?? 'notificar_gestor');
@@ -74,7 +74,7 @@ class EscalonarSlaCommand extends Command
                 continue;
             }
 
-            foreach ($this->destinatarios($tratamentoFaixa, $processo, $gestorRole) as $destinatario) {
+            foreach ($this->destinatarios($tratamentoFaixa, $processo, $destinatariosEscalonamento) as $destinatario) {
                 if ($this->jaEscalonado($processo->id, $destinatario->id, $processo->analysis_stage_started_at)) {
                     continue;
                 }
@@ -109,15 +109,11 @@ class EscalonarSlaCommand extends Command
      *
      * @return array<int, User>
      */
-    private function destinatarios(string $tratamento, ViabilityRequest $processo, string $gestorRole): array
+    private function destinatarios(string $tratamento, ViabilityRequest $processo, DestinatariosEscalonamento $escalonamento): array
     {
         return match ($tratamento) {
             'notificar_analista' => array_values(array_filter([$processo->assignedTo])),
-            'notificar_gestor' => User::query()
-                ->whereHas('roles', fn ($query) => $query->where('name', $gestorRole))
-                ->orderBy('id')
-                ->get()
-                ->all(),
+            'notificar_gestor' => $escalonamento->usuarios()->all(),
             default => [],
         };
     }

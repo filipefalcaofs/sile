@@ -35,7 +35,7 @@ class ManageRolesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/perfis/index')
-                ->has('roles', 21)
+                ->has('roles', 19)
                 ->has('roles.0', fn (Assert $item) => $item
                     ->hasAll(['id', 'name', 'permissions', 'users_count', 'structural']))
                 ->where(
@@ -46,8 +46,8 @@ class ManageRolesTest extends TestCase
                             && $role['users_count'] === 1
                     )
                 )
-                ->has('permissions', 36)
-                ->has('permissionCatalog', 36)
+                ->has('permissions', 38)
+                ->has('permissionCatalog', 38)
                 ->where(
                     'permissionCatalog',
                     fn ($catalog) => collect($catalog)->contains(
@@ -126,11 +126,11 @@ class ManageRolesTest extends TestCase
     public function test_ajusta_permissoes_de_papel_estrutural(): void
     {
         $admin = $this->admin();
-        $analista = Role::findByName('analista', 'web');
+        $analista = Role::findByName('Analista Terceirizado', 'web');
 
         $this->actingAs($admin, 'gestao')
             ->put("/gestao/perfis/{$analista->id}", [
-                'name' => 'analista',
+                'name' => 'Analista Terceirizado',
                 'permissions' => ['acessar-gestao', 'consultar-cnaes', 'consultar-acessos-de-qualquer-conta'],
             ])
             ->assertRedirect();
@@ -187,6 +187,43 @@ class ManageRolesTest extends TestCase
             ->assertSessionHasErrors('role');
 
         $this->assertDatabaseHas('roles', ['name' => 'administrador', 'guard_name' => 'web']);
+    }
+
+    public function test_perfil_protegido_nao_pode_ser_renomeado_nem_excluido(): void
+    {
+        $admin = $this->admin();
+        $protegido = Role::create(['name' => 'auditoria-externa', 'guard_name' => 'web', 'protegido' => true]);
+
+        $this->actingAs($admin, 'gestao')
+            ->put("/gestao/perfis/{$protegido->id}", ['name' => 'outro-nome'])
+            ->assertSessionHasErrors('name');
+
+        $this->actingAs($admin, 'gestao')
+            ->delete("/gestao/perfis/{$protegido->id}")
+            ->assertSessionHasErrors('role');
+
+        $this->assertDatabaseHas('roles', ['name' => 'auditoria-externa', 'protegido' => true]);
+    }
+
+    public function test_perfil_comum_pode_ser_renomeado(): void
+    {
+        $admin = $this->admin();
+        $comum = Role::create(['name' => 'perfil-comum', 'guard_name' => 'web']);
+
+        $this->actingAs($admin, 'gestao')
+            ->put("/gestao/perfis/{$comum->id}", ['name' => 'perfil-renomeado', 'permissions' => []])
+            ->assertRedirect();
+
+        $this->assertSame('perfil-renomeado', $comum->fresh()->name);
+    }
+
+    public function test_listagem_marca_protegido_no_campo_structural(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/perfis')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('roles', fn ($roles) => collect($roles)->firstWhere('name', 'administrador')['structural'] === true
+                    && collect($roles)->firstWhere('name', 'apoio')['structural'] === false));
     }
 
     public function test_exclusao_bloqueada_com_usuarios_vinculados(): void
@@ -278,5 +315,20 @@ class ManageRolesTest extends TestCase
             'result' => 'bloqueado',
             'causer_id' => $analista->id,
         ]);
+    }
+
+    public function test_perfil_apontado_pelo_parametro_do_cidadao_nao_pode_ser_excluido_nem_renomeado(): void
+    {
+        $admin = $this->admin();
+        $municipe = Role::create(['name' => 'municipe', 'guard_name' => 'web']);
+        config(['sile.portal.perfil_cidadao' => 'municipe']);
+
+        $this->actingAs($admin, 'gestao')
+            ->put("/gestao/perfis/{$municipe->id}", ['name' => 'outro'])
+            ->assertSessionHasErrors('name');
+
+        $this->actingAs($admin, 'gestao')
+            ->delete("/gestao/perfis/{$municipe->id}")
+            ->assertSessionHasErrors('role');
     }
 }
