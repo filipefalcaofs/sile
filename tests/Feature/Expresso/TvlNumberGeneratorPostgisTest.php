@@ -26,16 +26,16 @@ class TvlNumberGeneratorPostgisTest extends PostgisTestCase
 
     public function test_concorrencia_nao_duplica_sob_lock(): void
     {
-        $primeiro = $this->generator()->generate(2026);
-        $segundo = $this->generator()->generate(2026);
+        $primeiro = $this->generator()->generate();
+        $segundo = $this->generator()->generate();
 
-        $this->assertSame('TVL-2026-000001', $primeiro);
-        $this->assertSame('TVL-2026-000002', $segundo);
+        $this->assertSame('TVL-3000000', $primeiro);
+        $this->assertSame('TVL-3000001', $segundo);
         $this->assertNotSame($primeiro, $segundo);
 
         // A sequência avançou exatamente 2 — sem buraco, sem duplicidade.
-        $sequence = TvlSequence::query()->where('year', 2026)->sole();
-        $this->assertSame(2, (int) $sequence->last_number);
+        $sequence = TvlSequence::query()->where('year', TvlNumberGenerator::CONTADOR_UNICO)->sole();
+        $this->assertSame(3000001, (int) $sequence->last_number);
 
         // Prova que o engine é o Postgres real (não SQLite).
         $this->assertSame('pgsql', DB::connection()->getDriverName());
