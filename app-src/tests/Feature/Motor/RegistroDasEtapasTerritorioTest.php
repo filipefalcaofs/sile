@@ -135,4 +135,16 @@ class RegistroDasEtapasTerritorioTest extends TestCase
 
         $this->assertSame(SituacaoEtapa::Ok, $this->etapaVia($processo));
     }
+
+    public function test_comando_grava_a_via_no_inventario_de_camadas_e_cobre_processo_sem_etapa(): void
+    {
+        $this->classificacaoViaria(ClassificacaoViariaHit::IDENTIFICADO, 'VE');
+        $processo = $this->processoComPonto();
+        $processo->forceFill(['cod_log' => '958', 'camadas_incidentes' => ['zona' => null, 'camadas' => []]])->save();
+
+        $this->artisan('processos:recalcular-classe-viaria')->assertSuccessful();
+
+        $this->assertSame(SituacaoEtapa::Ok, $this->etapaVia($processo));
+        $this->assertSame('VE', $processo->fresh()->camadas_incidentes['via']);
+    }
 }

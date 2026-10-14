@@ -191,9 +191,11 @@ class FichaCadastroImobiliarioInertiaTest extends TestCase
         $processo = $this->processoComFicha([
             'property_registration' => '0010010010',
             'address_neighborhood' => 'ZCMe-1/03',
-            'simulation_snapshot' => ['zona' => 'ZCMe-1/03', 'via' => 'VE'],
         ]);
-        $processo->forceFill(['zona_codigo' => 'ZCMe-1/03'])->save();
+        $processo->forceFill([
+            'zona_codigo' => 'ZCMe-1/03',
+            'camadas_incidentes' => ['via' => 'VE', 'camadas' => []],
+        ])->save();
 
         $this->actingAs($this->analista(), 'gestao')
             ->get("/gestao/processos/{$processo->id}/ficha")
@@ -218,7 +220,6 @@ class FichaCadastroImobiliarioInertiaTest extends TestCase
         $processo = $this->processoComFicha([
             'property_registration' => '0010010010',
             'address_neighborhood' => 'ZCMe-1/03',
-            'simulation_snapshot' => ['zona' => 'ZCMe-1/03'],
         ]);
         $processo->forceFill(['zona_codigo' => 'ZCMe-1/03'])->save();
 

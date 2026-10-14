@@ -46,7 +46,7 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        $this->assertSame(19, Role::query()->count());
+        $this->assertSame(21, Role::query()->count());
         // 33 permissões (HU-013): as 17 base (sem consultar-risco/manter-risco,
         // consolidadas em consultar-cnaes/manter-cnaes) + as 5 da análise técnica
         // (analisar-processos, distribuir-processos, emitir-tvl,
@@ -62,7 +62,7 @@ class DatabaseSeederTest extends TestCase
         // catálogo administrável de camadas do GeoServer) + a da ficha de
         // vistoria (preencher-ficha-vistoria) + a da caixa de malha fina
         // (analisar-malha-fina — consulta e baixa, distinta de encaminhar) + a de reprocessar processos (reprocessar-processos — etapas do motor).
-        $this->assertSame(38, Permission::query()->count());
+        $this->assertSame(36, Permission::query()->count());
         $this->assertNotNull(LegalTerm::current('lgpd'));
         $this->assertSame(1331, Cnae::query()->count());
         // 100 parâmetros: 82 do catálogo base + 3 do Observatório de Saturação
@@ -88,8 +88,6 @@ class DatabaseSeederTest extends TestCase
         // + 1 da pergunta vinculada de intenção de sede no passo de
         // atividades do portal (SDD escritorio-virtual-telas-portal, Tarefa 3:
         // analise.escritorio_virtual.pergunta_vinculada)
-        // + 1 da flag de bypass de homologação do motor de risco (Fase 0
-        // parametrização: features.simulacao_protocolo — DEFAULT OFF).
         // + 1 dos atributos de nome da zona na feição (Fase 3 parametrização,
         // item 3.4: geo.zona.atributos_nome).
         // + 3 da Fase 5 (janela de duplicidade + pesos e cortes da auditoria
@@ -100,7 +98,7 @@ class DatabaseSeederTest extends TestCase
         // (features.geoserver_territorio — RT-02/03/04, 2026-09-23).
         // + 2 da autenticação AD do console (features.ad_login +
         // integrations.sedur_auth.base_url — 2026-09-24).
-        $this->assertSame(111, Parameter::query()->count());
+        $this->assertSame(109, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -337,13 +335,13 @@ class DatabaseSeederTest extends TestCase
         // a distribuição e a ficha navegáveis de ponta a ponta no dev.
         $analista = User::query()->where('email', 'analista@sile.dev')->first();
         $this->assertNotNull($analista, 'Esperava o analista dev (analista@sile.dev).');
-        $this->assertTrue($analista->hasRole('Analista Terceirizado'));
+        $this->assertTrue($analista->hasRole('analista'));
         $this->assertNotNull($analista->email_verified_at);
         $this->assertTrue($analista->sectors()->whereKey($setor->id)->exists());
 
         $gestor = User::query()->where('email', 'gestor@sile.dev')->first();
         $this->assertNotNull($gestor, 'Esperava o gestor dev (gestor@sile.dev).');
-        $this->assertTrue($gestor->hasRole('Coordenador'));
+        $this->assertTrue($gestor->hasRole('gestor'));
         $this->assertTrue($gestor->sectors()->whereKey($setor->id)->exists());
 
         // Apoio dev (tramitação): distribui da caixa do setor ao analista,
@@ -395,9 +393,9 @@ class DatabaseSeederTest extends TestCase
 
         $this->assertSame(1, User::query()->where('email', 'admin@sile.dev')->count());
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
-        $this->assertSame(19, Role::query()->count());
+        $this->assertSame(21, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(111, Parameter::query()->count());
+        $this->assertSame(109, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

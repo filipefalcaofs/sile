@@ -150,6 +150,8 @@ export default function Show({
 }) {
     const { auth } = usePage<SharedProps>().props;
     const podeAnalisar = auth.permissions.includes('analisar-processos');
+    const fichaExpresso = processo.fluxo === 'expresso';
+    const podeAbrirFicha = podeAnalisar || fichaExpresso;
     const podeConcluirAnalise = processo.status === 'em_analise' || processo.status === 'deferida';
 
     const [aba, setAba] = useState<Aba>('informacoes');
@@ -274,12 +276,12 @@ export default function Show({
 
                         <div className="mt-5 border-t border-gray-100 pt-5 dark:border-gray-800">
                             <div className="flex flex-wrap items-center gap-3">
-                                {podeAnalisar && (
+                                {podeAbrirFicha && (
                                     <Link
                                         href={`/gestao/processos/${processo.id}/ficha`}
                                         className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3 text-sm text-white shadow-theme-xs transition hover:bg-brand-600 focus:outline-hidden"
                                     >
-                                        Abrir ficha de análise
+                                        {fichaExpresso ? 'Abrir ficha' : 'Abrir ficha de análise'}
                                         <ArrowRightIcon className="size-4" />
                                     </Link>
                                 )}
@@ -290,9 +292,11 @@ export default function Show({
                                     Histórico de comunicações
                                 </Link>
                             </div>
-                            {podeAnalisar && (
+                            {podeAbrirFicha && (
                                 <p className="mt-2 text-theme-xs text-gray-400 dark:text-gray-500">
-                                    A análise, os precedentes e as decisões ficam na ficha. Esta tela é somente leitura.
+                                    {fichaExpresso
+                                        ? 'A ficha mostra o que o fluxo expresso fez e o resultado de cada CNAE. Esta tela é somente leitura.'
+                                        : 'A análise, os precedentes e as decisões ficam na ficha. Esta tela é somente leitura.'}
                                 </p>
                             )}
                         </div>

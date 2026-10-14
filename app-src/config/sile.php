@@ -55,11 +55,6 @@ return [
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,
         'fluxo_expresso' => true,
-        // Bypass de HOMOLOGAÇÃO do motor de risco (simulação REGIN): ligado,
-        // processo nascido do simulador com veredito pendente (zona oficial
-        // pendente SEDUR) emite TVL como permitido. DESLIGADO por default —
-        // NUNCA ligar em produção; remoção definitiva antes do go-live.
-        'simulacao_protocolo' => false,
         'notificacao_resultado_expresso' => true,
         'analise_tecnica' => true,
         // Toggles de canal da comunicação multicanal (EP11). E-mail e in-app
@@ -270,6 +265,7 @@ return [
         'vencimento' => ['antecedencia_dias' => 3],
         'escalonamento' => [
             'tratamento' => ['amarelo' => 'notificar_analista', 'vencido' => 'notificar_gestor'],
+            'gestor_role' => 'gestor',
         ],
         'pendencia' => [
             'assunto' => 'Convite na sua solicitação de viabilidade {protocolo}',
@@ -390,6 +386,9 @@ return [
                 // Consulta espacial por ponto: ~30 s medidos no servidor real.
                 // Sem retry interno; o job de decisão já tem tentativas (120 s).
                 'timeout_ponto' => 45,
+                // Segundos que uma segunda busca por ponto no mesmo processo
+                // espera a primeira terminar antes de seguir sem polígono.
+                'espera_trava_ponto' => 60,
             ],
         ],
         'arcgis_semap' => [
@@ -542,10 +541,5 @@ return [
     ],
     'parameters' => [
         'cache_ttl' => 300,
-    ],
-    // Catálogo exibido no simulador REGIN. A suíte aponta para o arquivo
-    // histórico; o arquivo padrão traz só o lote de sete inscrições.
-    'regin_simulacao' => [
-        'catalogo' => database_path('data/regras-20-08-26/protocolos-sedur.json'),
     ],
 ];

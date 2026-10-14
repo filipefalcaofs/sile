@@ -4,9 +4,11 @@ namespace App\Services\Motor;
 
 use App\Enums\EtapaMotor;
 use App\Enums\SituacaoEtapa;
+use App\Jobs\DecidirFluxoExpressoJob;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Geo\TerritorioProcessoService;
 use App\Services\Realty\LocalizacaoInscricao;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
@@ -24,6 +26,7 @@ class ReprocessarEtapasService
         private ProtocolarSolicitacaoService $protocolo,
         private FluxoExpressoService $expresso,
         private AuditService $audit,
+        private PoligonoEnderecamentoService $poligono,
     ) {}
 
     public function reprocessar(ViabilityRequest $request, ?User $actor = null): ReprocessoResultado
@@ -54,16 +57,29 @@ class ReprocessarEtapasService
             $paradaEm = EtapaMotor::LocalizacaoInscricao;
         }
 
+        $decisaoAgendada = false;
+
         if ($paradaEm === null) {
             $this->protocolo->completarTerritorio($request);
-            $this->expresso->reavaliar($request, $actor);
+
+            // Sem polígono e com ponto, a decisão espera a busca do lote pelo
+            // ponto (consulta lenta): vai para a fila em vez de decidir agora
+            // pelo ponto. Com polígono, segue síncrona como sempre.
+            if ($this->poligono->precisaConsultarPorPonto($request) && $this->expresso->podeReavaliar($request)) {
+                DecidirFluxoExpressoJob::dispatch($request->id, reavaliacao: true, atorId: $actor?->id);
+                $decisaoAgendada = true;
+            } else {
+                $this->expresso->reavaliar($request, $actor);
+            }
         }
 
         $request->refresh();
 
-        $mensagem = $paradaEm === null
-            ? 'Etapas reprocessadas e veredito reavaliado.'
-            : "Serviço de {$paradaEm->rotulo()} continua indisponível. Nova tentativa agendada.";
+        $mensagem = match (true) {
+            $paradaEm !== null => "Serviço de {$paradaEm->rotulo()} continua indisponível. Nova tentativa agendada.",
+            $decisaoAgendada => 'Etapas reprocessadas. O polígono do lote está sendo buscado pelo ponto; o veredito sai em seguida.',
+            default => 'Etapas reprocessadas e veredito reavaliado.',
+        };
 
         $this->audit->log(
             logName: 'motor',
@@ -74,6 +90,7 @@ class ReprocessarEtapasService
                 'ator_id' => $actor?->id,
                 'parada_em' => $paradaEm?->value,
                 'status_do_processo' => $request->status->value,
+                'decisao_agendada' => $decisaoAgendada,
             ],
             subject: $request,
             result: $paradaEm === null ? 'sucesso' : 'parcial',
