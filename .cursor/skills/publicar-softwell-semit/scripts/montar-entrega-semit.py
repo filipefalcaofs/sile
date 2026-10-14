@@ -54,17 +54,7 @@ REMOVE_FILES = [
     "scripts/reorganizar_fpa_codigo.py",
     "scripts/portainer-build-push.sh",
     "scripts/convert-cnae-xlsx.py",
-    "app/Http/Controllers/Gestao/ReginProtocoloSimulacaoController.php",
-    "app/Http/Requests/Gestao/SimularProtocoloReginRequest.php",
-    "app/Services/Regin/ReginProtocoloSimulacaoService.php",
-    "app/Services/Regin/ReginProtocoloCatalog.php",
-    "app/Models/ReginSimulacaoExecucao.php",
-    "app/Console/Commands/RiscoSimularProtocoloCommand.php",
     "app/Support/DemoMode.php",
-    "database/factories/ReginSimulacaoExecucaoFactory.php",
-    "database/migrations/2026_09_16_190000_create_regin_simulacao_execucoes_table.php",
-    "database/migrations/2026_09_17_140000_add_viability_request_id_to_regin_simulacao_execucoes_table.php",
-    "database/data/regras-20-08-26/protocolos-sedur.json",
     "database/seeders/DevDatabaseSeeder.php",
     "database/seeders/DemonstracaoClienteSeeder.php",
     "database/seeders/DevAdminSeeder.php",
@@ -77,9 +67,6 @@ REMOVE_FILES = [
     "database/seeders/AuditoriaDevSeeder.php",
     "database/seeders/RelatoriosDevSeeder.php",
     "database/seeders/AiConfigDevSeeder.php",
-    "resources/js/pages/gestao/risco/simulacao-regin.tsx",
-    "tests/Feature/Risco/ReginProtocoloSimulacaoTest.php",
-    "tests/Feature/Expresso/SimulacaoProtocoloFlagTest.php",
     "tests/Feature/Ai/AiConfigDevSeederTest.php",
     "tests/Feature/Seeders/DemonstracaoClienteSeederTest.php",
     "tests/Feature/Seeders/ExpressoSeedPostgisTest.php",
@@ -93,12 +80,9 @@ FORBIDDEN = [
     "Claude Code",
     "superpowers:",
     "cursor.com",
-    "ReginProtocoloSimulacao",
-    "simulacao-regin",
     "DemonstracaoClienteSeeder",
     "DevAdminSeeder",
     "ZonaFicticiaDevSeeder",
-    "features.simulacao_protocolo",
     "filipefalcaofs",
     "gitlab.softwell.com.br",
 ]
@@ -137,7 +121,7 @@ def remove_excluded(stage: Path) -> None:
         scripts.rmdir()
 
 
-def strip_regin_menu(stage: Path) -> None:
+def strip_cursor_nav_comment(stage: Path) -> None:
     nav = stage / "resources/js/navigation/gestao-nav.ts"
     if not nav.exists():
         return
@@ -146,15 +130,7 @@ def strip_regin_menu(stage: Path) -> None:
         " * Antes de incluir, mover ou criar grupo: ler `.cursor/rules/menu-navegacao.mdc`.\n *\n",
         "",
     )
-    item = (
-        "            {\n"
-        "                name: 'Simulação REGIN',\n"
-        "                href: '/gestao/risco/simulacao-regin',\n"
-        "                icon: 'plugin',\n"
-        "                permission: 'consultar-cnaes',\n"
-        "            },\n"
-    )
-    nav.write_text(text.replace(item, ""))
+    nav.write_text(text)
 
 
 def scan(app_src: Path) -> list[str]:
@@ -190,7 +166,7 @@ def main() -> int:
     export_commit(repo, commit, stage)
     install_okd_root(stage, destino)
     remove_excluded(stage)
-    strip_regin_menu(stage)
+    strip_cursor_nav_comment(stage)
 
     app_src = destino / "app-src"
     shutil.move(str(stage), str(app_src))

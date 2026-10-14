@@ -8,9 +8,9 @@ alwaysApply: false
 Antes de qualquer push desses destinos, seguir a skill `publicar-softwell-semit`.
 
 - Softwell (`softwell`) recebe o repositório de desenvolvimento, na branch atual, só com pedido explícito. Fast-forward. Nunca `--force` em `main`.
-- SEMIT (`sedur/viabiliza`) recebe só o código para instalar, executar e manter. Histórico próprio, separado do repositório de trabalho.
+- SEMIT (`sedur/viabiliza`) recebe o mesmo código da aplicação que a Softwell, inclusive o simulador REGIN. Histórico próprio, separado do repositório de trabalho.
 - Produção no SEMIT é `main`. Homologação é `homologa`. Não existe branch `prod`.
-- Não enviar ao SEMIT `.cursor/`, documentação interna, simulador REGIN, seeders de demonstração nem usuários fictícios.
+- Não enviar ao SEMIT `.cursor/`, documentação interna, seeders de demonstração nem usuários fictícios.
 - Toda publicação na Softwell ou na SEMIT, neste projeto e em qualquer outro, cria uma tag anotada SemVer `vX.Y.Z`, sequencial no remote de destino. PATCH para correção, MINOR para funcionalidade compatível, MAJOR para mudança incompatível. A mensagem da tag explica o que foi enviado. Empurrar só essa tag. Nunca `git push --tags`. Sem a tag, a publicação não está completa.
 - Softwell: após push + tag, executar redeploy e **não parar** até container healthy + HTTP 200 + versão esperada. Portainer **não** puxa a main sozinho — ver skill `publicar-softwell-semit` (MCP `StackGitRedeploy` ou fallback compose no host).
 - A credencial do SEMIT fica no remote local `semit` (`.git/config`). Usar `git remote get-url semit` no clone temporário. Não gravar token em arquivo versionado. Não fazer `git push semit` a partir da branch de desenvolvimento.

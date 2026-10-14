@@ -4,8 +4,8 @@ description: >
   Publica atualizações do Viabiliza no GitLab Softwell (repo de dev) e no GitLab
   SEMIT (entrega ao cliente). Usar quando o usuário pedir para subir, publicar,
   atualizar ou fazer push para softwell, semit, homologa, produção ou main da
-  prefeitura. Softwell recebe o repositório de desenvolvimento. SEMIT recebe só
-  o código de execução, com histórico próprio.
+  prefeitura. Softwell recebe o repositório de desenvolvimento. SEMIT recebe o
+  mesmo código da aplicação, inclusive o simulador REGIN, com histórico próprio.
 ---
 
 # Publicar no Softwell e no SEMIT
@@ -15,7 +15,7 @@ Dois destinos. Não misturar o conteúdo nem o histórico.
 | Destino | Remote / URL | O que entra |
 |---|---|---|
 | Softwell | `softwell` → `https://gitlab.softwell.com.br/techpulse/sile.git` | Repositório de desenvolvimento, branch atual |
-| SEMIT | `https://repositoriosemit.salvador.ba.gov.br/sedur/viabiliza.git` | Só o código para instalar, executar e manter |
+| SEMIT | `https://repositoriosemit.salvador.ba.gov.br/sedur/viabiliza.git` | O mesmo código da aplicação, inclusive o simulador REGIN |
 
 Push só com pedido explícito nesta conversa. Fast-forward. Nunca `--force` em `main` ou `homologa`.
 
@@ -29,6 +29,15 @@ A credencial do SEMIT fica no remote local `semit` deste repositório (`.git/con
 
 `origin` (GitHub) não entra, salvo pedido explícito.
 
+## Regra do SEMIT: nunca `git push semit`
+
+"Subir para o semit", "publicar no semit" ou "semit homologa/main" **nunca** significa `git push semit <branch>` a partir deste repositório. O histórico daqui não é ancestral do SEMIT, e o push cria lá branch e tags com o histórico de desenvolvimento.
+
+- No SEMIT só existem as branches `main` e `homologa`. Não criar nem enviar nenhuma outra (`feat/*`, `fix/*`, a branch de trabalho).
+- Tag nunca é enviada deste repositório para o `semit`. A tag do SEMIT é criada no clone temporário, no commit da árvore limpa (ver "Tag SemVer").
+- O remote `semit` serve só para autenticar o clone temporário (`git remote get-url semit`). Antes de qualquer `git push`, conferir o remote de destino: se for `semit`, o comando está errado.
+- Se algo errado chegou ao SEMIT (branch, tag, commit de desenvolvimento), parar, avisar o usuário e só apagar a branch e as tags erradas com o aval dele. `main` e `homologa` nunca são apagadas nem forçadas.
+
 ## Softwell
 
 ```bash
@@ -38,7 +47,7 @@ git push -u softwell HEAD
 
 A branch no Softwell é a branch atual. Se o usuário nomear outra, publicar essa. Se o remoto rejeitar por não ser fast-forward, parar e integrar. Não forçar.
 
-O Softwell leva o ambiente de desenvolvimento (`.cursor`, docs, testes, simulador). Isso não vai para o SEMIT.
+O código da aplicação é o mesmo nos dois destinos, inclusive o simulador REGIN. O que fica só no Softwell é o ambiente de desenvolvimento (`.cursor`, docs internas). Seeders de demonstração e usuários fictícios também não vão para o SEMIT.
 
 ### Redeploy no Portainer (obrigatório após o push)
 
@@ -104,6 +113,10 @@ Se o pedido não nomear a branch, o mesmo commit vai para `homologa` e para `mai
 
 O histórico do repositório de trabalho não é ancestral do SEMIT. Nunca fazer `git push` da branch de trabalho para o SEMIT.
 
+### Atalho para mudança pequena
+
+Quando o commit publicado altera poucos arquivos da aplicação (ex.: `git diff --stat <ultimo-commit-publicado> HEAD`) e o SEMIT já tem esses arquivos idênticos à versão anterior do desenvolvimento, não é preciso regenerar a árvore inteira. No clone temporário: copiar só os arquivos alterados para `app-src/`, atualizar `VERSION` (raiz e `app-src/`) para a tag, e seguir direto aos passos 8 e 9. Se o script listar referências proibidas em arquivos que o SEMIT já tem limpos, é esperado: o SEMIT guarda a versão corrigida. Mudança grande ou em arquivo que o SEMIT mantém diferente do desenvolvimento exige o fluxo completo abaixo.
+
 ### Montar a entrega
 
 1. Anotar o commit publicado no Softwell (`git rev-parse HEAD`).
@@ -126,9 +139,10 @@ python3 .cursor/skills/publicar-softwell-semit/scripts/montar-entrega-semit.py \
 
 - IDE e ferramentas de desenvolvimento: `.cursor/`, `.claude/`, `.codex/`, `.agents/`, `.ai/`, `.planning/`, `.github/`, `docs/`, `AGENTS.md`, `.mcp.json`, `boost.json`
 - Compose e scripts só de máquina local: `docker-compose.yml`, `scripts/portainer-build-push.sh`, scripts de ponto de função, `scripts/convert-cnae-xlsx.py`
-- Simulador REGIN: tela, rotas, controller, service, catálogo, model, factory, comando, migrations `regin_simulacao_execucoes`, `protocolos-sedur.json`, testes desse fluxo
-- Massa fictícia: `*DevSeeder`, `CompanySeeder`, `DevAdminSeeder`, `DemonstracaoClienteSeeder`, `DemoMode`, parâmetro `features.simulacao_protocolo`
+- Massa fictícia: `*DevSeeder`, `CompanySeeder`, `DevAdminSeeder`, `DemonstracaoClienteSeeder`, `DemoMode`
 - Comentário ou URL que aponte para `.cursor/`, GitHub pessoal ou o fluxo interno do GitLab Softwell
+
+O simulador REGIN vai inteiro: tela, rotas, controller, service, catálogo, model, factory, comando, migrations, `protocolos-sedur.json`, parâmetro `features.simulacao_protocolo` e os testes desse fluxo. Não reescrever menu, seeder nem serviço para tirá-lo da entrega.
 
 `DatabaseSeeder` no SEMIT chama só catálogo oficial (CNAE, risco, LOUOS, tratamento, TLL, zonas, vias, tipos de imóvel, parâmetros, papéis, feriados nacionais fixos, camadas, setor Análise Locacional, textos). Não cria usuário, empresa nem processo.
 
@@ -176,4 +190,6 @@ git push origin v0.2.0
 
 Conferir com `git ls-remote` se `main` e `homologa` apontam para o commit esperado. Apagar o clone em `/tmp`.
 
-Não fazer `git push semit` a partir da branch de desenvolvimento. O remote `semit` só autentica. A publicação continua sendo o commit da árvore limpa, no clone temporário.
+Não fazer `git push semit` a partir da branch de desenvolvimento, nem com tag, nem com `--tags`. O remote `semit` só autentica. A publicação continua sendo o commit da árvore limpa, no clone temporário, e o único destino de push é `origin` desse clone (`homologa` e/ou `main`).
+
+Ao terminar, rodar `git ls-remote --heads semit`: só podem aparecer `main` e `homologa`. Qualquer outra branch ou tag cujo commit não seja da árvore limpa do SEMIT é erro a corrigir com o aval do usuário.
