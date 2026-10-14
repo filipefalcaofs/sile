@@ -41,7 +41,7 @@ class DistribuicaoService
     {
         $ator ??= $analista;
 
-        $this->atribuir($request, $analista, $ator, 'distribuir', 'Processo distribuído a analista do setor', $this->distribuiEmQualquerSetor($ator), $setorEscolhido);
+        $this->atribuir($request, $analista, $ator, 'distribuir', "Processo distribuído a {$analista->name}", $this->distribuiEmQualquerSetor($ator), $setorEscolhido);
     }
 
     /**
@@ -105,7 +105,7 @@ class DistribuicaoService
             throw DistribuicaoException::jaAtribuido($request);
         }
 
-        $this->atribuir($request, $analista, $analista, 'assumir', 'Analista assumiu o processo da caixa do setor', false, null);
+        $this->atribuir($request, $analista, $analista, 'assumir', "{$analista->name} assumiu o processo da caixa do setor", false, null);
     }
 
     /**
@@ -134,13 +134,14 @@ class DistribuicaoService
                 'assigned_at' => now(),
             ])->save();
 
-            $this->audit->log('analise', 'redistribuir', "Processo redistribuído para outra analista (solicitação #{$request->id}).", [
+            $this->audit->log('analise', 'redistribuir', "Processo redistribuído para {$novaAnalista->name} (solicitação #{$request->id}).", [
                 'viability_request_id' => $request->id,
                 'protocol_number' => $request->protocol_number,
                 'sector_id' => $request->sector_id,
                 'setor_anterior_id' => $setorAnterior,
                 'analista_anterior_id' => $analistaAnterior,
                 'assigned_user_id' => $novaAnalista->id,
+                'analista_nome' => $novaAnalista->name,
                 'ator_id' => $ator->id,
             ], $request);
 
@@ -222,6 +223,7 @@ class DistribuicaoService
                 'sector_id' => $request->sector_id,
                 'setor_anterior_id' => $setorAnterior,
                 'assigned_user_id' => $analista->id,
+                'analista_nome' => $analista->name,
                 'ator_id' => $ator->id,
             ], $request);
 

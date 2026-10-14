@@ -471,4 +471,31 @@ class DistribuicaoServiceTest extends TestCase
         $this->assertSame($analista->id, $ok->fresh()->assigned_user_id);
         $this->assertNull($falho->fresh()->assigned_user_id);
     }
+
+    public function test_auditoria_da_atribuicao_registra_o_nome_da_analista(): void
+    {
+        $sector = Sector::factory()->create();
+        $analista = User::factory()->create(['name' => 'Lisa Sousa']);
+        $analista->sectors()->attach($sector);
+        $outra = User::factory()->create(['name' => 'Maria Pereira']);
+        $outra->sectors()->attach($sector);
+        $gestor = User::factory()->create();
+
+        $distribuida = $this->processoNaCaixa($sector);
+        $this->service()->distribuir($distribuida, $analista, $gestor);
+
+        $assumida = $this->processoNaCaixa($sector);
+        $this->service()->assumir($assumida, $analista);
+
+        $this->service()->redistribuir($distribuida->fresh(), $outra, $gestor);
+
+        $eventos = Activity::query()->whereIn('event', ['distribuir', 'assumir', 'redistribuir'])->orderBy('id')->get();
+
+        $this->assertCount(3, $eventos);
+        $this->assertStringContainsString('Lisa Sousa', $eventos[0]->description);
+        $this->assertSame('Lisa Sousa', $eventos[0]->properties['analista_nome']);
+        $this->assertStringContainsString('Lisa Sousa', $eventos[1]->description);
+        $this->assertStringContainsString('Maria Pereira', $eventos[2]->description);
+        $this->assertSame('Maria Pereira', $eventos[2]->properties['analista_nome']);
+    }
 }

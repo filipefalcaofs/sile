@@ -186,4 +186,27 @@ class TrilhaProcessoTest extends TestCase
             ->get('/gestao/relatorios/trilha')
             ->assertForbidden();
     }
+
+    public function test_trilha_mostra_a_analista_nas_distribuicoes_gravadas_sem_o_nome(): void
+    {
+        $analista = User::factory()->analista()->create(['name' => 'Lisa Sousa']);
+        $processo = ViabilityRequest::factory()->create(['protocol_number' => 'VIA-2026-000501']);
+
+        Activity::create([
+            'log_name' => 'analise',
+            'event' => 'distribuir',
+            'description' => "Processo distribuído a analista do setor (solicitação #{$processo->id}).",
+            'properties' => ['assigned_user_id' => $analista->id, 'ator_id' => $this->ator->id],
+            'subject_type' => ViabilityRequest::class,
+            'subject_id' => $processo->id,
+            'causer_type' => User::class,
+            'causer_id' => $this->ator->id,
+        ]);
+
+        $trilha = app(TrilhaProcessoService::class)->trilha('VIA-2026-000501');
+        $auditoria = collect($trilha['eventos'])->first(fn (array $e): bool => str_contains($e['descricao'], 'distribuído'));
+
+        $this->assertStringContainsString('Lisa Sousa', $auditoria['descricao']);
+        $this->assertSame('Ana Analista', $auditoria['usuario']);
+    }
 }
