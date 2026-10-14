@@ -45,6 +45,7 @@ class DistribuirProcessoRequest extends FormRequest
                 Rule::exists('viability_requests', 'id')->where('status', ViabilityRequestStatus::EmAnalise->value),
             ],
             'analista_id' => ['required', 'integer', Rule::exists('users', 'id')],
+            'sector_id' => ['nullable', 'integer', Rule::exists('sectors', 'id')],
         ];
     }
 
@@ -57,6 +58,7 @@ class DistribuirProcessoRequest extends FormRequest
             'request_ids' => 'processos',
             'request_ids.*' => 'processo',
             'analista_id' => 'analista',
+            'sector_id' => 'setor',
         ];
     }
 }

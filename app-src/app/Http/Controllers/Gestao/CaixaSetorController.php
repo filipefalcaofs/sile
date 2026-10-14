@@ -18,6 +18,7 @@ use App\Services\Analise\DistribuicaoService;
 use App\Services\Analise\ProcessoQueryService;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,9 +28,10 @@ use Inertia\Response;
 /**
  * Caixa do setor da análise técnica (HU-080/081): a fila da distribuição. O
  * analista vê e ASSUME os processos em_analise do(s) seu(s) setor(es)
- * (analisar-processos); o gestor e o apoio (tramitação) DISTRIBUEM — single ou
- * lote (RN-007) — a um analista do setor (distribuir-processos). A caixa NÃO
- * tira o processo do setor (RN-004): distribuir/assumir só fixam o responsável.
+ * (analisar-processos); o gestor DISTRIBUI — single ou lote (RN-007) — a um
+ * analista do setor (distribuir-processos), e a caixa NÃO tira o processo do
+ * setor (RN-004). O apoio (distribuir-qualquer-setor) vê a caixa de todos os
+ * setores e entrega a qualquer analista; o processo passa para o setor dele.
  * A delegação real é do DistribuicaoService (SLA recalculado + auditoria
  * síncrona por processo); 403 é auditado no ponto único (bootstrap/app.php).
  * Index server-driven espelhando o ResultadoExpressoController; a tela é 10-16.
@@ -62,6 +64,7 @@ class CaixaSetorController extends Controller
             : (int) Settings::get('ui.cnaes.per_page', 15);
 
         $sectorIds = $request->user()->sectors()->pluck('sectors.id');
+        $qualquerSetor = $this->distribuicao->distribuiEmQualquerSetor($request->user());
 
         // Visões da caixa (abas): "para_distribuir" (padrão — sem responsável)
         // e "distribuidos" (acompanhamento, com a analista atribuída).
@@ -69,8 +72,7 @@ class CaixaSetorController extends Controller
 
         $filtros = $this->filtrosDaCaixa($request);
 
-        $base = ViabilityRequest::query()
-            ->whereIn('sector_id', $sectorIds)
+        $base = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
             ->where('status', ViabilityRequestStatus::EmAnalise->value);
 
         $base = $this->processos->aplicarFiltros($base, $filtros);
@@ -119,6 +121,7 @@ class CaixaSetorController extends Controller
                 'analysis_status' => $processo->analysis_status?->value,
                 'analysis_stage' => $processo->analysis_stage?->value,
                 'analysis_stage_label' => $processo->analysis_stage?->label(),
+                'sector_id' => $processo->sector_id,
                 'sector' => $processo->sector?->name,
                 'assigned_user_id' => $processo->assigned_user_id,
                 'assigned_to' => $processo->assignedTo?->name,
@@ -137,36 +140,18 @@ class CaixaSetorController extends Controller
         $podeAssumir = $request->user()->can('analisar-processos');
 
         $analistas = $podeDistribuir
-            ? User::query()
-                ->permission('analisar-processos')
-                ->whereHas('sectors', fn ($query) => $query->whereIn('sectors.id', $sectorIds))
-                ->orderBy('name')
-                ->get(['id', 'name'])
-                ->map(fn (User $analista): array => [
-                    'id' => $analista->id,
-                    'name' => $analista->name,
-                ])
-                ->all()
+            ? $this->destinatarios('analisar-processos', $sectorIds, $qualquerSetor)
             : [];
 
         // Vistoriadores do(s) setor(es): o seletor da distribuição usa ESTA
         // lista quando a linha está no eixo de vistoria (a regra é enforced
         // pelo DistribuicaoService; aqui é a conveniência da tela).
         $vistoriadores = $podeDistribuir
-            ? User::query()
-                ->permission('preencher-ficha-vistoria')
-                ->whereHas('sectors', fn ($query) => $query->whereIn('sectors.id', $sectorIds))
-                ->orderBy('name')
-                ->get(['id', 'name'])
-                ->map(fn (User $vistoriador): array => [
-                    'id' => $vistoriador->id,
-                    'name' => $vistoriador->name,
-                ])
-                ->all()
+            ? $this->destinatarios('preencher-ficha-vistoria', $sectorIds, $qualquerSetor)
             : [];
 
         $this->audit->log('analise', 'consulta-caixa', 'Consulta da caixa do setor', [
-            'setores' => $sectorIds->all(),
+            'setores' => $qualquerSetor ? 'todos' : $sectorIds->all(),
             'filtros' => array_filter($filtros, fn ($v): bool => $v !== ''),
         ]);
 
@@ -181,6 +166,7 @@ class CaixaSetorController extends Controller
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'podeDistribuir' => $podeDistribuir,
             'podeAssumir' => $podeAssumir,
+            'distribuiEmQualquerSetor' => $qualquerSetor,
             'analistas' => $analistas,
             'vistoriadores' => $vistoriadores,
         ]);
@@ -197,6 +183,7 @@ class CaixaSetorController extends Controller
     public function central(Request $request): Response|RedirectResponse
     {
         $sectorIds = $request->user()->sectors()->pluck('sectors.id');
+        $qualquerSetor = $this->distribuicao->distribuiEmQualquerSetor($request->user());
 
         $ids = collect(explode(',', (string) $request->string('ids')))
             ->map(fn ($id): int => (int) trim($id))
@@ -204,9 +191,8 @@ class CaixaSetorController extends Controller
             ->unique()
             ->values();
 
-        $processos = ViabilityRequest::query()
+        $processos = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
             ->whereIn('id', $ids)
-            ->whereIn('sector_id', $sectorIds)
             ->where('status', ViabilityRequestStatus::EmAnalise->value)
             ->whereNull('assigned_user_id')
             ->with(['sector:id,name'])
@@ -215,6 +201,7 @@ class CaixaSetorController extends Controller
             ->get()
             ->map(fn (ViabilityRequest $processo): array => [
                 'id' => $processo->id,
+                'sector_id' => $processo->sector_id,
                 'bap' => $processo->external_reference,
                 'protocol_number' => $processo->protocol_number,
                 'imovel' => implode(' - ', array_filter([
@@ -232,14 +219,20 @@ class CaixaSetorController extends Controller
             ->unique()
             ->values();
 
-        if ($setoresDosProcessos->count() > 1) {
+        if (! $qualquerSetor && $setoresDosProcessos->count() > 1) {
             return redirect('/gestao/caixa-setor')->with('error', 'Selecione processos de um único setor por vez para distribuir.');
         }
 
-        $analistas = $this->carga->cargaDosSetores($setoresDosProcessos);
+        $analistas = $this->carga->cargaDosSetores($qualquerSetor ? null : $setoresDosProcessos);
         $totalEmAnalise = collect($analistas)->sum('total');
 
-        $setoresHistorico = $setoresDosProcessos->isNotEmpty() ? $setoresDosProcessos : $sectorIds;
+        $setoresDosAnalistas = collect($this->destinatarios('analisar-processos', $setoresDosProcessos, $qualquerSetor))
+            ->pluck('setores', 'id');
+        $analistas = array_map(fn (array $analista): array => $analista + [
+            'setores' => $setoresDosAnalistas[$analista['analista_id']] ?? [],
+        ], $analistas);
+
+        $setoresHistorico = $setoresDosProcessos->filter()->isNotEmpty() ? $setoresDosProcessos->filter() : $sectorIds;
 
         $historico = Activity::query()
             ->where('log_name', 'analise')
@@ -268,6 +261,7 @@ class CaixaSetorController extends Controller
             'totalSelecionados' => count($processos),
             'totalEmAnalise' => $totalEmAnalise,
             'historico' => $historico,
+            'distribuiEmQualquerSetor' => $qualquerSetor,
         ]);
     }
 
@@ -277,10 +271,9 @@ class CaixaSetorController extends Controller
      */
     public function distribuicaoInteligente(Request $request): Response|RedirectResponse
     {
-        $sectorIds = $request->user()->sectors()->pluck('sectors.id');
+        $qualquerSetor = $this->distribuicao->distribuiEmQualquerSetor($request->user());
 
-        $consulta = ViabilityRequest::query()
-            ->whereIn('sector_id', $sectorIds)
+        $consulta = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
             ->where('status', ViabilityRequestStatus::EmAnalise->value)
             ->whereNull('assigned_user_id');
 
@@ -302,15 +295,15 @@ class CaixaSetorController extends Controller
 
         $setores = $models->pluck('sector_id')->unique()->values();
 
-        if ($setores->count() > 1) {
+        if (! $qualquerSetor && $setores->count() > 1) {
             return redirect('/gestao/caixa-setor')->with('error', 'Selecione processos de um único setor por vez para distribuir.');
         }
 
-        if ($setores->isEmpty()) {
+        if ($models->isEmpty()) {
             return redirect('/gestao/caixa-setor')->with('error', 'Nenhum processo elegível para distribuir.');
         }
 
-        $carga = collect($this->carga->cargaDosSetores($setores))->keyBy('analista_id');
+        $carga = collect($this->carga->cargaDosSetores($qualquerSetor ? null : $setores))->keyBy('analista_id');
         $usuarios = User::query()
             ->with('sectors:id')
             ->whereIn('id', $carga->keys())
@@ -333,7 +326,7 @@ class CaixaSetorController extends Controller
             'protocol_number' => $processo->protocol_number,
         ])->all();
 
-        $sugestao = $this->inteligente->sugerir($processos, $analistas);
+        $sugestao = $this->inteligente->sugerir($processos, $analistas, $qualquerSetor);
 
         $this->audit->log('analise', 'consulta-distribuicao-inteligente', 'Consulta da sugestão de distribuição inteligente', [
             'setores' => $setores->all(),
@@ -359,14 +352,12 @@ class CaixaSetorController extends Controller
         /** @var User $analista */
         $analista = User::query()->findOrFail($request->integer('analista_id'));
 
-        $sectorIds = $request->user()->sectors()->pluck('sectors.id');
         $pedidos = collect($request->input('request_ids'))
             ->map(fn ($id): int => (int) $id)
             ->unique();
 
-        $processos = ViabilityRequest::query()
+        $processos = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
             ->whereIn('id', $pedidos)
-            ->whereIn('sector_id', $sectorIds)
             ->where('status', ViabilityRequestStatus::EmAnalise->value)
             ->whereNull('assigned_user_id')
             ->get();
@@ -375,7 +366,9 @@ class CaixaSetorController extends Controller
             return back()->with('error', 'Alguns processos não estão disponíveis para distribuição na sua caixa.');
         }
 
-        $resumo = $this->distribuicao->distribuirLote($processos, $analista, $request->user());
+        $setorEscolhido = $request->filled('sector_id') ? $request->integer('sector_id') : null;
+
+        $resumo = $this->distribuicao->distribuirLote($processos, $analista, $request->user(), $setorEscolhido);
 
         $response = back()->with('status', "{$resumo['ok']} processo(s) enviado(s) para a caixa de entrada de {$analista->name}.");
 
@@ -401,7 +394,7 @@ class CaixaSetorController extends Controller
      */
     public function distribuirLote(DistribuirEmLoteRequest $request): RedirectResponse
     {
-        $sectorIds = $request->user()->sectors()->pluck('sectors.id');
+        $qualquerSetor = $this->distribuicao->distribuiEmQualquerSetor($request->user());
         $alocacoes = $request->input('alocacoes');
 
         // Todos os ids pedidos, achatados; rejeita sobreposição entre grupos.
@@ -411,10 +404,9 @@ class CaixaSetorController extends Controller
         }
 
         try {
-            $resultado = DB::transaction(function () use ($request, $sectorIds, $alocacoes, $todosIds): array {
-                $processos = ViabilityRequest::query()
+            $resultado = DB::transaction(function () use ($request, $qualquerSetor, $alocacoes, $todosIds): array {
+                $processos = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
                     ->whereIn('id', $todosIds->unique())
-                    ->whereIn('sector_id', $sectorIds)
                     ->where('status', ViabilityRequestStatus::EmAnalise->value)
                     ->whereNull('assigned_user_id')
                     ->lockForUpdate()
@@ -425,7 +417,7 @@ class CaixaSetorController extends Controller
                     return ['error' => 'Alguns processos não estão disponíveis para distribuição na sua caixa.'];
                 }
 
-                if ($processos->pluck('sector_id')->unique()->count() > 1) {
+                if (! $qualquerSetor && $processos->pluck('sector_id')->unique()->count() > 1) {
                     return ['error' => 'Distribua processos de um único setor por vez.'];
                 }
 
@@ -441,7 +433,15 @@ class CaixaSetorController extends Controller
                         return ['error' => 'O destinatário selecionado não possui permissão para analisar processos.'];
                     }
 
-                    if (! $analista->sectors()->where('sectors.id', $sectorIdDoGrupo)->exists()) {
+                    if ($qualquerSetor) {
+                        try {
+                            foreach ($requests as $processo) {
+                                $this->distribuicao->setorDeDestino($processo, $analista, true);
+                            }
+                        } catch (DistribuicaoException $e) {
+                            return ['error' => $e->getMessage()];
+                        }
+                    } elseif (! $analista->sectors()->where('sectors.id', $sectorIdDoGrupo)->exists()) {
                         return ['error' => 'O destinatário selecionado não está vinculado ao setor dos processos.'];
                     }
 
@@ -482,7 +482,7 @@ class CaixaSetorController extends Controller
                         'ator_id' => $request->user()->id,
                         'ator_nome' => $request->user()->name,
                         'qtd' => $todosIds->unique()->count(),
-                        'sector_id' => (int) $processos->first()->sector_id,
+                        'sector_id' => $processos->first()->sector_id,
                         'proposta' => $request->input('proposta', []),
                         'confirmada' => collect($alocacoes)->map(fn (array $alocacao): array => [
                             'analista_id' => (int) $alocacao['analista_id'],
@@ -516,16 +516,15 @@ class CaixaSetorController extends Controller
         /** @var User $analista */
         $analista = User::query()->findOrFail($request->integer('analista_id'));
 
-        $sectorIds = $request->user()->sectors()->pluck('sectors.id');
-
-        $processo = ViabilityRequest::query()
+        $processo = $this->naCaixaDoUsuario(ViabilityRequest::query(), $request->user())
             ->whereIn('id', $request->input('request_ids'))
-            ->whereIn('sector_id', $sectorIds)
             ->where('status', ViabilityRequestStatus::EmAnalise->value)
             ->firstOrFail();
 
+        $setorEscolhido = $request->filled('sector_id') ? $request->integer('sector_id') : null;
+
         try {
-            $this->distribuicao->redistribuir($processo, $analista, $request->user());
+            $this->distribuicao->redistribuir($processo, $analista, $request->user(), $setorEscolhido);
         } catch (DistribuicaoException $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -546,6 +545,49 @@ class CaixaSetorController extends Controller
         }
 
         return back()->with('status', 'Processo assumido.');
+    }
+
+    /**
+     * Recorte da caixa (RN-004): os setores do usuário. Quem distribui em
+     * qualquer setor vê todos os processos, inclusive os que estão sem setor.
+     *
+     * @param  Builder<ViabilityRequest>  $query
+     * @return Builder<ViabilityRequest>
+     */
+    private function naCaixaDoUsuario(Builder $query, User $user): Builder
+    {
+        if ($this->distribuicao->distribuiEmQualquerSetor($user)) {
+            return $query;
+        }
+
+        return $query->whereIn('sector_id', $user->sectors()->pluck('sectors.id'));
+    }
+
+    /**
+     * Destinatários do seletor da distribuição, com os setores de cada um: o
+     * apoio escolhe o setor quando o analista está em mais de um.
+     *
+     * @param  iterable<int, int>  $sectorIds
+     * @return list<array{id: int, name: string, setores: list<array{id: int, name: string}>}>
+     */
+    private function destinatarios(string $permissao, iterable $sectorIds, bool $qualquerSetor): array
+    {
+        return User::query()
+            ->permission($permissao)
+            ->when(! $qualquerSetor, fn ($query) => $query->whereHas('sectors', fn ($setores) => $setores->whereIn('sectors.id', $sectorIds)))
+            ->with('sectors:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (User $usuario): array => [
+                'id' => $usuario->id,
+                'name' => $usuario->name,
+                'setores' => $usuario->sectors
+                    ->sortBy('name')
+                    ->map(fn ($setor): array => ['id' => $setor->id, 'name' => $setor->name])
+                    ->values()
+                    ->all(),
+            ])
+            ->all();
     }
 
     /**

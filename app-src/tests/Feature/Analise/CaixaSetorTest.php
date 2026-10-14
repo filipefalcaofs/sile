@@ -55,6 +55,17 @@ class CaixaSetorTest extends TestCase
         return $apoio;
     }
 
+    /**
+     * Distribui só nos próprios setores: sem distribuir-qualquer-setor.
+     */
+    private function gestorDoSetor(Sector $sector): User
+    {
+        $gestor = $this->gestor();
+        $gestor->sectors()->attach($sector);
+
+        return $gestor;
+    }
+
     private function processoNaCaixa(Sector $sector): ViabilityRequest
     {
         $request = ViabilityRequest::factory()->create();
@@ -433,12 +444,12 @@ class CaixaSetorTest extends TestCase
     {
         $setorA = Sector::factory()->create();
         $setorB = Sector::factory()->create();
-        $apoio = $this->apoioDoSetor($setorA);
+        $gestor = $this->gestorDoSetor($setorA);
         $analistaDoSetorB = $this->analistaDoSetor($setorB);
         $processoDoSetorA = $this->processoNaCaixa($setorA);
         $processoDoSetorB = $this->processoNaCaixa($setorB);
 
-        $this->actingAs($apoio, 'gestao')
+        $this->actingAs($gestor, 'gestao')
             ->post('/gestao/caixa-setor/distribuir', [
                 'request_ids' => [$processoDoSetorA->id, $processoDoSetorB->id],
                 'analista_id' => $analistaDoSetorB->id,
@@ -552,7 +563,7 @@ class CaixaSetorTest extends TestCase
     {
         $setorA = Sector::factory()->create();
         $setorB = Sector::factory()->create();
-        $apoio = $this->apoioDoSetor($setorA);
+        $gestor = $this->gestorDoSetor($setorA);
         $analistaDoSetorB = $this->analistaDoSetor($setorB);
         $novoAnalistaDoSetorB = $this->analistaDoSetor($setorB);
         $processo = $this->processoNaCaixa($setorB);
@@ -562,7 +573,7 @@ class CaixaSetorTest extends TestCase
             'analysis_status' => AnalysisStatus::EmAnalise,
         ])->save();
 
-        $this->actingAs($apoio, 'gestao')
+        $this->actingAs($gestor, 'gestao')
             ->post('/gestao/caixa-setor/redistribuir', [
                 'request_ids' => [$processo->id],
                 'analista_id' => $novoAnalistaDoSetorB->id,
@@ -744,12 +755,12 @@ class CaixaSetorTest extends TestCase
     {
         $setorA = Sector::factory()->create();
         $setorB = Sector::factory()->create();
-        $apoio = $this->apoioDoSetor($setorA);
-        $apoio->sectors()->attach($setorB);
+        $gestor = $this->gestorDoSetor($setorA);
+        $gestor->sectors()->attach($setorB);
         $processoDoSetorA = $this->processoNaCaixa($setorA);
         $processoDoSetorB = $this->processoNaCaixa($setorB);
 
-        $this->actingAs($apoio, 'gestao')
+        $this->actingAs($gestor, 'gestao')
             ->get("/gestao/caixa-setor/central?ids={$processoDoSetorA->id},{$processoDoSetorB->id}")
             ->assertRedirect('/gestao/caixa-setor')
             ->assertSessionHas('error');
@@ -759,12 +770,12 @@ class CaixaSetorTest extends TestCase
     {
         $setorA = Sector::factory()->create();
         $setorB = Sector::factory()->create();
-        $apoio = $this->apoioDoSetor($setorA);
+        $gestor = $this->gestorDoSetor($setorA);
 
         $doA = $this->processoNaCaixa($setorA);
         $doB = $this->processoNaCaixa($setorB);
 
-        $props = $this->actingAs($apoio, 'gestao')
+        $props = $this->actingAs($gestor, 'gestao')
             ->get("/gestao/caixa-setor/central?ids={$doA->id},{$doB->id}")
             ->assertOk()
             ->viewData('page')['props'];
@@ -828,13 +839,13 @@ class CaixaSetorTest extends TestCase
     {
         $setorDosProcessos = Sector::factory()->create();
         $outroSetor = Sector::factory()->create();
-        $apoio = $this->apoioDoSetor($setorDosProcessos);
+        $gestor = $this->gestorDoSetor($setorDosProcessos);
         $analistaValido = $this->analistaDoSetor($setorDosProcessos);
         $analistaDeOutroSetor = $this->analistaDoSetor($outroSetor);
         $processoDoGrupoValido = $this->processoNaCaixa($setorDosProcessos);
         $processoDoGrupoInvalido = $this->processoNaCaixa($setorDosProcessos);
 
-        $this->actingAs($apoio, 'gestao')
+        $this->actingAs($gestor, 'gestao')
             ->post('/gestao/caixa-setor/distribuir-lote', [
                 'alocacoes' => [
                     ['analista_id' => $analistaValido->id, 'request_ids' => [$processoDoGrupoValido->id]],
@@ -851,13 +862,13 @@ class CaixaSetorTest extends TestCase
     {
         $setorA = Sector::factory()->create();
         $setorB = Sector::factory()->create();
-        $apoio = $this->apoioDoSetor($setorA);
+        $gestor = $this->gestorDoSetor($setorA);
         $a = $this->analistaDoSetor($setorA);
 
         $doA = $this->processoNaCaixa($setorA);
         $doB = $this->processoNaCaixa($setorB); // fora da caixa do ator
 
-        $this->actingAs($apoio, 'gestao')
+        $this->actingAs($gestor, 'gestao')
             ->post('/gestao/caixa-setor/distribuir-lote', [
                 'alocacoes' => [
                     ['analista_id' => $a->id, 'request_ids' => [$doA->id, $doB->id]],

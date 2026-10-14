@@ -84,6 +84,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'manter-requisitos-documentais',
             'analisar-processos',
             'distribuir-processos',
+            'distribuir-qualquer-setor',
             'emitir-tvl',
             'encaminhar-malha-fina',
             'analisar-malha-fina',
@@ -119,8 +120,9 @@ class RolesAndPermissionsSeeder extends Seeder
             $this->perfil($nome)->givePermissionTo([...self::PERMISSOES_ANALISE, ...self::PERMISSOES_CHEFIA]);
         }
 
-        // Apoio (tramitação): distribui os processos da caixa do setor para um
-        // analista específico, sem analisar — a tramitação é dele, a análise não.
+        // Apoio (tramitação): distribui os processos da caixa para um analista
+        // específico, de qualquer setor, sem analisar — a tramitação é dele, a
+        // análise não.
         $this->perfil('apoio')->givePermissionTo([
             'acessar-gestao',
             'consultar-cnaes',
@@ -128,6 +130,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'consultar-louos',
             'consultar-solicitacoes',
             'distribuir-processos',
+            'distribuir-qualquer-setor',
         ]);
 
         $this->perfil('administrador', protegido: true)->givePermissionTo([
@@ -152,6 +155,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'manter-requisitos-documentais',
             'reprocessar-processos',
             'distribuir-processos',
+            'distribuir-qualquer-setor',
             'emitir-tvl',
             'encaminhar-malha-fina',
             'analisar-malha-fina',

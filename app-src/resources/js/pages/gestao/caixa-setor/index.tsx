@@ -16,6 +16,7 @@ import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import TableAction from '@/components/ui/table-action';
 import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
+import { escolhaDeSetor, type SetorDoAnalista } from './setor-destino';
 
 type Visao = 'para_distribuir' | 'distribuidos';
 
@@ -33,6 +34,7 @@ interface ProcessoItem {
     analysis_status: string | null;
     analysis_stage: string | null;
     analysis_stage_label: string | null;
+    sector_id: number | null;
     sector: string | null;
     assigned_user_id: number | null;
     assigned_to: string | null;
@@ -43,6 +45,7 @@ interface ProcessoItem {
 interface Analista {
     id: number;
     name: string;
+    setores: SetorDoAnalista[];
 }
 
 interface Paginado<T> {
@@ -70,6 +73,7 @@ interface CaixaSetorIndexProps {
     perPageOptions: number[];
     podeDistribuir: boolean;
     podeAssumir: boolean;
+    distribuiEmQualquerSetor: boolean;
     analistas: Analista[];
     vistoriadores: Analista[];
 }
@@ -162,6 +166,7 @@ export default function CaixaSetorIndex({
     perPageOptions,
     podeDistribuir,
     podeAssumir,
+    distribuiEmQualquerSetor,
     analistas,
     vistoriadores,
 }: CaixaSetorIndexProps) {
@@ -182,9 +187,10 @@ export default function CaixaSetorIndex({
     const [selecionados, setSelecionados] = useState<number[]>([]);
     const [modal, setModal] = useState<ModalTramitacao | null>(null);
 
-    const tramitacao = useForm<{ request_ids: number[]; analista_id: string }>({
+    const tramitacao = useForm<{ request_ids: number[]; analista_id: string; sector_id: string }>({
         request_ids: [],
         analista_id: '',
+        sector_id: '',
     });
 
     const selecaoAtiva = visao === 'para_distribuir' && podeDistribuir;
@@ -196,6 +202,14 @@ export default function CaixaSetorIndex({
     const modalEmVistoria =
         modal !== null && linhas.some((linha) => modal.ids.includes(linha.id) && emVistoria(linha));
     const opcoesDoModal = modalEmVistoria ? opcoesVistoriador : opcoesAnalista;
+    const destinatarioDoModal = (modalEmVistoria ? vistoriadores : analistas)?.find(
+        (pessoa) => String(pessoa.id) === tramitacao.data.analista_id,
+    );
+    const escolhaDoSetor = escolhaDeSetor(
+        distribuiEmQualquerSetor,
+        destinatarioDoModal?.setores ?? [],
+        linhas.filter((linha) => modal?.ids.includes(linha.id)).map((linha) => linha.sector_id),
+    );
 
     const { per_page: _perPage, ...filtrosDeCampo } = filtros;
 
@@ -235,7 +249,7 @@ export default function CaixaSetorIndex({
 
     function abrirModal(novo: ModalTramitacao) {
         tramitacao.clearErrors();
-        tramitacao.setData({ request_ids: novo.ids, analista_id: '' });
+        tramitacao.setData({ request_ids: novo.ids, analista_id: '', sector_id: '' });
         setModal(novo);
     }
 
@@ -402,7 +416,11 @@ export default function CaixaSetorIndex({
             <Card>
                 <CardHeader
                     title="Processos para distribuição"
-                    description="Processos em análise dos seus setores, priorizados por prazo. O apoio ou o gestor seleciona os processos e tramita para um analista do setor; o analista assume um processo. Assumir ou distribuir fixa o responsável — não retira o processo do setor."
+                    description={
+                        distribuiEmQualquerSetor
+                            ? 'Processos em análise de todos os setores, priorizados por prazo. Você tramita para qualquer analista, e o processo passa para o setor dele.'
+                            : 'Processos em análise dos seus setores, priorizados por prazo. O gestor seleciona os processos e tramita para um analista do setor; o analista assume um processo. Assumir ou distribuir fixa o responsável — não retira o processo do setor.'
+                    }
                 />
                 <CardContent>
                     <div className="space-y-5">
@@ -532,7 +550,9 @@ export default function CaixaSetorIndex({
                     {modal?.descricao} —{' '}
                     {modalEmVistoria
                         ? 'processo em vistoria: selecione o vistoriador responsável pela ficha.'
-                        : 'selecione a analista do setor responsável pela análise.'}
+                        : distribuiEmQualquerSetor
+                          ? 'selecione a analista responsável pela análise; o processo passa para o setor dela.'
+                          : 'selecione a analista do setor responsável pela análise.'}
                 </p>
 
                 <div className="mt-6">
@@ -542,7 +562,7 @@ export default function CaixaSetorIndex({
                     <Select
                         id="tramitar-analista"
                         value={tramitacao.data.analista_id}
-                        onChange={(value) => tramitacao.setData('analista_id', value)}
+                        onChange={(value) => tramitacao.setData({ ...tramitacao.data, analista_id: value, sector_id: '' })}
                         placeholder={
                             modalEmVistoria
                                 ? opcoesDoModal.length > 0
@@ -560,6 +580,22 @@ export default function CaixaSetorIndex({
                     )}
                 </div>
 
+                {escolhaDoSetor !== 'nenhuma' && destinatarioDoModal && (
+                    <div className="mt-4">
+                        <label htmlFor="tramitar-setor" className="mb-1.5 block text-theme-sm font-medium text-gray-700 dark:text-gray-300">
+                            Setor que recebe o processo
+                        </label>
+                        <Select
+                            id="tramitar-setor"
+                            value={tramitacao.data.sector_id}
+                            onChange={(value) => tramitacao.setData('sector_id', value)}
+                            placeholder={escolhaDoSetor === 'opcional' ? 'Manter o setor atual do processo' : 'Selecione o setor'}
+                            options={destinatarioDoModal.setores.map((setor) => ({ value: String(setor.id), label: setor.name }))}
+                        />
+                        {tramitacao.errors.sector_id && <FieldError>{tramitacao.errors.sector_id}</FieldError>}
+                    </div>
+                )}
+
                 <div className="mt-8 flex justify-end gap-3">
                     <Button variant="outline" onClick={() => setModal(null)} disabled={tramitacao.processing}>
                         Cancelar
@@ -568,7 +604,10 @@ export default function CaixaSetorIndex({
                         variant="primary"
                         onClick={confirmarTramitacao}
                         loading={tramitacao.processing}
-                        disabled={tramitacao.data.analista_id === ''}
+                        disabled={
+                            tramitacao.data.analista_id === '' ||
+                            (escolhaDoSetor === 'obrigatoria' && tramitacao.data.sector_id === '')
+                        }
                     >
                         Confirmar envio
                     </Button>

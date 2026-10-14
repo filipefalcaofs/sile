@@ -134,6 +134,12 @@ final class PermissionCatalog
                 'group' => 'Análise técnica',
             ],
             [
+                'name' => 'distribuir-qualquer-setor',
+                'label' => 'Distribuir em qualquer setor',
+                'description' => 'Vê a caixa de todos os setores e entrega o processo a qualquer analista; o processo passa para o setor do analista.',
+                'group' => 'Análise técnica',
+            ],
+            [
                 'name' => 'emitir-tvl',
                 'label' => 'Gerar PDF da viabilidade',
                 'description' => 'Gera o PDF interno da viabilidade locacional.',

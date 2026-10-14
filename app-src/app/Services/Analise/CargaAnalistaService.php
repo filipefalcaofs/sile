@@ -18,14 +18,19 @@ use Illuminate\Support\Facades\DB;
 class CargaAnalistaService
 {
     /**
-     * @param  iterable<int, int>  $sectorIds
+     * Sem setores (null), mede todos os analistas — a visão de quem distribui
+     * em qualquer setor.
+     *
+     * @param  iterable<int, int>|null  $sectorIds
      * @return list<array{analista_id: int, analista: string, total: int, por_grupo: array<string, int>}>
      */
-    public function cargaDosSetores(iterable $sectorIds): array
+    public function cargaDosSetores(?iterable $sectorIds): array
     {
-        $ids = collect($sectorIds)->map(fn ($id): int => (int) $id)->unique()->values();
+        $ids = $sectorIds === null
+            ? null
+            : collect($sectorIds)->map(fn ($id): int => (int) $id)->unique()->values();
 
-        if ($ids->isEmpty()) {
+        if ($ids !== null && $ids->isEmpty()) {
             return [];
         }
 
@@ -38,13 +43,13 @@ class CargaAnalistaService
         // Analistas vinculados ao(s) setor(es), com permissão de análise.
         $analistas = User::query()
             ->permission('analisar-processos')
-            ->whereHas('sectors', fn ($query) => $query->whereIn('sectors.id', $ids))
+            ->when($ids !== null, fn ($query) => $query->whereHas('sectors', fn ($setores) => $setores->whereIn('sectors.id', $ids)))
             ->orderBy('name')
             ->get(['id', 'name']);
 
         // Contagem ativa por analista e status (uma query), restrita aos setores.
         $contagens = ViabilityRequest::query()
-            ->whereIn('sector_id', $ids)
+            ->when($ids !== null, fn ($query) => $query->whereIn('sector_id', $ids))
             ->whereIn('status', [
                 ViabilityRequestStatus::EmAnalise->value,
                 ViabilityRequestStatus::EmPendencia->value,
