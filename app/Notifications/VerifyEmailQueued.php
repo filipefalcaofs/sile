@@ -3,9 +3,12 @@
 namespace App\Notifications;
 
 use App\Models\EmailLog;
+use App\Notifications\Messages\EmailViabiliza;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Lang;
 
 class VerifyEmailQueued extends VerifyEmail implements ShouldQueue
 {
@@ -29,6 +32,20 @@ class VerifyEmailQueued extends VerifyEmail implements ShouldQueue
     protected function verificationUrl($notifiable): string
     {
         return $this->verificationUrl ?? parent::verificationUrl($notifiable);
+    }
+
+    protected function buildMailMessage($url): MailMessage
+    {
+        $minutos = (int) config('auth.verification.expire', 60);
+
+        return (new EmailViabiliza)
+            ->subject(Lang::get('Verify Email Address'))
+            ->selo('Sua conta')
+            ->titulo('Confirme seu endereço de e-mail')
+            ->greeting('Olá!')
+            ->line('Para concluir seu cadastro no Viabiliza, confirme que este endereço de e-mail é seu.')
+            ->action('Confirmar e-mail', $url)
+            ->line("O link é válido por {$minutos} minutos. Se você não criou uma conta no Viabiliza, ignore esta mensagem.");
     }
 
     public function failed(\Throwable $exception): void

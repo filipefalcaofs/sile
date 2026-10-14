@@ -34,7 +34,7 @@ class EmailServerTestMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            htmlString: '<p>Teste de configuração de e-mail do Viabiliza. Se você recebeu esta mensagem, o servidor de e-mail está operacional.</p>',
+            markdown: 'emails.teste-configuracao',
         );
     }
 }

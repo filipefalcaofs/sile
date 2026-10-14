@@ -115,4 +115,21 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Viabiliza')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Markdown Mail Settings
+    |--------------------------------------------------------------------------
+    |
+    | Componentes e tema do Viabiliza (topo, rodapé, selo, quadro de dados).
+    | Ficam em resources/views/emails/mail porque o .gitignore ignora vendor/.
+    |
+    */
+
+    'markdown' => [
+        'theme' => 'default',
+        'paths' => [
+            resource_path('views/emails/mail'),
+        ],
+    ],
+
 ];

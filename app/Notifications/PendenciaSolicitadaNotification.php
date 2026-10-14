@@ -6,6 +6,7 @@ use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationType;
 use App\Models\EmailLog;
 use App\Notifications\Contracts\ProcessNotification;
+use App\Notifications\Messages\EmailViabiliza;
 use App\Services\Whatsapp\WhatsAppMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -114,13 +115,15 @@ class PendenciaSolicitadaNotification extends Notification implements ProcessNot
         // O corpo parametrizado pode abrir com a saudação; evita duplicar o greeting.
         $corpo = preg_replace('/^Olá!\s*/u', '', $corpo) ?? $corpo;
 
-        return (new MailMessage)
+        return (new EmailViabiliza)
             ->subject($assunto)
+            ->selo('Ação necessária')
+            ->titulo('Há um convite na sua solicitação')
             ->greeting('Olá!')
             ->line($corpo)
+            ->dados([['Solicitação', $this->protocolNumber]])
             ->action('Responder no portal', $url)
-            ->line('Acesse o portal Viabiliza, em "Minhas solicitações", para enviar a complementação.')
-            ->line('Este é um aviso automático — não responda a esta mensagem.');
+            ->line('Acesse o portal Viabiliza, em "Minhas solicitações", para enviar a complementação.');
     }
 
     /**
