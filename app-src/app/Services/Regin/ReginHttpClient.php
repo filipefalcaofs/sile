@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Http;
 
 /**
  * Cliente HTTP da API REGIN/JUCEB (api_integracao). Autentica em /acesso/auth
- * e usa o header JWT (não Authorization: Bearer) nas demais chamadas. Token e
+ * e usa Authorization: Bearer nas demais chamadas (o header JWT é barrado com
+ * 403 pela API de produção). Token e
  * senha nunca aparecem em exceção ou log. Sucesso do envio do parecer é o corpo
  * exato RECEBIDO_SUCESSO; qualquer outro resultado é indisponibilidade honesta.
  */
@@ -53,7 +54,7 @@ class ReginHttpClient
             $response = Http::timeout($this->timeout())
                 ->acceptJson()
                 ->asJson()
-                ->withHeaders(['JWT' => $token])
+                ->withToken($token)
                 ->post($this->settings->baseUrl().'/recebe', $resposta);
         } catch (ConnectionException) {
             throw new ReginUnavailableException(motivo: 'REGIN indisponível ao enviar o parecer.');
@@ -84,7 +85,7 @@ class ReginHttpClient
             $response = Http::timeout($this->timeout())
                 ->acceptJson()
                 ->asJson()
-                ->withHeaders(['JWT' => $token])
+                ->withToken($token)
                 ->post($this->settings->baseUrl().$caminho, $corpo);
         } catch (ConnectionException) {
             throw new ReginUnavailableException(motivo: "REGIN indisponível em {$caminho}.");

@@ -189,7 +189,7 @@ class ComunicarResultadoReginListenerTest extends TestCase
 
         event(new ResultadoEmitido($request, $decision));
 
-        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/recebe') && $r->hasHeader('JWT', 'jwt-1'));
+        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/recebe') && $r->hasHeader('Authorization', 'Bearer jwt-1'));
 
         $this->assertSame(1, Activity::query()
             ->where('log_name', 'integracoes')
