@@ -47,6 +47,43 @@ class IntegrationCallLogTest extends TestCase
         $this->assertStringContainsString('[redigido]', (string) $chamada->request_body);
     }
 
+    public function test_cabecalho_com_token_no_nome_e_mascarado_mostrando_so_o_inicio(): void
+    {
+        Http::fake([
+            'https://regin.exemplo.test/*' => Http::response('RECEBIDO_SUCESSO', 200),
+        ]);
+
+        Http::withHeaders(['jwt-token' => 'eyJhbGc.corpo-do-token.assinatura-secreta'])
+            ->post('https://regin.exemplo.test/api_integracao/recebe', ['protocolo' => 'PBA2600003']);
+
+        $chamada = IntegrationCall::query()->sole();
+        $headers = json_encode($chamada->request_headers, JSON_THROW_ON_ERROR);
+
+        $this->assertStringNotContainsString('assinatura-secreta', $headers);
+        $this->assertStringNotContainsString('corpo-do-token', $headers);
+        $this->assertStringContainsString('****', $headers);
+        $this->assertStringContainsString('eyJh', $headers);
+    }
+
+    public function test_token_no_corpo_json_e_mascarado_parcialmente_e_senha_e_redigida(): void
+    {
+        Http::fake([
+            'https://regin.exemplo.test/*' => Http::response('RECEBIDO_SUCESSO', 200),
+        ]);
+
+        Http::asJson()->post('https://regin.exemplo.test/api_integracao/recebe', [
+            'access_token' => 'abcd1234efgh5678',
+            'password' => 'senha-secreta',
+        ]);
+
+        $corpo = (string) IntegrationCall::query()->sole()->request_body;
+
+        $this->assertStringContainsString('abcd****', $corpo);
+        $this->assertStringNotContainsString('1234efgh5678', $corpo);
+        $this->assertStringContainsString('[redigido]', $corpo);
+        $this->assertStringNotContainsString('senha-secreta', $corpo);
+    }
+
     public function test_resposta_em_iso_8859_1_e_convertida_para_utf8_e_gravada(): void
     {
         $corpo = mb_convert_encoding('{"OBS":"Da Rua dos Rodoviários à Avenida Edgard Santos"}', 'ISO-8859-1', 'UTF-8');

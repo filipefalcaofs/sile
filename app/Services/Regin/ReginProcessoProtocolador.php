@@ -17,6 +17,7 @@ use App\Models\ViabilityServiceType;
 use App\Rules\ValidCpf;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\PoligonoEnderecamentoService;
+use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Tratamento\CategoriaEmpresa;
 use App\Services\Tratamento\RespostaPlanilha;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Throwable;
 
 /**
  * Protocola o processo a partir do RUC do envelope REGIN — sem o catálogo do
@@ -33,12 +35,16 @@ use RuntimeException;
  */
 class ReginProcessoProtocolador
 {
+    /** TIPO da instituição Prefeitura na tabela do Guia v2.12 (3.27); as demais perguntas do envelope não são da SEDUR. */
+    private const INSTITUICAO_PREFEITURA = '2';
+
     public function __construct(
         private ProtocolarSolicitacaoService $protocolar,
         private FluxoExpressoService $expresso,
         private ReginTipoImovelApplier $tipoImovel,
         private PoligonoEnderecamentoService $poligonoLote,
         private TratamentoRamoResolver $tratamento,
+        private PropertyRegistryLookup $cadastro,
     ) {}
 
     public function protocolar(ReginRecebimento $recebimento): ?ViabilityRequest
@@ -56,7 +62,8 @@ class ReginProcessoProtocolador
         $rowset = $this->completarPerguntasPeloXml($rowset, $recebimento);
 
         $cnaes = $this->cnaes($rowset);
-        $area = $this->area($rowset);
+        $inscricao = $this->inscricao($rowset);
+        $area = $this->area($rowset) ?? $this->areaPelaInscricao($inscricao);
         $endereco = $this->endereco($rowset);
 
         if ($cnaes === [] || $area === null || $endereco === null) {
@@ -77,7 +84,7 @@ class ReginProcessoProtocolador
             'address_complement' => $endereco['complement'],
             'address_neighborhood' => $endereco['neighborhood'],
             'address_zip' => $endereco['zip'],
-            'property_registration' => $this->inscricao($rowset),
+            'property_registration' => $inscricao,
             'simulation_snapshot' => $this->snapshotDoRowset($rowset, $cnaes),
             'contingency_reason' => ReginProtocoloSimulacaoService::CONTINGENCIA_RECEBE,
             'external_reference' => $recebimento->protocolo,
@@ -484,6 +491,10 @@ class ReginProcessoProtocolador
     private function respostasDoRowsetPorCnae(array $perguntas, array $cnaes): array
     {
         $mapa = [];
+        $perguntas = array_values(array_filter(
+            $perguntas,
+            fn (array $item): bool => $item['tipo'] === null || $item['tipo'] === self::INSTITUICAO_PREFEITURA,
+        ));
 
         foreach ($cnaes as $cnae) {
             $exibidas = $this->tratamento->perguntasExibidas($cnae->code);
@@ -502,7 +513,9 @@ class ReginProcessoProtocolador
                         continue;
                     }
 
-                    $resposta = $this->respostaRegin($item['resposta'], (string) $exibida['tipo'], $exibida['opcoes']);
+                    $resposta = self::normalizarTexto($item['resposta']) === 'seguir'
+                        ? $this->subdivisaoMarcada($perguntas, $exibida['opcoes'])
+                        : $this->respostaRegin($item['resposta'], (string) $exibida['tipo'], $exibida['opcoes']);
 
                     if ($resposta !== null) {
                         $mapa[$cnae->code][$numero] = $resposta->paraArmazenar();
@@ -512,6 +525,44 @@ class ReginProcessoProtocolador
         }
 
         return $mapa;
+    }
+
+    /**
+     * "Seguir" não é resposta: o REGIN abre a lista de subdivisões do CNAE e
+     * entrega cada opção como uma pergunta própria, marcada Sim ou Não. A
+     * escolha do requerente são as opções marcadas Sim.
+     *
+     * @param  list<array{codigo: ?string, tipo: ?string, cnpj: ?string, pergunta: string, resposta: string}>  $perguntas
+     * @param  list<array{rotulo: string, texto: string}>  $opcoes
+     */
+    private function subdivisaoMarcada(array $perguntas, array $opcoes): ?RespostaPlanilha
+    {
+        $marcadas = [];
+
+        foreach ($perguntas as $item) {
+            if (self::normalizarTexto($item['resposta']) !== 'sim') {
+                continue;
+            }
+
+            $alvo = self::normalizarTexto($item['pergunta']);
+
+            foreach ($opcoes as $opcao) {
+                $texto = self::normalizarTexto($opcao['texto']);
+
+                if ($texto === $alvo || str_contains($texto, $alvo) || str_contains($alvo, $texto)) {
+                    $rotulo = trim($opcao['rotulo']);
+                    $marcadas[] = ctype_digit($rotulo) ? (int) $rotulo : ord(mb_strtolower($rotulo)) - ord('a') + 1;
+
+                    break;
+                }
+            }
+        }
+
+        if ($marcadas === []) {
+            return null;
+        }
+
+        return RespostaPlanilha::de(count($marcadas) === 1 ? $marcadas[0] : $marcadas);
     }
 
     /**
@@ -676,6 +727,44 @@ class ReginProcessoProtocolador
         $area = (float) $valor;
 
         return $area > 0 ? $area : null;
+    }
+
+    /**
+     * A JUCEB carrega o RES_AREA da inscrição imobiliária; quando vem zerado,
+     * buscamos a mesma área na nossa consulta ao Cadastro Imobiliário (SEFAZ
+     * via SEDUR). Base indisponível ou sem área: segue sem processo, nunca com
+     * área simulada.
+     */
+    private function areaPelaInscricao(?string $inscricao): ?float
+    {
+        if ($inscricao === null) {
+            return null;
+        }
+
+        try {
+            $resultado = $this->cadastro->resolve($inscricao);
+        } catch (Throwable) {
+            return null;
+        }
+
+        $area = $this->paraArea($resultado->cadastro?->area_construida_m2);
+
+        return $area !== null && $area > 0 ? $area : null;
+    }
+
+    private function paraArea(?string $valor): ?float
+    {
+        if ($valor === null) {
+            return null;
+        }
+
+        $texto = trim($valor);
+
+        if (str_contains($texto, ',')) {
+            $texto = str_replace(',', '.', str_replace('.', '', $texto));
+        }
+
+        return is_numeric($texto) ? (float) $texto : null;
     }
 
     /**

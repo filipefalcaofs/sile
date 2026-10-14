@@ -54,6 +54,23 @@ class EmailServerSeederTest extends TestCase
         );
     }
 
+    public function test_nao_quebra_quando_a_senha_gravada_nao_abre_com_a_chave_atual(): void
+    {
+        $this->seed(EmailServerSeeder::class);
+
+        $id = EmailServer::query()->where('host', EmailServerSeeder::HOST)->value('id');
+        DB::table('email_servers')->where('id', $id)->update([
+            'password' => 'texto-cifrado-com-outra-chave',
+        ]);
+
+        $this->seed(EmailServerSeeder::class);
+
+        $this->assertSame(
+            'texto-cifrado-com-outra-chave',
+            DB::table('email_servers')->where('id', $id)->value('password'),
+        );
+    }
+
     public function test_passa_a_ser_o_unico_servidor_padrao(): void
     {
         $anterior = EmailServer::factory()->default()->create(['host' => 'smtp.outro.test']);

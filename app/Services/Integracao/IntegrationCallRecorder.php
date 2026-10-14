@@ -17,26 +17,33 @@ use Throwable;
 class IntegrationCallRecorder
 {
     /**
+     * Segredos que nunca aparecem, nem em parte: redigidos por completo.
+     *
      * @var list<string>
      */
-    private const SENSIVEIS = [
+    private const TERMOS_TOTAIS = [
         'password',
         'senha',
         'passwd',
+        'secret',
+    ];
+
+    /**
+     * Credenciais de transporte (token, JWT, chave de API, cookie): mascaradas
+     * mostrando só o começo, o bastante para auditar qual credencial foi usada
+     * sem expor o valor. A detecção é por conteúdo do nome, não por igualdade:
+     * cabeçalhos como "jwt-token" ou "x-auth-token" também entram.
+     *
+     * @var list<string>
+     */
+    private const TERMOS_PARCIAIS = [
         'token',
         'jwt',
-        'access_token',
-        'refresh_token',
-        'client_secret',
+        'auth',
         'api_key',
         'apikey',
-        'secret',
-        'authorization',
+        'api-key',
         'cookie',
-        'set-cookie',
-        'x-api-key',
-        'x-auth-token',
-        'proxy-authorization',
     ];
 
     public function saidaRespondida(ClientRequest $request, ClientResponse $response): void
@@ -185,17 +192,20 @@ class IntegrationCallRecorder
         foreach ($cabecalhos as $nome => $valores) {
             $chave = (string) $nome;
             $lista = is_array($valores) ? $valores : [$valores];
+            $nivel = $this->nivelDeSigilo($chave);
 
-            if ($this->chaveSensivel($chave)) {
+            if ($nivel === 'total') {
                 $limpos[$chave] = '[redigido]';
 
                 continue;
             }
 
-            $limpos[$chave] = implode(', ', array_map(
+            $texto = implode(', ', array_map(
                 fn (mixed $valor): string => is_scalar($valor) ? (string) $valor : '[omitido]',
                 $lista,
             ));
+
+            $limpos[$chave] = $nivel === 'parcial' ? $this->mascarar($texto) : $texto;
         }
 
         return $limpos;
@@ -305,8 +315,16 @@ class IntegrationCallRecorder
         $saida = [];
 
         foreach ($valor as $chave => $item) {
-            if (is_string($chave) && $this->chaveSensivel($chave)) {
+            $nivel = is_string($chave) ? $this->nivelDeSigilo($chave) : null;
+
+            if ($nivel === 'total') {
                 $saida[$chave] = '[redigido]';
+
+                continue;
+            }
+
+            if ($nivel === 'parcial' && is_scalar($item)) {
+                $saida[$chave] = $this->mascarar((string) $item);
 
                 continue;
             }
@@ -317,9 +335,41 @@ class IntegrationCallRecorder
         return $saida;
     }
 
-    private function chaveSensivel(string $chave): bool
+    /**
+     * @return 'total'|'parcial'|null
+     */
+    private function nivelDeSigilo(string $chave): ?string
     {
-        return in_array(strtolower($chave), self::SENSIVEIS, true);
+        $alvo = strtolower($chave);
+
+        foreach (self::TERMOS_TOTAIS as $termo) {
+            if (str_contains($alvo, $termo)) {
+                return 'total';
+            }
+        }
+
+        foreach (self::TERMOS_PARCIAIS as $termo) {
+            if (str_contains($alvo, $termo)) {
+                return 'parcial';
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Mantém só os primeiros caracteres e troca o resto por ****. Nunca expõe o
+     * fim do valor (num JWT, a assinatura). Valor curto some por inteiro.
+     */
+    private function mascarar(string $valor): string
+    {
+        $valor = trim($valor);
+
+        if (strlen($valor) <= 8) {
+            return '****';
+        }
+
+        return substr($valor, 0, 4).'****';
     }
 
     private function urlSegura(string $url): string

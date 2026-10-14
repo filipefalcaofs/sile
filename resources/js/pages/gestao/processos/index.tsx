@@ -2,7 +2,6 @@ import FieldError from '@/components/form/field-error';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import type { FormEvent, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { rotuloSemSla, type ProcessoItem } from '@/components/analise/processo-ui';
 import PageHeader from '@/components/app/page-header';
 import Checkbox from '@/components/form/checkbox';
@@ -273,7 +272,6 @@ export default function ConsultaProcessos({
     });
     const [perPage, setPerPage] = useState(filtros.per_page);
     const [ordem, setOrdem] = useState(filtros.ordem || 'recentes');
-    const [filtrosAbertos, setFiltrosAbertos] = useState(false);
     const [selecionados, setSelecionados] = useState<number[]>([]);
     const [motivo, setMotivo] = useState('');
     const [erroMotivo, setErroMotivo] = useState<string | null>(null);
@@ -327,21 +325,18 @@ export default function ConsultaProcessos({
 
     function aplicar(evento: FormEvent) {
         evento.preventDefault();
-        setFiltrosAbertos(false);
         visitar(form, perPage);
     }
 
     function limpar() {
         const vazio = { ...filtrosVazios(), busca: form.busca };
         setForm(vazio);
-        setFiltrosAbertos(false);
         visitar(vazio, perPage);
     }
 
     function limparTudo() {
         const vazio = filtrosVazios();
         setForm(vazio);
-        setFiltrosAbertos(false);
         visitar(vazio, perPage);
     }
 
@@ -469,14 +464,6 @@ export default function ConsultaProcessos({
                             aria-label="Buscar processos"
                         />
                     </div>
-                    <Button type="button" variant="outline" onClick={() => setFiltrosAbertos(true)}>
-                        Filtros avançados
-                        {chips.length > 0 && (
-                            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-xs font-semibold text-white">
-                                {chips.length}
-                            </span>
-                        )}
-                    </Button>
                     <a
                         href={erroPeriodo ? undefined : csvHref}
                         aria-disabled={erroPeriodo ? true : undefined}
@@ -486,6 +473,54 @@ export default function ConsultaProcessos({
                         Exportar CSV
                     </a>
                 </div>
+
+                <form
+                    onSubmit={aplicar}
+                    className="space-y-4 border-t border-gray-100 bg-gray-50/60 px-5 py-4 dark:border-gray-800 dark:bg-white/[0.02]"
+                >
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <CampoTexto id="filtro-protocolo" label="Nº do processo" value={form.protocolo} onChange={(valor) => definir('protocolo', valor)} />
+                        <CampoTexto id="filtro-bap" label="BAP" value={form.bap} onChange={(valor) => definir('bap', valor)} />
+                        <CampoTexto id="filtro-produto-tvl" label="Nº da viabilidade" value={form.produto_tvl} onChange={(valor) => definir('produto_tvl', valor)} />
+                        <CampoTexto id="filtro-nome" label="Empresa / requerente" value={form.nome} onChange={(valor) => definir('nome', valor)} />
+                        <CampoMascara id="filtro-cnpj" label="CNPJ" mask="cnpj" value={form.cnpj} onChange={(valor) => definir('cnpj', valor)} />
+                        <CampoMascara id="filtro-inscricao" label="Inscrição imobiliária" mask="inscricao" value={form.inscricao} onChange={(valor) => definir('inscricao', valor)} />
+                        <CampoTexto id="filtro-logradouro" label="Logradouro" value={form.logradouro} onChange={(valor) => definir('logradouro', valor)} />
+                        <CampoTexto id="filtro-bairro" label="Bairro" value={form.bairro} onChange={(valor) => definir('bairro', valor)} />
+                        <CampoMascara id="filtro-cep" label="CEP" mask="cep" value={form.cep} onChange={(valor) => definir('cep', valor)} />
+                        <div>
+                            <Label htmlFor="filtro-grupo">Grupo de status</Label>
+                            <Select id="filtro-grupo" value={form.grupo} onChange={(valor) => definir('grupo', valor)} placeholder="Todos" options={GRUPO_OPTIONS} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-status">Status</Label>
+                            <Select id="filtro-status" value={form.status} onChange={(valor) => definir('status', valor)} placeholder="Todos" options={statusOptions} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-analysis-status">Situação da análise</Label>
+                            <Select id="filtro-analysis-status" value={form.analysis_status} onChange={(valor) => definir('analysis_status', valor)} placeholder="Todas" options={analysisStatusOptions} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-fluxo">Fluxo</Label>
+                            <Select id="filtro-fluxo" value={form.fluxo} onChange={(valor) => definir('fluxo', valor)} placeholder="Todos" options={FLUXO_OPTIONS} />
+                        </div>
+                        <div>
+                            <Label htmlFor="filtro-categoria">Categoria</Label>
+                            <Select id="filtro-categoria" value={form.categoria} onChange={(valor) => definir('categoria', valor)} placeholder="Todas" options={categoriaOptions} />
+                        </div>
+                        <CampoTexto id="filtro-servico" label="Serviço (ID)" type="number" value={form.servico} onChange={(valor) => definir('servico', valor)} />
+                        <CampoTexto id="filtro-setor" label="Setor (ID)" type="number" value={form.setor} onChange={(valor) => definir('setor', valor)} />
+                        <CampoTexto id="filtro-analista" label="Analista (ID)" type="number" value={form.analista} onChange={(valor) => definir('analista', valor)} />
+                        <CampoData id="filtro-data-de" label="Protocolado de" value={form.data_de} onChange={(valor) => definir('data_de', valor)} />
+                        <CampoData id="filtro-data-ate" label="Protocolado até" value={form.data_ate} onChange={(valor) => definir('data_ate', valor)} />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Button type="submit">Pesquisar</Button>
+                        <Button type="button" variant="outline" onClick={limpar}>
+                            Limpar
+                        </Button>
+                    </div>
+                </form>
 
                 <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 px-5 py-3 dark:border-gray-800">
                     {ABAS.map((aba) => {
@@ -658,19 +693,6 @@ export default function ConsultaProcessos({
                     )}
                 </div>
             </section>
-
-            {filtrosAbertos && (
-                <PainelFiltros
-                    form={form}
-                    definir={definir}
-                    onClose={() => setFiltrosAbertos(false)}
-                    onSubmit={aplicar}
-                    onLimpar={limpar}
-                    statusOptions={statusOptions}
-                    categoriaOptions={categoriaOptions}
-                    analysisStatusOptions={analysisStatusOptions}
-                />
-            )}
         </>
     );
 }
@@ -764,134 +786,6 @@ function colunasProcessos(opcoes: {
     );
 
     return colunas;
-}
-
-function PainelFiltros({
-    form,
-    definir,
-    onClose,
-    onSubmit,
-    onLimpar,
-    statusOptions,
-    categoriaOptions,
-    analysisStatusOptions,
-}: {
-    form: FiltrosTexto;
-    definir: (chave: keyof FiltrosTexto, valor: string) => void;
-    onClose: () => void;
-    onSubmit: (evento: FormEvent) => void;
-    onLimpar: () => void;
-    statusOptions: SelectOption[];
-    categoriaOptions: SelectOption[];
-    analysisStatusOptions: SelectOption[];
-}) {
-    useEffect(() => {
-        function aoTeclar(evento: KeyboardEvent) {
-            if (evento.key === 'Escape') {
-                onClose();
-            }
-        }
-
-        document.addEventListener('keydown', aoTeclar);
-
-        return () => document.removeEventListener('keydown', aoTeclar);
-    }, [onClose]);
-
-    return createPortal(
-        <div className="fixed inset-0 z-[80] flex justify-end">
-            <button type="button" className="absolute inset-0 bg-gray-900/45" aria-label="Fechar filtros" onClick={onClose} />
-            <form
-                onSubmit={onSubmit}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="titulo-filtros"
-                className="relative flex h-full w-[440px] max-w-[92vw] flex-col overflow-y-auto border-l border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900"
-            >
-                <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-gray-100 bg-white px-6 py-5 dark:border-gray-800 dark:bg-gray-900">
-                    <div>
-                        <h3 id="titulo-filtros" className="text-base font-medium text-gray-800 dark:text-white/90">
-                            Filtros avançados
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500">Use quando a busca única não bastar.</p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        title="Fechar"
-                        className="inline-flex size-9 items-center justify-center rounded-lg bg-gray-50 text-gray-500 dark:bg-white/5"
-                    >
-                        <CloseIcon className="size-4.5" />
-                    </button>
-                </div>
-
-                <div className="flex flex-col gap-6 px-6 py-5 pb-28">
-                    <GrupoFiltro titulo="Identificadores">
-                        <CampoTexto id="filtro-protocolo" label="Nº do processo" value={form.protocolo} onChange={(valor) => definir('protocolo', valor)} />
-                        <CampoTexto id="filtro-bap" label="BAP" value={form.bap} onChange={(valor) => definir('bap', valor)} />
-                        <CampoTexto id="filtro-produto-tvl" label="Nº da viabilidade" value={form.produto_tvl} onChange={(valor) => definir('produto_tvl', valor)} />
-                    </GrupoFiltro>
-                    <GrupoFiltro titulo="Requerente">
-                        <CampoTexto id="filtro-nome" label="Empresa / requerente" value={form.nome} onChange={(valor) => definir('nome', valor)} />
-                        <CampoMascara id="filtro-cnpj" label="CNPJ" mask="cnpj" value={form.cnpj} onChange={(valor) => definir('cnpj', valor)} />
-                    </GrupoFiltro>
-                    <GrupoFiltro titulo="Imóvel">
-                        <CampoMascara id="filtro-inscricao" label="Inscrição imobiliária" mask="inscricao" value={form.inscricao} onChange={(valor) => definir('inscricao', valor)} />
-                        <CampoTexto id="filtro-logradouro" label="Logradouro" value={form.logradouro} onChange={(valor) => definir('logradouro', valor)} />
-                        <CampoTexto id="filtro-bairro" label="Bairro" value={form.bairro} onChange={(valor) => definir('bairro', valor)} />
-                        <CampoMascara id="filtro-cep" label="CEP" mask="cep" value={form.cep} onChange={(valor) => definir('cep', valor)} />
-                    </GrupoFiltro>
-                    <GrupoFiltro titulo="Classificação e responsáveis">
-                        <div>
-                            <Label htmlFor="filtro-grupo">Grupo de status</Label>
-                            <Select id="filtro-grupo" value={form.grupo} onChange={(valor) => definir('grupo', valor)} placeholder="Todos" options={GRUPO_OPTIONS} />
-                        </div>
-                        <div>
-                            <Label htmlFor="filtro-status">Status</Label>
-                            <Select id="filtro-status" value={form.status} onChange={(valor) => definir('status', valor)} placeholder="Todos" options={statusOptions} />
-                        </div>
-                        <div>
-                            <Label htmlFor="filtro-analysis-status">Situação da análise</Label>
-                            <Select id="filtro-analysis-status" value={form.analysis_status} onChange={(valor) => definir('analysis_status', valor)} placeholder="Todas" options={analysisStatusOptions} />
-                        </div>
-                        <div>
-                            <Label htmlFor="filtro-fluxo">Fluxo</Label>
-                            <Select id="filtro-fluxo" value={form.fluxo} onChange={(valor) => definir('fluxo', valor)} placeholder="Todos" options={FLUXO_OPTIONS} />
-                        </div>
-                        <div>
-                            <Label htmlFor="filtro-categoria">Categoria</Label>
-                            <Select id="filtro-categoria" value={form.categoria} onChange={(valor) => definir('categoria', valor)} placeholder="Todas" options={categoriaOptions} />
-                        </div>
-                        <CampoTexto id="filtro-servico" label="Serviço (ID)" type="number" value={form.servico} onChange={(valor) => definir('servico', valor)} />
-                        <CampoTexto id="filtro-setor" label="Setor (ID)" type="number" value={form.setor} onChange={(valor) => definir('setor', valor)} />
-                        <CampoTexto id="filtro-analista" label="Analista (ID)" type="number" value={form.analista} onChange={(valor) => definir('analista', valor)} />
-                    </GrupoFiltro>
-                    <GrupoFiltro titulo="Período">
-                        <CampoData id="filtro-data-de" label="Protocolado de" value={form.data_de} onChange={(valor) => definir('data_de', valor)} />
-                        <CampoData id="filtro-data-ate" label="Protocolado até" value={form.data_ate} onChange={(valor) => definir('data_ate', valor)} />
-                    </GrupoFiltro>
-                </div>
-
-                <div className="sticky bottom-0 mt-auto flex items-center gap-3 border-t border-gray-100 bg-white px-6 py-4 dark:border-gray-800 dark:bg-gray-900">
-                    <Button type="submit" className="flex-1">
-                        Aplicar filtros
-                    </Button>
-                    <Button type="button" variant="outline" onClick={onLimpar}>
-                        Limpar
-                    </Button>
-                </div>
-            </form>
-        </div>,
-        document.body,
-    );
-}
-
-function GrupoFiltro({ titulo, children }: { titulo: string; children: ReactNode }) {
-    return (
-        <div className="flex flex-col gap-3">
-            <span className="text-xs tracking-wide text-gray-400 uppercase">{titulo}</span>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
-        </div>
-    );
 }
 
 function CampoTexto({

@@ -5,21 +5,27 @@ namespace App\Services\Renovacao;
 use App\Enums\AnalysisCategory;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Sector;
 use App\Models\ServiceDeclaration;
 use App\Models\ServiceDeclarationAcceptance;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
+use App\Services\Analise\EnviarParaAnaliseService;
+use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Services\Solicitacao\ProtocolNumberGenerator;
 use App\Services\Solicitacao\ViabilityRequestStateMachine;
 use App\Support\Audit\AuditService;
+use App\Support\Settings;
 use DomainException;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Abre e protocola a renovação de um TVL provisório. Copia endereço e
- * atividades da origem (não são editáveis) e manda o processo para análise
- * semi-expressa, sem passar pelo deferimento automático.
+ * atividades da origem (não são editáveis), completa o território como no
+ * protocolo comum (inscrição, CODLOG, zona, via, endereçamento e lote) e
+ * manda o processo para análise semi-expressa já com a ficha do motor.
+ * Não passa pelo deferimento automático.
  */
 class RenovacaoProtocoloService
 {
@@ -28,6 +34,8 @@ class RenovacaoProtocoloService
         private ProtocolNumberGenerator $numeros,
         private ViabilityRequestStateMachine $stateMachine,
         private AuditService $audit,
+        private ProtocolarSolicitacaoService $protocoloViabilidade,
+        private EnviarParaAnaliseService $enviarAnalise,
     ) {}
 
     /**
@@ -138,7 +146,43 @@ class RenovacaoProtocoloService
             return $renovacao;
         });
 
+        // Fora da transação, como no protocolo comum: SEFAZ ou GIS fora do ar
+        // não desfaz o número. O motor só roda depois, para a ficha enxergar
+        // zona, via e polígono atuais.
+        $this->protocoloViabilidade->completarTerritorio($renovacao);
+
+        $setorId = $this->setorTriagemId();
+
+        if ($setorId !== null) {
+            $renovacao->forceFill(['sector_id' => $setorId])->save();
+        }
+
+        $this->enviarAnalise->enviar(
+            $renovacao,
+            $ator,
+            'Renovação de viabilidade locacional encaminhada à análise.',
+        );
+
         return $renovacao->fresh();
+    }
+
+    /**
+     * Mesma caixa de entrada do encaminhamento que não é expresso. Sem
+     * parâmetro, ou com setor inativo, o processo segue sem caixa.
+     */
+    private function setorTriagemId(): ?int
+    {
+        $id = Settings::get('analise.setor_triagem_id');
+
+        if ($id === null || $id === '') {
+            return null;
+        }
+
+        $id = (int) $id;
+
+        return Sector::query()->whereKey($id)->where('active', true)->exists()
+            ? $id
+            : null;
     }
 
     /**
