@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Notifications\Messages\EmailViabiliza;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
@@ -28,6 +29,7 @@ class EmailServerTestMail extends Mailable
         return new Envelope(
             from: new Address($this->fromAddress, $this->fromName),
             subject: 'Teste de configuração de e-mail — Viabiliza',
+            using: [EmailViabiliza::embutirImagensDoTopo(...)],
         );
     }
 

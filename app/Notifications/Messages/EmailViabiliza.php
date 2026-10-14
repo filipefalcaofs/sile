@@ -3,6 +3,7 @@
 namespace App\Notifications\Messages;
 
 use Illuminate\Notifications\Messages\MailMessage;
+use Symfony\Component\Mime\Email;
 
 /**
  * E-mail no modelo visual do Viabiliza (emails/notificacao): selo de contexto,
@@ -11,9 +12,31 @@ use Illuminate\Notifications\Messages\MailMessage;
  */
 class EmailViabiliza extends MailMessage
 {
+    /**
+     * Imagens do topo embutidas no e-mail (cid:). Link externo depende do APP_URL
+     * ser público e do cliente de e-mail baixar imagens; o cid sempre aparece.
+     *
+     * @var array<string, string>
+     */
+    public const IMAGENS_DO_TOPO = [
+        'viabiliza-pin' => 'viabiliza-pin.png',
+        'logo-prefeitura' => 'logo_prefeitura.png',
+        'logo-sedur' => '01JW9M9BYJ76Y0M06Z1XHJDKH8.png',
+    ];
+
     public function __construct()
     {
         $this->markdown('emails.notificacao');
+        $this->withSymfonyMessage(static function (Email $email): void {
+            self::embutirImagensDoTopo($email);
+        });
+    }
+
+    public static function embutirImagensDoTopo(Email $email): void
+    {
+        foreach (self::IMAGENS_DO_TOPO as $cid => $arquivo) {
+            $email->embedFromPath(public_path('images/'.$arquivo), $cid, 'image/png');
+        }
     }
 
     /**

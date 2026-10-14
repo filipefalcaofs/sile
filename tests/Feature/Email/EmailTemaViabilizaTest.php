@@ -20,6 +20,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Markdown;
 use Illuminate\Notifications\Messages\MailMessage;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Symfony\Component\Mime\Email;
 use Tests\TestCase;
 
 class EmailTemaViabilizaTest extends TestCase
@@ -73,11 +74,13 @@ class EmailTemaViabilizaTest extends TestCase
     {
         $html = (string) $montar()->render();
 
-        $this->assertStringContainsString('images/viabiliza-pin.png', $html);
-        $this->assertStringContainsString('images/logo_prefeitura.png', $html);
-        $this->assertStringContainsString('images/01JW9M9BYJ76Y0M06Z1XHJDKH8.png', $html);
+        $this->assertStringContainsString('cid:viabiliza-pin', $html);
+        $this->assertStringContainsString('cid:logo-prefeitura', $html);
+        $this->assertStringContainsString('cid:logo-sedur', $html);
         $this->assertStringContainsString('A viabilidade certa, no lugar certo', $html);
         $this->assertStringContainsString('class="selo selo-', $html);
+        $this->assertStringContainsString('<h1', $html);
+        $this->assertStringNotContainsString('# ', strip_tags($html));
         $this->assertStringContainsString('não responda a esta mensagem', $html);
         $this->assertStringContainsString('Prefeitura de Salvador', $html);
         $this->assertStringNotContainsString('laravel.com/img', $html);
@@ -97,9 +100,33 @@ class EmailTemaViabilizaTest extends TestCase
     {
         $html = (new EmailServerTestMail('a@sedur.test', 'SEDUR'))->render();
 
-        $this->assertStringContainsString('images/viabiliza-pin.png', $html);
-        $this->assertStringContainsString('images/01JW9M9BYJ76Y0M06Z1XHJDKH8.png', $html);
+        $this->assertStringContainsString('cid:viabiliza-pin', $html);
+        $this->assertStringContainsString('cid:logo-sedur', $html);
         $this->assertStringContainsString('servidor de e-mail do Viabiliza está operacional', $html);
+    }
+
+    public function test_notificacao_embute_as_imagens_do_topo_no_e_mail(): void
+    {
+        $email = new Email;
+        foreach ((new ResultadoExpressoNotification('VIA-2026-000777', DecisionOutcome::Deferida))->toMail(new User)->callbacks as $callback) {
+            $callback($email);
+        }
+
+        $nomes = array_map(fn ($parte) => $parte->getName(), $email->getAttachments());
+        $this->assertEqualsCanonicalizing(['viabiliza-pin', 'logo-prefeitura', 'logo-sedur'], $nomes);
+        foreach ($email->getAttachments() as $parte) {
+            $this->assertSame('inline', $parte->getDisposition());
+        }
+    }
+
+    public function test_email_de_teste_smtp_embute_as_imagens_do_topo(): void
+    {
+        $email = new Email;
+        foreach ((new EmailServerTestMail('a@sedur.test', 'SEDUR'))->envelope()->using as $callback) {
+            $callback($email);
+        }
+
+        $this->assertCount(3, $email->getAttachments());
     }
 
     public function test_versao_texto_nao_quebra(): void
