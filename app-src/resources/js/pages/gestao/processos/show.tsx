@@ -21,6 +21,7 @@ import OptionSelect from '@/components/form/option-select';
 import SearchableSelect from '@/components/form/searchable-select';
 import Select from '@/components/form/select';
 import { AlertIcon, ArrowRightIcon, MapPinIcon } from '@/components/icons';
+import Alert from '@/components/ui/alert';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -63,6 +64,8 @@ interface ShowProps {
         origem: { value: string; label: string } | null;
         camadas: CamadasImovel | null;
     };
+    /** Logradouro declarado × logradouro da inscrição (SEFAZ); null quando coincidem ou falta dado. */
+    divergencia_endereco?: { declarado: string; sefaz: string } | null;
     /** Explicabilidade passo a passo (HU-099); null quando não há decisão. */
     explicacao?: DecisionExplanationData | null;
     /** Próximas transições manuais oferecidas ao analista (Tarefa 10). */
@@ -140,6 +143,7 @@ export default function Show({
     parecer,
     timeline,
     geo,
+    divergencia_endereco = null,
     explicacao,
     analysisStatusProximas,
     conclusaoOpcoes,
@@ -335,6 +339,14 @@ export default function Show({
                         </div>
 
                         {aba === 'informacoes' && parecer && <ParecerCard parecer={parecer} />}
+
+                        {aba === 'informacoes' && divergencia_endereco && (
+                            <Alert
+                                variant="warning"
+                                title="Endereço diferente do cadastro da inscrição"
+                                message={`O logradouro informado no processo é "${divergencia_endereco.declarado}", mas a inscrição imobiliária está cadastrada na SEFAZ em "${divergencia_endereco.sefaz}". A análise de zona e via usa o imóvel da inscrição.`}
+                            />
+                        )}
 
                         {aba === 'informacoes' && (
                             <Card>
