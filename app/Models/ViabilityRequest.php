@@ -7,6 +7,7 @@ use App\Enums\AnalysisCategory;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\IntencaoAtividade;
+use App\Enums\PoligonoFonte;
 use App\Enums\PropertyLocationSource;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
@@ -134,6 +135,7 @@ class ViabilityRequest extends Model
             'address_polygon_geojson' => 'array',
             'origem_declarada' => 'array',
             'address_polygon_consulted_at' => 'datetime',
+            'address_polygon_source' => PoligonoFonte::class,
             'zona_fonte' => ZonaFonte::class,
             'property_point_lat' => 'float',
             'property_point_lng' => 'float',
