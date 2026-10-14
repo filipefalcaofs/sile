@@ -62,7 +62,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Atribuição aditiva (givePermissionTo, nunca sync): re-seed em produção
         // não pode remover permissões ajustadas pelo administrador via interface (HU-013).
-        Role::firstOrCreate(['name' => 'cidadao', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'cidadao', 'guard_name' => 'web'], ['protegido' => true])
             ->givePermissionTo(['gerenciar-procuracoes-proprias']);
         Role::firstOrCreate(['name' => 'analista', 'guard_name' => 'web'])
             ->givePermissionTo([
@@ -112,7 +112,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'consultar-relatorios',
                 'relatorios.produtividade.nominal',
             ]);
-        Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'administrador', 'guard_name' => 'web'], ['protegido' => true])
             ->givePermissionTo([
                 'acessar-gestao',
                 'consultar-acessos-de-qualquer-conta',

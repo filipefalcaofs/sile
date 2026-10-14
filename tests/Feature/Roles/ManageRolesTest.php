@@ -189,6 +189,43 @@ class ManageRolesTest extends TestCase
         $this->assertDatabaseHas('roles', ['name' => 'administrador', 'guard_name' => 'web']);
     }
 
+    public function test_perfil_protegido_nao_pode_ser_renomeado_nem_excluido(): void
+    {
+        $admin = $this->admin();
+        $protegido = Role::create(['name' => 'auditoria-externa', 'guard_name' => 'web', 'protegido' => true]);
+
+        $this->actingAs($admin, 'gestao')
+            ->put("/gestao/perfis/{$protegido->id}", ['name' => 'outro-nome'])
+            ->assertSessionHasErrors('name');
+
+        $this->actingAs($admin, 'gestao')
+            ->delete("/gestao/perfis/{$protegido->id}")
+            ->assertSessionHasErrors('role');
+
+        $this->assertDatabaseHas('roles', ['name' => 'auditoria-externa', 'protegido' => true]);
+    }
+
+    public function test_perfil_comum_pode_ser_renomeado(): void
+    {
+        $admin = $this->admin();
+        $comum = Role::create(['name' => 'perfil-comum', 'guard_name' => 'web']);
+
+        $this->actingAs($admin, 'gestao')
+            ->put("/gestao/perfis/{$comum->id}", ['name' => 'perfil-renomeado', 'permissions' => []])
+            ->assertRedirect();
+
+        $this->assertSame('perfil-renomeado', $comum->fresh()->name);
+    }
+
+    public function test_listagem_marca_protegido_no_campo_structural(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->get('/gestao/perfis')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('roles', fn ($roles) => collect($roles)->firstWhere('name', 'administrador')['structural'] === true
+                    && collect($roles)->firstWhere('name', 'apoio')['structural'] === false));
+    }
+
     public function test_exclusao_bloqueada_com_usuarios_vinculados(): void
     {
         $admin = $this->admin();
