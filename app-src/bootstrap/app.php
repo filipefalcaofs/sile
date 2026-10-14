@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
+use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -34,6 +35,16 @@ return Application::configure(basePath: dirname(__DIR__))
         // o Router resolve o controller (e o guard injetado do Fortify) na coleta
         // de middleware, antes da pilha web, fixando o nome do cookie cedo.
         $middleware->prepend(ConfigureEnvironmentSession::class);
+
+        // O HTTPS termina no proxy da prefeitura. Sem isso os redirects saem
+        // em http:// e o navegador esconde o header x-inertia da resposta.
+        // X-Forwarded-For fica de fora: o IP do cliente não vem do header.
+        $middleware->trustProxies(
+            at: '*',
+            headers: SymfonyRequest::HEADER_X_FORWARDED_PROTO
+                | SymfonyRequest::HEADER_X_FORWARDED_HOST
+                | SymfonyRequest::HEADER_X_FORWARDED_PORT,
+        );
 
         $middleware->web(append: [
             HandleInertiaRequests::class,
