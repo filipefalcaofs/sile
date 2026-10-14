@@ -10,6 +10,7 @@ use App\Http\Requests\Gestao\DistribuirProcessoRequest;
 use App\Models\Activity;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestEvento;
 use App\Models\ViabilityServiceType;
 use App\Services\Analise\CargaAnalistaService;
 use App\Services\Analise\DistribuicaoException;
@@ -88,7 +89,7 @@ class CaixaSetorController extends Controller
                 fn ($query) => $query->whereNull('assigned_user_id'),
                 fn ($query) => $query->whereNotNull('assigned_user_id'),
             )
-            ->with(['company', 'serviceType:id,name', 'cnaes', 'sector:id,name', 'assignedTo:id,name'])
+            ->with(['company', 'serviceType:id,name', 'eventos', 'cnaes', 'sector:id,name', 'assignedTo:id,name'])
             ->orderBy('analysis_due_at')
             ->orderBy('id')
             ->paginate($perPage)
@@ -103,6 +104,10 @@ class CaixaSetorController extends Controller
                     $processo->address_neighborhood,
                 ])),
                 'servico' => $processo->serviceType?->name,
+                // Serviço legível: os eventos que a JUCEB enviou; sem eles, o tipo interno.
+                'servicos' => $processo->eventos->isNotEmpty()
+                    ? $processo->eventos->pluck('nome')->values()->all()
+                    : array_values(array_filter([$processo->serviceType?->name])),
                 'cnaes' => $processo->cnaes
                     ->sortByDesc(fn ($cnae): bool => (bool) $cnae->pivot->is_primary)
                     ->map(fn ($cnae): array => [
@@ -612,11 +617,19 @@ class CaixaSetorController extends Controller
      */
     private function servicoOptions(): array
     {
-        return ViabilityServiceType::query()
+        $eventos = ViabilityRequestEvento::query()
+            ->selectRaw('codigo, min(nome) as nome')
+            ->groupBy('codigo')
+            ->orderBy('nome')
+            ->get()
+            ->map(fn ($evento): array => ['value' => ProcessoQueryService::PREFIXO_EVENTO.$evento->codigo, 'label' => $evento->nome]);
+
+        $tipos = ViabilityServiceType::query()
             ->orderBy('name')
             ->get(['id', 'name'])
-            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name])
-            ->all();
+            ->map(fn ($servico): array => ['value' => (string) $servico->id, 'label' => $servico->name]);
+
+        return $eventos->concat($tipos)->values()->all();
     }
 
     /**

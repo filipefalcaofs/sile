@@ -96,6 +96,8 @@ class ReginProcessoProtocolador
             $solicitacao->cnaes()->attach($cnae->id, ['is_primary' => $indice === 0]);
         }
 
+        ReginEventos::gravar($solicitacao, $recebimento);
+
         $this->protocolar->protocol($solicitacao->fresh() ?? $solicitacao, $ator);
 
         return $solicitacao->fresh() ?? $solicitacao;

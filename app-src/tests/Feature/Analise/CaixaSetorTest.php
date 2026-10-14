@@ -9,6 +9,7 @@ use App\Models\Cnae;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestEvento;
 use App\Models\ViabilityServiceType;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -128,6 +129,57 @@ class CaixaSetorTest extends TestCase
             collect($linha['cnaes'])->pluck('codigo')->all(),
         );
         $this->assertTrue($linha['cnaes'][0]['principal']);
+    }
+
+    public function test_servico_da_linha_sao_os_eventos_da_juceb_ou_o_tipo_interno(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $servico = ViabilityServiceType::factory()->create();
+
+        $daJuceb = $this->processoNaCaixa($setor);
+        $daJuceb->forceFill(['service_type_id' => $servico->id])->save();
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $daJuceb->id, 'codigo' => '211', 'nome' => 'Alteração de endereço dentro do mesmo município']);
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $daJuceb->id, 'codigo' => '244', 'nome' => 'Alteração de atividades econômicas (principal e secundárias)']);
+
+        $doPortal = $this->processoNaCaixa($setor);
+        $doPortal->forceFill(['service_type_id' => $servico->id])->save();
+
+        $linhas = collect(
+            $this->actingAs($analista, 'gestao')
+                ->get('/gestao/caixa-setor')
+                ->assertOk()
+                ->viewData('page')['props']['processos']['data']
+        )->keyBy('id');
+
+        $this->assertSame(
+            ['Alteração de endereço dentro do mesmo município', 'Alteração de atividades econômicas (principal e secundárias)'],
+            $linhas[$daJuceb->id]['servicos'],
+        );
+        $this->assertSame([$servico->name], $linhas[$doPortal->id]['servicos']);
+    }
+
+    public function test_filtro_de_servico_aceita_evento_da_juceb_e_lista_os_eventos_nas_opcoes(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = $this->apoioDoSetor($setor);
+
+        $comEvento = $this->processoNaCaixa($setor);
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $comEvento->id, 'codigo' => '244', 'nome' => 'Alteração de atividades econômicas (principal e secundárias)']);
+        $semEvento = $this->processoNaCaixa($setor);
+
+        $props = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?servico=e244')
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $ids = collect($props['processos']['data'])->pluck('id')->all();
+        $this->assertContains($comEvento->id, $ids);
+        $this->assertNotContains($semEvento->id, $ids);
+        $this->assertContains(
+            ['value' => 'e244', 'label' => 'Alteração de atividades econômicas (principal e secundárias)'],
+            $props['servicoOptions'],
+        );
     }
 
     public function test_index_lista_ordenada_por_prazo(): void
