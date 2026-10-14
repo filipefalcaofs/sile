@@ -198,6 +198,7 @@ final class DecisionTextCatalog
             'tratamento.motivo.sem_versao' => 'Planilha de tratamento sem versão vigente',
             'tratamento.motivo.cnae_sem_regra' => 'CNAE sem regra de tratamento vigente',
             'tratamento.motivo.pergunta_sem_resposta' => 'Pergunta :numero sem resposta — :texto',
+            'tratamento.motivo.subdivisao_ausente' => 'Subdivisão do CNAE :cnae ausente na planilha de tratamento carregada — rode o complemento da planilha (tratamento:verificar --corrigir)',
             'tratamento.motivo.sem_linha' => 'CNAE sem enquadramento no ramo escolhido',
             'tratamento.motivo.ramo_bloqueado' => 'A regra da planilha não permite o prosseguimento deste ramo',
             'tratamento.motivo.cnlu' => 'A SER DEFINIDO PELA CNLU',

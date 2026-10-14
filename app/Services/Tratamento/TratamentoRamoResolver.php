@@ -148,7 +148,8 @@ class TratamentoRamoResolver
 
                 return new TratamentoRamoResult(
                     status: 'nao_resolvido',
-                    motivo: $this->motivoPerguntaSemResposta((int) $numero, (int) $versao->getKey()),
+                    motivo: $this->subdivisaoNaoCarregada((int) $numero, (string) ($textosDasPerguntas[(int) $numero] ?? ''), $input->cnae, (int) $versao->getKey())
+                        ?? $this->motivoPerguntaSemResposta((int) $numero, (int) $versao->getKey()),
                     versaoRegra: $versao->version,
                 );
             }
@@ -634,6 +635,26 @@ class TratamentoRamoResolver
             ->first(fn (?string $valor): bool => filled($valor));
 
         return SubdivisaoCnae::opcoes($subdivisao);
+    }
+
+    /**
+     * Pergunta 1 que manda escolher entre as opções do CNAE, mas a planilha
+     * carregada não as traz (complemento da planilha não aplicado): a falha é
+     * da carga, não do requerente, e o motivo diz isso.
+     */
+    private function subdivisaoNaoCarregada(int $numero, string $enunciado, string $cnae, int $versaoId): ?string
+    {
+        if ($numero !== 1 || preg_match('/identifique entre as op[cç][õo]es/iu', $enunciado) !== 1) {
+            return null;
+        }
+
+        $formatado = $this->formatarCnae($cnae);
+
+        if (PerguntaEnunciado::analisar($enunciado)['opcoes'] !== [] || $this->opcoesDaSubdivisao($formatado, $versaoId) !== []) {
+            return null;
+        }
+
+        return $this->textos->render('tratamento.motivo.subdivisao_ausente', [':cnae' => $formatado]);
     }
 
     /**
