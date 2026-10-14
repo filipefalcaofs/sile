@@ -437,6 +437,27 @@ class LouosConsolidacaoTest extends TestCase
         $this->assertStringContainsStringIgnoringCase('cnlu', (string) $result->consolidado['motivo']);
     }
 
+    public function test_quadro11a_analise_particularizada_pela_cnlu_consolida_pendente(): void
+    {
+        $linhaOficial = collect(file(database_path('data/louos/oficial/quadro11a-condicoes-via.csv')))
+            ->map(fn (string $linha): array => str_getcsv(trim($linha), escape: '\\'))
+            ->first(fn (array $colunas): bool => str_contains((string) ($colunas[2] ?? ''), 'CNLU'));
+
+        $this->assertNotNull($linhaOficial);
+
+        $this->seedTratamento();
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+        $this->seedQuadro11a('VL', 'nR1', [$linhaOficial[2]]);
+
+        $result = $this->service()->enquadrar($this->inputMinimercado(
+            $this->territorio($this->zonaIdentificada('ZR-1'), null, $this->viaIdentificada('VL')),
+        ));
+
+        $this->assertSame(ResultadoViabilidade::Pendente->value, $result->resultado());
+        $this->assertStringContainsStringIgnoringCase('cnlu', (string) $result->consolidado['motivo']);
+        $this->assertNull($this->condicionantePorTipo($result->consolidado['condicionantes'], 'via'));
+    }
+
     public function test_quadro11a_condicao_textual_vira_condicionante(): void
     {
         $this->seedTratamento();

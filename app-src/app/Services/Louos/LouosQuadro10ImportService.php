@@ -21,7 +21,9 @@ use SplFileObject;
  *
  * Idempotente: upsert por (rule_version_id, zona, grupo_uso, subgrupo) — o
  * subgrupo ausente é gravado como '' para o ON CONFLICT casar no re-import; o
- * upsert NÃO toca 'observacao' (anotações do mantenedor sobrevivem). A permissão
+ * upsert NÃO toca 'observacao' (anotações do mantenedor sobrevivem). Células
+ * S(a)/S(b) gravam o marcador em 'observacao' só quando ela está vazia — é o
+ * que liga a verificação da allow-list RT-05 no motor. A permissão
  * é validada contra o enum Quadro10Permissao: valor desconhecido é rejeitado
  * (relatório), nunca inserido.
  */
@@ -48,6 +50,7 @@ class LouosQuadro10ImportService
         $rejected = [];
         $read = 0;
         $rows = [];
+        $observacoes = [];
 
         foreach ($file as $line) {
             if ($line === false || $line === [null]) {
@@ -99,9 +102,19 @@ class LouosQuadro10ImportService
             }
 
             $condicionante = $data['condicionante_ref'] === '' ? null : $data['condicionante_ref'];
+            $nota = preg_match('/\(\s*([abc])\s*\)/i', $data['permissao'], $match) === 1 ? mb_strtolower($match[1]) : null;
 
-            if ($condicionante === null && preg_match('/\(\s*([abc])\s*\)/i', $data['permissao'], $nota) === 1) {
-                $condicionante = 'Observação ('.$nota[1].') do Quadro 10 da Lei nº 9.148/2016';
+            if ($condicionante === null && $nota !== null) {
+                $condicionante = 'Observação ('.$nota.') do Quadro 10 da Lei nº 9.148/2016';
+            }
+
+            if (in_array($nota, ['a', 'b'], true)) {
+                $observacoes[] = [
+                    'zona' => $data['zona'],
+                    'grupo_uso' => $data['grupo_uso'],
+                    'subgrupo' => $data['subgrupo'],
+                    'observacao' => '('.$nota.')',
+                ];
             }
 
             $rows[] = [
@@ -134,6 +147,16 @@ class LouosQuadro10ImportService
                 ['rule_version_id', 'zona', 'grupo_uso', 'subgrupo'],
                 ['permissao', 'condicionante_ref', 'base_legal'],
             );
+        }
+
+        foreach ($observacoes as $observacao) {
+            LouosQuadro10Permissao::query()
+                ->where('rule_version_id', $version->getKey())
+                ->where('zona', $observacao['zona'])
+                ->where('grupo_uso', $observacao['grupo_uso'])
+                ->where('subgrupo', $observacao['subgrupo'])
+                ->whereNull('observacao')
+                ->update(['observacao' => $observacao['observacao']]);
         }
 
         return [

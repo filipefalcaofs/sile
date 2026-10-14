@@ -43,8 +43,8 @@ class LouosDraftController extends Controller
     ];
 
     private const CSV_EXEMPLOS = [
-        'quadro10' => 'ZPR 1,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10',
-        'quadro11a' => 'VL,nR1-01,Sim,Lei nº 9.148/2016 — Quadro 11A',
+        'quadro10' => 'ZPR 1,nR1,nR1-01,S,,"art. 116, I, e Quadro 10 do Anexo 01 da Lei nº 9.148/2016"',
+        'quadro11a' => 'VL,nR1-01,Sim,"art. 116, II, e Quadro 11-A do Anexo 01 da Lei nº 9.148/2016"',
     ];
 
     public function __construct(private LouosDraftService $service) {}

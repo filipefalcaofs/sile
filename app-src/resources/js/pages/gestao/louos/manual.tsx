@@ -178,10 +178,10 @@ export default function LouosManual({ quadro, urlModeloCsv, urlRascunho }: Manua
                             </p>
                             <CodeBlock>
                                 {`zona,grupo_uso,subgrupo,permissao,condicionante_ref,base_legal
-ZPR 1,nR1,nR1-01,S,,Lei nº 9.148/2016 — Quadro 10
-ZEIS 1,nR1,nR1-08,S(c),Quadro 12,Lei nº 9.148/2016 — Quadro 10
-ZIT,nR2,nR2-01,N,,Lei nº 9.148/2016 — Quadro 10
-ZPR 1,R1,,S,,Lei nº 9.148/2016 — Quadro 10`}
+ZPR 1,nR1,nR1-01,S,,"art. 116, I, e Quadro 10 do Anexo 01 da Lei nº 9.148/2016"
+ZEIS 1,nR1,nR1-08,S(c),Quadro 12,"art. 116, I, e Quadro 10 do Anexo 01 da Lei nº 9.148/2016"
+ZIT,nR2,nR2-01,N,,"art. 116, I, e Quadro 10 do Anexo 01 da Lei nº 9.148/2016"
+ZPR 1,R1,,S,,"art. 116, I, e Quadro 10 do Anexo 01 da Lei nº 9.148/2016"`}
                             </CodeBlock>
                             <ManualTable
                                 caption="Sinais de permissão aceitos no Quadro 10"
@@ -209,9 +209,9 @@ ZPR 1,R1,,S,,Lei nº 9.148/2016 — Quadro 10`}
                             </p>
                             <CodeBlock>
                                 {`classe_via,grupo_uso,condicoes,base_legal
-VL,nR1-01,Sim,Lei nº 9.148/2016 — Quadro 11A
-VE,nR3-08,Não,Lei nº 9.148/2016 — Quadro 11A
-VA I,ID2-05,Objeto de análise particularizada pela CNLU,Lei nº 9.148/2016 — Quadro 11A`}
+VL,nR1-01,Sim,"art. 116, II, e Quadro 11-A do Anexo 01 da Lei nº 9.148/2016"
+VE,nR3-08,Não,"art. 116, II, e Quadro 11-A do Anexo 01 da Lei nº 9.148/2016"
+VA I,ID2-05,Objeto de análise particularizada pela CNLU,"art. 116, II, e Quadro 11-A do Anexo 01 da Lei nº 9.148/2016"`}
                             </CodeBlock>
                             <p className="text-theme-sm text-gray-700 dark:text-gray-300">
                                 Várias condições na mesma célula: separe com ponto e vírgula. Na carga vigente, R da

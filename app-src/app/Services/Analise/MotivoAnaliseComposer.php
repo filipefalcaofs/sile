@@ -97,7 +97,7 @@ class MotivoAnaliseComposer
             'Loteamento Vela Branca' => 'Solicitação cadastrada no Loteamento Vela Branca',
             'Zona de Exploração Mineral' => 'Solicitação cadastrada na Zona de Exploração Mineral',
             'Zona de Proteção Ambiental' => 'Solicitação cadastrada na Zona de Proteção Ambiental',
-            'Trechos 5 e 6' => 'Solicitação cadastrada nos Trechos 5 e 6 da AMB – Área de Borda Marítima, em conformidade com as disposições estabelecidas pelo Decreto Municipal nº 31.168/2019',
+            'Trechos 5 e 6' => 'Solicitação cadastrada nos Trechos 5 e 6 da ABM – Área de Borda Marítima, em conformidade com as disposições estabelecidas pelo Decreto Municipal nº 31.168/2019',
             'Zona de Uso Especial' => 'Solicitação cadastrada em Zona de Uso Especial',
         ];
 

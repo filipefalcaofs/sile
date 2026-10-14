@@ -26,7 +26,8 @@ use Illuminate\Database\Seeder;
  *   (21 CNAEs únicos); a descrição oficial é a do cadastro de CNAE.
  * - OPEN-RT-2: o Hiperideal (item 11 de Itaigara) vem sem CODLOG — entra com
  *   5209 (Rua Anísio Teixeira, mesma via do item 10) pendente de confirmação.
- * - OPEN-RT-3: o motivo de ABM reproduz a grafia do documento ("AMB").
+ * - OPEN-RT-3: o documento grafa "AMB"; o motivo usa "ABM", sigla da LOUOS
+ *   (art. 36) e do Decreto 31.168/2019.
  * - Poligonais VALIDADAS contra o GeoServer ao vivo em 2026-09-23 (do host de
  *   produção — a rede de dev é barrada pelo firewall): loteamentos em
  *   `parcelamento_poligonal:VM_PARCELAMENTO` (atributo PARCELAMENTO, nome em
@@ -153,14 +154,14 @@ class TerritorialRuleSeeder extends Seeder
             'cod_log' => '212',
             'logradouro_nome' => 'Avenida Lafayette Coutinho',
             'decision_text_id' => $textoIndeferimento?->getKey(),
-            'base_legal' => 'art. 172-A da Lei Municipal nº 9.148/2016, com redação dada pela Lei Municipal nº 9.879/2025',
+            'base_legal' => 'art. 172-A da Lei Municipal nº 9.148/2016 (LOUOS), incluído pelo art. 11 da Lei Municipal nº 9.879/2025',
         ]);
 
         foreach (self::CNAES_RT01 as $cnae) {
             $rt01->cnaes()->create(['cnae' => $cnae]);
         }
 
-        // RT-02 — TACs (§3º do art. 162 do PDDU). Poligonais validadas ao vivo
+        // RT-02 — TACs (art. 18, §3º, da LOUOS c/c art. 162 do PDDU). Poligonais validadas ao vivo
         // em 2026-09-23: o nome do loteamento é o atributo PARCELAMENTO (em
         // minúsculas) da camada de parcelamento — filtro ILIKE confirmado.
         TerritorialRule::create([
@@ -172,7 +173,7 @@ class TerritorialRuleSeeder extends Seeder
             'camada' => 'parcelamento_poligonal:VM_PARCELAMENTO',
             'camada_filtro' => "PARCELAMENTO ILIKE 'vela branca'",
             'motivo_analise' => 'Solicitação cadastrada no Loteamento Vela Branca.',
-            'base_legal' => '§3º do art. 162 do PDDU',
+            'base_legal' => 'art. 18, §3º, da Lei Municipal nº 9.148/2016 (LOUOS), combinado com o art. 162 da Lei Municipal nº 9.069/2016 (PDDU)',
         ]);
 
         $itaigara = TerritorialRule::create([
@@ -184,7 +185,7 @@ class TerritorialRuleSeeder extends Seeder
             'camada' => 'parcelamento_poligonal:VM_PARCELAMENTO',
             'camada_filtro' => "PARCELAMENTO ILIKE 'itaigara'",
             'motivo_analise' => 'Solicitação cadastrada no Loteamento Itaigara.',
-            'base_legal' => '§3º do art. 162 do PDDU',
+            'base_legal' => 'art. 18, §3º, da Lei Municipal nº 9.148/2016 (LOUOS), combinado com o art. 162 da Lei Municipal nº 9.069/2016 (PDDU)',
         ]);
 
         foreach (self::ITAIGARA_ALLOWLIST as $endereco) {
@@ -196,10 +197,9 @@ class TerritorialRuleSeeder extends Seeder
         // string) — validada ao vivo em 2026-09-23. A l_savam homônima é
         // LineString e não serve para ponto-em-polígono.
         foreach ([
-            ['codigo' => 'RT-03-ZEM', 'titulo' => 'ZEM — Zona de Exploração Mineral', 'camada' => 'louos_zem:VM_L_Z_USO_ZEM', 'filtro' => null, 'motivo' => 'Solicitação cadastrada na Zona de Exploração Mineral.'],
-            ['codigo' => 'RT-03-ZPAM', 'titulo' => 'ZPAM — Zona de Proteção Ambiental', 'camada' => 'louos_zpam:VM_L_Z_USO_ZPAM', 'filtro' => null, 'motivo' => 'Solicitação cadastrada na Zona de Proteção Ambiental.'],
-            // OPEN-RT-3: grafia "AMB" reproduzida do documento oficial.
-            ['codigo' => 'RT-03-ABM', 'titulo' => 'ABM — Área de Borda Marítima, trechos 5 e 6', 'camada' => 'borda_maritima:VM_BORDA_MARITIMA_TRECHOS', 'filtro' => "TRECHOS IN ('5','6')", 'motivo' => 'Solicitação cadastrada nos Trechos 5 e 6 da AMB – Área de Borda Marítima, em conformidade com as disposições estabelecidas pelo Decreto Municipal nº 31.168/2019.'],
+            ['codigo' => 'RT-03-ZEM', 'titulo' => 'ZEM — Zona de Exploração Mineral', 'camada' => 'louos_zem:VM_L_Z_USO_ZEM', 'filtro' => null, 'motivo' => 'Solicitação cadastrada na Zona de Exploração Mineral.', 'base_legal' => 'art. 31, caput e §2º, da Lei Municipal nº 9.148/2016 (LOUOS)'],
+            ['codigo' => 'RT-03-ZPAM', 'titulo' => 'ZPAM — Zona de Proteção Ambiental', 'camada' => 'louos_zpam:VM_L_Z_USO_ZPAM', 'filtro' => null, 'motivo' => 'Solicitação cadastrada na Zona de Proteção Ambiental.', 'base_legal' => 'art. 33, §4º, da Lei Municipal nº 9.148/2016 (LOUOS)'],
+            ['codigo' => 'RT-03-ABM', 'titulo' => 'ABM — Área de Borda Marítima, trechos 5 e 6', 'camada' => 'borda_maritima:VM_BORDA_MARITIMA_TRECHOS', 'filtro' => "TRECHOS IN ('5','6')", 'motivo' => 'Solicitação cadastrada nos Trechos 5 e 6 da ABM – Área de Borda Marítima, em conformidade com as disposições estabelecidas pelo Decreto Municipal nº 31.168/2019.', 'base_legal' => 'Decreto Municipal nº 31.168/2019'],
         ] as $zona) {
             TerritorialRule::create([
                 'rule_version_id' => $version->getKey(),
@@ -210,21 +210,21 @@ class TerritorialRuleSeeder extends Seeder
                 'camada' => $zona['camada'],
                 'camada_filtro' => $zona['filtro'],
                 'motivo_analise' => $zona['motivo'],
-                'base_legal' => $zona['codigo'] === 'RT-03-ABM' ? 'Decreto Municipal nº 31.168/2019' : 'Lei Municipal nº 9.148/2016 (LOUOS)',
+                'base_legal' => $zona['base_legal'],
             ]);
         }
 
-        // RT-04 — Zonas de Uso Especial (art. 32): as treze subcategorias
+        // RT-04 — Zonas de Uso Especial (art. 32): as dezessete subcategorias
         // compartilham um único motivo; a camada distingue para relatório.
         TerritorialRule::create([
             'rule_version_id' => $version->getKey(),
             'codigo' => 'RT-04-ZUE',
-            'titulo' => 'Zonas de Uso Especial (art. 32, ZUE-1 a ZUE-13)',
+            'titulo' => 'Zonas de Uso Especial (art. 32, ZUE-1 a ZUE-17; incisos XIV a XVII incluídos pela Lei nº 9.879/2025)',
             'tipo' => TerritorialRuleType::PoligonalAnalise,
             'efeito' => TerritorialRuleEffect::EncaminharAnalise,
             'camada' => 'louos_zue:VM_L_Z_USO_ZUE',
             'motivo_analise' => 'Solicitação cadastrada em Zona de Uso Especial.',
-            'base_legal' => 'Art. 32 da Lei Municipal nº 9.148/2016 (LOUOS)',
+            'base_legal' => 'art. 32, §3º, da Lei Municipal nº 9.148/2016 (LOUOS)',
         ]);
 
         // RT-05 — Observações (a) e (b) do Quadro 10: allow-lists de via (e

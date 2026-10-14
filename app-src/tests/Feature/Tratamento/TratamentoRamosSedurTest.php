@@ -92,7 +92,7 @@ class TratamentoRamosSedurTest extends TestCase
     {
         $this->assertBloqueia(
             $this->resolver('8411-6/00', [7 => true], categoria: 'orgao_publico', tipo: 'Edificação Residencial'),
-            'A (s) atividade (s) solicitada (s) não é (são) permitida(s) em imóvel residencial conforme Decreto Municipal nº 29.987/2018',
+            'A (s) atividade (s) solicitada (s) não é (são) permitida(s) em imóvel residencial conforme o art. 4º do Decreto Municipal nº 29.987/2018',
         );
     }
 
@@ -131,7 +131,7 @@ class TratamentoRamosSedurTest extends TestCase
     {
         $this->assertBloqueia(
             $this->resolver('8423-0/00', [6 => false], categoria: 'orgao_publico', tipo: 'Edificação Residencial'),
-            'A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018',
+            'A atividade solicitada não é permitida em imóvel residencial conforme o art. 4º do Decreto Municipal nº 29.987/2018',
         );
     }
 
@@ -160,7 +160,7 @@ class TratamentoRamosSedurTest extends TestCase
     {
         $this->assertBloqueia(
             $this->resolver('3514-0/00', [31 => true, 32 => 1], tipo: 'Edificação Residencial'),
-            'A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018',
+            'A atividade solicitada não é permitida em imóvel residencial conforme o art. 4º do Decreto Municipal nº 29.987/2018',
         );
     }
 
@@ -342,7 +342,7 @@ class TratamentoRamosSedurTest extends TestCase
         foreach ([[3], [2]] as $opcoes) {
             $this->assertBloqueia(
                 $this->resolver('5612-1/00', [1 => $opcoes, 11 => false], tipo: 'Edificação Residencial'),
-                'A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018',
+                'A atividade solicitada não é permitida em imóvel residencial conforme o art. 4º do Decreto Municipal nº 29.987/2018',
             );
         }
     }

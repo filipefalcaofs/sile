@@ -106,8 +106,8 @@ final class DecisionTextCatalog
         return [
             // Bases legais citadas nas fundamentações.
             'base_legal.louos' => 'Lei nº 9.148/2016 (LOUOS)',
-            // Decreto de risco vigente declarado pela SEDUR (relatório 21/09/2026).
-            'base_legal.risco_municipal' => 'Decreto Municipal nº 41.758/2026',
+            // O Decreto 41.758/2026 só substitui os Anexos I a III do 32.636/2020 (art. 1º).
+            'base_legal.risco_municipal' => 'Decreto Municipal nº 32.636/2020, com os Anexos na redação do Decreto Municipal nº 41.758/2026',
 
             // LOUOS — motivos das dimensões e do consolidado
             // (LouosEnquadramentoService, constantes das linhas 38-62).
@@ -190,10 +190,10 @@ final class DecisionTextCatalog
             'tratamento.pendencia.sem_fluxo_curado' => 'Aguardando confirmação da SEDUR: o texto da regra não define o fluxo de forma inequívoca. O motor usa a heurística desta versão.',
             'tratamento.motivo.categoria_ausente' => 'Categoria da empresa ausente para a regra que depende dela',
             'tratamento.bloqueio.so_orgao_publico' => 'Esta atividade só é permitida para órgãos da Administração Pública',
-            'tratamento.bloqueio.residencial_plural' => 'A (s) atividade (s) solicitada (s) não é (são) permitida(s) em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares.',
+            'tratamento.bloqueio.residencial_plural' => 'A (s) atividade (s) solicitada (s) não é (são) permitida(s) em imóvel residencial conforme o art. 4º do Decreto Municipal nº 29.987/2018, que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares.',
             'tratamento.bloqueio.ambulante_alimentacao' => 'A SEDUR não licencia serviços ambulantes de alimentação, o requerente deverá solicitar licença junto a SEMOP (Secretaria Municipal de Ordem Pública).',
             'tratamento.bloqueio.food_truck' => 'A SEDUR licencia apenas o escritório para a atividade de Food Truck. Deverá solicitar licença específica no órgão competente para o local do funcionamento',
-            'tratamento.bloqueio.residencial' => 'A atividade solicitada não é permitida em imóvel residencial conforme Decreto Municipal nº 29.987/2018 que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares.',
+            'tratamento.bloqueio.residencial' => 'A atividade solicitada não é permitida em imóvel residencial conforme o art. 4º do Decreto Municipal nº 29.987/2018, que trata do funcionamento e estabelecimento de microempresas, empresas de pequeno e MEIs nas residências de seus titulares.',
             'tratamento.bloqueio.categoria_incompativel' => 'Resposta selecionada para a CNAE :cnae não é compatível com a categoria da empresa indicada nesta etapa. Revise as informações para continuar.',
             'tratamento.motivo.sem_versao' => 'Planilha de tratamento sem versão vigente',
             'tratamento.motivo.cnae_sem_regra' => 'CNAE sem regra de tratamento vigente',
