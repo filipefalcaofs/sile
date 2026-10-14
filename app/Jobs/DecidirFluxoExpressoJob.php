@@ -10,6 +10,7 @@ use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Realty\LocalizacaoInscricao;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Support\Audit\AuditService;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Throwable;
@@ -27,9 +28,16 @@ use Throwable;
  * estado fresco no handle). Um job que esgota as tentativas vai para failed_jobs
  * e AUDITA a falha (RN-002), nunca silenciosa — sem decisão falsa.
  */
-class DecidirFluxoExpressoJob implements ShouldQueue
+class DecidirFluxoExpressoJob implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
+
+    /**
+     * Um job por processo e por modo na fila: a rede de segurança (a cada 10
+     * min) e o reprocesso não empilham decisões repetidas enquanto a anterior
+     * ainda espera o worker. A trava cai quando o job termina, ou em 1 h.
+     */
+    public int $uniqueFor = 3600;
 
     public int $tries;
 
@@ -57,6 +65,11 @@ class DecidirFluxoExpressoJob implements ShouldQueue
         if ($fila !== '' && $fila !== 'default') {
             $this->onQueue($fila);
         }
+    }
+
+    public function uniqueId(): string
+    {
+        return $this->viabilityRequestId.':'.($this->reavaliacao ? 'reavaliacao' : 'protocolo');
     }
 
     public function handle(FluxoExpressoService $service, ?ProtocolarSolicitacaoService $protocolo = null, ?PoligonoEnderecamentoService $poligono = null): void

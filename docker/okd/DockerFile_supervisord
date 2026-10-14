@@ -47,4 +47,13 @@ RUN /usr/libexec/s2i/assemble
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
  && chmod -R ug+rwX storage bootstrap/cache
 
-CMD php artisan migrate --force --no-interaction && php artisan queue:work --sleep=3 --tries=3 --max-time=3600 --no-interaction
+# QUEUE_WORKERS processos de fila em paralelo (padrão 4). Cada um reinicia
+# sozinho ao sair (--max-time ou falha); o container só termina se todos caírem.
+CMD php artisan migrate --force --no-interaction && exec sh -c '\
+  n="${QUEUE_WORKERS:-4}"; i=0; \
+  while [ "$i" -lt "$n" ]; do \
+    ( while true; do php artisan queue:work --sleep=3 --tries=3 --max-time=3600 --no-interaction; sleep 2; done ) & \
+    i=$((i+1)); \
+  done; \
+  wait'
+
