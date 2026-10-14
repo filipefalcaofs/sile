@@ -546,13 +546,6 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'boolean'],
                 'description' => 'Habilita o deferimento/indeferimento automático (fluxo expresso); desligado, toda solicitação protocolada vai para análise técnica (degradação comunicada)',
             ],
-            'features.simulacao_protocolo' => [
-                'group' => 'features',
-                'type' => 'boolean',
-                'default_value' => '0',
-                'validation_rules' => ['required', 'boolean'],
-                'description' => 'SOMENTE HOMOLOGAÇÃO: processos do simulador REGIN com veredito pendente registram a viabilidade locacional como permitida. Desligado, seguem o fluxo normal (pendente → análise). NUNCA ligar em produção',
-            ],
             'features.notificacao_resultado_expresso' => [
                 'group' => 'features',
                 'type' => 'boolean',
@@ -937,7 +930,6 @@ class ParameterSeeder extends Seeder
             'risco.dimensao_tvl',
             'analise.escritorio_virtual.cnae_gatilho_sede',
             'features.fluxo_expresso',
-            'features.simulacao_protocolo',
             'renovacao.intervalo_meses',
         ];
     }

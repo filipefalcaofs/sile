@@ -15,7 +15,6 @@ use App\Services\Realty\PropertyRegistryLookup;
 use App\Services\Realty\PropertyRegistryResult;
 use App\Services\Realty\PropertyRegistryUnavailableException;
 use App\Services\Regin\ReginProcessoProtocolador;
-use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Tratamento\CategoriaEmpresa;
 use App\Services\Tratamento\PlanilhaTratamentoImporter;
 use App\Services\Tratamento\TratamentoRamoResolver;
@@ -141,7 +140,7 @@ class ReginProcessoProtocoladorTest extends TestCase
 
         $this->assertNotNull($processo);
         $this->assertSame(ViabilityRequestOrigin::Regin, $processo->origin);
-        $this->assertSame(ReginProtocoloSimulacaoService::CONTINGENCIA_RECEBE, $processo->contingency_reason);
+        $this->assertSame(ReginProcessoProtocolador::CONTINGENCIA_RECEBE, $processo->contingency_reason);
         $this->assertSame('43747', $processo->external_reference);
         $this->assertSame(834.0, (float) $processo->used_area_m2);
         $this->assertSame('Rua das Flores', $processo->address_street);

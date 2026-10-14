@@ -25,7 +25,6 @@ export type GestaoNavIcon =
     | 'road'
     | 'checklist'
     | 'paperclip'
-    | 'plug'
     | 'flask'
     | 'chart'
     | 'clock'
@@ -158,12 +157,6 @@ export const GESTAO_NAV_GROUPS: GestaoNavGroup[] = [
                 href: '/gestao/escritorio-virtual/anexos',
                 icon: 'paperclip',
                 permission: 'manter-cnaes',
-            },
-            {
-                name: 'Simulação REGIN',
-                href: '/gestao/risco/simulacao-regin',
-                icon: 'plug',
-                permission: 'consultar-cnaes',
             },
             { name: 'Simulação de regras', href: '/gestao/louos/simulacao', icon: 'flask', permission: 'manter-louos' },
         ],

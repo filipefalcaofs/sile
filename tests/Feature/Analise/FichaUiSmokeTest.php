@@ -184,11 +184,11 @@ class FichaUiSmokeTest extends TestCase
         ]);
         $processo->forceFill([
             'zona_codigo' => 'ZPR 3',
-            'simulation_snapshot' => ['via' => 'Avenida Luís Viana Filho'],
             'camadas_incidentes' => [
                 'logradouro_tributario' => ['cod_log' => '212', 'nome' => 'Avenida Lafayete Coutinho'],
                 'logradouros_proximos' => [['cod_log' => '212', 'nome' => 'Avenida Lafayete Coutinho', 'distancia_m' => 26.6]],
                 'zona' => ['status' => 'indisponivel', 'nome' => null],
+                'via' => 'VE',
                 'camadas' => [['regra' => 'RT-03-ABM', 'titulo' => 'ABM', 'status' => 'dentro', 'elemento' => 'Trecho 5', 'incide' => true]],
             ],
         ])->save();
@@ -206,9 +206,9 @@ class FichaUiSmokeTest extends TestCase
                 ->where('localizacao.camadas.logradouro_tributario.cod_log', '212')
                 ->where('localizacao.camadas.camadas.0.elemento', 'Trecho 5')
                 ->where('localizacao.camadas.zona.nome', 'ZPR 3')
-                ->where('localizacao.camadas.via', 'Avenida Luís Viana Filho')
+                ->where('localizacao.camadas.via', 'VE')
                 ->where('localizacao.zona', 'ZPR 3')
-                ->where('localizacao.via', 'Avenida Luís Viana Filho'));
+                ->where('localizacao.via', 'VE'));
     }
 
     public function test_ca_fc_01_ficha_expoe_o_poligono_do_enderecamento_e_a_fonte_da_zona(): void

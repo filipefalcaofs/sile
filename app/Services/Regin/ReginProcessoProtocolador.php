@@ -35,6 +35,8 @@ use Throwable;
  */
 class ReginProcessoProtocolador
 {
+    public const CONTINGENCIA_RECEBE = 'regin_recebe';
+
     /** TIPO da instituição Prefeitura na tabela do Guia v2.12 (3.27); as demais perguntas do envelope não são da SEDUR. */
     private const INSTITUICAO_PREFEITURA = '2';
 
@@ -86,7 +88,7 @@ class ReginProcessoProtocolador
             'address_zip' => $endereco['zip'],
             'property_registration' => $inscricao,
             'simulation_snapshot' => $this->snapshotDoRowset($rowset, $cnaes),
-            'contingency_reason' => ReginProtocoloSimulacaoService::CONTINGENCIA_RECEBE,
+            'contingency_reason' => self::CONTINGENCIA_RECEBE,
             'external_reference' => $recebimento->protocolo,
         ]);
 
@@ -141,7 +143,7 @@ class ReginProcessoProtocolador
                 'respostas_tratamento_por_cnae' => $this->respostasPorCnae($dados),
                 'perguntas_cnae' => $dados->perguntas,
             ],
-            'contingency_reason' => ReginProtocoloSimulacaoService::CONTINGENCIA_RECEBE,
+            'contingency_reason' => self::CONTINGENCIA_RECEBE,
             'external_reference' => $recebimento->protocolo,
             'origem_declarada' => $dados->toArray(),
         ]);

@@ -57,12 +57,6 @@ abstract class TestCase extends BaseTestCase
         // por padrão na suíte; os testes do cliente ligam e usam Http::fake.
         config(['sile.features.benchmark_redesim' => false]);
 
-        // A suíte exercita o catálogo histórico. O arquivo publicado no
-        // simulador traz só o lote de sete inscrições.
-        config([
-            'sile.regin_simulacao.catalogo' => database_path('data/regras-20-08-26/protocolos-sedur-suite.json'),
-        ]);
-
         // O gatilho do fluxo expresso (listener auto-descoberto AvaliarFluxoExpresso)
         // despacha o DecidirFluxoExpressoJob a CADA protocolo (SolicitacaoProtocolada,
         // EP08). Na suíte a fila é sync (phpunit.xml): o job rodaria INLINE e a
