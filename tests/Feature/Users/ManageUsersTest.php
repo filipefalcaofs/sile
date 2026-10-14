@@ -175,21 +175,21 @@ class ManageUsersTest extends TestCase
         $user = User::factory()->analista()->create();
 
         $this->actingAs($admin, 'gestao')
-            ->put("/gestao/usuarios/{$user->id}/papel", ['role' => 'gestor'])
+            ->put("/gestao/usuarios/{$user->id}/papel", ['role' => 'Coordenador'])
             ->assertRedirect();
 
         $user = $user->fresh();
 
-        $this->assertTrue($user->hasRole('gestor'));
-        $this->assertFalse($user->hasRole('analista'));
+        $this->assertTrue($user->hasRole('Coordenador'));
+        $this->assertFalse($user->hasRole('Analista Terceirizado'));
 
         $activity = Activity::where('log_name', 'usuarios')
             ->where('event', 'papel-alterado')
             ->first();
 
         $this->assertNotNull($activity, 'Esperava activity de alteração de papel');
-        $this->assertSame(['analista'], $activity->properties['papel_anterior']);
-        $this->assertSame('gestor', $activity->properties['papel_novo']);
+        $this->assertSame(['Analista Terceirizado'], $activity->properties['papel_anterior']);
+        $this->assertSame('Coordenador', $activity->properties['papel_novo']);
     }
 
     public function test_papel_inexistente_e_rejeitado(): void
@@ -201,7 +201,7 @@ class ManageUsersTest extends TestCase
             ->put("/gestao/usuarios/{$user->id}/papel", ['role' => 'papel-fantasma'])
             ->assertSessionHasErrors('role');
 
-        $this->assertTrue($user->fresh()->hasRole('analista'));
+        $this->assertTrue($user->fresh()->hasRole('Analista Terceirizado'));
     }
 
     public function test_gestor_sem_permissao_nao_gerencia_usuarios(): void

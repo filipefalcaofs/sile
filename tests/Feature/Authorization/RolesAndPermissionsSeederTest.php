@@ -17,7 +17,7 @@ class RolesAndPermissionsSeederTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        foreach (['cidadao', 'analista', 'apoio', 'gestor', 'administrador'] as $role) {
+        foreach (['cidadao', 'Analista Terceirizado', 'apoio', 'Coordenador', 'administrador'] as $role) {
             $this->assertSame($role, Role::findByName($role, 'web')->name);
         }
 
@@ -56,12 +56,12 @@ class RolesAndPermissionsSeederTest extends TestCase
             $this->assertTrue($administrador->hasPermissionTo($permission));
         }
 
-        $analista = Role::findByName('analista', 'web');
+        $analista = Role::findByName('Analista Terceirizado', 'web');
         $this->assertTrue($analista->hasPermissionTo('acessar-gestao'));
         $this->assertTrue($analista->hasPermissionTo('consultar-cnaes'));
         $this->assertFalse($analista->hasPermissionTo('manter-cnaes'));
 
-        $gestor = Role::findByName('gestor', 'web');
+        $gestor = Role::findByName('Coordenador', 'web');
         $this->assertTrue($gestor->hasPermissionTo('acessar-gestao'));
         $this->assertTrue($gestor->hasPermissionTo('consultar-cnaes'));
         $this->assertFalse($gestor->hasPermissionTo('manter-cnaes'));
@@ -81,7 +81,7 @@ class RolesAndPermissionsSeederTest extends TestCase
             Permission::findByName('consultar-territorio', 'web')->name,
         );
 
-        foreach (['administrador', 'analista', 'gestor'] as $role) {
+        foreach (['administrador', 'Analista Terceirizado', 'Coordenador'] as $role) {
             $this->assertTrue(
                 Role::findByName($role, 'web')->hasPermissionTo('consultar-territorio'),
             );
@@ -107,7 +107,7 @@ class RolesAndPermissionsSeederTest extends TestCase
 
         $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('manter-territorio'));
 
-        foreach (['analista', 'gestor', 'cidadao'] as $role) {
+        foreach (['Analista Terceirizado', 'Coordenador', 'cidadao'] as $role) {
             $this->assertFalse(
                 Role::findByName($role, 'web')->hasPermissionTo('manter-territorio'),
                 "O papel {$role} não pode manter o catálogo de camadas do GeoServer.",
@@ -127,7 +127,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
 
         // Consulta dos Quadros vigentes: analista, gestor e administrador (espelha CNAEs/risco).
-        foreach (['administrador', 'analista', 'gestor'] as $role) {
+        foreach (['administrador', 'Analista Terceirizado', 'Coordenador'] as $role) {
             $this->assertTrue(
                 Role::findByName($role, 'web')->hasPermissionTo('consultar-louos'),
             );
@@ -135,8 +135,8 @@ class RolesAndPermissionsSeederTest extends TestCase
 
         // Manutenção (publicação versionada dos Quadros): só o administrador.
         $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('manter-louos'));
-        $this->assertFalse(Role::findByName('analista', 'web')->hasPermissionTo('manter-louos'));
-        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('manter-louos'));
+        $this->assertFalse(Role::findByName('Analista Terceirizado', 'web')->hasPermissionTo('manter-louos'));
+        $this->assertFalse(Role::findByName('Coordenador', 'web')->hasPermissionTo('manter-louos'));
         $this->assertFalse(Role::findByName('cidadao', 'web')->hasPermissionTo('consultar-louos'));
     }
 
@@ -159,8 +159,8 @@ class RolesAndPermissionsSeederTest extends TestCase
             );
         }
 
-        // Administrador parametriza tudo; gestor opera e parametriza os cadastros da fase.
-        foreach (['administrador', 'gestor'] as $role) {
+        // Administrador parametriza tudo; as chefias de análise não parametrizam os cadastros.
+        foreach (['administrador'] as $role) {
             foreach ($solicitacao as $permission) {
                 $this->assertTrue(
                     Role::findByName($role, 'web')->hasPermissionTo($permission),
@@ -169,7 +169,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
 
         // Analista só consulta os processos no backoffice (não registra contingência).
-        $analista = Role::findByName('analista', 'web');
+        $analista = Role::findByName('Analista Terceirizado', 'web');
         $this->assertTrue($analista->hasPermissionTo('consultar-solicitacoes'));
         $this->assertFalse($analista->hasPermissionTo('registrar-contingencia'));
 
@@ -184,9 +184,9 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->assertTrue(User::factory()->cidadao()->create()->hasRole('cidadao'));
-        $this->assertTrue(User::factory()->analista()->create()->hasRole('analista'));
+        $this->assertTrue(User::factory()->analista()->create()->hasRole('Analista Terceirizado'));
         $this->assertTrue(User::factory()->apoio()->create()->hasRole('apoio'));
-        $this->assertTrue(User::factory()->gestor()->create()->hasRole('gestor'));
+        $this->assertTrue(User::factory()->gestor()->create()->hasRole('Coordenador'));
         $this->assertTrue(User::factory()->administrador()->create()->hasRole('administrador'));
     }
 
@@ -248,7 +248,7 @@ class RolesAndPermissionsSeederTest extends TestCase
 
         // Analista analisa, provoca malha fina e emite o TVL interno; não
         // distribui processos nem administra setores (atribuições do gestor).
-        $analista = Role::findByName('analista', 'web');
+        $analista = Role::findByName('Analista Terceirizado', 'web');
         foreach (['analisar-processos', 'encaminhar-malha-fina', 'emitir-tvl'] as $permission) {
             $this->assertTrue($analista->hasPermissionTo($permission));
         }
@@ -257,17 +257,18 @@ class RolesAndPermissionsSeederTest extends TestCase
 
         // Gestor distribui e também analisa/emite TVL. Setores ficam só com o
         // administrador (relatório de usabilidade SEDUR 19/09, itens 03-04).
-        $gestor = Role::findByName('gestor', 'web');
+        $gestor = Role::findByName('Coordenador', 'web');
         foreach (['analisar-processos', 'distribuir-processos', 'emitir-tvl', 'encaminhar-malha-fina', 'analisar-malha-fina'] as $permission) {
             $this->assertTrue($gestor->hasPermissionTo($permission));
         }
         $this->assertFalse($gestor->hasPermissionTo('manter-setores'));
 
-        // Administrador recebe as cinco (administra tudo).
+        // Administrador administra e distribui, mas não conclui processos.
         $administrador = Role::findByName('administrador', 'web');
-        foreach ($novas as $permission) {
+        foreach (array_diff($novas, ['analisar-processos']) as $permission) {
             $this->assertTrue($administrador->hasPermissionTo($permission));
         }
+        $this->assertFalse($administrador->hasPermissionTo('analisar-processos'));
 
         // Cidadão não recebe nenhuma permissão de backoffice da análise.
         $cidadao = Role::findByName('cidadao', 'web');
@@ -288,7 +289,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         // Envio manual do processo à análise (tela T06): permissão DEDICADA
         // concedida a quem já opera a análise técnica — analista, gestor e
         // administrador.
-        foreach (['analista', 'gestor', 'administrador'] as $role) {
+        foreach (['Analista Terceirizado', 'Coordenador', 'administrador'] as $role) {
             $this->assertTrue(
                 Role::findByName($role, 'web')->hasPermissionTo('enviar-tvl-analise'),
                 "O papel {$role} deve poder enviar processos para análise.",
@@ -319,16 +320,16 @@ class RolesAndPermissionsSeederTest extends TestCase
         // gestor (relatório de usabilidade SEDUR 19/09, item 06).
         $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('consultar-auditoria'));
         $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('gerenciar-alertas-abuso'));
-        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('consultar-auditoria'));
-        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('gerenciar-alertas-abuso'));
+        $this->assertFalse(Role::findByName('Coordenador', 'web')->hasPermissionTo('consultar-auditoria'));
+        $this->assertFalse(Role::findByName('Coordenador', 'web')->hasPermissionTo('gerenciar-alertas-abuso'));
 
         // Painel LGPD (HU-102; DPO/admin): só o administrador.
         $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('monitorar-lgpd'));
-        $this->assertFalse(Role::findByName('gestor', 'web')->hasPermissionTo('monitorar-lgpd'));
+        $this->assertFalse(Role::findByName('Coordenador', 'web')->hasPermissionTo('monitorar-lgpd'));
 
         // Analista NÃO recebe nenhuma das três (default gestor/admin; sem papel
         // auditor dedicado — decisão CONTEXT).
-        $analista = Role::findByName('analista', 'web');
+        $analista = Role::findByName('Analista Terceirizado', 'web');
         foreach ($novas as $permission) {
             $this->assertFalse($analista->hasPermissionTo($permission));
         }
@@ -356,7 +357,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         // Consultar relatórios e ver a produtividade nominal (HU-130): gestor e
         // administrador. A exportação NÃO tem permissão própria — herda a leitura
         // da tela (RN-007).
-        foreach (['gestor', 'administrador'] as $role) {
+        foreach (['Coordenador', 'administrador'] as $role) {
             foreach ($novas as $permission) {
                 $this->assertTrue(Role::findByName($role, 'web')->hasPermissionTo($permission));
             }
@@ -364,7 +365,7 @@ class RolesAndPermissionsSeederTest extends TestCase
 
         // Analista não consulta os relatórios gerenciais nem vê produtividade
         // nominal (default conservador RH/LGPD — vê só o próprio recorte).
-        $analista = Role::findByName('analista', 'web');
+        $analista = Role::findByName('Analista Terceirizado', 'web');
         foreach ($novas as $permission) {
             $this->assertFalse($analista->hasPermissionTo($permission));
         }
@@ -386,7 +387,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         );
 
         // Administrador e gestor parametrizam os tipos de imóvel (espelha manter-tipos-servico).
-        foreach (['administrador', 'gestor'] as $role) {
+        foreach (['administrador'] as $role) {
             $this->assertTrue(
                 Role::findByName($role, 'web')->hasPermissionTo('manter-tipos-imovel'),
                 "O papel {$role} deve ter manter-tipos-imovel.",
@@ -394,7 +395,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
 
         // Analista e cidadão NÃO recebem a permissão.
-        foreach (['analista', 'cidadao'] as $role) {
+        foreach (['Analista Terceirizado', 'cidadao'] as $role) {
             $this->assertFalse(
                 Role::findByName($role, 'web')->hasPermissionTo('manter-tipos-imovel'),
                 "O papel {$role} não deve ter manter-tipos-imovel.",
@@ -413,7 +414,7 @@ class RolesAndPermissionsSeederTest extends TestCase
 
         // Administrador e gestor mantêm os gatilhos semi-expresso (espelha
         // manter-tipos-imovel — parametrização das regras do licenciamento).
-        foreach (['administrador', 'gestor'] as $role) {
+        foreach (['administrador'] as $role) {
             $this->assertTrue(
                 Role::findByName($role, 'web')->hasPermissionTo('manter-gatilhos-risco'),
                 "O papel {$role} deve ter manter-gatilhos-risco.",
@@ -421,7 +422,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
 
         // Analista e cidadão NÃO recebem a permissão.
-        foreach (['analista', 'cidadao'] as $role) {
+        foreach (['Analista Terceirizado', 'cidadao'] as $role) {
             $this->assertFalse(
                 Role::findByName($role, 'web')->hasPermissionTo('manter-gatilhos-risco'),
                 "O papel {$role} não deve ter manter-gatilhos-risco.",
@@ -443,7 +444,7 @@ class RolesAndPermissionsSeederTest extends TestCase
         // externo). Espelha manter-config-email.
         $this->assertTrue(Role::findByName('administrador', 'web')->hasPermissionTo('manter-config-ia'));
 
-        foreach (['analista', 'gestor', 'cidadao'] as $role) {
+        foreach (['Analista Terceirizado', 'Coordenador', 'cidadao'] as $role) {
             $this->assertFalse(
                 Role::findByName($role, 'web')->hasPermissionTo('manter-config-ia'),
                 "O papel {$role} não pode manter a configuração de IA.",
@@ -457,11 +458,8 @@ class RolesAndPermissionsSeederTest extends TestCase
 
         $perfis = [
             'Analista Servidor',
-            'Analista Terceirizado',
             'Analista Vistoriador',
             'Atendimento Sedur',
-            'Chefe de setor',
-            'Coordenador',
             'Diretor',
             'Fiscal',
             'Gerente',
@@ -470,7 +468,6 @@ class RolesAndPermissionsSeederTest extends TestCase
             'Secretário',
             'SEFAZ',
             'Servidor',
-            'Subcoordenador',
             'Vistoriador',
         ];
 
@@ -480,22 +477,22 @@ class RolesAndPermissionsSeederTest extends TestCase
             $this->assertCount(0, $perfil->permissions, "O perfil {$nome} nasce sem permissão.");
         }
 
-        $this->assertSame(21, Role::query()->count());
+        $this->assertSame(19, Role::query()->count());
     }
 
     public function test_seeder_preserva_permissao_configurada_em_perfil_do_legado(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        Role::findByName('Chefe de setor', 'web')->givePermissionTo('acessar-gestao');
+        Role::findByName('Fiscal', 'web')->givePermissionTo('acessar-gestao');
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        $this->assertTrue(Role::findByName('Chefe de setor', 'web')->hasPermissionTo('acessar-gestao'));
-        $this->assertSame(21, Role::query()->count());
+        $this->assertTrue(Role::findByName('Fiscal', 'web')->hasPermissionTo('acessar-gestao'));
+        $this->assertSame(19, Role::query()->count());
     }
 
-    public function test_seeder_remove_perfil_fora_do_catalogo(): void
+    public function test_seeder_preserva_perfil_fora_do_seed(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
@@ -505,11 +502,11 @@ class RolesAndPermissionsSeederTest extends TestCase
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        $this->assertFalse(Role::query()->where('name', 'validacao-fase-02')->exists());
-        $this->assertFalse($usuario->fresh()->hasRole('validacao-fase-02'));
+        $this->assertTrue(Role::query()->where('name', 'validacao-fase-02')->exists());
+        $this->assertTrue($usuario->fresh()->hasRole('validacao-fase-02'));
         $this->assertTrue(Role::query()->where('name', 'cidadao')->exists());
         $this->assertTrue(Role::query()->where('name', 'Chefe de setor')->exists());
-        $this->assertSame(21, Role::query()->count());
+        $this->assertSame(20, Role::query()->count());
     }
 
     public function test_seeder_e_idempotente(): void
@@ -517,20 +514,78 @@ class RolesAndPermissionsSeederTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        $this->assertSame(21, Role::query()->count());
-        $this->assertSame(36, Permission::query()->count());
+        $this->assertSame(19, Role::query()->count());
+        $this->assertSame(38, Permission::query()->count());
     }
 
     public function test_seeder_aditivo_preserva_ajustes_feitos_pela_interface(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        Role::findByName('analista', 'web')->givePermissionTo(
+        Role::findByName('Analista Terceirizado', 'web')->givePermissionTo(
             Permission::firstOrCreate(['name' => 'permissao-extra-ui', 'guard_name' => 'web']),
         );
 
         $this->seed(RolesAndPermissionsSeeder::class);
 
-        $this->assertTrue(Role::findByName('analista', 'web')->hasPermissionTo('permissao-extra-ui'));
+        $this->assertTrue(Role::findByName('Analista Terceirizado', 'web')->hasPermissionTo('permissao-extra-ui'));
+    }
+
+    public function test_so_os_perfis_de_analise_concluem_processos(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        foreach (['Analista Terceirizado', 'Coordenador', 'Subcoordenador', 'Chefe de setor'] as $nome) {
+            $this->assertTrue(Role::findByName($nome, 'web')->hasPermissionTo('analisar-processos'), $nome);
+        }
+
+        foreach (['administrador', 'apoio', 'cidadao'] as $nome) {
+            $this->assertFalse(Role::findByName($nome, 'web')->hasPermissionTo('analisar-processos'), $nome);
+        }
+    }
+
+    public function test_chefias_recebem_extras_e_analista_terceirizado_nao(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $extras = [
+            'distribuir-processos',
+            'analisar-malha-fina',
+            'consultar-relatorios',
+            'relatorios.produtividade.nominal',
+            'forcar-transicao-analise',
+            'receber-escalonamento-sla',
+        ];
+
+        foreach (['Coordenador', 'Subcoordenador', 'Chefe de setor'] as $nome) {
+            foreach ($extras as $permissao) {
+                $this->assertTrue(Role::findByName($nome, 'web')->hasPermissionTo($permissao), "{$nome} / {$permissao}");
+            }
+        }
+
+        foreach ($extras as $permissao) {
+            $this->assertFalse(Role::findByName('Analista Terceirizado', 'web')->hasPermissionTo($permissao), $permissao);
+        }
+    }
+
+    public function test_analista_e_gestor_nao_existem_mais_e_protegidos_vem_marcados(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertDatabaseMissing('roles', ['name' => 'analista']);
+        $this->assertDatabaseMissing('roles', ['name' => 'gestor']);
+        $this->assertDatabaseHas('roles', ['name' => 'cidadao', 'protegido' => true]);
+        $this->assertDatabaseHas('roles', ['name' => 'administrador', 'protegido' => true]);
+        $this->assertDatabaseHas('roles', ['name' => 'apoio', 'protegido' => false]);
+    }
+
+    public function test_reseed_nao_apaga_perfil_criado_pela_interface(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        Role::create(['name' => 'perfil-da-tela', 'guard_name' => 'web']);
+
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $this->assertDatabaseHas('roles', ['name' => 'perfil-da-tela']);
     }
 }

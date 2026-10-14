@@ -35,7 +35,7 @@ class ManageRolesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/perfis/index')
-                ->has('roles', 21)
+                ->has('roles', 19)
                 ->has('roles.0', fn (Assert $item) => $item
                     ->hasAll(['id', 'name', 'permissions', 'users_count', 'structural']))
                 ->where(
@@ -46,8 +46,8 @@ class ManageRolesTest extends TestCase
                             && $role['users_count'] === 1
                     )
                 )
-                ->has('permissions', 36)
-                ->has('permissionCatalog', 36)
+                ->has('permissions', 38)
+                ->has('permissionCatalog', 38)
                 ->where(
                     'permissionCatalog',
                     fn ($catalog) => collect($catalog)->contains(
@@ -126,11 +126,11 @@ class ManageRolesTest extends TestCase
     public function test_ajusta_permissoes_de_papel_estrutural(): void
     {
         $admin = $this->admin();
-        $analista = Role::findByName('analista', 'web');
+        $analista = Role::findByName('Analista Terceirizado', 'web');
 
         $this->actingAs($admin, 'gestao')
             ->put("/gestao/perfis/{$analista->id}", [
-                'name' => 'analista',
+                'name' => 'Analista Terceirizado',
                 'permissions' => ['acessar-gestao', 'consultar-cnaes', 'consultar-acessos-de-qualquer-conta'],
             ])
             ->assertRedirect();
