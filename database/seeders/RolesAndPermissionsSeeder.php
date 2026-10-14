@@ -34,7 +34,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'receber-escalonamento-sla',
     ];
 
-    private const array PERFIS_ANALISE = ['Analista Terceirizado'];
+    private const array PERFIS_ANALISE = ['Analista Terceirizado', 'Analista Servidor'];
 
     private const array PERFIS_CHEFIA = ['Coordenador', 'Subcoordenador', 'Chefe de setor'];
 
@@ -43,7 +43,6 @@ class RolesAndPermissionsSeeder extends Seeder
      * administrador configura cada um na tela de Perfis.
      */
     private const array PERFIS_SEM_PERMISSAO = [
-        'Analista Servidor',
         'Analista Vistoriador',
         'Atendimento Sedur',
         'Diretor',

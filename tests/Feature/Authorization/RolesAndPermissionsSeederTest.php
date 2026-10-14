@@ -452,12 +452,34 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
     }
 
+    public function test_perfis_de_analise_e_chefia_entram_na_lista_de_distribuicao(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        $perfis = ['Chefe de setor', 'Coordenador', 'Subcoordenador', 'Analista Terceirizado', 'Analista Servidor'];
+
+        foreach ($perfis as $nome) {
+            $this->assertTrue(
+                Role::findByName($nome, 'web')->hasPermissionTo('analisar-processos'),
+                "O perfil {$nome} precisa de analisar-processos para receber distribuição.",
+            );
+
+            $usuario = User::factory()->create();
+            $usuario->assignRole($nome);
+
+            $this->assertContains(
+                $usuario->id,
+                User::query()->permission('analisar-processos')->pluck('id')->all(),
+                "Usuário do perfil {$nome} deve aparecer na lista de distribuição.",
+            );
+        }
+    }
+
     public function test_seeder_cria_perfis_do_legado_sem_permissao(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $perfis = [
-            'Analista Servidor',
             'Analista Vistoriador',
             'Atendimento Sedur',
             'Diretor',
