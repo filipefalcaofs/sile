@@ -626,7 +626,7 @@ class ParameterSeederTest extends TestCase
         );
 
         $this->assertNull(Parameter::query()->where('key', 'notificacoes.escalonamento.gestor_role')->first());
-        $this->assertSame('gestor', config('sile.notificacoes.escalonamento.gestor_role'));
+        $this->assertNull(config('sile.notificacoes.escalonamento.gestor_role'));
         $this->assertNull(Parameter::query()->where('key', 'notificacoes.pendencia.assunto')->first());
         $this->assertNull(Parameter::query()->where('key', 'notificacoes.pendencia.corpo')->first());
         $this->assertStringContainsString('{protocolo}', (string) config('sile.notificacoes.pendencia.assunto'));

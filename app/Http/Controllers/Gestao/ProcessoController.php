@@ -257,7 +257,7 @@ class ProcessoController extends Controller
      * delegar à AnalysisStatusStateMachine — os estados dirigidos por evento
      * (convite_respondido/expirado) fazem parte do grafo completo da máquina,
      * mas não podem ser setados manualmente. A guarda é ignorada quando o
-     * usuário é gestor E pede o override (`force`), que aí passa a valer o
+     * usuário tem forcar-transicao-analise E pede o override (`force`), que aí passa a valer o
      * grafo completo validado pela state machine. `motivo` é opcional na Fase
      * 1 (a obrigatoriedade de parecer no cancelamento chega com o convite, na
      * Fase 2). Transição recusada é comunicada com flash.error — nunca
@@ -270,7 +270,7 @@ class ProcessoController extends Controller
     ): RedirectResponse {
         $to = AnalysisStatus::from($request->string('status')->toString());
         $from = $viabilityRequest->analysis_status;
-        $force = $request->boolean('force') && $request->user()->hasRole('gestor');
+        $force = $request->boolean('force') && $request->user()->can('forcar-transicao-analise');
 
         if (! $force && ($from === null || ! in_array($to, $from->proximas(), true))) {
             return back()->with('error', 'Transição de situação da análise não permitida.');
