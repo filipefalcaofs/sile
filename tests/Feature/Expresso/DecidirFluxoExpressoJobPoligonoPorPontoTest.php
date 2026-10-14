@@ -2,7 +2,10 @@
 
 namespace Tests\Feature\Expresso;
 
+use App\Enums\AnalysisStatus;
+use App\Enums\ViabilityRequestStatus;
 use App\Jobs\DecidirFluxoExpressoJob;
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\DecisionResult;
 use App\Services\Expresso\FluxoExpressoService;
@@ -109,5 +112,41 @@ class DecidirFluxoExpressoJobPoligonoPorPontoTest extends TestCase
 
         $this->assertSame(0, $this->consultasPorPonto());
         $this->assertSame($existente, $request->fresh()->address_polygon_geojson);
+    }
+
+    public function test_reavaliacao_decide_processo_em_analise_sem_analista_com_o_ator(): void
+    {
+        Http::fake(['*' => Http::response($this->colecaoComUmLote())]);
+        $ator = User::factory()->create();
+        $request = $this->protocolada([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'analysis_status' => AnalysisStatus::ParaDistribuir,
+        ]);
+
+        $service = Mockery::mock(FluxoExpressoService::class);
+        $service->shouldReceive('podeReavaliar')->once()->andReturnTrue();
+        $service->shouldReceive('decide')->once()
+            ->with(Mockery::type(ViabilityRequest::class), Mockery::on(fn (?User $u): bool => $u?->id === $ator->id))
+            ->andReturn(DecisionResult::paraAnalise('teste'));
+
+        (new DecidirFluxoExpressoJob($request->id, reavaliacao: true, atorId: $ator->id))->handle($service);
+
+        $this->assertSame('Polygon', $request->fresh()->address_polygon_geojson['type']);
+    }
+
+    public function test_sem_reavaliacao_processo_em_analise_continua_sem_efeito(): void
+    {
+        Http::fake();
+        $request = $this->protocolada([
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'analysis_status' => AnalysisStatus::ParaDistribuir,
+        ]);
+
+        $service = Mockery::mock(FluxoExpressoService::class);
+        $service->shouldNotReceive('decide');
+
+        (new DecidirFluxoExpressoJob($request->id))->handle($service);
+
+        Http::assertNothingSent();
     }
 }

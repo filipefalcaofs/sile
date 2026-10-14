@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
 use App\Services\Geo\PoligonoEnderecamentoService;
@@ -37,8 +38,11 @@ class DecidirFluxoExpressoJob implements ShouldQueue
     /** @var array<int, int> */
     public array $backoff;
 
-    public function __construct(public readonly int $viabilityRequestId)
-    {
+    public function __construct(
+        public readonly int $viabilityRequestId,
+        public readonly bool $reavaliacao = false,
+        public readonly ?int $atorId = null,
+    ) {
         // Resiliência parametrizada por constante técnica (config/sile.php,
         // precedente [02-02]) — fila/tries/timeout/backoff ajustáveis sem deploy.
         $this->tries = (int) config('sile.expresso.job.tries', 3);
@@ -60,9 +64,14 @@ class DecidirFluxoExpressoJob implements ShouldQueue
         $request = ViabilityRequest::query()->find($this->viabilityRequestId);
 
         // Guard idempotente: a solicitação foi removida ou já saiu de protocolada
-        // (decidida/encaminhada por outra passada) → no-op. O serviço também
-        // re-checa o status sob o lock, então o reprocesso é sempre seguro.
-        if ($request === null || $request->status !== ViabilityRequestStatus::Protocolada) {
+        // (decidida/encaminhada por outra passada) → no-op. Na reavaliação pedida
+        // pelo reprocesso vale a mesma regra do reprocesso: protocolada, ou em
+        // análise sem analista e sem decisão. O serviço re-checa sob o lock.
+        if ($request === null) {
+            return;
+        }
+
+        if ($this->reavaliacao ? ! $service->podeReavaliar($request) : $request->status !== ViabilityRequestStatus::Protocolada) {
             return;
         }
 
@@ -75,7 +84,7 @@ class DecidirFluxoExpressoJob implements ShouldQueue
         // protocolo síncrono não a pede. Falha não impede a decisão.
         ($poligono ?? app(PoligonoEnderecamentoService::class))->aplicarPorPonto($request);
 
-        $service->decide($request);
+        $service->decide($request, $this->atorId !== null ? User::query()->find($this->atorId) : null);
     }
 
     /**
