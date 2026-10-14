@@ -1,6 +1,5 @@
 /**
  * Catálogo único da sidebar de Gestão. Fonte de verdade do menu e do Cmd+K.
- *
  */
 
 export type GestaoNavIcon =

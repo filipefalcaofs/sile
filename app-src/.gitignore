@@ -26,8 +26,6 @@ secrets.json
 
 # Caches de assistentes (não as skills/rules versionadas)
 .claude-cache/
-cache-editor/
-sessions-editor/
 
 # Logs e temporários genéricos
 *.log

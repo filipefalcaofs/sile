@@ -10,9 +10,15 @@ use App\Models\Company;
 use App\Models\ReginRecebimento;
 use App\Models\User;
 use App\Models\ViabilityRequest;
+use App\Services\Realty\PropertyCadastroCampos;
+use App\Services\Realty\PropertyRegistryLookup;
+use App\Services\Realty\PropertyRegistryResult;
+use App\Services\Realty\PropertyRegistryUnavailableException;
 use App\Services\Regin\ReginProcessoProtocolador;
 use App\Services\Regin\ReginProtocoloSimulacaoService;
 use App\Services\Tratamento\CategoriaEmpresa;
+use App\Services\Tratamento\PlanilhaTratamentoImporter;
+use App\Services\Tratamento\TratamentoRamoResolver;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use ReflectionMethod;
@@ -72,6 +78,61 @@ class ReginProcessoProtocoladorTest extends TestCase
             'protocolo' => '43747',
             'corpo' => $corpo,
         ]);
+    }
+
+    /**
+     * @param  callable(string): PropertyRegistryResult  $resolver
+     */
+    private function fakeInscricao(callable $resolver): void
+    {
+        $this->app->instance(PropertyRegistryLookup::class, new class($resolver) implements PropertyRegistryLookup
+        {
+            /** @param callable(string): PropertyRegistryResult $resolver */
+            public function __construct(private $resolver) {}
+
+            public function resolve(string $inscricao): PropertyRegistryResult
+            {
+                return ($this->resolver)($inscricao);
+            }
+        });
+    }
+
+    private function resultadoComArea(string $inscricao, ?string $area): PropertyRegistryResult
+    {
+        $cadastro = new PropertyCadastroCampos(
+            inscricao: $inscricao,
+            endereco: null,
+            numero_metrico: null,
+            loteamento: null,
+            quadra: null,
+            lote: null,
+            conjunto_edificio: null,
+            bloco: null,
+            sub_unidade: null,
+            numero_sub_unidade: null,
+            bairro: null,
+            cep: null,
+            area_construida_m2: $area,
+            tipo_imovel: null,
+            data_lancamento: null,
+            situacao_cadastral: null,
+            contribuinte: null,
+            cpf_cnpj: null,
+            numero_porta: null,
+            area_terreno_m2: null,
+            valor_venal_iptu: null,
+            logradouro_tributario: null,
+            situacao_fiscal: null,
+            data_emissao_certidao: null,
+        );
+
+        return new PropertyRegistryResult(
+            latitude: null,
+            longitude: null,
+            inscricao: $inscricao,
+            source: 'teste',
+            cadastro: $cadastro,
+        );
     }
 
     public function test_ruc_completo_protocola_com_cnaes_endereco_area_e_inscricao(): void
@@ -225,6 +286,74 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertNotNull($processo);
         $this->assertSame([], $processo->simulation_snapshot['respostas_tratamento_por_cnae'] ?? []);
         $this->assertSame('316', $processo->simulation_snapshot['perguntas_regin'][0]['codigo'] ?? null);
+    }
+
+    public function test_pergunta_de_outra_instituicao_com_o_mesmo_enunciado_nao_vale_para_a_planilha(): void
+    {
+        $this->seedTratamentoPlanilha();
+
+        $corpo = $this->ruc([
+            'GROUPPERGUNTAS' => [
+                'PERGUNTAS' => [
+                    [
+                        'TIPO' => '4',
+                        'CNPJ' => '22306987000100',
+                        'COD_PERGUNTA' => '999',
+                        'PER_PERGUNTA' => 'A atividade será desenvolvida no local?',
+                        'PER_RESPOSTA' => 'NÃO',
+                    ],
+                    [
+                        'TIPO' => '2',
+                        'CNPJ' => '05457349000170',
+                        'COD_PERGUNTA' => '352',
+                        'PER_PERGUNTA' => 'A atividade será desenvolvida no local?',
+                        'PER_RESPOSTA' => 'Sim, a atividade será desenvolvida no local.',
+                    ],
+                ],
+            ],
+        ]);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($corpo));
+
+        $respostas = $processo->simulation_snapshot['respostas_tratamento_por_cnae']['4712100'] ?? [];
+        $this->assertSame(true, $respostas[11] ?? null);
+        $this->assertCount(2, $processo->simulation_snapshot['perguntas_regin']);
+    }
+
+    public function test_seguir_na_pergunta_1_resolve_a_subdivisao_pela_opcao_marcada_sim(): void
+    {
+        $versao = $this->seedTratamentoPlanilha();
+        app(PlanilhaTratamentoImporter::class)->complementar($versao, database_path('data/regras-20-08-26/planilha-regras.xlsx'));
+
+        $pergunta1 = collect(app(TratamentoRamoResolver::class)->perguntasExibidas('9609299'))->firstWhere('numero', 1);
+        $opcoes = $pergunta1['opcoes'] ?? [];
+        $this->assertGreaterThanOrEqual(2, count($opcoes), 'A planilha deve listar as subdivisões do CNAE 9609-2/99.');
+
+        $linhas = [[
+            'TIPO' => '2',
+            'CNPJ' => '05457349000170',
+            'COD_PERGUNTA' => '705',
+            'PER_PERGUNTA' => 'Identifique entre as opções a seguir os serviços ou as atividades que serão prestado(a)s/desenvolvido (a)s:',
+            'PER_RESPOSTA' => 'Seguir',
+        ]];
+
+        foreach ($opcoes as $indice => $opcao) {
+            $linhas[] = [
+                'TIPO' => '2',
+                'CNPJ' => '05457349000170',
+                'COD_PERGUNTA' => (string) (553 + $indice),
+                'PER_PERGUNTA' => $opcao['texto'],
+                'PER_RESPOSTA' => $indice === 1 ? 'SIM' : 'NÃO',
+            ];
+        }
+
+        $corpo = $this->ruc(['GROUPPERGUNTAS' => ['PERGUNTAS' => $linhas]]);
+        $corpo['rowset']['GROUPRUC_ACTV_ECON']['RUC_ACTV_ECON'] = [['RAE_TAE_COD_ACTVD' => '9609299', 'RAE_CALIF_ACTV' => '1']];
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($corpo));
+
+        $respostas = $processo->simulation_snapshot['respostas_tratamento_por_cnae']['9609299'] ?? [];
+        $this->assertSame(2, $respostas[1] ?? null);
     }
 
     public function test_envelope_real_bap2601472834_com_groupperguntas_alimenta_o_motor(): void
@@ -385,6 +514,43 @@ XML,
 
         $this->assertNull($processo);
         $this->assertSame(0, ViabilityRequest::query()->count());
+    }
+
+    public function test_area_zerada_no_regin_carrega_da_inscricao_imobiliaria(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComArea($inscricao, '150,00'));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_ESTAB' => ['RES_AREA' => '0']])),
+        );
+
+        $this->assertNotNull($processo);
+        $this->assertSame(150.0, (float) $processo->used_area_m2);
+        $this->assertSame('12345678', $processo->property_registration);
+    }
+
+    public function test_area_zerada_sem_area_no_cadastro_nao_protocola(): void
+    {
+        $this->fakeInscricao(fn (string $inscricao): PropertyRegistryResult => $this->resultadoComArea($inscricao, null));
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_ESTAB' => ['RES_AREA' => '0']])),
+        );
+
+        $this->assertNull($processo);
+    }
+
+    public function test_area_zerada_com_cadastro_indisponivel_nao_protocola(): void
+    {
+        $this->fakeInscricao(function (string $inscricao): PropertyRegistryResult {
+            throw new PropertyRegistryUnavailableException($inscricao);
+        });
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar(
+            $this->recebimento($this->ruc(['RUC_ESTAB' => ['RES_AREA' => '0']])),
+        );
+
+        $this->assertNull($processo);
     }
 
     public function test_ruc_sem_area_nao_protocola(): void
