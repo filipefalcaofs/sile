@@ -6,6 +6,8 @@ use App\Enums\PoligonoFonte;
 use App\Models\ViabilityRequest;
 use App\Support\Audit\AuditService;
 use App\Support\Settings;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Grava no processo a geometria do lote, em cadeia de fontes oficiais:
@@ -81,9 +83,27 @@ class PoligonoEnderecamentoService
     /**
      * Terceira fonte: o lote que contém o ponto do imóvel. Não consulta quando
      * o processo já tem polígono ou não tem ponto, então repetir a chamada (nova
-     * tentativa do job) não repete a consulta lenta.
+     * tentativa do job) não repete a consulta lenta. Uma trava por processo faz
+     * a segunda busca simultânea (job do REGIN e job de decisão, cliques
+     * repetidos no reprocesso) esperar a primeira e reaproveitar o polígono.
      */
     public function aplicarPorPonto(ViabilityRequest $request): bool
+    {
+        if (! $this->precisaConsultarPorPonto($request)) {
+            return false;
+        }
+
+        try {
+            return Cache::lock("poligono-ponto:{$request->id}", 90)->block(
+                (int) config('sile.integrations.geoserver.enderecamento.espera_trava_ponto', 60),
+                fn (): bool => $this->buscarPorPonto($request->refresh()),
+            );
+        } catch (LockTimeoutException) {
+            return false;
+        }
+    }
+
+    private function buscarPorPonto(ViabilityRequest $request): bool
     {
         $ponto = $request->pontoDoImovel();
 

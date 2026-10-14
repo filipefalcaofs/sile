@@ -8,6 +8,7 @@ use App\Models\ViabilityRequest;
 use App\Services\Geo\PoligonoEnderecamentoService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -221,5 +222,19 @@ class PoligonoPorPontoTest extends TestCase
         $this->assertFalse(app(PoligonoEnderecamentoService::class)->aplicar($request, consultarPorPonto: true));
 
         $this->assertSame(0, $this->consultasPorPonto());
+    }
+
+    public function test_busca_em_andamento_no_mesmo_processo_nao_repete_a_consulta(): void
+    {
+        config(['sile.integrations.geoserver.enderecamento.espera_trava_ponto' => 0]);
+        $this->fakeGeoServer($this->colecao($this->quadrado(-38.5, -12.98)));
+        $request = $this->processo();
+        $emAndamento = Cache::lock("poligono-ponto:{$request->id}", 60);
+        $emAndamento->get();
+
+        $this->assertFalse(app(PoligonoEnderecamentoService::class)->aplicarPorPonto($request));
+
+        $this->assertSame(0, $this->consultasPorPonto());
+        $emAndamento->release();
     }
 }

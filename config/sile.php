@@ -391,6 +391,9 @@ return [
                 // Consulta espacial por ponto: ~30 s medidos no servidor real.
                 // Sem retry interno; o job de decisão já tem tentativas (120 s).
                 'timeout_ponto' => 45,
+                // Segundos que uma segunda busca por ponto no mesmo processo
+                // espera a primeira terminar antes de seguir sem polígono.
+                'espera_trava_ponto' => 60,
             ],
         ],
         'arcgis_semap' => [
