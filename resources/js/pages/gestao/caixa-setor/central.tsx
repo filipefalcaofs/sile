@@ -5,11 +5,14 @@ import Input from '@/components/form/input';
 import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import ProgressBar from '@/components/ui/progress-bar';
+import Select from '@/components/form/select';
 import GestaoLayout from '@/layouts/gestao-layout';
 import { alocarPorQuantidade } from './alocar-lote';
+import { escolhaDeSetor, type SetorDoAnalista } from './setor-destino';
 
 interface ProcessoSelecionado {
     id: number;
+    sector_id: number | null;
     bap: string | null;
     protocol_number: string | null;
     imovel: string;
@@ -21,6 +24,7 @@ interface AnalistaCarga {
     analista: string;
     total: number;
     por_grupo: Record<string, number>;
+    setores: SetorDoAnalista[];
 }
 
 interface HistoricoItem {
@@ -36,6 +40,7 @@ interface CentralProps {
     totalSelecionados: number;
     totalEmAnalise: number;
     historico: HistoricoItem[];
+    distribuiEmQualquerSetor: boolean;
 }
 
 type Ordenacao = 'menor' | 'maior' | 'nome';
@@ -46,6 +51,7 @@ export default function CentralDistribuicao({
     totalSelecionados,
     totalEmAnalise,
     historico,
+    distribuiEmQualquerSetor,
 }: CentralProps) {
     const [busca, setBusca] = useState('');
     const [ordenacao, setOrdenacao] = useState<Ordenacao>('menor');
@@ -53,6 +59,7 @@ export default function CentralDistribuicao({
     const [modo, setModo] = useState<'um' | 'varios'>('um');
     const [quantidades, setQuantidades] = useState<Record<number, number>>({});
     const [historicoAberto, setHistoricoAberto] = useState(false);
+    const [setorDestino, setSetorDestino] = useState('');
 
     const form = useForm<{ request_ids: number[]; analista_id: string }>({
         request_ids: processos.map((p) => p.id),
@@ -115,6 +122,11 @@ export default function CentralDistribuicao({
     }, [analistasOrdenados, busca]);
 
     const escolhido = analistas.find((a) => a.analista_id === selecionado) ?? null;
+    const escolhaDoSetor = escolhaDeSetor(
+        distribuiEmQualquerSetor,
+        escolhido?.setores ?? [],
+        processos.map((processo) => processo.sector_id),
+    );
 
     function definirQuantidade(analistaId: number, valor: number) {
         const restante = totalSelecionados - (totalAlocado - (quantidades[analistaId] || 0));
@@ -127,7 +139,7 @@ export default function CentralDistribuicao({
             return;
         }
 
-        form.transform((data) => ({ ...data, analista_id: String(selecionado) }));
+        form.transform((data) => ({ ...data, analista_id: String(selecionado), sector_id: setorDestino || null }));
         form.post('/gestao/caixa-setor/distribuir', {
             preserveScroll: true,
             onSuccess: () => router.visit('/gestao/caixa-setor'),
@@ -163,7 +175,7 @@ export default function CentralDistribuicao({
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             <ResumoItem rotulo="Processos selecionados" valor={totalSelecionados} />
                             <ResumoItem rotulo="Analistas disponíveis" valor={analistas.length} />
-                            <ResumoItem rotulo="Processos em análise no setor" valor={totalEmAnalise} />
+                            <ResumoItem rotulo={distribuiEmQualquerSetor ? "Processos em análise" : "Processos em análise no setor"} valor={totalEmAnalise} />
                         </div>
                     </CardContent>
                 </Card>
@@ -332,7 +344,10 @@ export default function CentralDistribuicao({
                                     <li key={a.analista_id}>
                                         <button
                                             type="button"
-                                            onClick={() => setSelecionado(a.analista_id)}
+                                            onClick={() => {
+                                                setSelecionado(a.analista_id);
+                                                setSetorDestino('');
+                                            }}
                                             aria-pressed={ativo}
                                             className={`flex w-full flex-col gap-2 px-3 py-3 text-left transition-colors sm:flex-row sm:items-center sm:gap-4 ${
                                                 ativo ? 'bg-brand-50 dark:bg-brand-500/10' : 'hover:bg-gray-50 dark:hover:bg-white/[0.03]'
@@ -457,12 +472,31 @@ export default function CentralDistribuicao({
                                         {'  =  '}
                                         Após envio: <strong className="tabular-nums">{escolhido.total + totalSelecionados}</strong>
                                     </p>
+                                    {escolhaDoSetor !== 'nenhuma' && (
+                                        <div className="mt-3 w-full sm:w-80">
+                                            <label htmlFor="central-setor" className="mb-1.5 block text-theme-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Setor que recebe os processos
+                                            </label>
+                                            <Select
+                                                id="central-setor"
+                                                value={setorDestino}
+                                                onChange={setSetorDestino}
+                                                placeholder={escolhaDoSetor === 'opcional' ? 'Manter o setor atual dos processos' : 'Selecione o setor'}
+                                                options={escolhido.setores.map((setor) => ({ value: String(setor.id), label: setor.name }))}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <Button variant="outline" onClick={() => router.visit('/gestao/caixa-setor')} disabled={form.processing}>
                                         Cancelar
                                     </Button>
-                                    <Button variant="primary" onClick={confirmar} loading={form.processing}>
+                                    <Button
+                                        variant="primary"
+                                        onClick={confirmar}
+                                        loading={form.processing}
+                                        disabled={escolhaDoSetor === 'obrigatoria' && setorDestino === ''}
+                                    >
                                         Confirmar envio
                                     </Button>
                                 </div>

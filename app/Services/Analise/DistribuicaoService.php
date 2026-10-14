@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\DB;
  * processos em análise. O processo cai na caixa do setor (sector_id) e é
  * atribuído a um analista do setor SEM sair da caixa (RN-004 — modelo SAPS que
  * cobre férias/ausências: qualquer analista do setor mantém visibilidade e pode
- * assumir). A atribuição recalcula o SLA para a etapa de análise (HU-144, fonte
+ * assumir). Quem distribui em qualquer setor (o apoio) entrega a qualquer
+ * analista, e o processo passa para o setor do analista. A atribuição recalcula o SLA para a etapa de análise (HU-144, fonte
  * única AnalysisSlaService) e audita por processo de forma SÍNCRONA (RN-006 —
  * não depende de evento, lição das Fases 8/9). O lote (RN-007) itera item a
  * item, auditando cada um e isolando falhas.
@@ -36,9 +37,11 @@ class DistribuicaoService
      * Lança DistribuicaoException se o processo não está em caixa ou o analista
      * não pertence ao setor; nesse caso nada é gravado.
      */
-    public function distribuir(ViabilityRequest $request, User $analista, ?User $ator = null): void
+    public function distribuir(ViabilityRequest $request, User $analista, ?User $ator = null, ?int $setorEscolhido = null): void
     {
-        $this->atribuir($request, $analista, $ator ?? $analista, 'distribuir', 'Processo distribuído a analista do setor');
+        $ator ??= $analista;
+
+        $this->atribuir($request, $analista, $ator, 'distribuir', 'Processo distribuído a analista do setor', $this->distribuiEmQualquerSetor($ator), $setorEscolhido);
     }
 
     /**
@@ -48,14 +51,14 @@ class DistribuicaoService
      * @param  iterable<int, ViabilityRequest>  $requests
      * @return array{ok: int, falhas: list<array{viability_request_id: int, motivo: string}>}
      */
-    public function distribuirLote(iterable $requests, User $analista, ?User $ator = null): array
+    public function distribuirLote(iterable $requests, User $analista, ?User $ator = null, ?int $setorEscolhido = null): array
     {
         $ok = 0;
         $falhas = [];
 
         foreach ($requests as $request) {
             try {
-                $this->distribuir($request, $analista, $ator);
+                $this->distribuir($request, $analista, $ator, $setorEscolhido);
                 $ok++;
             } catch (DistribuicaoException $e) {
                 $falhas[] = [
@@ -102,7 +105,7 @@ class DistribuicaoService
             throw DistribuicaoException::jaAtribuido($request);
         }
 
-        $this->atribuir($request, $analista, $analista, 'assumir', 'Analista assumiu o processo da caixa do setor');
+        $this->atribuir($request, $analista, $analista, 'assumir', 'Analista assumiu o processo da caixa do setor', false, null);
     }
 
     /**
@@ -111,9 +114,9 @@ class DistribuicaoService
      * da pessoa; trocar o responsável não zera atraso. Audita a troca com a
      * analista anterior e a nova.
      */
-    public function redistribuir(ViabilityRequest $request, User $novaAnalista, User $ator): void
+    public function redistribuir(ViabilityRequest $request, User $novaAnalista, User $ator, ?int $setorEscolhido = null): void
     {
-        $this->garantirVinculoDeSetor($request, $novaAnalista);
+        $setorDestino = $this->setorDeDestino($request, $novaAnalista, $this->distribuiEmQualquerSetor($ator), $setorEscolhido);
 
         $status = $request->analysis_status;
 
@@ -121,18 +124,21 @@ class DistribuicaoService
             throw DistribuicaoException::analiseConcluida($request);
         }
 
-        DB::transaction(function () use ($request, $novaAnalista, $ator): void {
+        DB::transaction(function () use ($request, $novaAnalista, $ator, $setorDestino): void {
             $analistaAnterior = $request->assigned_user_id;
+            $setorAnterior = $request->sector_id;
 
             $request->forceFill([
+                'sector_id' => $setorDestino,
                 'assigned_user_id' => $novaAnalista->id,
                 'assigned_at' => now(),
             ])->save();
 
-            $this->audit->log('analise', 'redistribuir', "Processo redistribuído para outra analista do setor (solicitação #{$request->id}).", [
+            $this->audit->log('analise', 'redistribuir', "Processo redistribuído para outra analista (solicitação #{$request->id}).", [
                 'viability_request_id' => $request->id,
                 'protocol_number' => $request->protocol_number,
                 'sector_id' => $request->sector_id,
+                'setor_anterior_id' => $setorAnterior,
                 'analista_anterior_id' => $analistaAnterior,
                 'assigned_user_id' => $novaAnalista->id,
                 'ator_id' => $ator->id,
@@ -143,20 +149,66 @@ class DistribuicaoService
     }
 
     /**
-     * Núcleo da atribuição: valida o vínculo de setor, grava assigned_user_id/
-     * assigned_at e recalcula o SLA (etapa análise) via forceFill, SEM alterar
-     * sector_id (não sai da caixa) nem o status (segue em_analise), e audita
-     * SÍNCRONO por processo (RN-006: quem/quando/de qual setor).
+     * Quem distribui em qualquer setor (o apoio) não fica preso aos próprios
+     * setores nem ao setor do processo.
      */
-    private function atribuir(ViabilityRequest $request, User $analista, User $ator, string $evento, string $descricao): void
+    public function distribuiEmQualquerSetor(User $ator): bool
     {
-        $this->garantirVinculoDeSetor($request, $analista);
+        return $ator->can('distribuir-qualquer-setor');
+    }
+
+    /**
+     * Setor em que o processo fica depois da atribuição. Na regra do setor, é o
+     * setor do processo, e o analista precisa estar nele. Em qualquer setor, o
+     * processo passa para o setor do analista: o escolhido, o do processo se o
+     * analista já está nele, ou o único setor do analista. Não grava nada.
+     */
+    public function setorDeDestino(ViabilityRequest $request, User $analista, bool $qualquerSetor, ?int $setorEscolhido = null): int
+    {
+        if (! $qualquerSetor) {
+            $this->garantirVinculoDeSetor($request, $analista);
+
+            return (int) $request->sector_id;
+        }
+
+        $setoresDoAnalista = $analista->sectors()->pluck('sectors.id')->map(fn ($id): int => (int) $id);
+
+        if ($setorEscolhido !== null) {
+            if (! $setoresDoAnalista->contains($setorEscolhido)) {
+                throw DistribuicaoException::setorForaDoAnalista($analista, $request);
+            }
+
+            return $setorEscolhido;
+        }
+
+        if ($request->sector_id !== null && $setoresDoAnalista->contains((int) $request->sector_id)) {
+            return (int) $request->sector_id;
+        }
+
+        return match ($setoresDoAnalista->count()) {
+            0 => throw DistribuicaoException::analistaSemSetor($analista, $request),
+            1 => $setoresDoAnalista->first(),
+            default => throw DistribuicaoException::setorAmbiguo($analista, $request),
+        };
+    }
+
+    /**
+     * Núcleo da atribuição: resolve o setor de destino, grava assigned_user_id/
+     * assigned_at e recalcula o SLA (etapa análise) via forceFill, sem alterar o
+     * status (segue em_analise), e audita SÍNCRONO por processo (RN-006:
+     * quem/quando/de qual setor). Na regra do setor o processo não sai da caixa.
+     */
+    private function atribuir(ViabilityRequest $request, User $analista, User $ator, string $evento, string $descricao, bool $qualquerSetor, ?int $setorEscolhido): void
+    {
+        $setorDestino = $this->setorDeDestino($request, $analista, $qualquerSetor, $setorEscolhido);
         $this->garantirVistoriadorEmVistoria($request, $analista);
 
-        DB::transaction(function () use ($request, $analista, $ator, $evento, $descricao): void {
+        DB::transaction(function () use ($request, $analista, $ator, $evento, $descricao, $setorDestino): void {
             $startedAt = now();
+            $setorAnterior = $request->sector_id;
 
             $request->forceFill([
+                'sector_id' => $setorDestino,
                 'assigned_user_id' => $analista->id,
                 'assigned_at' => $startedAt,
                 'analysis_stage' => AnalysisStage::Analise,
@@ -168,6 +220,7 @@ class DistribuicaoService
                 'viability_request_id' => $request->id,
                 'protocol_number' => $request->protocol_number,
                 'sector_id' => $request->sector_id,
+                'setor_anterior_id' => $setorAnterior,
                 'assigned_user_id' => $analista->id,
                 'ator_id' => $ator->id,
             ], $request);

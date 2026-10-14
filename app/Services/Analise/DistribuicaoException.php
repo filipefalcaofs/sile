@@ -24,6 +24,21 @@ class DistribuicaoException extends RuntimeException
         return new self("Analista #{$analista->id} não está vinculado ao setor da solicitação #{$request->id}.");
     }
 
+    public static function analistaSemSetor(User $analista, ViabilityRequest $request): self
+    {
+        return new self("{$analista->name} não está vinculado a nenhum setor — a solicitação #{$request->id} não foi distribuída.");
+    }
+
+    public static function setorAmbiguo(User $analista, ViabilityRequest $request): self
+    {
+        return new self("{$analista->name} está em mais de um setor — escolha o setor que recebe a solicitação #{$request->id}.");
+    }
+
+    public static function setorForaDoAnalista(User $analista, ViabilityRequest $request): self
+    {
+        return new self("O setor escolhido não é de {$analista->name} — a solicitação #{$request->id} não foi distribuída.");
+    }
+
     public static function jaAtribuido(ViabilityRequest $request): self
     {
         return new self("Solicitação #{$request->id} já está com um analista. A troca de responsável é feita pela redistribuição.");

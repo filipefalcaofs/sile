@@ -21,7 +21,7 @@ class DistribuicaoInteligenteService
      *     nao_alocados: list<array{id: int, bap: ?string, protocol_number: ?string, motivo: string}>
      * }
      */
-    public function sugerir(array $processos, array $analistas): array
+    public function sugerir(array $processos, array $analistas, bool $qualquerSetor = false): array
     {
         $ordenados = $processos;
         usort($ordenados, function (array $a, array $b): int {
@@ -57,7 +57,7 @@ class DistribuicaoInteligenteService
         $envolvidos = [];
 
         foreach ($ordenados as $processo) {
-            $elegiveis = $this->elegiveis($processo, $analistas);
+            $elegiveis = $this->elegiveis($processo, $analistas, $qualquerSetor);
 
             if ($elegiveis === []) {
                 $naoAlocados[] = [
@@ -126,17 +126,22 @@ class DistribuicaoInteligenteService
     }
 
     /**
+     * Em qualquer setor, também é elegível o analista de um único setor: o
+     * processo vai para esse setor. Analista de vários setores fora do setor do
+     * processo fica de fora, porque o setor de destino precisa ser escolhido.
+     *
      * @param  array{id: int, sector_id: int, analysis_status: ?string}  $processo
      * @param  list<array{analista_id: int, analista: string, total: int, pode_vistoria: bool, setores: list<int>}>  $analistas
      * @return list<array{analista_id: int, analista: string, total: int, pode_vistoria: bool, setores: list<int>}>
      */
-    private function elegiveis(array $processo, array $analistas): array
+    private function elegiveis(array $processo, array $analistas, bool $qualquerSetor): array
     {
         $vistoria = in_array($processo['analysis_status'], ['vistoriar', 'vistoriado'], true);
 
         return array_values(array_filter(
             $analistas,
-            fn (array $analista): bool => in_array($processo['sector_id'], $analista['setores'], true)
+            fn (array $analista): bool => (in_array($processo['sector_id'], $analista['setores'], true)
+                || ($qualquerSetor && count($analista['setores']) === 1))
                 && (! $vistoria || $analista['pode_vistoria']),
         ));
     }
