@@ -25,6 +25,7 @@ interface AnalistaCarga {
     total: number;
     por_grupo: Record<string, number>;
     setores: SetorDoAnalista[];
+    perfis: string[];
 }
 
 interface HistoricoItem {
@@ -44,6 +45,20 @@ interface CentralProps {
 }
 
 type Ordenacao = 'menor' | 'maior' | 'nome';
+
+function IdentidadeDoAnalista({ analista, className = '' }: { analista: AnalistaCarga; className?: string }) {
+    const perfil = analista.perfis.length > 0 ? analista.perfis.join(', ') : 'Sem perfil';
+    const setores = analista.setores.length > 0 ? analista.setores.map((setor) => setor.name).join(', ') : 'Sem setor vinculado';
+
+    return (
+        <span className={`block ${className}`}>
+            <span className="block font-medium text-gray-800 dark:text-white/90">{analista.analista}</span>
+            <span className="block text-theme-xs text-gray-500 dark:text-gray-400">
+                {perfil} · {setores}
+            </span>
+        </span>
+    );
+}
 
 export default function CentralDistribuicao({
     processos,
@@ -283,7 +298,7 @@ export default function CentralDistribuicao({
                                         <li key={a.analista_id}>
                                             <div className="grid gap-3 px-3 py-4 sm:grid-cols-[minmax(12rem,1.4fr)_minmax(10rem,1fr)_8.5rem_6rem] sm:items-center">
                                                 <div>
-                                                    <p className="font-medium text-gray-800 dark:text-white/90">{a.analista}</p>
+                                                    <IdentidadeDoAnalista analista={a} />
                                                     <p className="text-theme-xs text-gray-500 dark:text-gray-400">
                                                         {grupos.length > 0
                                                             ? grupos.map(([g, n]) => `${n} ${g}`).join(' · ')
@@ -353,9 +368,7 @@ export default function CentralDistribuicao({
                                                 ativo ? 'bg-brand-50 dark:bg-brand-500/10' : 'hover:bg-gray-50 dark:hover:bg-white/[0.03]'
                                             }`}
                                         >
-                                            <span className="min-w-[200px] flex-1 font-medium text-gray-800 dark:text-white/90">
-                                                {a.analista}
-                                            </span>
+                                            <IdentidadeDoAnalista analista={a} className="min-w-[200px] flex-1" />
                                             <span className="flex min-w-[240px] flex-1 items-center gap-3">
                                                 <span className="inline-flex min-w-[3.5rem] justify-center rounded-full bg-gray-100 px-2.5 py-0.5 text-theme-sm font-semibold tabular-nums text-gray-700 dark:bg-white/10 dark:text-gray-200">
                                                     {a.total}
@@ -465,6 +478,10 @@ export default function CentralDistribuicao({
                                         Você está encaminhando <strong>{totalSelecionados}</strong> processo(s) para
                                     </p>
                                     <p className="text-lg font-semibold text-gray-800 dark:text-white/90">{escolhido.analista}</p>
+                                    <p className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                        {escolhido.perfis.length > 0 ? escolhido.perfis.join(', ') : 'Sem perfil'} ·{' '}
+                                        {escolhido.setores.length > 0 ? escolhido.setores.map((setor) => setor.name).join(', ') : 'Sem setor vinculado'}
+                                    </p>
                                     <p className="mt-1 text-theme-sm text-gray-600 dark:text-gray-300">
                                         Carga atual: <strong className="tabular-nums">{escolhido.total}</strong>
                                         {'  +  '}

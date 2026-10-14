@@ -231,10 +231,10 @@ class CaixaSetorController extends Controller
         $analistas = $this->carga->cargaDosSetores($qualquerSetor ? null : $setoresDosProcessos);
         $totalEmAnalise = collect($analistas)->sum('total');
 
-        $setoresDosAnalistas = collect($this->destinatarios('analisar-processos', $setoresDosProcessos, $qualquerSetor))
-            ->pluck('setores', 'id');
+        $destinatarios = collect($this->destinatarios('analisar-processos', $setoresDosProcessos, $qualquerSetor))->keyBy('id');
         $analistas = array_map(fn (array $analista): array => $analista + [
-            'setores' => $setoresDosAnalistas[$analista['analista_id']] ?? [],
+            'setores' => $destinatarios[$analista['analista_id']]['setores'] ?? [],
+            'perfis' => $destinatarios[$analista['analista_id']]['perfis'] ?? [],
         ], $analistas);
 
         $setoresHistorico = $setoresDosProcessos->filter()->isNotEmpty() ? $setoresDosProcessos->filter() : $sectorIds;
@@ -573,19 +573,20 @@ class CaixaSetorController extends Controller
      * apoio escolhe o setor quando o analista está em mais de um.
      *
      * @param  iterable<int, int>  $sectorIds
-     * @return list<array{id: int, name: string, setores: list<array{id: int, name: string}>}>
+     * @return list<array{id: int, name: string, perfis: list<string>, setores: list<array{id: int, name: string}>}>
      */
     private function destinatarios(string $permissao, iterable $sectorIds, bool $qualquerSetor): array
     {
         return User::query()
             ->permission($permissao)
             ->when(! $qualquerSetor, fn ($query) => $query->whereHas('sectors', fn ($setores) => $setores->whereIn('sectors.id', $sectorIds)))
-            ->with('sectors:id,name')
+            ->with(['sectors:id,name', 'roles:id,name'])
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (User $usuario): array => [
                 'id' => $usuario->id,
                 'name' => $usuario->name,
+                'perfis' => $usuario->roles->pluck('name')->sort()->values()->all(),
                 'setores' => $usuario->sectors
                     ->sortBy('name')
                     ->map(fn ($setor): array => ['id' => $setor->id, 'name' => $setor->name])

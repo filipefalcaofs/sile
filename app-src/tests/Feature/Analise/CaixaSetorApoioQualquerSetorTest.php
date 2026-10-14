@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
@@ -88,6 +89,26 @@ class CaixaSetorApoioQualquerSetorTest extends TestCase
         $analista = collect($props['analistas'])->firstWhere('id', $analistaB->id);
         $this->assertNotNull($analista);
         $this->assertSame([['id' => $setorB->id, 'name' => $setorB->name]], $analista['setores']);
+    }
+
+    public function test_central_mostra_perfil_e_setores_de_cada_analista(): void
+    {
+        $setorA = Sector::factory()->create(['name' => 'Setor Alfa']);
+        $setorB = Sector::factory()->create(['name' => 'Setor Beta']);
+        $processo = $this->processoNaCaixa($setorA);
+        $analista = $this->analista([$setorB, $setorA]);
+        $analista->assignRole(Role::findOrCreate('Coordenador', 'web'));
+
+        $props = $this->actingAs($this->apoio(), 'gestao')
+            ->get("/gestao/caixa-setor/central?ids={$processo->id}")
+            ->assertOk()
+            ->viewData('page')['props'];
+
+        $linha = collect($props['analistas'])->firstWhere('analista_id', $analista->id);
+
+        $this->assertNotNull($linha);
+        $this->assertContains('Coordenador', $linha['perfis']);
+        $this->assertSame(['Setor Alfa', 'Setor Beta'], collect($linha['setores'])->pluck('name')->all());
     }
 
     public function test_gestor_continua_vendo_so_os_seus_setores(): void
