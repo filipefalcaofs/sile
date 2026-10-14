@@ -86,7 +86,7 @@ class CaixaSetorController extends Controller
                 fn ($query) => $query->whereNull('assigned_user_id'),
                 fn ($query) => $query->whereNotNull('assigned_user_id'),
             )
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name'])
+            ->with(['company', 'serviceType:id,name', 'cnaes', 'sector:id,name', 'assignedTo:id,name'])
             ->orderBy('analysis_due_at')
             ->orderBy('id')
             ->paginate($perPage)
@@ -100,6 +100,16 @@ class CaixaSetorController extends Controller
                     trim(implode(', ', array_filter([$processo->address_street, $processo->address_number]))),
                     $processo->address_neighborhood,
                 ])),
+                'servico' => $processo->serviceType?->name,
+                'cnaes' => $processo->cnaes
+                    ->sortByDesc(fn ($cnae): bool => (bool) $cnae->pivot->is_primary)
+                    ->map(fn ($cnae): array => [
+                        'codigo' => $cnae->formatted_code,
+                        'descricao' => $cnae->description,
+                        'principal' => (bool) $cnae->pivot->is_primary,
+                    ])
+                    ->values()
+                    ->all(),
                 'empresa' => $processo->company?->trade_name ?: $processo->company?->legal_name,
                 'cnpj' => $processo->company?->formatted_cnpj,
                 'status' => $processo->status->value,

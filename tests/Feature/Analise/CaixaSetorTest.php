@@ -5,6 +5,7 @@ namespace Tests\Feature\Analise;
 use App\Enums\AnalysisStage;
 use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cnae;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -88,6 +89,34 @@ class CaixaSetorTest extends TestCase
         $ids = collect($page['props']['processos']['data'])->pluck('id')->all();
         $this->assertContains($doSetorA->id, $ids);
         $this->assertNotContains($doSetorB->id, $ids);
+    }
+
+    public function test_index_expoe_servico_e_cnaes_com_o_principal_primeiro(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $processo = $this->processoNaCaixa($setor);
+
+        $servico = ViabilityServiceType::factory()->create();
+        $secundario = Cnae::factory()->create();
+        $principal = Cnae::factory()->create();
+        $processo->forceFill(['service_type_id' => $servico->id])->save();
+        $processo->cnaes()->attach($secundario->id, ['is_primary' => false]);
+        $processo->cnaes()->attach($principal->id, ['is_primary' => true]);
+
+        $linha = collect(
+            $this->actingAs($analista, 'gestao')
+                ->get('/gestao/caixa-setor')
+                ->assertOk()
+                ->viewData('page')['props']['processos']['data']
+        )->firstWhere('id', $processo->id);
+
+        $this->assertSame($servico->name, $linha['servico']);
+        $this->assertSame(
+            [$principal->formatted_code, $secundario->formatted_code],
+            collect($linha['cnaes'])->pluck('codigo')->all(),
+        );
+        $this->assertTrue($linha['cnaes'][0]['principal']);
     }
 
     public function test_index_lista_ordenada_por_prazo(): void
