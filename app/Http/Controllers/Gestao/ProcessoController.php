@@ -18,6 +18,7 @@ use App\Services\Analise\AnalysisStatusStateMachine;
 use App\Services\Analise\InvalidAnalysisStatusTransitionException;
 use App\Services\Analise\ProcessoQueryService;
 use App\Services\Auditoria\DecisionExplanationService;
+use App\Services\Geo\DivergenciaLogradouroInscricao;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\ProcessosReportSource;
 use App\Services\Relatorios\ReportFilters;
@@ -53,6 +54,7 @@ class ProcessoController extends Controller
         private ProcessoQueryService $processos,
         private AuditService $audit,
         private DecisionExplanationService $explanations,
+        private DivergenciaLogradouroInscricao $divergenciaLogradouro,
     ) {}
 
     /**
@@ -226,6 +228,9 @@ class ProcessoController extends Controller
                 ],
                 'camadas' => $viabilityRequest->camadas_incidentes,
             ],
+            // Logradouro declarado × logradouro da inscrição (SEFAZ): só vem
+            // preenchido quando os dois existem e divergem.
+            'divergencia_endereco' => $this->divergenciaLogradouro->avaliar($viabilityRequest),
             // Próximas transições manuais oferecidas ao analista no dropdown
             // do detalhe (Tarefa 10) — vazio quando o processo ainda não tem
             // status de análise (fora do fluxo operacional) ou já está num

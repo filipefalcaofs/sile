@@ -231,6 +231,44 @@ class ProcessoUiSmokeTest extends TestCase
                 ->where('geo.camadas.camadas.0.elemento', 'Trecho 5'));
     }
 
+    public function test_detalhe_expoe_a_divergencia_quando_o_logradouro_declarado_difere_do_da_inscricao(): void
+    {
+        $processo = $this->processo(['address_street' => 'SÃO CRISTÓVÃO']);
+        $processo->forceFill(['camadas_incidentes' => [
+            'logradouro_tributario' => ['cod_log' => '4902', 'nome' => 'Rua São Geraldo'],
+        ]])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('divergencia_endereco.declarado', 'SÃO CRISTÓVÃO')
+                ->where('divergencia_endereco.sefaz', 'Rua São Geraldo'));
+    }
+
+    public function test_detalhe_nao_expoe_divergencia_quando_o_logradouro_coincide(): void
+    {
+        $processo = $this->processo(['address_street' => 'Rua São Geraldo']);
+        $processo->forceFill(['camadas_incidentes' => [
+            'logradouro_tributario' => ['cod_log' => '4902', 'nome' => 'Rua São Geraldo'],
+        ]])->save();
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('divergencia_endereco', null));
+    }
+
+    public function test_detalhe_nao_expoe_divergencia_sem_logradouro_da_inscricao(): void
+    {
+        $processo = $this->processo(['address_street' => 'SÃO CRISTÓVÃO']);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('divergencia_endereco', null));
+    }
+
     public function test_ca_fc_02_detalhe_expoe_o_poligono_do_enderecamento(): void
     {
         $processo = $this->processo();
