@@ -49,6 +49,7 @@ interface PerCnae {
     codigo_louos?: string | null;
     codigo_tll?: string | null;
     gatilhos?: string[] | null;
+    motivo_fora_do_expresso?: string | null;
     fundamentacao?: string[] | null;
     condicionantes?: string[] | null;
     justificativa?: string | null;
@@ -1863,6 +1864,16 @@ export default function FichaAnaliseShow({
                                                             )}
                                                         </div>
                                                     </div>
+
+                                                    {item.motivo_fora_do_expresso && (
+                                                        <div
+                                                            role="note"
+                                                            className="mt-3 rounded-lg border border-warning-300 bg-warning-50 p-3 text-theme-sm text-warning-800 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-200"
+                                                        >
+                                                            <p className="font-medium">Por que não seguiu o fluxo expresso</p>
+                                                            <p className="mt-1">{item.motivo_fora_do_expresso}</p>
+                                                        </div>
+                                                    )}
 
                                                     {(item.quadros?.length ?? 0) > 0 && (
                                                         <QuadrosChecklist quadros={item.quadros ?? []} />

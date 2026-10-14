@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Analise;
 
+use App\Enums\AnalysisRecordStatus;
 use App\Enums\GeoLayerType;
 use App\Enums\Quadro10Permissao;
 use App\Enums\RiscoMunicipal;
@@ -453,6 +454,85 @@ class PreAnaliseServiceTest extends TestCase
         $this->assertSame('deferida', $record->per_cnae[0]['status_escolhido']);
         $this->assertNull($record->parecer);
         $this->assertSame(1, $request->analysisRecords()->count());
+    }
+
+    public function test_atualiza_rascunho_intocado_com_o_veredito_atual_do_motor(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $request = $this->emAnaliseComCnaes(['4712100']);
+        $antiga = AnalysisRecord::factory()->create([
+            'viability_request_id' => $request->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+            'analyst_user_id' => null,
+            'engine_available' => true,
+            'engine_snapshot' => ['por_cnae' => [], 'consolidado' => ['resultado' => 'pendente']],
+            'per_cnae' => [['cnae' => '4712100', 'tendencia' => 'pendente', 'status_escolhido' => null]],
+            'parecer' => null,
+        ]);
+
+        $atualizada = $this->service()->atualizarRascunho($request);
+
+        $this->assertSame($antiga->id, $atualizada->id);
+        $this->assertSame('deferida', $atualizada->fresh()->per_cnae[0]['status_escolhido']);
+        $this->assertSame(1, $request->analysisRecords()->count());
+    }
+
+    public function test_nao_atualiza_rascunho_que_o_analista_ja_assumiu_ou_preencheu(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $request = $this->emAnaliseComCnaes(['4712100']);
+        $antiga = AnalysisRecord::factory()->create([
+            'viability_request_id' => $request->id,
+            'revision' => 1,
+            'status' => AnalysisRecordStatus::Rascunho,
+            'engine_available' => true,
+            'per_cnae' => [['cnae' => '4712100', 'tendencia' => 'pendente', 'status_escolhido' => null]],
+            'parecer' => 'Parecer do analista',
+        ]);
+
+        $this->service()->atualizarRascunho($request);
+
+        $this->assertNull($antiga->fresh()->per_cnae[0]['status_escolhido']);
+        $this->assertSame('Parecer do analista', $antiga->fresh()->parecer);
+    }
+
+    public function test_ficha_explica_por_que_o_cnae_ficou_fora_do_expresso(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::Alto);
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $request = $this->emAnaliseComCnaes(['4712100']);
+
+        $record = $this->service()->preAnalisar($request);
+        $item = $record->per_cnae[0];
+
+        $this->assertSame('analise', $item['fluxo']);
+        $this->assertStringContainsString('Fora do fluxo expresso', (string) $item['motivo_fora_do_expresso']);
+        $this->assertStringContainsString('alto', (string) $item['motivo_fora_do_expresso']);
+        $this->assertStringContainsString('não é decidido automaticamente', (string) $item['motivo_fora_do_expresso']);
+    }
+
+    public function test_cnae_do_fluxo_expresso_nao_traz_motivo_de_fora_do_expresso(): void
+    {
+        $this->fakeBairroComZona('ZR-1');
+        $this->classificarMunicipal('4712100', RiscoMunicipal::BaixoA);
+        $this->seedTratamento('4712100', 'nR1', 'nR1-01');
+        $this->seedQuadro10('ZR-1', 'nR1', Quadro10Permissao::Permitido);
+
+        $record = $this->service()->preAnalisar($this->emAnaliseComCnaes(['4712100']));
+
+        $this->assertSame('expresso', $record->per_cnae[0]['fluxo']);
+        $this->assertNull($record->per_cnae[0]['motivo_fora_do_expresso']);
     }
 
     public function test_grava_motivo_da_queda_do_expresso_na_ficha(): void

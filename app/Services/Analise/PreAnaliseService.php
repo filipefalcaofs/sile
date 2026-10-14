@@ -4,6 +4,7 @@ namespace App\Services\Analise;
 
 use App\Enums\AnalysisRecordStatus;
 use App\Enums\DecisionOutcome;
+use App\Enums\Fluxo;
 use App\Enums\ResultadoViabilidade;
 use App\Models\AnalysisRecord;
 use App\Models\ViabilityRequest;
@@ -81,6 +82,85 @@ class PreAnaliseService
     }
 
     /**
+     * Reavaliação do processo que continua em análise sem analista: a ficha da
+     * revisão 1 foi montada com a planilha da época e passaria a mostrar o
+     * enquadramento antigo. Enquanto ela segue intocada (rascunho, sem analista,
+     * sem parecer, única revisão), recebe o veredito atual do motor, que é o que
+     * o analista confirma ou altera. Ficha já assumida ou preenchida nunca é
+     * tocada; motor indisponível deixa a ficha como está.
+     */
+    public function atualizarRascunho(ViabilityRequest $request): ?AnalysisRecord
+    {
+        $existente = $this->revisaoInicial($request);
+
+        if ($existente === null || $this->eRascunhoVazioDoMotor($existente)) {
+            return $this->preAnalisar($request);
+        }
+
+        if (! $this->eRascunhoIntocado($existente) || $request->analysisRecords()->count() > 1) {
+            return $existente;
+        }
+
+        try {
+            $resolved = $this->resolver->resolve($request);
+        } catch (Throwable) {
+            return $existente;
+        }
+
+        return DB::transaction(function () use ($request, $resolved, $existente): AnalysisRecord {
+            $existente->forceFill($this->camposDoMotor($request, $resolved))->save();
+
+            $this->audit->log(
+                logName: 'analise',
+                event: 'pre-analise-atualizada',
+                description: "Ficha do processo #{$request->id} atualizada com o veredito atual do motor na reavaliação",
+                properties: [
+                    'viability_request_id' => $request->id,
+                    'protocol_number' => $request->protocol_number,
+                    'revision' => self::REVISAO_INICIAL,
+                    'consolidado' => $resolved->consolidado,
+                    'sugestao_por_cnae' => $this->sugestaoPorCnae($resolved),
+                ],
+                subject: $existente,
+                result: 'sucesso',
+                rulesVersion: $this->rulesVersionRepresentativa($resolved->rules_versions),
+            );
+
+            return $existente;
+        });
+    }
+
+    private function eRascunhoIntocado(AnalysisRecord $record): bool
+    {
+        return $record->revision === self::REVISAO_INICIAL
+            && $record->status === AnalysisRecordStatus::Rascunho
+            && $record->analyst_user_id === null
+            && $record->finalized_at === null
+            && trim((string) ($record->parecer ?? '')) === '';
+    }
+
+    /**
+     * Campos da ficha que vêm do motor (criação e atualização do rascunho).
+     *
+     * @return array<string, mixed>
+     */
+    private function camposDoMotor(ViabilityRequest $request, ResolvedViability $resolved): array
+    {
+        return [
+            'engine_available' => true,
+            'engine_snapshot' => [
+                ...$resolved->toSnapshot(),
+                'consolidado' => $resolved->consolidado,
+            ],
+            'engine_rules_versions' => $resolved->rules_versions,
+            'per_cnae' => $this->perCnae($resolved, $request),
+            'conditions' => $this->conditions($resolved, $request),
+            'parking' => $this->parking($resolved),
+            'analysis_reasons' => $this->motivosDaQueda($request, $resolved),
+        ];
+    }
+
+    /**
      * Tenta resolver pelo motor real e materializa a ficha conforme o resultado:
      * sucesso (sugestão pré-preenchida) ou degradação honesta (FA-01).
      */
@@ -109,18 +189,9 @@ class PreAnaliseService
                 'revision' => self::REVISAO_INICIAL,
                 'status' => AnalysisRecordStatus::Rascunho,
                 'analyst_user_id' => null,
-                'engine_available' => true,
-                'engine_snapshot' => [
-                    ...$resolved->toSnapshot(),
-                    'consolidado' => $resolved->consolidado,
-                ],
-                'engine_rules_versions' => $resolved->rules_versions,
-                'per_cnae' => $this->perCnae($resolved, $request),
-                'conditions' => $this->conditions($resolved, $request),
-                'parking' => $this->parking($resolved),
                 'parecer' => null,
-                'analysis_reasons' => $this->motivosDaQueda($request, $resolved),
                 'finalized_at' => null,
+                ...$this->camposDoMotor($request, $resolved),
             ]);
 
             $this->audit->log(
@@ -219,6 +290,14 @@ class PreAnaliseService
                 'fluxo' => $item['fluxo'],
                 'grupo_uso' => $grupo,
                 'gatilhos' => $this->rotulosGatilhos($consulta->risco->encaminhamento['gatilhos_acionados'] ?? []),
+                'motivo_fora_do_expresso' => $item['fluxo'] === Fluxo::Expresso->value
+                    ? null
+                    : ExplicacaoForaDoExpresso::longa(
+                        (string) $item['cnae_formatado'],
+                        (array) $consulta->risco->encaminhamento,
+                        $grupo,
+                        is_string($enquadramentoUso['codigo_louos'] ?? null) ? $enquadramentoUso['codigo_louos'] : null,
+                    ),
                 'condicionantes' => $this->textosCondicionantes($consulta->enquadramento->consolidado['condicionantes'] ?? []),
                 'fundamentacao' => $consulta->fundamentacao(),
                 // Justificativa em branco (regra SEDUR 22/09/2026, item 6):

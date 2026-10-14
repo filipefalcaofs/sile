@@ -22,6 +22,8 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Analise\AnalysisSlaService;
+use App\Services\Analise\ExplicacaoForaDoExpresso;
+use App\Services\Analise\PreAnaliseService;
 use App\Services\Auditoria\DecisionTraceBuilder;
 use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\EscritorioVirtual\AbrigadoResolver;
@@ -88,6 +90,7 @@ class FluxoExpressoService
         private ZonaProcessoService $zonaProcesso,
         private PoligonoEnderecamentoService $poligonoEnderecamento,
         private DecisionTextCatalog $textos,
+        private PreAnaliseService $preAnalise,
     ) {}
 
     /**
@@ -337,7 +340,7 @@ class FluxoExpressoService
         }
 
         if (! $resolved->elegivelExpresso()) {
-            return $this->encaminharAnalise($request, $this->textos->get('expresso.motivo.fora_do_expresso'), $actor, $resolved);
+            return $this->encaminharAnalise($request, $this->motivoForaDoExpresso($resolved), $actor, $resolved);
         }
 
         // Sem a zona (Quadro 10), o veredito é pendente — encaminha à análise SEM
@@ -422,6 +425,30 @@ class FluxoExpressoService
     }
 
     /**
+     * Motivo do encaminhamento por não ser elegível ao expresso: o texto do
+     * catálogo seguido de qual CNAE e qual nível ou gatilho o tirou do fluxo,
+     * para o analista e as listas não verem só "fora do fluxo expresso".
+     */
+    private function motivoForaDoExpresso(ResolvedViability $resolved): string
+    {
+        $base = $this->textos->get('expresso.motivo.fora_do_expresso');
+        $causas = [];
+
+        foreach ($resolved->por_cnae as $item) {
+            if (($item['fluxo'] ?? null) === Fluxo::Expresso->value) {
+                continue;
+            }
+
+            $causas[] = ExplicacaoForaDoExpresso::curta(
+                (string) ($item['cnae_formatado'] ?? $item['cnae'] ?? ''),
+                (array) ($item['consulta_array']['risco']['encaminhamento'] ?? []),
+            );
+        }
+
+        return $causas === [] ? $base : $base.' — '.implode('; ', $causas);
+    }
+
+    /**
      * Processo REGIN já encaminhado à análise, ainda sem analista e sem
      * decisão: o motor pode concluir agora que a zona passou a ser
      * identificável. Quem já assumiu o processo não é redecidido.
@@ -481,6 +508,10 @@ class FluxoExpressoService
                 // passada anterior mesmo depois de a queda ter mudado.
                 $request->encaminhamentoAnalise()->update(['reason' => $reason]);
             });
+
+            // O analista recebe a ficha com o veredito do motor desta passada,
+            // e não com o retrato da planilha da época do primeiro encaminhamento.
+            $this->preAnalise->atualizarRascunho($request);
 
             return DecisionResult::paraAnalise($reason);
         }

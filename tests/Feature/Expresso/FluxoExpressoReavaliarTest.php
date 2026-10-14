@@ -274,6 +274,24 @@ class FluxoExpressoReavaliarTest extends TestCase
         $this->assertSame($motivoAtual, $request->fresh()->encaminhamentoAnalise->reason);
     }
 
+    public function test_reavaliacao_que_continua_em_analise_atualiza_a_ficha_intocada_com_o_veredito_atual(): void
+    {
+        $request = $this->protocoladaComCnaes(['2222222']);
+        $servico = app(FluxoExpressoService::class);
+
+        $servico->decide($request);
+        $ficha = $request->fresh()->analysisRecords()->where('revision', 1)->firstOrFail();
+
+        $ficha->forceFill(['engine_snapshot' => ['marca' => 'retrato antigo'], 'per_cnae' => []])->save();
+
+        $servico->decide($request->fresh());
+
+        $atual = $ficha->fresh();
+        $this->assertArrayNotHasKey('marca', $atual->engine_snapshot);
+        $this->assertNotEmpty($atual->per_cnae);
+        $this->assertSame(1, $request->analysisRecords()->count());
+    }
+
     public function test_processo_protocolado_segue_o_caminho_de_decisao_normal(): void
     {
         Event::fake([ResultadoEmitido::class]);
