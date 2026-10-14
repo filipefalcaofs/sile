@@ -3049,6 +3049,14 @@ function SugestoesIaSkeleton() {
     );
 }
 
+function destinoIndisponibilidadeIa(motivo: string | null): { href: string; rotulo: string } {
+    if (motivo?.includes('parâmetros')) {
+        return { href: '/gestao/parametros?grupo=ia', rotulo: 'Abrir Parâmetros' };
+    }
+
+    return { href: '/gestao/config-ia', rotulo: 'Abrir Configuração de IA' };
+}
+
 /**
  * Card "Resumo do processo" (HU-117): apresenta a síntese gerada pela IA
  * (resumo + pontos-chave + fonte) no TOPO da ficha, sempre marcada como
@@ -3076,6 +3084,7 @@ function ResumoProcessoCard({
 }) {
     const resumos = sugestoes.filter((sugestao) => sugestao.type === 'resumo_processo');
     const podeManterIa = usePage<SharedProps>().props.auth.permissions.includes('manter-config-ia');
+    const destinoIa = destinoIndisponibilidadeIa(iaFicha.resumo_motivo);
 
     return (
         <Card>
@@ -3129,8 +3138,8 @@ function ResumoProcessoCard({
                                 {podeManterIa ? (
                                     <>
                                         {' '}
-                                        <Link href="/gestao/config-ia" className="underline underline-offset-2">
-                                            Abrir Configuração de IA
+                                        <Link href={destinoIa.href} className="underline underline-offset-2">
+                                            {destinoIa.rotulo}
                                         </Link>
                                     </>
                                 ) : (

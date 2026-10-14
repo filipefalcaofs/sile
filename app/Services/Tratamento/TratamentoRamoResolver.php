@@ -395,11 +395,24 @@ class TratamentoRamoResolver
             return 'ramo da regra';
         }
 
+        $frase = trim((string) ($ramo->acao['frase'] ?? ''));
+
+        if ($frase !== '') {
+            return 'ramo da Regra '.$ramo->regra.': '.$frase.' → fluxo '.$ramo->fluxo;
+        }
+
         $partes = [];
 
         if ($ramo->condicoes !== null) {
-            foreach ((array) $ramo->condicoes as $chave => $valor) {
-                $partes[] = $chave.' = '.(is_bool($valor) ? ($valor ? 'Sim' : 'Não') : (is_array($valor) ? implode(', ', array_map('strval', $valor)) : (string) $valor));
+            foreach ((array) $ramo->condicoes as $tipo => $valor) {
+                $partes[] = match ($tipo) {
+                    'perguntas' => $this->descreverPerguntasDoRamo((array) $valor),
+                    'categoria' => 'categoria da empresa '.(string) $valor,
+                    'tipo_imovel' => 'tipo de imóvel '.(string) $valor,
+                    'faixa' => $valor === 'ate_1250' ? 'área até 1.250 m²' : 'área acima de 1.250 m²',
+                    'glp_kg' => 'GLP '.(isset($valor['ate']) ? 'até '.$valor['ate'] : 'acima de '.($valor['acima'] ?? '?')).' kg',
+                    default => $tipo.' = '.json_encode($valor, JSON_UNESCAPED_UNICODE),
+                };
             }
         } else {
             if ($ramo->pergunta !== null) {
@@ -415,9 +428,36 @@ class TratamentoRamoResolver
             }
         }
 
-        $texto = 'ramo da Regra '.$ramo->regra.($partes === [] ? '' : ' ('.implode('; ', $partes).')');
+        return 'ramo da Regra '.$ramo->regra.($partes === [] ? '' : ' ('.implode('; ', $partes).')').' → fluxo '.$ramo->fluxo;
+    }
 
-        return $texto.' → fluxo '.$ramo->fluxo;
+    /**
+     * @param  array<int|string, mixed>  $perguntas
+     */
+    private function descreverPerguntasDoRamo(array $perguntas): string
+    {
+        $textos = [];
+
+        foreach ($perguntas as $numero => $esperado) {
+            $esperado = (array) $esperado;
+            $detalhes = [];
+
+            if (array_key_exists('sim', $esperado)) {
+                $detalhes[] = $esperado['sim'] ? 'Sim' : 'Não';
+            }
+
+            if (! empty($esperado['opcoes'])) {
+                $detalhes[] = 'alguma das opções '.implode(', ', array_map('strval', (array) $esperado['opcoes']));
+            }
+
+            if (! empty($esperado['sem'])) {
+                $detalhes[] = 'sem as opções '.implode(', ', array_map('strval', (array) $esperado['sem']));
+            }
+
+            $textos[] = 'pergunta '.$numero.($detalhes === [] ? '' : ' = '.implode(', ', $detalhes));
+        }
+
+        return implode('; ', $textos);
     }
 
     private function descreverHeuristica(string $codigoLouos, string $subgrupo, string $risco, ?bool $noLocal, ?TipoImovel $tipo): string
