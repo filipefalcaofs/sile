@@ -391,6 +391,16 @@ class ViabilityRequest extends Model
     }
 
     /**
+     * Eventos do protocolo enviados pela JUCEB (inscrição, alteração, regularização).
+     *
+     * @return HasMany<ViabilityRequestEvento, $this>
+     */
+    public function eventos(): HasMany
+    {
+        return $this->hasMany(ViabilityRequestEvento::class)->orderBy('id');
+    }
+
+    /**
      * Etapas do motor que dependem de serviço de terceiro.
      *
      * @return HasMany<ViabilityRequestEtapa, $this>

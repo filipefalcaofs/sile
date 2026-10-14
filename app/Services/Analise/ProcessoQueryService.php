@@ -35,6 +35,9 @@ class ProcessoQueryService
     ];
 
     /** Filtros oferecidos nas caixas (setor e analista) — subconjunto do SAPS. */
+    /** Prefixo do valor do filtro `servico` que aponta para um evento da JUCEB, e não para o tipo interno. */
+    public const PREFIXO_EVENTO = 'e';
+
     public const CHAVES_FILTRO_CAIXA = ['analysis_status', 'servico', 'protocolo', 'bap', 'data_de', 'data_ate', 'nome', 'cnpj', 'bairro', 'categoria'];
 
     /**
@@ -96,6 +99,7 @@ class ProcessoQueryService
             ->when($this->valor($filtros, 'bap'), fn (Builder $q, string $v) => $q->whereLike('external_reference', "%{$v}%", caseSensitive: false))
             ->when($this->valor($filtros, 'produto_tvl'), fn (Builder $q, string $v) => $q->whereHas('decision', fn ($d) => $d->whereLike('tvl_product_number', "%{$v}%", caseSensitive: false)))
             ->when($this->inteiro($filtros, 'servico'), fn (Builder $q, int $id) => $q->where('service_type_id', $id))
+            ->when($this->eventoDoServico($filtros), fn (Builder $q, string $codigo) => $q->whereHas('eventos', fn ($e) => $e->where('codigo', $codigo)))
             ->when($this->inteiro($filtros, 'setor'), fn (Builder $q, int $id) => $q->where('sector_id', $id))
             ->when($this->inteiro($filtros, 'analista'), fn (Builder $q, int $id) => $q->where('assigned_user_id', $id))
             ->when($this->valor($filtros, 'inscricao'), fn (Builder $q, string $v) => $q->whereLike('property_registration', "%{$v}%", caseSensitive: false))
@@ -362,6 +366,22 @@ class ProcessoQueryService
         $valor = isset($filtros[$chave]) ? trim((string) $filtros[$chave]) : '';
 
         return $valor === '' ? null : $valor;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filtros
+     */
+    private function eventoDoServico(array $filtros): ?string
+    {
+        $valor = $this->valor($filtros, 'servico');
+
+        if ($valor === null || ! str_starts_with($valor, self::PREFIXO_EVENTO)) {
+            return null;
+        }
+
+        $codigo = substr($valor, strlen(self::PREFIXO_EVENTO));
+
+        return $codigo === '' ? null : $codigo;
     }
 
     /**
