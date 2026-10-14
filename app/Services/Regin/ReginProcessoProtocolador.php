@@ -156,6 +156,11 @@ class ReginProcessoProtocolador
 
         $this->protocolar->protocol($solicitacao->fresh() ?? $solicitacao, $ator);
 
+        // Vincula já: o resto (geometria pelo ponto, decisão) pode levar mais de
+        // um minuto, e o job morto por timeout nesse meio não pode abrir um
+        // segundo processo na nova tentativa.
+        $recebimento->update(['viability_request_id' => $solicitacao->id]);
+
         $ajuste = [];
 
         if ($dados->codlog !== null) {
