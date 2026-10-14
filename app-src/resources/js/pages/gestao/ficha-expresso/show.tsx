@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { EtapasMotorCard, type EtapaMotor } from '@/components/analise/etapas-motor';
+import { QuadrosChecklist, type QuadroChecklist } from '@/components/analise/quadros-checklist';
 import { rotuloFluxoRisco } from '@/components/analise/processo-ui';
 import DecisionExplanation, { type DecisionExplanationData } from '@/components/auditoria/decision-explanation';
 import PageHeader from '@/components/app/page-header';
@@ -17,6 +18,7 @@ interface PerCnaeItem {
     tendencia_label?: string;
     fluxo?: string;
     fundamentacao?: string[];
+    quadros?: QuadroChecklist[] | null;
 }
 
 interface Decisao {
@@ -226,6 +228,7 @@ export default function FichaExpressoShow({
                                                     </span>
                                                 )}
                                             </div>
+                                            {(item.quadros?.length ?? 0) > 0 && <QuadrosChecklist quadros={item.quadros ?? []} />}
                                             {fundamentos.length > 0 && (
                                                 <ul className="mt-3 list-inside list-disc text-theme-sm text-gray-600 dark:text-gray-300">
                                                     {fundamentos.map((texto, textoIndice) => (

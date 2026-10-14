@@ -30,6 +30,7 @@ use App\Services\Analise\AnalysisRecordDiff;
 use App\Services\Analise\AnalysisRecordImutavelException;
 use App\Services\Analise\AnalysisRecordService;
 use App\Services\Analise\CadastroImobiliarioFichaService;
+use App\Services\Analise\QuadrosFichaChecklist;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
@@ -64,6 +65,7 @@ class AnalysisRecordController extends Controller
         private AnaliseTecnicaDecisionService $decisao,
         private SugestaoParecerService $parecer,
         private DecisionExplanationService $explanations,
+        private QuadrosFichaChecklist $quadros,
     ) {}
 
     /**
@@ -181,6 +183,12 @@ class AnalysisRecordController extends Controller
 
         $cadastro = $this->cadastroImobiliario->para($viabilityRequest);
 
+        $decisaoPayload = (new ViabilityDecisionResource($decisao))->resolve();
+        $decisaoPayload['per_cnae'] = $this->quadros->anexarAoPerCnae(
+            $decisaoPayload['per_cnae'],
+            is_array($decisao->decision_trace) ? $decisao->decision_trace : [],
+        );
+
         return Inertia::render('gestao/ficha-expresso/show', [
             'processo' => [
                 'id' => $viabilityRequest->id,
@@ -190,7 +198,7 @@ class AnalysisRecordController extends Controller
                 'empresa' => $viabilityRequest->company?->trade_name ?: $viabilityRequest->company?->legal_name,
                 'cnpj' => $viabilityRequest->company?->formatted_cnpj,
             ],
-            'decisao' => (new ViabilityDecisionResource($decisao))->resolve(),
+            'decisao' => $decisaoPayload,
             'explicacao' => (new DecisionExplanationResource($this->explanations->explain($decisao)))->resolve(),
             'etapasMotor' => $this->etapasDoMotor($viabilityRequest),
             'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),

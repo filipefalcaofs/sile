@@ -19,6 +19,25 @@ final class QuadrosFichaChecklist
      * @param  array<string, mixed>  $consulta  Item `consulta` do engine_snapshot da ficha.
      * @return list<array{key: string, label: string, estado: string, detalhe: string}>
      */
+    /**
+     * Anexa o checklist a cada CNAE da decisão expresso, lendo só o
+     * decision_trace já gravado. Sem o bloco daquele CNAE, a lista fica vazia:
+     * a ficha não inventa pendência.
+     *
+     * @param  list<array<string, mixed>>  $perCnae
+     * @param  list<array<string, mixed>>  $decisionTrace
+     * @return list<array<string, mixed>>
+     */
+    public function anexarAoPerCnae(array $perCnae, array $decisionTrace): array
+    {
+        return array_values(array_map(function (array $item) use ($decisionTrace): array {
+            $bloco = $this->blocoDoCnae($decisionTrace, (string) ($item['cnae'] ?? ''));
+            $item['quadros'] = $bloco === null ? [] : $this->para($this->consultaDoBloco($bloco));
+
+            return $item;
+        }, $perCnae));
+    }
+
     public function para(array $consulta): array
     {
         // consulta.enquadramento é o EnquadramentoResult::toArray(): tem o uso
@@ -133,5 +152,68 @@ final class QuadrosFichaChecklist
     private function texto(mixed $valor): ?string
     {
         return is_string($valor) && trim($valor) !== '' ? trim($valor) : null;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $decisionTrace
+     * @return array<string, mixed>|null
+     */
+    private function blocoDoCnae(array $decisionTrace, string $cnae): ?array
+    {
+        $digitos = preg_replace('/\D/', '', $cnae) ?? '';
+
+        foreach ($decisionTrace as $bloco) {
+            if (! is_array($bloco)) {
+                continue;
+            }
+
+            $doBloco = preg_replace('/\D/', '', (string) ($bloco['cnae'] ?? '')) ?? '';
+
+            if ($digitos !== '' && $digitos === $doBloco) {
+                return $bloco;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Remonta o `consulta` que o checklist já sabe ler, a partir dos passos
+     * gravados (enquadramento, Quadro 10 e Quadro 11-A). Passo não registrado
+     * vira quadro vazio e, portanto, pendente.
+     *
+     * @param  array<string, mixed>  $bloco
+     * @return array<string, mixed>
+     */
+    private function consultaDoBloco(array $bloco): array
+    {
+        $porPasso = [];
+
+        foreach (is_array($bloco['passos'] ?? null) ? $bloco['passos'] : [] as $passo) {
+            if (is_array($passo) && is_string($passo['passo'] ?? null)) {
+                $porPasso[$passo['passo']] = $passo;
+            }
+        }
+
+        return [
+            'enquadramento' => [
+                'enquadramento' => $this->resultadoDoPasso($porPasso['louos.enquadramento'] ?? null),
+                'quadro10' => $this->resultadoDoPasso($porPasso['louos.quadro10'] ?? null),
+                'quadro11a' => $this->resultadoDoPasso($porPasso['louos.quadro11a'] ?? null),
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $passo
+     * @return array<string, mixed>
+     */
+    private function resultadoDoPasso(?array $passo): array
+    {
+        if ($passo === null || ($passo['registrado'] ?? false) !== true) {
+            return [];
+        }
+
+        return is_array($passo['resultado_parcial'] ?? null) ? $passo['resultado_parcial'] : [];
     }
 }
