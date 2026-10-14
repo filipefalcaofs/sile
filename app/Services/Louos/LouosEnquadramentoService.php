@@ -605,6 +605,10 @@ class LouosEnquadramentoService
 
             if (in_array($norm, ['nao', 'não', 'r', 'sim'], true)) {
                 $out[] = $norm === 'não' ? 'nao' : $norm;
+            } elseif (str_starts_with($norm, 'objeto de analise particularizada pela cnlu')) {
+                // Texto por extenso do Q11A (nRa, nR3-14, nR4): depende da CNLU
+                // (LOUOS art. 181, §2º, I) — equivale ao "R".
+                $out[] = 'r';
             }
         }
 

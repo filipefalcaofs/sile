@@ -154,6 +154,66 @@ class LouosQuadro10ImportServiceTest extends TestCase
         );
     }
 
+    public function test_csv_oficial_preenche_observacao_das_celulas_s_a_e_s_b(): void
+    {
+        $version = RuleVersion::factory()->create([
+            'domain' => RuleDomain::LouosQuadro10,
+            'version' => 'lei-9148-2016-quadro10-oficial',
+        ]);
+
+        app(LouosQuadro10ImportService::class)->import(
+            $version,
+            database_path('data/louos/oficial/quadro10-permissoes.csv'),
+        );
+
+        $observacoes = LouosQuadro10Permissao::query()
+            ->where('rule_version_id', $version->id)
+            ->whereNotNull('observacao')
+            ->get(['zona', 'subgrupo', 'observacao']);
+
+        $this->assertCount(16, $observacoes);
+        $this->assertSame(
+            ['ZCLMu' => '(b)', 'ZCMu 2' => '(a)'],
+            $observacoes->pluck('observacao', 'zona')->sortKeys()->all(),
+        );
+        $this->assertNull(
+            LouosQuadro10Permissao::query()
+                ->where('zona', 'ZPR 2')
+                ->where('subgrupo', 'nR1-08')
+                ->value('observacao'),
+            'S(c) não é observação de allow-list.',
+        );
+    }
+
+    public function test_reimport_nao_sobrescreve_observacao_do_mantenedor(): void
+    {
+        $version = RuleVersion::factory()->create([
+            'domain' => RuleDomain::LouosQuadro10,
+            'version' => 'teste-quadro10',
+        ]);
+
+        $linhas = [
+            self::HEADER,
+            'ZCMu 2,ID2,ID2-05,S(A),,Quadro 10 da Lei nº 9.148/2016',
+            'ZCLMu,ID2,ID2-05,S(B),,Quadro 10 da Lei nº 9.148/2016',
+        ];
+
+        $csv = $this->csvTemporario($linhas);
+        app(LouosQuadro10ImportService::class)->import($version, $csv);
+
+        LouosQuadro10Permissao::query()->where('zona', 'ZCMu 2')->update(['observacao' => '(a) — conferido com a SEDUR']);
+        LouosQuadro10Permissao::query()->where('zona', 'ZCLMu')->update(['observacao' => null]);
+
+        try {
+            app(LouosQuadro10ImportService::class)->import($version, $csv);
+        } finally {
+            unlink($csv);
+        }
+
+        $this->assertSame('(a) — conferido com a SEDUR', LouosQuadro10Permissao::query()->where('zona', 'ZCMu 2')->value('observacao'));
+        $this->assertSame('(b)', LouosQuadro10Permissao::query()->where('zona', 'ZCLMu')->value('observacao'));
+    }
+
     public function test_seeder_publica_versao_vigente_e_e_idempotente(): void
     {
         $this->seed(LouosQuadro10Seeder::class);

@@ -103,7 +103,7 @@ class TextosServicosByteIdenticosTest extends TestCase
         $result = app(RiscoClassificationService::class)->classify(RiscoInput::paraCnae('1234567'));
 
         $this->assertSame('classificado', $result->municipal['status']);
-        $this->assertSame('Decreto Municipal nº 41.758/2026', $result->fundamentacao[0]);
+        $this->assertSame('Decreto Municipal nº 32.636/2020, com os Anexos na redação do Decreto Municipal nº 41.758/2026', $result->fundamentacao[0]);
     }
 
     public function test_parecer_da_pre_analise_nasce_em_branco(): void

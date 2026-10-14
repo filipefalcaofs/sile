@@ -56,7 +56,7 @@ class TerritorialRuleCrudTest extends TestCase
             'camada_filtro' => null,
             'zona_alvo' => null,
             'motivo_analise' => null,
-            'base_legal' => 'art. 172-A da Lei Municipal nº 9.148/2016, com redação dada pela Lei Municipal nº 9.879/2025',
+            'base_legal' => 'art. 172-A da Lei Municipal nº 9.148/2016 (LOUOS), incluído pelo art. 11 da Lei Municipal nº 9.879/2025',
             'decision_text_id' => null,
             'cnaes' => ['4520006', '4723700'],
             'addresses' => [],
