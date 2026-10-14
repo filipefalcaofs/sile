@@ -258,6 +258,22 @@ class FluxoExpressoReavaliarTest extends TestCase
         $this->assertSame($motivosDoEncaminhamento, $motivosAtuais);
     }
 
+    public function test_reavaliacao_que_continua_em_analise_atualiza_o_motivo_exibido_do_encaminhamento(): void
+    {
+        $request = $this->protocoladaComCnaes(['2222222']);
+        $servico = app(FluxoExpressoService::class);
+
+        $servico->decide($request);
+        $motivoAtual = $request->fresh()->encaminhamentoAnalise->reason;
+
+        $request->encaminhamentoAnalise()->update(['reason' => 'veredito locacional pendente — Pergunta 1 sem resposta']);
+        $this->assertSame('veredito locacional pendente — Pergunta 1 sem resposta', $request->fresh()->encaminhamentoAnalise->reason);
+
+        $servico->decide($request->fresh());
+
+        $this->assertSame($motivoAtual, $request->fresh()->encaminhamentoAnalise->reason);
+    }
+
     public function test_processo_protocolado_segue_o_caminho_de_decisao_normal(): void
     {
         Event::fake([ResultadoEmitido::class]);

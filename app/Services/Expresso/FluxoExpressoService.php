@@ -475,6 +475,11 @@ class FluxoExpressoService
 
                 $request->expressoQuedas()->delete();
                 $this->capturarQueda($request, $reason, $resolved, $territorial, $gatilho);
+
+                // A tela exibe o motivo da transição de encaminhamento: sem
+                // atualizá-lo, o processo reavaliado segue mostrando o motivo da
+                // passada anterior mesmo depois de a queda ter mudado.
+                $request->encaminhamentoAnalise()->update(['reason' => $reason]);
             });
 
             return DecisionResult::paraAnalise($reason);
