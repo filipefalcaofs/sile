@@ -58,9 +58,9 @@ class ReginHomologarCommandTest extends TestCase
             ->assertSuccessful();
 
         Http::assertSent(fn ($request) => str_contains($request->url(), '/teste/validaResposta')
-            && $request->hasHeader('JWT', 'jwt-hml'));
+            && $request->hasHeader('Authorization', 'Bearer jwt-hml'));
         Http::assertSent(fn ($request) => str_contains($request->url(), '/teste/testeRecebimento')
-            && $request->hasHeader('JWT', 'jwt-hml'));
+            && $request->hasHeader('Authorization', 'Bearer jwt-hml'));
 
         $this->assertSame(2, Activity::query()
             ->where('log_name', 'integracoes')

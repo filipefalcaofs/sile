@@ -62,7 +62,7 @@ class ReginHttpClientTest extends TestCase
             && $request['password'] === 'segredo-forte');
     }
 
-    public function test_enviar_parecer_usa_header_jwt_e_aceita_recebido_sucesso(): void
+    public function test_enviar_parecer_usa_authorization_bearer_e_aceita_recebido_sucesso(): void
     {
         Http::fake([
             '*/acesso/auth' => Http::response(['token' => 'jwt-123']),
@@ -72,8 +72,8 @@ class ReginHttpClientTest extends TestCase
         app(ReginHttpClient::class)->enviarParecer(['protocolo' => '43747']);
 
         Http::assertSent(fn ($request) => str_ends_with($request->url(), '/recebe')
-            && $request->hasHeader('JWT', 'jwt-123')
-            && ! $request->hasHeader('Authorization'));
+            && $request->hasHeader('Authorization', 'Bearer jwt-123')
+            && ! $request->hasHeader('JWT'));
     }
 
     public function test_enviar_parecer_lanca_quando_corpo_nao_e_recebido_sucesso(): void
