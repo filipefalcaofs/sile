@@ -2,6 +2,7 @@
 @isset($selo)
 <x-mail::selo :tipo="$selo[1]">{{ $selo[0] }}</x-mail::selo>
 @endisset
+
 # {{ $titulo ?? (! empty($greeting) ? $greeting : 'Olá!') }}
 
 @foreach ($introLines as $line)
