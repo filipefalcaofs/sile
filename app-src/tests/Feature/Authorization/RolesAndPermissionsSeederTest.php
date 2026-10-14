@@ -475,6 +475,27 @@ class RolesAndPermissionsSeederTest extends TestCase
         }
     }
 
+    public function test_migration_concede_analise_aos_perfis_que_ficaram_sem_permissao(): void
+    {
+        $perfis = ['Chefe de setor', 'Coordenador', 'Subcoordenador', 'Analista Terceirizado', 'Analista Servidor'];
+
+        foreach ($perfis as $nome) {
+            Role::create(['name' => $nome, 'guard_name' => 'web']);
+        }
+
+        (require database_path('migrations/2026_10_15_120000_concede_analise_aos_perfis_de_distribuicao.php'))->up();
+
+        foreach ($perfis as $nome) {
+            $usuario = User::factory()->create();
+            $usuario->assignRole($nome);
+
+            $this->assertContains($usuario->id, User::query()->permission('analisar-processos')->pluck('id')->all(), $nome);
+        }
+
+        $this->assertTrue(Role::findByName('Coordenador', 'web')->hasPermissionTo('distribuir-processos'));
+        $this->assertFalse(Role::findByName('Analista Servidor', 'web')->hasPermissionTo('distribuir-processos'));
+    }
+
     public function test_seeder_cria_perfis_do_legado_sem_permissao(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
