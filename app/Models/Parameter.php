@@ -96,6 +96,17 @@ class Parameter extends Model
     }
 
     /**
+     * Rótulo para a trilha e para a tela. A chave técnica fica no registro,
+     * fora do texto que o usuário lê.
+     */
+    public function auditLabel(): string
+    {
+        $description = trim((string) $this->description);
+
+        return $description !== '' ? $description : 'Parâmetro do sistema';
+    }
+
+    /**
      * @return HasMany<ParameterProposal, $this>
      */
     public function proposals(): HasMany

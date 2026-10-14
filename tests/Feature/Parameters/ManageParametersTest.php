@@ -149,6 +149,7 @@ class ManageParametersTest extends TestCase
         $last = $activities->last();
 
         $this->assertSame('security.login.max_attempts', $last->properties['key']);
+        $this->assertStringNotContainsString('security.login.max_attempts', (string) $last->description);
         $this->assertSame('5', $last->properties['valor_anterior']);
         $this->assertSame('10', $last->properties['valor_novo']);
         $this->assertSame($admin->id, $last->causer_id);

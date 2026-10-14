@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
+import { rotular } from '@/components/auditoria/valor-legivel';
 import Input from '@/components/form/input';
 import IsoDateInput from '@/components/form/iso-date-input';
 import { FileIcon } from '@/components/icons';
@@ -15,6 +16,10 @@ import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import GestaoLayout from '@/layouts/gestao-layout';
 
 type BadgeColor = 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark';
+
+function rotuloCodigo(valor: string): string {
+    return rotular(valor.replaceAll('-', '_'));
+}
 
 interface SelectOption {
     value: string;
@@ -569,10 +574,12 @@ function AcaoCell({ linha }: { linha: AtividadeRow }) {
             <div className="flex flex-wrap items-center gap-1.5">
                 {linha.log_name && (
                     <Badge color="light" size="sm">
-                        {linha.log_name}
+                        {rotuloCodigo(linha.log_name)}
                     </Badge>
                 )}
-                <span className="text-theme-sm font-medium text-gray-700 dark:text-gray-200">{linha.event ?? '—'}</span>
+                <span className="text-theme-sm font-medium text-gray-700 dark:text-gray-200">
+                    {linha.event ? rotuloCodigo(linha.event) : '—'}
+                </span>
                 {linha.personal_data && (
                     <Badge color="warning" size="sm">
                         Dado pessoal
@@ -634,7 +641,7 @@ function DiffCell({ changes }: { changes: AttributeChanges | null }) {
         <ul className="space-y-1">
             {campos.map((campo) => (
                 <li key={campo} className="text-theme-xs">
-                    <span className="font-medium text-gray-600 dark:text-gray-300">{campo}:</span>{' '}
+                    <span className="font-medium text-gray-600 dark:text-gray-300">{rotular(campo)}:</span>{' '}
                     <span className="text-error-600 line-through dark:text-error-400">{valorLegivel(antigos[campo])}</span>{' '}
                     <span className="text-gray-400">→</span>{' '}
                     <span className="text-success-600 dark:text-success-400">{valorLegivel(novos[campo])}</span>
@@ -676,7 +683,7 @@ const colunaResultado: ColumnDef<AtividadeRow> = {
     cell: (linha) =>
         linha.result ? (
             <Badge color={resultadoColor(linha.result)} size="sm">
-                {linha.result}
+                {rotuloCodigo(linha.result)}
             </Badge>
         ) : (
             <span className="text-gray-400 dark:text-gray-500">—</span>
@@ -727,7 +734,7 @@ const colunasAcessos: ColumnDef<AcessoRow>[] = [
         cell: (linha) =>
             linha.event ? (
                 <Badge color="light" size="sm">
-                    {linha.event}
+                    {rotuloCodigo(linha.event)}
                 </Badge>
             ) : (
                 <span className="text-gray-400 dark:text-gray-500">—</span>

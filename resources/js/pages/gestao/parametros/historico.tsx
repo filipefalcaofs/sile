@@ -89,9 +89,6 @@ export default function ParameterHistory({ parameter, entries }: ParameterHistor
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             Valor anterior, valor novo, responsável e data/hora de cada alteração.
                         </p>
-                        <p className="mt-1 font-mono text-theme-xs text-gray-400 dark:text-gray-500">
-                            {parameter.key}
-                        </p>
                     </div>
                     <CardContent>
                         <div className="space-y-5">

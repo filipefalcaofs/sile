@@ -144,7 +144,10 @@ class FichaSugestoesIaTest extends TestCase
                 ->component('gestao/ficha-analise/show')
                 ->where('iaFicha.resumo_disponivel', false)
                 ->where('iaFicha.parecer_disponivel', false)
-                ->where('iaFicha.resumo_motivo', fn (mixed $motivo): bool => is_string($motivo) && $motivo !== ''));
+                ->where('iaFicha.resumo_motivo', fn (mixed $motivo): bool => is_string($motivo)
+                    && $motivo !== ''
+                    && ! str_contains($motivo, 'features.ia_resumo')
+                    && ! str_contains($motivo, 'features.')));
     }
 
     public function test_ficha_marca_ia_disponivel_com_toggle_provedor_e_motor(): void

@@ -71,7 +71,7 @@ class ParameterChangeService
         $this->audit->log(
             'parametros',
             'parametro-aprovado',
-            "Parâmetro {$parameter->key} aprovado por quatro olhos",
+            "Parâmetro aprovado por quatro olhos: {$parameter->auditLabel()}",
             [
                 'key' => $parameter->key,
                 'autor_id' => $proposal->created_by,
@@ -102,7 +102,7 @@ class ParameterChangeService
         $this->audit->log(
             'parametros',
             'parametro-rejeitado',
-            "Proposta do parâmetro {$parameter->key} rejeitada",
+            "Proposta rejeitada: {$parameter->auditLabel()}",
             [
                 'key' => $parameter->key,
                 'autor_id' => $proposal->created_by,

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Ai;
 
 use App\Models\AiConfiguration;
+use App\Models\Parameter;
 use App\Services\Ai\AiFeatureGate;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -77,11 +78,67 @@ class AiFeatureGateTest extends TestCase
         config(['sile.features.ia_resumo' => false]);
         Cache::forget('sile.parameters.features.ia_resumo');
 
-        $this->assertStringContainsString('desligada', (string) $this->gate()->unavailableReason('resumo'));
+        $motivo = (string) $this->gate()->unavailableReason('resumo');
+
+        $this->assertStringContainsString('desligada', $motivo);
+        $this->assertStringNotContainsString('features.ia_resumo', $motivo);
+        $this->assertStringNotContainsString('features.', $motivo);
 
         config(['sile.features.ia_resumo' => true]);
         Cache::forget('sile.parameters.features.ia_resumo');
 
         $this->assertStringContainsString('provedor', (string) $this->gate()->unavailableReason('resumo'));
+    }
+
+    public function test_parametro_ainda_no_padrao_nao_bloqueia_provedor_ativo(): void
+    {
+        config(['sile.features.ia_resumo' => false]);
+        Cache::put('sile.parameters.features.ia_resumo', false, 300);
+        Parameter::factory()->create([
+            'key' => 'features.ia_resumo',
+            'group' => 'ia',
+            'type' => 'boolean',
+            'value' => null,
+            'default_value' => '0',
+            'validation_rules' => ['required', 'boolean'],
+        ]);
+        AiConfiguration::factory()->create(['capability' => 'text', 'active' => true]);
+
+        $this->assertTrue($this->gate()->available('resumo'));
+        $this->assertNull($this->gate()->unavailableReason('resumo'));
+    }
+
+    public function test_parametro_ligado_vence_cache_que_ainda_diz_desligado(): void
+    {
+        config(['sile.features.ia_resumo' => false]);
+        Cache::put('sile.parameters.features.ia_resumo', false, 300);
+        Parameter::factory()->create([
+            'key' => 'features.ia_resumo',
+            'group' => 'ia',
+            'type' => 'boolean',
+            'value' => '1',
+            'default_value' => '0',
+            'validation_rules' => ['required', 'boolean'],
+        ]);
+        AiConfiguration::factory()->create(['capability' => 'text', 'active' => true]);
+
+        $this->assertTrue($this->gate()->available('resumo'));
+    }
+
+    public function test_parametro_explicitamente_desligado_bloqueia_mesmo_com_provedor(): void
+    {
+        config(['sile.features.ia_resumo' => true]);
+        Parameter::factory()->create([
+            'key' => 'features.ia_resumo',
+            'group' => 'ia',
+            'type' => 'boolean',
+            'value' => '0',
+            'default_value' => '0',
+            'validation_rules' => ['required', 'boolean'],
+        ]);
+        AiConfiguration::factory()->create(['capability' => 'text', 'active' => true]);
+
+        $this->assertFalse($this->gate()->available('resumo'));
+        $this->assertStringContainsString('desligada', (string) $this->gate()->unavailableReason('resumo'));
     }
 }

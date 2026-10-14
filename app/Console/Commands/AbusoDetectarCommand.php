@@ -24,7 +24,7 @@ class AbusoDetectarCommand extends Command
         $resumo = $service->detectar();
 
         if (! $resumo['executado']) {
-            $this->info('Detecção de abuso desligada (features.deteccao_abuso=0).');
+            $this->info('Detecção de abuso desligada.');
 
             return self::SUCCESS;
         }

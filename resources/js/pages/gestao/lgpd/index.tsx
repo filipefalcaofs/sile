@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import PageHeader from '@/components/app/page-header';
+import { rotular } from '@/components/auditoria/valor-legivel';
 import { CheckCircleIcon, EyeIcon, InfoIcon, LockIcon, ShieldIcon } from '@/components/icons';
 import Badge from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -105,7 +106,7 @@ const colunasAcessos: ColumnDef<AcessoPorEvento>[] = [
         cell: (linha) =>
             linha.log_name ? (
                 <Badge color="light" size="sm">
-                    {linha.log_name}
+                    {rotular(linha.log_name.replaceAll('-', '_'))}
                 </Badge>
             ) : (
                 <span className="text-gray-400 dark:text-gray-500">—</span>
@@ -115,7 +116,7 @@ const colunasAcessos: ColumnDef<AcessoPorEvento>[] = [
         id: 'event',
         header: 'Ação',
         cellClassName: 'text-gray-700 dark:text-gray-300',
-        cell: (linha) => linha.event ?? '—',
+        cell: (linha) => (linha.event ? rotular(linha.event.replaceAll('-', '_')) : '—'),
     },
     {
         id: 'total',

@@ -259,7 +259,7 @@ class LoginController extends Controller
         $this->markOrigin($request, 'ad');
 
         if (! $this->sedurAuth->enabled()) {
-            app(AuditService::class)->logBlocked('seguranca', 'Login AD bloqueado: integração desabilitada (features.ad_login)', [
+            app(AuditService::class)->logBlocked('seguranca', 'Login AD bloqueado: integração desabilitada', [
                 'email' => $user->email,
                 'user_id' => $user->id,
             ]);

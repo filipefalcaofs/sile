@@ -1,5 +1,5 @@
 import FieldError from '@/components/form/field-error';
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import PageHeader from '@/components/app/page-header';
@@ -177,7 +177,6 @@ function ParameterSection({ item }: { item: ParameterItem }) {
                         {item.has_admin_value && <Badge size="sm">Administrado</Badge>}
                         {item.governance === 'decision' && <Badge size="sm">Decisório</Badge>}
                     </div>
-                    <p className="mt-1 font-mono text-theme-xs text-gray-400 dark:text-gray-500">{item.key}</p>
                     <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
                         Padrão: {item.default_value ?? '—'}
                     </p>
@@ -252,7 +251,9 @@ function ParameterSection({ item }: { item: ParameterItem }) {
 
 export default function ParametersIndex({ groups }: ParametersIndexProps) {
     const groupKeys = Object.keys(groups);
-    const [activeGroup, setActiveGroup] = useState(groupKeys[0] ?? '');
+    const grupoNaUrl = new URLSearchParams(usePage().url.split('?')[1] ?? '').get('grupo');
+    const grupoInicial = grupoNaUrl !== null && groupKeys.includes(grupoNaUrl) ? grupoNaUrl : (groupKeys[0] ?? '');
+    const [activeGroup, setActiveGroup] = useState(grupoInicial);
     const activeItems = groups[activeGroup] ?? [];
 
     return (
