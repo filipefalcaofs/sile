@@ -17,6 +17,7 @@ use App\Models\TvlSequence;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Expresso\TvlNumberGenerator;
 use App\Services\Geo\SpatialRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -72,8 +73,8 @@ class FluxoExpressoIdempotenciaPostgisTest extends PostgisTestCase
         $this->assertTrue($primeira->decision->is($segunda->decision));
 
         // A sequência do TVL avançou exatamente 1 — sem buraco, sem duplicidade.
-        $sequence = TvlSequence::query()->where('year', (int) now()->year)->sole();
-        $this->assertSame(1, (int) $sequence->last_number);
+        $sequence = TvlSequence::query()->where('year', TvlNumberGenerator::CONTADOR_UNICO)->sole();
+        $this->assertSame(3000000, (int) $sequence->last_number);
 
         $this->assertSame(ViabilityRequestStatus::Deferida, $request->fresh()->status);
 

@@ -96,6 +96,19 @@ class ViabilityDecision extends Model
         return $this->outcome === DecisionOutcome::Deferida;
     }
 
+    /**
+     * Parte numérica do número TVL, que é o identificador enviado à SEFAZ
+     * (3000000 em diante). Null sem TVL ou no formato legado com ano.
+     */
+    public function numeroSefaz(): ?int
+    {
+        if (! preg_match('/^[^-]+-(\d+)$/', (string) $this->tvl_product_number, $partes)) {
+            return null;
+        }
+
+        return (int) $partes[1];
+    }
+
     public function isIndeferida(): bool
     {
         return $this->outcome === DecisionOutcome::Indeferida;

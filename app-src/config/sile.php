@@ -174,7 +174,7 @@ return [
             'assunto_deferida' => 'Resultado da sua solicitação de viabilidade: deferida',
             'assunto_indeferida' => 'Resultado da sua solicitação de viabilidade: indeferida',
         ],
-        'tvl' => ['prefixo' => 'TVL', 'padding' => 6],
+        'tvl' => ['prefixo' => 'TVL', 'padding' => 6, 'inicio' => 3_000_000],
         // Constantes TÉCNICAS (fora do catálogo HU-014 — precedente [02-02]):
         // idempotência/concorrência da emissão da decisão (TTL do Cache::lock)
         // e resiliência do job de decisão (fila + tries/timeout/backoff). Não
