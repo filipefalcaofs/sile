@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Messages\EmailViabiliza;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -32,13 +33,15 @@ class TllExercicioFaltanteNotification extends Notification implements ShouldQue
     {
         $anos = implode(', ', $this->exercicios);
 
-        return (new MailMessage)
+        return (new EmailViabiliza)
             ->subject('Tabela TLL sem publicação — exercício '.$anos)
+            ->selo('Ação necessária', 'alerta')
+            ->titulo('A tabela de valores TLL ainda não foi publicada')
             ->greeting('Olá!')
             ->line("A tabela de valores TLL ainda não foi publicada para o(s) exercício(s) {$anos}.")
             ->line('Gere o rascunho pelo fator do decreto e peça a um segundo usuário para publicar.')
-            ->action('Abrir valores TLL', url('/gestao/tll'))
-            ->line('Este é um aviso automático — não responda a esta mensagem.');
+            ->dados([['Exercício(s) sem publicação', $anos, 'erro']])
+            ->action('Abrir valores TLL', url('/gestao/tll'));
     }
 
     /**

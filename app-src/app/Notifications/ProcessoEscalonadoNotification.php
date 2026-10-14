@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationType;
 use App\Notifications\Contracts\ProcessNotification;
+use App\Notifications\Messages\EmailViabiliza;
 use App\Services\Whatsapp\WhatsAppMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -85,12 +86,14 @@ class ProcessoEscalonadoNotification extends Notification implements ProcessNoti
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        return (new EmailViabiliza)
             ->subject($this->assunto)
+            ->selo('Escalonado', 'erro')
+            ->titulo('Um processo foi escalonado e precisa de atenção')
             ->greeting('Olá!')
             ->line($this->detalhe)
-            ->action('Abrir o processo no Viabiliza', $this->url)
-            ->line('Este é um aviso automático — não responda a esta mensagem.');
+            ->dados([['Processo', $this->protocolNumber]])
+            ->action('Abrir o processo no Viabiliza', $this->url);
     }
 
     /**

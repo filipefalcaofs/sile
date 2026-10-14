@@ -6,6 +6,7 @@ use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationType;
 use App\Enums\DecisionOutcome;
 use App\Notifications\Contracts\ProcessNotification;
+use App\Notifications\Messages\EmailViabiliza;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -110,22 +111,25 @@ class ResultadoExpressoNotification extends Notification implements ProcessNotif
             ? config('sile.expresso.notificacao.assunto_deferida')
             : config('sile.expresso.notificacao.assunto_indeferida');
 
-        $message = (new MailMessage)
+        $message = (new EmailViabiliza)
             ->subject($subject)
+            ->titulo('A análise da sua solicitação foi concluída')
             ->greeting('Olá!')
             ->line("A análise da sua solicitação de viabilidade de protocolo {$this->protocolNumber} foi concluída.");
 
         if ($deferida) {
             $message
-                ->line('Resultado: deferida.')
-                ->line('O documento oficial de viabilidade é disponibilizado pelos canais da Junta Comercial (Regin) e da SEFAZ municipal — este e-mail é apenas um aviso e não acompanha anexo.');
+                ->selo('Deferida', 'sucesso')
+                ->dados([['Protocolo', $this->protocolNumber], ['Resultado', 'Deferida', 'sucesso']])
+                ->destaque('O documento oficial de viabilidade é disponibilizado pelos canais da Junta Comercial (Regin) e da SEFAZ municipal — este e-mail é apenas um aviso e não acompanha anexo.');
         } else {
             $message
-                ->line('Resultado: indeferida.')
-                ->line('Acompanhe os detalhes e as orientações pelos canais da Junta Comercial (Regin).');
+                ->selo('Indeferida', 'erro')
+                ->dados([['Protocolo', $this->protocolNumber], ['Resultado', 'Indeferida', 'erro']])
+                ->destaque('Acompanhe os detalhes e as orientações pelos canais da Junta Comercial (Regin).');
         }
 
-        return $message->line('Este é um aviso automático — não responda a esta mensagem.');
+        return $message;
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\ExportFile;
+use App\Notifications\Messages\EmailViabiliza;
 use App\Support\Settings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -34,11 +35,13 @@ class ExportacaoPronta extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        return (new EmailViabiliza)
             ->subject('Sua exportação está pronta')
+            ->selo('Pronta', 'sucesso')
+            ->titulo('Sua exportação está pronta para download')
             ->greeting('Olá!')
             ->line('A exportação que você solicitou foi gerada e está disponível para download.')
-            ->line("Formato: {$this->exportFile->format} — {$this->exportFile->row_count} registro(s).")
+            ->dados([['Formato', (string) $this->exportFile->format], ['Registros', (string) $this->exportFile->row_count]])
             ->action('Baixar exportação', $this->downloadUrl())
             ->line('O link de download expira por segurança.');
     }

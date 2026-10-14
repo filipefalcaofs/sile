@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationType;
 use App\Notifications\Contracts\ProcessNotification;
+use App\Notifications\Messages\EmailViabiliza;
 use App\Services\Whatsapp\WhatsAppMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -79,13 +80,14 @@ class PendenciaExpiradaNotification extends Notification implements ProcessNotif
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        return (new EmailViabiliza)
             ->subject("Convite expirado — processo indeferido — {$this->protocolNumber}")
+            ->selo('Indeferido', 'erro')
+            ->titulo('O convite expirou e o processo foi indeferido')
             ->greeting('Olá!')
             ->line("O convite da solicitação {$this->protocolNumber} expirou sem resposta do requerente dentro do prazo, e o processo foi indeferido automaticamente.")
-            ->line("Convite: {$this->descricao}")
-            ->action('Abrir o processo no Viabiliza', $this->url)
-            ->line('Este é um aviso automático — não responda a esta mensagem.');
+            ->dados([['Solicitação', $this->protocolNumber], ['Convite', $this->descricao]])
+            ->action('Abrir o processo no Viabiliza', $this->url);
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationType;
 use App\Notifications\Contracts\ProcessNotification;
+use App\Notifications\Messages\EmailViabiliza;
 use App\Services\Whatsapp\WhatsAppMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -96,10 +97,13 @@ class RespostaPendenciaNotification extends Notification implements ProcessNotif
     {
         $url = route('gestao.processos.show', $this->viabilityRequestId);
 
-        return (new MailMessage)
+        return (new EmailViabiliza)
             ->subject("Convite respondido — análise reaberta ({$this->protocolNumber})")
+            ->selo('Análise reaberta', 'neutro')
+            ->titulo('O requerente respondeu ao convite')
             ->greeting('Olá!')
             ->line("O requerente respondeu o convite da solicitação {$this->protocolNumber} e a análise foi reaberta.")
+            ->dados([['Solicitação', $this->protocolNumber]])
             ->action('Abrir o processo', $url)
             ->line('Retome a análise técnica do processo na gestão do Viabiliza.');
     }

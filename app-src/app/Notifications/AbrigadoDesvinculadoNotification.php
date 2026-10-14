@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationType;
 use App\Notifications\Contracts\ProcessNotification;
+use App\Notifications\Messages\EmailViabiliza;
 use App\Services\Whatsapp\WhatsAppMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -78,13 +79,15 @@ class AbrigadoDesvinculadoNotification extends Notification implements ProcessNo
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        return (new EmailViabiliza)
             ->subject("Escritório virtual desvinculado — solicitação {$this->protocolNumber}")
+            ->selo('Regularização necessária', 'alerta')
+            ->titulo('Sua empresa foi desvinculada da Sede de Escritório Virtual')
             ->greeting('Olá!')
             ->line('A Sede de Escritório Virtual à qual sua empresa está vinculada deixou de prestar o serviço de Sede neste endereço.')
-            ->line('Para regularização do cadastro, deverá ser solicitada a alteração de endereço da empresa.')
-            ->action('Abrir o processo no Viabiliza', $this->url)
-            ->line('Este é um aviso automático — não responda a esta mensagem.');
+            ->destaque('Para regularização do cadastro, deverá ser solicitada a alteração de endereço da empresa.', 'alerta')
+            ->dados([['Solicitação', $this->protocolNumber]])
+            ->action('Abrir o processo no Viabiliza', $this->url);
     }
 
     /**
