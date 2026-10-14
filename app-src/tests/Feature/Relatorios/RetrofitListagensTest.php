@@ -155,6 +155,18 @@ class RetrofitListagensTest extends TestCase
         $this->assertContains('52998224725', $celulas);
     }
 
+    public function test_usuarios_report_source_separa_conta_ad_sem_papel_na_equipe(): void
+    {
+        User::factory()->ad()->create(['name' => 'Servidora AD Sem Papel']);
+
+        $nomes = fn (string $tab) => app(UsuariosReportSource::class)
+            ->definition(ReportFilters::fromArray(['tab' => $tab]))
+            ->builder()->get()->pluck('name');
+
+        $this->assertTrue($nomes('gestao')->contains('Servidora AD Sem Papel'));
+        $this->assertFalse($nomes('portal')->contains('Servidora AD Sem Papel'));
+    }
+
     public function test_export_csv_de_usuarios_reflete_busca_rn005(): void
     {
         User::factory()->analista()->create(['name' => 'Mariana Busca Presente']);

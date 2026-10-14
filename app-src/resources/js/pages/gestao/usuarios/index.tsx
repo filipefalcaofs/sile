@@ -7,6 +7,7 @@ import Label from '@/components/form/label';
 import Input from '@/components/form/input';
 import { PowerIcon } from '@/components/icons';
 import Select from '@/components/form/select';
+import Textarea from '@/components/form/textarea';
 import Avatar from '@/components/ui/avatar';
 import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
@@ -32,6 +33,16 @@ interface UserItem {
     ad_username: string | null;
 }
 
+interface SolicitacaoItem {
+    id: number;
+    name: string;
+    email: string;
+    ad_username: string | null;
+    perfil: string;
+    justificativa: string;
+    created_at: string;
+}
+
 type UsersTab = 'gestao' | 'portal';
 
 interface UsersIndexProps {
@@ -51,6 +62,7 @@ interface UsersIndexProps {
         portal: number;
     };
     roles: string[];
+    solicitacoes: SolicitacaoItem[];
 }
 
 function UsersTabs({
@@ -101,6 +113,86 @@ function UsersTabs({
                 })}
             </nav>
         </div>
+    );
+}
+
+function SolicitacaoRow({ item, roles, onReject }: { item: SolicitacaoItem; roles: string[]; onReject: () => void }) {
+    const [role, setRole] = useState(item.perfil);
+    const [processing, setProcessing] = useState(false);
+
+    function approve() {
+        router.put(
+            `/gestao/usuarios/solicitacoes/${item.id}/aprovar`,
+            { role },
+            {
+                preserveScroll: true,
+                onStart: () => setProcessing(true),
+                onFinish: () => setProcessing(false),
+            },
+        );
+    }
+
+    return (
+        <li className="flex flex-col gap-4 py-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+                <p className="font-medium text-gray-800 dark:text-white/90">{item.name}</p>
+                <p className="text-theme-xs text-gray-500 dark:text-gray-400">
+                    {item.email}
+                    {item.ad_username ? ` · AD: ${item.ad_username}` : ''}
+                </p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{item.justificativa}</p>
+            </div>
+            <div className="flex w-full flex-col gap-2 lg:w-80">
+                <Label htmlFor={`solicitacao-role-${item.id}`}>Perfil a conceder (pedido: {item.perfil})</Label>
+                <Select
+                    id={`solicitacao-role-${item.id}`}
+                    name="role"
+                    value={role}
+                    onChange={setRole}
+                    placeholder="Selecionar..."
+                    options={roles.map((roleOption) => ({ value: roleOption, label: roleOption }))}
+                />
+                <div className="flex justify-end gap-2">
+                    <Button size="sm" variant="outline" onClick={onReject} disabled={processing}>
+                        Recusar
+                    </Button>
+                    <Button size="sm" onClick={approve} disabled={processing || role === ''}>
+                        Aprovar
+                    </Button>
+                </div>
+            </div>
+        </li>
+    );
+}
+
+function RejectModal({ item, onClose }: { item: SolicitacaoItem; onClose: () => void }) {
+    return (
+        <Modal isOpen onClose={onClose} className="m-4 max-w-[507px] p-6 lg:p-8">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">Recusar solicitação</h4>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Informe o motivo da recusa para {item.name}. Ele aparece para o servidor no painel.
+            </p>
+
+            <Form action={`/gestao/usuarios/solicitacoes/${item.id}/recusar`} method="put" onSuccess={onClose} className="mt-6">
+                {({ errors, processing }) => (
+                    <div className="flex flex-col gap-5">
+                        <div>
+                            <Label htmlFor={`recusa-motivo-${item.id}`}>Motivo</Label>
+                            <Textarea id={`recusa-motivo-${item.id}`} name="motivo" rows={3} error={Boolean(errors.motivo)} />
+                            {errors.motivo && <FieldError>{errors.motivo}</FieldError>}
+                        </div>
+                        <div className="flex items-center justify-end gap-3">
+                            <Button size="sm" variant="outline" onClick={onClose} disabled={processing}>
+                                Cancelar
+                            </Button>
+                            <Button size="sm" type="submit" disabled={processing}>
+                                {processing ? 'Recusando...' : 'Recusar'}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Form>
+        </Modal>
     );
 }
 
@@ -239,13 +331,14 @@ function AuthTypeModal({ user, onClose }: { user: UserItem; onClose: () => void 
     );
 }
 
-export default function UsersIndex({ users, filters, counts, roles }: UsersIndexProps) {
+export default function UsersIndex({ users, filters, counts, roles, solicitacoes }: UsersIndexProps) {
     const [search, setSearch] = useState(filters.search ?? '');
     const isFirstRender = useRef(true);
     const [roleUser, setRoleUser] = useState<UserItem | null>(null);
     const [authTypeUser, setAuthTypeUser] = useState<UserItem | null>(null);
     const [activationUser, setActivationUser] = useState<UserItem | null>(null);
     const [activationProcessing, setActivationProcessing] = useState(false);
+    const [rejectItem, setRejectItem] = useState<SolicitacaoItem | null>(null);
 
     const tab = filters.tab ?? 'gestao';
 
@@ -371,6 +464,22 @@ export default function UsersIndex({ users, filters, counts, roles }: UsersIndex
             <Head title="Usuários" />
             <PageHeader title="Usuários" breadcrumbs={[{ label: 'Painel', href: '/gestao' }]} />
 
+            {solicitacoes.length > 0 && (
+                <Card className="mb-6">
+                    <CardHeader
+                        title={`Solicitações de acesso (${solicitacoes.length})`}
+                        description="Servidores que entraram pelo AD e pediram um perfil. Aprove com o perfil pedido, troque o perfil ou recuse."
+                    />
+                    <CardContent>
+                        <ul className="divide-y divide-gray-200 dark:divide-gray-800">
+                            {solicitacoes.map((item) => (
+                                <SolicitacaoRow key={item.id} item={item} roles={roles} onReject={() => setRejectItem(item)} />
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            )}
+
             <Card>
                 <CardHeader
                     title="Contas cadastradas"
@@ -427,6 +536,7 @@ export default function UsersIndex({ users, filters, counts, roles }: UsersIndex
             </Card>
 
             {roleUser && <RoleModal user={roleUser} roles={roles} onClose={() => setRoleUser(null)} />}
+            {rejectItem && <RejectModal item={rejectItem} onClose={() => setRejectItem(null)} />}
 
             {authTypeUser && <AuthTypeModal user={authTypeUser} onClose={() => setAuthTypeUser(null)} />}
 

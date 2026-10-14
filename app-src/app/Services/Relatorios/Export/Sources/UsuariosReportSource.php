@@ -9,7 +9,6 @@ use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\ReportSource;
 use App\Services\Relatorios\ReportFilters;
 use Illuminate\Database\Eloquent\Builder;
-use Spatie\Permission\Models\Role;
 
 /**
  * Fonte da listagem de usuários (HU-012) para o contrato único de exportação
@@ -41,10 +40,6 @@ final class UsuariosReportSource implements ReportSource
         // RN-007: PII (CPF completo) só sob liberação explícita no bag.
         $pii = filter_var($filtros->get('pii'), FILTER_VALIDATE_BOOLEAN);
 
-        $gestaoRoleIds = Role::query()
-            ->whereHas('permissions', fn ($query) => $query->where('name', 'acessar-gestao'))
-            ->pluck('id');
-
         return new ReportDefinition(
             titulo: 'Usuários',
             colunas: [
@@ -59,8 +54,8 @@ final class UsuariosReportSource implements ReportSource
             builder: fn (): Builder => User::query()
                 ->when(
                     $tab === 'gestao',
-                    fn ($query) => $query->whereHas('roles', fn ($inner) => $inner->whereIn('roles.id', $gestaoRoleIds)),
-                    fn ($query) => $query->whereDoesntHave('roles', fn ($inner) => $inner->whereIn('roles.id', $gestaoRoleIds)),
+                    fn ($query) => $query->equipeSedur(),
+                    fn ($query) => $query->usuarioPortal(),
                 )
                 ->with('roles:id,name')
                 ->when($search !== '', function ($query) use ($search): void {

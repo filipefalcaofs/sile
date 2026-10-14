@@ -11,6 +11,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -53,6 +54,26 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdAccount(): bool
     {
         return $this->auth_type === AuthType::Ad;
+    }
+
+    /**
+     * Equipe SEDUR: conta do AD corporativo ou com perfil que dá acesso à gestão.
+     */
+    public function scopeEquipeSedur(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $inner) => $inner
+            ->where('auth_type', AuthType::Ad->value)
+            ->orWhereHas('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao')));
+    }
+
+    /**
+     * Usuário do portal: externo, nunca conta AD e sem perfil com acesso à gestão.
+     */
+    public function scopeUsuarioPortal(Builder $query): Builder
+    {
+        return $query
+            ->where('auth_type', '!=', AuthType::Ad->value)
+            ->whereDoesntHave('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao'));
     }
 
     public function sendEmailVerificationNotification(): void
