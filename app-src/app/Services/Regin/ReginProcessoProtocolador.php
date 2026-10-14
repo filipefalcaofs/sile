@@ -509,8 +509,9 @@ class ReginProcessoProtocolador
 
         foreach ($cnaes as $cnae) {
             $exibidas = $this->tratamento->perguntasExibidas($cnae->code);
+            $casadas = [];
 
-            foreach ($perguntas as $item) {
+            foreach ($perguntas as $indice => $item) {
                 $alvo = self::normalizarTexto($item['pergunta']);
 
                 foreach ($exibidas as $exibida) {
@@ -518,6 +519,7 @@ class ReginProcessoProtocolador
                         continue;
                     }
 
+                    $casadas[$indice] = true;
                     $numero = (int) $exibida['numero'];
 
                     if (isset($mapa[$cnae->code][$numero])) {
@@ -533,9 +535,95 @@ class ReginProcessoProtocolador
                     }
                 }
             }
+
+            foreach ($this->respostasPelaOpcao($perguntas, $casadas, $exibidas, $mapa[$cnae->code] ?? []) as $numero => $resposta) {
+                $mapa[$cnae->code][$numero] = $resposta;
+            }
         }
 
         return $mapa;
+    }
+
+    /**
+     * A JUCEB reescreve o enunciado de algumas perguntas ("Informar quais dos
+     * serviços citados a seguir…" no lugar do texto da planilha) e responde
+     * pelo texto da opção. Sem casar o enunciado, a pergunta de opções ainda
+     * sem resposta é resolvida pela linha sobrante cuja resposta é o texto de
+     * uma das suas opções — nunca por resposta Sim/Não, que não identifica a
+     * pergunta.
+     *
+     * @param  list<array{codigo: ?string, tipo: ?string, cnpj: ?string, pergunta: string, resposta: string}>  $perguntas
+     * @param  array<int, true>  $casadas
+     * @param  list<array{numero: int, texto: string, tipo: string, opcoes: list<array{rotulo: string, texto: string}>, depende: array{pergunta: int, sim: bool}|null}>  $exibidas
+     * @param  array<int, bool|int|list<int>>  $jaRespondidas
+     * @return array<int, bool|int|list<int>>
+     */
+    private function respostasPelaOpcao(array $perguntas, array $casadas, array $exibidas, array $jaRespondidas): array
+    {
+        $respostas = [];
+
+        foreach ($exibidas as $exibida) {
+            $numero = (int) $exibida['numero'];
+
+            if (isset($jaRespondidas[$numero]) || ! in_array($exibida['tipo'], ['multipla', 'opcao_unica'], true) || $exibida['opcoes'] === []) {
+                continue;
+            }
+
+            $escolhidas = [];
+
+            foreach ($perguntas as $indice => $item) {
+                if (isset($casadas[$indice]) || RespostaPlanilha::deTexto($item['resposta']) !== null) {
+                    continue;
+                }
+
+                $rotulo = $this->rotuloDaOpcaoPeloTexto($item['resposta'], $exibida['opcoes']);
+
+                if ($rotulo !== null) {
+                    $escolhidas[$rotulo] = $rotulo;
+                }
+            }
+
+            if ($escolhidas !== []) {
+                sort($escolhidas);
+                $respostas[$numero] = RespostaPlanilha::de(count($escolhidas) === 1 ? $escolhidas[array_key_first($escolhidas)] : $escolhidas)->paraArmazenar();
+            }
+        }
+
+        return $respostas;
+    }
+
+    /**
+     * Texto idêntico à opção (sem o ";" ou "." final) tem prioridade sobre o
+     * trecho contido: "Serviços de organização de arquivos" é a opção 3, não a
+     * 2 ("…de arquivo de documentos…").
+     *
+     * @param  list<array{rotulo: string, texto: string}>  $opcoes
+     */
+    private function rotuloDaOpcaoPeloTexto(string $resposta, array $opcoes): ?int
+    {
+        $alvo = rtrim(self::normalizarTexto($resposta), ';. ');
+
+        if ($alvo === '') {
+            return null;
+        }
+
+        $contida = null;
+
+        foreach ($opcoes as $opcao) {
+            $texto = rtrim(self::normalizarTexto($opcao['texto']), ';. ');
+            $rotulo = trim($opcao['rotulo']);
+            $numero = ctype_digit($rotulo) ? (int) $rotulo : ord(mb_strtolower($rotulo)) - ord('a') + 1;
+
+            if ($texto === $alvo) {
+                return $numero;
+            }
+
+            if ($contida === null && str_contains($texto, $alvo)) {
+                $contida = $numero;
+            }
+        }
+
+        return $contida;
     }
 
     /**

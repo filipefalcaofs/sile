@@ -65,6 +65,21 @@ class TratamentoMotivosCatalogoTest extends TestCase
         $this->assertSame("Pergunta 11 sem resposta — {$enunciado}", $ramo->motivo);
     }
 
+    public function test_pergunta_1_sem_subdivisao_carregada_aponta_a_planilha_e_nao_o_requerente(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '3314-7/10',
+            respostas: [],
+            areaUtilizada: 100.0,
+        ));
+
+        $this->assertSame('nao_resolvido', $ramo->status);
+        $this->assertSame(
+            'Subdivisão do CNAE 3314-7/10 ausente na planilha de tratamento carregada — rode o complemento da planilha (tratamento:verificar --corrigir)',
+            $ramo->motivo,
+        );
+    }
+
     public function test_motivo_editado_no_catalogo_vale_no_resolver(): void
     {
         DecisionText::query()->create([

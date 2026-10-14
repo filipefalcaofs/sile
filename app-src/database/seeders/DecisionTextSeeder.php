@@ -82,6 +82,7 @@ class DecisionTextSeeder extends Seeder
         'tratamento.motivo.sem_versao' => 'Motivo do ramo da planilha quando não há versão vigente da planilha de tratamento.',
         'tratamento.motivo.cnae_sem_regra' => 'Motivo do ramo da planilha quando o CNAE não tem regra de tratamento vigente.',
         'tratamento.motivo.pergunta_sem_resposta' => 'Motivo do ramo da planilha quando uma pergunta ligada ao CNAE não foi respondida. Placeholders: :numero, :texto (enunciado da pergunta).',
+        'tratamento.motivo.subdivisao_ausente' => 'Motivo do ramo da planilha quando a pergunta 1 pede a escolha de uma subdivisão do CNAE mas a planilha carregada não traz as opções (carga incompleta, não falta do requerente). Placeholder: :cnae.',
         'tratamento.motivo.sem_linha' => 'Motivo do ramo da planilha quando nenhuma linha de enquadramento do CNAE serve ao ramo escolhido.',
         'tratamento.motivo.ramo_bloqueado' => 'Motivo padrão quando a regra da planilha não permite o prosseguimento do ramo (sem mensagem própria).',
         'tratamento.motivo.cnlu' => 'Motivo do ramo da planilha quando o enquadramento é de análise da CNLU (coluna Risco ou aba Análise CNLU).',

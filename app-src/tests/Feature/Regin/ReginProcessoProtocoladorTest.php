@@ -355,6 +355,54 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertSame(2, $respostas[1] ?? null);
     }
 
+    public function test_pergunta_5_da_juceb_com_outro_enunciado_casa_pelo_texto_da_opcao(): void
+    {
+        $versao = $this->seedTratamentoPlanilha();
+        app(PlanilhaTratamentoImporter::class)->complementar($versao, database_path('data/regras-20-08-26/planilha-regras.xlsx'));
+
+        $linhas = [
+            ['TIPO' => '2', 'CNPJ' => '05457349000170', 'COD_PERGUNTA' => '900', 'PER_PERGUNTA' => 'Informar quais dos serviços citados a seguir a empresa desenvolve no caso da empresa não seja sede de escritório virtual', 'PER_RESPOSTA' => 'Coworking'],
+            ['TIPO' => '2', 'CNPJ' => '05457349000170', 'COD_PERGUNTA' => '900', 'PER_PERGUNTA' => 'Informar quais dos serviços citados a seguir a empresa desenvolve no caso da empresa não seja sede de escritório virtual', 'PER_RESPOSTA' => 'Serviços de organização de arquivos'],
+        ];
+
+        $corpo = $this->ruc(['GROUPPERGUNTAS' => ['PERGUNTAS' => $linhas]]);
+        $corpo['rowset']['GROUPRUC_ACTV_ECON']['RUC_ACTV_ECON'] = [['RAE_TAE_COD_ACTVD' => '8211300', 'RAE_CALIF_ACTV' => '1']];
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($corpo));
+
+        $respostas = $processo->simulation_snapshot['respostas_tratamento_por_cnae']['8211300'] ?? [];
+        $this->assertSame([3, 5], $respostas[5] ?? null);
+    }
+
+    public function test_opcoes_marcadas_antes_do_seguir_e_em_dois_cnaes_resolvem_cada_cnae(): void
+    {
+        $versao = $this->seedTratamentoPlanilha();
+        app(PlanilhaTratamentoImporter::class)->complementar($versao, database_path('data/regras-20-08-26/planilha-regras.xlsx'));
+
+        $enunciado = 'Identifique entre as opções a seguir os serviços ou as atividades que serão prestado(a)s/desenvolvido (a)s:';
+        $linha = fn (string $pergunta, string $resposta): array => ['TIPO' => '2', 'CNPJ' => '05457349000170', 'COD_PERGUNTA' => '1', 'PER_PERGUNTA' => $pergunta, 'PER_RESPOSTA' => $resposta];
+
+        $linhas = [
+            $linha('Serviços de organização de festas e eventos, familiares ou não, inclusive festas de formaturas.', 'SIM'),
+            $linha('Atividade de computação gráfica para publicidade', 'SIM'),
+            $linha('Serviço de alto-falante para publicidade', 'NÃO'),
+            $linha($enunciado, 'Seguir'),
+            $linha($enunciado, 'Seguir'),
+        ];
+
+        $corpo = $this->ruc(['GROUPPERGUNTAS' => ['PERGUNTAS' => $linhas]]);
+        $corpo['rowset']['GROUPRUC_ACTV_ECON']['RUC_ACTV_ECON'] = [
+            ['RAE_TAE_COD_ACTVD' => '8230001', 'RAE_CALIF_ACTV' => '1'],
+            ['RAE_TAE_COD_ACTVD' => '7319099', 'RAE_CALIF_ACTV' => '2'],
+        ];
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($corpo));
+
+        $porCnae = $processo->simulation_snapshot['respostas_tratamento_por_cnae'];
+        $this->assertSame(3, $porCnae['8230001'][1] ?? null);
+        $this->assertSame(1, $porCnae['7319099'][1] ?? null);
+    }
+
     public function test_envelope_real_bap2601472834_com_groupperguntas_alimenta_o_motor(): void
     {
         $this->seedTratamentoPlanilha();
