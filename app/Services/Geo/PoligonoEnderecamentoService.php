@@ -188,9 +188,32 @@ class PoligonoEnderecamentoService
                 'status' => $hit->status,
                 'candidatas' => $hit->candidatas,
                 'motivo' => $hit->motivo,
+                'codlog_encontrado' => $hit->propriedades['CODLOG'] ?? null,
+                'numero_encontrado' => $hit->propriedades['NUMERACAO_METRICA'] ?? null,
+                'confere_com_o_processo' => $this->confereComOProcesso($request, $hit),
             ],
             subject: $request,
             result: $hit->status,
         );
+    }
+
+    /**
+     * O lote achado pelo ponto tem o CODLOG e o número do processo? Falso aponta
+     * um ponto que pode ter caído no lote vizinho. Nulo quando não há como
+     * comparar (sem lote ou processo sem CODLOG/número).
+     */
+    private function confereComOProcesso(ViabilityRequest $request, EnderecamentoHit $hit): ?bool
+    {
+        $normalizar = fn (mixed $valor): string => ltrim(trim((string) $this->texto($valor)), '0');
+
+        $codLogProcesso = $normalizar($request->cod_log);
+        $numeroProcesso = $normalizar($request->address_number);
+
+        if (! $hit->encontrado() || $codLogProcesso === '' || $numeroProcesso === '') {
+            return null;
+        }
+
+        return $normalizar($hit->propriedades['CODLOG'] ?? null) === $codLogProcesso
+            && $normalizar($hit->propriedades['NUMERACAO_METRICA'] ?? null) === $numeroProcesso;
     }
 }

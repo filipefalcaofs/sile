@@ -237,4 +237,39 @@ class PoligonoPorPontoTest extends TestCase
         $this->assertSame(0, $this->consultasPorPonto());
         $emAndamento->release();
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function auditoriaDoPonto(): array
+    {
+        $atividade = Activity::query()->where('event', 'enderecamento-poligono')
+            ->get()
+            ->first(fn (Activity $a): bool => ($a->properties['fonte'] ?? null) === 'ponto');
+
+        return $atividade?->properties?->all() ?? [];
+    }
+
+    public function test_auditoria_do_ponto_registra_lote_de_outro_endereco_como_divergente(): void
+    {
+        $this->fakeGeoServer($this->colecao($this->quadrado(-38.5, -12.98)));
+        $request = $this->processo(['cod_log' => '999', 'address_number' => '5']);
+
+        $this->assertTrue(app(PoligonoEnderecamentoService::class)->aplicar($request, consultarPorPonto: true));
+
+        $auditoria = $this->auditoriaDoPonto();
+        $this->assertSame('24574', (string) $auditoria['codlog_encontrado']);
+        $this->assertSame('70', (string) $auditoria['numero_encontrado']);
+        $this->assertFalse($auditoria['confere_com_o_processo']);
+    }
+
+    public function test_auditoria_do_ponto_registra_lote_do_mesmo_endereco_como_conferido(): void
+    {
+        $this->fakeGeoServer($this->colecao($this->quadrado(-38.5, -12.98)));
+        $request = $this->processo(['cod_log' => '024574', 'address_number' => '70']);
+
+        $this->assertTrue(app(PoligonoEnderecamentoService::class)->aplicarPorPonto($request));
+
+        $this->assertTrue($this->auditoriaDoPonto()['confere_com_o_processo']);
+    }
 }
