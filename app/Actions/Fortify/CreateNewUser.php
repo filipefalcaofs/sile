@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Models\User;
 use App\Rules\TelefoneComDdd;
 use App\Rules\ValidCpf;
+use App\Support\PerfilCidadao;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -45,7 +46,7 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $input['password'],
         ]);
 
-        $user->assignRole('cidadao');
+        $user->assignRole(PerfilCidadao::nome());
 
         return $user;
     }

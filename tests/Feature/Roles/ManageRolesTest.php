@@ -316,4 +316,19 @@ class ManageRolesTest extends TestCase
             'causer_id' => $analista->id,
         ]);
     }
+
+    public function test_perfil_apontado_pelo_parametro_do_cidadao_nao_pode_ser_excluido_nem_renomeado(): void
+    {
+        $admin = $this->admin();
+        $municipe = Role::create(['name' => 'municipe', 'guard_name' => 'web']);
+        config(['sile.portal.perfil_cidadao' => 'municipe']);
+
+        $this->actingAs($admin, 'gestao')
+            ->put("/gestao/perfis/{$municipe->id}", ['name' => 'outro'])
+            ->assertSessionHasErrors('name');
+
+        $this->actingAs($admin, 'gestao')
+            ->delete("/gestao/perfis/{$municipe->id}")
+            ->assertSessionHasErrors('role');
+    }
 }
