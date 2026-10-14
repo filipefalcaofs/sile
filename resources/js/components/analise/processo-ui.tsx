@@ -131,6 +131,7 @@ export interface ProcessoItem {
     categorias: ProcessoCategoria[];
     categoria: string | null;
     servico: string | null;
+    servicos: string[];
     analista: string | null;
     assigned_user_id: number | null;
     setor: string | null;

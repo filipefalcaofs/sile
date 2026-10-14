@@ -748,7 +748,19 @@ function colunasProcessos(opcoes: {
         {
             id: 'servico',
             header: 'Serviço',
-            cell: (item) => item.servico ?? item.categoria ?? '—',
+            cellClassName: 'min-w-56 max-w-xs',
+            cell: (item) =>
+                item.servicos.length === 0 ? (
+                    <span className="text-gray-400 dark:text-gray-500">{item.categoria ?? '—'}</span>
+                ) : (
+                    <ul className="flex flex-col gap-1">
+                        {item.servicos.map((servico) => (
+                            <li key={servico} className="leading-snug text-gray-700 dark:text-gray-300">
+                                {servico}
+                            </li>
+                        ))}
+                    </ul>
+                ),
         },
         {
             id: 'analista',
