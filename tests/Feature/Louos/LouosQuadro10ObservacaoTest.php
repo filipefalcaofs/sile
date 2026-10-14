@@ -10,6 +10,7 @@ use App\Services\Geo\TerritoryResult;
 use App\Services\Louos\EnquadramentoInput;
 use App\Services\Louos\EnquadramentoResult;
 use App\Services\Louos\LouosEnquadramentoService;
+use App\Services\Louos\LouosQuadro10ImportService;
 use Database\Seeders\DecisionTextSeeder;
 use Database\Seeders\TerritorialRuleSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -132,6 +133,32 @@ class LouosQuadro10ObservacaoTest extends TestCase
 
         $this->assertSame(EnquadramentoResult::STATUS_INDISPONIVEL, $result->quadro10['status']);
         $this->assertSame('pendente', $result->consolidado['resultado']);
+    }
+
+    public function test_celula_s_a_importada_fora_das_localizacoes_resulta_nao_permitido(): void
+    {
+        $version = RuleVersion::factory()->create([
+            'domain' => RuleDomain::LouosQuadro10,
+            'version' => 'lei-9148-2016-quadro10',
+            'rules_version' => 'lei-9148-2016-quadro10',
+        ]);
+
+        $csv = tempnam(sys_get_temp_dir(), 'quadro10-');
+        file_put_contents($csv, implode("\n", [
+            'zona,grupo_uso,subgrupo,permissao,condicionante_ref,base_legal',
+            'ZCMu-2,nR1,,S(A),,Lei nº 9.148/2016 — Quadro 10',
+        ]));
+
+        try {
+            app(LouosQuadro10ImportService::class)->import($version, $csv);
+        } finally {
+            unlink($csv);
+        }
+
+        $result = $this->enquadrar($this->territorio(['CODLOG' => '999'], 'Pituba'));
+
+        $this->assertSame(Quadro10Permissao::Proibido->value, $result->quadro10['permissao']);
+        $this->assertSame('nao_permitido', $result->consolidado['resultado']);
     }
 
     public function test_linha_sem_observacao_segue_o_fluxo_normal(): void
