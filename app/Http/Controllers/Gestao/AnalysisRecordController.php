@@ -510,9 +510,8 @@ class AnalysisRecordController extends Controller
         $numeroMetrico = $this->textoOuNulo($request->address_number);
         $cep = $this->textoOuNulo($request->address_zip);
         $pontoReferencia = $this->textoOuNulo($request->address_reference);
-        $zona = $this->textoOuNulo($request->zona_codigo)
-            ?? $this->textoOuNulo(data_get($request->simulation_snapshot, 'zona'));
-        $via = $this->textoOuNulo(data_get($request->simulation_snapshot, 'via'));
+        $zona = $this->textoOuNulo($request->zona_codigo);
+        $via = $this->textoOuNulo($request->camadas_incidentes['via'] ?? null);
         $bairro = $this->bairroDaLocalizacao($request, $cadastro, $zona);
 
         $partes = array_values(array_filter(

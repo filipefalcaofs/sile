@@ -68,6 +68,7 @@ class FichaEvPainelTest extends TestCase
 
         ViabilityDecision::factory()->create([
             'viability_request_id' => $sede->id,
+            'flow' => 'analise_tecnica',
             'is_virtual_office_hq' => true,
             'tvl_product_number' => $tvlSede,
         ]);
