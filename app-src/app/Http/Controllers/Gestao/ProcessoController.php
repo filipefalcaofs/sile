@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\AnalysisStatusRequest;
 use App\Http\Resources\DecisionExplanationResource;
 use App\Http\Resources\ProcessoResource;
+use App\Models\Activity;
 use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -199,18 +200,7 @@ class ProcessoController extends Controller
             'explicacao' => $viabilityRequest->decision === null
                 ? null
                 : (new DecisionExplanationResource($this->explanations->explain($viabilityRequest->decision)))->resolve(),
-            'timeline' => $viabilityRequest->transitions->load('actor')->map(fn ($transicao): array => [
-                'from' => $transicao->from_status?->value,
-                'from_label' => $transicao->from_status?->label(),
-                'to' => $transicao->to_status->value,
-                'to_label' => $transicao->to_status->label(),
-                'reason' => $transicao->reason,
-                'em' => $transicao->created_at?->toIso8601String(),
-                'ator' => $transicao->actor?->name,
-                'atribuido' => $transicao->to_status === ViabilityRequestStatus::EmAnalise
-                    ? $viabilityRequest->assignedTo?->name
-                    : null,
-            ])->all(),
+            'timeline' => $this->timeline($viabilityRequest),
             'setoresEncaminhamento' => Sector::query()->where('active', true)->orderBy('name')->get(['id', 'name']),
             'analistasEncaminhamento' => User::query()
                 ->with('sectors:id')
@@ -248,6 +238,62 @@ class ProcessoController extends Controller
                 )
                 : [],
         ]);
+    }
+
+    /**
+     * Linha do tempo do processo. A distribuição não muda o status canônico
+     * (o processo já está em análise), então quem distribuiu sai da auditoria
+     * da atribuição e aparece na etapa Em análise.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function timeline(ViabilityRequest $viabilityRequest): array
+    {
+        $distribuidor = $this->distribuidorDoProcesso($viabilityRequest);
+
+        return $viabilityRequest->transitions->load('actor')->map(fn ($transicao): array => [
+            'from' => $transicao->from_status?->value,
+            'from_label' => $transicao->from_status?->label(),
+            'to' => $transicao->to_status->value,
+            'to_label' => $transicao->to_status->label(),
+            'reason' => $transicao->reason,
+            'em' => $transicao->created_at?->toIso8601String(),
+            'ator' => $transicao->actor?->name,
+            'atribuido' => $transicao->to_status === ViabilityRequestStatus::EmAnalise
+                ? $viabilityRequest->assignedTo?->name
+                : null,
+            'distribuidor' => $transicao->to_status === ViabilityRequestStatus::EmAnalise
+                ? $distribuidor
+                : null,
+        ])->all();
+    }
+
+    /**
+     * Quem fez a última atribuição (distribuição, assunção ou redistribuição).
+     * O ator gravado pelo serviço prevalece sobre o causer da sessão.
+     */
+    private function distribuidorDoProcesso(ViabilityRequest $viabilityRequest): ?string
+    {
+        $atividade = Activity::query()
+            ->where('subject_type', $viabilityRequest->getMorphClass())
+            ->where('subject_id', $viabilityRequest->id)
+            ->whereIn('event', ['distribuir', 'assumir', 'redistribuir'])
+            ->latest('id')
+            ->first();
+
+        if ($atividade === null) {
+            return null;
+        }
+
+        $atorId = $atividade->properties['ator_id'] ?? $atividade->causer_id;
+
+        if ($atorId === null) {
+            return null;
+        }
+
+        $nome = User::query()->whereKey($atorId)->value('name');
+
+        return is_string($nome) ? $nome : null;
     }
 
     /**

@@ -5,9 +5,11 @@ namespace Tests\Feature\Analise;
 use App\Enums\AnalysisStage;
 use App\Enums\PropertyLocationSource;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Services\Analise\DistribuicaoService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -145,6 +147,51 @@ class ProcessoUiSmokeTest extends TestCase
                 ->where('parecer.outcome_label', 'Indeferida')
                 ->where('parecer.motivo', 'A solicitação está localizada no logradouro 212 – Avenida Lafayette Coutinho.')
                 ->where('parecer.fundamentacao.0', 'art. 172-A da Lei Municipal nº 9.148/2016'));
+    }
+
+    public function test_detalhe_mostra_quem_distribuiu_o_processo_na_tramitacao(): void
+    {
+        $setor = Sector::factory()->create();
+        $apoio = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+        $apoio->sectors()->attach($setor);
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create(['name' => 'Lisa Sousa']);
+        $analista->sectors()->attach($setor);
+        $protocolador = User::factory()->create(['name' => 'Filipe Protocolo']);
+
+        $processo = $this->processo([
+            'sector_id' => $setor->id,
+            'status' => ViabilityRequestStatus::EmAnalise,
+        ], [
+            'analysis_stage' => AnalysisStage::Distribuicao,
+            'analysis_stage_started_at' => now(),
+            'analysis_due_at' => now()->addDays(2),
+        ]);
+
+        $processo->transitions()->create([
+            'from_status' => ViabilityRequestStatus::Rascunho,
+            'to_status' => ViabilityRequestStatus::Protocolada,
+            'actor_user_id' => $protocolador->id,
+        ]);
+        $processo->transitions()->create([
+            'from_status' => ViabilityRequestStatus::Protocolada,
+            'to_status' => ViabilityRequestStatus::EmAnalise,
+            'reason' => 'veredito locacional pendente',
+        ]);
+
+        $this->actingAs($apoio, 'gestao');
+        app(DistribuicaoService::class)->distribuir($processo, $analista, $apoio);
+
+        $timeline = $this->actingAs($analista, 'gestao')
+            ->get("/gestao/processos/{$processo->id}")
+            ->assertOk()
+            ->viewData('page')['props']['timeline'];
+
+        $emAnalise = collect($timeline)->firstWhere('to', ViabilityRequestStatus::EmAnalise->value);
+        $protocolada = collect($timeline)->firstWhere('to', ViabilityRequestStatus::Protocolada->value);
+
+        $this->assertSame($apoio->name, $emAnalise['distribuidor']);
+        $this->assertSame('Lisa Sousa', $emAnalise['atribuido']);
+        $this->assertNull($protocolada['distribuidor']);
     }
 
     public function test_detalhe_mostra_o_ponto_do_cadastro_quando_nao_ha_poligono(): void
