@@ -15,8 +15,10 @@ use App\Models\Cnae;
 use App\Models\ExpressoQueda;
 use App\Models\GeoLayer;
 use App\Models\LouosQuadro10Permissao;
+use App\Models\Parameter;
 use App\Models\RiskClassification;
 use App\Models\RuleVersion;
+use App\Models\Sector;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
@@ -176,6 +178,49 @@ class FluxoExpressoReavaliarTest extends TestCase
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);
         $this->assertSame($transicoesAntes, $request->transitions()->count());
         Event::assertNotDispatched(EncaminhadoParaAnalise::class);
+    }
+
+    public function test_reavaliacao_que_continua_em_analise_deposita_o_processo_sem_setor_na_caixa_de_triagem(): void
+    {
+        Event::fake([EncaminhadoParaAnalise::class]);
+        $request = $this->emAnaliseNaoAssumida($this->protocoladaComCnaes(['2222222']));
+        $this->assertNull($request->sector_id);
+
+        $setorTriagem = Sector::factory()->create(['active' => true]);
+        Parameter::factory()->create([
+            'key' => 'analise.setor_triagem_id',
+            'group' => 'analise',
+            'type' => 'integer',
+            'value' => (string) $setorTriagem->id,
+            'default_value' => null,
+            'validation_rules' => ['nullable', 'integer', 'exists:sectors,id'],
+        ]);
+
+        app(FluxoExpressoService::class)->decide($request);
+
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $request->fresh()->status);
+        $this->assertSame($setorTriagem->id, $request->fresh()->sector_id);
+    }
+
+    public function test_reavaliacao_nao_tira_o_processo_do_setor_em_que_ja_esta(): void
+    {
+        Event::fake([EncaminhadoParaAnalise::class]);
+        $setorAtual = Sector::factory()->create(['active' => true]);
+        $request = $this->emAnaliseNaoAssumida($this->protocoladaComCnaes(['2222222']));
+        $request->forceFill(['sector_id' => $setorAtual->id])->save();
+
+        Parameter::factory()->create([
+            'key' => 'analise.setor_triagem_id',
+            'group' => 'analise',
+            'type' => 'integer',
+            'value' => (string) Sector::factory()->create(['active' => true])->id,
+            'default_value' => null,
+            'validation_rules' => ['nullable', 'integer', 'exists:sectors,id'],
+        ]);
+
+        app(FluxoExpressoService::class)->decide($request);
+
+        $this->assertSame($setorAtual->id, $request->fresh()->sector_id);
     }
 
     public function test_reavaliacao_com_o_mesmo_motivo_nao_duplica_a_queda(): void

@@ -467,6 +467,12 @@ class FluxoExpressoService
         // a ser o motivo atual do motor, não o da passada anterior (HU-145).
         if ($request->status === ViabilityRequestStatus::EmAnalise) {
             DB::transaction(function () use ($request, $reason, $resolved, $territorial, $gatilho): void {
+                // Processo encaminhado quando não havia setor de triagem ainda
+                // fica sem caixa; a reavaliação o deposita no setor atual.
+                if ($request->sector_id === null) {
+                    $request->forceFill(['sector_id' => $this->setorTriagemId()])->save();
+                }
+
                 $request->expressoQuedas()->delete();
                 $this->capturarQueda($request, $reason, $resolved, $territorial, $gatilho);
             });
