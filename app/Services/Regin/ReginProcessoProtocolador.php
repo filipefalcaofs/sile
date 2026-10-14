@@ -174,7 +174,9 @@ class ReginProcessoProtocolador
         // maior porção. Já fora da transação — fonte indisponível não desfaz
         // o processo. O polígono declarado no REGIN fica em
         // property_polygon_geojson e só vale se a cadeia oficial não achar.
-        $this->poligonoLote->aplicar($solicitacao->fresh() ?? $solicitacao);
+        // Sem polígono pela chave nem pelo SEMAP, busca o lote pelo ponto: este
+        // protocolo roda no job do REGIN (120 s), onde a espera é aceitável.
+        $this->poligonoLote->aplicar($solicitacao->fresh() ?? $solicitacao, consultarPorPonto: true);
 
         $this->expresso->decide($solicitacao->fresh() ?? $solicitacao, $ator);
 
