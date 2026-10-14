@@ -37,3 +37,33 @@ describe('resolveActiveHref', () => {
         expect(resolveActiveHref('/portal/empresas', hrefs, homeHref)).toBeNull();
     });
 });
+
+describe('resolveActiveHref no portal do cidadão', () => {
+    const portalHrefs = [
+        '/portal/painel',
+        '/portal/notificacoes',
+        '/portal/viabilidade',
+        '/portal/solicitacoes',
+        '/portal/renovacao',
+        '/portal/empresas',
+        '/portal/procuracoes',
+        '/portal/conta/perfil',
+        '/portal/acessos',
+    ];
+
+    it('acende Consultar viabilidade no histórico de consultas', () => {
+        expect(resolveActiveHref('/portal/viabilidade/historico', portalHrefs, '/portal')).toBe('/portal/viabilidade');
+    });
+
+    it('acende Minhas solicitações no wizard de nova solicitação', () => {
+        expect(resolveActiveHref('/portal/solicitacoes/nova', portalHrefs, '/portal')).toBe('/portal/solicitacoes');
+    });
+
+    it('acende Minhas empresas no detalhe da empresa', () => {
+        expect(resolveActiveHref('/portal/empresas/42', portalHrefs, '/portal')).toBe('/portal/empresas');
+    });
+
+    it('não acende nada na landing pública', () => {
+        expect(resolveActiveHref('/portal', portalHrefs, '/portal')).toBeNull();
+    });
+});

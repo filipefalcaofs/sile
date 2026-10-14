@@ -46,7 +46,11 @@ Route::middleware('guest')
 // parametrizado (07-01) e a guarda do toggle features.consulta_viabilidade no
 // controller (degradação comunicada quando desligado, nunca falha silenciosa).
 Route::prefix('portal')->name('portal.')->group(function () {
-    Route::get('viabilidade', [ConsultaViabilidadeController::class, 'index'])->name('viabilidade.index');
+    // ResolveRepresentation: logado, a consulta abre no shell do portal e
+    // precisa do mesmo "atuando em nome de" das demais telas.
+    Route::get('viabilidade', [ConsultaViabilidadeController::class, 'index'])
+        ->middleware(ResolveRepresentation::class)
+        ->name('viabilidade.index');
 
     Route::middleware('throttle:consulta-viabilidade')->group(function () {
         Route::post('viabilidade/endereco', [ConsultaViabilidadeController::class, 'endereco'])->name('viabilidade.endereco');

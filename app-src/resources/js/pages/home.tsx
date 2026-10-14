@@ -1,18 +1,12 @@
-import { Head, Link } from '@inertiajs/react';
-import type { ComponentType, SVGProps } from 'react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import AccessibilityBar from '@/components/app/accessibility-bar';
-import { MotionProvider, RevealLink, RevealScope, Surface } from '@/components/motion';
+import { MotionProvider, RevealLink, RevealScope } from '@/components/motion';
 import Logo from '@/components/app/logo';
-import {
-    ArrowRightIcon,
-    CheckCircleIcon,
-    EyeIcon,
-    FileIcon,
-    GroupIcon,
-    MoonIcon,
-    SunIcon,
-} from '@/components/icons';
+import { ArrowRightIcon, MoonIcon, SunIcon } from '@/components/icons';
 import { ThemeProvider, useTheme } from '@/contexts/theme-context';
+import { acoesPublicas } from '@/navigation/portal-nav';
+import { PORTAL_NAV_ICONS } from '@/navigation/portal-nav-icons';
+import type { SharedProps } from '@/types';
 
 const primaryCtaStyles =
     'inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-5 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600';
@@ -24,41 +18,6 @@ const navLinks = [
     { label: 'Serviços', href: '#servicos' },
     { label: 'Como funciona', href: '#como-funciona' },
     { label: 'Base legal', href: '#base-legal' },
-];
-
-interface ServiceItem {
-    icon: ComponentType<SVGProps<SVGSVGElement>>;
-    title: string;
-    description: string;
-    href?: string;
-}
-
-const services: ServiceItem[] = [
-    {
-        icon: EyeIcon,
-        title: 'Consulta de viabilidade',
-        description:
-            'Verificação de que uma atividade econômica pode funcionar no endereço pretendido, aplicando as regras de uso e ocupação do solo da LOUOS.',
-        href: '/portal/viabilidade',
-    },
-    {
-        icon: FileIcon,
-        title: 'Solicitação de viabilidade',
-        description:
-            'Protocolo do pedido de viabilidade locacional e acompanhamento do andamento do processo diretamente pelo portal.',
-    },
-    {
-        icon: CheckCircleIcon,
-        title: 'Fluxo expresso',
-        description:
-            'Resposta automática para atividades de baixo risco, conforme a classificação de risco do Decreto nº 41.758/2026.',
-    },
-    {
-        icon: GroupIcon,
-        title: 'Procurações',
-        description:
-            'Vínculo de procurador para atuar em nome do interessado, com prazo de validade opcional e revogação a qualquer momento.',
-    },
 ];
 
 const steps = [
@@ -129,7 +88,14 @@ function ThemeToggleButton() {
     );
 }
 
+/** Visitante já autenticado no portal: os CTAs de entrada levam ao painel. */
+function useLogado(): boolean {
+    return usePage<SharedProps>().props.auth.user !== null;
+}
+
 function SiteHeader() {
+    const logado = useLogado();
+
     return (
         <header className="sticky top-0 z-50 border-b border-gray-200/70 bg-white/80 backdrop-blur-md dark:border-gray-800/70 dark:bg-gray-900/80">
             <div className="mx-auto flex w-full max-w-(--breakpoint-xl) min-w-0 flex-wrap items-center justify-between gap-2 px-4 py-4 sm:gap-4 sm:px-6">
@@ -158,15 +124,23 @@ function SiteHeader() {
 
                 <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                     <ThemeToggleButton />
-                    <Link
-                        href="/portal/login"
-                        className={`${outlineCtaStyles} hidden px-4 py-2.5 sm:inline-flex`}
-                    >
-                        Entrar
-                    </Link>
-                    <Link href="/portal/register" className={`${primaryCtaStyles} px-3 py-2 text-sm sm:px-4 sm:py-2.5 sm:text-base`}>
-                        Criar conta
-                    </Link>
+                    {logado ? (
+                        <Link href="/portal/painel" className={`${primaryCtaStyles} px-3 py-2 text-sm sm:px-4 sm:py-2.5 sm:text-base`}>
+                            Ir para o meu painel
+                        </Link>
+                    ) : (
+                        <>
+                            <Link
+                                href="/portal/login"
+                                className={`${outlineCtaStyles} hidden px-4 py-2.5 sm:inline-flex`}
+                            >
+                                Entrar
+                            </Link>
+                            <Link href="/portal/register" className={`${primaryCtaStyles} px-3 py-2 text-sm sm:px-4 sm:py-2.5 sm:text-base`}>
+                                Criar conta
+                            </Link>
+                        </>
+                    )}
                 </div>
             </div>
         </header>
@@ -174,6 +148,8 @@ function SiteHeader() {
 }
 
 function HeroSection() {
+    const logado = useLogado();
+
     return (
         <section className="relative isolate overflow-hidden bg-brand-950">
             <img
@@ -210,16 +186,25 @@ function HeroSection() {
                     </p>
 
                     <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                        <Link href="/portal/register" className={`${primaryCtaStyles} px-6 py-3.5`}>
-                            Criar conta
-                            <ArrowRightIcon className="size-5" aria-hidden="true" />
-                        </Link>
-                        <Link
-                            href="/portal/login"
-                            className="inline-flex items-center justify-center rounded-lg px-6 py-3.5 text-sm font-medium text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition hover:bg-white/10"
-                        >
-                            Entrar
-                        </Link>
+                        {logado ? (
+                            <Link href="/portal/painel" className={`${primaryCtaStyles} px-6 py-3.5`}>
+                                Ir para o meu painel
+                                <ArrowRightIcon className="size-5" aria-hidden="true" />
+                            </Link>
+                        ) : (
+                            <>
+                                <Link href="/portal/register" className={`${primaryCtaStyles} px-6 py-3.5`}>
+                                    Criar conta
+                                    <ArrowRightIcon className="size-5" aria-hidden="true" />
+                                </Link>
+                                <Link
+                                    href="/portal/login"
+                                    className="inline-flex items-center justify-center rounded-lg px-6 py-3.5 text-sm font-medium text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm transition hover:bg-white/10"
+                                >
+                                    Entrar
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
@@ -244,37 +229,25 @@ function ServicesSection() {
                 <MotionProvider>
                 <RevealScope>
                 <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                    {services.map((service) => {
-                        const cardClasses =
-                            'rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-brand-200 hover:shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-500/30';
-                        const cardContent = (
-                            <>
-                                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-500 dark:bg-brand-500/10 dark:text-brand-400">
-                                    <service.icon className="size-6" aria-hidden="true" />
-                                </span>
-                                <h3 className="mt-5 text-base font-semibold text-gray-800 dark:text-white/90">
-                                    {service.title}
-                                </h3>
-                                <p className="mt-2 text-theme-sm leading-6 text-gray-500 dark:text-gray-400">
-                                    {service.description}
-                                </p>
-                                {service.href && (
-                                    <span className="mt-4 inline-flex items-center gap-1 text-theme-sm font-medium text-brand-500 dark:text-brand-400">
-                                        Consultar agora
-                                        <ArrowRightIcon className="size-4" aria-hidden="true" />
-                                    </span>
-                                )}
-                            </>
-                        );
+                    {acoesPublicas().map((acao) => {
+                        const Icon = PORTAL_NAV_ICONS[acao.icon];
 
-                        return service.href ? (
-                            <RevealLink key={service.title} href={service.href} className={cardClasses}>
-                                {cardContent}
+                        return (
+                            <RevealLink
+                                key={acao.href}
+                                href={acao.href}
+                                className="rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-brand-200 hover:shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-500/30"
+                            >
+                                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-500 dark:bg-brand-500/10 dark:text-brand-400">
+                                    <Icon className="size-6" aria-hidden="true" />
+                                </span>
+                                <h3 className="mt-5 text-base font-semibold text-gray-800 dark:text-white/90">{acao.titulo}</h3>
+                                <p className="mt-2 text-theme-sm leading-6 text-gray-500 dark:text-gray-400">{acao.descricao}</p>
+                                <span className="mt-4 inline-flex items-center gap-1 text-theme-sm font-medium text-brand-500 dark:text-brand-400">
+                                    Acessar
+                                    <ArrowRightIcon className="size-4" aria-hidden="true" />
+                                </span>
                             </RevealLink>
-                        ) : (
-                            <Surface key={service.title} className={cardClasses}>
-                                {cardContent}
-                            </Surface>
                         );
                     })}
                 </div>
@@ -356,6 +329,12 @@ function LegalBasisSection() {
 }
 
 function FinalCtaSection() {
+    const logado = useLogado();
+
+    if (logado) {
+        return null;
+    }
+
     return (
         <section>
             <div className="mx-auto w-full max-w-(--breakpoint-xl) px-4 pb-16 sm:px-6 sm:pb-20">
@@ -393,6 +372,8 @@ function FinalCtaSection() {
 }
 
 function SiteFooter() {
+    const logado = useLogado();
+
     return (
         <footer id="rodape" className="border-t border-gray-200 dark:border-gray-800">
             <div className="mx-auto flex w-full max-w-(--breakpoint-xl) flex-col gap-10 px-4 py-12 sm:px-6 lg:flex-row lg:items-start lg:justify-between">
@@ -433,22 +414,35 @@ function SiteFooter() {
                             Acesso
                         </p>
                         <ul className="mt-3 space-y-2">
-                            <li>
-                                <Link
-                                    href="/portal/login"
-                                    className="text-sm text-gray-500 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-white/90"
-                                >
-                                    Entrar
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/portal/register"
-                                    className="text-sm text-gray-500 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-white/90"
-                                >
-                                    Criar conta
-                                </Link>
-                            </li>
+                            {logado ? (
+                                <li>
+                                    <Link
+                                        href="/portal/painel"
+                                        className="text-sm text-gray-500 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-white/90"
+                                    >
+                                        Ir para o meu painel
+                                    </Link>
+                                </li>
+                            ) : (
+                                <>
+                                    <li>
+                                        <Link
+                                            href="/portal/login"
+                                            className="text-sm text-gray-500 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-white/90"
+                                        >
+                                            Entrar
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            href="/portal/register"
+                                            className="text-sm text-gray-500 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-white/90"
+                                        >
+                                            Criar conta
+                                        </Link>
+                                    </li>
+                                </>
+                            )}
                         </ul>
                     </div>
                 </div>

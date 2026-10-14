@@ -116,6 +116,8 @@ function UserDropdown({ logoutHref, accountHref }: { logoutHref: string; account
 
 interface AppHeaderProps {
     homeHref: string;
+    /** Destino do logo mobile; padrão `homeHref`. */
+    logoHref?: string;
     logoutHref: string;
     accountHref: string;
     toolbar?: ReactNode;
@@ -126,7 +128,7 @@ interface AppHeaderProps {
  * e menu do usuário. O console de gestão injeta a busca global em `toolbar`,
  * à esquerda desses controles.
  */
-export default function AppHeader({ homeHref, logoutHref, accountHref, toolbar }: AppHeaderProps) {
+export default function AppHeader({ homeHref, logoHref, logoutHref, accountHref, toolbar }: AppHeaderProps) {
     const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
     const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
@@ -163,7 +165,7 @@ export default function AppHeader({ homeHref, logoutHref, accountHref, toolbar }
                     {toolbar ? (
                         <div className="min-w-0 w-full max-w-xl flex-1">{toolbar}</div>
                     ) : (
-                        <Link href={homeHref} className="lg:hidden">
+                        <Link href={logoHref ?? homeHref} className="lg:hidden">
                             <span className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">VIABILIZA</span>
                         </Link>
                     )}
