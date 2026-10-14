@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\ViabilityRequest;
 use App\Services\Expresso\FluxoExpressoService;
+use App\Services\Geo\PoligonoEnderecamentoService;
 use App\Services\Realty\LocalizacaoInscricao;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
 use App\Support\Audit\AuditService;
@@ -54,7 +55,7 @@ class DecidirFluxoExpressoJob implements ShouldQueue
         }
     }
 
-    public function handle(FluxoExpressoService $service, ?ProtocolarSolicitacaoService $protocolo = null): void
+    public function handle(FluxoExpressoService $service, ?ProtocolarSolicitacaoService $protocolo = null, ?PoligonoEnderecamentoService $poligono = null): void
     {
         $request = ViabilityRequest::query()->find($this->viabilityRequestId);
 
@@ -68,6 +69,11 @@ class DecidirFluxoExpressoJob implements ShouldQueue
         if ($this->aguardarCadastroImobiliario($request, $protocolo ?? app(ProtocolarSolicitacaoService::class))) {
             return;
         }
+
+        // O polígono do lote vem ANTES da decisão: é ele que zoneia pela maior
+        // porção. Só aqui (fila, 120 s) a consulta espacial lenta é aceitável; o
+        // protocolo síncrono não a pede. Falha não impede a decisão.
+        ($poligono ?? app(PoligonoEnderecamentoService::class))->aplicarPorPonto($request);
 
         $service->decide($request);
     }
