@@ -28,8 +28,9 @@ class UserManagementController extends Controller
 
     /**
      * Listagem com busca por nome ou e-mail (HU-012 CA-01), separada em
-     * abas: equipe SEDUR (papéis com a permissão acessar-gestao, inclusive
-     * perfis customizados da HU-013) e usuários do portal (os demais).
+     * abas: equipe SEDUR (contas do AD e papéis com a permissão acessar-gestao,
+     * inclusive perfis customizados da HU-013) e usuários do portal (externos,
+     * nunca contas AD).
      * CPF nunca exposto em claro (LGPD) — apenas os dígitos verificadores.
      */
     public function index(Request $request): Response|HttpResponse
@@ -53,15 +54,9 @@ class UserManagementController extends Controller
             $tab = 'gestao';
         }
 
-        $gestaoRoleIds = Role::query()
-            ->whereHas('permissions', fn ($query) => $query->where('name', 'acessar-gestao'))
-            ->pluck('id');
-
-        $scopeTab = function ($query, string $which) use ($gestaoRoleIds) {
-            return $which === 'gestao'
-                ? $query->whereHas('roles', fn ($inner) => $inner->whereIn('roles.id', $gestaoRoleIds))
-                : $query->whereDoesntHave('roles', fn ($inner) => $inner->whereIn('roles.id', $gestaoRoleIds));
-        };
+        $scopeTab = fn ($query, string $which) => $which === 'gestao'
+            ? $query->equipeSedur()
+            : $query->usuarioPortal();
 
         $users = $scopeTab(User::query(), $tab)
             ->with('roles:id,name')

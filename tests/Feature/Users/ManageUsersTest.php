@@ -66,6 +66,27 @@ class ManageUsersTest extends TestCase
                 ->where('users.data', fn ($data) => collect($data)->pluck('name')->sort()->values()->all() === collect([$cidada->name, $semPapel->name])->sort()->values()->all()));
     }
 
+    public function test_conta_ad_sem_papel_conta_como_equipe_sedur_e_nunca_como_portal(): void
+    {
+        $admin = $this->admin();
+        User::factory()->ad('servidora.ad')->create(['name' => 'Servidora AD']);
+        User::factory()->cidadao()->create(['name' => 'Cidadã Portal']);
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/usuarios')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('counts.gestao', 2)
+                ->where('counts.portal', 1)
+                ->where('users.data', fn ($data) => collect($data)->pluck('name')->contains('Servidora AD')));
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/usuarios?tab=portal')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('users.data', fn ($data) => ! collect($data)->pluck('name')->contains('Servidora AD')));
+    }
+
     public function test_perfil_customizado_com_acesso_a_gestao_conta_como_equipe(): void
     {
         $admin = $this->admin();
