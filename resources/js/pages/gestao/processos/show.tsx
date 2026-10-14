@@ -37,6 +37,7 @@ interface TimelineItem {
     em: string | null;
     ator?: string | null;
     atribuido?: string | null;
+    distribuidor?: string | null;
 }
 
 interface SetorEncaminhamento {
@@ -494,9 +495,14 @@ export default function Show({
                                                             <span className="text-theme-sm font-medium text-gray-800 dark:text-white/90">
                                                                 {evento.to_label}
                                                             </span>
+                                                            {evento.distribuidor && (
+                                                                <span className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                                    Distribuído por: {evento.distribuidor}
+                                                                </span>
+                                                            )}
                                                             {evento.ator && (
                                                                 <span className="text-theme-xs text-gray-500 dark:text-gray-400">
-                                                                    Distribuição: {evento.ator}
+                                                                    Por: {evento.ator}
                                                                 </span>
                                                             )}
                                                             {evento.atribuido && (
