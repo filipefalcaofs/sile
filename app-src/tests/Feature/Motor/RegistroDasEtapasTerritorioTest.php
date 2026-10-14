@@ -7,8 +7,11 @@ use App\Enums\GeoLayerType;
 use App\Enums\SituacaoEtapa;
 use App\Models\GeoLayer;
 use App\Models\ViabilityRequest;
+use App\Services\Geo\ClassificacaoViariaHit;
+use App\Services\Geo\GeoServerClassificacaoViariaClient;
 use App\Services\Geo\SpatialRepository;
 use App\Services\Geo\TerritorioProcessoService;
+use App\Services\Motor\EtapaMotorRegistrador;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\Support\Geo\FakeSpatialRepository;
 use Tests\TestCase;
@@ -38,6 +41,13 @@ class RegistroDasEtapasTerritorioTest extends TestCase
         $this->app->instance(SpatialRepository::class, $this->espacial);
     }
 
+    private function classificacaoViaria(string $status, ?string $classe = null, ?string $motivo = null): void
+    {
+        $this->mock(GeoServerClassificacaoViariaClient::class, function ($mock) use ($status, $classe, $motivo): void {
+            $mock->shouldReceive('consultar')->andReturn(new ClassificacaoViariaHit($status, $classe, $classe, $motivo));
+        });
+    }
+
     private function processoComPonto(): ViabilityRequest
     {
         return ViabilityRequest::factory()->create([
@@ -49,6 +59,7 @@ class RegistroDasEtapasTerritorioTest extends TestCase
 
     public function test_materializar_registra_zona_via_e_bairro_como_ok_quando_identificados(): void
     {
+        $this->classificacaoViaria(ClassificacaoViariaHit::IDENTIFICADO, 'VE');
         $processo = $this->processoComPonto();
 
         app(TerritorioProcessoService::class)->materializar($processo);
@@ -73,5 +84,55 @@ class RegistroDasEtapasTerritorioTest extends TestCase
         app(TerritorioProcessoService::class)->materializar($processo);
 
         $this->assertSame(0, $processo->etapas()->count());
+    }
+
+    private function etapaVia(ViabilityRequest $processo): ?SituacaoEtapa
+    {
+        return $processo->etapas()->where('etapa', EtapaMotor::Via->value)->first()?->situacao;
+    }
+
+    public function test_classe_viaria_segue_o_codlog_do_processo_e_nao_a_via_mais_proxima(): void
+    {
+        $this->espacial->setNearest(GeoLayerType::Via, null);
+        $this->classificacaoViaria(ClassificacaoViariaHit::IDENTIFICADO, 'VE');
+        $processo = $this->processoComPonto();
+        $processo->forceFill(['cod_log' => '958'])->save();
+
+        app(TerritorioProcessoService::class)->materializar($processo);
+
+        $this->assertSame(SituacaoEtapa::Ok, $this->etapaVia($processo));
+    }
+
+    public function test_classe_viaria_indisponivel_no_geoserver_fica_reprocessavel(): void
+    {
+        $this->classificacaoViaria(ClassificacaoViariaHit::INDISPONIVEL, null, 'GeoServer fora do ar.');
+        $processo = $this->processoComPonto();
+
+        app(TerritorioProcessoService::class)->materializar($processo);
+
+        $this->assertSame(SituacaoEtapa::Indisponivel, $this->etapaVia($processo));
+    }
+
+    public function test_classe_viaria_nao_encontrada_para_o_codlog_e_definitiva(): void
+    {
+        $this->classificacaoViaria(ClassificacaoViariaHit::NAO_ENCONTRADO, null, 'Logradouro sem classificação.');
+        $processo = $this->processoComPonto();
+
+        app(TerritorioProcessoService::class)->materializar($processo);
+
+        $this->assertSame(SituacaoEtapa::Definitiva, $this->etapaVia($processo));
+    }
+
+    public function test_comando_recalcula_a_etapa_sem_resultado_pelo_codlog(): void
+    {
+        $this->classificacaoViaria(ClassificacaoViariaHit::IDENTIFICADO, 'VE');
+        $processo = $this->processoComPonto();
+        $processo->forceFill(['cod_log' => '958'])->save();
+        app(EtapaMotorRegistrador::class)
+            ->registrar($processo, EtapaMotor::Via, SituacaoEtapa::Definitiva);
+
+        $this->artisan('processos:recalcular-classe-viaria')->assertSuccessful();
+
+        $this->assertSame(SituacaoEtapa::Ok, $this->etapaVia($processo));
     }
 }

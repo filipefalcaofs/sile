@@ -97,11 +97,18 @@ class ProtocolarSolicitacaoService
         // CODLOG e sobrepõe a via mais próxima.
         $status = $this->territorioProcesso->localizarPelaInscricao($request);
 
+        $materializou = false;
+
         if ($request->zona_codigo === null || $request->bairro_oficial === null || $request->cod_log === null) {
             $this->territorioProcesso->materializar($request);
+            $materializou = true;
         }
 
-        $this->territorioProcesso->aplicarLogradouroTributario($request);
+        $trocouCodLog = $this->territorioProcesso->aplicarLogradouroTributario($request);
+
+        if (! $materializou || $trocouCodLog) {
+            $this->territorioProcesso->registrarClasseViaria($request);
+        }
 
         // Com o CODLOG tributário aplicado, a cadeia de geometria do lote roda:
         // endereçamento SEDUR por CODLOG + número + complemento e, sem polígono

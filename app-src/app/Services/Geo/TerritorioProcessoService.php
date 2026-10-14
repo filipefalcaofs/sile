@@ -30,6 +30,7 @@ class TerritorioProcessoService
         private readonly LocalizacaoInscricaoService $localizacao,
         private readonly AuditService $audit,
         private readonly EtapaMotorRegistrador $etapas,
+        private readonly GeoServerClassificacaoViariaClient $classificacaoViaria,
     ) {}
 
     /**
@@ -49,8 +50,6 @@ class TerritorioProcessoService
 
             $territorio = $this->territory->identify($ponto['lat'], $ponto['lng']);
         }
-
-        $this->registrarEtapasDoTerritorio($request, $territorio);
 
         $mudou = false;
 
@@ -82,7 +81,37 @@ class TerritorioProcessoService
             ])->save();
         }
 
+        $this->registrarEtapasDoTerritorio($request, $territorio);
+
         return $mudou;
+    }
+
+    /**
+     * Etapa "Classe viária" pelo CODLOG do processo — a mesma fonte que o
+     * enquadramento usa no Quadro 11A. Sem CODLOG, a etapa fica como a busca
+     * da via pelo ponto a registrou.
+     */
+    public function registrarClasseViaria(ViabilityRequest $request): void
+    {
+        $codLog = is_string($request->cod_log) ? trim($request->cod_log) : '';
+
+        if ($codLog === '') {
+            return;
+        }
+
+        $hit = $this->classificacaoViaria->consultar($codLog);
+
+        $this->etapas->registrar(
+            $request,
+            EtapaMotor::Via,
+            match ($hit->status) {
+                ClassificacaoViariaHit::IDENTIFICADO => SituacaoEtapa::Ok,
+                ClassificacaoViariaHit::INDISPONIVEL => SituacaoEtapa::Indisponivel,
+                ClassificacaoViariaHit::DESLIGADO => SituacaoEtapa::Pulada,
+                default => SituacaoEtapa::Definitiva,
+            },
+            $hit->classe === null ? $hit->motivo : null,
+        );
     }
 
     /**
@@ -231,6 +260,12 @@ class TerritorioProcessoService
             'via' => EtapaMotor::Via,
             'bairro' => EtapaMotor::Bairro,
         ] as $dimensao => $etapa) {
+            if ($etapa === EtapaMotor::Via && filled($request->cod_log)) {
+                $this->registrarClasseViaria($request);
+
+                continue;
+            }
+
             $dados = $territorio->{$dimensao};
 
             $this->etapas->registrar(
