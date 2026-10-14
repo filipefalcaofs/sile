@@ -1,7 +1,7 @@
 import PerguntaPlanilhaCampo from '@/components/viabilidade/pergunta-planilha-campo';
 import { perguntasVisiveis, type PerguntaPlanilha, type RespostaPlanilha } from '@/lib/respostas-planilha';
 import { Head, Link, useHttp, usePage } from '@inertiajs/react';
-import type { ComponentType, ReactElement, ReactNode, SVGProps } from 'react';
+import type { ComponentType, ReactNode, SVGProps } from 'react';
 import { useState } from 'react';
 import AccessibilityBar from '@/components/app/accessibility-bar';
 import Logo from '@/components/app/logo';
@@ -474,9 +474,6 @@ export default function Consulta({ consultaEnabled }: ConsultaProps) {
     );
 }
 
-Consulta.layout = (page: ReactElement<SharedProps>) =>
-    shellDaConsulta(page.props.auth?.user) === 'portal' ? (
-        <PortalLayout>{page}</PortalLayout>
-    ) : (
-        <PublicShell>{page}</PublicShell>
-    );
+// Resolver do Inertia v3: recebe as props da página e devolve o componente de
+// layout (persistente). Logado → shell do portal; anônimo → shell público.
+Consulta.layout = (props: SharedProps) => (shellDaConsulta(props.auth?.user) === 'portal' ? PortalLayout : PublicShell);

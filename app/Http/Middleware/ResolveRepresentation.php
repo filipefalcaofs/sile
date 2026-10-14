@@ -29,7 +29,7 @@ class ResolveRepresentation
             $procuration = Procuration::query()->with('grantor')->find($procurationId);
 
             if ($procuration === null
-                || $procuration->attorney_user_id !== $request->user()->id
+                || $procuration->attorney_user_id !== $request->user()?->id
                 || ! $procuration->isActive()) {
                 $request->session()->forget('acting_procuration_id');
                 $request->session()->flash('status', 'A representação foi encerrada porque a procuração não está mais ativa.');

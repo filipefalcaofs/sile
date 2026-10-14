@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Viabilidade;
 
+use App\Models\Procuration;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -42,5 +43,38 @@ class ConsultaViabilidadePaginaTest extends TestCase
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('portal/viabilidade/consulta')
                 ->where('auth.user.id', $user->id));
+    }
+
+    public function test_consulta_logada_mantem_a_representacao_ativa(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $grantor = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $attorney = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $procuration = Procuration::factory()->create([
+            'grantor_user_id' => $grantor->id,
+            'attorney_user_id' => $attorney->id,
+        ]);
+
+        $this->actingAs($attorney)
+            ->withSession(['acting_procuration_id' => $procuration->id])
+            ->get('/portal/viabilidade')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('portal/viabilidade/consulta')
+                ->where('actingFor.id', $grantor->id));
+    }
+
+    public function test_anonimo_com_representacao_velha_na_sessao_segue_publico(): void
+    {
+        // Procuração real na sessão: sem usuário logado, a revalidação tem de
+        // encerrar a representação em vez de quebrar ao ler o id do usuário.
+        $procuration = Procuration::factory()->create();
+
+        $this->withSession(['acting_procuration_id' => $procuration->id])
+            ->get('/portal/viabilidade')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('portal/viabilidade/consulta')
+                ->where('actingFor', null));
     }
 }

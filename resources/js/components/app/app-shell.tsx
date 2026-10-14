@@ -86,6 +86,7 @@ function ShellContent({
                     <AccessibilityBar />
                     <AppHeader
                         homeHref={homeHref}
+                        logoHref={logoHref}
                         logoutHref={logoutHref ?? '/portal/logout'}
                         accountHref={accountHref ?? '/portal/conta/perfil'}
                         toolbar={headerToolbar}
