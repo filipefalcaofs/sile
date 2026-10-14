@@ -112,6 +112,21 @@ class TerritorioProcessoService
             },
             $hit->classe === null ? $hit->motivo : null,
         );
+
+        $this->gravarViaNoInventario($request, $hit->classe);
+    }
+
+    private function gravarViaNoInventario(ViabilityRequest $request, ?string $classe): void
+    {
+        $camadas = $request->camadas_incidentes;
+
+        if (! is_array($camadas) || ($camadas['via'] ?? null) === $classe) {
+            return;
+        }
+
+        $camadas['via'] = $classe;
+
+        $request->forceFill(['camadas_incidentes' => $camadas])->save();
     }
 
     /**

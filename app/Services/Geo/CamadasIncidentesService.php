@@ -42,6 +42,7 @@ class CamadasIncidentesService
         private GeoServerWfsCamadaClient $wfs,
         private LocalizacaoInscricaoService $localizacao,
         private ZonaProcessoService $zonaProcesso,
+        private GeoServerClassificacaoViariaClient $classificacaoViaria,
     ) {}
 
     /**
@@ -80,6 +81,7 @@ class CamadasIncidentesService
             'logradouros_proximos' => [],
             'bairro' => null,
             'zona' => null,
+            'via' => $this->classeViaria($request->cod_log ?: $localizacao->codLogTributario),
             'camadas' => [],
         ];
 
@@ -97,6 +99,17 @@ class CamadasIncidentesService
         $inventario['camadas'] = $this->camadasPoligonais($ponto['lat'], $ponto['lng']);
 
         return $inventario;
+    }
+
+    /**
+     * Classe viária (Quadro 11A) do logradouro do processo, a mesma que o
+     * enquadramento usa. Null quando o CODLOG falta ou a classe não existe.
+     */
+    private function classeViaria(?string $codLog): ?string
+    {
+        $codLog = trim((string) $codLog);
+
+        return $codLog === '' ? null : $this->classificacaoViaria->consultar($codLog)->classe;
     }
 
     /**
