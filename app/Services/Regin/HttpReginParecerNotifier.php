@@ -40,7 +40,7 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
             'cnpjOrigem' => $cnpj,
             'cnpjEmpresa' => $cnpj,
             'codFuncao' => 110,
-            'dataGeracao' => now()->toIso8601String(),
+            'dataGeracao' => now('America/Bahia')->format('Y-m-d\TH:i:s'),
             'dadosProcesso' => [
                 'PROTOCOLO' => $protocolo,
                 'CNPJ_INSTITUICAO' => $cnpj,

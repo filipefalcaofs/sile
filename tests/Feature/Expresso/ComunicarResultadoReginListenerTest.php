@@ -10,6 +10,7 @@ use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginParecerNotifier;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -174,6 +175,27 @@ class ComunicarResultadoReginListenerTest extends TestCase
 
         $this->assertCount(1, $fake->chamadas, 'O indeferimento também é comunicado ao Regin (RN-008).');
         $this->assertSame(DecisionOutcome::Indeferida, $fake->chamadas[0]['decision']->outcome);
+    }
+
+    public function test_envelope_do_parecer_envia_data_geracao_sem_fuso_em_horario_de_brasilia(): void
+    {
+        // A API da JUCEB desserializa dataGeracao como java.time.LocalDateTime:
+        // um offset (+00:00) é recusado com HTTP 400. O app roda em UTC, então o
+        // valor é convertido para o horário local da JUCEB e enviado sem fuso.
+        Carbon::setTestNow('2026-10-14 20:47:20 UTC');
+        $this->credenciaisRegin();
+        Http::fake([
+            '*/acesso/auth' => Http::response(['token' => 'jwt-1']),
+            '*/recebe' => Http::response('RECEBIDO_SUCESSO'),
+        ]);
+
+        [$request, $decision] = $this->requestComDecisao();
+        $request->forceFill(['external_reference' => '43747'])->save();
+
+        event(new ResultadoEmitido($request, $decision));
+
+        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/recebe')
+            && $r['dataGeracao'] === '2026-10-14T17:47:20');
     }
 
     public function test_binding_real_envia_parecer_e_audita_sucesso(): void
