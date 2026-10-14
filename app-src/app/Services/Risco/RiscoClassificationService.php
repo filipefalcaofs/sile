@@ -190,9 +190,11 @@ class RiscoClassificationService
 
         if ($ramo?->resolvido()) {
             $fluxo = $ramo->fluxo === 'expresso' ? Fluxo::Expresso->value : Fluxo::Analise->value;
+            $regra = $ramo->planilha['regra'] ?? null;
+            $fonte = 'planilha vigente'.($regra === null ? '' : ", Regra {$regra}");
             $motivo = $fluxo === Fluxo::Expresso->value
-                ? "Nível {$ramo->risco} (planilha vigente) elegível ao fluxo expresso"
-                : "Nível {$ramo->risco} (planilha vigente) encaminhado para análise técnica";
+                ? "Nível {$ramo->risco} ({$fonte}) elegível ao fluxo expresso"
+                : "Nível {$ramo->risco} ({$fonte}) encaminhado para análise técnica";
             $tll = $ramo->tll;
             $nivel = $ramo->risco;
         } elseif ($dimensaoDecisiva === 'sanitario') {
@@ -245,6 +247,7 @@ class RiscoClassificationService
             'motivo' => $motivo,
             'gatilhos_acionados' => $gatilhosAcionados,
             'tll' => $tll ?? null,
+            'planilha' => $ramo?->planilha,
         ];
     }
 

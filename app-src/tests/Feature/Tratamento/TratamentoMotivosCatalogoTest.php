@@ -111,6 +111,26 @@ class TratamentoMotivosCatalogoTest extends TestCase
         $this->assertSame('Tipo de imóvel não reconhecido', $ramo->motivo);
     }
 
+    public function test_resultado_resolvido_aponta_onde_na_planilha_a_decisao_esta(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '9609-2/99',
+            respostas: [1 => [1, 2, 3], 11 => false],
+            areaUtilizada: 30400.0,
+        ));
+
+        $this->assertSame('resolvido', $ramo->status);
+        $this->assertSame('planilha-20-08-26', $ramo->planilha['versao']);
+        $this->assertSame('9609-2/99', $ramo->planilha['cnae']);
+        $this->assertSame(40, $ramo->planilha['regra']);
+        $this->assertSame('Atualizada em 21/08/2026', $ramo->planilha['regra_referencia']);
+        $this->assertSame('acima_1250', $ramo->planilha['faixa']);
+        $this->assertSame('MÉDIO RISCO', $ramo->planilha['risco_planilha']);
+        $this->assertSame('VALIDAÇÃO', $ramo->planilha['classificacao']);
+        $this->assertContains($ramo->planilha['origem_fluxo'], ['ramo', 'classificacao', 'heuristica']);
+        $this->assertNotSame('', $ramo->planilha['decisao_fluxo']);
+    }
+
     private function resolver(): TratamentoRamoResolver
     {
         return app(TratamentoRamoResolver::class);
