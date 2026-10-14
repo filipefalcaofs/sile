@@ -265,7 +265,6 @@ return [
         'vencimento' => ['antecedencia_dias' => 3],
         'escalonamento' => [
             'tratamento' => ['amarelo' => 'notificar_analista', 'vencido' => 'notificar_gestor'],
-            'gestor_role' => 'gestor',
         ],
         'pendencia' => [
             'assunto' => 'Convite na sua solicitação de viabilidade {protocolo}',

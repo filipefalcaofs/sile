@@ -69,7 +69,7 @@ class DemonstracaoClienteSeederTest extends TestCase
         $this->assertTrue($validadora->hasPermissionTo('manter-cnaes'));
         $this->assertTrue($validadora->hasPermissionTo('manter-perfis'));
         $this->assertTrue($validadora->hasPermissionTo('manter-usuarios'));
-        $this->assertSame(21, Role::query()->count());
+        $this->assertSame(19, Role::query()->count());
     }
 
     public function test_reseed_promove_validadora_existente_para_administrador(): void
@@ -81,14 +81,14 @@ class DemonstracaoClienteSeederTest extends TestCase
         $existente = User::factory()->create([
             'email' => DemonstracaoClienteSeeder::CLIENTE_GESTAO_EMAIL,
         ]);
-        $existente->syncRoles(['gestor']);
+        $existente->syncRoles(['Coordenador']);
 
         $this->seed(DemonstracaoClienteSeeder::class);
 
         $existente->refresh();
 
         $this->assertTrue($existente->hasRole('administrador'));
-        $this->assertFalse($existente->hasRole('gestor'));
+        $this->assertFalse($existente->hasRole('Coordenador'));
     }
 
     public function test_nao_planta_processos_de_demonstracao(): void

@@ -43,7 +43,7 @@ class ContingenciaTest extends TestCase
      */
     private function operador(): User
     {
-        return User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        return User::factory()->administrador()->withAcceptedLgpdTerm()->create();
     }
 
     /**

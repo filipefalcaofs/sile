@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
@@ -108,16 +109,18 @@ class AnalysisStatusEndpointTest extends TestCase
      * O override do gestor (`force`) ignora o subconjunto manual — permite
      * qualquer transição válida no grafo completo, mesmo fora de proximas().
      */
-    public function test_gestor_com_force_ignora_subconjunto_manual(): void
+    public function test_quem_tem_permissao_de_forcar_ignora_subconjunto_manual(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
-        $gestor = User::factory()->create();
-        $gestor->assignRole('gestor');
+        $papel = Role::create(['name' => 'perfil-livre', 'guard_name' => 'web']);
+        $papel->givePermissionTo(['acessar-gestao', 'analisar-processos', 'forcar-transicao-analise']);
+        $usuario = User::factory()->create();
+        $usuario->assignRole('perfil-livre');
 
         $request = ViabilityRequest::factory()->create();
         $request->forceFill(['analysis_status' => AnalysisStatus::Analisar])->save();
 
-        $this->actingAs($gestor, 'gestao')
+        $this->actingAs($usuario, 'gestao')
             ->post("/gestao/processos/{$request->id}/status-analise", [
                 'status' => 'vistoriado',
                 'force' => true,
@@ -131,7 +134,7 @@ class AnalysisStatusEndpointTest extends TestCase
      * `force` só vale para gestor — um analista pedindo force é ignorado e a
      * transição fora do subconjunto manual continua recusada.
      */
-    public function test_force_de_nao_gestor_e_ignorado(): void
+    public function test_force_sem_a_permissao_e_ignorado(): void
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $analista = User::factory()->analista()->create();

@@ -5,11 +5,13 @@ namespace Tests\Feature\Parameters;
 use App\Models\Activity;
 use App\Models\Parameter;
 use App\Models\User;
+use App\Support\PerfilCidadao;
 use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ManageParametersTest extends TestCase
@@ -49,7 +51,7 @@ class ManageParametersTest extends TestCase
                 ->has('groups.features')
                 ->has('groups.seguranca')
                 ->has('groups.integracoes')
-                ->has('groups.seguranca.0', fn (Assert $item) => $item->hasAll([
+                ->has('groups.seguranca.1', fn (Assert $item) => $item->hasAll([
                     'key',
                     'type',
                     'description',
@@ -63,12 +65,12 @@ class ManageParametersTest extends TestCase
                     'pending_proposal',
                     'can_approve',
                 ]))
-                ->where('groups.seguranca.0.key', 'security.govbr.minimum_level')
-                ->where('groups.seguranca.0.type', 'string')
-                ->where('groups.seguranca.0.description', 'Nível mínimo de confiabilidade da conta GOV.BR aceito no login (bronze, prata ou ouro)')
-                ->where('groups.seguranca.0.value', null)
-                ->where('groups.seguranca.0.default_value', 'bronze')
-                ->where('groups.seguranca.0.sensitive', false));
+                ->where('groups.seguranca.1.key', 'security.govbr.minimum_level')
+                ->where('groups.seguranca.1.type', 'string')
+                ->where('groups.seguranca.1.description', 'Nível mínimo de confiabilidade da conta GOV.BR aceito no login (bronze, prata ou ouro)')
+                ->where('groups.seguranca.1.value', null)
+                ->where('groups.seguranca.1.default_value', 'bronze')
+                ->where('groups.seguranca.1.sensitive', false));
     }
 
     public function test_atualiza_parametro_valido(): void
@@ -98,6 +100,35 @@ class ManageParametersTest extends TestCase
             ->assertSessionHasErrors('value');
 
         $this->assertNull(Parameter::query()->where('key', 'security.login.max_attempts')->value('value'));
+    }
+
+    public function test_perfil_do_cidadao_inexistente_e_rejeitado(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->put('/gestao/parametros/portal.perfil_cidadao', ['value' => 'perfil-que-nao-existe'])
+            ->assertSessionHasErrors('value');
+
+        $this->assertNull(Parameter::query()->where('key', 'portal.perfil_cidadao')->value('value'));
+    }
+
+    public function test_perfil_do_cidadao_com_acesso_a_gestao_e_rejeitado(): void
+    {
+        $this->actingAs($this->admin(), 'gestao')
+            ->put('/gestao/parametros/portal.perfil_cidadao', ['value' => 'administrador'])
+            ->assertSessionHasErrors(['value' => 'O perfil do cidadão não pode ter acesso à gestão.']);
+
+        $this->assertNull(Parameter::query()->where('key', 'portal.perfil_cidadao')->value('value'));
+    }
+
+    public function test_perfil_do_cidadao_sem_acesso_a_gestao_e_aceito(): void
+    {
+        Role::create(['name' => 'municipe', 'guard_name' => 'web']);
+
+        $this->actingAs($this->admin(), 'gestao')
+            ->put('/gestao/parametros/portal.perfil_cidadao', ['value' => 'municipe'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('municipe', PerfilCidadao::nome());
     }
 
     public function test_alteracao_e_auditada_com_valor_anterior_e_novo(): void

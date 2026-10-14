@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Gestao;
 
-use App\Support\Roles;
+use App\Support\RoleProtection;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -55,8 +55,8 @@ class UpdateRoleRequest extends FormRequest
 
         return [
             function (Validator $validator) use ($role) {
-                if (in_array($role->name, Roles::STRUCTURAL, true) && $this->input('name') !== $role->name) {
-                    $validator->errors()->add('name', __('Papéis estruturais do sistema não podem ser renomeados.'));
+                if (RoleProtection::isProtected($role) && $this->input('name') !== $role->name) {
+                    $validator->errors()->add('name', __('Perfis protegidos do sistema não podem ser renomeados.'));
                 }
 
                 if ($role->name === 'administrador' && ! in_array('acessar-gestao', (array) $this->input('permissions'), true)) {

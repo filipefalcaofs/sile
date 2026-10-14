@@ -62,6 +62,7 @@ use App\Http\Controllers\Gestao\RiskTriggerController;
 use App\Http\Controllers\Gestao\RoleController;
 use App\Http\Controllers\Gestao\SalaDeControleController;
 use App\Http\Controllers\Gestao\SectorController;
+use App\Http\Controllers\Gestao\SolicitacaoAcessoController;
 use App\Http\Controllers\Gestao\StandardTextController;
 use App\Http\Controllers\Gestao\TermoLgpdController;
 use App\Http\Controllers\Gestao\TerritorialRuleController;
@@ -114,6 +115,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
     ->name('gestao.')
     ->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
+        Route::post('solicitacao-acesso', [SolicitacaoAcessoController::class, 'store'])->name('solicitacao-acesso.store');
         Route::get('metadados', MetadataController::class)->name('metadados');
 
         // Conta do servidor isolada no console (HU-007): perfil e senha sob
@@ -304,6 +306,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::put('usuarios/{user}/papel', [UserManagementController::class, 'updateRole'])->name('usuarios.papel.update');
             Route::put('usuarios/{user}/inativacao', [UserManagementController::class, 'toggleActivation'])->name('usuarios.inativacao.update');
             Route::put('usuarios/{user}/autenticacao', [UserManagementController::class, 'updateAuthType'])->name('usuarios.autenticacao.update');
+            Route::put('usuarios/solicitacoes/{accessRequest}/aprovar', [SolicitacaoAcessoController::class, 'approve'])->name('usuarios.solicitacoes.aprovar');
+            Route::put('usuarios/solicitacoes/{accessRequest}/recusar', [SolicitacaoAcessoController::class, 'reject'])->name('usuarios.solicitacoes.recusar');
         });
 
         Route::middleware('permission:manter-perfis')->group(function () {

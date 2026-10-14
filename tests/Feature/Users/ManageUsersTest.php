@@ -66,6 +66,27 @@ class ManageUsersTest extends TestCase
                 ->where('users.data', fn ($data) => collect($data)->pluck('name')->sort()->values()->all() === collect([$cidada->name, $semPapel->name])->sort()->values()->all()));
     }
 
+    public function test_conta_ad_sem_papel_conta_como_equipe_sedur_e_nunca_como_portal(): void
+    {
+        $admin = $this->admin();
+        User::factory()->ad('servidora.ad')->create(['name' => 'Servidora AD']);
+        User::factory()->cidadao()->create(['name' => 'Cidadã Portal']);
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/usuarios')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('counts.gestao', 2)
+                ->where('counts.portal', 1)
+                ->where('users.data', fn ($data) => collect($data)->pluck('name')->contains('Servidora AD')));
+
+        $this->actingAs($admin, 'gestao')
+            ->get('/gestao/usuarios?tab=portal')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('users.data', fn ($data) => ! collect($data)->pluck('name')->contains('Servidora AD')));
+    }
+
     public function test_perfil_customizado_com_acesso_a_gestao_conta_como_equipe(): void
     {
         $admin = $this->admin();
@@ -175,21 +196,21 @@ class ManageUsersTest extends TestCase
         $user = User::factory()->analista()->create();
 
         $this->actingAs($admin, 'gestao')
-            ->put("/gestao/usuarios/{$user->id}/papel", ['role' => 'gestor'])
+            ->put("/gestao/usuarios/{$user->id}/papel", ['role' => 'Coordenador'])
             ->assertRedirect();
 
         $user = $user->fresh();
 
-        $this->assertTrue($user->hasRole('gestor'));
-        $this->assertFalse($user->hasRole('analista'));
+        $this->assertTrue($user->hasRole('Coordenador'));
+        $this->assertFalse($user->hasRole('Analista Terceirizado'));
 
         $activity = Activity::where('log_name', 'usuarios')
             ->where('event', 'papel-alterado')
             ->first();
 
         $this->assertNotNull($activity, 'Esperava activity de alteração de papel');
-        $this->assertSame(['analista'], $activity->properties['papel_anterior']);
-        $this->assertSame('gestor', $activity->properties['papel_novo']);
+        $this->assertSame(['Analista Terceirizado'], $activity->properties['papel_anterior']);
+        $this->assertSame('Coordenador', $activity->properties['papel_novo']);
     }
 
     public function test_papel_inexistente_e_rejeitado(): void
@@ -201,7 +222,7 @@ class ManageUsersTest extends TestCase
             ->put("/gestao/usuarios/{$user->id}/papel", ['role' => 'papel-fantasma'])
             ->assertSessionHasErrors('role');
 
-        $this->assertTrue($user->fresh()->hasRole('analista'));
+        $this->assertTrue($user->fresh()->hasRole('Analista Terceirizado'));
     }
 
     public function test_gestor_sem_permissao_nao_gerencia_usuarios(): void

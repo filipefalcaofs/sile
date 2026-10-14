@@ -12,10 +12,14 @@ use App\Models\ViabilityRequest;
 use App\Notifications\ProcessoEscalonadoNotification;
 use App\Services\Analise\AnalysisSlaService;
 use App\Services\Analise\SlaStatus;
+use App\Services\Comunicacao\DestinatariosEscalonamento;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /**
@@ -46,6 +50,32 @@ class EscalonarSlaCommandTest extends TestCase
         Carbon::setTestNow();
 
         parent::tearDown();
+    }
+
+    public function test_escalonamento_segue_a_permissao_e_nao_o_nome_do_perfil(): void
+    {
+        Role::create(['name' => 'perfil-livre', 'guard_name' => 'web'])
+            ->givePermissionTo('receber-escalonamento-sla');
+        $destinatario = User::factory()->create();
+        $destinatario->assignRole('perfil-livre');
+        $naoDestinatario = User::factory()->analista()->create();
+
+        $usuarios = app(DestinatariosEscalonamento::class)->usuarios();
+
+        $this->assertTrue($usuarios->contains('id', $destinatario->id));
+        $this->assertFalse($usuarios->contains('id', $naoDestinatario->id));
+    }
+
+    public function test_sem_destinatario_registra_aviso_no_log(): void
+    {
+        Role::query()->get()->each(fn (Role $role) => $role->revokePermissionTo('receber-escalonamento-sla'));
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        Log::spy();
+
+        $usuarios = app(DestinatariosEscalonamento::class)->usuarios();
+
+        $this->assertTrue($usuarios->isEmpty());
+        Log::shouldHaveReceived('warning')->once();
     }
 
     /**
