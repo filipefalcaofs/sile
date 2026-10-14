@@ -8,6 +8,8 @@ use App\Enums\RuleDomain;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\AnalysisRecordRequest;
 use App\Http\Resources\AnalysisRecordResource;
+use App\Http\Resources\DecisionExplanationResource;
+use App\Http\Resources\ViabilityDecisionResource;
 use App\Models\AiSuggestion;
 use App\Models\AnalysisRecord;
 use App\Models\RuleVersion;
@@ -16,6 +18,7 @@ use App\Models\StandardText;
 use App\Models\TllValor;
 use App\Models\TratamentoEnquadramento;
 use App\Models\User;
+use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use App\Services\Ai\AiFeatureGate;
@@ -27,6 +30,7 @@ use App\Services\Analise\AnalysisRecordDiff;
 use App\Services\Analise\AnalysisRecordImutavelException;
 use App\Services\Analise\AnalysisRecordService;
 use App\Services\Analise\CadastroImobiliarioFichaService;
+use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
 use App\Services\Relatorios\RelatorioSedeEscritorioVirtualService;
 use App\Support\Audit\AuditService;
@@ -59,6 +63,7 @@ class AnalysisRecordController extends Controller
         private CadastroImobiliarioFichaService $cadastroImobiliario,
         private AnaliseTecnicaDecisionService $decisao,
         private SugestaoParecerService $parecer,
+        private DecisionExplanationService $explanations,
     ) {}
 
     /**
@@ -67,6 +72,14 @@ class AnalysisRecordController extends Controller
      */
     public function show(Request $request, ViabilityRequest $viabilityRequest): Response
     {
+        $decisaoExpresso = $viabilityRequest->decision;
+
+        if ($decisaoExpresso !== null && $decisaoExpresso->flow === 'expresso') {
+            return $this->showExpresso($request, $viabilityRequest, $decisaoExpresso);
+        }
+
+        abort_unless($request->user()?->can('analisar-processos'), 403);
+
         $record = $this->records->current($viabilityRequest);
         $record->loadMissing('analyst');
         $viabilityRequest->loadMissing('expressoQuedas');
@@ -140,6 +153,48 @@ class AnalysisRecordController extends Controller
 
                 return $this->sugestoesIa($viabilityRequest);
             }),
+        ]);
+    }
+
+    /**
+     * Ficha somente leitura do fluxo expresso. A decisão já está gravada
+     * (deferida ou indeferida): a tela mostra o que o motor fez e o resultado
+     * de cada CNAE, sem criar revisão de análise humana.
+     */
+    private function showExpresso(Request $request, ViabilityRequest $viabilityRequest, ViabilityDecision $decisao): Response
+    {
+        $viabilityRequest->loadMissing(['company', 'decision.decidedBy']);
+        $decisao->setRelation('viabilityRequest', $viabilityRequest);
+
+        $this->audit->log(
+            logName: 'expresso',
+            event: 'ficha-consulta',
+            description: "Abertura da ficha do fluxo expresso do processo #{$viabilityRequest->id}",
+            properties: [
+                'viability_request_id' => $viabilityRequest->id,
+                'protocol_number' => $viabilityRequest->protocol_number,
+                'outcome' => $decisao->outcome->value,
+            ],
+            subject: $viabilityRequest,
+            personalData: true,
+        );
+
+        $cadastro = $this->cadastroImobiliario->para($viabilityRequest);
+
+        return Inertia::render('gestao/ficha-expresso/show', [
+            'processo' => [
+                'id' => $viabilityRequest->id,
+                'protocol_number' => $viabilityRequest->protocol_number,
+                'status' => $viabilityRequest->status->value,
+                'status_label' => $viabilityRequest->status->label(),
+                'empresa' => $viabilityRequest->company?->trade_name ?: $viabilityRequest->company?->legal_name,
+                'cnpj' => $viabilityRequest->company?->formatted_cnpj,
+            ],
+            'decisao' => (new ViabilityDecisionResource($decisao))->resolve(),
+            'explicacao' => (new DecisionExplanationResource($this->explanations->explain($decisao)))->resolve(),
+            'etapasMotor' => $this->etapasDoMotor($viabilityRequest),
+            'localizacao' => $this->localizacaoDoImovel($viabilityRequest, $cadastro),
+            'podeReprocessar' => (bool) $request->user()?->can('reprocessar-processos'),
         ]);
     }
 
@@ -455,8 +510,9 @@ class AnalysisRecordController extends Controller
         $numeroMetrico = $this->textoOuNulo($request->address_number);
         $cep = $this->textoOuNulo($request->address_zip);
         $pontoReferencia = $this->textoOuNulo($request->address_reference);
-        $zona = $this->textoOuNulo($request->zona_codigo);
-        $via = $this->textoOuNulo($request->camadas_incidentes['via'] ?? null);
+        $zona = $this->textoOuNulo($request->zona_codigo)
+            ?? $this->textoOuNulo(data_get($request->simulation_snapshot, 'zona'));
+        $via = $this->textoOuNulo(data_get($request->simulation_snapshot, 'via'));
         $bairro = $this->bairroDaLocalizacao($request, $cadastro, $zona);
 
         $partes = array_values(array_filter(
