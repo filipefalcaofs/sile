@@ -49,7 +49,7 @@ class ManageParametersTest extends TestCase
                 ->has('groups.features')
                 ->has('groups.seguranca')
                 ->has('groups.integracoes')
-                ->has('groups.seguranca.0', fn (Assert $item) => $item->hasAll([
+                ->has('groups.seguranca.1', fn (Assert $item) => $item->hasAll([
                     'key',
                     'type',
                     'description',
@@ -63,12 +63,12 @@ class ManageParametersTest extends TestCase
                     'pending_proposal',
                     'can_approve',
                 ]))
-                ->where('groups.seguranca.0.key', 'security.govbr.minimum_level')
-                ->where('groups.seguranca.0.type', 'string')
-                ->where('groups.seguranca.0.description', 'Nível mínimo de confiabilidade da conta GOV.BR aceito no login (bronze, prata ou ouro)')
-                ->where('groups.seguranca.0.value', null)
-                ->where('groups.seguranca.0.default_value', 'bronze')
-                ->where('groups.seguranca.0.sensitive', false));
+                ->where('groups.seguranca.1.key', 'security.govbr.minimum_level')
+                ->where('groups.seguranca.1.type', 'string')
+                ->where('groups.seguranca.1.description', 'Nível mínimo de confiabilidade da conta GOV.BR aceito no login (bronze, prata ou ouro)')
+                ->where('groups.seguranca.1.value', null)
+                ->where('groups.seguranca.1.default_value', 'bronze')
+                ->where('groups.seguranca.1.sensitive', false));
     }
 
     public function test_atualiza_parametro_valido(): void
