@@ -35,8 +35,50 @@ final class ExplicacaoForaDoExpresso
         ]);
         $complemento = $enquadramento === [] ? '' : ' ('.implode(', ', $enquadramento).')';
 
-        return "Fora do fluxo expresso: a atividade{$complemento} tem risco {$nivel}, definido pela ".self::origem($dimensao)
+        $texto = "Fora do fluxo expresso: a atividade{$complemento} tem risco {$nivel}, definido pela ".self::origem($dimensao)
             .'. Esse nível não é decidido automaticamente: o motor já indica o veredito, e o analista o confirma ou altera.';
+
+        $planilha = $encaminhamento['planilha'] ?? null;
+
+        return is_array($planilha) ? $texto.' '.self::ondeNaPlanilha($planilha) : $texto;
+    }
+
+    /**
+     * Localização exata na planilha de tratamento, para o analista conferir:
+     * versão, linha da aba CNAES, regra e o ramo ou classificação que definiu
+     * o fluxo.
+     *
+     * @param  array<string, mixed>  $planilha
+     */
+    public static function ondeNaPlanilha(array $planilha): string
+    {
+        $regra = $planilha['regra'] ?? null;
+        $referencia = trim((string) ($planilha['regra_referencia'] ?? ''));
+        $area = $planilha['area_m2'] ?? null;
+        $faixa = match ($planilha['faixa'] ?? null) {
+            'ate_1250' => 'até 1.250 m²',
+            'acima_1250' => 'acima de 1.250 m²',
+            default => null,
+        };
+
+        $linha = array_filter([
+            'CNAE '.($planilha['cnae'] ?? ''),
+            $regra === null ? null : 'Regra '.$regra.($referencia !== '' ? " ({$referencia})" : ''),
+            'LOUOS '.($planilha['codigo_louos'] ?? '').(filled($planilha['denominacao_louos'] ?? null) ? ' — '.$planilha['denominacao_louos'] : ''),
+            filled($planilha['subgrupo'] ?? null) ? 'subgrupo '.$planilha['subgrupo'].($faixa !== null ? " ({$faixa}".($area !== null ? ', área declarada '.number_format((float) $area, 2, ',', '.').' m²' : '').')' : '') : null,
+            filled($planilha['risco_planilha'] ?? null) ? 'risco '.$planilha['risco_planilha'] : null,
+            filled($planilha['classificacao'] ?? null) ? 'classificação '.$planilha['classificacao'] : null,
+        ]);
+
+        $texto = 'Onde na planilha: versão '.($planilha['versao'] ?? '?').', aba CNAES, '.implode(', ', $linha).'.';
+
+        $decisao = trim((string) ($planilha['decisao_fluxo'] ?? ''));
+
+        if ($decisao !== '') {
+            $texto .= ' O que definiu o fluxo: '.$decisao.'.';
+        }
+
+        return $texto;
     }
 
     /**
@@ -58,8 +100,11 @@ final class ExplicacaoForaDoExpresso
             return "CNAE {$cnaeFormatado}: risco não parametrizado";
         }
 
+        $regra = $encaminhamento['planilha']['regra'] ?? null;
+
         return "CNAE {$cnaeFormatado}: risco {$nivel} ("
-            .self::origem((string) ($encaminhamento['dimensao_decisiva'] ?? '')).')';
+            .self::origem((string) ($encaminhamento['dimensao_decisiva'] ?? ''))
+            .($regra === null ? '' : ", Regra {$regra}").')';
     }
 
     /**

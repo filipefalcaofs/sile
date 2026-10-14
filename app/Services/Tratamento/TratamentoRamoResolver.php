@@ -9,6 +9,7 @@ use App\Models\TratamentoCnaeBinding;
 use App\Models\TratamentoCnluItem;
 use App\Models\TratamentoEnquadramento;
 use App\Models\TratamentoPergunta;
+use App\Models\TratamentoRegra;
 use App\Models\TratamentoRegraRamo;
 use App\Services\Decisao\DecisionTextCatalog;
 use App\Services\Risco\TipoImovel;
@@ -301,7 +302,9 @@ class TratamentoRamoResolver
 
         $risco = $this->riscoDaRegra($risco, $subgrupo, $ramoCurado, $input);
 
-        $fluxo = $ramoCurado?->fluxo ?? $this->fluxoDaClassificacao($linha->classificacao) ?? $this->fluxoDe($linha->codigo_louos, $subgrupo, $risco, $noLocal, $input->tipoImovel);
+        $fluxoDoRamo = $ramoCurado?->fluxo;
+        $fluxoDaClassificacao = $fluxoDoRamo === null ? $this->fluxoDaClassificacao($linha->classificacao) : null;
+        $fluxo = $fluxoDoRamo ?? $fluxoDaClassificacao ?? $this->fluxoDe($linha->codigo_louos, $subgrupo, $risco, $noLocal, $input->tipoImovel);
 
         $binding = $bindings->firstWhere('codigo_louos', $linha->codigo_louos);
 
@@ -315,7 +318,127 @@ class TratamentoRamoResolver
             tll: $linha->codigo_tll,
             condicionantes: array_map('intval', $binding?->condicionantes ?? []),
             versaoRegra: $versao->version,
+            planilha: $this->referenciaDaPlanilha(
+                $versao,
+                $linha,
+                $ramoCurado,
+                $subgrupo,
+                $risco,
+                $input,
+                $noLocal,
+                match (true) {
+                    $fluxoDoRamo !== null => 'ramo',
+                    $fluxoDaClassificacao !== null => 'classificacao',
+                    default => 'heuristica',
+                },
+                $fluxo,
+            ),
         );
+    }
+
+    /**
+     * Onde, na planilha vigente, está o que decidiu este CNAE: a linha da aba
+     * CNAES (regra, LOUOS, subgrupo, risco, classificação), a regra com a data
+     * de atualização e o que definiu o fluxo (ramo curado da regra, a
+     * classificação da linha ou a heurística do motor). É o que a ficha mostra
+     * ao analista para ele conferir na planilha.
+     *
+     * @return array<string, mixed>
+     */
+    private function referenciaDaPlanilha(
+        RuleVersion $versao,
+        TratamentoEnquadramento $linha,
+        ?TratamentoRegraRamo $ramo,
+        string $subgrupo,
+        string $risco,
+        TratamentoRamoInput $input,
+        ?bool $noLocal,
+        string $origemFluxo,
+        string $fluxo,
+    ): array {
+        $regra = $linha->regra === null ? null : TratamentoRegra::query()
+            ->where('rule_version_id', $versao->getKey())
+            ->where('numero', (int) $linha->regra)
+            ->first();
+
+        $area = $input->areaUtilizada;
+        $faixa = $area === null ? null : ($area <= 1250 ? 'ate_1250' : 'acima_1250');
+
+        $decisao = match ($origemFluxo) {
+            'ramo' => $this->descreverRamo($ramo),
+            'classificacao' => 'classificação da linha na aba CNAES: '.trim((string) $linha->classificacao),
+            default => $this->descreverHeuristica($linha->codigo_louos, $subgrupo, $risco, $noLocal, $input->tipoImovel),
+        };
+
+        return [
+            'versao' => $versao->version,
+            'cnae' => $this->formatarCnae($input->cnae),
+            'regra' => $linha->regra === null ? null : (int) $linha->regra,
+            'regra_referencia' => $regra?->referencia,
+            'codigo_louos' => $linha->codigo_louos,
+            'denominacao_louos' => $linha->denominacao_louos,
+            'subgrupo' => $subgrupo,
+            'faixa' => $faixa,
+            'area_m2' => $area,
+            'risco_planilha' => $linha->risco,
+            'risco' => $risco,
+            'classificacao' => $linha->classificacao,
+            'fluxo' => $fluxo,
+            'origem_fluxo' => $origemFluxo,
+            'decisao_fluxo' => $decisao,
+        ];
+    }
+
+    private function descreverRamo(?TratamentoRegraRamo $ramo): string
+    {
+        if ($ramo === null) {
+            return 'ramo da regra';
+        }
+
+        $partes = [];
+
+        if ($ramo->condicoes !== null) {
+            foreach ((array) $ramo->condicoes as $chave => $valor) {
+                $partes[] = $chave.' = '.(is_bool($valor) ? ($valor ? 'Sim' : 'Não') : (is_array($valor) ? implode(', ', array_map('strval', $valor)) : (string) $valor));
+            }
+        } else {
+            if ($ramo->pergunta !== null) {
+                $partes[] = 'pergunta '.$ramo->pergunta.($ramo->resposta === null ? '' : ' = '.($ramo->resposta ? 'Sim' : 'Não'));
+            }
+
+            if ($ramo->faixa !== null) {
+                $partes[] = $ramo->faixa === 'ate_1250' ? 'área até 1.250 m²' : 'área acima de 1.250 m²';
+            }
+
+            if ($ramo->tipo_dirige !== null) {
+                $partes[] = $ramo->tipo_dirige ? 'imóvel galpão, container ou edificação residencial' : 'imóvel que não dirige regra';
+            }
+        }
+
+        $texto = 'ramo da Regra '.$ramo->regra.($partes === [] ? '' : ' ('.implode('; ', $partes).')');
+
+        return $texto.' → fluxo '.$ramo->fluxo;
+    }
+
+    private function descreverHeuristica(string $codigoLouos, string $subgrupo, string $risco, ?bool $noLocal, ?TipoImovel $tipo): string
+    {
+        if ($this->eFamiliaId($subgrupo)) {
+            return "subgrupo {$subgrupo} (família ID) remete à análise";
+        }
+
+        if ($tipo?->dirigeRegra() ?? false) {
+            return 'tipo de imóvel '.($tipo->raw ?? 'galpão/container/residencial').' remete à crítica do analista';
+        }
+
+        if ($codigoLouos === '07.12.13' && $noLocal === false) {
+            return 'escritório sem atividade no local segue o expresso';
+        }
+
+        if ($risco === 'alto') {
+            return 'risco alto não é decidido automaticamente';
+        }
+
+        return "nível {$risco} da planilha";
     }
 
     private function resolverVersao(TratamentoRamoInput $input): ?RuleVersion

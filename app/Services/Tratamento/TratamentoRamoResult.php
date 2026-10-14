@@ -6,6 +6,7 @@ final readonly class TratamentoRamoResult
 {
     /**
      * @param  list<int>  $condicionantes
+     * @param  array<string, mixed>|null  $planilha  Onde a planilha decidiu: versão, linha da aba CNAES, regra e o que definiu o fluxo
      */
     public function __construct(
         public string $status,
@@ -20,6 +21,7 @@ final readonly class TratamentoRamoResult
         public ?string $versaoRegra = null,
         public bool $bloqueia = false,
         public bool $cnlu = false,
+        public ?array $planilha = null,
     ) {}
 
     public function resolvido(): bool
@@ -42,6 +44,7 @@ final readonly class TratamentoRamoResult
             'condicionantes_planilha' => $this->condicionantes,
             'bloqueia' => $this->bloqueia,
             'cnlu' => $this->cnlu,
+            'planilha' => $this->planilha,
         ];
     }
 }
