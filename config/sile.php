@@ -388,6 +388,9 @@ return [
             ],
             'enderecamento' => [
                 'type_name' => 'enderecamento:VM_ENDERECAMENTO',
+                // Consulta espacial por ponto: ~30 s medidos no servidor real.
+                // Sem retry interno; o job de decisão já tem tentativas (120 s).
+                'timeout_ponto' => 45,
             ],
         ],
         'arcgis_semap' => [
