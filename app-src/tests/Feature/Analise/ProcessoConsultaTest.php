@@ -10,7 +10,9 @@ use App\Models\Company;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
+use App\Models\ViabilityRequestEvento;
 use App\Models\ViabilityRequestTransition;
+use App\Models\ViabilityServiceType;
 use App\Services\Analise\ProcessoQueryService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -482,5 +484,27 @@ class ProcessoConsultaTest extends TestCase
                 ->has('processos.data', 1)
                 ->where('processos.data.0.id', $tecnica->id)
                 ->where('processos.data.0.fluxo', 'analise_tecnica'));
+    }
+
+    public function test_servico_da_linha_sao_os_eventos_da_juceb_ou_o_tipo_interno(): void
+    {
+        $servico = ViabilityServiceType::factory()->create();
+        $daJuceb = $this->processo(['service_type_id' => $servico->id]);
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $daJuceb->id, 'codigo' => '211', 'nome' => 'Alteração de endereço dentro do mesmo município']);
+        ViabilityRequestEvento::factory()->create(['viability_request_id' => $daJuceb->id, 'codigo' => '244', 'nome' => 'Alteração de atividades econômicas (principal e secundárias)']);
+        $doPortal = $this->processo(['service_type_id' => $servico->id]);
+
+        $linhas = collect(
+            $this->actingAs($this->analista(), 'gestao')
+                ->get('/gestao/processos')
+                ->assertOk()
+                ->viewData('page')['props']['processos']['data']
+        )->keyBy('id');
+
+        $this->assertSame(
+            ['Alteração de endereço dentro do mesmo município', 'Alteração de atividades econômicas (principal e secundárias)'],
+            $linhas[$daJuceb->id]['servicos'],
+        );
+        $this->assertSame([$servico->name], $linhas[$doPortal->id]['servicos']);
     }
 }

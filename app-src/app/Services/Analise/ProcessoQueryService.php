@@ -68,7 +68,7 @@ class ProcessoQueryService
     public function filtered(array $filtros): Builder
     {
         $query = ViabilityRequest::query()
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name']);
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos']);
 
         return $this->aplicarOrdem($this->aplicarFiltros($query, $filtros), $this->valor($filtros, 'ordem'));
     }
@@ -147,7 +147,7 @@ class ProcessoQueryService
     public function fila(User $user): Builder
     {
         return $this->escopo($user)
-            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name'])
+            ->with(['company', 'sector:id,name', 'assignedTo:id,name', 'decision', 'encaminhamentoAnalise', 'serviceType:id,name', 'eventos'])
             ->whereIn('status', self::STATUS_FILA)
             ->orderBy('analysis_due_at')
             ->orderBy('id');
