@@ -50,6 +50,16 @@ class GestaoDashboardKpisTest extends TestCase
             ->assertRedirect('/gestao/processos/fila');
     }
 
+    public function test_analista_com_consultar_relatorios_continua_na_caixa_de_entrada(): void
+    {
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $analista->givePermissionTo('consultar-relatorios');
+
+        $this->actingAs($analista, 'gestao')
+            ->get('/gestao')
+            ->assertRedirect('/gestao/processos/fila');
+    }
+
     public function test_apoio_cai_na_caixa_do_setor(): void
     {
         $apoio = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
