@@ -20,6 +20,7 @@ use App\Services\Analise\ProcessoQueryService;
 use App\Services\Analise\TramitacaoProcessoService;
 use App\Services\Auditoria\DecisionExplanationService;
 use App\Services\Geo\DivergenciaLogradouroInscricao;
+use App\Services\Regin\HttpReginParecerNotifier;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\ProcessosReportSource;
 use App\Services\Relatorios\ReportFilters;
@@ -204,6 +205,14 @@ class ProcessoController extends Controller
                 ? null
                 : (new DecisionExplanationResource($this->explanations->explain($viabilityRequest->decision)))->resolve(),
             'timeline' => $this->timeline($viabilityRequest),
+            // Texto que o parecer leva à JUCEB (gravado no processo ou o padrão da
+            // decisão); null quando o processo não tem decisão ou não veio da JUCEB.
+            'justificativaRegin' => $viabilityRequest->decision === null || blank($viabilityRequest->external_reference)
+                ? null
+                : [
+                    'texto' => app(HttpReginParecerNotifier::class)->justificativaPara($viabilityRequest, $viabilityRequest->decision),
+                    'personalizada' => filled($viabilityRequest->regin_justificativa),
+                ],
             'setoresEncaminhamento' => Sector::query()->where('active', true)->orderBy('name')->get(['id', 'name']),
             'destinatariosConclusao' => User::permission('concluir-analise')
                 ->orderBy('name')

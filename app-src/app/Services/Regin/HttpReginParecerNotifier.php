@@ -72,7 +72,7 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
                         [
                             'CODIGO_AREA' => $this->settings->codigoArea(),
                             'STATUS_ANALISE' => $decision->outcome === DecisionOutcome::Deferida ? 2 : 4,
-                            'JUSTIFICATIVA_ANALISE' => $this->justificativa($decision),
+                            'JUSTIFICATIVA_ANALISE' => $this->justificativaPara($request, $decision),
                             'DATA_ANALISE' => $decision->decided_at?->format('Ymd') ?? now()->format('Ymd'),
                         ],
                     ],
@@ -82,50 +82,86 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
     }
 
     /**
-     * Motivo da decisão (reason) seguido da fundamentação legal, no limite de
-     * 10.000 caracteres do campo JUSTIFICATIVA_ANALISE da PSCS.
+     * Texto do campo JUSTIFICATIVA_ANALISE (limite de 10.000 caracteres da PSCS).
+     * Vale o texto gravado no processo pelo analista; sem ele, o motivo da decisão
+     * e o fundamento legal registrado, com as condicionantes separadas.
      */
-    private function justificativa(ViabilityDecision $decision): string
+    public function justificativaPara(ViabilityRequest $request, ViabilityDecision $decision): string
     {
-        $motivo = trim((string) $decision->reason);
-        $fundamentacao = $this->fundamentacao($decision);
+        $gravada = trim((string) $request->regin_justificativa);
 
-        $texto = match (true) {
-            $motivo !== '' && $fundamentacao !== null => $motivo."\n\nFundamentação legal: ".$fundamentacao,
-            $motivo !== '' => $motivo,
-            $fundamentacao !== null => $fundamentacao,
-            default => "Viabilidade {$decision->outcome->value} pelo motor de regras.",
-        };
+        if ($gravada !== '') {
+            return mb_substr($gravada, 0, 10000);
+        }
+
+        $motivo = trim((string) $decision->reason);
+        $linhas = $this->fundamentacao($decision);
+        $condicionantes = array_values(array_filter($linhas, fn (string $linha): bool => $this->ehCondicionante($linha)));
+        $base = array_values(array_filter($linhas, fn (string $linha): bool => ! $this->ehCondicionante($linha)));
+
+        $partes = [];
+
+        if ($motivo !== '') {
+            $partes[] = $motivo;
+        }
+
+        if ($base !== []) {
+            $abertura = $motivo !== '' ? 'Fundamentação legal: ' : $this->abertura($decision);
+            $partes[] = $abertura.implode('; ', $base);
+        }
+
+        if ($condicionantes !== []) {
+            $partes[] = 'Condicionantes: '.implode('; ', $condicionantes);
+        }
+
+        $texto = $partes === []
+            ? "Viabilidade {$decision->outcome->value} pelo motor de regras."
+            : implode("\n\n", $partes);
 
         return mb_substr($texto, 0, 10000);
     }
 
-    private function fundamentacao(ViabilityDecision $decision): ?string
+    private function abertura(ViabilityDecision $decision): string
+    {
+        return match ($decision->outcome) {
+            DecisionOutcome::Deferida => 'Deferida com fundamento em: ',
+            DecisionOutcome::Indeferida => 'Indeferida com fundamento em: ',
+            default => 'Fundamentação legal: ',
+        };
+    }
+
+    private function ehCondicionante(string $linha): bool
+    {
+        return preg_match('/^\s*desde que\b/iu', $linha) === 1;
+    }
+
+    /**
+     * Linhas de fundamento da decisão, sem as notas internas do motor.
+     *
+     * @return list<string>
+     */
+    private function fundamentacao(ViabilityDecision $decision): array
     {
         $fundacao = $decision->fundamentacao;
 
         if (is_string($fundacao) && $fundacao !== '') {
-            return $fundacao;
+            return [$fundacao];
         }
 
-        if (is_array($fundacao)) {
-            $texto = $fundacao['texto'] ?? null;
-
-            if (is_string($texto) && $texto !== '') {
-                return $texto;
-            }
-
-            $linhas = array_values(array_filter(
-                $fundacao,
-                fn (mixed $linha): bool => is_string($linha) && $linha !== '' && ! $this->ehNotaInterna($linha),
-            ));
-
-            if ($linhas !== []) {
-                return implode('; ', $linhas);
-            }
+        if (! is_array($fundacao)) {
+            return [];
         }
 
-        return null;
+        $texto = $fundacao['texto'] ?? null;
+
+        if (is_string($texto) && $texto !== '') {
+            return [$texto];
+        }
+
+        return array_values(array_filter(
+            $fundacao,
+            fn (mixed $linha): bool => is_string($linha) && $linha !== '' && ! $this->ehNotaInterna($linha),
+        ));
     }
 
     private function ehNotaInterna(string $linha): bool
