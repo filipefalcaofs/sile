@@ -130,10 +130,8 @@ class GestaoLoginAdSectorSyncTest extends TestCase
             '*/pessoaView/buscarPorCPF/*' => Http::response([
                 'nome' => 'Maria Analista',
                 'telefone' => '71988887777',
-                'centroInformacao' => [
-                    'codigo' => '0231400300',
-                    'descricao' => 'SEDUR-DLI-CAP-ATIV-Subcoordenadoria de Atividade',
-                ],
+                'centroInformacaoNumero' => '0231400300',
+                'centroInformacaoDescricao' => 'SEDUR-DLI-CAP-ATIV-Subcoordenadoria de Atividade',
             ]),
         ]);
 

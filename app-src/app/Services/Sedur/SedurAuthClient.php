@@ -17,7 +17,11 @@ use Illuminate\Support\Facades\Http;
  */
 class SedurAuthClient
 {
-    /** Blocos da pessoaView que podem trazer o centro de informação, na ordem de preferência. */
+    /**
+     * Blocos da pessoaView que podem trazer o centro de informação, na ordem de
+     * preferência. O formato real (SEDUR, 15/10/2026) traz o centro na raiz:
+     * centroInformacaoNumero e centroInformacaoDescricao.
+     */
     private const array BLOCOS_LOTACAO_PESSOA = [
         'centroInformacao',
         'centro_informacao',
@@ -32,6 +36,7 @@ class SedurAuthClient
     ];
 
     private const array CHAVES_CODIGO_CENTRO = [
+        'centroInformacaoNumero',
         'ceinNumero',
         'CEIN_NUMERO',
         'cein_numero',
@@ -45,6 +50,7 @@ class SedurAuthClient
     ];
 
     private const array CHAVES_NOME_CENTRO = [
+        'centroInformacaoDescricao',
         'ceinDescricao',
         'CEIN_DESCRICAO',
         'cein_descricao',

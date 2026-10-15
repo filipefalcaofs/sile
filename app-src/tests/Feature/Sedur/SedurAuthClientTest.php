@@ -128,6 +128,26 @@ class SedurAuthClientTest extends TestCase
         $this->assertSame('maria@salvador.ba.gov.br', $pessoa['email']);
     }
 
+    public function test_pessoa_por_cpf_le_o_formato_real_da_pessoa_view(): void
+    {
+        Http::fake(['*/pessoaView/buscarPorCPF/*' => Http::response([
+            'nome' => 'Talita Analista',
+            'cpf' => '12345678901',
+            'dataNascimento' => '1990-01-01',
+            'cargo' => 'Analista',
+            'email' => 'talita@salvador.ba.gov.br',
+            'ramal' => null,
+            'centroInformacaoNumero' => '5914032500',
+            'centroInformacaoDescricao' => 'SEDUR-DLI-CAP-ATIV-Convite',
+        ])]);
+
+        $pessoa = $this->client()->pessoaPorCpf('tk-123', '12345678901');
+
+        $this->assertSame('5914032500', $pessoa['lotacaoCodigo']);
+        $this->assertSame('SEDUR-DLI-CAP-ATIV-Convite', $pessoa['lotacaoNome']);
+        $this->assertSame('Talita Analista', $pessoa['nome']);
+    }
+
     public function test_pessoa_por_cpf_aceita_cein_no_root_e_em_lista(): void
     {
         $this->assertSame(
