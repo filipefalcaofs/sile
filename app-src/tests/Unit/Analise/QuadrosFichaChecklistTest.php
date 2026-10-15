@@ -70,6 +70,17 @@ class QuadrosFichaChecklistTest extends TestCase
         $this->assertSame('pendente', $itens[1]['estado']);
     }
 
+    public function test_detalhe_dos_quadros_cita_o_subgrupo_especifico_do_cnae(): void
+    {
+        $itens = app(QuadrosFichaChecklist::class)->para($this->consulta(
+            quadro10: ['status' => 'identificado', 'permissao' => 'permitido'],
+            quadro11a: ['status' => 'identificado', 'condicoes' => ['Sim'], 'classe_via' => 'VL'],
+        ));
+
+        $this->assertStringContainsString('NR2-12', $itens[0]['detalhe']);
+        $this->assertStringContainsString('nR2-12', $itens[1]['detalhe']);
+    }
+
     /**
      * Monta o item `consulta` no formato do engine_snapshot da ficha: o
      * `enquadramento` é o EnquadramentoResult::toArray() (uso + quadros +

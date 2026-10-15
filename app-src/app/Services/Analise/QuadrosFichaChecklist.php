@@ -46,7 +46,7 @@ final class QuadrosFichaChecklist
         $uso = is_array($resultado['enquadramento'] ?? null) ? $resultado['enquadramento'] : [];
         $territorio = is_array($consulta['territorio'] ?? null) ? $consulta['territorio'] : [];
 
-        $grupo = $this->texto($uso['grupo'] ?? null);
+        $grupo = $this->texto($uso['subgrupo'] ?? null) ?? $this->texto($uso['grupo'] ?? null);
         $zona = $this->texto($territorio['zona']['nome'] ?? null);
 
         return [
@@ -93,18 +93,18 @@ final class QuadrosFichaChecklist
         $tokens = $this->tokensVia($quadro['condicoes'] ?? []);
 
         if (in_array('nao', $tokens, true)) {
-            return $this->item('quadro11a', $label, 'nao_permitido', 'Uso vedado para '.lcfirst($alvo).'.');
+            return $this->item('quadro11a', $label, 'nao_permitido', 'Uso vedado para '.$alvo.'.');
         }
 
         if (in_array('r', $tokens, true)) {
-            return $this->item('quadro11a', $label, 'pendente', 'Encaminhado à CNLU para '.lcfirst($alvo).'.');
+            return $this->item('quadro11a', $label, 'pendente', 'Encaminhado à CNLU para '.$alvo.'.');
         }
 
         if ($tokens === ['sim']) {
-            return $this->item('quadro11a', $label, 'permitido', 'Sem vedação para '.lcfirst($alvo).'.');
+            return $this->item('quadro11a', $label, 'permitido', 'Sem vedação para '.$alvo.'.');
         }
 
-        return $this->item('quadro11a', $label, 'condicionado', 'Condições de instalação para '.lcfirst($alvo).'.');
+        return $this->item('quadro11a', $label, 'condicionado', 'Condições de instalação para '.$alvo.'.');
     }
 
     /**

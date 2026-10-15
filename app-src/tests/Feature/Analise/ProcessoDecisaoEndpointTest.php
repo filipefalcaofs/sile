@@ -201,10 +201,8 @@ class ProcessoDecisaoEndpointTest extends TestCase
         $this->assertNull($processo->fresh()->decision?->tvl_product_number);
     }
 
-    public function test_concluir_processo_recusa_cnae_sem_escolha_do_analista(): void
+    public function test_concluir_processo_defere_com_cnae_sem_escolha_quando_nenhuma_esta_indeferida(): void
     {
-        // Relatório SEDUR 21/09 (item 07): o 422 vira erro de validação ACIONÁVEL
-        // — o corpo lista quais CNAEs ficaram sem decisão, nunca a tela "Oops".
         Event::fake([ResultadoEmitido::class]);
 
         $processo = $this->processoComFicha(
@@ -212,40 +210,78 @@ class ProcessoDecisaoEndpointTest extends TestCase
             ['status' => AnalysisRecordStatus::Rascunho, 'finalized_at' => null],
         );
 
-        $response = $this->actingAs($this->analista(), 'gestao')
+        $this->actingAs($this->analista(), 'gestao')
             ->postJson("/gestao/processos/{$processo->id}/ficha/concluir-processo")
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['ficha']);
+            ->assertOk()
+            ->assertJsonPath('outcome', 'deferida');
 
-        $this->assertStringContainsString('4712-1/00', (string) $response->json('errors.ficha.0'));
-
-        $this->assertDatabaseCount('viability_decisions', 0);
-        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
-        Event::assertNotDispatched(ResultadoEmitido::class);
+        $this->assertSame(ViabilityRequestStatus::Deferida, $processo->fresh()->status);
     }
 
-    public function test_decidir_com_cnae_sem_escolha_volta_com_erro_inline_e_nao_pagina_de_erro(): void
+    public function test_concluir_processo_indefere_quando_ha_cnae_indeferida_e_outras_sem_escolha(): void
     {
-        // Relatório SEDUR 21/09 (item 07): decidir com atividade sem escolha não
-        // pode devolver a tela "Oops / 422" — o analista recebe o erro na própria
-        // tela (error bag da sessão) com a atividade pendente identificada.
+        Event::fake([ResultadoEmitido::class]);
+
+        $processo = $this->processoComFicha(
+            [
+                ['cnae' => '4712100', 'status_escolhido' => null],
+                ['cnae' => '8211300', 'cnae_formatado' => '8211-3/00', 'status_escolhido' => 'indeferida', 'justificativa' => 'Uso vedado.'],
+            ],
+            ['status' => AnalysisRecordStatus::Rascunho, 'finalized_at' => null],
+        );
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->postJson("/gestao/processos/{$processo->id}/ficha/concluir-processo")
+            ->assertOk()
+            ->assertJsonPath('outcome', 'indeferida');
+
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $processo->fresh()->status);
+    }
+
+    public function test_decidir_com_cnae_sem_escolha_defere_pela_ficha(): void
+    {
         Event::fake([ResultadoEmitido::class]);
 
         $processo = $this->processoComFicha([
             ['cnae' => '8211300', 'cnae_formatado' => '8211-3/00', 'status_sugerido' => null, 'status_escolhido' => null],
         ]);
 
-        $response = $this->actingAs($this->analista(), 'gestao')
-            ->post("/gestao/processos/{$processo->id}/decidir");
+        $this->actingAs($this->analista(), 'gestao')
+            ->post("/gestao/processos/{$processo->id}/decidir")
+            ->assertSessionHasNoErrors();
 
-        $response->assertSessionHasErrors(['decisao']);
-        $this->assertStringContainsString(
-            '8211-3/00',
-            (string) session('errors')->getBag('default')->first('decisao'),
-        );
+        $this->assertSame(ViabilityRequestStatus::Deferida, $processo->fresh()->status);
+    }
+
+    public function test_decidir_como_deferido_com_cnae_indeferida_volta_com_erro_inline(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $processo = $this->processoComFicha([
+            ['cnae' => '8211300', 'cnae_formatado' => '8211-3/00', 'status_escolhido' => 'indeferida'],
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->post("/gestao/processos/{$processo->id}/decidir", ['decisao' => 'deferida'])
+            ->assertSessionHasErrors(['decisao']);
 
         $this->assertDatabaseCount('viability_decisions', 0);
         $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
-        Event::assertNotDispatched(ResultadoEmitido::class);
+    }
+
+    public function test_decidir_como_indeferido_sem_cnae_indeferida_volta_com_erro_inline(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $processo = $this->processoComFicha([
+            ['cnae' => '8211300', 'cnae_formatado' => '8211-3/00', 'status_escolhido' => null],
+        ]);
+
+        $this->actingAs($this->analista(), 'gestao')
+            ->post("/gestao/processos/{$processo->id}/decidir", ['decisao' => 'indeferida'])
+            ->assertSessionHasErrors(['decisao']);
+
+        $this->assertDatabaseCount('viability_decisions', 0);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
     }
 }

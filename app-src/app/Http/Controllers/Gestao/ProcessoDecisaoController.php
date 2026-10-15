@@ -37,6 +37,7 @@ class ProcessoDecisaoController extends Controller
         }
 
         $dados = $request->validate([
+            'decisao' => ['nullable', Rule::in([DecisionOutcome::Deferida->value, DecisionOutcome::Indeferida->value])],
             'tvl_kind' => ['nullable', Rule::enum(TvlKind::class)],
             'tvl_valid_until' => ['nullable', 'date'],
             'condicionantes_atendidos' => ['nullable', 'boolean'],
@@ -46,6 +47,7 @@ class ProcessoDecisaoController extends Controller
             $result = $this->decision->decide(
                 $record,
                 $request->user(),
+                escolhido: isset($dados['decisao']) ? DecisionOutcome::from($dados['decisao']) : null,
                 tvlKind: isset($dados['tvl_kind']) ? TvlKind::from($dados['tvl_kind']) : null,
                 tvlValidUntil: $dados['tvl_valid_until'] ?? null,
                 condicionantesAtendidos: $request->exists('condicionantes_atendidos')

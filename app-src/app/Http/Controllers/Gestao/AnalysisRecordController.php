@@ -267,14 +267,6 @@ class AnalysisRecordController extends Controller
     {
         $record = $this->records->current($viabilityRequest);
 
-        try {
-            $this->decisao->recusarSeAindaEmAnalise($record->per_cnae ?? []);
-        } catch (DomainException $e) {
-            // Erro acionável na própria tela (relatório SEDUR 21/09, item 07):
-            // o useHttp lê errors.ficha e o analista vê quais CNAEs faltam.
-            throw ValidationException::withMessages(['ficha' => $e->getMessage()]);
-        }
-
         if (! $record->isFinalizada()) {
             try {
                 $record = $this->records->finalizar($record, $request->user());

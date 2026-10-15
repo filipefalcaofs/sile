@@ -92,22 +92,16 @@ class AnaliseTecnicaDecisionService
             throw new DomainException('A ficha finalizada não possui atividades (CNAEs) para decidir.');
         }
 
-        $this->recusarSeAindaEmAnalise($perCnae);
-
         if ($escolhido !== null && ! in_array($escolhido, [DecisionOutcome::Deferida, DecisionOutcome::Indeferida], true)) {
             throw new DomainException('Deferido e indeferido são os únicos resultados lidos da ficha.');
         }
 
         $derivado = $this->outcome($perCnae);
 
+        $this->recusarDecisaoContraditoria($perCnae, $escolhido);
+
         if ($request->isRenewal() && $condicionantesAtendidos === false) {
             $escolhido = DecisionOutcome::Indeferida;
-        }
-
-        if ($escolhido === DecisionOutcome::Deferida && $derivado !== DecisionOutcome::Deferida) {
-            throw new DomainException(
-                'Não é possível deferir: há atividade indeferida na ficha. Ajuste a atividade ou escolha Indeferido.',
-            );
         }
 
         $outcome = $escolhido ?? $derivado;
@@ -256,55 +250,62 @@ class AnaliseTecnicaDecisionService
     }
 
     /**
-     * Desfecho da decisão (RN-004): DEFERE só quando TODAS as CNAEs da ficha estão
-     * com status_escolhido 'deferida'; QUALQUER outra escolha (indeferida, ainda em
-     * análise, ausente) INDEFERE o processo. Anti-fachada: nunca defere por omissão.
+     * Rótulos das atividades marcadas como indeferidas na ficha.
      *
      * @param  list<array<string, mixed>>  $perCnae
+     * @return list<string>
      */
-    /**
-     * Guarda da conclusão: todo CNAE precisa de escolha explícita do analista
-     * (deferida/indeferida). "Em análise" é status do PROCESSO, nunca do CNAE —
-     * um CNAE sem escolha (null ou o legado 'analise') bloqueia a conclusão.
-     * Anti-fachada: nunca defere nem indefere por omissão de escolha. A mensagem
-     * LISTA as atividades pendentes (relatório SEDUR 21/09, item 07) — o erro
-     * tem que ser acionável, nunca uma tela genérica.
-     *
-     * @param  list<array<string, mixed>>  $perCnae
-     */
-    public function recusarSeAindaEmAnalise(array $perCnae): void
+    private function indeferidas(array $perCnae): array
     {
-        $pendentes = [];
+        $rotulos = [];
 
         foreach ($perCnae as $item) {
-            if (! is_array($item)) {
-                continue;
-            }
-
-            $escolhido = $item['status_escolhido'] ?? null;
-
-            if (! in_array($escolhido, [DecisionOutcome::Deferida->value, DecisionOutcome::Indeferida->value], true)) {
+            if (($item['status_escolhido'] ?? null) === DecisionOutcome::Indeferida->value) {
                 $rotulo = trim((string) ($item['cnae_formatado'] ?? $item['cnae'] ?? ''));
-                $pendentes[] = $rotulo !== '' ? $rotulo : 'atividade sem código';
+                $rotulos[] = $rotulo !== '' ? $rotulo : 'atividade sem código';
             }
         }
 
-        if ($pendentes !== []) {
+        return $rotulos;
+    }
+
+    /**
+     * Decisão coerente com a ficha (RN-004): deferir exige NENHUMA atividade
+     * indeferida; indeferir exige PELO MENOS UMA. Atividade sem marcação não
+     * bloqueia — só o indeferimento é marcado explicitamente. A mensagem lista
+     * as atividades em conflito (erro acionável na própria tela).
+     *
+     * @param  list<array<string, mixed>>  $perCnae
+     *
+     * @throws DomainException quando a decisão pedida contradiz as marcações
+     */
+    public function recusarDecisaoContraditoria(array $perCnae, ?DecisionOutcome $escolhido): void
+    {
+        $indeferidas = $this->indeferidas($perCnae);
+
+        if ($escolhido === DecisionOutcome::Deferida && $indeferidas !== []) {
             throw new DomainException(
-                'Atividade sem decisão do analista: '.implode(', ', $pendentes).'. Escolha deferir ou indeferir em cada CNAE antes de concluir.',
+                'Não é possível deferir: há atividade indeferida na ficha ('.implode(', ', $indeferidas).'). Desmarque o indeferimento ou escolha Indeferido.',
+            );
+        }
+
+        if ($escolhido === DecisionOutcome::Indeferida && $indeferidas === []) {
+            throw new DomainException(
+                'Não é possível indeferir: nenhuma atividade está marcada como indeferida na ficha. Marque ao menos uma atividade como indeferida ou escolha Deferido.',
             );
         }
     }
 
+    /**
+     * Desfecho da decisão (RN-004): INDEFERE quando QUALQUER atividade da ficha
+     * está marcada como indeferida; senão DEFERE. Atividade sem marcação não
+     * indefere — o analista só precisa marcar o que indefere.
+     *
+     * @param  list<array<string, mixed>>  $perCnae
+     */
     private function outcome(array $perCnae): DecisionOutcome
     {
-        foreach ($perCnae as $item) {
-            if (($item['status_escolhido'] ?? null) !== DecisionOutcome::Deferida->value) {
-                return DecisionOutcome::Indeferida;
-            }
-        }
-
-        return DecisionOutcome::Deferida;
+        return $this->indeferidas($perCnae) === [] ? DecisionOutcome::Deferida : DecisionOutcome::Indeferida;
     }
 
     /**
@@ -368,7 +369,7 @@ class AnaliseTecnicaDecisionService
         foreach ($perCnae as $item) {
             $justificativa = $item['justificativa'] ?? null;
 
-            if (($item['status_escolhido'] ?? null) !== DecisionOutcome::Deferida->value && is_string($justificativa) && trim($justificativa) !== '') {
+            if (($item['status_escolhido'] ?? null) === DecisionOutcome::Indeferida->value && is_string($justificativa) && trim($justificativa) !== '') {
                 $porAtividade[] = 'CNAE '.($item['cnae_formatado'] ?? $item['cnae']).': '.trim($justificativa);
             }
         }

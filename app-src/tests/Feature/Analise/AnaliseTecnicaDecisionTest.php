@@ -176,6 +176,78 @@ class AnaliseTecnicaDecisionTest extends TestCase
         $this->service()->decide($ficha, $this->analista());
     }
 
+    public function test_defere_sem_exigir_escolha_individual_quando_nenhuma_cnae_esta_indeferida(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $ficha = $this->fichaFinalizada([
+            ['cnae' => '4712100', 'cnae_formatado' => '4712-1/00', 'status_escolhido' => null],
+            ['cnae' => '5611201', 'cnae_formatado' => '5611-2/01', 'status_escolhido' => 'analise'],
+            ['cnae' => '8211300', 'cnae_formatado' => '8211-3/00', 'status_escolhido' => 'deferida'],
+        ]);
+
+        $result = $this->service()->decide($ficha, $this->analista(), DecisionOutcome::Deferida);
+
+        $this->assertSame(DecisionOutcome::Deferida, $result->outcome);
+        $this->assertSame(ViabilityRequestStatus::Deferida, $ficha->viabilityRequest->fresh()->status);
+    }
+
+    public function test_indefere_com_uma_cnae_indeferida_sem_exigir_escolha_nas_demais(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $ficha = $this->fichaFinalizada([
+            ['cnae' => '4712100', 'status_escolhido' => null],
+            ['cnae' => '5611201', 'cnae_formatado' => '5611-2/01', 'status_escolhido' => 'indeferida', 'justificativa' => 'Proibido na zona.'],
+        ]);
+
+        $result = $this->service()->decide($ficha, $this->analista(), DecisionOutcome::Indeferida);
+
+        $this->assertSame(DecisionOutcome::Indeferida, $result->outcome);
+        $this->assertSame(ViabilityRequestStatus::Indeferida, $ficha->viabilityRequest->fresh()->status);
+        $this->assertNotNull($ficha->viabilityRequest->fresh()->decision->reason);
+    }
+
+    public function test_recusa_deferir_quando_ha_cnae_indeferida(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $ficha = $this->fichaFinalizada([
+            ['cnae' => '4712100', 'status_escolhido' => null],
+            ['cnae' => '5611201', 'cnae_formatado' => '5611-2/01', 'status_escolhido' => 'indeferida'],
+        ]);
+
+        try {
+            $this->service()->decide($ficha, $this->analista(), DecisionOutcome::Deferida);
+            $this->fail('Deveria recusar o deferimento.');
+        } catch (DomainException $e) {
+            $this->assertStringContainsString('5611-2/01', $e->getMessage());
+        }
+
+        $this->assertDatabaseCount('viability_decisions', 0);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $ficha->viabilityRequest->fresh()->status);
+    }
+
+    public function test_recusa_indeferir_quando_nenhuma_cnae_esta_indeferida(): void
+    {
+        Event::fake([ResultadoEmitido::class]);
+
+        $ficha = $this->fichaFinalizada([
+            ['cnae' => '4712100', 'status_escolhido' => null],
+            ['cnae' => '5611201', 'status_escolhido' => 'deferida'],
+        ]);
+
+        try {
+            $this->service()->decide($ficha, $this->analista(), DecisionOutcome::Indeferida, 'Parecer qualquer.');
+            $this->fail('Deveria recusar o indeferimento.');
+        } catch (DomainException $e) {
+            $this->assertStringContainsString('nenhuma atividade', $e->getMessage());
+        }
+
+        $this->assertDatabaseCount('viability_decisions', 0);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $ficha->viabilityRequest->fresh()->status);
+    }
+
     public function test_defere_o_caso_pendente_sem_zona_com_fundamentacao_da_ficha(): void
     {
         // Anti-fachada inversa: o motor consolidou PENDENTE (zona oficial ausente)
