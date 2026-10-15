@@ -120,7 +120,7 @@ class AnaliseTecnicaDecisionService
 
         $justificativa = $outcome === DecisionOutcome::Indeferida
             ? $this->justificativaDoIndeferimento($record, $perCnae, $parecer)
-            : null;
+            : $this->parecerDoDeferimento($parecer);
 
         try {
             $decision = DB::transaction(
@@ -340,6 +340,13 @@ class AnaliseTecnicaDecisionService
         }
 
         return false;
+    }
+
+    private function parecerDoDeferimento(?string $parecer): ?string
+    {
+        $parecer = trim((string) $parecer);
+
+        return $parecer === '' ? null : $parecer;
     }
 
     /**
