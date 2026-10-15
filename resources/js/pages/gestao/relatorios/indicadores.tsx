@@ -444,15 +444,17 @@ export default function IndicadoresViabilidade({
                     <CardHeader title="Top CNAEs" description="Atividades econômicas com maior volume de solicitações no recorte." />
                     <CardContent>
                         {porCnae.length > 0 ? (
-                            <div aria-hidden="true">
-                                <Chart option={cnaeChartOption(porCnae)} className="h-80 w-full" />
-                            </div>
-                            <ChartDataTable
-                                caption="Top CNAEs"
-                                rotuloCabecalho="CNAE"
-                                valorCabecalho="Solicitações"
-                                linhas={porCnae.map((item) => ({ rotulo: item.cnae, valor: item.total }))}
-                            />
+                            <>
+                                <div aria-hidden="true">
+                                    <Chart option={cnaeChartOption(porCnae)} className="h-80 w-full" />
+                                </div>
+                                <ChartDataTable
+                                    caption="Top CNAEs"
+                                    rotuloCabecalho="CNAE"
+                                    valorCabecalho="Solicitações"
+                                    linhas={porCnae.map((item) => ({ rotulo: item.cnae, valor: item.total }))}
+                                />
+                            </>
                         ) : (
                             <GraficoSemDados />
                         )}
