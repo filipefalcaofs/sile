@@ -35,9 +35,6 @@ class ReginProcessoProtocolador
 {
     public const CONTINGENCIA_RECEBE = 'regin_recebe';
 
-    /** CPF reservado (inválido) do requerente técnico de processos sem solicitante. */
-    private const CPF_SOLICITANTE_NAO_IDENTIFICADO = '00000000000';
-
     /** TIPO da instituição Prefeitura na tabela do Guia v2.12 (3.27); as demais perguntas do envelope não são da SEDUR. */
     private const INSTITUICAO_PREFEITURA = '2';
 
@@ -229,7 +226,7 @@ class ReginProcessoProtocolador
     private function solicitanteNaoIdentificado(): Cidadao
     {
         return Cidadao::criarRegistroDeBalcao(
-            self::CPF_SOLICITANTE_NAO_IDENTIFICADO,
+            Cidadao::CPF_TECNICO,
             'Solicitante não identificado (REGIN)',
             null,
             null,

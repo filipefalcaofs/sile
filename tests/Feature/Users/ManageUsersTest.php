@@ -50,13 +50,13 @@ class ManageUsersTest extends TestCase
                 ->where('counts.portal', 1));
     }
 
-    public function test_aba_portal_lista_apenas_usuarios_sem_acesso_a_gestao(): void
+    public function test_aba_portal_lista_apenas_cidadaos(): void
     {
         $admin = $this->admin();
 
         User::factory()->analista()->create();
         $cidada = Cidadao::factory()->create(['name' => 'Maria Souza']);
-        $semPapel = User::factory()->create(['name' => 'Sem Papel']);
+        $semSenha = Cidadao::factory()->semSenha()->create(['name' => 'Sem Senha']);
 
         $this->actingAs($admin, 'gestao')
             ->get('/gestao/usuarios?tab=portal')
@@ -64,7 +64,7 @@ class ManageUsersTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.tab', 'portal')
                 ->has('users.data', 2)
-                ->where('users.data', fn ($data) => collect($data)->pluck('name')->sort()->values()->all() === collect([$cidada->name, $semPapel->name])->sort()->values()->all()));
+                ->where('users.data', fn ($data) => collect($data)->pluck('name')->sort()->values()->all() === collect([$cidada->name, $semSenha->name])->sort()->values()->all()));
     }
 
     public function test_conta_ad_sem_papel_conta_como_equipe_sedur_e_nunca_como_portal(): void
@@ -144,18 +144,18 @@ class ManageUsersTest extends TestCase
         $user = Cidadao::factory()->create();
 
         $this->actingAs($admin, 'gestao')
-            ->put("/gestao/usuarios/{$user->id}/inativacao")
+            ->put(route('gestao.cidadaos.inativacao.update', $user))
             ->assertRedirect();
 
         $this->assertNotNull($user->fresh()->inactivated_at);
 
         $activity = Activity::where('log_name', 'usuarios')
-            ->where('event', 'usuario-inativado')
+            ->where('event', 'cidadao-inativado')
             ->first();
 
         $this->assertNotNull($activity, 'Esperava activity de inativação do usuário');
         $this->assertSame($admin->id, $activity->causer_id);
-        $this->assertSame($user->id, $activity->properties['target_user_id']);
+        $this->assertSame($user->id, $activity->properties['target_cidadao_id']);
     }
 
     public function test_reativa_usuario_com_auditoria(): void
@@ -164,18 +164,18 @@ class ManageUsersTest extends TestCase
         $user = Cidadao::factory()->inactive()->create();
 
         $this->actingAs($admin, 'gestao')
-            ->put("/gestao/usuarios/{$user->id}/inativacao")
+            ->put(route('gestao.cidadaos.inativacao.update', $user))
             ->assertRedirect();
 
         $this->assertNull($user->fresh()->inactivated_at);
 
         $activity = Activity::where('log_name', 'usuarios')
-            ->where('event', 'usuario-reativado')
+            ->where('event', 'cidadao-reativado')
             ->first();
 
         $this->assertNotNull($activity, 'Esperava activity de reativação do usuário');
         $this->assertSame($admin->id, $activity->causer_id);
-        $this->assertSame($user->id, $activity->properties['target_user_id']);
+        $this->assertSame($user->id, $activity->properties['target_cidadao_id']);
     }
 
     public function test_administrador_nao_inativa_a_propria_conta(): void
@@ -247,7 +247,7 @@ class ManageUsersTest extends TestCase
         $user = Cidadao::factory()->create();
 
         $this->actingAs($admin, 'gestao')
-            ->put("/gestao/usuarios/{$user->id}/inativacao")
+            ->put(route('gestao.cidadaos.inativacao.update', $user))
             ->assertRedirect();
 
         $this->post(route('gestao.logout'));

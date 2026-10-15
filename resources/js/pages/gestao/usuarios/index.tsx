@@ -31,6 +31,7 @@ interface UserItem {
     cpf_masked: string;
     auth_type: 'ad' | 'local';
     ad_username: string | null;
+    sem_senha: boolean;
 }
 
 interface SolicitacaoItem {
@@ -375,6 +376,11 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
                 <div className="flex items-center gap-3">
                     <Avatar name={user.name} size="sm" />
                     <span>{user.name}</span>
+                    {user.sem_senha && (
+                        <Badge size="sm" color="light">
+                            Registro de balcão
+                        </Badge>
+                    )}
                 </div>
             ),
         },
@@ -389,11 +395,15 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
             cellClassName: 'whitespace-nowrap',
             cell: (user) => user.cpf_masked,
         },
-        {
-            id: 'roles',
-            header: 'Papel',
-            cell: (user) => <RoleBadges roles={user.roles} />,
-        },
+        ...(tab === 'gestao'
+            ? [
+                  {
+                      id: 'roles',
+                      header: 'Papel',
+                      cell: (user: UserItem) => <RoleBadges roles={user.roles} />,
+                  },
+              ]
+            : []),
         {
             id: 'situation',
             header: 'Situação',
@@ -409,15 +419,19 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
 
                 return (
                     <div className="flex justify-end gap-2">
-                        <TableAction tone="neutral" href={`/gestao/acessos/${user.id}`}>
-                            Acessos
-                        </TableAction>
-                        <TableAction tone="neutral" onClick={() => setAuthTypeUser(user)}>
-                            Autenticação
-                        </TableAction>
-                        <TableAction tone="brand" onClick={() => setRoleUser(user)}>
-                            Alterar papel
-                        </TableAction>
+                        {tab === 'gestao' && (
+                            <>
+                                <TableAction tone="neutral" href={`/gestao/acessos/${user.id}`}>
+                                    Acessos
+                                </TableAction>
+                                <TableAction tone="neutral" onClick={() => setAuthTypeUser(user)}>
+                                    Autenticação
+                                </TableAction>
+                                <TableAction tone="brand" onClick={() => setRoleUser(user)}>
+                                    Alterar papel
+                                </TableAction>
+                            </>
+                        )}
                         <TableAction
                             tone={active ? 'warning' : 'success'}
                             icon={<PowerIcon className="size-4.5" />}
@@ -435,7 +449,7 @@ export default function UsersIndex({ users, filters, counts, roles, solicitacoes
             return;
         }
 
-        router.put(`/gestao/usuarios/${activationUser.id}/inativacao`, undefined, {
+        router.put(`${tab === 'portal' ? '/gestao/cidadaos' : '/gestao/usuarios'}/${activationUser.id}/inativacao`, undefined, {
             preserveScroll: true,
             onStart: () => setActivationProcessing(true),
             onFinish: () => setActivationProcessing(false),

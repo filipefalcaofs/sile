@@ -65,16 +65,6 @@ class User extends Authenticatable implements MustVerifyEmail
             ->orWhereHas('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao')));
     }
 
-    /**
-     * Usuário do portal: externo, nunca conta AD e sem perfil com acesso à gestão.
-     */
-    public function scopeUsuarioPortal(Builder $query): Builder
-    {
-        return $query
-            ->where('auth_type', '!=', AuthType::Ad->value)
-            ->whereDoesntHave('roles.permissions', fn ($permissions) => $permissions->where('name', 'acessar-gestao'));
-    }
-
     public function sendEmailVerificationNotification(): void
     {
         $log = EmailLog::create([

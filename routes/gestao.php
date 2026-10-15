@@ -11,6 +11,7 @@ use App\Http\Controllers\Gestao\AuditoriaController;
 use App\Http\Controllers\Gestao\AuditoriaPreditivaController;
 use App\Http\Controllers\Gestao\BenchmarkController;
 use App\Http\Controllers\Gestao\CaixaSetorController;
+use App\Http\Controllers\Gestao\CidadaoManagementController;
 use App\Http\Controllers\Gestao\CnaeController;
 use App\Http\Controllers\Gestao\ConclusaoAnaliseController;
 use App\Http\Controllers\Gestao\ConsultarCpfSedurController;
@@ -305,6 +306,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             Route::get('usuarios', [UserManagementController::class, 'index'])->name('usuarios.index');
             Route::put('usuarios/{user}/papel', [UserManagementController::class, 'updateRole'])->name('usuarios.papel.update');
             Route::put('usuarios/{user}/inativacao', [UserManagementController::class, 'toggleActivation'])->name('usuarios.inativacao.update');
+            Route::put('cidadaos/{cidadao}/inativacao', [CidadaoManagementController::class, 'toggleActivation'])->name('cidadaos.inativacao.update');
             Route::put('usuarios/{user}/autenticacao', [UserManagementController::class, 'updateAuthType'])->name('usuarios.autenticacao.update');
             Route::put('usuarios/solicitacoes/{accessRequest}/aprovar', [SolicitacaoAcessoController::class, 'approve'])->name('usuarios.solicitacoes.aprovar');
             Route::put('usuarios/solicitacoes/{accessRequest}/recusar', [SolicitacaoAcessoController::class, 'reject'])->name('usuarios.solicitacoes.recusar');
