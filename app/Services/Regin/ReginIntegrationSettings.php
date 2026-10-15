@@ -30,6 +30,27 @@ class ReginIntegrationSettings
         return rtrim((string) Settings::get($key, $fallback), '/');
     }
 
+    /**
+     * Caminho, na API da JUCEB, que recebe o envelope Resposta (parecer). A
+     * documentação pública não o nomeia; fica em parâmetro para a SEDUR trocar
+     * sem deploy quando a JUCEB informar.
+     */
+    public function caminhoResposta(): string
+    {
+        $caminho = trim((string) Settings::get('integrations.regin.caminho_resposta', config('sile.integrations.regin.caminho_resposta', '/recebe')));
+
+        return '/'.ltrim($caminho, '/');
+    }
+
+    /**
+     * CODIGO_AREA da análise na Resposta: a área/secretaria da instituição no
+     * REGIN. A SEDUR tem uma só; o validador da JUCEB exige valor mínimo 1.
+     */
+    public function codigoArea(): int
+    {
+        return max(1, (int) Settings::get('integrations.regin.codigo_area', config('sile.integrations.regin.codigo_area', 1)));
+    }
+
     public function username(): string
     {
         return (string) Settings::get('integrations.regin.usuario', '');

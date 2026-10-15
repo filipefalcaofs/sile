@@ -730,6 +730,20 @@ class ParameterSeeder extends Seeder
                 'validation_rules' => ['required', 'string', 'size:14'],
                 'description' => 'CNPJ da Prefeitura (somente dígitos) usado como origem/destino nos envelopes da API REGIN',
             ],
+            'integrations.regin.caminho_resposta' => [
+                'group' => 'integracoes',
+                'type' => 'string',
+                'default_value' => '/recebe',
+                'validation_rules' => ['required', 'string', 'max:120', 'regex:/^\\/[A-Za-z0-9_\\/.-]*$/'],
+                'description' => 'Caminho da API REGIN/JUCEB que recebe o parecer (envelope Resposta, codFuncao 110), relativo à URL base. Informado pela JUCEB',
+            ],
+            'integrations.regin.codigo_area' => [
+                'group' => 'integracoes',
+                'type' => 'integer',
+                'default_value' => '1',
+                'validation_rules' => ['required', 'integer', 'min:1'],
+                'description' => 'CODIGO_AREA da análise no envelope Resposta: código da área/secretaria da Prefeitura no REGIN',
+            ],
             // Auditoria e compliance (EP12). O toggle de detecção de abuso
             // (HU-149) nasce DESLIGADO (nunca pune — só registra alerta e
             // encaminha à malha fina). Paginação da trilha fica em config/sile.php.

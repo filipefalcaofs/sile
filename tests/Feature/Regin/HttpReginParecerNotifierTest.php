@@ -3,6 +3,7 @@
 namespace Tests\Feature\Regin;
 
 use App\Enums\DecisionOutcome;
+use App\Models\ReginRecebimento;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Regin\HttpReginParecerNotifier;
@@ -56,9 +57,24 @@ class HttpReginParecerNotifierTest extends TestCase
         $this->assertSame(1, $dados['FINALIZA_PROCESSO']);
         $this->assertSame(1, $dados['PROCESSO_INTERESSE_INSTITUICAO']);
         $this->assertSame(0, $dados['GERA_DOCUMENTO_PROCESSO']);
+        $this->assertSame(1, $dados['ANALISES']['AREA'][0]['CODIGO_AREA']);
         $this->assertSame(2, $dados['ANALISES']['AREA'][0]['STATUS_ANALISE']);
         $this->assertSame($decision->decided_at->format('Ymd'), $dados['ANALISES']['AREA'][0]['DATA_ANALISE']);
         $this->assertNotSame('', $dados['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE']);
+    }
+
+    public function test_cnpj_empresa_vem_do_envelope_recebido_da_juceb(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create(['external_reference' => 'BAP2601000001']);
+        $decision = ViabilityDecision::factory()->create(['viability_request_id' => $request->id]);
+        ReginRecebimento::factory()->create(['protocolo' => 'BAP2601000001', 'cnpj_empresa' => '98945203320']);
+
+        $espiao = $this->clienteEspiao();
+        $this->app->instance(ReginHttpClient::class, $espiao);
+
+        $this->app->make(HttpReginParecerNotifier::class)->notifyParecer($request, $decision);
+
+        $this->assertSame('98945203320', $espiao->envios[0]['cnpjEmpresa']);
     }
 
     public function test_monta_envelope_indeferido_com_status_4(): void

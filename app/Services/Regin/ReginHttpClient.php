@@ -54,8 +54,8 @@ class ReginHttpClient
             $response = Http::timeout($this->timeout())
                 ->acceptJson()
                 ->asJson()
-                ->withToken($token)
-                ->post($this->settings->baseUrl().'/recebe', $resposta);
+                ->withHeaders($this->autorizacao($token))
+                ->post($this->settings->baseUrl().$this->settings->caminhoResposta(), $resposta);
         } catch (ConnectionException) {
             throw new ReginUnavailableException(motivo: 'REGIN indisponível ao enviar o parecer.');
         }
@@ -85,7 +85,7 @@ class ReginHttpClient
             $response = Http::timeout($this->timeout())
                 ->acceptJson()
                 ->asJson()
-                ->withToken($token)
+                ->withHeaders($this->autorizacao($token))
                 ->post($this->settings->baseUrl().$caminho, $corpo);
         } catch (ConnectionException) {
             throw new ReginUnavailableException(motivo: "REGIN indisponível em {$caminho}.");
@@ -94,6 +94,44 @@ class ReginHttpClient
         if (! $response->successful()) {
             throw new ReginUnavailableException(motivo: "REGIN rejeitou a homologação em {$caminho}.");
         }
+    }
+
+    /**
+     * Submete o envelope Resposta ao validador da JUCEB (/teste/validaResposta)
+     * e devolve o status e o corpo, sem lançar: serve para conferir o envelope
+     * em produção antes de enviar o parecer.
+     *
+     * @param  array<string, mixed>  $resposta
+     * @return array{status: int, corpo: string}
+     */
+    public function validarResposta(array $resposta): array
+    {
+        $token = $this->token();
+
+        try {
+            $response = Http::timeout($this->timeout())
+                ->acceptJson()
+                ->asJson()
+                ->withHeaders($this->autorizacao($token))
+                ->post($this->settings->baseUrl().'/teste/validaResposta', $resposta);
+        } catch (ConnectionException) {
+            throw new ReginUnavailableException(motivo: 'REGIN indisponível em /teste/validaResposta.');
+        }
+
+        return ['status' => $response->status(), 'corpo' => trim($response->body())];
+    }
+
+    /**
+     * A API devolve o token já com o prefixo "Bearer " e só aceita o header
+     * Authorization com esse valor exato: o prefixo não pode ser repetido.
+     *
+     * @return array<string, string>
+     */
+    private function autorizacao(string $token): array
+    {
+        $token = trim($token);
+
+        return ['Authorization' => preg_match('/^bearer\s/i', $token) === 1 ? $token : 'Bearer '.$token];
     }
 
     private function timeout(): int
