@@ -81,7 +81,7 @@ class ProfileTest extends TestCase
 
         $activity = Activity::query()
             ->where('event', 'updated')
-            ->where('subject_type', User::class)
+            ->where('subject_type', Cidadao::class)
             ->where('subject_id', $user->id)
             ->latest('id')
             ->first();
@@ -135,7 +135,7 @@ class ProfileTest extends TestCase
 
     public function test_email_duplicado_bloqueia(): void
     {
-        $other = User::factory()->create();
+        $other = Cidadao::factory()->create();
         $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
 
         $response = $this->actingAs($user)->patch('/portal/conta/perfil', [
@@ -147,6 +147,22 @@ class ProfileTest extends TestCase
         $response->assertSessionHasErrors('email');
 
         $this->assertSame($user->email, $user->fresh()->email);
+    }
+
+    public function test_email_de_servidor_nao_bloqueia_o_cidadao(): void
+    {
+        // E-mail é único dentro de cada tabela, não entre cidadaos e users.
+        $servidor = User::factory()->create();
+        $user = Cidadao::factory()->withAcceptedLgpdTerm()->create();
+
+        $this->actingAs($user)->patch('/portal/conta/perfil', [
+            'name' => $user->name,
+            'email' => $servidor->email,
+            'phone' => $user->phone,
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame($servidor->email, $user->fresh()->email);
+        $this->assertSame($servidor->email, $servidor->fresh()->email);
     }
 
     public function test_visitante_nao_acessa_perfil(): void
