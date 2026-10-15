@@ -234,15 +234,25 @@ class ReginProcessoProtocolador
      */
     private function solicitanteNaoIdentificado(): User
     {
-        return User::query()->firstOrCreate(
-            ['email' => User::EMAIL_SOLICITANTE_NAO_IDENTIFICADO],
-            [
-                'name' => 'Solicitante não identificado (REGIN)',
-                'cpf' => '00000000000',
-                'password' => Hash::make(Str::random(40)),
-                'auth_type' => AuthType::Local,
-            ],
-        );
+        $existente = User::query()->where('email', User::EMAIL_SOLICITANTE_NAO_IDENTIFICADO)->first();
+
+        if ($existente !== null) {
+            return $existente;
+        }
+
+        $cpf = '00000000000';
+
+        for ($sufixo = 1; User::query()->where('cpf', $cpf)->exists(); $sufixo++) {
+            $cpf = str_pad((string) $sufixo, 11, '0', STR_PAD_LEFT);
+        }
+
+        return User::query()->create([
+            'name' => 'Solicitante não identificado (REGIN)',
+            'email' => User::EMAIL_SOLICITANTE_NAO_IDENTIFICADO,
+            'cpf' => $cpf,
+            'password' => Hash::make(Str::random(40)),
+            'auth_type' => AuthType::Local,
+        ]);
     }
 
     private function solicitante(RecebimentoProcesso $dados): ?User

@@ -167,6 +167,16 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertFalse($processo->requester->temEmailEntregavel());
     }
 
+    public function test_cpf_ja_usado_nao_impede_o_solicitante_nao_identificado(): void
+    {
+        User::factory()->create(['cpf' => '00000000000']);
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+
+        $this->assertNotNull($processo);
+        $this->assertSame(User::EMAIL_SOLICITANTE_NAO_IDENTIFICADO, $processo->requester->email);
+    }
+
     public function test_natureza_juridica_do_ruc_vai_para_a_empresa(): void
     {
         $processo = app(ReginProcessoProtocolador::class)->protocolar(
