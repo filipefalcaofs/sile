@@ -164,4 +164,83 @@ class AccessHistoryTest extends TestCase
     {
         $this->get('/portal/acessos')->assertRedirect('/portal/login');
     }
+
+    public function test_portal_nao_mostra_acesso_de_servidor_com_o_mesmo_id(): void
+    {
+        $servidor = User::factory()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create(['id' => $servidor->id]);
+
+        AccessLog::factory()->create([
+            'actor_type' => User::class, 'actor_id' => $servidor->id,
+            'email' => 'servidor@example.test', 'ip_address' => '10.8.8.8',
+        ]);
+        AccessLog::factory()->create([
+            'actor_type' => Cidadao::class, 'actor_id' => $cidadao->id,
+            'email' => $cidadao->email, 'ip_address' => '10.1.1.1',
+        ]);
+
+        $this->actingAs($cidadao)
+            ->get('/portal/acessos')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('logs.data', 1)
+                ->where('logs.data.0.ip_address', '10.1.1.1'));
+    }
+
+    public function test_portal_nao_mostra_acesso_de_servidor_com_o_mesmo_email(): void
+    {
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
+        $servidor = User::factory()->create(['email' => $cidadao->email]);
+
+        AccessLog::factory()->create([
+            'actor_type' => User::class, 'actor_id' => $servidor->id,
+            'email' => $servidor->email, 'ip_address' => '10.8.8.8',
+        ]);
+
+        $this->actingAs($cidadao)
+            ->get('/portal/acessos')
+            ->assertInertia(fn (Assert $page) => $page->has('logs.data', 0));
+    }
+
+    public function test_falha_pre_login_sem_conta_aparece_pelo_email_do_cidadao(): void
+    {
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create();
+
+        AccessLog::factory()->create([
+            'actor_type' => null, 'actor_id' => null,
+            'email' => $cidadao->email, 'event' => 'falha',
+        ]);
+
+        $this->actingAs($cidadao)
+            ->get('/portal/acessos')
+            ->assertInertia(fn (Assert $page) => $page->has('logs.data', 1));
+    }
+
+    public function test_gestao_nao_mostra_acesso_de_cidadao_com_mesmo_id_ou_email(): void
+    {
+        $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+        $servidor = User::factory()->create();
+        $cidadao = Cidadao::factory()->create(['id' => $servidor->id, 'email' => $servidor->email]);
+
+        AccessLog::factory()->create([
+            'actor_type' => Cidadao::class, 'actor_id' => $cidadao->id,
+            'email' => $cidadao->email, 'ip_address' => '10.9.9.9',
+        ]);
+        AccessLog::factory()->create([
+            'actor_type' => User::class, 'actor_id' => $servidor->id,
+            'email' => $servidor->email, 'ip_address' => '10.2.2.2',
+        ]);
+
+        $this->actingAs($admin, 'gestao')
+            ->get("/gestao/acessos/{$servidor->id}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('logs.data', 1)
+                ->where('logs.data.0.ip_address', '10.2.2.2'));
+
+        $csv = $this->actingAs($admin, 'gestao')
+            ->get("/gestao/acessos/{$servidor->id}?formato=csv")
+            ->streamedContent();
+
+        $this->assertStringContainsString('10.2.2.2', $csv);
+        $this->assertStringNotContainsString('10.9.9.9', $csv);
+    }
 }

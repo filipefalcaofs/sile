@@ -63,6 +63,8 @@ class AnexarDocumentoTest extends TestCase
         $documento = $solicitacao->documents()->first();
 
         $this->assertNotNull($documento);
+        $this->assertSame(Cidadao::class, $documento->uploaded_by_type);
+        $this->assertSame($user->id, $documento->uploaded_by_id);
         $this->assertSame('local', $documento->disk);
         $this->assertSame('documento.pdf', $documento->original_name);
         $this->assertSame(64, strlen((string) $documento->sha256));

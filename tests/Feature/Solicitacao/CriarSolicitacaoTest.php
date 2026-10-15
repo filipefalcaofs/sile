@@ -149,6 +149,7 @@ class CriarSolicitacaoTest extends TestCase
         $this->assertNotNull($request);
         $this->assertSame($grantor->id, $request->requester_user_id);
         $this->assertSame($attorney->id, $request->created_by_id);
+        $this->assertSame(Cidadao::class, $request->created_by_type);
 
         $this->assertDatabaseHas('activity_log', [
             'subject_type' => $request->getMorphClass(),

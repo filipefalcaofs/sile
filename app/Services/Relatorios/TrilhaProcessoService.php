@@ -39,6 +39,7 @@ class TrilhaProcessoService
         $atividades = Activity::query()
             ->where('subject_type', $processo->getMorphClass())
             ->where('subject_id', $processo->id)
+            ->with('causer')
             ->oldest()
             ->get();
 
@@ -76,7 +77,7 @@ class TrilhaProcessoService
                 'eixo' => 'auditoria',
                 'eixo_label' => 'Auditoria',
                 'descricao' => $this->descreverAtividade($a, $usuarios),
-                'usuario' => $a->causer_id !== null ? ($usuarios[$a->causer_id] ?? null) : null,
+                'usuario' => $a->causer?->name,
             ];
         }
 
@@ -106,8 +107,8 @@ class TrilhaProcessoService
     }
 
     /**
-     * Nomes dos atores em batch (transições da análise + causers da
-     * auditoria) — uma query só, sem N+1.
+     * Nomes dos atores em batch (transições da análise + analistas das
+     * atribuições; o causer vem pela relação polimórfica) — uma query só, sem N+1.
      *
      * @return array<int, string>
      */
@@ -122,10 +123,6 @@ class TrilhaProcessoService
         }
 
         foreach ($atividades as $a) {
-            if ($a->causer_id !== null) {
-                $ids[] = $a->causer_id;
-            }
-
             if (in_array($a->event, self::EVENTOS_DE_ATRIBUICAO, true) && isset($a->properties['assigned_user_id'])) {
                 $ids[] = (int) $a->properties['assigned_user_id'];
             }

@@ -41,14 +41,14 @@ final class AcessosUsuarioReportSource implements ReportSource
                 ['key' => 'channel', 'label' => 'Canal'],
                 ['key' => 'created_at', 'label' => 'Data/hora'],
             ],
-            // RN-005: a MESMA query do AccessHistoryController (user_id OU e-mail do
-            // alvo), reconstruída a partir do id que veio no bag.
+            // RN-005: a MESMA query do AccessHistoryController (conta do alvo OU e-mail do
+            // alvo em linhas sem conta), reconstruída a partir do id que veio no bag.
             builder: fn (): Builder => AccessLog::query()
                 ->where(function ($query) use ($userId, $alvo): void {
                     $query->where(fn ($q) => $q->where('actor_type', User::class)->where('actor_id', $userId));
 
                     if ($alvo !== null) {
-                        $query->orWhere('email', $alvo->email);
+                        $query->orWhere(fn ($q) => $q->whereNull('actor_id')->where('email', $alvo->email));
                     }
                 })
                 ->latest('created_at'),

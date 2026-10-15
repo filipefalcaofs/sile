@@ -50,11 +50,10 @@ class LgpdMonitorService
             ];
         }
 
-        $aceitaram = LegalTermAcceptance::query()
+        $aceitaram = (int) LegalTermAcceptance::query()
             ->where('legal_term_id', $term->id)
-            ->distinct()
-            ->get(['accepted_by_type', 'accepted_by_id'])
-            ->count();
+            ->selectRaw('count(distinct accepted_by_type || \'#\' || accepted_by_id) as total')
+            ->value('total');
 
         return [
             'sem_termo_publicado' => false,

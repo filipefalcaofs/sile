@@ -121,6 +121,7 @@ class ContingenciaTest extends TestCase
         $this->assertNotNull($solicitacao->protocoled_at);
         $this->assertSame($beneficiario->id, $solicitacao->requester_user_id);
         $this->assertSame($operador->id, $solicitacao->created_by_id);
+        $this->assertSame(User::class, $solicitacao->created_by_type);
         $this->assertNotNull($solicitacao->contingency_reason);
 
         // MESMO motor: a transição rascunho→protocolada foi gravada e auditada.
@@ -318,6 +319,8 @@ class ContingenciaTest extends TestCase
 
         $documento = $solicitacao->documents()->where('requirement_id', $requisito->id)->firstOrFail();
         $this->assertNotNull($documento->sha256);
+        $this->assertSame(User::class, $documento->uploaded_by_type);
+        $this->assertSame($operador->id, $documento->uploaded_by_id);
         Storage::disk('local')->assertExists($documento->path);
     }
 

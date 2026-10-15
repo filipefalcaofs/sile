@@ -70,6 +70,7 @@ class CancelarSolicitacaoTest extends TestCase
         $this->assertNotNull($solicitacao->cancelled_at);
         $this->assertSame('Cadastro duplicado por engano.', $solicitacao->cancelled_reason);
         $this->assertSame($owner->id, $solicitacao->cancelled_by_id);
+        $this->assertSame(Cidadao::class, $solicitacao->cancelled_by_type);
 
         $transition = $solicitacao->transitions()->first();
         $this->assertNotNull($transition);
