@@ -75,7 +75,9 @@ para `*_cidadao_id` para não repetir a ambiguidade que causou o defeito:
 
 - `company_user.user_id`
 - `gov_br_accounts.user_id`
-- `procurations.grantor_user_id` e `procurations.attorney_user_id`
+- `procurations.grantor_user_id`, `procurations.attorney_user_id` e
+  `procurations.revoked_by_user_id` (só `ProcurationController::destroy` grava, com o
+  usuário do guard `web`)
 - `viability_requests.requester_user_id`
 - `assisted_attendances.citizen_user_id`
 - `viability_queries.user_id` (nullable: consulta anônima)
@@ -103,10 +105,11 @@ para `*_cidadao_id` para não repetir a ambiguidade que causou o defeito:
 - `access_logs.user_id`
 - `legal_term_acceptances.user_id`
 - `communications.recipient_user_id`
-- `procurations.revoked_by_user_id`
 
-O mapa morph usa os apelidos `cidadao` e `user` (`Relation::enforceMorphMap`), para o
-banco não guardar nome de classe.
+O `*_type` guarda o nome completo da classe (`App\Models\Cidadao` ou `App\Models\User`),
+como `notifications` e `activity_log` já fazem. Não se usa `enforceMorphMap`: a tabela
+`model_has_roles` do Spatie, as notificações e o log de atividade já guardam
+`App\Models\User`, e apelidos quebrariam essas linhas.
 
 ### 4. Notificações e auditoria
 
@@ -120,16 +123,22 @@ existe (`$request->is('gestao*') ? 'gestao' : 'web'`).
 Uma migration, em transação, na ordem:
 
 1. Cria `cidadaos`.
-2. Copia de `users` para `cidadaos` as contas que **têm o papel `cidadao` e nenhum papel
-   de servidor** e não têm `ad_username`. Guarda o par `users.id → cidadaos.id` numa
-   tabela temporária de mapeamento.
-3. Reaponta as colunas "só cidadão" e reescreve as "mistas" usando o mapeamento.
+2. Copia de `users` para `cidadaos` **preservando o `id`** as contas que não são AD e
+   não têm perfil com a permissão `acessar-gestao` (mesmo critério de
+   `User::scopeUsuarioPortal`). Como o `id` não muda, as colunas "só cidadão" mantêm os
+   valores e só trocam o alvo da chave estrangeira; não há tabela de mapeamento.
+3. Nas colunas "mistas", grava o tipo antes de qualquer outra mudança: `id` que existe em
+   `cidadaos` vira `App\Models\Cidadao`, o restante `App\Models\User`. Nas colunas "só
+   cidadão" que apontam para um servidor (por exemplo o ator de fallback do recebimento
+   REGIN), o servidor ganha um espelho em `cidadaos` com o mesmo `id` e sem senha, e a
+   chave estrangeira é retargetada. A sequência de `cidadaos.id` é reajustada ao final.
 4. Reescreve `notifications` e `activity_log` dos cidadãos.
 5. Remove de `users` as linhas migradas e o papel `cidadao` do catálogo de papéis.
 
-Conta que tem papel de servidor **e** histórico de cidadão fica em `users` e ganha uma
-linha em `cidadaos` ligada por CPF, para o histórico continuar acessível no portal. A
-migração tem `down()` que reverte pelo mapeamento. Ela roda antes numa cópia do banco de
+O espelho de um servidor em `cidadaos` não tem senha: ele não entra no portal, mas o
+histórico que ele tenha como requerente continua íntegro. A migração falha com mensagem
+clara se alguma coluna "só servidor" apontar para um cidadão migrado. O `down()` devolve
+as contas para `users` pelo mesmo `id`. Ela roda antes numa cópia do banco de
 homologação, com contagem de linhas por tabela antes e depois.
 
 ### 6. Código, por camada
@@ -165,7 +174,6 @@ homologação, com contagem de linhas por tabela antes e depois.
 ## Questões que o plano resolve com evidência
 
 - Classificação final de cada coluna dos três grupos (leitura do código que escreve nela).
-- Se `revoked_by_user_id` das procurações é sempre o outorgante. Até a confirmação, a
-  coluna fica no grupo das mistas; sendo sempre o outorgante, passa a "só cidadão".
+- (Resolvida na escrita do plano: `revoked_by_user_id` é só de cidadão.)
 - Se existem contas hoje em `users` com papel de servidor e papel `cidadao` ao mesmo
   tempo, e quantas são.
