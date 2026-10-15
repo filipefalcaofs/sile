@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\StoreSolicitacaoRequest;
 use App\Http\Resources\Portal\SolicitacaoResumoResource;
 use App\Models\AiSuggestion;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
@@ -283,10 +284,10 @@ class SolicitacaoController extends Controller
      *
      * @return array<int, array<string, mixed>>
      */
-    private function companyOptions(User $user): array
+    private function companyOptions(Cidadao|User $user): array
     {
         return Company::query()
-            ->whereHas('links', fn ($query) => $query->where('user_id', $user->id)->whereNull('ended_at'))
+            ->whereHas('links', fn ($query) => $query->where('cidadao_id', $user->id)->whereNull('ended_at'))
             ->orderBy('legal_name')
             ->get()
             ->map(fn (Company $company) => [

@@ -9,7 +9,7 @@ use App\Support\Representation\CurrentRepresentation;
 
 /**
  * Autorização sobre o cadastro empresarial integrada à representação "em
- * nome de" (Fase 1, [01-07]): toda checagem é sobre o usuário EFETIVO — o
+ * nome de" (Fase 1, [01-07]): toda checagem é sobre o cidadão EFETIVO — o
  * próprio, ou o representado quando há representação ativa. A listagem
  * (index) é escopada no controller; aqui ficam as ações por empresa.
  */
@@ -25,7 +25,7 @@ class CompanyPolicy
     }
 
     /**
-     * Ver a empresa: qualquer vínculo do usuário efetivo (ativo OU encerrado
+     * Ver a empresa: qualquer vínculo do cidadão efetivo (ativo OU encerrado
      * — o histórico do vínculo continua visível, HU-027/HU-028).
      */
     public function view(Cidadao $cidadao, Company $company): bool
@@ -36,7 +36,7 @@ class CompanyPolicy
     }
 
     /**
-     * Atualizar dados da empresa: somente com vínculo ATIVO do usuário
+     * Atualizar dados da empresa: somente com vínculo ATIVO do cidadão
      * efetivo (HU-024 CA-04).
      */
     public function update(Cidadao $cidadao, Company $company): bool
@@ -59,7 +59,7 @@ class CompanyPolicy
     }
 
     /**
-     * Encerrar o próprio vínculo: exige vínculo ATIVO do usuário efetivo
+     * Encerrar o próprio vínculo: exige vínculo ATIVO do cidadão efetivo
      * (HU-028).
      */
     public function endLink(Cidadao $cidadao, Company $company): bool

@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -149,11 +148,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function termAcceptances(): MorphMany
     {
         return $this->morphMany(LegalTermAcceptance::class, 'accepted_by');
-    }
-
-    public function govBrAccount(): HasOne
-    {
-        return $this->hasOne(GovBrAccount::class);
     }
 
     public function hasAcceptedTerm(LegalTerm $term): bool

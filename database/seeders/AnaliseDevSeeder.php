@@ -324,7 +324,7 @@ class AnaliseDevSeeder extends Seeder
         $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
 
         $company = $cidadao === null ? null : Company::query()
-            ->whereHas('links', fn ($query) => $query->where('user_id', $cidadao->id)->whereNull('ended_at'))
+            ->whereHas('links', fn ($query) => $query->where('cidadao_id', $cidadao->id)->whereNull('ended_at'))
             ->orderBy('id')
             ->first();
 
