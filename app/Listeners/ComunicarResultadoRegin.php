@@ -3,11 +3,11 @@
 namespace App\Listeners;
 
 use App\Events\ResultadoEmitido;
+use App\Models\ViabilityRequest;
 use App\Services\Regin\ReginParecerNotifier;
 use App\Services\Regin\ReginUnavailableException;
 use App\Support\Audit\AuditService;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
+use Throwable;
 
 /**
  * Efeito desacoplado do SEGUNDO evento de domínio (HU-104): comunica o parecer da
@@ -22,25 +22,36 @@ use Illuminate\Queue\InteractsWithQueue;
  * AppServiceProvider e o caminho de sucesso (já provado com um fake nos testes)
  * passa a auditar 'sucesso', sem tocar este listener.
  *
- * A integração de saída roda na FILA (ShouldQueue): não atrasa nem derruba a
- * decisão, que já foi gravada e auditada SÍNCRONA (HU-078). A exceção NÃO é
- * relançada para fora do handle — a integração indisponível jamais quebra o efeito
- * do resultado; o registro 'bloqueado' é a pendência visível (outbox/trilha).
+ * O envio sai na hora, sem passar pela fila (o parecer não espera os jobs lentos
+ * de GeoServer): no request do analista roda logo DEPOIS da resposta, para não
+ * segurar a tela; em console (job, comando, teste) roda direto. A decisão já foi
+ * gravada e auditada SÍNCRONA (HU-078). Nenhuma falha é relançada — a integração
+ * indisponível jamais quebra o efeito do resultado; o registro 'bloqueado' é a
+ * pendência que o regin:reenviar-pareceres agendado retoma.
  *
  * Registrado SÓ por auto-descoberta de eventos (type-hint de ResultadoEmitido no
  * handle): NÃO registrar via Event::listen (lição da Fase 8 — duplicaria a
  * auditoria). A não-duplicação é travada por CONTAGEM no teste.
  */
-class ComunicarResultadoRegin implements ShouldQueue
+class ComunicarResultadoRegin
 {
-    use InteractsWithQueue;
-
     public function __construct(
         private ReginParecerNotifier $regin,
         private AuditService $audit,
     ) {}
 
     public function handle(ResultadoEmitido $event): void
+    {
+        if (app()->runningInConsole()) {
+            $this->enviar($event);
+
+            return;
+        }
+
+        dispatch(fn () => $this->enviar($event))->afterResponse();
+    }
+
+    private function enviar(ResultadoEmitido $event): void
     {
         $request = $event->request;
         $decision = $event->decision;
@@ -63,16 +74,29 @@ class ComunicarResultadoRegin implements ShouldQueue
                 result: 'sucesso',
             );
         } catch (ReginUnavailableException $e) {
-            // Degradação honesta (Fase 13): a transmissão NÃO ocorreu. Registra a
-            // pendência visível (outbox/trilha) — jamais um sucesso fictício.
-            $this->audit->log(
-                logName: 'integracoes',
-                event: 'regin-parecer',
-                description: "Comunicação do parecer ao Regin/Junta pendente (integração bloqueada — Fase 13) para o protocolo {$request->protocol_number}",
-                properties: array_merge($properties, ['erro' => $e->getMessage()]),
-                subject: $request,
-                result: 'bloqueado',
-            );
+            $this->registrarPendencia($request, $properties, $e);
+        } catch (Throwable $e) {
+            report($e);
+
+            $this->registrarPendencia($request, $properties, $e);
         }
+    }
+
+    /**
+     * Degradação honesta: a transmissão NÃO ocorreu. Registra a pendência visível
+     * (trilha) — jamais um sucesso fictício.
+     *
+     * @param  array<string, mixed>  $properties
+     */
+    private function registrarPendencia(ViabilityRequest $request, array $properties, Throwable $e): void
+    {
+        $this->audit->log(
+            logName: 'integracoes',
+            event: 'regin-parecer',
+            description: "Comunicação do parecer ao Regin/Junta pendente para o protocolo {$request->protocol_number}",
+            properties: array_merge($properties, ['erro' => $e->getMessage()]),
+            subject: $request,
+            result: 'bloqueado',
+        );
     }
 }

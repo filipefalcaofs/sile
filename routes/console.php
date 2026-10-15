@@ -129,3 +129,12 @@ Schedule::command('tll:alertar-exercicio')
     ->dailyAt('07:30')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Rede de SEGURANÇA do parecer à JUCEB: o envio sai na hora da decisão ou da
+// conclusão; o que falhar fica como pendência (auditoria 'bloqueado' ou sem
+// registro) e é reenviado aqui. Só reenvia processo REGIN com decisão e sem
+// 'sucesso'; para após 3 recusas seguidas.
+Schedule::command('regin:reenviar-pareceres')
+    ->everyFiveMinutes()
+    ->withoutOverlapping()
+    ->onOneServer();

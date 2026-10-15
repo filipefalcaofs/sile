@@ -6,6 +6,8 @@ use App\Enums\AnalysisStatus;
 use App\Enums\ConclusionOutcome;
 use App\Enums\SefazNotificationEvent;
 use App\Enums\ViabilityRequestStatus;
+use App\Events\ResultadoEmitido;
+use App\Listeners\ComunicarResultadoRegin;
 use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
@@ -35,6 +37,7 @@ class ConclusaoAnaliseService
         private AnalysisStatusStateMachine $analysisStatus,
         private DesvincularInscricaoService $desvincular,
         private AuditService $audit,
+        private ComunicarResultadoRegin $regin,
     ) {}
 
     public function concluir(ViabilityRequest $request, User $ator, ConclusionOutcome $resultado, ?string $parecer = null): void
@@ -95,9 +98,11 @@ class ConclusaoAnaliseService
             );
         }
 
-        DB::transaction(function () use ($request, $ator, $resultado, $parecer, $destino): void {
+        $decisao = null;
+
+        DB::transaction(function () use ($request, $ator, $resultado, $parecer, $destino, &$decisao): void {
             if ($request->status === ViabilityRequestStatus::EmAnalise && $request->decision()->doesntExist()) {
-                ViabilityDecision::create([
+                $decisao = ViabilityDecision::create([
                     'viability_request_id' => $request->id,
                     'flow' => 'analise_tecnica',
                     'outcome' => $resultado->decisionOutcome(),
@@ -135,6 +140,13 @@ class ConclusaoAnaliseService
                 result: $resultado->value,
             );
         });
+
+        // Encerrar sem decisão prévia é o único desfecho que a JUCEB ainda não
+        // conhece: ela recebe o parecer (indeferido). Um processo já deferido
+        // foi finalizado lá no deferimento e não é reenviado.
+        if ($decisao !== null) {
+            $this->regin->handle(new ResultadoEmitido($request, $decisao));
+        }
     }
 
     private function fecharEixo(ViabilityRequest $request, User $ator, string $motivo): void
