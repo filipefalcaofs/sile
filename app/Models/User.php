@@ -14,8 +14,8 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
@@ -143,9 +143,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->phone;
     }
 
-    public function termAcceptances(): HasMany
+    /**
+     * @return MorphMany<LegalTermAcceptance, $this>
+     */
+    public function termAcceptances(): MorphMany
     {
-        return $this->hasMany(LegalTermAcceptance::class);
+        return $this->morphMany(LegalTermAcceptance::class, 'accepted_by');
     }
 
     public function govBrAccount(): HasOne
