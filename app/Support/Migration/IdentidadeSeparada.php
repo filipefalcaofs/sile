@@ -25,7 +25,7 @@ final class IdentidadeSeparada
 
     /**
      * Contas que não são de servidor: não AD e sem perfil com `acessar-gestao`
-     * (mesmo critério de `User::scopeUsuarioPortal`).
+     * (o inverso de `User::scopeEquipeSedur`).
      */
     public static function consultaContasDeCidadao(): Builder
     {

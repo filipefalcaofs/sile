@@ -62,7 +62,7 @@ class DemonstracaoClienteSeeder extends Seeder
             self::CLIENTE_PORTAL_EMAIL,
             'Requerente Demo SEDUR',
             '45317828791',
-            'cidadao',
+            null,
         );
 
         $this->command?->info('Gestão (validação): '.self::CLIENTE_GESTAO_EMAIL.' / '.self::DEMO_PASSWORD);
@@ -87,7 +87,7 @@ class DemonstracaoClienteSeeder extends Seeder
         $this->command?->info('Usuários @sile.dev com senha demo: '.self::DEMO_PASSWORD);
     }
 
-    private function seedUsuario(string $email, string $name, string $cpf, string $role): User
+    private function seedUsuario(string $email, string $name, string $cpf, ?string $role): User
     {
         $user = User::firstOrCreate(
             ['email' => $email],
@@ -103,7 +103,7 @@ class DemonstracaoClienteSeeder extends Seeder
             $user->forceFill(['email_verified_at' => now()])->save();
         }
 
-        if (! $user->hasRole($role)) {
+        if ($role !== null && ! $user->hasRole($role)) {
             $user->syncRoles([$role]);
         }
 

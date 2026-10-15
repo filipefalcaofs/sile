@@ -474,8 +474,6 @@ class AuditoriaDevSeeder extends Seeder
             $user->forceFill(['email_verified_at' => now()])->save();
         }
 
-        $user->assignRole('cidadao');
-
         if ($term = LegalTerm::current('lgpd')) {
             LegalTermAcceptance::firstOrCreate(
                 ['accepted_by_type' => $user->getMorphClass(), 'accepted_by_id' => $user->id, 'legal_term_id' => $term->id],

@@ -97,8 +97,8 @@ class IdentidadeSeparadaTest extends TestCase
             $t->unsignedBigInteger('attorney_user_id');
             $t->timestamp('revoked_at')->nullable();
         });
-        $c1 = User::factory()->cidadao()->create();
-        $c2 = User::factory()->cidadao()->create();
+        $c1 = User::factory()->papelCidadaoLegado()->create();
+        $c2 = User::factory()->papelCidadaoLegado()->create();
         $servidor = User::factory()->analista()->create();
         $jaRevogada = now()->subDay()->startOfSecond();
         DB::table('procuracoes_antigas')->insert([
@@ -162,7 +162,7 @@ class IdentidadeSeparadaTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->criarRascunho(true);
-        $cidadao = User::factory()->cidadao()->create();
+        $cidadao = User::factory()->papelCidadaoLegado()->create();
         $servidor = User::factory()->analista()->create();
         DB::table(self::TABELA)->insert([
             ['user_id' => $cidadao->id, 'assunto' => 'c'],

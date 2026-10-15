@@ -18,7 +18,7 @@ class MigracaoCopiaCidadaosTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $cidadao = User::factory()->create();
-        $comPapel = User::factory()->cidadao()->create();
+        $comPapel = User::factory()->papelCidadaoLegado()->create();
         $analista = User::factory()->analista()->create();
         $ad = User::factory()->ad()->create();
 

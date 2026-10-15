@@ -5,7 +5,6 @@ namespace App\Providers;
 use App\Actions\Fortify\CreateNewCidadao;
 use App\Actions\Fortify\ResetCidadaoPassword;
 use App\Actions\Fortify\UpdateCidadaoPassword;
-use App\Actions\Fortify\UpdateCidadaoProfileInformation;
 use App\Http\Responses\RespostaRecuperacaoSenhaSemRevelarConta;
 use App\Models\AccessLog;
 use App\Models\Cidadao;
@@ -92,7 +91,6 @@ class FortifyServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Fortify::createUsersUsing(CreateNewCidadao::class);
-        Fortify::updateUserProfileInformationUsing(UpdateCidadaoProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateCidadaoPassword::class);
         Fortify::resetUserPasswordsUsing(ResetCidadaoPassword::class);
         Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);

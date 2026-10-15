@@ -35,7 +35,7 @@ class ManageRolesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('gestao/perfis/index')
-                ->has('roles', 19)
+                ->has('roles', 18)
                 ->has('roles.0', fn (Assert $item) => $item
                     ->hasAll(['id', 'name', 'permissions', 'users_count', 'structural']))
                 ->where(
@@ -166,15 +166,15 @@ class ManageRolesTest extends TestCase
     public function test_papel_estrutural_nao_pode_ser_renomeado(): void
     {
         $admin = $this->admin();
-        $cidadao = Role::findByName('cidadao', 'web');
+        $administrador = Role::findByName('administrador', 'web');
 
         $this->actingAs($admin, 'gestao')
-            ->put("/gestao/perfis/{$cidadao->id}", [
-                'name' => 'municipe',
+            ->put("/gestao/perfis/{$administrador->id}", [
+                'name' => 'superusuario',
             ])
             ->assertSessionHasErrors('name');
 
-        $this->assertSame('cidadao', $cidadao->fresh()->name);
+        $this->assertSame('administrador', $administrador->fresh()->name);
     }
 
     public function test_papel_estrutural_nao_pode_ser_excluido(): void
@@ -260,7 +260,7 @@ class ManageRolesTest extends TestCase
 
         $this->actingAs($admin, 'gestao')
             ->post('/gestao/perfis', [
-                'name' => 'cidadao',
+                'name' => 'administrador',
                 'permissions' => [],
             ])
             ->assertSessionHasErrors('name');
@@ -317,11 +317,10 @@ class ManageRolesTest extends TestCase
         ]);
     }
 
-    public function test_perfil_apontado_pelo_parametro_do_cidadao_nao_pode_ser_excluido_nem_renomeado(): void
+    public function test_perfil_marcado_como_protegido_nao_pode_ser_excluido_nem_renomeado(): void
     {
         $admin = $this->admin();
-        $municipe = Role::create(['name' => 'municipe', 'guard_name' => 'web']);
-        config(['sile.portal.perfil_cidadao' => 'municipe']);
+        $municipe = Role::create(['name' => 'municipe', 'guard_name' => 'web', 'protegido' => true]);
 
         $this->actingAs($admin, 'gestao')
             ->put("/gestao/perfis/{$municipe->id}", ['name' => 'outro'])

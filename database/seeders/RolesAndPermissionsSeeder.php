@@ -108,9 +108,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Atribuição aditiva (givePermissionTo, nunca sync): re-seed em produção
         // não pode remover permissões ajustadas pelo administrador via interface (HU-013).
-        $this->perfil('cidadao', protegido: true)
-            ->givePermissionTo(['gerenciar-procuracoes-proprias']);
-
         foreach (self::PERFIS_ANALISE as $nome) {
             $this->perfil($nome)->givePermissionTo(self::PERMISSOES_ANALISE);
         }

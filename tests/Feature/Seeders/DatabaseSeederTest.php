@@ -174,7 +174,7 @@ class DatabaseSeederTest extends TestCase
         $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
 
         $this->assertNotNull($cidadao);
-        $this->assertTrue($cidadao->hasRole('cidadao'));
+        $this->assertTrue($cidadao->roles()->doesntExist());
         $this->assertNotNull($cidadao->email_verified_at);
         $this->assertTrue(
             LegalTermAcceptance::query()

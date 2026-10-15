@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Gestao;
 
 use App\Models\Parameter;
-use App\Rules\PerfilSemAcessoAGestao;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -56,7 +55,7 @@ class UpdateParameterRequest extends FormRequest
 
                 $dynamic = validator(
                     ['value' => $value],
-                    ['value' => [...$parameter->validation_rules, ...$this->regrasExtras($parameter)]],
+                    ['value' => $parameter->validation_rules],
                     [],
                     ['value' => $parameter->description],
                 );
@@ -66,18 +65,5 @@ class UpdateParameterRequest extends FormRequest
                 }
             },
         ];
-    }
-
-    /**
-     * Regras que não cabem no catálogo persistido (exigem objeto de regra).
-     *
-     * @return array<int, ValidationRule>
-     */
-    private function regrasExtras(Parameter $parameter): array
-    {
-        return match ($parameter->key) {
-            'portal.perfil_cidadao' => [new PerfilSemAcessoAGestao],
-            default => [],
-        };
     }
 }

@@ -70,8 +70,6 @@ class CompanySeeder extends Seeder
             $cidadao->forceFill(['email_verified_at' => now()])->save();
         }
 
-        $cidadao->assignRole('cidadao');
-
         if ($term = LegalTerm::current('lgpd')) {
             LegalTermAcceptance::firstOrCreate(
                 ['accepted_by_type' => $cidadao->getMorphClass(), 'accepted_by_id' => $cidadao->id, 'legal_term_id' => $term->id],

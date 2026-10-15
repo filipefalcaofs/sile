@@ -830,17 +830,11 @@ class ParameterSeederTest extends TestCase
         }
     }
 
-    public function test_parametro_do_perfil_do_cidadao(): void
+    public function test_catalogo_nao_tem_parametro_de_perfil_do_cidadao(): void
     {
         $this->seed(ParameterSeeder::class);
 
-        $parametro = Parameter::query()->where('key', 'portal.perfil_cidadao')->first();
-
-        $this->assertNotNull($parametro);
-        $this->assertSame('seguranca', $parametro->group);
-        $this->assertSame('string', $parametro->type);
-        $this->assertSame('cidadao', $parametro->typedValue());
-        $this->assertContains('exists:roles,name', $parametro->validation_rules);
+        $this->assertFalse(Parameter::query()->where('key', 'portal.perfil_cidadao')->exists());
     }
 
     public function test_seeder_e_idempotente(): void

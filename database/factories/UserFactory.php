@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends Factory<User>
@@ -95,11 +96,12 @@ class UserFactory extends Factory
     }
 
     /**
-     * Assign the cidadao role (role must be seeded first).
+     * Papel `cidadao` de antes da separação cidadão x servidor (o papel não existe mais).
+     * Só para os testes das migrations que leem contas antigas de `users`.
      */
-    public function cidadao(): static
+    public function papelCidadaoLegado(): static
     {
-        return $this->afterCreating(fn (User $user) => $user->assignRole('cidadao'));
+        return $this->afterCreating(fn (User $user) => $user->assignRole(Role::findOrCreate('cidadao', 'web')));
     }
 
     /**
