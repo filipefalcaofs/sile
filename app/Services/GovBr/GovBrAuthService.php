@@ -3,10 +3,9 @@
 namespace App\Services\GovBr;
 
 use App\Models\AccessLog;
+use App\Models\Cidadao;
 use App\Models\GovBrAccount;
-use App\Models\User;
 use App\Support\Audit\AuditService;
-use App\Support\PerfilCidadao;
 use App\Support\Settings;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -30,7 +29,7 @@ class GovBrAuthService
     /**
      * @throws GovBrAuthException
      */
-    public function authenticate(SocialiteUser $govBrUser): User
+    public function authenticate(SocialiteUser $govBrUser): Cidadao
     {
         /** @var array<string, mixed> $claims */
         $claims = $govBrUser->getRaw();
@@ -45,7 +44,7 @@ class GovBrAuthService
 
         $this->ensureMinimumLevel($level, $cpf);
 
-        $user = User::query()->where('cpf', $cpf)->first();
+        $user = Cidadao::query()->where('cpf', $cpf)->first();
 
         if ($user !== null) {
             $this->ensureActive($user);
@@ -99,7 +98,7 @@ class GovBrAuthService
     /**
      * @throws GovBrAuthException
      */
-    private function ensureActive(User $user): void
+    private function ensureActive(Cidadao $user): void
     {
         if (! $user->isInactive()) {
             return;
@@ -124,7 +123,7 @@ class GovBrAuthService
     /**
      * @param  array<string, mixed>  $claims
      */
-    private function syncAccount(User $user, array $claims, string $level): void
+    private function syncAccount(Cidadao $user, array $claims, string $level): void
     {
         $account = GovBrAccount::query()->firstOrNew(['user_id' => $user->id]);
 
@@ -160,7 +159,7 @@ class GovBrAuthService
      *
      * @throws GovBrAuthException
      */
-    private function register(array $claims, string $cpf, string $level): User
+    private function register(array $claims, string $cpf, string $level): Cidadao
     {
         $email = isset($claims['email']) ? strtolower(trim((string) $claims['email'])) : null;
         $emailVerified = filter_var($claims['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN);
@@ -172,9 +171,9 @@ class GovBrAuthService
             );
         }
 
-        if (User::query()->where('email', $email)->exists()) {
+        if (Cidadao::query()->where('email', $email)->exists()) {
             throw new GovBrAuthException(
-                'E-mail do GOV.BR já pertence a usuário local com outro CPF.',
+                'E-mail do GOV.BR já pertence a cidadão local com outro CPF.',
                 'O e-mail da sua conta GOV.BR já está em uso por outra conta neste portal. Entre com e-mail e senha ou procure o suporte.',
             );
         }
@@ -185,8 +184,8 @@ class GovBrAuthService
             throw new GovBrAuthException('id_token do GOV.BR sem o claim name.');
         }
 
-        return DB::transaction(function () use ($claims, $cpf, $level, $email, $name): User {
-            $user = User::create([
+        return DB::transaction(function () use ($claims, $cpf, $level, $email, $name): Cidadao {
+            $user = Cidadao::create([
                 'name' => $name,
                 'email' => $email,
                 'cpf' => $cpf,
@@ -195,8 +194,6 @@ class GovBrAuthService
 
             // E-mail já verificado pelo GOV.BR (RN-007) — dispensa reverificação local.
             $user->markEmailAsVerified();
-
-            $user->assignRole(PerfilCidadao::nome());
 
             GovBrAccount::create([
                 'user_id' => $user->id,

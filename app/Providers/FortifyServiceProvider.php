@@ -2,13 +2,13 @@
 
 namespace App\Providers;
 
-use App\Actions\Fortify\CreateNewUser;
-use App\Actions\Fortify\ResetUserPassword;
-use App\Actions\Fortify\UpdateUserPassword;
-use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Actions\Fortify\CreateNewCidadao;
+use App\Actions\Fortify\ResetCidadaoPassword;
+use App\Actions\Fortify\UpdateCidadaoPassword;
+use App\Actions\Fortify\UpdateCidadaoProfileInformation;
 use App\Http\Responses\RespostaRecuperacaoSenhaSemRevelarConta;
 use App\Models\AccessLog;
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Services\GovBr\GovBr;
 use App\Support\PasswordPolicy;
 use App\Support\Settings;
@@ -91,10 +91,10 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Fortify::createUsersUsing(CreateNewUser::class);
-        Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
-        Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
-        Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
+        Fortify::createUsersUsing(CreateNewCidadao::class);
+        Fortify::updateUserProfileInformationUsing(UpdateCidadaoProfileInformation::class);
+        Fortify::updateUserPasswordsUsing(UpdateCidadaoPassword::class);
+        Fortify::resetUserPasswordsUsing(ResetCidadaoPassword::class);
         Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);
 
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
@@ -134,20 +134,21 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::authenticateUsing(function (Request $request) {
             $cpf = preg_replace('/\D/', '', (string) $request->input('cpf'));
 
-            $user = User::query()->where('cpf', $cpf)->first();
+            $cidadao = Cidadao::query()->where('cpf', $cpf)->first();
 
-            if (! $user || ! Hash::check($request->password, $user->password)) {
+            if (! $cidadao || ! $cidadao->temSenha() || ! Hash::check($request->password, $cidadao->password)) {
                 return null;
             }
 
-            if ($user->isInactive()) {
+            if ($cidadao->isInactive()) {
                 AccessLog::create([
-                    'user_id' => $user->id,
-                    'email' => $user->email,
+                    'actor_type' => Cidadao::class,
+                    'actor_id' => $cidadao->id,
+                    'email' => $cidadao->email,
                     'event' => 'inativada',
                     'ip_address' => $request->ip(),
                     'user_agent' => substr((string) $request->userAgent(), 0, 500),
-                    'channel' => $request->routeIs('gestao.*') ? 'gestao' : 'portal',
+                    'channel' => 'portal',
                 ]);
 
                 throw ValidationException::withMessages([
@@ -155,7 +156,7 @@ class FortifyServiceProvider extends ServiceProvider
                 ]);
             }
 
-            return $user;
+            return $cidadao;
         });
 
         RateLimiter::for('login', function (Request $request) {
