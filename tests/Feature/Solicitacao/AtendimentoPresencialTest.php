@@ -191,6 +191,34 @@ class AtendimentoPresencialTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component('gestao/atendimento/index'));
     }
 
+    public function test_servidor_nao_atende_o_cidadao_com_o_proprio_cpf(): void
+    {
+        $attendant = $this->attendant();
+        $citizen = Cidadao::factory()->create(['cpf' => $attendant->cpf]);
+
+        $this->actingAs($attendant, 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => $citizen->cpf])
+            ->assertSessionHasErrors(['cpf' => 'Não é possível iniciar um atendimento para a sua própria conta.']);
+
+        $this->assertDatabaseCount('assisted_attendances', 0);
+    }
+
+    public function test_id_igual_ao_do_servidor_nao_impede_atender_cidadao_de_outro_cpf(): void
+    {
+        $attendant = $this->attendant();
+        $citizen = Cidadao::factory()->create(['id' => $attendant->id]);
+        $this->assertNotSame($attendant->cpf, $citizen->cpf);
+
+        $this->actingAs($attendant, 'gestao')
+            ->post('/gestao/atendimento', ['cpf' => $citizen->cpf])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('assisted_attendances', [
+            'attendant_user_id' => $attendant->id,
+            'citizen_cidadao_id' => $citizen->id,
+        ]);
+    }
+
     public function test_inicia_atendimento_informando_cpf(): void
     {
         $attendant = $this->attendant();

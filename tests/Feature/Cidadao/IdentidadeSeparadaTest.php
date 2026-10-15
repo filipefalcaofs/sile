@@ -85,7 +85,36 @@ class IdentidadeSeparadaTest extends TestCase
         $this->assertSame(['cidadao_id', 'assunto'], $indices['rascunho_identidade_cidadao_id_assunto_unique']['columns']);
         $this->assertSame(['assunto', 'cidadao_id'], $indices['rascunho_identidade_assunto_cidadao_id_index']['columns']);
         $this->assertDatabaseHas(self::TABELA, ['cidadao_id' => $usuario->id]);
-        $this->assertDatabaseHas('cidadaos', ['id' => $usuario->id]);
+        $this->assertDatabaseMissing('cidadaos', ['id' => $usuario->id]);
+    }
+
+    public function test_revogar_procuracoes_de_servidores_so_mantem_as_entre_cidadaos(): void
+    {
+        $this->seed(RolesAndPermissionsSeeder::class);
+        Schema::create('procuracoes_antigas', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('grantor_user_id');
+            $t->unsignedBigInteger('attorney_user_id');
+            $t->timestamp('revoked_at')->nullable();
+        });
+        $c1 = User::factory()->cidadao()->create();
+        $c2 = User::factory()->cidadao()->create();
+        $servidor = User::factory()->analista()->create();
+        $jaRevogada = now()->subDay()->startOfSecond();
+        DB::table('procuracoes_antigas')->insert([
+            ['grantor_user_id' => $c1->id, 'attorney_user_id' => $c2->id, 'revoked_at' => null],
+            ['grantor_user_id' => $c1->id, 'attorney_user_id' => $servidor->id, 'revoked_at' => null],
+            ['grantor_user_id' => $servidor->id, 'attorney_user_id' => $c2->id, 'revoked_at' => null],
+            ['grantor_user_id' => $servidor->id, 'attorney_user_id' => $c1->id, 'revoked_at' => $jaRevogada],
+        ]);
+
+        IdentidadeSeparada::revogarProcuracoesDeServidores('procuracoes_antigas');
+
+        $linhas = DB::table('procuracoes_antigas')->orderBy('id')->get();
+        $this->assertNull($linhas[0]->revoked_at);
+        $this->assertNotNull($linhas[1]->revoked_at);
+        $this->assertNotNull($linhas[2]->revoked_at);
+        $this->assertSame($jaRevogada->toDateTimeString(), (string) $linhas[3]->revoked_at);
     }
 
     public function test_retargetar_recusa_set_null_em_coluna_obrigatoria(): void

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Audit;
 
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Support\Audit\AuditService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -36,7 +37,7 @@ class AuditInfrastructureTest extends TestCase
 
     public function test_activity_aceita_acting_for_cidadao_id_via_context(): void
     {
-        $outroUser = User::factory()->create();
+        $outroUser = Cidadao::factory()->create();
 
         Route::middleware('web')->get('/_test/audit-em-nome-de', function () use ($outroUser) {
             Context::add('acting_for_cidadao_id', $outroUser->id);

@@ -106,6 +106,28 @@ class RepresentacaoTest extends TestCase
         $this->assertDatabaseCount('procurations', 0);
     }
 
+    public function test_servidor_com_id_igual_ao_do_cidadao_nao_assume_nem_revoga_procuracao(): void
+    {
+        $servidor = User::factory()->administrador()->create();
+        $outorgante = Cidadao::factory()->withAcceptedLgpdTerm()->create(['id' => $servidor->id]);
+        $procurador = Cidadao::factory()->withAcceptedLgpdTerm()->create();
+        $procuracao = Procuration::factory()->create([
+            'grantor_cidadao_id' => $outorgante->id,
+            'attorney_cidadao_id' => $procurador->id,
+        ]);
+        $this->assertSame($servidor->id, $outorgante->id);
+
+        $this->actingAs($servidor, 'gestao')
+            ->post('/portal/representacao', ['procuration_id' => $procuracao->id])
+            ->assertRedirect(route('login'));
+        $this->assertNull(session('acting_procuration_id'));
+
+        $this->actingAs($servidor, 'gestao')
+            ->delete("/portal/procuracoes/{$procuracao->id}")
+            ->assertRedirect(route('login'));
+        $this->assertNull($procuracao->refresh()->revoked_at);
+    }
+
     public function test_atendimento_presencial_liga_um_cidadao(): void
     {
         $atendente = User::factory()->administrador()->create();
@@ -134,12 +156,26 @@ class RepresentacaoTest extends TestCase
         $this->assertTrue(Schema::hasColumn('activity_log', 'acting_for_cidadao_id'));
         $this->assertFalse(Schema::hasColumn('activity_log', 'acting_for_user_id'));
 
+        $esperadas = [
+            'procurations.grantor_cidadao_id' => 'cascade',
+            'procurations.attorney_cidadao_id' => 'cascade',
+            'procurations.revoked_by_cidadao_id' => 'set null',
+            'assisted_attendances.citizen_cidadao_id' => 'cascade',
+        ];
+        $encontradas = [];
         foreach (['procurations', 'assisted_attendances', 'activity_log'] as $tabela) {
             foreach (Schema::getForeignKeys($tabela) as $fk) {
-                if ($fk['foreign_table'] === 'users') {
-                    $this->assertContains($fk['columns'][0], ['attendant_user_id'], "{$tabela}.{$fk['columns'][0]} ainda aponta para users");
+                $chave = "{$tabela}.{$fk['columns'][0]}";
+                if (isset($esperadas[$chave])) {
+                    $this->assertSame('cidadaos', $fk['foreign_table'], $chave);
+                    $this->assertSame($esperadas[$chave], $fk['on_delete'], $chave);
+                    $encontradas[] = $chave;
+                } else {
+                    $this->assertSame('assisted_attendances.attendant_user_id', $chave, "{$chave} inesperada");
+                    $this->assertSame('users', $fk['foreign_table']);
                 }
             }
         }
+        $this->assertEqualsCanonicalizing(array_keys($esperadas), $encontradas);
     }
 }

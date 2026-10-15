@@ -7,6 +7,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        IdentidadeSeparada::revogarProcuracoesDeServidores();
+
         IdentidadeSeparada::retargetar('procurations', 'grantor_user_id', 'grantor_cidadao_id', false);
         IdentidadeSeparada::retargetar('procurations', 'attorney_user_id', 'attorney_cidadao_id', false);
         IdentidadeSeparada::retargetar('procurations', 'revoked_by_user_id', 'revoked_by_cidadao_id', true, 'set null');

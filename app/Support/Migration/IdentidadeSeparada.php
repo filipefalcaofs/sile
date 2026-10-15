@@ -126,19 +126,31 @@ final class IdentidadeSeparada
 
     /**
      * Como `retargetar`, mas sem chave estrangeira nova: derruba a FK para users e renomeia
-     * (coluna de trilha de auditoria, que não deve travar a exclusão do cidadão). Servidores
-     * citados na coluna ganham espelho em `cidadaos`, para o id continuar resolvendo.
+     * (coluna de trilha de auditoria, que não deve travar a exclusão do cidadão). Não espelha
+     * servidores: ids que não são de cidadão simplesmente deixam de resolver.
      */
     public static function renomearSemChave(string $tabela, string $antiga, string $nova): void
     {
-        self::espelharOrfaos($tabela, $antiga);
-
         $indices = self::indicesCitando($tabela, $antiga);
 
         self::derrubarIndices($tabela, $indices);
         Schema::table($tabela, fn (Blueprint $t) => $t->dropForeign([$antiga]));
         Schema::table($tabela, fn (Blueprint $t) => $t->renameColumn($antiga, $nova));
         self::recriarIndices($tabela, $indices, $antiga, [$nova]);
+    }
+
+    /**
+     * Revoga (revoked_at = agora, sem autor) as procurações ainda não revogadas em que o outorgante
+     * ou o procurador não é conta de cidadão, para que nenhuma sobreviva ligada a um espelho de servidor.
+     */
+    public static function revogarProcuracoesDeServidores(string $tabela = 'procurations', string $outorgante = 'grantor_user_id', string $procurador = 'attorney_user_id'): void
+    {
+        $cidadaos = self::consultaContasDeCidadao()->select('id');
+
+        DB::table($tabela)
+            ->whereNull('revoked_at')
+            ->where(fn ($q) => $q->whereNotIn($outorgante, $cidadaos)->orWhereNotIn($procurador, $cidadaos))
+            ->update(['revoked_at' => now()]);
     }
 
     /**
