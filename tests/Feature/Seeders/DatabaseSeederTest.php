@@ -47,7 +47,7 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        $this->assertSame(19, Role::query()->count());
+        $this->assertSame(18, Role::query()->count());
         // 33 permissões (HU-013): as 17 base (sem consultar-risco/manter-risco,
         // consolidadas em consultar-cnaes/manter-cnaes) + as 5 da análise técnica
         // (analisar-processos, distribuir-processos, emitir-tvl,
@@ -178,7 +178,8 @@ class DatabaseSeederTest extends TestCase
         $this->assertNotNull($cidadao->email_verified_at);
         $this->assertTrue(
             LegalTermAcceptance::query()
-                ->where('user_id', $cidadao->id)
+                ->where('accepted_by_type', $cidadao->getMorphClass())
+                ->where('accepted_by_id', $cidadao->id)
                 ->where('legal_term_id', LegalTerm::current('lgpd')->id)
                 ->exists()
         );
@@ -394,7 +395,7 @@ class DatabaseSeederTest extends TestCase
 
         $this->assertSame(1, User::query()->where('email', 'admin@sile.dev')->count());
         $this->assertSame(1, User::query()->where('email', 'cidadao@sile.dev')->count());
-        $this->assertSame(19, Role::query()->count());
+        $this->assertSame(18, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
         $this->assertSame(110, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());

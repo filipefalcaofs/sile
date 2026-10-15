@@ -69,7 +69,7 @@ class DemonstracaoClienteSeederTest extends TestCase
         $this->assertTrue($validadora->hasPermissionTo('manter-cnaes'));
         $this->assertTrue($validadora->hasPermissionTo('manter-perfis'));
         $this->assertTrue($validadora->hasPermissionTo('manter-usuarios'));
-        $this->assertSame(19, Role::query()->count());
+        $this->assertSame(18, Role::query()->count());
     }
 
     public function test_reseed_promove_validadora_existente_para_administrador(): void
