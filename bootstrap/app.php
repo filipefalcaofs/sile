@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\ConfigureEnvironmentSession;
 use App\Http\Middleware\EnsureLgpdTermAccepted;
+use App\Http\Middleware\EnsurePortalSolicitacaoEnabled;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectGestaoIfAuthenticated;
@@ -57,6 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => PermissionMiddleware::class,
             'lgpd.accepted' => EnsureLgpdTermAccepted::class,
             'gestao.guest' => RedirectGestaoIfAuthenticated::class,
+            'portal.solicitacao' => EnsurePortalSolicitacaoEnabled::class,
         ]);
 
         // Logins separados por contexto: retaguarda usa /gestao/login,

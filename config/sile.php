@@ -51,6 +51,10 @@ return [
         // motivo — nenhum número é estimado no lugar.
         'benchmark_redesim' => true,
         'cadastro_imobiliario' => env('SILE_CADASTRO_IMOBILIARIO', true),
+        // Interruptor temporário das jornadas de criação do portal (solicitação
+        // e renovação de viabilidade). SILE_PORTAL_SOLICITACAO=false tira do ar
+        // sem deploy; consulta e acompanhamento de processos existentes seguem.
+        'portal_solicitacao' => env('SILE_PORTAL_SOLICITACAO', true),
         'consulta_viabilidade' => true,
         'solicitacao_viabilidade' => true,
         'simulacao_solicitacao' => true,
