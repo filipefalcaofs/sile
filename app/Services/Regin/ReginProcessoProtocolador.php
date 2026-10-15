@@ -40,6 +40,12 @@ class ReginProcessoProtocolador
     /** TIPO da instituição Prefeitura na tabela do Guia v2.12 (3.27); as demais perguntas do envelope não são da SEDUR. */
     private const INSTITUICAO_PREFEITURA = '2';
 
+    /** Parte mínima das palavras do enunciado da JUCEB que a planilha precisa conter para casar por semelhança. */
+    private const COBERTURA_MINIMA_SEMELHANCA = 0.8;
+
+    /** Enunciado curto demais ("Trata-se de escritório virtual?") não casa por semelhança. */
+    private const PALAVRAS_MINIMAS_SEMELHANCA = 4;
+
     public function __construct(
         private ProtocolarSolicitacaoService $protocolar,
         private FluxoExpressoService $expresso,
@@ -539,6 +545,10 @@ class ReginProcessoProtocolador
             foreach ($this->respostasPelaOpcao($perguntas, $casadas, $exibidas, $mapa[$cnae->code] ?? []) as $numero => $resposta) {
                 $mapa[$cnae->code][$numero] = $resposta;
             }
+
+            foreach ($this->respostasPorSemelhanca($perguntas, $casadas, $exibidas, $mapa[$cnae->code] ?? []) as $numero => $resposta) {
+                $mapa[$cnae->code][$numero] = $resposta;
+            }
         }
 
         return $mapa;
@@ -590,6 +600,74 @@ class ReginProcessoProtocolador
         }
 
         return $respostas;
+    }
+
+    /**
+     * A JUCEB também reescreve enunciados Sim/Não ("Irá prestar serviço de
+     * escritório virtual/ centro de negócios?" no lugar de "O estabelecimento
+     * prestará o serviço de escritório virtual ou centro de negócios (sede…)?").
+     * Pergunta Sim/Não ainda sem resposta casa com a única linha sobrante de
+     * resposta Sim/Não cujas palavras o enunciado da planilha contém; havendo
+     * mais de uma candidata, nenhuma é usada.
+     *
+     * @param  list<array{codigo: ?string, tipo: ?string, cnpj: ?string, pergunta: string, resposta: string}>  $perguntas
+     * @param  array<int, true>  $casadas
+     * @param  list<array{numero: int, texto: string, tipo: string, opcoes: list<array{rotulo: string, texto: string}>, depende: array{pergunta: int, sim: bool}|null}>  $exibidas
+     * @param  array<int, bool|int|list<int>>  $jaRespondidas
+     * @return array<int, bool|int|list<int>>
+     */
+    private function respostasPorSemelhanca(array $perguntas, array $casadas, array $exibidas, array $jaRespondidas): array
+    {
+        $respostas = [];
+
+        foreach ($exibidas as $exibida) {
+            $numero = (int) $exibida['numero'];
+
+            if (isset($jaRespondidas[$numero]) || $exibida['tipo'] !== 'sim_nao') {
+                continue;
+            }
+
+            $palavrasDaPlanilha = self::palavrasDoEnunciado((string) $exibida['texto']);
+            $candidatas = [];
+
+            foreach ($perguntas as $indice => $item) {
+                $resposta = RespostaPlanilha::deTexto($item['resposta']);
+                $palavras = self::palavrasDoEnunciado($item['pergunta']);
+
+                if (isset($casadas[$indice]) || $resposta === null || count($palavras) < self::PALAVRAS_MINIMAS_SEMELHANCA) {
+                    continue;
+                }
+
+                $cobertura = count(array_intersect($palavras, $palavrasDaPlanilha)) / count($palavras);
+
+                if ($cobertura >= self::COBERTURA_MINIMA_SEMELHANCA) {
+                    $candidatas[] = $resposta;
+                }
+            }
+
+            if (count($candidatas) === 1) {
+                $respostas[$numero] = $candidatas[0]->paraArmazenar();
+            }
+        }
+
+        return $respostas;
+    }
+
+    /**
+     * Palavras de conteúdo do enunciado, sem acento nem flexão (cinco primeiras
+     * letras), para comparar enunciados reescritos.
+     *
+     * @return list<string>
+     */
+    private static function palavrasDoEnunciado(string $texto): array
+    {
+        $semConectivos = ['a', 'o', 'as', 'os', 'de', 'da', 'do', 'das', 'dos', 'e', 'ou', 'em', 'no', 'na', 'um', 'uma', 'se', 'que', 'para', 'por', 'com', 'ser', 'sera'];
+        $palavras = preg_split('/[^a-z0-9]+/', Str::ascii(mb_strtolower($texto)), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        return array_values(array_unique(array_map(
+            fn (string $palavra): string => substr($palavra, 0, 5),
+            array_filter($palavras, fn (string $palavra): bool => ! in_array($palavra, $semConectivos, true)),
+        )));
     }
 
     /**

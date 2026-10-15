@@ -28,6 +28,17 @@ class TratamentoRamoResolverTest extends TestCase
         (new TratamentoRegrasImportService)->import($versao, database_path('data/regras-20-08-26'));
     }
 
+    public function test_pergunta_5_nao_trava_quando_a_4_e_sim(): void
+    {
+        $ramo = $this->resolver()->resolver(new TratamentoRamoInput(
+            cnae: '8211-3/00',
+            respostas: [4 => true],
+            areaUtilizada: 30.0,
+        ));
+
+        $this->assertStringNotContainsString('Pergunta 5 sem resposta', (string) $ramo->motivo);
+    }
+
     public function test_gc01_p11_nao_area_ate_1250_e_escritorio_baixo_expresso(): void
     {
         $ramo = $this->resolver()->resolver(new TratamentoRamoInput(

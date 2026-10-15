@@ -374,6 +374,42 @@ class ReginProcessoProtocoladorTest extends TestCase
         $this->assertSame([3, 5], $respostas[5] ?? null);
     }
 
+    public function test_pergunta_4_da_juceb_com_outro_enunciado_casa_pelo_texto_do_enunciado(): void
+    {
+        $versao = $this->seedTratamentoPlanilha();
+        app(PlanilhaTratamentoImporter::class)->complementar($versao, database_path('data/regras-20-08-26/planilha-regras.xlsx'));
+
+        $linhas = [
+            ['TIPO' => '2', 'CNPJ' => '05457349000170', 'COD_PERGUNTA' => '530', 'PER_PERGUNTA' => 'Irá prestar serviço de escritório virtual/ centro de negócios?', 'PER_RESPOSTA' => 'SIM'],
+        ];
+
+        $corpo = $this->ruc(['GROUPPERGUNTAS' => ['PERGUNTAS' => $linhas]]);
+        $corpo['rowset']['GROUPRUC_ACTV_ECON']['RUC_ACTV_ECON'] = [['RAE_TAE_COD_ACTVD' => '8211300', 'RAE_CALIF_ACTV' => '1']];
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($corpo));
+
+        $respostas = $processo->simulation_snapshot['respostas_tratamento_por_cnae']['8211300'] ?? [];
+        $this->assertSame(true, $respostas[4] ?? null);
+    }
+
+    public function test_pergunta_de_enunciado_curto_nao_e_casada_por_semelhanca(): void
+    {
+        $versao = $this->seedTratamentoPlanilha();
+        app(PlanilhaTratamentoImporter::class)->complementar($versao, database_path('data/regras-20-08-26/planilha-regras.xlsx'));
+
+        $linhas = [
+            ['TIPO' => '2', 'CNPJ' => '05457349000170', 'COD_PERGUNTA' => '515', 'PER_PERGUNTA' => 'Trata-se de escritório virtual?', 'PER_RESPOSTA' => 'SIM'],
+        ];
+
+        $corpo = $this->ruc(['GROUPPERGUNTAS' => ['PERGUNTAS' => $linhas]]);
+        $corpo['rowset']['GROUPRUC_ACTV_ECON']['RUC_ACTV_ECON'] = [['RAE_TAE_COD_ACTVD' => '8211300', 'RAE_CALIF_ACTV' => '1']];
+
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($corpo));
+
+        $respostas = $processo->simulation_snapshot['respostas_tratamento_por_cnae']['8211300'] ?? [];
+        $this->assertArrayNotHasKey(4, $respostas);
+    }
+
     public function test_opcoes_marcadas_antes_do_seguir_e_em_dois_cnaes_resolvem_cada_cnae(): void
     {
         $versao = $this->seedTratamentoPlanilha();
