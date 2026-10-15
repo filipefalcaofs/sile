@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Gestao;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Gestao\StoreRoleRequest;
 use App\Http\Requests\Gestao\UpdateRoleRequest;
+use App\Models\User;
 use App\Services\Relatorios\Export\ReportExporter;
 use App\Services\Relatorios\Export\Sources\PerfisReportSource;
 use App\Services\Relatorios\ReportFilters;
@@ -120,7 +121,8 @@ class RoleController extends Controller
             ]);
         }
 
-        if ($role->users()->exists()) {
+        // Role::users() resolve o model pelo guard do papel (web = Cidadao); perfis são de servidor.
+        if (User::role($role)->exists()) {
             throw ValidationException::withMessages([
                 'role' => __('Este perfil possui usuários vinculados e não pode ser excluído.'),
             ]);

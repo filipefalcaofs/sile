@@ -3,10 +3,12 @@
 namespace Tests\Feature\Lgpd;
 
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
 use App\Models\User;
 use App\Services\Lgpd\LgpdMonitorService;
+use App\Support\Migration\IdentidadeSeparada;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -103,6 +105,31 @@ class LgpdMonitorTest extends TestCase
         $this->assertSame(2, $c['total_usuarios']);
         $this->assertSame(0, $c['aceitaram_vigente']);
         $this->assertSame(0, $c['pendentes_reaceite']);
+    }
+
+    public function test_consentimentos_contam_cidadaos_com_conta_e_ignoram_registros_sem_senha(): void
+    {
+        $term = LegalTerm::factory()->published()->create(['type' => 'lgpd', 'version' => 1]);
+        $servidor = User::factory()->create();
+        IdentidadeSeparada::espelharServidor($servidor->id);
+        $cidadao = Cidadao::factory()->create();
+        Cidadao::factory()->semSenha()->create();
+        $this->assertSame(3, Cidadao::query()->count());
+
+        foreach ([$servidor, $cidadao] as $conta) {
+            LegalTermAcceptance::create([
+                'accepted_by_type' => $conta->getMorphClass(), 'accepted_by_id' => $conta->id,
+                'legal_term_id' => $term->id,
+                'accepted_at' => now(),
+            ]);
+        }
+
+        $c = $this->service()->consentimentos();
+
+        $this->assertSame(2, $c['total_usuarios']);
+        $this->assertSame(2, $c['aceitaram_vigente']);
+        $this->assertSame(0, $c['pendentes_reaceite']);
+        $this->assertSame(100.0, $c['percentual_aceite']);
     }
 
     public function test_acessos_dado_pessoal_conta_so_marcados_na_janela(): void

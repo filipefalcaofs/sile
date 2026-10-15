@@ -35,7 +35,8 @@ class LgpdMonitorService
      */
     public function consentimentos(): array
     {
-        $total = User::query()->count() + Cidadao::query()->count();
+        // Registro de balcão e espelho de servidor não têm senha: não são contas e não aceitam termo.
+        $total = User::query()->count() + Cidadao::query()->whereNotNull('password')->count();
         $term = LegalTerm::current('lgpd');
 
         if ($term === null) {
