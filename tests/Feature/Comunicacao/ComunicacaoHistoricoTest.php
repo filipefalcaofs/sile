@@ -54,7 +54,7 @@ class ComunicacaoHistoricoTest extends TestCase
      * Processo protocolado com protocolo único (evita colisão do protocoled()
      * hardcoded quando há mais de um processo no teste).
      */
-    private function processo(?User $owner = null): ViabilityRequest
+    private function processo(?Cidadao $owner = null): ViabilityRequest
     {
         // Sem owner explícito, a factory cria o próprio requerente (FK NOT NULL).
         $attrs = $owner === null ? [] : [

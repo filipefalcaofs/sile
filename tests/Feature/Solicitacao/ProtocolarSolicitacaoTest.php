@@ -7,7 +7,6 @@ use App\Events\SolicitacaoProtocolada;
 use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\DocumentRequirement;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\DocumentacaoIncompletaException;
 use App\Services\Solicitacao\InvalidStatusTransitionException;
@@ -56,7 +55,7 @@ class ProtocolarSolicitacaoTest extends TestCase
      * Rascunho COMPLETO (empresa, imóvel/polígono, área e CNAE principal) cujo
      * requerente é o usuário — pronto para protocolar.
      */
-    private function completeDraft(User $user): ViabilityRequest
+    private function completeDraft(Cidadao $user): ViabilityRequest
     {
         $solicitacao = ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,

@@ -10,7 +10,6 @@ use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
 use App\Models\GeoLayer;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Geo\SpatialRepository;
@@ -239,7 +238,7 @@ class SolicitacaoSmokeTest extends TestCase
      * Cidadão habilitado (papel + termo LGPD) com empresa vinculada e um tipo de
      * serviço ativo do catálogo seedado.
      *
-     * @return array{0: User, 1: Company, 2: ViabilityServiceType}
+     * @return array{0: Cidadao, 1: Company, 2: ViabilityServiceType}
      */
     private function ator(): array
     {

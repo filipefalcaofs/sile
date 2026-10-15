@@ -6,7 +6,6 @@ use App\Enums\CompanyLinkRole;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cidadao;
 use App\Models\Company;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -37,7 +36,7 @@ class InformarImovelTest extends TestCase
         return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
-    private function companyLinkedTo(User $user): Company
+    private function companyLinkedTo(Cidadao $user): Company
     {
         $company = Company::factory()->create();
 
@@ -53,7 +52,7 @@ class InformarImovelTest extends TestCase
     /**
      * Rascunho do usuário (nasce sem imóvel/área).
      */
-    private function draftFor(User $user, array $overrides = []): ViabilityRequest
+    private function draftFor(Cidadao $user, array $overrides = []): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create(array_merge([
             'requester_user_id' => $user->id,

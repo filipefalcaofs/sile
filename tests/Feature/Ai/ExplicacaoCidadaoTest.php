@@ -9,7 +9,6 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
 use App\Models\Cidadao;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Ai\ExplicacaoCidadaoService;
@@ -47,7 +46,7 @@ class ExplicacaoCidadaoTest extends TestCase
      * Processo DECIDIDO (ViabilityDecision deferida) — a fonte REAL da explicação.
      * requester = $dono para a policy view do portal.
      */
-    private function processoDecidido(?User $dono = null): ViabilityRequest
+    private function processoDecidido(?Cidadao $dono = null): ViabilityRequest
     {
         $atributos = [];
 

@@ -7,7 +7,6 @@ use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\Procuration;
-use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -39,7 +38,7 @@ class MyCompaniesTest extends TestCase
     /**
      * Cria uma empresa vinculada ao usuário (responsável ativo por padrão).
      */
-    private function companyFor(User $user, array $companyAttributes = [], ?callable $linkState = null): Company
+    private function companyFor(Cidadao $user, array $companyAttributes = [], ?callable $linkState = null): Company
     {
         $company = Company::factory()->create($companyAttributes);
 

@@ -8,7 +8,6 @@ use App\Models\AnalysisPendency;
 use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\Procuration;
-use App\Models\User;
 use App\Models\ViabilityQuery;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -38,7 +37,7 @@ class PainelCidadaoTest extends TestCase
     }
 
     /** Empresa com vínculo ATIVO do usuário. */
-    private function companyLinkedTo(User $user): Company
+    private function companyLinkedTo(Cidadao $user): Company
     {
         $company = Company::factory()->create();
 

@@ -5,7 +5,6 @@ namespace Tests\Feature\Solicitacao;
 use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Parameter;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -41,7 +40,7 @@ class InformarAtividadesTest extends TestCase
     /**
      * Rascunho de solicitação cujo requerente (beneficiário) é o usuário.
      */
-    private function draftFor(User $user): ViabilityRequest
+    private function draftFor(Cidadao $user): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,

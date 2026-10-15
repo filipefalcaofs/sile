@@ -5,7 +5,6 @@ namespace Tests\Feature\Solicitacao;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\Cidadao;
 use App\Models\Parameter;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
@@ -51,7 +50,7 @@ class ConsultarProtocoloTest extends TestCase
      * Solicitação PROTOCOLADA de verdade (número único + transição real) cujo
      * requerente é o usuário — caminho anti-fachada (sem inventar timeline).
      */
-    private function protocoladaDoUsuario(User $user): ViabilityRequest
+    private function protocoladaDoUsuario(Cidadao $user): ViabilityRequest
     {
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
             'requester_user_id' => $user->id,

@@ -3,7 +3,6 @@
 namespace Tests\Feature\Solicitacao;
 
 use App\Models\Cidadao;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Solicitacao\ComprovanteProtocoloService;
 use App\Services\Solicitacao\ProtocolarSolicitacaoService;
@@ -34,7 +33,7 @@ class ComprovanteProtocoloTest extends TestCase
         return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
-    private function protocoladaDoUsuario(User $user): ViabilityRequest
+    private function protocoladaDoUsuario(Cidadao $user): ViabilityRequest
     {
         $solicitacao = ViabilityRequest::factory()->draft()->withPrimaryCnae()->create([
             'requester_user_id' => $user->id,

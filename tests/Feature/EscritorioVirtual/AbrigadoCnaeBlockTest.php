@@ -4,7 +4,6 @@ namespace Tests\Feature\EscritorioVirtual;
 
 use App\Models\Cidadao;
 use App\Models\Cnae;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\VirtualOfficeInscriptionLock;
 use Database\Seeders\EscritorioVirtualCnaeSeeder;
@@ -46,7 +45,7 @@ class AbrigadoCnaeBlockTest extends TestCase
      * Rascunho de solicitação cujo requerente (beneficiário) é o usuário, com a
      * inscrição imobiliária informada (passo do imóvel, anterior às atividades).
      */
-    private function draftFor(User $user, ?string $propertyRegistration): ViabilityRequest
+    private function draftFor(Cidadao $user, ?string $propertyRegistration): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,

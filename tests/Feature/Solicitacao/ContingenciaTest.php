@@ -81,7 +81,7 @@ class ContingenciaTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    private function payload(User $beneficiario, Company $company, Cnae $principal, array $overrides = []): array
+    private function payload(Cidadao $beneficiario, Company $company, Cnae $principal, array $overrides = []): array
     {
         return array_merge([
             'beneficiary_cpf' => $beneficiario->cpf,

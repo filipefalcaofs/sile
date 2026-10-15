@@ -7,7 +7,6 @@ use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\CompanyUser;
-use App\Models\User;
 use App\Services\CompanyCnaeService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -35,7 +34,7 @@ class SecondaryCnaesTest extends TestCase
     /**
      * Cria uma empresa com CNAE principal e vínculo ativo de responsável.
      */
-    private function companyLinkedTo(User $user, Cnae $primaryCnae): Company
+    private function companyLinkedTo(Cidadao $user, Cnae $primaryCnae): Company
     {
         $company = Company::factory()->withPrimaryCnae($primaryCnae)->create();
 

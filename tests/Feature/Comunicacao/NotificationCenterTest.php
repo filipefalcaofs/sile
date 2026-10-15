@@ -48,7 +48,7 @@ class NotificationCenterTest extends TestCase
      *
      * @param  array<string, mixed>  $data
      */
-    private function notificar(User $user, bool $lida = false, array $data = []): DatabaseNotification
+    private function notificar(User|Cidadao $user, bool $lida = false, array $data = []): DatabaseNotification
     {
         return $user->notifications()->create([
             'id' => (string) Str::uuid(),

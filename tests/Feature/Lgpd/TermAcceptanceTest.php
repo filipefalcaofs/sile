@@ -164,7 +164,7 @@ class TermAcceptanceTest extends TestCase
 
         // Defesa em profundidade: sessão da gestão sem a permissão (ex.:
         // papel rebaixado após o login) é barrada antes do gate do termo.
-        $cidadao = User::factory()->cidadao()->create();
-        $this->actingAs($cidadao, 'gestao')->get('/gestao')->assertForbidden();
+        $servidor = User::factory()->create();
+        $this->actingAs($servidor, 'gestao')->get('/gestao')->assertForbidden();
     }
 }

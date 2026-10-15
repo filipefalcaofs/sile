@@ -166,7 +166,7 @@ class AtendimentoPresencialTest extends TestCase
      * Cidadão atendido + empresa com vínculo ATIVO dele (Fase 3) — pré-condição
      * para abrir a solicitação em nome do cidadão.
      *
-     * @return array{0: User, 1: Company}
+     * @return array{0: Cidadao, 1: Company}
      */
     private function citizenWithCompany(): array
     {

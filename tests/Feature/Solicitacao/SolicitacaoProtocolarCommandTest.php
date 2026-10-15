@@ -6,7 +6,6 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\DocumentRequirement;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -43,7 +42,7 @@ class SolicitacaoProtocolarCommandTest extends TestCase
      * Rascunho COMPLETO (empresa, imóvel/polígono, área, CNAE principal) pronto
      * para protocolar — o created_by é o ator que o comando usa.
      */
-    private function completeDraft(User $user): ViabilityRequest
+    private function completeDraft(Cidadao $user): ViabilityRequest
     {
         $solicitacao = ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,

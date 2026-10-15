@@ -11,7 +11,6 @@ use App\Models\AiConfiguration;
 use App\Models\AiSuggestion;
 use App\Models\Cidadao;
 use App\Models\Company;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Services\Ai\ResumoSolicitacaoService;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -49,7 +48,7 @@ class ResumoSolicitacaoTest extends TestCase
      * Rascunho de solicitação com os dados declarados (empresa/CNAE/imóvel) — a
      * entrada real do resumo de conferência. requester = $dono para a policy.
      */
-    private function solicitacaoDeclarada(?User $dono = null): ViabilityRequest
+    private function solicitacaoDeclarada(?Cidadao $dono = null): ViabilityRequest
     {
         $empresa = Company::factory()->create(['legal_name' => 'Comércio Exemplo LTDA']);
 

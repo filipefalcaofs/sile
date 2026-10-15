@@ -136,18 +136,18 @@ class CnaeCrudTest extends TestCase
         ]);
     }
 
-    public function test_cidadao_nao_acessa_cnaes(): void
+    public function test_servidor_sem_permissao_nao_acessa_cnaes(): void
     {
-        $cidadao = User::factory()->cidadao()->withAcceptedLgpdTerm()->create();
+        $servidor = User::factory()->withAcceptedLgpdTerm()->create();
 
-        $this->actingAs($cidadao, 'gestao')
+        $this->actingAs($servidor, 'gestao')
             ->get('/gestao/cnaes')
             ->assertForbidden();
 
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'seguranca',
             'result' => 'bloqueado',
-            'causer_id' => $cidadao->id,
+            'causer_id' => $servidor->id,
         ]);
     }
 

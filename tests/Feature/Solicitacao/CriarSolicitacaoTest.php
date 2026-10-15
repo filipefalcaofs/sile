@@ -6,7 +6,6 @@ use App\Enums\CompanyLinkRole;
 use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\Procuration;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -44,7 +43,7 @@ class CriarSolicitacaoTest extends TestCase
     /**
      * Empresa com vínculo ATIVO do usuário (Fase 3).
      */
-    private function companyLinkedTo(User $user): Company
+    private function companyLinkedTo(Cidadao $user): Company
     {
         $company = Company::factory()->create();
 

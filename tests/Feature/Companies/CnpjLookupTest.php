@@ -5,7 +5,6 @@ namespace Tests\Feature\Companies;
 use App\Models\Activity;
 use App\Models\Cidadao;
 use App\Models\Parameter;
-use App\Models\User;
 use App\Services\Cnpj\BrasilApiCnpjLookup;
 use App\Services\Cnpj\CnpjData;
 use App\Services\Cnpj\CnpjLookup;
@@ -61,7 +60,7 @@ class CnpjLookupTest extends TestCase
     /**
      * Cidadão habilitado a navegar no portal (papel + termo LGPD aceito).
      */
-    private function portalUser(): User
+    private function portalUser(): Cidadao
     {
         $this->seed(RolesAndPermissionsSeeder::class);
 

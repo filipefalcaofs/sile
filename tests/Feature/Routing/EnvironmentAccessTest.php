@@ -113,7 +113,7 @@ class EnvironmentAccessTest extends TestCase
                 ->has('auth.user.id')
                 ->has('auth.roles')
                 ->has('auth.permissions')
-                ->where('auth.roles.0', 'cidadao'));
+                ->where('auth.roles', []));
     }
 
     public function test_cidadao_nao_acessa_gestao_e_tentativa_e_auditada(): void
@@ -126,7 +126,8 @@ class EnvironmentAccessTest extends TestCase
         // Defesa em profundidade: sessão da gestão que perdeu a permissão
         // (ex.: papel rebaixado após o login) é bloqueada e auditada —
         // a permissão é avaliada ANTES do gate LGPD (HU-002 CA-04).
-        $this->actingAs($cidadao, 'gestao')->get('/gestao')->assertForbidden();
+        $servidorSemPermissao = User::factory()->withAcceptedLgpdTerm()->create();
+        $this->actingAs($servidorSemPermissao, 'gestao')->get('/gestao')->assertForbidden();
 
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'seguranca',

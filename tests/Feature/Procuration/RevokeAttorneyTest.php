@@ -5,7 +5,6 @@ namespace Tests\Feature\Procuration;
 use App\Http\Middleware\ResolveRepresentation;
 use App\Models\Cidadao;
 use App\Models\Procuration;
-use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -32,7 +31,7 @@ class RevokeAttorneyTest extends TestCase
     }
 
     /**
-     * @return array{0: User, 1: User, 2: Procuration}
+     * @return array{0: Cidadao, 1: Cidadao, 2: Procuration}
      */
     private function activeProcuration(): array
     {

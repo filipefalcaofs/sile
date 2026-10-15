@@ -55,7 +55,7 @@ class NotificationCenterUiSmokeTest extends TestCase
      * Notificação real no canal database nativo do usuário (espelha o que o
      * toDatabase() das Notifications de processo grava: title/summary/url).
      */
-    private function notificar(User $user, bool $lida = false): DatabaseNotification
+    private function notificar(User|Cidadao $user, bool $lida = false): DatabaseNotification
     {
         return $user->notifications()->create([
             'id' => (string) Str::uuid(),
@@ -69,7 +69,7 @@ class NotificationCenterUiSmokeTest extends TestCase
         ]);
     }
 
-    private function processo(?User $owner = null): ViabilityRequest
+    private function processo(?Cidadao $owner = null): ViabilityRequest
     {
         $attrs = $owner === null ? [] : [
             'requester_user_id' => $owner->id,

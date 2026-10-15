@@ -5,7 +5,6 @@ namespace Tests\Feature\Solicitacao;
 use App\Models\Cidadao;
 use App\Models\DocumentRequirement;
 use App\Models\Parameter;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -37,7 +36,7 @@ class AnexarDocumentoTest extends TestCase
         return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
-    private function draftFor(User $user): ViabilityRequest
+    private function draftFor(Cidadao $user): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,

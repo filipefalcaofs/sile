@@ -81,7 +81,7 @@ class PersonalDataMarkingTest extends TestCase
     public function test_alteracao_de_papel_de_usuario_marca_acesso_a_dado_pessoal(): void
     {
         $admin = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
-        $target = Cidadao::factory()->create();
+        $target = User::factory()->create();
 
         $this->actingAs($admin, 'gestao')
             ->put("/gestao/usuarios/{$target->id}/papel", ['role' => 'Analista Terceirizado'])

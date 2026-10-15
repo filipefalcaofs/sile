@@ -6,7 +6,6 @@ use App\Enums\AnalysisPendencyStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
 use App\Models\Cidadao;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -45,7 +44,7 @@ class PendenciaRespostaPortalTest extends TestCase
      * protocolo ÚNICO por solicitação (evita a colisão do protocoled() hardcoded
      * — armadilha herdada do 10-02 quando há mais de uma solicitação no teste).
      */
-    private function emPendenciaDoDono(User $owner): ViabilityRequest
+    private function emPendenciaDoDono(Cidadao $owner): ViabilityRequest
     {
         $request = ViabilityRequest::factory()->withPrimaryCnae()->create([
             'requester_user_id' => $owner->id,

@@ -5,7 +5,6 @@ namespace Tests\Feature\EscritorioVirtual;
 use App\Enums\IntencaoAtividade;
 use App\Models\Cidadao;
 use App\Models\Cnae;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Expresso\SedeEscritorioVirtualGatilho;
@@ -56,7 +55,7 @@ class AtividadesPortalEscritorioVirtualTest extends TestCase
         );
     }
 
-    private function draftAlteracaoAtividade(User $user): ViabilityRequest
+    private function draftAlteracaoAtividade(Cidadao $user): ViabilityRequest
     {
         return ViabilityRequest::factory()->draft()->create([
             'requester_user_id' => $user->id,

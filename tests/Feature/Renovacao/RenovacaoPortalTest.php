@@ -8,7 +8,6 @@ use App\Enums\ViabilityRequestStatus;
 use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\ServiceDeclaration;
-use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
@@ -126,7 +125,7 @@ class RenovacaoPortalTest extends TestCase
         return Cidadao::factory()->withAcceptedLgpdTerm()->create();
     }
 
-    private function empresaDe(User $user): Company
+    private function empresaDe(Cidadao $user): Company
     {
         $empresa = Company::factory()->create();
         $empresa->links()->create([

@@ -6,7 +6,6 @@ use App\Models\Activity;
 use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\CompanyUser;
-use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -33,7 +32,7 @@ class EndCompanyLinkTest extends TestCase
     /**
      * Cria uma empresa com vínculo (ativo por padrão) do usuário informado.
      */
-    private function companyLinkedTo(User $user, array $linkAttributes = []): Company
+    private function companyLinkedTo(Cidadao $user, array $linkAttributes = []): Company
     {
         $company = Company::factory()->create();
 
@@ -48,7 +47,7 @@ class EndCompanyLinkTest extends TestCase
     /**
      * Acrescenta um segundo responsável ativo a uma empresa existente.
      */
-    private function addResponsavel(Company $company, ?User $user = null): User
+    private function addResponsavel(Company $company, ?Cidadao $user = null): Cidadao
     {
         $user ??= $this->portalUser();
 
