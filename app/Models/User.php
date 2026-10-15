@@ -51,8 +51,8 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    /** E-mail reservado ao requerente técnico dos envelopes REGIN sem solicitante. */
-    public const EMAIL_SOLICITANTE_NAO_IDENTIFICADO = 'solicitante-nao-identificado@regin.invalid';
+    /** Conta técnica da integração JUCEB/REGIN: autora dos processos recebidos e requerente quando o envelope não traz solicitante. */
+    public const EMAIL_INTEGRACAO_REGIN = 'solicitante-nao-identificado@regin.invalid';
 
     public function temEmailEntregavel(): bool
     {

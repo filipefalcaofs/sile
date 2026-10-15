@@ -174,7 +174,28 @@ class ReginProcessoProtocoladorTest extends TestCase
         $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
 
         $this->assertNotNull($processo);
-        $this->assertSame(User::EMAIL_SOLICITANTE_NAO_IDENTIFICADO, $processo->requester->email);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->requester->email);
+    }
+
+    public function test_comando_refaz_requerente_pelo_envelope_e_criador_pela_integracao(): void
+    {
+        $dev = User::factory()->create(['email' => 'dev@exemplo.test']);
+        config(['viabiliza.tramitacao.atores_ocultos.emails' => ['dev@exemplo.test']]);
+        $processo = app(ReginProcessoProtocolador::class)->protocolar($this->recebimento($this->ruc()));
+        $processo->forceFill([
+            'requester_user_id' => $dev->id,
+            'created_by_user_id' => $dev->id,
+            'origem_declarada' => ['cpf_solicitante' => '52998224725', 'nome_solicitante' => 'Maria Souza', 'email_solicitante' => 'maria@exemplo.com'],
+        ])->save();
+
+        $this->artisan('regin:corrigir-requerentes', ['--dry-run' => true])->assertSuccessful();
+        $this->assertSame($dev->id, $processo->fresh()->requester_user_id);
+
+        $this->artisan('regin:corrigir-requerentes')->assertSuccessful();
+
+        $processo = $processo->fresh();
+        $this->assertSame('maria@exemplo.com', $processo->requester->email);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
     }
 
     public function test_natureza_juridica_do_ruc_vai_para_a_empresa(): void

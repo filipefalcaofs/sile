@@ -77,7 +77,7 @@ class ReginProcessoProtocolador
             return null;
         }
 
-        $ator = $this->ator();
+        $ator = $this->integracao();
 
         $solicitacao = ViabilityRequest::query()->create([
             'origin' => ViabilityRequestOrigin::Regin,
@@ -114,7 +114,8 @@ class ReginProcessoProtocolador
             return null;
         }
 
-        $ator = $this->atorDaDeclaracao($dados);
+        $ator = $this->integracao();
+        $requerente = $this->requerenteDaDeclaracao($dados);
         $cnaePrincipal = $this->cnae((string) $dados->cnaePrincipal);
         $secundarios = [];
 
@@ -130,7 +131,7 @@ class ReginProcessoProtocolador
             'origin' => ViabilityRequestOrigin::Regin,
             'service_type_id' => $this->tipoServicoDeclarado($dados->servico)->id,
             'company_id' => $this->empresaDaDeclaracao($dados, $recebimento->protocolo)->id,
-            'requester_user_id' => $ator->id,
+            'requester_user_id' => $requerente->id,
             'created_by_user_id' => $ator->id,
             'used_area_m2' => $dados->area,
             'address_street' => $dados->logradouro,
@@ -217,24 +218,21 @@ class ReginProcessoProtocolador
         ]);
     }
 
-    private function atorDaDeclaracao(RecebimentoProcesso $dados): User
+    /**
+     * Quem a JUCEB indicou como solicitante; sem os dados, a conta da integração.
+     */
+    public function requerenteDaDeclaracao(RecebimentoProcesso $dados, bool $criar = true): User
     {
-        $solicitante = $this->solicitante($dados);
-
-        if ($solicitante !== null) {
-            return $solicitante;
-        }
-
-        return $this->solicitanteNaoIdentificado();
+        return $this->solicitante($dados, $criar) ?? $this->integracao();
     }
 
     /**
-     * Requerente técnico para envelope sem solicitante: nunca uma pessoa real
+     * Autora técnica dos processos recebidos da JUCEB: nunca uma pessoa real
      * (nem o primeiro usuário, nem quem está logado). Sem e-mail entregável.
      */
-    private function solicitanteNaoIdentificado(): User
+    public function integracao(): User
     {
-        $existente = User::query()->where('email', User::EMAIL_SOLICITANTE_NAO_IDENTIFICADO)->first();
+        $existente = User::query()->where('email', User::EMAIL_INTEGRACAO_REGIN)->first();
 
         if ($existente !== null) {
             return $existente;
@@ -247,15 +245,15 @@ class ReginProcessoProtocolador
         }
 
         return User::query()->create([
-            'name' => 'Solicitante não identificado (REGIN)',
-            'email' => User::EMAIL_SOLICITANTE_NAO_IDENTIFICADO,
+            'name' => 'JUCEB (integração REGIN)',
+            'email' => User::EMAIL_INTEGRACAO_REGIN,
             'cpf' => $cpf,
             'password' => Hash::make(Str::random(40)),
             'auth_type' => AuthType::Local,
         ]);
     }
 
-    private function solicitante(RecebimentoProcesso $dados): ?User
+    private function solicitante(RecebimentoProcesso $dados, bool $criar = true): ?User
     {
         $cpf = $dados->cpfSolicitante;
         $email = $dados->emailSolicitante;
@@ -278,6 +276,10 @@ class ReginProcessoProtocolador
 
         if ($porCpf !== null) {
             return $porCpf;
+        }
+
+        if (! $criar) {
+            return new User;
         }
 
         $emailEmUso = User::query()->where('email', $email)->exists();
@@ -1061,10 +1063,5 @@ class ReginProcessoProtocolador
                 'active' => true,
             ],
         );
-    }
-
-    private function ator(): User
-    {
-        return $this->solicitanteNaoIdentificado();
     }
 }

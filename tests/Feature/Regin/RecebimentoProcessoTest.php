@@ -28,6 +28,7 @@ class RecebimentoProcessoTest extends TestCase
 
         $this->assertNotSame($primeiro->id, $processo->requester_user_id);
         $this->assertNotSame($primeiro->id, $processo->created_by_user_id);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy->email);
         $this->assertFalse($processo->requester->temEmailEntregavel());
     }
 
@@ -53,6 +54,7 @@ class RecebimentoProcessoTest extends TestCase
         $this->assertSame('Microempresa', $processo->company?->size);
         $this->assertSame('Salvador', $processo->company?->city);
         $this->assertSame('BA', $processo->company?->state);
+        $this->assertSame(User::EMAIL_INTEGRACAO_REGIN, $processo->createdBy?->email);
         $this->assertSame('52998224725', $processo->requester?->cpf);
         $this->assertSame('Maria Souza', $processo->requester?->name);
         $this->assertSame('maria.souza@exemplo.com', $processo->requester?->email);
