@@ -6,6 +6,7 @@ import Button from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
+import { formatDateTime } from '@/lib/datas';
 
 interface NotificationData {
     title?: string;
@@ -34,23 +35,6 @@ interface NotificationCenterProps {
     lista: NotificationList;
     /** Base do ambiente (`/portal` ou `/gestao`) para as rotas de marcação. */
     basePath: string;
-}
-
-/** Formata ISO 8601 como 'DD/MM/YYYY HH:MM' sem depender do fuso do navegador. */
-function formatDateTime(value: string | null): string {
-    if (!value) {
-        return '—';
-    }
-
-    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
-
-    if (!match) {
-        return value;
-    }
-
-    const [, year, month, day, hour, minute] = match;
-
-    return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
 function NotificationCard({

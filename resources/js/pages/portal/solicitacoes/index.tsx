@@ -18,6 +18,7 @@ import EmptyState from '@/components/ui/empty-state';
 import Pagination, { type PaginationLink } from '@/components/ui/pagination';
 import TableAction from '@/components/ui/table-action';
 import PortalLayout from '@/layouts/portal-layout';
+import { formatDateTime } from '@/lib/datas';
 
 type BadgeColor = 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light';
 
@@ -82,23 +83,6 @@ function statusColor(value: string): BadgeColor {
         default:
             return 'light';
     }
-}
-
-/** Formata 'YYYY-MM-DD HH:MM:SS' como 'DD/MM/YYYY HH:MM' sem depender do fuso do navegador. */
-function formatDateTime(value: string | null): string {
-    if (!value) {
-        return '—';
-    }
-
-    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
-
-    if (!match) {
-        return value;
-    }
-
-    const [, year, month, day, hour, minute] = match;
-
-    return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
 export default function SolicitacoesIndex({
