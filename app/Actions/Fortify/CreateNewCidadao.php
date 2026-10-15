@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Models\Cidadao;
 use App\Rules\TelefoneComDdd;
 use App\Rules\ValidCpf;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -26,41 +27,53 @@ class CreateNewCidadao implements CreatesNewUsers
     {
         $input['cpf'] = preg_replace('/\D/', '', (string) ($input['cpf'] ?? ''));
 
-        $balcao = Cidadao::query()->where('cpf', $input['cpf'])->whereNull('password')->first();
+        return DB::transaction(function () use ($input): Cidadao {
+            $balcao = Cidadao::query()
+                ->where('cpf', $input['cpf'])
+                ->whereNull('password')
+                ->lockForUpdate()
+                ->first();
 
-        Validator::make($input, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required', 'string', 'email', 'max:255',
-                Rule::unique('cidadaos', 'email')->ignore($balcao?->id),
-            ],
-            'cpf' => [
-                'required', 'string', new ValidCpf,
-                Rule::unique('cidadaos', 'cpf')->ignore($balcao?->id),
-            ],
-            'phone' => ['required', 'string', 'max:20', new TelefoneComDdd],
-            'password' => $this->passwordRules(),
-        ], [], [
-            'name' => 'nome',
-            'cpf' => 'CPF',
-            'phone' => 'telefone',
-            'password' => 'senha',
-        ])->validate();
+            Validator::make($input, [
+                'name' => ['required', 'string', 'max:255'],
+                'email' => [
+                    'required', 'string', 'email', 'max:255',
+                    Rule::unique('cidadaos', 'email')->ignore($balcao?->id),
+                ],
+                'cpf' => [
+                    'required', 'string', new ValidCpf,
+                    Rule::unique('cidadaos', 'cpf')->ignore($balcao?->id),
+                ],
+                'phone' => ['required', 'string', 'max:20', new TelefoneComDdd],
+                'password' => $this->passwordRules(),
+            ], [], [
+                'name' => 'nome',
+                'cpf' => 'CPF',
+                'phone' => 'telefone',
+                'password' => 'senha',
+            ])->validate();
 
-        $dados = [
-            'name' => $input['name'],
-            'email' => $input['email'],
-            'cpf' => $input['cpf'],
-            'phone' => $input['phone'] ?? null,
-            'password' => $input['password'],
-        ];
+            if ($balcao?->isInactive()) {
+                throw ValidationException::withMessages([
+                    'cpf' => __('Sua conta está inativa. Procure o administrador do sistema.'),
+                ]);
+            }
 
-        if ($balcao !== null) {
-            $balcao->forceFill($dados)->save();
+            $dados = [
+                'name' => $input['name'],
+                'email' => $input['email'],
+                'cpf' => $input['cpf'],
+                'phone' => $input['phone'] ?? null,
+                'password' => $input['password'],
+            ];
 
-            return $balcao;
-        }
+            if ($balcao !== null) {
+                $balcao->forceFill($dados + ['email_verified_at' => null])->save();
 
-        return Cidadao::create($dados);
+                return $balcao;
+            }
+
+            return Cidadao::create($dados);
+        });
     }
 }

@@ -22,8 +22,7 @@ class UpdateCidadaoPassword implements UpdatesUserPasswords
      */
     public function update(Cidadao $user, array $input): void
     {
-        // Sem guard fixo na rule: o default da request (web no portal,
-        // gestao no console via auth:web,gestao) resolve o usuário correto.
+        // Sem guard fixo na rule: o guard padrão (web) é o do portal e autentica o cidadão.
         Validator::make($input, [
             'current_password' => ['required', 'string', 'current_password'],
             'password' => $this->passwordRules(),

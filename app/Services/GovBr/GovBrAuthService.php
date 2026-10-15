@@ -48,6 +48,7 @@ class GovBrAuthService
 
         if ($user !== null) {
             $this->ensureActive($user);
+            $this->garantirSenha($user);
             $this->syncAccount($user, $claims, $level);
 
             return $user;
@@ -217,6 +218,16 @@ class GovBrAuthService
 
             return $user;
         });
+    }
+
+    /** O provider de sessão só resolve cidadão com senha; registro de balcão entra por GOV.BR com senha aleatória. */
+    private function garantirSenha(Cidadao $cidadao): void
+    {
+        if ($cidadao->temSenha()) {
+            return;
+        }
+
+        $cidadao->forceFill(['password' => Str::password(40)])->save();
     }
 
     private function maskCpf(string $cpf): string

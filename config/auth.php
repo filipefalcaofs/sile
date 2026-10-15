@@ -74,8 +74,9 @@ return [
             'model' => env('AUTH_MODEL', User::class),
         ],
 
+        // Driver próprio: só resolve cidadão com senha (registro de balcão não vira sessão).
         'cidadaos' => [
-            'driver' => 'eloquent',
+            'driver' => 'cidadaos',
             'model' => Cidadao::class,
         ],
     ],
