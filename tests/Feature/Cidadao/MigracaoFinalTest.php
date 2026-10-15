@@ -11,6 +11,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class MigracaoFinalTest extends TestCase
@@ -78,7 +79,7 @@ class MigracaoFinalTest extends TestCase
 
     public function test_falha_com_mensagem_se_coluna_de_servidor_aponta_para_cidadao(): void
     {
-        $usuario = User::factory()->create();
+        $usuario = User::factory()->papelCidadaoLegado()->create();
         IdentidadeSeparada::copiarContasDeCidadao();
         DB::table('sector_user')->insert(['user_id' => $usuario->id, 'sector_id' => Sector::factory()->create()->id]);
 
@@ -90,11 +91,12 @@ class MigracaoFinalTest extends TestCase
         }
 
         $this->assertSame([$usuario->id], DB::table('users')->pluck('id')->all());
+        $this->assertNadaFoiApagado($usuario);
     }
 
     public function test_conflito_e_detectado_em_qualquer_chave_para_users(): void
     {
-        $usuario = User::factory()->create();
+        $usuario = User::factory()->papelCidadaoLegado()->create();
         $outro = User::factory()->create();
         IdentidadeSeparada::copiarContasDeCidadao();
         DB::table('regin_simulacao_execucoes')->insert([
@@ -114,6 +116,7 @@ class MigracaoFinalTest extends TestCase
         }
 
         $this->assertSame(2, DB::table('users')->count());
+        $this->assertNadaFoiApagado($usuario);
     }
 
     public function test_cidadao_novo_com_id_de_servidor_nao_remove_o_servidor(): void
@@ -124,6 +127,36 @@ class MigracaoFinalTest extends TestCase
         $this->rodarMigracao();
 
         $this->assertTrue(DB::table('users')->where('id', $servidor->id)->exists());
+    }
+
+    public function test_conta_com_mesmo_id_mas_outro_cpf_em_cidadaos_nao_e_copia_e_fica_em_users(): void
+    {
+        $usuario = User::factory()->papelCidadaoLegado()->create();
+        $usuario->givePermissionTo('gerenciar-procuracoes-proprias');
+        Cidadao::factory()->create(['id' => $usuario->id, 'cpf' => '52998224725']);
+        $copia = User::factory()->papelCidadaoLegado()->create();
+        Cidadao::factory()->create(['id' => $copia->id, 'cpf' => $copia->cpf, 'email' => $copia->email]);
+
+        $this->rodarMigracao();
+
+        $this->assertSame([$usuario->id], DB::table('users')->pluck('id')->all());
+        $this->assertSame(1, DB::table('model_has_permissions')->where('model_type', User::class)->where('model_id', $usuario->id)->count());
+        $this->assertSame(0, DB::table('model_has_permissions')->where('model_id', $copia->id)->count());
+        $this->assertTrue(DB::table('cidadaos')->where('id', $copia->id)->where('cpf', $copia->cpf)->exists());
+    }
+
+    public function test_conta_com_mesmo_id_mas_outro_cpf_mantem_os_papeis(): void
+    {
+        $usuario = User::factory()->create();
+        $papel = Role::findOrCreate('perfil-legado', 'web');
+        $usuario->assignRole($papel);
+        Cidadao::factory()->create(['id' => $usuario->id, 'cpf' => '52998224725']);
+
+        $this->rodarMigracao();
+
+        $this->assertTrue(DB::table('users')->where('id', $usuario->id)->exists());
+        $this->assertTrue(DB::table('model_has_roles')
+            ->where('model_type', User::class)->where('model_id', $usuario->id)->where('role_id', $papel->id)->exists());
     }
 
     public function test_down_nao_altera_nada(): void
@@ -137,6 +170,16 @@ class MigracaoFinalTest extends TestCase
 
         $this->assertFalse(DB::table('users')->where('id', $copiado->id)->exists());
         $this->assertTrue(DB::table('cidadaos')->where('id', $copiado->id)->exists());
+    }
+
+    /** A checagem de conflito vem antes de qualquer delete: vínculos e o papel `cidadao` seguem intactos. */
+    private function assertNadaFoiApagado(User $usuario): void
+    {
+        $papel = DB::table('roles')->where('name', 'cidadao')->value('id');
+
+        $this->assertNotNull($papel);
+        $this->assertTrue(DB::table('model_has_roles')
+            ->where('model_type', User::class)->where('model_id', $usuario->id)->where('role_id', $papel)->exists());
     }
 
     private function rodarMigracao(): void

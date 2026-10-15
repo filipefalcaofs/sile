@@ -53,15 +53,22 @@ return new class extends Migration
     public function down(): void {}
 
     /**
-     * Conta copiada: tem senha em `cidadaos` e o mesmo id ainda é conta de cidadão em `users`.
-     * Espelhos de servidor (sem senha) e servidores que assumiram o espelho no portal ficam fora.
+     * Conta copiada: tem senha em `cidadaos` e há em `users` uma conta de cidadão com o mesmo
+     * id E o mesmo CPF. Só o id não basta: as sequências das duas tabelas podem gerar o mesmo
+     * número para pessoas diferentes depois da cópia. Espelhos de servidor (sem senha) e
+     * servidores que assumiram o espelho no portal ficam fora.
      */
     private function contasCopiadas(): Builder
     {
         return DB::table('cidadaos')
-            ->whereNotNull('password')
-            ->whereIn('id', IdentidadeSeparada::consultaContasDeCidadao()->select('id'))
-            ->select('id');
+            ->select('cidadaos.id')
+            ->whereNotNull('cidadaos.password')
+            ->whereExists(
+                IdentidadeSeparada::consultaContasDeCidadao()
+                    ->select(DB::raw(1))
+                    ->whereColumn('users.id', 'cidadaos.id')
+                    ->whereColumn('users.cpf', 'cidadaos.cpf')
+            );
     }
 
     /** @return list<string> tabela.coluna (linhas) */
