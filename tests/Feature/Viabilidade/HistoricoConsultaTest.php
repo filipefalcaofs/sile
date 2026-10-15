@@ -3,6 +3,7 @@
 namespace Tests\Feature\Viabilidade;
 
 use App\Models\Cidadao;
+use App\Models\User;
 use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\Geocoder;
@@ -80,6 +81,25 @@ class HistoricoConsultaTest extends TestCase
         $this->assertNotEmpty($query->rules_versions);
         $this->assertArrayHasKey('louos', $query->rules_versions);
         $this->assertNotEmpty($query->rules_versions['louos']);
+    }
+
+    public function test_conta_de_servidor_nao_grava_historico_no_id_do_cidadao_homonimo(): void
+    {
+        // Rota pública (fora de auth:web): só conta de cidadão tem histórico
+        // pessoal. Um servidor com o mesmo id de um cidadão não pode gravar a
+        // consulta no histórico desse cidadão.
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create(['id' => 9003]);
+        $servidor = User::factory()->create(['id' => 9003]);
+
+        $this->actingAs($servidor)
+            ->postJson('/portal/viabilidade/cnae', [
+                'cnae' => self::CNAE_MINIMERCADO,
+                'area' => 120,
+            ])
+            ->assertOk();
+
+        $this->assertSame(0, ViabilityQuery::query()->where('cidadao_id', $cidadao->id)->count());
+        $this->assertSame(0, ViabilityQuery::count());
     }
 
     public function test_consulta_anonima_nao_grava_historico_mas_e_auditada(): void

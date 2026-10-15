@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Portal\ConsultaViabilidadeCnaeRequest;
 use App\Http\Requests\Portal\ConsultaViabilidadeEnderecoRequest;
 use App\Http\Requests\Portal\ConsultaViabilidadeInscricaoRequest;
+use App\Models\Cidadao;
 use App\Models\ViabilityQuery;
 use App\Services\Geo\AddressNotFoundException;
 use App\Services\Geo\ForaDeSalvadorException;
@@ -132,7 +133,8 @@ class ConsultaViabilidadeController extends Controller
     {
         $cidadao = $request->user();
 
-        if ($cidadao === null) {
+        // Rota pública: só conta de cidadão tem histórico pessoal (ids de users e cidadaos colidem).
+        if (! $cidadao instanceof Cidadao) {
             return;
         }
 
