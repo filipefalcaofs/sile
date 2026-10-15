@@ -16,6 +16,20 @@ use App\Support\Settings;
  */
 class HttpReginParecerNotifier implements ReginParecerNotifier
 {
+    /**
+     * Trechos que marcam nota interna do motor (falha de camada, indisponibilidade,
+     * encaminhamento à análise): vão para a trilha do processo, não para a JUCEB.
+     *
+     * @var list<string>
+     */
+    private const MARCAS_NOTA_INTERNA = [
+        'geoserver',
+        'indispon',
+        'resposta incompleta',
+        'não foi possível verificar',
+        'segue para análise técnica',
+    ];
+
     public function __construct(private ReginHttpClient $client, private ReginIntegrationSettings $settings) {}
 
     public function notifyParecer(ViabilityRequest $request, ViabilityDecision $decision): void
@@ -30,7 +44,7 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
     {
         $cnpj = (string) Settings::get(
             'integrations.regin.cnpj_prefeitura',
-            config('sile.integrations.regin.cnpj_prefeitura'),
+            config('viabiliza.integrations.regin.cnpj_prefeitura'),
         );
         $protocolo = (string) $request->external_reference;
 
@@ -103,7 +117,7 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
 
             $linhas = array_values(array_filter(
                 $fundacao,
-                fn (mixed $linha): bool => is_string($linha) && $linha !== '',
+                fn (mixed $linha): bool => is_string($linha) && $linha !== '' && ! $this->ehNotaInterna($linha),
             ));
 
             if ($linhas !== []) {
@@ -112,5 +126,18 @@ class HttpReginParecerNotifier implements ReginParecerNotifier
         }
 
         return null;
+    }
+
+    private function ehNotaInterna(string $linha): bool
+    {
+        $texto = mb_strtolower($linha);
+
+        foreach (self::MARCAS_NOTA_INTERNA as $marca) {
+            if (str_contains($texto, $marca)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
