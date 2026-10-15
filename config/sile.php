@@ -5,6 +5,15 @@ return [
     // Nunca ligar em produção real — só no ambiente de apresentação ao cliente.
     'demo_data' => env('SILE_DEMO_DATA', false),
 
+    // Contas de desenvolvedor/suporte: não aparecem como autor na linha do
+    // tempo da tramitação (não são servidores nem atuam no negócio).
+    'tramitacao' => [
+        'atores_ocultos' => [
+            'emails' => ['fillipe.falcao@sudoesteinformatica.com.br'],
+            'ad_usernames' => ['filipefalcao'],
+        ],
+    ],
+
     'security' => [
         'password' => [
             'min_length' => 8,
