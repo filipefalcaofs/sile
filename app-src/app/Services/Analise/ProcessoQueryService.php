@@ -3,6 +3,7 @@
 namespace App\Services\Analise;
 
 use App\Enums\AnalysisCategory;
+use App\Enums\AnalysisStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -218,14 +219,20 @@ class ProcessoQueryService
     }
 
     /**
-     * Escopo da caixa de entrada: processos atribuídos ao usuário. Sem filtro de
-     * status nem ordenação (reaproveitado pela fila e pelos contadores).
+     * Escopo da caixa de entrada: processos atribuídos ao usuário, menos os já
+     * enviados para conclusão (saem da caixa individual e vão para a aba "Para
+     * Conclusão" do setor). Sem filtro de status nem ordenação (reaproveitado
+     * pela fila e pelos contadores).
      *
      * @return Builder<ViabilityRequest>
      */
     private function escopo(User $user): Builder
     {
-        return ViabilityRequest::query()->where('assigned_user_id', $user->id);
+        return ViabilityRequest::query()
+            ->where('assigned_user_id', $user->id)
+            ->where(fn (Builder $query) => $query
+                ->whereNull('analysis_status')
+                ->orWhere('analysis_status', '!=', AnalysisStatus::ParaConclusao->value));
     }
 
     /**

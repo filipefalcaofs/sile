@@ -88,7 +88,6 @@ const ROTULOS_TIPO: Record<string, string> = {
     integracao: 'Integração',
 };
 
-
 /** Centroide do anel exterior do polígono (média dos vértices em [lng, lat]). */
 function centroide(poligono: Polygon | null): { lat: number; lng: number } | null {
     const anel = poligono?.coordinates?.[0];
@@ -163,7 +162,9 @@ export default function Show({
     conclusaoOpcoes,
     setoresEncaminhamento = [],
     analistasEncaminhamento = [],
+    destinatariosConclusao = [],
 }: ShowProps & {
+    destinatariosConclusao?: { value: string; label: string }[];
     setoresEncaminhamento?: SetorEncaminhamento[];
     analistasEncaminhamento?: AnalistaEncaminhamento[];
 }) {
@@ -171,7 +172,9 @@ export default function Show({
     const podeAnalisar = auth.permissions.includes('analisar-processos');
     const fichaExpresso = processo.fluxo === 'expresso';
     const podeAbrirFicha = podeAnalisar || fichaExpresso;
-    const podeConcluirAnalise = processo.status === 'em_analise' || processo.status === 'deferida';
+    const podeConcluirAnalise =
+        auth.permissions.includes('concluir-analise') &&
+        (processo.status === 'em_analise' || processo.status === 'deferida');
 
     const [aba, setAba] = useState<Aba>('informacoes');
     const [resultadoConclusao, setResultadoConclusao] = useState('');
@@ -180,6 +183,7 @@ export default function Show({
     const [situacaoAnalise, setSituacaoAnalise] = useState('');
     const [setorEncaminhamento, setSetorEncaminhamento] = useState('');
     const [analistaEncaminhamento, setAnalistaEncaminhamento] = useState('');
+    const [destinatarioConclusao, setDestinatarioConclusao] = useState('');
 
     function concluirAnalise() {
         setErroConclusao(null);
@@ -411,7 +415,7 @@ export default function Show({
                                                         options={analysisStatusProximas}
                                                         onChange={(valor) => {
                                                             setSituacaoAnalise(valor);
-                                                            if (valor !== '' && valor !== 'encaminhado') {
+                                                            if (valor !== '' && valor !== 'encaminhado' && valor !== 'para_conclusao') {
                                                                 router.post(
                                                                     `/gestao/processos/${processo.id}/status-analise`,
                                                                     { status: valor },
@@ -420,6 +424,35 @@ export default function Show({
                                                             }
                                                         }}
                                                     />
+                                                    {situacaoAnalise === 'para_conclusao' && (
+                                                        <>
+                                                            <SearchableSelect
+                                                                id="destinatario-conclusao"
+                                                                value={destinatarioConclusao}
+                                                                placeholder="Encaminhar para (opcional)"
+                                                                options={destinatariosConclusao}
+                                                                onChange={setDestinatarioConclusao}
+                                                            />
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() =>
+                                                                    router.post(
+                                                                        `/gestao/processos/${processo.id}/status-analise`,
+                                                                        {
+                                                                            status: 'para_conclusao',
+                                                                            encaminhado_para_user_id:
+                                                                                destinatarioConclusao === ''
+                                                                                    ? null
+                                                                                    : Number(destinatarioConclusao),
+                                                                        },
+                                                                        { preserveScroll: true },
+                                                                    )
+                                                                }
+                                                            >
+                                                                Enviar para conclusão
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                     {situacaoAnalise === 'encaminhado' && (
                                                         <>
                                                             <OptionSelect

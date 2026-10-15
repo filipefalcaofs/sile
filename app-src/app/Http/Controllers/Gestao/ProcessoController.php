@@ -205,6 +205,11 @@ class ProcessoController extends Controller
                 : (new DecisionExplanationResource($this->explanations->explain($viabilityRequest->decision)))->resolve(),
             'timeline' => $this->timeline($viabilityRequest),
             'setoresEncaminhamento' => Sector::query()->where('active', true)->orderBy('name')->get(['id', 'name']),
+            'destinatariosConclusao' => User::permission('concluir-analise')
+                ->orderBy('name')
+                ->get(['users.id', 'users.name'])
+                ->map(fn (User $usuario): array => ['value' => (string) $usuario->id, 'label' => $usuario->name])
+                ->all(),
             'analistasEncaminhamento' => User::query()
                 ->with('sectors:id')
                 ->orderBy('name')
@@ -349,6 +354,14 @@ class ProcessoController extends Controller
                 'assigned_user_id' => $analista->id,
                 'assigned_at' => now(),
             ])->save();
+        }
+
+        if ($to === AnalysisStatus::ParaConclusao) {
+            $viabilityRequest->forceFill([
+                'conclusao_encaminhada_para_user_id' => $request->filled('encaminhado_para_user_id')
+                    ? $request->integer('encaminhado_para_user_id')
+                    : null,
+            ]);
         }
 
         try {

@@ -18,7 +18,7 @@ import GestaoLayout from '@/layouts/gestao-layout';
 import type { SharedProps } from '@/types';
 import { escolhaDeSetor, type SetorDoAnalista } from './setor-destino';
 
-type Visao = 'para_distribuir' | 'distribuidos';
+type Visao = 'para_distribuir' | 'distribuidos' | 'para_conclusao';
 
 interface ProcessoItem {
     id: number;
@@ -39,6 +39,7 @@ interface ProcessoItem {
     sector: string | null;
     assigned_user_id: number | null;
     assigned_to: string | null;
+    encaminhado_para: string | null;
     analysis_due_at: string | null;
     pode_redistribuir: boolean;
 }
@@ -154,6 +155,7 @@ function formatarPrazo(iso: string | null): string {
 const ABAS: { id: Visao; rotulo: string }[] = [
     { id: 'para_distribuir', rotulo: 'Para distribuir' },
     { id: 'distribuidos', rotulo: 'Distribuídos' },
+    { id: 'para_conclusao', rotulo: 'Para conclusão' },
 ];
 
 export default function CaixaSetorIndex({
@@ -374,6 +376,16 @@ export default function CaixaSetorIndex({
             cell: (item) =>
                 item.assigned_to ?? <span className="text-gray-400 dark:text-gray-500">Não atribuído</span>,
         },
+        ...(visao === 'para_conclusao'
+            ? [
+                  {
+                      id: 'encaminhado_para',
+                      header: 'Encaminhado para',
+                      cellClassName: 'whitespace-nowrap',
+                      cell: (item: ProcessoItem) => item.encaminhado_para ?? '',
+                  },
+              ]
+            : []),
         {
             id: 'prazo',
             header: 'Prazo',
@@ -532,12 +544,16 @@ export default function CaixaSetorIndex({
                                     title={
                                         visao === 'para_distribuir'
                                             ? 'Nenhum processo para distribuir'
-                                            : 'Nenhum processo distribuído'
+                                            : visao === 'para_conclusao'
+                                              ? 'Nenhum processo para conclusão'
+                                              : 'Nenhum processo distribuído'
                                     }
                                     description={
                                         visao === 'para_distribuir'
                                             ? 'Não há processos aguardando distribuição nos seus setores.'
-                                            : 'Ainda não há processos atribuídos a analistas nos seus setores.'
+                                            : visao === 'para_conclusao'
+                                              ? 'Não há processos com a análise finalizada aguardando conclusão nos seus setores.'
+                                              : 'Ainda não há processos atribuídos a analistas nos seus setores.'
                                     }
                                 />
                             }

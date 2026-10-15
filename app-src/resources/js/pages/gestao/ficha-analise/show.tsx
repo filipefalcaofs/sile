@@ -896,7 +896,8 @@ export default function FichaAnaliseShow({
     const [parecerConclusao, setParecerConclusao] = useState('');
     const [conclusaoProcessing, setConclusaoProcessing] = useState(false);
     const [erroConclusao, setErroConclusao] = useState<string | null>(null);
-    const podeConcluirAnalise = processo.status === 'em_analise' || processo.status === 'deferida';
+    const podeConcluir = auth.permissions.includes('concluir-analise');
+    const podeConcluirAnalise = podeConcluir && (processo.status === 'em_analise' || processo.status === 'deferida');
     const [pickerParaParecer, setPickerParaParecer] = useState(false);
     const [pickerParaCondicao, setPickerParaCondicao] = useState(false);
 
@@ -2475,23 +2476,34 @@ export default function FichaAnaliseShow({
                                             <Button onClick={salvarRascunho} variant="outline" size="sm">
                                                 Salvar Ficha
                                             </Button>
-                                            <Button
-                                                onClick={() => setShowFinalizar(true)}
-                                                size="sm"
-                                            >
-                                                Finalizar processo
-                                            </Button>
-                                            <p className="text-theme-xs text-gray-500 dark:text-gray-400">
-                                                {cnaesIndeferidos.length > 0
-                                                    ? `Será indeferido: ${cnaesIndeferidos.map((i) => i.cnae_formatado ?? i.cnae).join(', ')} marcado(s) como indeferido(s).`
-                                                    : 'Será deferido: nenhum CNAE marcado como indeferido.'}
-                                            </p>
+                                            {podeConcluir ? (
+                                                <>
+                                                    <Button
+                                                        onClick={() => setShowFinalizar(true)}
+                                                        size="sm"
+                                                    >
+                                                        Finalizar processo
+                                                    </Button>
+                                                    <p className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                        {cnaesIndeferidos.length > 0
+                                                            ? `Será indeferido: ${cnaesIndeferidos.map((i) => i.cnae_formatado ?? i.cnae).join(', ')} marcado(s) como indeferido(s).`
+                                                            : 'Será deferido: nenhum CNAE marcado como indeferido.'}
+                                                    </p>
+                                                </>
+                                            ) : (
+                                                <p className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                    Sem permissão para concluir: ao terminar a ficha, altere a situação do processo para
+                                                    “Para conclusão”.
+                                                </p>
+                                            )}
                                         </>
                                     ) : (
                                         <>
-                                            <Button onClick={() => setShowDecidir(true)} size="sm">
-                                                Decidir processo (conforme ficha)
-                                            </Button>
+                                            {podeConcluir && (
+                                                <Button onClick={() => setShowDecidir(true)} size="sm">
+                                                    Decidir processo (conforme ficha)
+                                                </Button>
+                                            )}
                                             <Button onClick={novaRevisao} variant="outline" size="sm" loading={acao.processing}>
                                                 Criar nova ficha
                                             </Button>

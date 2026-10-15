@@ -10,8 +10,7 @@ use Illuminate\Support\Facades\Http;
  * e usa Authorization: Bearer nas demais chamadas (o header JWT é barrado com
  * 403 pela API de produção). Token e
  * senha nunca aparecem em exceção ou log. Sucesso do envio do parecer é o corpo
- * RECEBIDO_SUCESSO, em texto ou como string JSON; qualquer outro resultado é
- * indisponibilidade honesta.
+ * exato RECEBIDO_SUCESSO; qualquer outro resultado é indisponibilidade honesta.
  */
 class ReginHttpClient
 {
@@ -61,25 +60,9 @@ class ReginHttpClient
             throw new ReginUnavailableException(motivo: 'REGIN indisponível ao enviar o parecer.');
         }
 
-        if (! $response->successful() || ! self::confirmouRecebimento($response->body())) {
+        if (! $response->successful() || trim($response->body()) !== 'RECEBIDO_SUCESSO') {
             throw new ReginUnavailableException(motivo: 'REGIN não confirmou o recebimento do parecer.');
         }
-    }
-
-    /**
-     * A JUCEB confirma com o texto RECEBIDO_SUCESSO ou, em produção, com a
-     * string JSON "RECEBIDO_SUCESSO" (corpo application/json): as duas valem.
-     */
-    public static function confirmouRecebimento(string $corpo): bool
-    {
-        $texto = trim($corpo);
-        $decodificado = json_decode($texto, true);
-
-        if (is_string($decodificado)) {
-            $texto = trim($decodificado);
-        }
-
-        return $texto === 'RECEBIDO_SUCESSO';
     }
 
     /**

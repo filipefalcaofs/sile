@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\ViabilityDecision;
 use App\Models\ViabilityRequest;
 use App\Services\Analise\DistribuicaoService;
+use App\Support\Audit\AuditService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -223,7 +224,7 @@ class ProcessoUiSmokeTest extends TestCase
 
     public function test_tramitacao_omite_o_ator_de_conta_de_desenvolvedor(): void
     {
-        config(['sile.tramitacao.atores_ocultos.emails' => ['dev@exemplo.test']]);
+        config(['viabiliza.tramitacao.atores_ocultos.emails' => ['dev@exemplo.test']]);
         $dev = User::factory()->create(['name' => 'Pessoa Dev', 'email' => 'Dev@Exemplo.test']);
         $outro = User::factory()->create(['name' => 'Filipe Protocolo']);
 

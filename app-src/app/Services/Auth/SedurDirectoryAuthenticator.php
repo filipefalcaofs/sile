@@ -7,9 +7,8 @@ use App\Services\Sedur\SedurAuthUnavailableException;
 
 /**
  * DirectoryAuthenticator sobre a API institucional SEDUR. O token Bearer é
- * transitório: autentica, consulta discovery e pessoaView do PRÓPRIO usuário
- * (cadastro e centro de informação, que é a lotação no RH) e é descartado ao
- * fim da chamada.
+ * transitório: autentica, consulta discovery (lotação) e pessoaView do PRÓPRIO
+ * usuário (minimização LGPD) e é descartado ao fim da chamada.
  */
 class SedurDirectoryAuthenticator implements DirectoryAuthenticator
 {
@@ -56,13 +55,6 @@ class SedurDirectoryAuthenticator implements DirectoryAuthenticator
             $nome = $pessoa['nome'] ?: $nome;
             $email = $pessoa['email'] ?: $email;
             $telefone = $pessoa['telefone'] ?: $telefone;
-
-            // O discovery não traz a lotação; o centro de informação do RH vem
-            // da pessoaView e completa o vínculo de setor.
-            if ($setorCodigo === null && $setorNome === null) {
-                $setorCodigo = $pessoa['lotacaoCodigo'];
-                $setorNome = $pessoa['lotacaoNome'];
-            }
         } catch (SedurAuthUnavailableException) {
             $sincronizacaoFalhou = true;
         }
