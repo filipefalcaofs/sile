@@ -5,7 +5,7 @@ use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
-    /** Ordem obrigatória: o tipo é decidido pelo conteúdo de `users` antes de qualquer retarget. */
+    /** Ordem obrigatória: o tipo é decidido pelas contas de cidadão (`consultaContasDeCidadao`) antes de qualquer retarget. */
     public function up(): void
     {
         IdentidadeSeparada::paraMorph('viability_requests', 'created_by_user_id', 'created_by');

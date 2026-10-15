@@ -55,6 +55,11 @@ function rotuloRegra(chave: string): string {
     return REGRA_LABEL[chave] ?? chave.replaceAll('_', ' ');
 }
 
+const TIPO_CONTA_LABEL: Record<string, string> = {
+    'App\\Models\\Cidadao': 'Cidadão',
+    'App\\Models\\User': 'Servidor',
+};
+
 function rotuloEvidencia(chave: string): string {
     return EVIDENCIA_LABEL[chave] ?? chave.replaceAll('_', ' ');
 }
@@ -224,7 +229,7 @@ function resumoEvidencia(evidence: Record<string, unknown> | null): { chave: str
         }
 
         if (typeof valor === 'string' || typeof valor === 'number') {
-            itens.push({ chave, valor: String(valor) });
+            itens.push({ chave, valor: TIPO_CONTA_LABEL[String(valor)] ?? String(valor) });
         } else if (typeof valor === 'boolean') {
             itens.push({ chave, valor: valor ? 'sim' : 'não' });
         } else if (Array.isArray(valor)) {
