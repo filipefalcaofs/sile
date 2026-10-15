@@ -100,7 +100,8 @@ class DatabaseSeederTest extends TestCase
         // (features.geoserver_territorio — RT-02/03/04, 2026-09-23).
         // + 2 da autenticação AD do console (features.ad_login +
         // integrations.sedur_auth.base_url — 2026-09-24).
-        $this->assertSame(110, Parameter::query()->count());
+        // + 2 do parecer à JUCEB (integrations.regin.caminho_resposta/codigo_area).
+        $this->assertSame(111, Parameter::query()->count());
         $this->assertTrue(
             Activity::query()
                 ->where('log_name', 'cnaes')
@@ -400,7 +401,7 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame(0, User::query()->where('email', 'cidadao@sile.dev')->count());
         $this->assertSame(18, Role::query()->count());
         $this->assertSame(1331, Cnae::query()->count());
-        $this->assertSame(110, Parameter::query()->count());
+        $this->assertSame(111, Parameter::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoMunicipal)->count());
         $this->assertSame(1331, RiskClassification::query()->count());
         $this->assertSame(1, RuleVersion::vigente(RuleDomain::RiscoSanitario)->count());

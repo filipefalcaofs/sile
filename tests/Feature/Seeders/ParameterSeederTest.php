@@ -15,7 +15,7 @@ class ParameterSeederTest extends TestCase
     {
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(110, Parameter::query()->count());
+        $this->assertSame(111, Parameter::query()->count());
         $this->assertSame(
             ['abuso', 'analise', 'expresso', 'features', 'geo', 'ia', 'integracoes', 'louos', 'notificacoes', 'relatorios', 'retencao', 'risco', 'seguranca', 'solicitacao', 'tll'],
             Parameter::query()->distinct()->orderBy('group')->pluck('group')->all(),
@@ -842,6 +842,6 @@ class ParameterSeederTest extends TestCase
         $this->seed(ParameterSeeder::class);
         $this->seed(ParameterSeeder::class);
 
-        $this->assertSame(110, Parameter::query()->count());
+        $this->assertSame(111, Parameter::query()->count());
     }
 }
