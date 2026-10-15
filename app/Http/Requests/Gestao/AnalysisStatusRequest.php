@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Gestao;
 
 use App\Enums\AnalysisStatus;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,6 +31,9 @@ class AnalysisStatusRequest extends FormRequest
             'force' => ['sometimes', 'boolean'],
             'sector_id' => ['required_if:status,encaminhado', 'nullable', 'integer', 'exists:sectors,id'],
             'user_id' => ['required_if:status,encaminhado', 'nullable', 'integer', 'exists:users,id'],
+            'encaminhado_para_user_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where(
+                fn ($query) => $query->whereIn('id', User::permission('concluir-analise')->select('users.id')),
+            )],
         ];
     }
 }

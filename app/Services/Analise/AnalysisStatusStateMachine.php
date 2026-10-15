@@ -22,7 +22,8 @@ class AnalysisStatusStateMachine
         'para_distribuir' => ['encaminhado'],
         'encaminhado' => ['analisar'],
         'analisar' => ['em_analise'],
-        'em_analise' => ['analise_concluida', 'em_convite', 'vistoriar'],
+        'em_analise' => ['para_conclusao', 'analise_concluida', 'em_convite', 'vistoriar'],
+        'para_conclusao' => ['analise_concluida', 'em_analise'],
         'em_convite' => ['convite_respondido', 'convite_cancelado', 'convite_expirado'],
         'convite_respondido' => ['em_analise'],
         'convite_cancelado' => ['em_analise'],
@@ -54,7 +55,13 @@ class AnalysisStatusStateMachine
             throw InvalidAnalysisStatusTransitionException::para($from, $to);
         }
 
-        $request->forceFill(['analysis_status' => $to])->save();
+        $request->forceFill(['analysis_status' => $to]);
+
+        if ($to !== AnalysisStatus::ParaConclusao) {
+            $request->forceFill(['conclusao_encaminhada_para_user_id' => null]);
+        }
+
+        $request->save();
 
         $transition = $request->analysisStatusTransitions()->create([
             'from_status' => $from,

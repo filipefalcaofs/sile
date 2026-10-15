@@ -717,7 +717,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         // analisar-malha-fina — quem só encaminha não opera a caixa.
         Route::middleware('permission:analisar-malha-fina')->prefix('malha-fina')->name('malha-fina.')->group(function () {
             Route::get('/', MalhaFinaCaixaController::class)->name('index');
-            Route::post('{viabilityRequest}/concluir', [MalhaFinaController::class, 'concluir'])->name('concluir');
+            Route::post('{viabilityRequest}/concluir', [MalhaFinaController::class, 'concluir'])->middleware('permission:concluir-analise')->name('concluir');
         });
 
         // Ficha de análise técnica (HU-135/140/142): a superfície da análise
@@ -746,7 +746,7 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
         Route::middleware('permission:analisar-processos')->prefix('processos/{viabilityRequest}')->name('processos.')->group(function () {
             Route::patch('ficha', [AnalysisRecordController::class, 'autosave'])->name('ficha.autosave');
             Route::post('ficha/finalizar', [AnalysisRecordController::class, 'finalizar'])->name('ficha.finalizar');
-            Route::post('ficha/concluir-processo', [AnalysisRecordController::class, 'concluirProcesso'])->name('ficha.concluir-processo');
+            Route::post('ficha/concluir-processo', [AnalysisRecordController::class, 'concluirProcesso'])->middleware('permission:concluir-analise')->name('ficha.concluir-processo');
             Route::post('ficha/nova-revisao', [AnalysisRecordController::class, 'novaRevisao'])->name('ficha.nova-revisao');
             // Sugestão de minuta de parecer por IA (HU-118) — apoio, nunca decisão.
             Route::post('ficha/sugerir-parecer', [AnalysisRecordController::class, 'sugerirParecer'])->name('ficha.sugerir-parecer');
@@ -802,8 +802,8 @@ Route::middleware(['auth:gestao', 'permission:acessar-gestao', 'lgpd.accepted'])
             // Decidir (deferir/indeferir/encerrar) e abrir pendência — sob a
             // permissão da análise técnica (a regra de estado é do serviço).
             Route::middleware('permission:analisar-processos')->group(function () {
-                Route::post('{viabilityRequest}/decidir', ProcessoDecisaoController::class)->name('decidir');
-                Route::post('{viabilityRequest}/conclusao-analise', ConclusaoAnaliseController::class)->name('conclusao-analise');
+                Route::post('{viabilityRequest}/decidir', ProcessoDecisaoController::class)->middleware('permission:concluir-analise')->name('decidir');
+                Route::post('{viabilityRequest}/conclusao-analise', ConclusaoAnaliseController::class)->middleware('permission:concluir-analise')->name('conclusao-analise');
                 Route::post('{viabilityRequest}/pendencias', [ProcessoPendenciaController::class, 'store'])->name('pendencias.store');
                 Route::post('{viabilityRequest}/cancelar-convite', [ProcessoPendenciaController::class, 'cancelar'])->name('cancelar-convite');
                 Route::post('{viabilityRequest}/status-analise', [ProcessoController::class, 'atualizarStatusAnalise'])->name('status-analise');

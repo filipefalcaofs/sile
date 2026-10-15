@@ -85,7 +85,7 @@ class ViabilityRequest extends Model
         // Pergunta 4 do CNAE gatilho (sede de escritório virtual) é respondida no passo do imóvel.
         if ($cnae !== null
             && ! array_key_exists(4, $respostas)
-            && preg_replace('/\D/', '', $cnae) === preg_replace('/\D/', '', (string) config('sile.analise.escritorio_virtual.cnae_gatilho_sede'))
+            && preg_replace('/\D/', '', $cnae) === preg_replace('/\D/', '', (string) config('viabiliza.analise.escritorio_virtual.cnae_gatilho_sede'))
             && $this->wants_virtual_office_hq !== null) {
             $respostas[4] = (bool) $this->wants_virtual_office_hq;
         }
@@ -463,6 +463,17 @@ class ViabilityRequest extends Model
     public function assignedTo(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
+    /**
+     * Destinatário opcional da conclusão, informado pelo analista ao enviar o
+     * processo para conclusão. Quem analisou continua em assignedTo.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function conclusaoEncaminhadaPara(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'conclusao_encaminhada_para_user_id');
     }
 
     /**

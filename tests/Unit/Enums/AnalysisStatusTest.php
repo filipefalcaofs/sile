@@ -28,6 +28,7 @@ class AnalysisStatusTest extends TestCase
     public function test_redistribuicao_bloqueada_apos_conclusao_ou_em_convite_ou_vistoria(): void
     {
         $bloqueados = [
+            AnalysisStatus::ParaConclusao,
             AnalysisStatus::AnaliseConcluida,
             AnalysisStatus::EmConvite,
             AnalysisStatus::ConviteRespondido,

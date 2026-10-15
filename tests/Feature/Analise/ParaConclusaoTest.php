@@ -1,0 +1,208 @@
+<?php
+
+namespace Tests\Feature\Analise;
+
+use App\Enums\AnalysisStatus;
+use App\Enums\ViabilityRequestStatus;
+use App\Models\AnalysisRecord;
+use App\Models\Sector;
+use App\Models\User;
+use App\Models\ViabilityRequest;
+use App\Services\Analise\ProcessoQueryService;
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Tests\TestCase;
+
+/**
+ * Aba "Para Conclusão" da caixa do setor: o analista termina a ficha, muda a
+ * situação para "Para conclusão" (com destinatário opcional) e o processo sai
+ * da caixa dele para a fila centralizada do apoio. A conclusão final exige a
+ * permissão concluir-analise.
+ */
+class ParaConclusaoTest extends TestCase
+{
+    use LazilyRefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(RolesAndPermissionsSeeder::class);
+    }
+
+    private function analistaDoSetor(Sector $setor): User
+    {
+        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $analista->sectors()->attach($setor);
+
+        return $analista;
+    }
+
+    private function analistaSemConcluir(): User
+    {
+        $analista = User::factory()->withAcceptedLgpdTerm()->create();
+        $analista->givePermissionTo(['acessar-gestao', 'analisar-processos']);
+
+        return $analista;
+    }
+
+    private function processoEmAnalise(Sector $setor, User $analista): ViabilityRequest
+    {
+        $processo = ViabilityRequest::factory()->create();
+        $processo->forceFill([
+            'sector_id' => $setor->id,
+            'status' => ViabilityRequestStatus::EmAnalise,
+            'analysis_status' => AnalysisStatus::EmAnalise,
+            'assigned_user_id' => $analista->id,
+            'analysis_due_at' => now()->addDays(2),
+        ])->save();
+
+        return $processo;
+    }
+
+    public function test_analista_envia_para_conclusao_sem_destinatario(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $processo = $this->processoEmAnalise($setor, $analista);
+
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/status-analise", ['status' => 'para_conclusao'])
+            ->assertSessionHasNoErrors()
+            ->assertSessionMissing('error');
+
+        $processo->refresh();
+        $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
+        $this->assertNull($processo->conclusao_encaminhada_para_user_id);
+        $this->assertSame($analista->id, $processo->assigned_user_id);
+    }
+
+    public function test_analista_envia_para_conclusao_com_destinatario(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $chefia = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        $processo = $this->processoEmAnalise($setor, $analista);
+
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/status-analise", [
+                'status' => 'para_conclusao',
+                'encaminhado_para_user_id' => $chefia->id,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $processo->refresh();
+        $this->assertSame(AnalysisStatus::ParaConclusao, $processo->analysis_status);
+        $this->assertSame($chefia->id, $processo->conclusao_encaminhada_para_user_id);
+    }
+
+    public function test_destinatario_precisa_poder_concluir(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $processo = $this->processoEmAnalise($setor, $analista);
+        $semPermissao = $this->analistaSemConcluir();
+
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/status-analise", [
+                'status' => 'para_conclusao',
+                'encaminhado_para_user_id' => $semPermissao->id,
+            ])
+            ->assertSessionHasErrors('encaminhado_para_user_id');
+
+        $this->assertSame(AnalysisStatus::EmAnalise, $processo->refresh()->analysis_status);
+    }
+
+    public function test_processo_para_conclusao_sai_da_caixa_do_analista(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $processo = $this->processoEmAnalise($setor, $analista);
+        $outro = $this->processoEmAnalise($setor, $analista);
+
+        $processo->forceFill(['analysis_status' => AnalysisStatus::ParaConclusao])->save();
+
+        $servico = app(ProcessoQueryService::class);
+        $ids = $servico->fila($analista)->pluck('viability_requests.id')->all();
+
+        $this->assertNotContains($processo->id, $ids);
+        $this->assertContains($outro->id, $ids);
+        $this->assertSame(1, $servico->contadores($analista)['em_analise']);
+    }
+
+    public function test_aba_para_conclusao_lista_com_analista_e_encaminhado_para(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $chefia = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        $apoio = User::factory()->apoio()->withAcceptedLgpdTerm()->create();
+        $apoio->sectors()->attach($setor);
+
+        $comDestino = $this->processoEmAnalise($setor, $analista);
+        $comDestino->forceFill([
+            'analysis_status' => AnalysisStatus::ParaConclusao,
+            'conclusao_encaminhada_para_user_id' => $chefia->id,
+        ])->save();
+        $semDestino = $this->processoEmAnalise($setor, $analista);
+        $semDestino->forceFill(['analysis_status' => AnalysisStatus::ParaConclusao])->save();
+        $emAndamento = $this->processoEmAnalise($setor, $analista);
+
+        $page = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?visao=para_conclusao')
+            ->assertOk()
+            ->viewData('page');
+
+        $linhas = collect($page['props']['processos']['data'])->keyBy('id');
+
+        $this->assertSame('para_conclusao', $page['props']['visao']);
+        $this->assertEqualsCanonicalizing([$comDestino->id, $semDestino->id], $linhas->keys()->all());
+        $this->assertSame($chefia->name, $linhas[$comDestino->id]['encaminhado_para']);
+        $this->assertNull($linhas[$semDestino->id]['encaminhado_para']);
+        $this->assertSame($analista->name, $linhas[$comDestino->id]['assigned_to']);
+        $this->assertSame(2, $page['props']['contadores']['para_conclusao']);
+
+        $outras = $this->actingAs($apoio, 'gestao')
+            ->get('/gestao/caixa-setor?visao=distribuidos')
+            ->viewData('page');
+
+        $this->assertSame([$emAndamento->id], collect($outras['props']['processos']['data'])->pluck('id')->all());
+        $this->assertSame(1, $outras['props']['contadores']['distribuidos']);
+    }
+
+    public function test_conclusao_exige_a_permissao_concluir_analise(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaSemConcluir();
+        $analista->sectors()->attach($setor);
+        $processo = $this->processoEmAnalise($setor, $analista);
+
+        $this->actingAs($analista, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/conclusao-analise", ['resultado' => 'deferido'])
+            ->assertForbidden();
+    }
+
+    public function test_conclusao_a_partir_de_para_conclusao_fecha_o_eixo_e_limpa_o_destinatario(): void
+    {
+        $setor = Sector::factory()->create();
+        $analista = $this->analistaDoSetor($setor);
+        $chefia = User::factory()->gestor()->withAcceptedLgpdTerm()->create();
+        $processo = $this->processoEmAnalise($setor, $analista);
+        $processo->forceFill([
+            'analysis_status' => AnalysisStatus::ParaConclusao,
+            'conclusao_encaminhada_para_user_id' => $chefia->id,
+        ])->save();
+        AnalysisRecord::factory()->finalizada()->create([
+            'viability_request_id' => $processo->id,
+            'revision' => 1,
+            'per_cnae' => [],
+        ]);
+
+        $this->actingAs($chefia, 'gestao')
+            ->post("/gestao/processos/{$processo->id}/conclusao-analise", ['resultado' => 'desativado'])
+            ->assertSessionHasNoErrors();
+
+        $processo->refresh();
+        $this->assertSame(AnalysisStatus::AnaliseConcluida, $processo->analysis_status);
+        $this->assertNull($processo->conclusao_encaminhada_para_user_id);
+    }
+}

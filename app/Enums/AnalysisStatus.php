@@ -14,6 +14,7 @@ enum AnalysisStatus: string
     case Encaminhado = 'encaminhado';
     case Analisar = 'analisar';
     case EmAnalise = 'em_analise';
+    case ParaConclusao = 'para_conclusao';
     case AnaliseConcluida = 'analise_concluida';
     case EmConvite = 'em_convite';
     case ConviteRespondido = 'convite_respondido';
@@ -29,6 +30,7 @@ enum AnalysisStatus: string
             self::Encaminhado => 'Encaminhado para',
             self::Analisar => 'Analisar',
             self::EmAnalise => 'Em análise',
+            self::ParaConclusao => 'Para conclusão',
             self::AnaliseConcluida => 'Análise concluída',
             self::EmConvite => 'Em convite',
             self::ConviteRespondido => 'Convite respondido',
@@ -43,7 +45,7 @@ enum AnalysisStatus: string
     {
         return match ($this) {
             self::ParaDistribuir, self::Encaminhado => 'Distribuição',
-            self::Analisar, self::EmAnalise, self::AnaliseConcluida => 'Análise',
+            self::Analisar, self::EmAnalise, self::ParaConclusao, self::AnaliseConcluida => 'Análise',
             self::EmConvite, self::ConviteRespondido, self::ConviteCancelado, self::ConviteExpirado => 'Convite',
             self::Vistoriar, self::Vistoriado => 'Vistoria',
         };
@@ -58,7 +60,7 @@ enum AnalysisStatus: string
     {
         return match ($this) {
             self::ParaDistribuir, self::Encaminhado, self::Analisar, self::EmAnalise => true,
-            self::AnaliseConcluida, self::EmConvite, self::ConviteRespondido,
+            self::ParaConclusao, self::AnaliseConcluida, self::EmConvite, self::ConviteRespondido,
             self::ConviteCancelado, self::ConviteExpirado, self::Vistoriar, self::Vistoriado => false,
         };
     }
@@ -87,7 +89,8 @@ enum AnalysisStatus: string
             self::ParaDistribuir => [self::Encaminhado],
             self::Encaminhado => [self::Analisar],
             self::Analisar => [self::EmAnalise],
-            self::EmAnalise => [self::AnaliseConcluida, self::EmConvite, self::Vistoriar],
+            self::EmAnalise => [self::ParaConclusao, self::AnaliseConcluida, self::EmConvite, self::Vistoriar],
+            self::ParaConclusao => [self::EmAnalise],
             self::EmConvite => [self::ConviteCancelado],
             self::Vistoriar => [self::Vistoriado],
             self::Vistoriado, self::ConviteRespondido, self::ConviteCancelado => [self::EmAnalise],

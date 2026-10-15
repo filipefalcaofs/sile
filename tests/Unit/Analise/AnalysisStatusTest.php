@@ -7,9 +7,9 @@ use PHPUnit\Framework\TestCase;
 
 class AnalysisStatusTest extends TestCase
 {
-    public function test_todos_os_11_estados_existem_com_rotulo(): void
+    public function test_todos_os_12_estados_existem_com_rotulo(): void
     {
-        $this->assertCount(11, AnalysisStatus::cases());
+        $this->assertCount(12, AnalysisStatus::cases());
         $this->assertSame('Para distribuir', AnalysisStatus::ParaDistribuir->label());
         $this->assertSame('Em convite', AnalysisStatus::EmConvite->label());
         $this->assertSame('Vistoriado', AnalysisStatus::Vistoriado->label());
@@ -27,13 +27,13 @@ class AnalysisStatusTest extends TestCase
     {
         $options = AnalysisStatus::options();
         $this->assertContains(['value' => 'para_distribuir', 'label' => 'Para distribuir'], $options);
-        $this->assertCount(11, $options);
+        $this->assertCount(12, $options);
     }
 
     public function test_proximas_lista_transicoes_manuais(): void
     {
         $this->assertSame(
-            ['analise_concluida', 'em_convite', 'vistoriar'],
+            ['para_conclusao', 'analise_concluida', 'em_convite', 'vistoriar'],
             array_map(fn (AnalysisStatus $s) => $s->value, AnalysisStatus::EmAnalise->proximas()),
         );
         $this->assertSame([], AnalysisStatus::AnaliseConcluida->proximas());

@@ -56,7 +56,10 @@ class CargaAnalistaService
             ])
             ->where(fn ($query) => $query
                 ->whereNull('analysis_status')
-                ->orWhere('analysis_status', '!=', AnalysisStatus::AnaliseConcluida->value))
+                ->orWhereNotIn('analysis_status', [
+                    AnalysisStatus::AnaliseConcluida->value,
+                    AnalysisStatus::ParaConclusao->value,
+                ]))
             ->whereNotNull('assigned_user_id')
             ->groupBy('assigned_user_id', 'analysis_status')
             ->get([
