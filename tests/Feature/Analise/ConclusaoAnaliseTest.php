@@ -101,7 +101,7 @@ class ConclusaoAnaliseTest extends TestCase
         Event::assertNotDispatched(ResultadoEmitido::class);
     }
 
-    public function test_indeferido_explicito_encerra_mesmo_com_atividades_deferidas(): void
+    public function test_indeferido_explicito_sem_cnae_indeferida_e_bloqueado(): void
     {
         Event::fake([ResultadoEmitido::class]);
 
@@ -112,15 +112,13 @@ class ConclusaoAnaliseTest extends TestCase
         $this->actingAs($this->analista(), 'gestao')
             ->post("/gestao/processos/{$processo->id}/conclusao-analise", [
                 'resultado' => 'indeferido',
+                'parecer' => 'Parecer qualquer.',
             ])
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasErrors('conclusao');
 
-        $processo->refresh();
-        $this->assertSame(ViabilityRequestStatus::Indeferida, $processo->status);
-        $this->assertSame(DecisionOutcome::Indeferida, $processo->decision->outcome);
-        $this->assertNull($processo->decision->tvl_product_number);
-        Event::assertDispatched(ResultadoEmitido::class);
+        $this->assertSame(ViabilityRequestStatus::EmAnalise, $processo->fresh()->status);
+        $this->assertDatabaseCount('viability_decisions', 0);
+        Event::assertNotDispatched(ResultadoEmitido::class);
     }
 
     public function test_cassado_revogado_e_desativado_encerram_sem_tvl(): void

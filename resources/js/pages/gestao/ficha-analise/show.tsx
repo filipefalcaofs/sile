@@ -45,6 +45,7 @@ interface PerCnae {
     status_escolhido?: string | null;
     fluxo?: string | null;
     grupo_uso?: string | null;
+    subgrupo_uso?: string | null;
     valor_tll?: number | string | null;
     codigo_louos?: string | null;
     codigo_tll?: string | null;
@@ -673,8 +674,9 @@ function StatusEscolhido({
     onChange,
     disabled,
 }: {
-    cnae: string;    valor: string | null | undefined;
-    onChange: (status: StatusFicha) => void;
+    cnae: string;
+    valor: string | null | undefined;
+    onChange: (status: StatusFicha | null) => void;
     disabled: boolean;
 }) {
     return (
@@ -689,7 +691,7 @@ function StatusEscolhido({
                         role="radio"
                         aria-checked={ativo}
                         disabled={disabled}
-                        onClick={() => onChange(opcao.value)}
+                        onClick={() => onChange(ativo ? null : opcao.value)}
                         className={`rounded-lg px-3 py-1.5 text-theme-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
                             ativo
                                 ? opcao.value === 'deferida'
@@ -776,11 +778,10 @@ export default function FichaAnaliseShow({
     const editavel = ficha.editavel;
 
     const [perCnae, setPerCnae] = useState<PerCnae[]>(() => ficha.per_cnae ?? []);
-    // Guarda do relatório SEDUR 21/09 (item 07): sem decisão em cada CNAE, o
-    // processo não conclui — o botão fica desabilitado e a pendência visível.
-    const cnaesPendentes = perCnae.filter(
-        (item) => item.status_escolhido !== 'deferida' && item.status_escolhido !== 'indeferida',
-    );
+    // Regra de decisão: só o indeferimento é marcado por CNAE. Nenhum indeferido
+    // → o processo é deferido; ao menos um indeferido → o processo é indeferido.
+    const cnaesIndeferidos = perCnae.filter((item) => item.status_escolhido === 'indeferida');
+    const resultadoPrevisto = cnaesIndeferidos.length > 0 ? 'indeferido' : 'deferido';
     const [conditions, setConditions] = useState<string[]>(() => ficha.conditions ?? []);
     const [parecer, setParecer] = useState<string>(() => ficha.parecer ?? '');
     const [tvlKind, setTvlKind] = useState<'provisoria' | 'definitiva'>('provisoria');
@@ -1857,9 +1858,15 @@ export default function FichaAnaliseShow({
                                                                     </Badge>
                                                                 )}
                                                             </div>
-                                                            {item.grupo_uso && (
+                                                            {(item.subgrupo_uso || item.grupo_uso || item.codigo_louos) && (
                                                                 <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
-                                                                    Grupo de uso: {item.grupo_uso}
+                                                                    Enquadramento:{' '}
+                                                                    {[item.subgrupo_uso ?? item.grupo_uso, item.codigo_louos]
+                                                                        .filter(Boolean)
+                                                                        .join(' · ')}
+                                                                    {item.subgrupo_uso && item.grupo_uso
+                                                                        ? ` (grupo ${item.grupo_uso})`
+                                                                        : ''}
                                                                 </p>
                                                             )}
                                                         </div>
@@ -2482,16 +2489,14 @@ export default function FichaAnaliseShow({
                                             <Button
                                                 onClick={() => setShowFinalizar(true)}
                                                 size="sm"
-                                                disabled={cnaesPendentes.length > 0}
                                             >
                                                 Finalizar processo
                                             </Button>
-                                            {cnaesPendentes.length > 0 && (
-                                                <p className="text-theme-xs text-gray-500 dark:text-gray-400">
-                                                    Falta decidir:{' '}
-                                                    {cnaesPendentes.map((i) => i.cnae_formatado ?? i.cnae).join(', ')}
-                                                </p>
-                                            )}
+                                            <p className="text-theme-xs text-gray-500 dark:text-gray-400">
+                                                {cnaesIndeferidos.length > 0
+                                                    ? `Será indeferido: ${cnaesIndeferidos.map((i) => i.cnae_formatado ?? i.cnae).join(', ')} marcado(s) como indeferido(s).`
+                                                    : 'Será deferido: nenhum CNAE marcado como indeferido.'}
+                                            </p>
                                         </>
                                     ) : (
                                         <>
@@ -2596,7 +2601,10 @@ export default function FichaAnaliseShow({
                 title="Finalizar processo?"
                 description={
                     <>
-                        A ficha fica imutável e o processo é concluído conforme a decisão do analista em cada CNAE.
+                        A ficha fica imutável e o processo será {resultadoPrevisto}
+                        {cnaesIndeferidos.length > 0
+                            ? ` — há ${cnaesIndeferidos.length} CNAE(s) marcado(s) como indeferido(s).`
+                            : ' — nenhum CNAE está marcado como indeferido.'}
                         {erroAcao && (
                             <span className="mt-2 block font-medium text-error-600 dark:text-error-500">
                                 {erroAcao}
