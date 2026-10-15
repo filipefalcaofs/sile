@@ -8,6 +8,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use InvalidArgumentException;
 
 /**
  * Operações compartilhadas pelas migrations da separação cidadão x servidor.
@@ -55,7 +56,7 @@ final class IdentidadeSeparada
             return;
         }
 
-        $colunas = array_diff(self::COLUNAS, ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_confirmed_at']);
+        $colunas = self::colunasDoEspelho();
 
         DB::table('cidadaos')->insertUsing(
             $colunas,
@@ -63,14 +64,24 @@ final class IdentidadeSeparada
         );
     }
 
+    /** @return list<string> */
+    private static function colunasDoEspelho(): array
+    {
+        return array_values(array_diff(self::COLUNAS, ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_confirmed_at']));
+    }
+
+    /** Espelha, em uma só instrução, os servidores citados em `$tabela.$coluna` que ainda não estão em `cidadaos`. */
     public static function espelharOrfaos(string $tabela, string $coluna): void
     {
-        DB::table($tabela)
-            ->whereNotNull($coluna)
-            ->whereNotIn($coluna, DB::table('cidadaos')->select('id'))
-            ->distinct()
-            ->pluck($coluna)
-            ->each(fn (int $id) => self::espelharServidor($id));
+        $colunas = self::colunasDoEspelho();
+
+        DB::table('cidadaos')->insertUsing(
+            $colunas,
+            DB::table('users')
+                ->select($colunas)
+                ->whereIn('id', DB::table($tabela)->whereNotNull($coluna)->select($coluna))
+                ->whereNotIn('id', DB::table('cidadaos')->select('id')),
+        );
 
         self::acertarSequencia();
     }
@@ -90,34 +101,109 @@ final class IdentidadeSeparada
         );
     }
 
-    /** Troca `$antiga` (FK para users) por `$nova` (FK para cidadaos), mantendo os valores. */
+    /**
+     * Troca `$antiga` (FK para users) por `$nova` (FK para cidadaos), mantendo os valores.
+     * Índices que citavam a coluna são derrubados pelo nome real e recriados sobre a coluna nova.
+     */
     public static function retargetar(string $tabela, string $antiga, string $nova, bool $nullable, string $onDelete = 'cascade'): void
     {
+        if (strtolower($onDelete) === 'set null' && ! $nullable) {
+            throw new InvalidArgumentException("onDelete 'set null' exige coluna nullable ({$tabela}.{$antiga}).");
+        }
+
         self::espelharOrfaos($tabela, $antiga);
 
+        $indices = self::indicesCitando($tabela, $antiga);
+
+        self::derrubarIndices($tabela, $indices);
         Schema::table($tabela, fn (Blueprint $t) => $t->dropForeign([$antiga]));
         Schema::table($tabela, fn (Blueprint $t) => $t->renameColumn($antiga, $nova));
         Schema::table($tabela, function (Blueprint $t) use ($nova, $onDelete) {
             $t->foreign($nova)->references('id')->on('cidadaos')->onDelete($onDelete);
         });
+        self::recriarIndices($tabela, $indices, $antiga, [$nova]);
     }
 
-    /** Converte `$antiga` (FK para users) no par `{$base}_type` + `{$base}_id`, sem FK. */
+    /**
+     * Converte `$antiga` (FK para users) no par `{$base}_type` + `{$base}_id`, sem FK.
+     * O tipo vem das contas que a consulta de cidadão classifica como tal (independe do conteúdo
+     * atual de `cidadaos`); o resto é User. `{base}_type` herda a obrigatoriedade da coluna original.
+     * Índices que citavam a coluna passam a conter `{base}_type` antes de `{base}_id`.
+     */
     public static function paraMorph(string $tabela, string $antiga, string $base): void
     {
+        $obrigatoria = ! collect(Schema::getColumns($tabela))->firstWhere('name', $antiga)['nullable'];
+        $indices = self::indicesCitando($tabela, $antiga);
+
         Schema::table($tabela, function (Blueprint $t) use ($base) {
             $t->string("{$base}_type", 60)->nullable();
         });
 
         DB::table($tabela)->whereNotNull($antiga)
-            ->whereIn($antiga, DB::table('cidadaos')->select('id'))
+            ->whereIn($antiga, self::consultaContasDeCidadao()->select('id'))
             ->update(["{$base}_type" => Cidadao::class]);
 
         DB::table($tabela)->whereNotNull($antiga)->whereNull("{$base}_type")
             ->update(["{$base}_type" => User::class]);
 
+        if ($obrigatoria) {
+            Schema::table($tabela, fn (Blueprint $t) => $t->string("{$base}_type", 60)->nullable(false)->change());
+        }
+
+        self::derrubarIndices($tabela, $indices);
         Schema::table($tabela, fn (Blueprint $t) => $t->dropForeign([$antiga]));
         Schema::table($tabela, fn (Blueprint $t) => $t->renameColumn($antiga, "{$base}_id"));
-        Schema::table($tabela, fn (Blueprint $t) => $t->index(["{$base}_type", "{$base}_id"]));
+
+        if ($indices === []) {
+            Schema::table($tabela, fn (Blueprint $t) => $t->index(["{$base}_type", "{$base}_id"]));
+        } else {
+            self::recriarIndices($tabela, $indices, $antiga, ["{$base}_type", "{$base}_id"]);
+        }
+    }
+
+    /** @return list<array{name: string, columns: list<string>, unique: bool, primary: bool}> */
+    private static function indicesCitando(string $tabela, string $coluna): array
+    {
+        return array_values(array_filter(
+            Schema::getIndexes($tabela),
+            fn (array $indice) => ! $indice['primary'] && in_array($coluna, $indice['columns'], true),
+        ));
+    }
+
+    /** @param list<array{name: string, columns: list<string>, unique: bool, primary: bool}> $indices */
+    private static function derrubarIndices(string $tabela, array $indices): void
+    {
+        if ($indices === []) {
+            return;
+        }
+
+        Schema::table($tabela, function (Blueprint $t) use ($indices) {
+            foreach ($indices as $indice) {
+                $indice['unique'] ? $t->dropUnique($indice['name']) : $t->dropIndex($indice['name']);
+            }
+        });
+    }
+
+    /**
+     * Recria com os nomes padrão do Laravel, trocando `$antiga` por `$substituta` na mesma posição.
+     *
+     * @param  list<array{name: string, columns: list<string>, unique: bool, primary: bool}>  $indices
+     * @param  list<string>  $substituta
+     */
+    private static function recriarIndices(string $tabela, array $indices, string $antiga, array $substituta): void
+    {
+        if ($indices === []) {
+            return;
+        }
+
+        Schema::table($tabela, function (Blueprint $t) use ($indices, $antiga, $substituta) {
+            foreach ($indices as $indice) {
+                $colunas = [];
+                foreach ($indice['columns'] as $coluna) {
+                    array_push($colunas, ...($coluna === $antiga ? $substituta : [$coluna]));
+                }
+                $indice['unique'] ? $t->unique($colunas) : $t->index($colunas);
+            }
+        });
     }
 }

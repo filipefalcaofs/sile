@@ -2,7 +2,6 @@
 
 use App\Support\Migration\IdentidadeSeparada;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,8 +10,9 @@ return new class extends Migration
         IdentidadeSeparada::copiarContasDeCidadao();
     }
 
-    public function down(): void
-    {
-        DB::table('cidadaos')->delete();
-    }
+    /**
+     * Sem reversão: apagar `cidadaos` em cascata destruiria vínculos já retargetados.
+     * A reversão completa é a restauração do backup do banco (consolidada nas Tarefas 12/13).
+     */
+    public function down(): void {}
 };

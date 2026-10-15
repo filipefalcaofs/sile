@@ -18,6 +18,7 @@ class MigracaoCopiaCidadaosTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
 
         $cidadao = User::factory()->create();
+        $comPapel = User::factory()->cidadao()->create();
         $analista = User::factory()->analista()->create();
         $ad = User::factory()->ad()->create();
 
@@ -25,6 +26,7 @@ class MigracaoCopiaCidadaosTest extends TestCase
         $migracao->up();
 
         $this->assertDatabaseHas('cidadaos', ['id' => $cidadao->id, 'cpf' => $cidadao->cpf]);
+        $this->assertDatabaseHas('cidadaos', ['id' => $comPapel->id, 'cpf' => $comPapel->cpf]);
         $this->assertDatabaseMissing('cidadaos', ['id' => $analista->id]);
         $this->assertDatabaseMissing('cidadaos', ['id' => $ad->id]);
         $this->assertSame($cidadao->password, DB::table('cidadaos')->where('id', $cidadao->id)->value('password'));
@@ -43,8 +45,20 @@ class MigracaoCopiaCidadaosTest extends TestCase
 
     public function test_acertar_sequencia_nao_falha_fora_do_postgres(): void
     {
-        IdentidadeSeparada::acertarSequencia();
+        // Só verificável em PostgreSQL real (setval); aqui basta não falhar.
+        $this->expectNotToPerformAssertions();
 
-        $this->assertTrue(true);
+        IdentidadeSeparada::acertarSequencia();
+    }
+
+    public function test_down_da_migration_de_copia_nao_apaga_cidadaos(): void
+    {
+        $cidadao = User::factory()->create();
+        IdentidadeSeparada::copiarContasDeCidadao();
+
+        $migracao = require database_path('migrations/2026_10_16_000300_copia_cidadaos_de_users.php');
+        $migracao->down();
+
+        $this->assertDatabaseHas('cidadaos', ['id' => $cidadao->id]);
     }
 }
