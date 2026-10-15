@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Notifications\VerifyEmailQueued;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -35,7 +35,7 @@ class EmailVerificationTest extends TestCase
             'password_confirmation' => 'SenhaForte123',
         ]);
 
-        $user = User::firstWhere('email', 'maria@example.com');
+        $user = Cidadao::firstWhere('email', 'maria@example.com');
 
         $this->assertNotNull($user);
 
@@ -44,7 +44,7 @@ class EmailVerificationTest extends TestCase
 
     public function test_tela_de_verificacao_renderiza(): void
     {
-        $user = User::factory()->unverified()->create();
+        $user = Cidadao::factory()->unverified()->create();
 
         $this->actingAs($user)
             ->get('/portal/email/verify')
@@ -54,7 +54,7 @@ class EmailVerificationTest extends TestCase
 
     public function test_email_e_verificado_com_link_assinado(): void
     {
-        $user = User::factory()->unverified()->create();
+        $user = Cidadao::factory()->unverified()->create();
 
         $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
             'id' => $user->id,
@@ -68,7 +68,7 @@ class EmailVerificationTest extends TestCase
 
     public function test_verificacao_gera_auditoria(): void
     {
-        $user = User::factory()->unverified()->create();
+        $user = Cidadao::factory()->unverified()->create();
 
         $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
             'id' => $user->id,
@@ -85,7 +85,7 @@ class EmailVerificationTest extends TestCase
 
     public function test_hash_invalido_nao_verifica(): void
     {
-        $user = User::factory()->unverified()->create();
+        $user = Cidadao::factory()->unverified()->create();
 
         $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
             'id' => $user->id,
@@ -99,7 +99,7 @@ class EmailVerificationTest extends TestCase
 
     public function test_link_de_verificacao_expirado_volta_ao_aviso_com_mensagem(): void
     {
-        $user = User::factory()->unverified()->create();
+        $user = Cidadao::factory()->unverified()->create();
 
         $url = URL::temporarySignedRoute('verification.verify', now()->subMinute(), [
             'id' => $user->id,
@@ -116,7 +116,7 @@ class EmailVerificationTest extends TestCase
 
     public function test_nao_verificado_nao_acessa_portal(): void
     {
-        $user = User::factory()->unverified()->create();
+        $user = Cidadao::factory()->unverified()->create();
 
         $this->actingAs($user)
             ->get('/portal/painel')
@@ -127,7 +127,7 @@ class EmailVerificationTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->unverified()->create();
+        $user = Cidadao::factory()->unverified()->create();
 
         $this->actingAs($user)->post('/portal/email/verification-notification');
 
@@ -138,7 +138,7 @@ class EmailVerificationTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->unverified()->create();
+        $user = Cidadao::factory()->unverified()->create();
 
         $this->actingAs($user)->post('/portal/email/verification-notification');
 
@@ -153,7 +153,7 @@ class EmailVerificationTest extends TestCase
 
     public function test_email_usa_a_url_congelada_mesmo_com_ambiente_divergente_no_worker(): void
     {
-        $user = User::factory()->unverified()->create();
+        $user = Cidadao::factory()->unverified()->create();
 
         $notification = new VerifyEmailQueued;
         $notification->verificationUrl = 'https://sile.salvador.ba.gov.br/portal/email/verify/9/abc?signature=x';

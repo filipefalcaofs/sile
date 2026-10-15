@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\Cidadao;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -263,10 +262,11 @@ class GestaoLoginAdTest extends TestCase
     {
         $this->fakeAdSucesso();
 
-        $cidadao = Cidadao::factory()->ad('seuusuarioad')->create();
+        // Conta AD válida, mas sem perfil com acessar-gestao.
+        $servidor = User::factory()->ad('seuusuarioad')->create();
 
         $this->post('/gestao/login', [
-            'identifier' => $cidadao->email,
+            'identifier' => $servidor->email,
             'password' => 'senha-corporativa',
         ])->assertSessionHasErrors('identifier');
 

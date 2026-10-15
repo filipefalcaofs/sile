@@ -15,7 +15,6 @@ use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery;
 use Mockery\MockInterface;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class GovBrLoginTest extends TestCase
@@ -152,16 +151,16 @@ class GovBrLoginTest extends TestCase
         $this->assertStringStartsWith('https://sso.acesso.gov.br/authorize?', $location);
     }
 
-    public function test_callback_usa_o_perfil_definido_no_parametro(): void
+    public function test_callback_nao_cria_conta_de_servidor_nem_atribui_perfil(): void
     {
-        Role::create(['name' => 'municipe', 'guard_name' => 'web']);
         $this->enableGovBr();
-        $this->setParameter('portal.perfil_cidadao', 'municipe');
         $this->mockSocialiteUser($this->govBrClaims());
 
         $this->get('/portal/login/govbr/callback?code=abc&state=xyz');
 
-        $this->assertTrue(Cidadao::query()->where('cpf', self::VALID_CPF)->first()->hasRole('municipe'));
+        $this->assertNotNull(Cidadao::query()->where('cpf', self::VALID_CPF)->first());
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('model_has_roles', 0);
     }
 
     public function test_callback_cria_conta_real_no_primeiro_acesso(): void

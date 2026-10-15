@@ -62,14 +62,16 @@ class AuthenticationTest extends TestCase
     {
         // Ambientes independentes: o login do portal nunca leva à gestão —
         // o console tem login próprio em /gestao/login (guard gestao).
-        $user = User::factory()->administrador()->create();
+        // A mesma pessoa tem as duas contas: o portal só autentica a de cidadão.
+        $administrador = User::factory()->administrador()->create();
+        $cidadao = Cidadao::factory()->create(['cpf' => $administrador->cpf, 'email' => $administrador->email]);
 
         $response = $this->post('/portal/login', [
-            'cpf' => $user->cpf,
+            'cpf' => $administrador->cpf,
             'password' => 'password',
         ]);
 
-        $this->assertAuthenticatedAs($user, 'web');
+        $this->assertAuthenticatedAs($cidadao, 'web');
         $this->assertGuest('gestao');
         $response->assertRedirect('/portal/painel');
     }
@@ -221,6 +223,7 @@ class AuthenticationTest extends TestCase
     public function test_servidor_logando_no_portal_tambem_fica_no_portal(): void
     {
         $administrador = User::factory()->administrador()->withAcceptedLgpdTerm()->create();
+        $cidadao = Cidadao::factory()->withAcceptedLgpdTerm()->create(['cpf' => $administrador->cpf]);
 
         $this->get('/gestao/cnaes')->assertRedirect('/gestao/login');
 
@@ -230,6 +233,8 @@ class AuthenticationTest extends TestCase
         ]);
 
         $response->assertRedirect(route('portal.dashboard'));
+        $this->assertAuthenticatedAs($cidadao, 'web');
+        $this->assertGuest('gestao');
     }
 
     public function test_cidadao_logado_no_portal_nao_entra_na_gestao(): void

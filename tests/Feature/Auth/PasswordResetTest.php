@@ -70,7 +70,7 @@ class PasswordResetTest extends TestCase
     {
         $user = Cidadao::factory()->create();
 
-        $token = Password::createToken($user);
+        $token = Password::broker('cidadaos')->createToken($user);
 
         $response = $this->post('/portal/reset-password', [
             'token' => $token,
@@ -89,7 +89,7 @@ class PasswordResetTest extends TestCase
     {
         $user = Cidadao::factory()->create();
 
-        $token = Password::createToken($user);
+        $token = Password::broker('cidadaos')->createToken($user);
 
         $this->post('/portal/reset-password', [
             'token' => $token,
@@ -136,7 +136,7 @@ class PasswordResetTest extends TestCase
     {
         $user = Cidadao::factory()->create();
 
-        $token = Password::createToken($user);
+        $token = Password::broker('cidadaos')->createToken($user);
 
         $response = $this->post('/portal/reset-password', [
             'token' => $token,

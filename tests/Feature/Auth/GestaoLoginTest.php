@@ -86,6 +86,26 @@ class GestaoLoginTest extends TestCase
 
         $this->assertGuest('gestao');
 
+        $this->assertDatabaseHas('access_logs', [
+            'email' => $cidadao->email,
+            'event' => 'falha',
+            'channel' => 'gestao',
+        ]);
+    }
+
+    public function test_servidor_sem_perfil_de_gestao_nao_loga_e_tentativa_e_auditada(): void
+    {
+        $servidor = User::factory()->create();
+
+        $response = $this->post('/gestao/login', [
+            'identifier' => $servidor->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertSessionHasErrors('identifier');
+
+        $this->assertGuest('gestao');
+
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'seguranca',
             'event' => 'acesso-negado',
