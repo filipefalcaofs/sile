@@ -177,15 +177,42 @@ class AutenticacaoCidadaoTest extends TestCase
         Notification::fake();
         User::factory()->create(['email' => 'so-servidor@example.com']);
 
-        $existente = $this->post('/portal/forgot-password', ['email' => 'so-servidor@example.com']);
-        $inexistente = $this->post('/portal/forgot-password', ['email' => 'ninguem@example.com']);
+        $deServidor = $this->respostaDoForgotPasswordDoPortal('so-servidor@example.com');
+        $inexistente = $this->respostaDoForgotPasswordDoPortal('ninguem@example.com');
 
         Notification::assertNothingSent();
-        $this->assertSame($inexistente->getStatusCode(), $existente->getStatusCode());
-        $this->assertSame(
-            session('status'),
-            $inexistente->baseResponse->getSession()->get('status'),
-        );
+        // A resposta ao e-mail de servidor é a mesma do e-mail inexistente: o portal
+        // não revela que o endereço pertence a uma conta da gestão.
+        // (e-mail inexistente responde como envio real; RespostaRecuperacaoSenhaSemRevelarConta).
+        $this->assertSame(302, $inexistente['status']);
+        $this->assertSame([], $inexistente['erros']);
+        $this->assertSame(__(Password::RESET_LINK_SENT), $inexistente['flash']);
+        $this->assertSame($inexistente, $deServidor);
+    }
+
+    /**
+     * Requisição isolada: o store de sessão do teste é compartilhado entre
+     * requisições, então a sessão é capturada e esvaziada a cada chamada.
+     *
+     * @return array{status: int, destino: ?string, erros: array<string, list<string>>, flash: mixed}
+     */
+    private function respostaDoForgotPasswordDoPortal(string $email): array
+    {
+        $this->flushSession();
+
+        $resposta = $this->from('/portal/forgot-password')->post('/portal/forgot-password', ['email' => $email]);
+        $sessao = $resposta->baseResponse->getSession();
+
+        $retrato = [
+            'status' => $resposta->getStatusCode(),
+            'destino' => $resposta->headers->get('Location'),
+            'erros' => $sessao->get('errors')?->getBag('default')->toArray() ?? [],
+            'flash' => $sessao->get('status'),
+        ];
+
+        $this->flushSession();
+
+        return $retrato;
     }
 
     public function test_forgot_password_da_gestao_ignora_cidadao_com_o_mesmo_email(): void
