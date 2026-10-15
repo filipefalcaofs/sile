@@ -90,6 +90,63 @@ class HttpReginParecerNotifierTest extends TestCase
         $this->assertSame(4, $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['STATUS_ANALISE']);
     }
 
+    public function test_justificativa_nao_leva_notas_internas_do_motor(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create(['external_reference' => 'BAP2601875586']);
+        $decision = ViabilityDecision::factory()->create([
+            'viability_request_id' => $request->id,
+            'outcome' => DecisionOutcome::Deferida,
+            'reason' => null,
+            'fundamentacao' => [
+                'Atividade sem enquadramento na planilha vigente — segue para análise técnica',
+                'Decreto Municipal nº 32.636/2020, com os Anexos na redação do Decreto Municipal nº 41.758/2026',
+                'Lei nº 9.148/2016 (LOUOS) — nR2-12',
+                'GeoServer SEDUR indisponível ou resposta incompleta (HTTP 20).',
+                'Não foi possível verificar a restrição territorial "Loteamento Vela Branca (TAC vigente)" (camada geográfica indisponível)',
+                'Desde que seja escritório da empresa',
+                'Desde que a área utilizada não ultrapasse 1.250m² (mil duzentos e cinquenta metros quadrados).',
+            ],
+        ]);
+
+        $espiao = $this->clienteEspiao();
+        $this->app->instance(ReginHttpClient::class, $espiao);
+
+        $this->app->make(HttpReginParecerNotifier::class)->notifyParecer($request, $decision);
+
+        $justificativa = $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'];
+
+        $this->assertStringNotContainsString('GeoServer', $justificativa);
+        $this->assertStringNotContainsString('indisponível', $justificativa);
+        $this->assertStringNotContainsString('indisponivel', $justificativa);
+        $this->assertStringNotContainsString('segue para análise técnica', $justificativa);
+        $this->assertStringNotContainsString('Não foi possível verificar', $justificativa);
+        $this->assertStringContainsString('Decreto Municipal nº 32.636/2020', $justificativa);
+        $this->assertStringContainsString('Lei nº 9.148/2016 (LOUOS)', $justificativa);
+        $this->assertStringContainsString('Desde que seja escritório da empresa', $justificativa);
+        $this->assertStringContainsString('1.250m²', $justificativa);
+    }
+
+    public function test_justificativa_so_com_notas_internas_cai_no_texto_padrao(): void
+    {
+        $request = ViabilityRequest::factory()->protocoled()->create(['external_reference' => 'BAP2601875587']);
+        $decision = ViabilityDecision::factory()->create([
+            'viability_request_id' => $request->id,
+            'outcome' => DecisionOutcome::Deferida,
+            'reason' => null,
+            'fundamentacao' => ['GeoServer SEDUR indisponível ou resposta incompleta (HTTP 20).'],
+        ]);
+
+        $espiao = $this->clienteEspiao();
+        $this->app->instance(ReginHttpClient::class, $espiao);
+
+        $this->app->make(HttpReginParecerNotifier::class)->notifyParecer($request, $decision);
+
+        $this->assertSame(
+            'Viabilidade deferida pelo motor de regras.',
+            $espiao->envios[0]['dadosProcesso']['ANALISES']['AREA'][0]['JUSTIFICATIVA_ANALISE'],
+        );
+    }
+
     public function test_indeferimento_envia_a_justificativa_seguida_da_fundamentacao(): void
     {
         $request = ViabilityRequest::factory()->protocoled()->create(['external_reference' => '00990026']);

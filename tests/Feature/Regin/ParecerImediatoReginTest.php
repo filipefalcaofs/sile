@@ -125,7 +125,7 @@ class ParecerImediatoReginTest extends TestCase
 
     public function test_desativado_cassado_e_revogado_em_analise_enviam_parecer_indeferido(): void
     {
-        $analista = User::factory()->analista()->withAcceptedLgpdTerm()->create();
+        $analista = User::factory()->analistaServidor()->withAcceptedLgpdTerm()->create();
 
         foreach (['desativado', 'cassado', 'revogado'] as $indice => $resultado) {
             $protocolo = 'BAP20'.$indice;
@@ -150,7 +150,7 @@ class ParecerImediatoReginTest extends TestCase
         $processo->forceFill(['status' => ViabilityRequestStatus::Deferida])->save();
         ViabilityDecision::factory()->create(['viability_request_id' => $processo->id]);
 
-        $this->actingAs(User::factory()->analista()->withAcceptedLgpdTerm()->create(), 'gestao')
+        $this->actingAs(User::factory()->analistaServidor()->withAcceptedLgpdTerm()->create(), 'gestao')
             ->post("/gestao/processos/{$processo->id}/conclusao-analise", ['resultado' => 'cassado'])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
