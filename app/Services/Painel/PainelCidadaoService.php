@@ -6,7 +6,7 @@ use App\Enums\AnalysisPendencyStatus;
 use App\Enums\ViabilityRequestStatus;
 use App\Http\Resources\Portal\SolicitacaoResumoResource;
 use App\Models\AnalysisPendency;
-use App\Models\User;
+use App\Models\Cidadao;
 use App\Models\ViabilityRequest;
 
 /**
@@ -22,7 +22,7 @@ class PainelCidadaoService
     /**
      * @return array<string, mixed>
      */
-    public function build(User $efetivo, User $logado): array
+    public function build(Cidadao $efetivo, Cidadao $logado): array
     {
         $emRepresentacao = $efetivo->id !== $logado->id;
 
@@ -37,7 +37,7 @@ class PainelCidadaoService
     /**
      * @return array{em_analise: int, processos: int, em_convite: int}
      */
-    private function indicadores(User $efetivo): array
+    private function indicadores(Cidadao $efetivo): array
     {
         $porStatus = ViabilityRequest::query()
             ->where('requester_user_id', $efetivo->id)
@@ -58,7 +58,7 @@ class PainelCidadaoService
      *
      * @return list<array<string, mixed>>
      */
-    private function solicitacoesRecentes(User $efetivo): array
+    private function solicitacoesRecentes(Cidadao $efetivo): array
     {
         $limit = (int) config('sile.ui.painel.solicitacoes_recentes', 5);
 
@@ -79,7 +79,7 @@ class PainelCidadaoService
      *
      * @return array{pendencias: list<array<string, mixed>>, rascunhos: list<array<string, mixed>>}
      */
-    private function atencao(User $efetivo): array
+    private function atencao(Cidadao $efetivo): array
     {
         $pendencias = AnalysisPendency::query()
             ->where('status', AnalysisPendencyStatus::Aberta)

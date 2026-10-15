@@ -125,6 +125,23 @@ final class IdentidadeSeparada
     }
 
     /**
+     * Como `retargetar`, mas sem chave estrangeira nova: derruba a FK para users e renomeia
+     * (coluna de trilha de auditoria, que não deve travar a exclusão do cidadão). Servidores
+     * citados na coluna ganham espelho em `cidadaos`, para o id continuar resolvendo.
+     */
+    public static function renomearSemChave(string $tabela, string $antiga, string $nova): void
+    {
+        self::espelharOrfaos($tabela, $antiga);
+
+        $indices = self::indicesCitando($tabela, $antiga);
+
+        self::derrubarIndices($tabela, $indices);
+        Schema::table($tabela, fn (Blueprint $t) => $t->dropForeign([$antiga]));
+        Schema::table($tabela, fn (Blueprint $t) => $t->renameColumn($antiga, $nova));
+        self::recriarIndices($tabela, $indices, $antiga, [$nova]);
+    }
+
+    /**
      * Converte `$antiga` (FK para users) no par `{$base}_type` + `{$base}_id`, sem FK.
      * O tipo vem das contas que a consulta de cidadão classifica como tal (independe do conteúdo
      * atual de `cidadaos`); o resto é User. `{base}_type` herda a obrigatoriedade da coluna original.

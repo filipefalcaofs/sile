@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Cidadao;
 use App\Models\Procuration;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,8 +19,8 @@ class ProcurationFactory extends Factory
     public function definition(): array
     {
         return [
-            'grantor_user_id' => User::factory(),
-            'attorney_user_id' => User::factory(),
+            'grantor_cidadao_id' => Cidadao::factory(),
+            'attorney_cidadao_id' => Cidadao::factory(),
             'starts_at' => now(),
             'expires_at' => null,
         ];

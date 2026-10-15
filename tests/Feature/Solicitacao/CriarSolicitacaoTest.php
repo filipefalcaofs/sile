@@ -129,8 +129,8 @@ class CriarSolicitacaoTest extends TestCase
         $attorney = $this->portalUser();
 
         $proc = Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         // A empresa é do REPRESENTADO; o procurador opera em nome dele.
@@ -154,7 +154,7 @@ class CriarSolicitacaoTest extends TestCase
         $this->assertDatabaseHas('activity_log', [
             'subject_type' => $request->getMorphClass(),
             'event' => 'created',
-            'acting_for_user_id' => $grantor->id,
+            'acting_for_cidadao_id' => $grantor->id,
         ]);
     }
 

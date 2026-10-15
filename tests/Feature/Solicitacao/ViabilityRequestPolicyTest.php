@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Solicitacao;
 
+use App\Models\Cidadao;
 use App\Models\Procuration;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -76,12 +77,12 @@ class ViabilityRequestPolicyTest extends TestCase
 
     public function test_representado_opera_pelo_procurador(): void
     {
-        $grantor = User::factory()->create();
-        $attorney = User::factory()->create();
+        $grantor = Cidadao::factory()->create();
+        $attorney = Cidadao::factory()->create();
 
         $proc = Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         $request = ViabilityRequest::factory()->draft()->create([

@@ -29,13 +29,13 @@ class ResolveRepresentation
             $procuration = Procuration::query()->with('grantor')->find($procurationId);
 
             if ($procuration === null
-                || $procuration->attorney_user_id !== $request->user()?->id
+                || $procuration->attorney_cidadao_id !== $request->user()?->id
                 || ! $procuration->isActive()) {
                 $request->session()->forget('acting_procuration_id');
                 $request->session()->flash('status', 'A representação foi encerrada porque a procuração não está mais ativa.');
                 $this->endRepresentation();
             } else {
-                Context::add('acting_for_user_id', $procuration->grantor_user_id);
+                Context::add('acting_for_cidadao_id', $procuration->grantor_cidadao_id);
                 app(CurrentRepresentation::class)->set($procuration);
             }
         } else {
@@ -52,7 +52,7 @@ class ResolveRepresentation
      */
     private function endRepresentation(): void
     {
-        Context::forget('acting_for_user_id');
+        Context::forget('acting_for_cidadao_id');
         app(CurrentRepresentation::class)->clear();
     }
 }

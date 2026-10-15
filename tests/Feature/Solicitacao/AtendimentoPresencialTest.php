@@ -59,9 +59,9 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_representacao_resolve_o_cidadao_atendido(): void
     {
-        $citizen = User::factory()->create();
+        $citizen = Cidadao::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         $representation = app(CurrentRepresentation::class);
@@ -77,8 +77,8 @@ class AtendimentoPresencialTest extends TestCase
 
     public function test_procuracao_continua_resolvendo_o_outorgante(): void
     {
-        $grantor = User::factory()->create();
-        $procuration = Procuration::factory()->create(['grantor_user_id' => $grantor->id]);
+        $grantor = Cidadao::factory()->create();
+        $procuration = Procuration::factory()->create(['grantor_cidadao_id' => $grantor->id]);
 
         $representation = app(CurrentRepresentation::class);
         $representation->set($procuration);
@@ -114,13 +114,13 @@ class AtendimentoPresencialTest extends TestCase
         $citizen = Cidadao::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         $this->runMiddleware($attendant, $attendance->id);
 
         $this->assertSame($citizen->id, app(CurrentRepresentation::class)->grantor()?->id);
-        $this->assertSame($citizen->id, Context::get('acting_for_user_id'));
+        $this->assertSame($citizen->id, Context::get('acting_for_cidadao_id'));
     }
 
     public function test_middleware_limpa_estado_quando_expirado(): void
@@ -133,7 +133,7 @@ class AtendimentoPresencialTest extends TestCase
         $request = $this->runMiddleware($attendant, $attendance->id);
 
         $this->assertNull(app(CurrentRepresentation::class)->grantor());
-        $this->assertNull(Context::get('acting_for_user_id'));
+        $this->assertNull(Context::get('acting_for_cidadao_id'));
         // Vínculo expirado some da sessão: a próxima ação exige reabertura (CA-03).
         $this->assertFalse($request->session()->has('attending_attendance_id'));
     }
@@ -150,7 +150,7 @@ class AtendimentoPresencialTest extends TestCase
 
         // Atendimento de outro atendente nunca vira representação do atual.
         $this->assertNull(app(CurrentRepresentation::class)->grantor());
-        $this->assertNull(Context::get('acting_for_user_id'));
+        $this->assertNull(Context::get('acting_for_cidadao_id'));
     }
 
     /**
@@ -203,7 +203,7 @@ class AtendimentoPresencialTest extends TestCase
 
         $this->assertDatabaseHas('assisted_attendances', [
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
             'ended_at' => null,
         ]);
 
@@ -234,7 +234,7 @@ class AtendimentoPresencialTest extends TestCase
         $serviceType = ViabilityServiceType::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         $this->actingAs($attendant, 'gestao')
@@ -258,7 +258,7 @@ class AtendimentoPresencialTest extends TestCase
             'subject_type' => $solicitacao->getMorphClass(),
             'event' => 'created',
             'causer_id' => $attendant->id,
-            'acting_for_user_id' => $citizen->id,
+            'acting_for_cidadao_id' => $citizen->id,
         ]);
     }
 
@@ -269,7 +269,7 @@ class AtendimentoPresencialTest extends TestCase
         $serviceType = ViabilityServiceType::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         $this->actingAs($attendant, 'gestao')
@@ -292,7 +292,7 @@ class AtendimentoPresencialTest extends TestCase
         $serviceType = ViabilityServiceType::factory()->create();
         $expired = AssistedAttendance::factory()->expired()->create([
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         // Atendimento expirado: a ação não opera em nome de ninguém.
@@ -360,7 +360,7 @@ class AtendimentoPresencialTest extends TestCase
         $citizen = Cidadao::factory()->create();
         $attendance = AssistedAttendance::factory()->active()->create([
             'attendant_user_id' => $attendant->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         $this->actingAs($attendant, 'gestao')

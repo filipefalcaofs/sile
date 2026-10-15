@@ -40,10 +40,9 @@ class Company extends Model
     /**
      * Contagem reutilizável das empresas com vínculo ATIVO do cidadão —
      * consumida pela listagem (totalCompanies) e pelo painel do cidadão na
-     * evolução (lacuna registrada no STATE). Aceita `User` enquanto a representação
-     * ainda devolve o outorgante como `User` (ids de cidadão são preservados).
+     * evolução (lacuna registrada no STATE).
      */
-    public static function countForCidadao(Cidadao|User $cidadao): int
+    public static function countForCidadao(Cidadao $cidadao): int
     {
         return static::query()
             ->whereHas('links', fn ($q) => $q->where('cidadao_id', $cidadao->id)->whereNull('ended_at'))

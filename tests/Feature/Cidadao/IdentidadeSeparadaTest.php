@@ -70,6 +70,24 @@ class IdentidadeSeparadaTest extends TestCase
         $this->assertSame([], $this->indices(self::TABELA));
     }
 
+    public function test_renomear_sem_chave_derruba_a_fk_para_users_e_mantem_indices(): void
+    {
+        $this->criarRascunho(true);
+        $usuario = User::factory()->create();
+        DB::table(self::TABELA)->insert(['user_id' => $usuario->id, 'assunto' => 'a']);
+
+        IdentidadeSeparada::renomearSemChave(self::TABELA, 'user_id', 'cidadao_id');
+
+        $this->assertSame([], Schema::getForeignKeys(self::TABELA));
+        $this->assertTrue(Schema::hasColumn(self::TABELA, 'cidadao_id'));
+        $this->assertFalse(Schema::hasColumn(self::TABELA, 'user_id'));
+        $indices = $this->indices(self::TABELA);
+        $this->assertSame(['cidadao_id', 'assunto'], $indices['rascunho_identidade_cidadao_id_assunto_unique']['columns']);
+        $this->assertSame(['assunto', 'cidadao_id'], $indices['rascunho_identidade_assunto_cidadao_id_index']['columns']);
+        $this->assertDatabaseHas(self::TABELA, ['cidadao_id' => $usuario->id]);
+        $this->assertDatabaseHas('cidadaos', ['id' => $usuario->id]);
+    }
+
     public function test_retargetar_recusa_set_null_em_coluna_obrigatoria(): void
     {
         $this->criarRascunho();

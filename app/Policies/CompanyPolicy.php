@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Cidadao;
 use App\Models\Company;
-use App\Models\User;
 use App\Support\Representation\CurrentRepresentation;
 
 /**
@@ -19,7 +18,7 @@ class CompanyPolicy
      * Cidadão efetivo: o representado quando em representação ativa, senão
      * o próprio cidadão autenticado ([01-07]).
      */
-    private function effectiveUser(Cidadao $cidadao): Cidadao|User
+    private function effectiveUser(Cidadao $cidadao): Cidadao
     {
         return app(CurrentRepresentation::class)->grantor() ?? $cidadao;
     }

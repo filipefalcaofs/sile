@@ -14,7 +14,6 @@ use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityRequestDocument;
 use App\Models\ViabilityServiceType;
@@ -284,7 +283,7 @@ class SolicitacaoController extends Controller
      *
      * @return array<int, array<string, mixed>>
      */
-    private function companyOptions(Cidadao|User $user): array
+    private function companyOptions(Cidadao $user): array
     {
         return Company::query()
             ->whereHas('links', fn ($query) => $query->where('cidadao_id', $user->id)->whereNull('ended_at'))
@@ -470,7 +469,7 @@ class SolicitacaoController extends Controller
      * Usuário efetivo: o representado em representação ativa, senão o próprio
      * ([01-07]). Resolvido pelo middleware ResolveRepresentation.
      */
-    private function effectiveUser(Request $request): User
+    private function effectiveUser(Request $request): Cidadao
     {
         return app(CurrentRepresentation::class)->grantor() ?? $request->user();
     }

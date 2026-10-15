@@ -24,7 +24,7 @@ class RepresentationController extends Controller
             ->active()
             ->with('grantor')
             ->where('id', $validated['procuration_id'])
-            ->where('attorney_user_id', $request->user()->id)
+            ->where('attorney_cidadao_id', $request->user()->id)
             ->first();
 
         if ($procuration === null) {
@@ -34,7 +34,7 @@ class RepresentationController extends Controller
         }
 
         $request->session()->put('acting_procuration_id', $procuration->id);
-        Context::add('acting_for_user_id', $procuration->grantor_user_id);
+        Context::add('acting_for_cidadao_id', $procuration->grantor_cidadao_id);
 
         $audit->log('procuracao', 'representacao-iniciada', 'Início de atuação em nome do outorgante', [
             'procuration_id' => $procuration->id,

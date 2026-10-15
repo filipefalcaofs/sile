@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Gestao;
 use App\Enums\ViabilityRequestOrigin;
 use App\Http\Controllers\Controller;
 use App\Models\AssistedAttendance;
+use App\Models\Cidadao;
 use App\Models\Company;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Rules\ValidCpf;
@@ -78,7 +78,7 @@ class AssistedAttendanceController extends Controller
         );
 
         $cpf = (string) preg_replace('/\D/', '', $validated['cpf']);
-        $citizen = User::query()->where('cpf', $cpf)->first();
+        $citizen = Cidadao::query()->where('cpf', $cpf)->first();
 
         if ($citizen === null) {
             throw ValidationException::withMessages([
@@ -86,7 +86,7 @@ class AssistedAttendanceController extends Controller
             ]);
         }
 
-        if ($citizen->id === $request->user()->id) {
+        if ($citizen->cpf === $request->user()->cpf) {
             throw ValidationException::withMessages([
                 'cpf' => 'Não é possível iniciar um atendimento para a sua própria conta.',
             ]);
@@ -96,7 +96,7 @@ class AssistedAttendanceController extends Controller
 
         $attendance = AssistedAttendance::create([
             'attendant_user_id' => $request->user()->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
             'started_at' => now(),
             'expires_at' => now()->addMinutes($minutes),
         ]);
@@ -105,7 +105,7 @@ class AssistedAttendanceController extends Controller
 
         $this->audit->log('atendimento', 'atendimento-iniciado', 'Início de atendimento presencial assistido', [
             'attendance_id' => $attendance->id,
-            'citizen_user_id' => $citizen->id,
+            'citizen_cidadao_id' => $citizen->id,
         ]);
 
         return redirect()
@@ -208,7 +208,7 @@ class AssistedAttendanceController extends Controller
      *
      * @return array<int, array{id: int, legal_name: string, formatted_cnpj: string}>
      */
-    private function citizenCompanies(User $citizen): array
+    private function citizenCompanies(Cidadao $citizen): array
     {
         return Company::query()
             ->whereHas('links', fn ($query) => $query

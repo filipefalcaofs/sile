@@ -5,6 +5,7 @@ namespace Tests\Feature\Auditoria;
 use App\Http\Resources\ActivityResource;
 use App\Models\AccessLog;
 use App\Models\Activity;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\User;
 use App\Services\Auditoria\AuditTrailQueryService;
@@ -179,7 +180,7 @@ class AuditoriaConsultaTest extends TestCase
     public function test_activity_resource_expoe_campos_da_trilha_e_o_diff(): void
     {
         $causer = User::factory()->create(['name' => 'Carla Causer']);
-        $representado = User::factory()->create(['name' => 'Diego Representado']);
+        $representado = Cidadao::factory()->create(['name' => 'Diego Representado']);
 
         $activity = $this->atividade([
             'log_name' => 'empresas',
@@ -187,7 +188,7 @@ class AuditoriaConsultaTest extends TestCase
             'description' => 'Atualização de empresa',
             'causer_type' => $causer->getMorphClass(),
             'causer_id' => $causer->id,
-            'acting_for_user_id' => $representado->id,
+            'acting_for_cidadao_id' => $representado->id,
             'subject_type' => 'App\\Models\\Company',
             'subject_id' => 99,
             'result' => 'sucesso',

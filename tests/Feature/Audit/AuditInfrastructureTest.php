@@ -34,12 +34,12 @@ class AuditInfrastructureTest extends TestCase
         ]);
     }
 
-    public function test_activity_aceita_acting_for_user_id_via_context(): void
+    public function test_activity_aceita_acting_for_cidadao_id_via_context(): void
     {
         $outroUser = User::factory()->create();
 
         Route::middleware('web')->get('/_test/audit-em-nome-de', function () use ($outroUser) {
-            Context::add('acting_for_user_id', $outroUser->id);
+            Context::add('acting_for_cidadao_id', $outroUser->id);
 
             activity('teste')->log('Ação em nome de outro usuário');
 
@@ -51,7 +51,7 @@ class AuditInfrastructureTest extends TestCase
         $this->assertDatabaseHas('activity_log', [
             'log_name' => 'teste',
             'description' => 'Ação em nome de outro usuário',
-            'acting_for_user_id' => $outroUser->id,
+            'acting_for_cidadao_id' => $outroUser->id,
         ]);
     }
 

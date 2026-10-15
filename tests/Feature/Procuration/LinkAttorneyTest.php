@@ -55,8 +55,8 @@ class LinkAttorneyTest extends TestCase
             ->assertSessionHas('status');
 
         $this->assertDatabaseHas('procurations', [
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
             'revoked_at' => null,
         ]);
     }
@@ -75,8 +75,8 @@ class LinkAttorneyTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $procuration = Procuration::query()
-            ->where('grantor_user_id', $grantor->id)
-            ->where('attorney_user_id', $attorney->id)
+            ->where('grantor_cidadao_id', $grantor->id)
+            ->where('attorney_cidadao_id', $attorney->id)
             ->first();
 
         $this->assertNotNull($procuration);
@@ -154,8 +154,8 @@ class LinkAttorneyTest extends TestCase
         $attorney = $this->portalUser();
 
         Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         $this->actingAs($grantor)
@@ -174,8 +174,8 @@ class LinkAttorneyTest extends TestCase
         $attorney = $this->portalUser();
 
         Procuration::factory()->revoked()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         $this->actingAs($grantor)

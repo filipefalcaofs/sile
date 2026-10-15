@@ -162,8 +162,8 @@ class MyCompaniesTest extends TestCase
         $this->companyFor($grantor);
 
         $proc = Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         // Com a representação ativa: vê a empresa do representado.

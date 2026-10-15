@@ -186,8 +186,8 @@ class PainelCidadaoTest extends TestCase
         $attorney = $this->portalUser();
 
         $proc = Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         // Dados do REPRESENTADO (devem aparecer).

@@ -116,7 +116,7 @@ class AccessLogRecordingTest extends TestCase
             'password_confirmation' => 'SenhaForte1',
         ]);
 
-        $user = User::firstWhere('email', 'maria@example.com');
+        $user = Cidadao::firstWhere('email', 'maria@example.com');
 
         $this->assertNotNull($user, 'Esperava usuário criado pelo cadastro');
 

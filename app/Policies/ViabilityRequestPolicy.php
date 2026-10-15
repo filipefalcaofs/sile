@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Support\Representation\CurrentRepresentation;
@@ -20,7 +21,7 @@ class ViabilityRequestPolicy
      * Usuário efetivo: o representado em representação ativa, senão o próprio
      * usuário autenticado ([01-07]).
      */
-    private function effectiveUser(User $user): User
+    private function effectiveUser(User|Cidadao $user): User|Cidadao
     {
         return app(CurrentRepresentation::class)->grantor() ?? $user;
     }

@@ -10,7 +10,6 @@ use App\Http\Requests\Portal\UpdateCompanyRequest;
 use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
-use App\Models\User;
 use App\Support\Representation\CurrentRepresentation;
 use App\Support\Settings;
 use Illuminate\Http\RedirectResponse;
@@ -250,7 +249,7 @@ class CompanyController extends Controller
      * Usuário efetivo: o representado em representação ativa, senão o próprio
      * ([01-07]). Resolvido pelo middleware ResolveRepresentation.
      */
-    private function effectiveUser(Request $request): Cidadao|User
+    private function effectiveUser(Request $request): Cidadao
     {
         return app(CurrentRepresentation::class)->grantor() ?? $request->user();
     }

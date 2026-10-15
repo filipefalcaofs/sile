@@ -190,8 +190,8 @@ class CompanyRegistrationTest extends TestCase
         $attorney = $this->portalUser();
 
         $proc = Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         $this->actingAs($attorney)
@@ -216,7 +216,7 @@ class CompanyRegistrationTest extends TestCase
         $this->assertDatabaseHas('activity_log', [
             'subject_type' => $company->getMorphClass(),
             'event' => 'created',
-            'acting_for_user_id' => $grantor->id,
+            'acting_for_cidadao_id' => $grantor->id,
         ]);
     }
 }

@@ -51,8 +51,8 @@ class ConsultaViabilidadePaginaTest extends TestCase
         $grantor = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $attorney = Cidadao::factory()->withAcceptedLgpdTerm()->create();
         $procuration = Procuration::factory()->create([
-            'grantor_user_id' => $grantor->id,
-            'attorney_user_id' => $attorney->id,
+            'grantor_cidadao_id' => $grantor->id,
+            'attorney_cidadao_id' => $attorney->id,
         ]);
 
         $this->actingAs($attorney)
