@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
@@ -209,7 +210,7 @@ class ComunicacaoDevSeeder extends Seeder
         return $request;
     }
 
-    private function exemploExistente(User $cidadao): ?ViabilityRequest
+    private function exemploExistente(Cidadao $cidadao): ?ViabilityRequest
     {
         return ViabilityRequest::query()
             ->where('requester_cidadao_id', $cidadao->id)
@@ -221,13 +222,13 @@ class ComunicacaoDevSeeder extends Seeder
      * Pré-requisitos do seed (cidadão/empresa/tipo/CNAE/fachada + setor/analista do
      * SectorSeeder). Devolve null se faltar algo (degradação honesta).
      *
-     * @phpstan-type ComunicacaoDevContexto array{cidadao: User, company: Company, type: ViabilityServiceType, cnae: Cnae, fachada: DocumentRequirement, sector: Sector, analista: User}
+     * @phpstan-type ComunicacaoDevContexto array{cidadao: Cidadao, company: Company, type: ViabilityServiceType, cnae: Cnae, fachada: DocumentRequirement, sector: Sector, analista: User}
      *
      * @return ComunicacaoDevContexto|null
      */
     private function contexto(): ?array
     {
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->first();
 
         $company = $cidadao === null ? null : Company::query()
             ->whereHas('links', fn ($query) => $query->where('cidadao_id', $cidadao->id)->whereNull('ended_at'))

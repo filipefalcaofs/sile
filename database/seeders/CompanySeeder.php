@@ -10,7 +10,6 @@ use App\Models\Company;
 use App\Models\CompanyUser;
 use App\Models\LegalTerm;
 use App\Models\LegalTermAcceptance;
-use App\Models\User;
 use App\Services\RedesimImportService;
 use Illuminate\Database\Seeder;
 
@@ -33,30 +32,9 @@ class CompanySeeder extends Seeder
         $this->seedEmpresasRedesim($cidadao);
     }
 
-    /**
-     * Conta de cidadão com o mesmo id e dados do `User` de dev: os demais seeders
-     * ainda localizam o requerente como `User` (migram nas tarefas seguintes),
-     * enquanto o vínculo com a empresa já aponta para `cidadaos`.
-     */
-    public static function cidadaoDe(User $user): Cidadao
+    private function seedCidadao(): Cidadao
     {
-        return Cidadao::query()->find($user->id) ?? tap(
-            (new Cidadao)->forceFill([
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'cpf' => $user->cpf,
-                'phone' => $user->phone,
-                'password' => 'password',
-                'email_verified_at' => $user->email_verified_at ?? now(),
-            ]),
-            fn (Cidadao $cidadao) => $cidadao->save(),
-        );
-    }
-
-    private function seedCidadao(): User
-    {
-        $cidadao = User::firstOrCreate(
+        $cidadao = Cidadao::firstOrCreate(
             ['email' => 'cidadao@sile.dev'],
             [
                 'name' => 'Cidadão Viabiliza',
@@ -80,7 +58,7 @@ class CompanySeeder extends Seeder
         return $cidadao;
     }
 
-    private function seedEmpresaManual(User $cidadao): void
+    private function seedEmpresaManual(Cidadao $cidadao): void
     {
         $company = Company::firstOrCreate(
             ['cnpj' => '47960950000121'],
@@ -105,7 +83,7 @@ class CompanySeeder extends Seeder
         );
 
         CompanyUser::firstOrCreate(
-            ['company_id' => $company->id, 'cidadao_id' => self::cidadaoDe($cidadao)->id, 'role' => CompanyLinkRole::Responsavel],
+            ['company_id' => $company->id, 'cidadao_id' => $cidadao->id, 'role' => CompanyLinkRole::Responsavel],
             ['started_at' => now()],
         );
 
@@ -118,7 +96,7 @@ class CompanySeeder extends Seeder
         }
     }
 
-    private function seedEmpresasRedesim(User $cidadao): void
+    private function seedEmpresasRedesim(Cidadao $cidadao): void
     {
         // Import REAL do payload de referência (lógica de produção, carga de
         // dev). O serviço NÃO cria vínculo usuário-empresa por design — o
@@ -130,7 +108,7 @@ class CompanySeeder extends Seeder
 
         if ($company) {
             CompanyUser::firstOrCreate(
-                ['company_id' => $company->id, 'cidadao_id' => self::cidadaoDe($cidadao)->id, 'role' => CompanyLinkRole::Responsavel],
+                ['company_id' => $company->id, 'cidadao_id' => $cidadao->id, 'role' => CompanyLinkRole::Responsavel],
                 ['started_at' => now()],
             );
         }

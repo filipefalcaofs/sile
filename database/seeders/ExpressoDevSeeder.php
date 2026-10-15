@@ -4,10 +4,10 @@ namespace Database\Seeders;
 
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use App\Models\ViabilityServiceType;
 use App\Services\Expresso\FluxoExpressoService;
@@ -56,7 +56,7 @@ class ExpressoDevSeeder extends Seeder
             return;
         }
 
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->first();
 
         $company = $cidadao === null ? null : Company::query()
             ->whereHas('links', fn ($query) => $query->where('cidadao_id', $cidadao->id)->whereNull('ended_at'))
@@ -93,7 +93,7 @@ class ExpressoDevSeeder extends Seeder
      * Idempotente pelo marcador em address_reference.
      */
     private function exampleDraft(
-        User $cidadao,
+        Cidadao $cidadao,
         Company $company,
         ViabilityServiceType $type,
         Cnae $cnae,

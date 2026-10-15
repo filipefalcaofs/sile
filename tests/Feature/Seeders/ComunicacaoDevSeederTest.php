@@ -7,6 +7,7 @@ use App\Enums\CommunicationChannel;
 use App\Enums\CommunicationType;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisPendency;
+use App\Models\Cidadao;
 use App\Models\Communication;
 use App\Models\User;
 use App\Models\ViabilityRequest;
@@ -35,7 +36,7 @@ class ComunicacaoDevSeederTest extends TestCase
 
     private function dedicada(): ?ViabilityRequest
     {
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->first();
 
         if ($cidadao === null) {
             return null;
@@ -104,7 +105,7 @@ class ComunicacaoDevSeederTest extends TestCase
         $request = $this->dedicada();
         $this->assertNotNull($request);
 
-        $requerente = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
+        $requerente = Cidadao::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
         $analista = User::query()->where('email', 'analista@sile.dev')->firstOrFail();
 
         // Canal database nativo (in-app): o requerente recebeu a notificação da

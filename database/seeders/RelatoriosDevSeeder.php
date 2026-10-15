@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\Company;
 use App\Models\ExpressoQueda;
 use App\Models\User;
@@ -44,14 +45,14 @@ class RelatoriosDevSeeder extends Seeder
             return;
         }
 
-        $requester = User::query()->where('email', self::REQUESTER_EMAIL)->first();
+        $requester = Cidadao::query()->where('email', self::REQUESTER_EMAIL)->first();
 
         // Idempotência: solicitações do requerente dedicado já existem → semeado.
         if ($requester !== null && ViabilityRequest::query()->where('requester_cidadao_id', $requester->id)->exists()) {
             return;
         }
 
-        $requester ??= User::factory()->create([
+        $requester ??= Cidadao::factory()->create([
             'email' => self::REQUESTER_EMAIL,
             'name' => 'Requerente Demo Relatórios',
         ]);
@@ -130,7 +131,7 @@ class RelatoriosDevSeeder extends Seeder
      * @param  array<string, mixed>  $overrides
      */
     private function solicitacao(
-        User $requester,
+        Cidadao $requester,
         Company $company,
         ViabilityServiceType $serviceType,
         ViabilityRequestStatus $status,

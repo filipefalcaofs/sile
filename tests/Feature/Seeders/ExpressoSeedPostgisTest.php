@@ -5,8 +5,8 @@ namespace Tests\Feature\Seeders;
 use App\Enums\DecisionOutcome;
 use App\Enums\GeoLayerType;
 use App\Enums\ViabilityRequestStatus;
+use App\Models\Cidadao;
 use App\Models\GeoLayer;
-use App\Models\User;
 use App\Models\ViabilityRequest;
 use Database\Seeders\ExpressoDevSeeder;
 use Database\Seeders\ZonaFicticiaDevSeeder;
@@ -50,7 +50,7 @@ class ExpressoSeedPostgisTest extends PostgisTestCase
         $this->assertSame(ZonaFicticiaDevSeeder::VERSION, $zona->version);
         $this->assertSame(1, $zona->feature_count);
 
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
 
         // DEFERIMENTO navegável: a solicitação sobre a zona fictícia (Centro) com
         // o minimercado (risco baixo → expresso) é DEFERIDA pelo motor real, com

@@ -2,7 +2,10 @@
 
 namespace Tests\Feature\Seeders;
 
+use App\Models\Cidadao;
 use App\Models\GeoServerLayer;
+use App\Models\LegalTerm;
+use App\Models\LegalTermAcceptance;
 use App\Models\LouosQuadro10Permissao;
 use App\Models\PropertyType;
 use App\Models\TratamentoCnaeBinding;
@@ -33,6 +36,8 @@ class DemonstracaoClienteSeederTest extends TestCase
             'email' => DemonstracaoClienteSeeder::CLIENTE_GESTAO_EMAIL,
         ]);
         $this->assertDatabaseMissing('users', ['email' => 'cidadao@sile.dev']);
+        $this->assertDatabaseMissing('cidadaos', ['email' => 'cidadao@sile.dev']);
+        $this->assertDatabaseMissing('cidadaos', ['email' => DemonstracaoClienteSeeder::CLIENTE_PORTAL_EMAIL]);
     }
 
     public function test_cria_usuarios_e_perfis_quando_demo_data_ligado(): void
@@ -44,7 +49,10 @@ class DemonstracaoClienteSeederTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => DemonstracaoClienteSeeder::CLIENTE_GESTAO_EMAIL,
         ]);
-        $this->assertDatabaseHas('users', [
+        $this->assertDatabaseHas('cidadaos', [
+            'email' => DemonstracaoClienteSeeder::CLIENTE_PORTAL_EMAIL,
+        ]);
+        $this->assertDatabaseMissing('users', [
             'email' => DemonstracaoClienteSeeder::CLIENTE_PORTAL_EMAIL,
         ]);
         $this->assertFalse(Role::where('name', 'validacao-fase-completa')->exists());
@@ -168,7 +176,7 @@ class DemonstracaoClienteSeederTest extends TestCase
 
         $this->seed(DemonstracaoClienteSeeder::class);
 
-        foreach (['admin@sile.dev', 'cidadao@sile.dev', 'analista@sile.dev', 'gestor@sile.dev'] as $email) {
+        foreach (['admin@sile.dev', 'analista@sile.dev', 'gestor@sile.dev'] as $email) {
             $user = User::query()->where('email', $email)->firstOrFail();
 
             $this->assertTrue(
@@ -176,5 +184,36 @@ class DemonstracaoClienteSeederTest extends TestCase
                 "Esperava a senha demo rotacionada para {$email}."
             );
         }
+
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->firstOrFail();
+
+        $this->assertTrue(
+            Hash::check(DemonstracaoClienteSeeder::DEMO_PASSWORD, $cidadao->password),
+            'Esperava a senha demo rotacionada para cidadao@sile.dev.'
+        );
+    }
+
+    public function test_requerente_do_portal_e_cidadao_com_senha_demo_e_termo_aceito(): void
+    {
+        config(['sile.demo_data' => true]);
+
+        $this->seed(DemonstracaoClienteSeeder::class);
+        $this->seed(DemonstracaoClienteSeeder::class);
+
+        $requerentes = Cidadao::query()->where('email', DemonstracaoClienteSeeder::CLIENTE_PORTAL_EMAIL)->get();
+
+        $this->assertCount(1, $requerentes, 'Re-seed não pode duplicar o requerente.');
+        $requerente = $requerentes->first();
+        $this->assertSame('45317828791', $requerente->cpf);
+        $this->assertNotNull($requerente->email_verified_at);
+        $this->assertTrue(Hash::check(DemonstracaoClienteSeeder::DEMO_PASSWORD, $requerente->password));
+
+        $term = LegalTerm::current('lgpd');
+        $this->assertNotNull($term);
+        $this->assertTrue(LegalTermAcceptance::query()
+            ->where('accepted_by_type', $requerente->getMorphClass())
+            ->where('accepted_by_id', $requerente->id)
+            ->where('legal_term_id', $term->id)
+            ->exists());
     }
 }

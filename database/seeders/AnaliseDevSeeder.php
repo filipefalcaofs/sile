@@ -6,6 +6,7 @@ use App\Enums\DecisionOutcome;
 use App\Enums\ViabilityRequestOrigin;
 use App\Enums\ViabilityRequestStatus;
 use App\Models\AnalysisRecord;
+use App\Models\Cidadao;
 use App\Models\Cnae;
 use App\Models\Company;
 use App\Models\DocumentRequirement;
@@ -315,13 +316,13 @@ class AnaliseDevSeeder extends Seeder
      * Pré-requisitos do seed (cidadão/empresa/tipo/CNAE/fachada + setor/analista/
      * gestor do SectorSeeder). Devolve null se faltar algo (degradação honesta).
      *
-     * @phpstan-type AnaliseDevContexto array{cidadao: User, company: Company, type: ViabilityServiceType, cnae: Cnae, fachada: DocumentRequirement, sector: Sector, analista: User, gestor: User}
+     * @phpstan-type AnaliseDevContexto array{cidadao: Cidadao, company: Company, type: ViabilityServiceType, cnae: Cnae, fachada: DocumentRequirement, sector: Sector, analista: User, gestor: User}
      *
      * @return AnaliseDevContexto|null
      */
     private function contexto(): ?array
     {
-        $cidadao = User::query()->where('email', 'cidadao@sile.dev')->first();
+        $cidadao = Cidadao::query()->where('email', 'cidadao@sile.dev')->first();
 
         $company = $cidadao === null ? null : Company::query()
             ->whereHas('links', fn ($query) => $query->where('cidadao_id', $cidadao->id)->whereNull('ended_at'))
